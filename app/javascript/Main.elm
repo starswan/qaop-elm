@@ -21,6 +21,7 @@ import Html.Attributes exposing (style)
 import Params exposing (StringPair, valid_params)
 import Qaop exposing (Message(..), Qaop, ctrlKeyDownEvent, ctrlKeyUpEvent, keyDownEvent, keyUpEvent, pause)
 import Utils exposing (digitToString)
+import Z80Debug exposing (debug_log)
 import Z80Memory exposing (getScreenLine)
 
 -- meant to be run every 20 msec(50Hz)
@@ -128,7 +129,10 @@ gotRom: Qaop -> Result (Http.Detailed.Error Bytes) (Http.Metadata, Array Int) ->
 gotRom qaop result =
     case result of
         Ok (metadata, value) ->
-           { qaop | spectrum = qaop.spectrum |> set_rom value } |> Qaop.run
+            let
+                x = debug_log (Array.length(value) |> String.fromInt)  Nothing
+            in
+                { qaop | spectrum = qaop.spectrum |> set_rom value } |> Qaop.run
         Err error ->
             (qaop, Cmd.none)
 
