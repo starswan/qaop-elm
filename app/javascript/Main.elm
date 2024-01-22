@@ -21,12 +21,14 @@ import Html.Attributes exposing (style)
 import Params exposing (StringPair, valid_params)
 import Qaop exposing (Message(..), Qaop, ctrlKeyDownEvent, ctrlKeyUpEvent, keyDownEvent, keyUpEvent, pause)
 import Utils exposing (digitToString)
+import Vector16384
 import Z80Debug exposing (debug_log)
 import Z80Memory exposing (getScreenLine)
 
 -- meant to be run every 20 msec(50Hz)
 -- arthur timings:
 -- Chromium debug 74.2ms(13.4 Hz) live 37.8ms(26.4 Hz)
+-- looks like this experiment is slower - 7.77 Hz firefox in debug
 -- firefox debug 104.6ms (9.5 Hz) live 59.9ms(16.6 Hz)
 c_TICKTIME = 33
 
@@ -130,9 +132,12 @@ gotRom qaop result =
     case result of
         Ok (metadata, value) ->
             let
-                x = debug_log (Array.length(value) |> String.fromInt)  Nothing
+                x = debug_log "size" (Array.length(value) |> String.fromInt) value
+                v = Vector16384.fromArray x
             in
-                { qaop | spectrum = qaop.spectrum |> set_rom value } |> Qaop.run
+                case v of
+                    Just thing -> { qaop | spectrum = qaop.spectrum |> set_rom thing } |> Qaop.run
+                    Nothing -> (qaop, Cmd.none)
         Err error ->
             (qaop, Cmd.none)
 

@@ -7,13 +7,14 @@ import Array exposing (Array)
 import Bitwise exposing (and, or, shiftLeftBy, shiftRightBy)
 import Keyboard exposing (Keyboard, z80_keyboard_input)
 import Utils exposing (listToDict, shiftLeftBy8, shiftRightBy8)
+import Vector16384 exposing (Vector16384)
 import Z80Memory exposing (Z80Memory, getValue)
 import Z80Rom exposing (Z80ROM, getROMValue)
 
 -- changing this to an array results in a recursion error in the browser :-(
 type alias Z80Env =
     {
-            rom48k: Z80ROM,
+            rom48k: Vector16384,
             ram: Z80Memory,
             keyboard: Keyboard,
             ctime: Int,
@@ -52,12 +53,12 @@ z80env_constructor =
     in
         Z80Env Z80Rom.constructor (Z80Memory.constructor ram) keyboard 0 c_FRSTART
 
-set_rom: Array Int -> Z80Env -> Z80Env
+set_rom: Vector16384 -> Z80Env -> Z80Env
 set_rom romdata z80env =
-   let
-      romDict = listToDict (Array.toList romdata)
-   in
-      { z80env | rom48k = romDict }
+   --let
+   --   romDict = listToDict (Array.toList romdata)
+   --in
+      { z80env | rom48k = romdata }
 
 m1: Int -> Int -> Z80Env -> Z80EnvWithValue
 m1 tmp_addr ir z80env_ =

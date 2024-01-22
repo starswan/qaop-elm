@@ -6,6 +6,7 @@ module Spectrum exposing (..)
 import Array exposing (Array)
 import Bitwise exposing (complement, shiftRightBy)
 import Keyboard exposing (KeyEvent, Keyboard, update_keyboard)
+import Vector16384 exposing (Vector16384)
 import Z80 exposing (Z80, execute, interrupt)
 import Z80Debug exposing (debug_log)
 import Z80Env exposing (c_FRSTART, c_FRTIME)
@@ -58,7 +59,7 @@ new_tape: List Int -> Spectrum -> Spectrum
 new_tape tape_string spectrum =
   { spectrum | tape = Just (Tape False tape_string 0 0 True True) }
 
-set_rom: Array Int -> Spectrum -> Spectrum
+set_rom: Vector16384 -> Spectrum -> Spectrum
 set_rom romdata spectrum =
    let
       z80 = spectrum.cpu
