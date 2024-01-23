@@ -15,6 +15,7 @@ type alias Qaop =
     --, loader : Loader
     , state : Int
     , keys : List KeyEvent
+    , paused : Bool
     }
 
 
@@ -62,25 +63,20 @@ type alias Qaop =
 --		}
 --		return v;
 --	}
-
-
-pause : Bool -> Qaop -> Qaop
-pause v qaop =
-    let
-        pauser =
-            if v then
-                0x44
-
-            else
-                0x40
-
-        speccy =
-            qaop.spectrum |> Spectrum.pause pauser
-    in
-    { qaop | spectrum = speccy }
-
-
-
+--pause : Bool -> Qaop -> Qaop
+--pause v qaop =
+--    let
+--        pauser =
+--            if v then
+--                0x44
+--
+--            else
+--                0x40
+--
+--        speccy =
+--            qaop.spectrum |> Spectrum.pause pauser
+--    in
+--    { qaop | spectrum = speccy }
 --
 --	public void mask(String name)
 --	{

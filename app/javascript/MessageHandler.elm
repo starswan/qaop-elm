@@ -1,10 +1,11 @@
 module MessageHandler exposing (..)
 
+import Array exposing (Array)
 import Bytes exposing (Bytes)
 import Dict exposing (Dict)
 import Http exposing (Error(..), Response)
 import Tapfile exposing (Tapfile, parseTapFile)
-import Z80Rom exposing (parseRomFile)
+import Z80Rom exposing (Z80ROM, parseRomFile)
 
 
 bytesToTap : Response Bytes -> Result Error (List Tapfile)
@@ -34,7 +35,7 @@ bytesToTap httpResponse =
             Ok (body |> parseTapFile)
 
 
-bytesToRom : Response Bytes -> Result Error (Dict Int Int)
+bytesToRom : Response Bytes -> Result Error Z80ROM
 bytesToRom httpResponse =
     case httpResponse of
         Http.BadUrl_ url ->
@@ -50,9 +51,13 @@ bytesToRom httpResponse =
             Err (Http.BadStatus metadata.statusCode)
 
         Http.GoodStatus_ _ body ->
-            case body |> parseRomFile of
-                Just a ->
-                    Ok a
+            body |> parseRomFile
 
-                Nothing ->
-                    Err (BadBody "ROM parse failed")
+
+
+--case body |> parseRomFile of
+--    Just a ->
+--        Ok a
+--
+--    Nothing ->
+--        Err (BadBody "ROM parse failed")

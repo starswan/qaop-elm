@@ -4,6 +4,7 @@ import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, addCpuTimeTime, reset_cpu_time)
 import Interrupts exposing (IFFValue(..), InterruptMode(..))
 import Z80Core exposing (Z80Core)
+import Z80Debug exposing (debugLog)
 import Z80Env exposing (z80_push, z80env_constructor)
 import Z80Flags exposing (FlagRegisters)
 import Z80Mem exposing (mem16)
@@ -85,9 +86,11 @@ interrupt bus rom48k full_z80 =
     in
     if full_z80 |> get_ei then
         let
-            --z81 = debug_log "interrupt" "keyboard scan" z80
+            z81 =
+                debugLog "interrupt" "keyboard scan" z80_core
+
             z80_1 =
-                { z80_core | interrupts = { ints | halted = False } }
+                { z81 | interrupts = { ints | halted = False } }
 
             pushed =
                 z80_1.env |> z80_push z80Clock.pc z80Clock.clockTime

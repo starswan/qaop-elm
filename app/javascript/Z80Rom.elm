@@ -2,63 +2,93 @@ module Z80Rom exposing (..)
 
 import Array exposing (Array)
 import Bytes exposing (Bytes)
-import Bytes.Decode exposing (Decoder, Step(..), andThen, loop, map, succeed, unsignedInt8)
+import Bytes.Decode exposing (Decoder, Step(..), unsignedInt8)
+import Bytes.Decode.Extra as BDE
+import Bytes.Extra as BE
 import Dict exposing (Dict)
+import Http exposing (Error(..))
 import Keyboard exposing (Keyboard)
-import Utils exposing (listToDict, toHexString)
-import Z80Debug exposing (debugTodo)
+import Utils exposing (toHexString)
+import Z80Debug exposing (debugLog, debugTodo)
 import Z80Ram exposing (Z80Ram)
 
 
 type alias Z80ROM =
-    { rom48k : Dict Int Int
+    { rom48k : Array Int
     , keyboard : Keyboard
     , z80ram : Z80Ram
     }
 
 
-constructor : Dict Int Int -> Z80ROM
+constructor : Array Int -> Z80ROM
 constructor rom_dict =
     Z80ROM rom_dict Keyboard.constructor Z80Ram.constructor
 
 
 getROMValue : Int -> Z80ROM -> Int
-getROMValue addr z80rom =
-    case Dict.get addr z80rom.rom48k of
+getROMValue in_addr z80rom =
+    let
+        addr =
+            debugLog "getROMValue" in_addr in_addr
+    in
+    case Array.get addr z80rom.rom48k of
         Just a ->
-            a
+            debugLog "getROMValue" ( addr, a ) a
 
         Nothing ->
             debugTodo "getROMValue" (String.fromInt addr) -1
 
 
-parseRomFile : Bytes -> Maybe (Dict Int Int)
+
+--getROMValue : Int -> Z80ROM -> Int
+--getROMValue addr z80rom =
+--    case Array.get addr z80rom.rom48k of
+--        Just a ->
+--            a
+--
+--        Nothing ->
+--            debugTodo "getROMValue" (String.fromInt addr) -1
+
+
+parseRomFile : Bytes -> Result Error Z80ROM
 parseRomFile bytes =
-    Bytes.Decode.decode romDecoder bytes
+    --Bytes.Decode.decode romDecoder bytes
+    let
+        array : Maybe (List (List Int))
+        array =
+            Bytes.Decode.decode (BDE.list 16 (BDE.list 1024 unsignedInt8)) bytes
+    in
+    case array of
+        Just listint ->
+            Ok (constructor (listint |> List.concat |> Array.fromList))
+
+        Nothing ->
+            Err (BadBody "Missing bytes")
 
 
-romDecoder : Decoder (Dict Int Int)
-romDecoder =
-    array_decoder 16384 unsignedInt8 |> andThen grabRomDecoder
 
-
-grabRomDecoder : Array Int -> Decoder (Dict Int Int)
-grabRomDecoder romData =
-    succeed (romData |> Array.toList |> listToDict)
-
-
-array_decoder : Int -> Decoder Int -> Decoder (Array Int)
-array_decoder size decoder =
-    loop ( size, Array.empty ) (arrayStep decoder)
-
-
-arrayStep : Decoder Int -> ( Int, Array Int ) -> Decoder (Step ( Int, Array Int ) (Array Int))
-arrayStep decoder ( n, xs ) =
-    if n <= 0 then
-        succeed (Done xs)
-
-    else
-        map (\x -> Loop ( n - 1, Array.push x xs )) decoder
+--romDecoder : Decoder (Dict Int Int)
+--romDecoder =
+--    array_decoder 16384 unsignedInt8 |> andThen grabRomDecoder
+--
+--
+--grabRomDecoder : Array Int -> Decoder (Dict Int Int)
+--grabRomDecoder romData =
+--    succeed (romData |> Array.toList |> listToDict)
+--
+--
+--array_decoder : Int -> Decoder Int -> Decoder (Array Int)
+--array_decoder size decoder =
+--    loop ( size, Array.empty ) (arrayStep decoder)
+--
+--
+--arrayStep : Decoder Int -> ( Int, Array Int ) -> Decoder (Step ( Int, Array Int ) (Array Int))
+--arrayStep decoder ( n, xs ) =
+--    if n <= 0 then
+--        succeed (Done xs)
+--
+--    else
+--        map (\x -> Loop ( n - 1, Array.push x xs )) decoder
 
 
 romRoutineNames =
