@@ -1,21 +1,21 @@
 module Z80Rom exposing (..)
 
+import Array exposing (Array)
 import Dict exposing (Dict)
 import Utils exposing (toHexString)
 import Z80Debug exposing (debug_todo)
-type alias Z80ROM = Dict Int Int
+type alias Z80ROM = Array Int
 
 constructor: Z80ROM
 constructor =
    let
      rom48k = List.range 0 16384
-     rom_list = List.indexedMap Tuple.pair rom48k
    in
-     Dict.fromList rom_list
+     Array.fromList rom48k
 
 getROMValue: Int -> Z80ROM -> Int
 getROMValue addr z80dict  =
-    case Dict.get addr z80dict of
+    case Array.get addr z80dict of
         Just a ->
           a
         Nothing ->
