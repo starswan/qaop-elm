@@ -3,4 +3,6 @@ Rails.application.routes.draw do
   #
   root 'games#index'
   resources :games
+  # resources :images, only: :get
+  get 'images/:data/:foreground/:background' => 'images#show', :as=>:image
 end
