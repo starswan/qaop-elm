@@ -46,10 +46,8 @@ import Z80Screen exposing (ScreenLine, screenLines, spectrumColour)
 -- Run at 25 (40Hz) - i7 laptop can do 20Hz in firefox dev mode
 
 
-c_TICKTIME =
-    25
-
-
+-- Run at 40 (25Hz) - i7 laptop can do 20Hz in firefox dev mode
+c_TICKTIME = 20
 
 -- I'm currently unsure whether scaling the display results in a significant slowdown or not
 -- what it does show is that changing the screen makes everything slower, which probably means in practice
