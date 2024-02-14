@@ -5,9 +5,12 @@ module Z80Env exposing (..)
 
 import Array exposing (Array)
 import Bitwise exposing (and, or, shiftLeftBy, shiftRightBy)
+import Dict
 import Keyboard exposing (Keyboard, z80_keyboard_input)
+import Maybe.Extra exposing (combine)
 import Utils exposing (listToDict, shiftLeftBy8, shiftRightBy8)
-import Z80Ram exposing (Z80Ram, add_cpu_time_ram, c_FRSTART, getRam16Value, getRamValue)
+import Z80Debug exposing (debug_log)
+import Z80Ram exposing (Z80Ram, add_cpu_time_ram, c_FRSTART, getRamValue)
 import Z80Rom exposing (Z80ROM, getROMValue)
 
 -- changing this to an array results in a recursion error in the browser :-(
@@ -37,12 +40,28 @@ c_SCRENDT = 191*224+126
 z80env_constructor =
     Z80Env Z80Rom.constructor Z80Ram.constructor Keyboard.constructor 0
 
+-- weird that none of these approaches works
+--romIndexes = List.range 0 16383
+--
+--set_rom: Array Int -> Z80Env -> Z80Env
+--set_rom romdata z80env =
+--   let
+--      romDict = listToDict (Array.toList romdata)
+--      romListMaybes = romIndexes |> List.map (\index -> romDict |> Dict.get index)
+--      maybeList = romListMaybes |> combine
+--   in
+--      case maybeList of
+--          Just romList -> { z80env | rom48k = romList |> Array.fromList }
+--          Nothing -> z80env
+
 set_rom: Array Int -> Z80Env -> Z80Env
 set_rom romdata z80env =
-   let
-      romDict = listToDict (Array.toList romdata)
-   in
-      { z80env | rom48k = romDict }
+    let
+        rom_List = romdata |> Array.toList
+        x = debug_log "set_rom" (rom_List |> List.length |> String.fromInt) Nothing
+    in
+        { z80env | rom48k = romdata }
+        --Z80Env romdata z80env.ram z80env.keyboard z80env.ctime
 
 m1: Int -> Int -> Z80Env -> Z80EnvWithValue
 m1 tmp_addr ir z80env_ =
