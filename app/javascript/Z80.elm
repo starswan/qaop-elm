@@ -2282,7 +2282,7 @@ execute_0xC6 z80 =
    in
       { z80_1 | flags = z80_1.flags |> z80_add v.value }
 
-execute_0xCD: Z80 -> Z80
+execute_0xCD: Z80 -> Z80Delta
 execute_0xCD z80 =
    -- case 0xCD: v=imm16(); push(PC); MP=PC=v; break;
    let
@@ -2291,7 +2291,8 @@ execute_0xCD z80 =
       --d = debug_log "call" ("from " ++ (v.z80.pc |> toHexString) ++ " to " ++ (v.value |> subName)) Nothing
       pushed = z80_1 |> push v.pc
    in
-      { z80_1 | env = pushed.env, sp = pushed.register_value, pc = v.value }
+      --{ z80_1 | env = pushed.env, sp = pushed.register_value, pc = v.value }
+      EnvWithSpAndPc pushed.env pushed.register_value (ProgramCounter v.value)
 
 execute_0xC5: Z80 -> Z80
 execute_0xC5 z80 =
@@ -2523,7 +2524,6 @@ execute_gtc0 c ixiyhl z80 =
           0xF9 -> execute_0xF9 z80
           0xFB -> z80 |> execute_0xFB
           0xC6 -> execute_0xC6 z80
-          0xCD -> execute_0xCD z80
           0xC5 -> execute_0xC5 z80
           0xE6 -> execute_0xE6 z80
           0xF6 -> execute_0xF6 z80
@@ -2598,6 +2598,7 @@ execute_delta tmp_z80 =
             0xFD -> DeltaWithChanges (group_xy IXIY_IY z80) interrupts new_pc z80.env
             0xCB -> DeltaWithChanges (Whole (group_cb z80)) interrupts new_pc z80.env
             0xED -> DeltaWithChanges (Whole (group_ed z80)) interrupts new_pc z80.env
+            0xCD -> DeltaWithChanges (execute_0xCD z80) interrupts new_pc z80.env
             _ -> DeltaWithChanges (execute_gtc0 c.value HL z80) interrupts new_pc z80.env
 -- case 0xD4: call((Ff&0x100)==0); break;
 -- case 0xDA: jp((Ff&0x100)!=0); break;
@@ -2656,10 +2657,6 @@ execute z80 =
 group_xy: IXIY -> Z80 -> Z80Delta
 group_xy ixiy old_z80 =
    let
-      --xy = if c0 == 0xDD then
-      --       old_z80.ix
-      --     else
-      --       old_z80.iy
       c = m1 old_z80.pc (or old_z80.interrupts.ir (and old_z80.interrupts.r 0x7F)) old_z80.env
       intr = old_z80.interrupts
       z80_1 = { old_z80 | env = c.env, interrupts = { intr | r = intr.r + 1 } }
@@ -2671,6 +2668,7 @@ group_xy ixiy old_z80 =
           0xFD -> group_xy IXIY_IY z80
           0xCB -> Whole (group_xy_cb ixiy z80)
           0xED -> Whole (group_ed z80)
+          0xCD -> execute_0xCD z80
           _ ->  if c.value < 0xC0 then
                     let
                        maybe = case ixiy of

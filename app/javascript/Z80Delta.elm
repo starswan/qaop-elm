@@ -14,6 +14,7 @@ type Z80Delta
     | FlagRegs FlagRegisters
     | FlagsAndAlt FlagRegisters FlagRegisters
     | EnvWithFlags Z80Env FlagRegisters
+    | EnvWithSpAndPc Z80Env Int ProgramCounter
     --| IXIYMainFlagsCpuTime Int Int MainRegisters FlagRegisters Int
 
 
@@ -53,6 +54,10 @@ apply_delta z80 z80delta =
 
         EnvWithFlags z80Env flagRegisters ->
             { z80 | flags = flagRegisters, pc = z80delta.pc, env = z80Env, interrupts = z80delta.interrupts }
+
+        EnvWithSpAndPc z80Env sp programCounter ->
+            { z80 | sp = sp, pc = programCounter.pc, env = z80Env, interrupts = z80delta.interrupts }
+
 
         --IXIYMainFlagsCpuTime ix iy mainRegisters flagRegisters cpu_time ->
         --    { z80 | flags = flagRegisters, main = mainRegisters, ix = ix, iy = iy, pc = z80delta.pc, env = z80delta.env |> add_cpu_time_env cpu_time, interrupts = z80delta.interrupts }
