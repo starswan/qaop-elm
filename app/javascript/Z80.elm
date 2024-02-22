@@ -2663,12 +2663,12 @@ group_xy ixiy old_z80 =
       new_pc = z80_1 |> inc_pc
       z80 = { z80_1 | pc = new_pc } |> add_cpu_time 4
    in
-       case c.value of
-           0xDD -> group_xy IXIY_IX z80
-           0xFD -> group_xy IXIY_IY z80
-           0xCB -> group_xy_cb ixiy z80
-           0xED -> group_ed z80
-           _ ->  if c.value < 0xC0 then
+      case c.value of
+          0xDD -> group_xy IXIY_IX z80
+          0xFD -> group_xy IXIY_IY z80
+          0xCB -> Whole (group_xy_cb ixiy z80)
+          0xED -> Whole (group_ed z80)
+          _ ->  if c.value < 0xC0 then
                     let
                        maybe = case ixiy of
                           IXIY_IX -> execute_ltC0 c.value IX z80
@@ -2680,18 +2680,10 @@ group_xy ixiy old_z80 =
                               case ixiy of
                                  IXIY_IX -> z80 |> executegt40ltC0 c.value IX
                                  IXIY_IY -> z80 |> executegt40ltC0 c.value IY
-      -- case 0xDD:
-      -- case 0xFD: c0=c; continue;
-      else
-         case c.value of
-           0xDD -> group_xy IXIY_IX z80
-           0xFD -> group_xy IXIY_IY z80
-           0xCB -> Whole (group_xy_cb ixiy z80)
-           0xED -> Whole (group_ed z80)
-           _ ->
-               case ixiy of
-                   IXIY_IX -> Whole (execute_gtc0 c.value IX z80)
-                   IXIY_IY -> Whole (execute_gtc0 c.value IY z80)
+                 else
+                    case ixiy of
+                       IXIY_IX -> Whole (execute_gtc0 c.value IX z80)
+                       IXIY_IY -> Whole (execute_gtc0 c.value IY z80)
 --      case c.value of
 -- case 0xED: group_ed(); break;
 -- case 0xC0: time++; if(Fr!=0) MP=PC=pop(); break;
