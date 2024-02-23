@@ -85,12 +85,12 @@ m1 tmp_addr ir z80env =
     let
        n = z80env.time.cpu_time - z80env.time.ctime
        time_1 = if n > 0 then
-                  z80env.time |> cont n
+                  z80env.time |> cont_env n
                 else
                   z80env.time
        addr = tmp_addr - 0x4000
        time_2 = if ((and addr 0xC000) == 0) then
-                       time_1 |> cont1 0
+                       time_1 |> cont1_env 0
                      else
                        time_1
        ctime = if and ir 0xC000 == 0x4000 then
@@ -139,7 +139,7 @@ mem base_addr z80env_ctime =
        (new_time, ctime, value) = if addr >= 0 then
                                     if addr < 0x4000 then
                                        let
-                                          new_z80_time = z80env.time |> cont1 0
+                                          new_z80_time = z80env.time |> cont1_env 0
                                        in
                                           (new_z80_time, new_z80_time.cpu_time + 3, z80env.ram |> getRamValue addr)
                                     else
@@ -181,7 +181,7 @@ mem16 addr z80env =
     let
        n = z80env.time.cpu_time - z80env.time.ctime
        time_0 = if n > 0 then
-                  z80env.time |> cont n
+                  z80env.time |> cont_env n
                 else
                   z80env.time
        addr1 = addr - 0x3FFF
@@ -198,7 +198,7 @@ mem16 addr z80env =
               low1 = getRamValue (addr - 0x4000) z80env.ram
               high1 = getRamValue addr1 z80env.ram
               time_1 = if addr1 < 0x4000 then
-                            time_0 |> cont1 0 |> cont1 3 |> add_cpu_time_ctime 6
+                            time_0 |> cont1_env 0 |> cont1_env 3 |> add_cpu_time_ctime 6
                          else
                             { time_0 | ctime = c_NOCONT }
         in
@@ -217,7 +217,7 @@ mem16 addr z80env =
                 CpuTimeWithValue new_time_s0  (or low_s0 (shiftLeftBy8 high_s0))
           1 ->
             let
-                new_time_s1 = time_0 |> cont1 0
+                new_time_s1 = time_0 |> cont1_env 0
                 low_s1 = getRamValue (addr - 0x4000) z80env.ram
                 high_s1 = getRamValue addr1 z80env.ram
             in
@@ -286,7 +286,7 @@ set_mem z80_addr value old_z80env =
                                (z80env, c_NOCONT)
                             else
                                let
-                                   time_1 = z80env.time |> cont1 0
+                                   time_1 = z80env.time |> cont1_env 0
                                    new_ctime = time_1.cpu_time + 3
                                    ram_value = getRamValue addr z80env.ram
                                    z80env_1 = { z80env | time = time_1 }
@@ -546,8 +546,8 @@ add_cpu_time_env: Int -> Z80Env -> Z80Env
 add_cpu_time_env value z80env =
    { z80env | time = CpuTimeCTime (z80env.time.cpu_time + value) z80env.time.ctime }
 
-add_cpu_time_ctime: Int -> CpuTimeCTime -> CpuTimeCTime
-add_cpu_time_ctime value time =
+add_cpu_time: Int -> CpuTimeCTime -> CpuTimeCTime
+add_cpu_time value time =
    { time | cpu_time = time.cpu_time + value }
 
 reset_cpu_time: Z80Env -> Z80Env
