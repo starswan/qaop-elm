@@ -7,7 +7,7 @@ import Array exposing (Array)
 import Bitwise exposing (and, complement, or, shiftLeftBy, shiftRightBy)
 import Dict exposing (Dict)
 import Loop
-import Utils exposing (byte, char, shiftLeftBy8, shiftRightBy8, toHexString)
+import Utils exposing (byte, char, shiftLeftBy8, shiftRightBy8, toHexString, toHexString2)
 import Z80Debug exposing (debug_log, debug_todo)
 import Z80Env exposing (Z80Env, add_cpu_time_env, m1, mem, mem16, out, set_mem, set_mem16, z80_in, z80env_constructor)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, adc, add16, bit, c_F3, c_F5, c_F53, c_FC, c_FS, cp, cpl, daa, dec, get_flags, inc, rot, sbc, scf_ccf, set_flags, shifter, z80_add, z80_and, z80_or, z80_sub, z80_xor)
@@ -395,19 +395,18 @@ imm16 z80 =
 --	}
 rld: Z80 -> Z80
 rld z80 =
-    let
-        v_lhs_1 = z80.env |> mem(z80.main.hl)
-        v_rhs = and z80.flags.a 0x0F
-        v_lhs = v_lhs_1.value |> (shiftLeftBy 4)
-        v = or v_lhs v_rhs
-        a1 = and z80.flags.a 0xF0
-        new_a = or a1 (shiftRightBy8 v)
-        flags = z80.flags
-        new_flags = { flags | a = new_a }
-        z80_1 = z80 |> f_szh0n0p new_a
-        env_1 = v_lhs_1.env |> set_mem z80_1.main.hl (and v 0xFF)
-    in
-        { z80_1 | flags = new_flags, env = env_1 } |> add_cpu_time 10
+   let
+      memval = z80.env |> mem z80.main.hl
+      v = Bitwise.or (memval.value |> shiftLeftBy 4) (Bitwise.and z80.flags.a 0x0F)
+      z81 = z80 |> add_cpu_time 7
+      new_a = Bitwise.and z81.flags.a 0xF0
+      flags = z81.flags
+      new_flags = { flags | a = new_a }
+      z82 = { z81 | flags = new_flags }
+      z83 = z82 |> f_szh0n0p (Bitwise.or new_a (v |> shiftRightBy8))
+      env = memval.env |> set_mem z83.main.hl (Bitwise.and v 0xFF) |> add_cpu_time_env 3
+   in
+      { z83 | env = env }
 --
 --	private void ld_a_ir(int v)
 --	{
@@ -2486,15 +2485,17 @@ execute_gtc0 c ixiyhl z80 =
       ---- case 0xDC: call((Ff&0x100)!=0); break;
       --0xDC -> z80 |> call (Bitwise.and z80.flags.ff 0x100 /= 0)
       ---- case 0xF2: jp((Ff&FS)==0); break;
-      --0xF2 -> z80 |> jp (Bitwise.and z80.flags.ff c_FS == 0)
+      0xF2 -> z80 |> jp (Bitwise.and z80.flags.ff c_FS == 0)
       ---- case 0xFA: jp((Ff&FS)!=0); break;
-      --0xFA -> z80 |> jp (Bitwise.and z80.flags.ff c_FS /= 0)
-      ---- case 0xCE: adc(imm8()); break;
-      --0xCE -> let
-      --           v = z80 |> imm8
-      --           flags = v.z80.flags |> adc v.value
-      --        in
-      --           v.z80 |> set_flag_regs flags
+      0xFA -> z80 |> jp (Bitwise.and z80.flags.ff c_FS /= 0)
+      -- case 0xDA: jp((Ff&0x100)!=0); break;
+      0xDA -> z80 |> jp ((Bitwise.and z80.flags.ff 0x100) /= 0)
+      -- case 0xCE: adc(imm8()); break;
+      0xCE -> let
+                 v = z80 |> imm8
+                 flags = z80.flags |> adc v.value
+              in
+                 {z80 | pc = v.pc, env = v.env, flags = flags }
       _ -> debug_todo "execute" (c |> toHexString) z80
 
 execute_instruction: Z80 -> Z80
@@ -2521,7 +2522,6 @@ execute_instruction tmp_z80 =
                else
                   execute_gtc0 c.value HL z80
 -- case 0xD4: call((Ff&0x100)==0); break;
--- case 0xDA: jp((Ff&0x100)!=0); break;
 -- case 0xE0: time++; if((flags()&FP)==0) MP=PC=pop(); break;
 -- case 0xE2: jp((flags()&FP)==0); break;
 -- case 0xE4: call((flags()&FP)==0); break;
@@ -2693,6 +2693,12 @@ group_ed z80_0 =
       case c.value of
       -- case 0x47: i(A); time++; break;
       0x47 -> z80 |> set_i z80.flags.a |> add_cpu_time 1
+      -- case 0x4F: r(A); time++; break;
+      -- case 0x57: ld_a_ir(IR>>>8); break;
+      -- case 0x5F: ld_a_ir(r()); break;
+      -- case 0x67: rrd(); break;
+      -- case 0x6F: rld(); break;
+      0x6F -> z80 |> rld
       --  case 0x78: MP=(v=B<<8|C)+1; f_szh0n0p(A=env.in(v)); time+=4; break;
       0x78 -> let
                     v = z80 |> get_bc
@@ -2757,8 +2763,6 @@ group_ed z80_0 =
                  z80 |> sbc_hl bc
       -- case 0x72: sbc_hl(SP); break;
       0x72 -> z80 |> sbc_hl z80.sp
-      -- case 0x6F: rld(); break;
-      0x6F -> z80 |> rld
       ---- case 0x6A: adc_hl(HL); break;
       --0x6A -> z80 |> adc_hl z80.main.hl
       ---- case 0x5A: adc_hl(D<<8|E); break;
@@ -2805,11 +2809,7 @@ group_ed z80_0 =
          --   in
          --      z80 |> set_flag_regs flags_1
          else
-            debug_todo "group_ed" (c.value |> toHexString) z80
--- case 0x4F: r(A); time++; break;
--- case 0x57: ld_a_ir(IR>>>8); break;
--- case 0x5F: ld_a_ir(r()); break;
--- case 0x67: rrd(); break;
+            debug_todo "group_ed" (c.value |> toHexString2) z80
 -- case 0x78: MP=(v=B<<8|C)+1; f_szh0n0p(A=env.in(v)); time+=4; break;
 -- case 0x41: env.out(B<<8|C,B); time+=4; break;
 -- case 0x49: env.out(B<<8|C,C); time+=4; break;
