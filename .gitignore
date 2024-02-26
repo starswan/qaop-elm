@@ -30,3 +30,6 @@ yarn-debug.log*
 .yarn-integrity
 index.html
 /public/z80test/
+
+/app/assets/builds/*
+!/app/assets/builds/.keep
