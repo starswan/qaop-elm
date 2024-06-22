@@ -2,7 +2,7 @@ module Z80Types exposing (..)
 
 import Bitwise
 import Utils exposing (shiftRightBy8)
-import Z80Env exposing (CpuTimeCTime, Z80Env, add_cpu_time_ctime, add_cpu_time_env, mem, mem16, set_mem)
+import Z80Env exposing (CpuTimeCTime, Z80Env, add_cpu_time, add_cpu_time_env, mem, mem16, set_mem)
 import Z80Flags exposing (FlagRegisters)
 type alias MainRegisters =
    {
@@ -111,6 +111,6 @@ imm16 z80 =
     let
         v = mem16 z80.pc z80.env
         pc = Bitwise.and (z80.pc + 2) 0xFFFF
-        time = v.time |> add_cpu_time_ctime 6
+        time = v.time |> add_cpu_time 6
     in
         CpuTimeWithPcAndValue time pc v.value
