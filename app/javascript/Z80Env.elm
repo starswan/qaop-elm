@@ -7,7 +7,9 @@ import Array exposing (Array)
 import Bitwise exposing (and, or, shiftLeftBy, shiftRightBy)
 import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, add_cpu_time_time, c_NOCONT, cont, cont1, cont_port)
 import Keyboard exposing (Keyboard, z80_keyboard_input)
+--import Maybe.Extra exposing (combine)
 import Utils exposing (shiftLeftBy8, shiftRightBy8, toHexString)
+import Z80Debug exposing (debug_log)
 import Z80Ram exposing (Z80Ram, c_FRSTART, getRamValue)
 import Z80Rom exposing (Z80ROM, getROMValue, set_spectrum_rom)
 
@@ -37,12 +39,29 @@ type alias ValueWithTime =
 z80env_constructor =
     Z80Env Z80Rom.constructor Z80Ram.constructor Keyboard.constructor (CpuTimeCTime c_FRSTART 0) 0
 
+-- weird that none of these approaches works
+--romIndexes = List.range 0 16383
+--
+--set_rom: Array Int -> Z80Env -> Z80Env
+--set_rom romdata z80env =
+--   let
+--      romDict = listToDict (Array.toList romdata)
+--      romListMaybes = romIndexes |> List.map (\index -> romDict |> Dict.get index)
+--      maybeList = romListMaybes |> combine
+--   in
+--      case maybeList of
+--          Just romList -> { z80env | rom48k = romList |> Array.fromList }
+--          Nothing -> z80env
+
 set_rom: Array Int -> Z80Env -> Z80Env
 set_rom romdata z80env =
-   let
-       rommy = z80env.rom48k |> set_spectrum_rom romdata
-   in
-      { z80env | rom48k = rommy }
+    let
+        --rom_List = romdata |> Array.toList
+        --x = debug_log "set_rom" (rom_List |> List.length |> String.fromInt) Nothing
+        rommy = set_spectrum_rom romdata
+    in
+        { z80env | rom48k = rommy }
+        --Z80Env romdata z80env.ram z80env.keyboard z80env.ctime
 
 --public final int m1(int addr, int ir) {
 --	int n = cpu.time - ctime;
