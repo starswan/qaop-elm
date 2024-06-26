@@ -5,6 +5,7 @@ module ScreenStorage exposing (..)
 import Bitwise exposing (shiftLeftBy, shiftRightBy)
 import Vector24 exposing (Vector24)
 import Vector32 exposing (Vector32)
+import Z80Byte exposing (Z80Byte, hexThirtyEightByte, zeroByte)
 import Z80Memory exposing (Z80Memory, getMemValue)
 
 
@@ -51,7 +52,7 @@ attr_indexes =
 
 type alias Z80Screen =
     { data : Z80Memory
-    , attrs : Vector24 (Vector32 Int)
+    , attrs : Vector24 (Vector32 Z80Byte)
     , border : Int
     , flash : Bool
 
@@ -67,8 +68,8 @@ type alias Z80Screen =
 
 
 type alias RawScreenData =
-    { colour : Int
-    , data : Int
+    { colour : Z80Byte
+    , data : Z80Byte
     }
 
 
@@ -76,13 +77,13 @@ constructor : Z80Screen
 constructor =
     let
         screen_data =
-            List.repeat 6144 0 |> Z80Memory.constructor
+            List.repeat 6144 zeroByte |> Z80Memory.constructor
 
         --for(int i=6144;i<6912;i++) ram[i] = 070; // white
         --attributes =
         --    List.repeat 768 0x38 |> Z80Memory.constructor
         attr_line =
-            Vector32.repeat 0x38
+            Vector32.repeat hexThirtyEightByte
 
         attributes =
             Vector24.repeat attr_line
@@ -109,8 +110,8 @@ screenOffsets =
     attr_indexes |> List.indexedMap (\index attr_index -> ( calcDataOffset index, attr_index ))
 
 
-range031 =
-    List.range 0 31
+--range031 =
+--    List.range 0 31
 
 
 
@@ -131,7 +132,7 @@ range031 =
 --    { colour = colour, data = data }
 
 
-setScreenValue : Int -> Int -> Z80Screen -> Z80Screen
+setScreenValue : Int -> Z80Byte -> Z80Screen -> Z80Screen
 setScreenValue addr value z80screen =
     --let
     --    z80screen =
@@ -161,7 +162,7 @@ setScreenValue addr value z80screen =
         { z80screen | attrs = z80screen.attrs |> Vector24.set row new_row }
 
 
-getScreenValue : Int -> Z80Screen -> Int
+getScreenValue : Int -> Z80Screen -> Z80Byte
 getScreenValue addr screen =
     if addr < 0x1800 then
         screen.data |> getMemValue addr

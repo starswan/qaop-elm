@@ -1,7 +1,7 @@
 module SingleEnvWithMain exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, CpuTimeIncrement, InstructionDuration(..), addDuration)
+import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeAndZ80Byte, CpuTimeCTime, CpuTimeIncrement, InstructionDuration(..), addDuration)
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
 import Utils exposing (BitTest(..), shiftLeftBy8)
@@ -82,10 +82,10 @@ applySingleEnvMainChange pcInc duration z80changeData z80 =
         new_pc =
             case pcInc of
                 IncrementByOne ->
-                    Bitwise.and (z80.pc + 1) 0xFFFF
+                    z80.pc |> incrementBy1
 
                 IncrementByTwo ->
-                    Bitwise.and (z80.pc + 2) 0xFFFF
+                    z80.pc |> incrementBy2
     in
     case z80changeData of
         SingleEnvNewARegister int cpuTimeCTime ->
@@ -176,8 +176,10 @@ ld_a_indirect_bc : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainCh
 ld_a_indirect_bc z80_main rom48k z80_env =
     -- case 0x0A: MP=(v=B<<8|C)+1; A=env.mem(v); time+=3; break;
     let
+        --v =
+        --    Bitwise.or (shiftLeftBy8 z80_main.b) z80_main.c
         v =
-            Bitwise.or (shiftLeftBy8 z80_main.b) z80_main.c
+            Z80Word z80_main.c z80_main.b
 
         new_a =
             mem v z80_env.time rom48k z80_env.ram
@@ -189,8 +191,10 @@ ld_a_indirect_de : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainCh
 ld_a_indirect_de z80_main rom48k z80_env =
     -- case 0x1A: MP=(v=D<<8|E)+1; A=env.mem(v); time+=3; break;
     let
+        --addr =
+        --    Bitwise.or (shiftLeftBy8 z80_main.d) z80_main.e
         addr =
-            Bitwise.or (shiftLeftBy8 z80_main.d) z80_main.e
+            Z80Word z80_main.e z80_main.d
 
         new_a =
             mem addr z80_env.time rom48k z80_env.ram

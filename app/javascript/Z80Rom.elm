@@ -5,21 +5,22 @@ import Bytes exposing (Bytes)
 import Bytes.Decode exposing (Decoder, Step(..), andThen, loop, map, succeed, unsignedInt8)
 import Dict exposing (Dict)
 import Utils exposing (listToDict, toHexString)
+import Z80Byte exposing (Z80Byte, intToZ80, zeroByte)
 import Z80Debug exposing (debugTodo)
 
 
 type Z80ROM
-    = Z80ROM (Dict Int Int)
+    = Z80ROM (Dict Int Z80Byte)
 
 
 constructor : Z80ROM
 constructor =
     let
         rom48k =
-            List.range 0 16384
+            List.range 0 16384 |> List.map (\j -> j |> intToZ80)
 
         rom_list =
-            List.indexedMap Tuple.pair rom48k
+            List.indexedMap (\a b -> ( a, zeroByte )) rom48k
 
         rom_dict =
             Dict.fromList rom_list
@@ -27,7 +28,7 @@ constructor =
     Z80ROM rom_dict
 
 
-getROMValue : Int -> Z80ROM -> Int
+getROMValue : Int -> Z80ROM -> Z80Byte
 getROMValue addr z80rom =
     case z80rom of
         Z80ROM z80dict ->
@@ -36,17 +37,7 @@ getROMValue addr z80rom =
                     a
 
                 Nothing ->
-                    debugTodo "getROMValue" (String.fromInt addr) -1
-
-
-
---make_spectrum_rom : Array Int -> Z80ROM
---make_spectrum_rom romdata =
---    let
---        romDict =
---            listToDict (Array.toList romdata)
---    in
---    Z80ROM romDict
+                    debugTodo "getROMValue" (String.fromInt addr) zeroByte
 
 
 parseRomFile : Bytes -> Maybe Z80ROM
@@ -61,7 +52,7 @@ romDecoder =
 
 grabRomDecoder : Array Int -> Decoder Z80ROM
 grabRomDecoder romData =
-    succeed (Z80ROM (romData |> Array.toList |> listToDict))
+    succeed (Z80ROM (romData |> Array.toList |> List.map (\int -> int |> intToZ80) |> List.indexedMap Tuple.pair |> Dict.fromList))
 
 
 array_decoder : Int -> Decoder Int -> Decoder (Array Int)

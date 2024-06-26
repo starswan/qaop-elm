@@ -2,56 +2,58 @@ module Z80Delta exposing (..)
 
 import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimeIncrement, InstructionDuration, addCpuTimeTime)
 import Utils exposing (toHexString)
+import Z80Byte exposing (Z80Byte, z80ToInt)
 import Z80Core exposing (Z80, Z80Core, add_cpu_time, set408bitHL)
 import Z80Debug exposing (debugTodo)
 import Z80Env exposing (Z80Env, addCpuTimeEnv, setMem, setMem16, z80_push)
 import Z80Flags exposing (FlagRegisters, f_szh0n0p)
 import Z80Types exposing (IXIYHL(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
+import Z80Word exposing (Z80Word)
 
 
 type Z80Delta
     = WholeCore Z80Core
-    | MainRegsWithPcAndCpuTime MainWithIndexRegisters Int CpuTimeCTime
+    | MainRegsWithPcAndCpuTime MainWithIndexRegisters Z80Word CpuTimeCTime
       --| FlagsWithPCMainAndTime FlagRegisters Int MainWithIndexRegisters CpuTimeIncrement
     | FlagsWithMainAndTime FlagRegisters MainWithIndexRegisters Int
-    | FlagsWithPCMainAndCpuTime FlagRegisters Int MainWithIndexRegisters CpuTimeCTime
+    | FlagsWithPCMainAndCpuTime FlagRegisters Z80Word MainWithIndexRegisters CpuTimeCTime
     | FlagRegs FlagRegisters
-    | FlagRegsWithPc FlagRegisters Int
+    | FlagRegsWithPc FlagRegisters Z80Word
       --| MainRegs MainWithIndexRegisters
-    | MainRegsWithPc MainWithIndexRegisters Int
+    | MainRegsWithPc MainWithIndexRegisters Z80Word
     | CpuTimeWithFlags CpuTimeCTime FlagRegisters
-    | EnvWithFlagsAndPc Z80Env FlagRegisters Int
-    | CpuTimeWithFlagsAndPc CpuTimeCTime FlagRegisters Int
+    | EnvWithFlagsAndPc Z80Env FlagRegisters Z80Word
+    | CpuTimeWithFlagsAndPc CpuTimeCTime FlagRegisters Z80Word
     | MainRegsWithEnv MainWithIndexRegisters Z80Env
-    | SpAndCpuTimeWithPc Int Int Int
-    | EnvWithPc Z80Env Int
-    | CpuTimeWithSpAndPc CpuTimeCTime Int Int
-    | OnlyPc Int
-    | FlagsWithPcAndTime FlagRegisters Int CpuTimeCTime
+    | SpAndCpuTimeWithPc Z80Word Int Z80Word
+    | EnvWithPc Z80Env Z80Word
+    | CpuTimeWithSpAndPc CpuTimeCTime Z80Word Z80Word
+    | OnlyPc Z80Word
+    | FlagsWithPcAndTime FlagRegisters Z80Word CpuTimeCTime
     | InterruptsWithCpuTime InterruptRegisters CpuTimeCTime
     | SetImValue Int
-    | MainRegsWithSpPcAndTime MainWithIndexRegisters Int Int CpuTimeCTime
+    | MainRegsWithSpPcAndTime MainWithIndexRegisters Z80Word Z80Word CpuTimeCTime
       --| MainRegsWithEnvAndPc MainWithIndexRegisters Z80Env Int
       --| OnlyTime CpuTimeCTime
       --| MainRegsWithAltRegs MainWithIndexRegisters MainRegisters
-    | OnlyPush Int
-    | PushWithPc Int Int
-    | PushWithCpuTimeAndPc Int CpuTimeCTime Int
-    | PushWithMainSpCpuTimeAndPc Int MainWithIndexRegisters Int CpuTimeCTime Int
-    | PushWithMainSpCpuTime Int MainWithIndexRegisters Int CpuTimeCTime
-    | SetMem8WithTime Int Int Int
-    | SetMem16WithTimeAndPc Int Int Int Int
-    | SetMem8WithCpuTimeIncrementAndPc Int Int CpuTimeCTime Int Int
+    | OnlyPush Z80Word
+    | PushWithPc Z80Word Z80Word
+    | PushWithCpuTimeAndPc Z80Word CpuTimeCTime Z80Word
+    | PushWithMainSpCpuTimeAndPc Z80Word MainWithIndexRegisters Z80Word CpuTimeCTime Z80Word
+    | PushWithMainSpCpuTime Z80Word MainWithIndexRegisters Z80Word CpuTimeCTime
+    | SetMem8WithTime Z80Word Z80Byte Int
+    | SetMem16WithTimeAndPc Z80Word Z80Word Int Z80Word
+    | SetMem8WithCpuTimeIncrementAndPc Z80Word Z80Byte CpuTimeCTime Int Z80Word
       --| PcTimeSet408Bit Int CpuTimeCTime Int Int
-    | Fszh0n0pTimeDeltaSet408Bit Int Int Int
-    | FlagsWithPcEnvAndCpuTime FlagRegisters Int Z80Env Int
-    | UnknownIntValue String Int
+    | Fszh0n0pTimeDeltaSet408Bit Int Int Z80Byte
+    | FlagsWithPcEnvAndCpuTime FlagRegisters Z80Word Z80Env Int
+    | UnknownIntValue String Z80Byte
 
 
 type alias DeltaWithChangesData =
     { delta : Z80Delta
     , interrupts : InterruptRegisters
-    , pc : Int
+    , pc : Z80Word
     , time : CpuTimeCTime
     }
 
@@ -186,4 +188,4 @@ applyDeltaWithChanges z80delta z80 =
             { z80 | flags = flagRegisters, pc = pc, env = z80Env |> addCpuTimeEnv int, interrupts = z80delta.interrupts }
 
         UnknownIntValue string int ->
-            debugTodo string (int |> toHexString) z80
+            debugTodo string (int |> z80ToInt |> toHexString) z80

@@ -1,6 +1,8 @@
 module CpuTimeCTime exposing (..)
 
 import Bitwise exposing (shiftLeftBy, shiftRightBy)
+import Z80Byte exposing (Z80Byte)
+import Z80Word exposing (Z80Word, z80wordToInt)
 
 
 type
@@ -37,28 +39,55 @@ type alias CpuTimeCTime =
 
 type alias CpuTimeAndValue =
     { time : CpuTimeCTime
-    , value : Int
+    , value : Z80Byte
+    }
+
+
+type alias CpuTimeAndWord =
+    { time : CpuTimeCTime
+    , value : Z80Word
+    }
+
+
+type alias CpuTimeAndZ80Byte =
+    { time : CpuTimeCTime
+    , value : Z80Byte
     }
 
 
 type alias CpuTimeAnd16BitValue =
     { time : CpuTimeCTime
-    , value16 : Int
+    , value16 : Z80Word
     }
 
 
 type alias CpuTimePcAndValue =
     { time : CpuTimeCTime
-    , pc : Int
-    , value : Int
+    , pc : Z80Word
+    , value : Z80Byte
     }
 
 
 type alias CpuTimePcAnd16BitValue =
     { time : CpuTimeCTime
-    , pc : Int
-    , value16 : Int
+    , pc : Z80Word
+    , value16 : Z80Word
     }
+
+
+type alias CpuTimePcAndZ80Byte =
+    { time : CpuTimeCTime
+    , pc : Z80Word
+    , value : Z80Byte
+    }
+
+
+
+--type alias CpuTimePcAnd16BitValue =
+--    { time : CpuTimeCTime
+--    , pc : Int
+--    , value16 : Int
+--    }
 
 
 type alias CpuTimeSpAndValue =
@@ -70,8 +99,8 @@ type alias CpuTimeSpAndValue =
 
 type alias CpuTimeSpAnd16BitValue =
     { time : CpuTimeCTime
-    , sp : Int
-    , value16 : Int
+    , sp : Z80Word
+    , value16 : Z80Word
     }
 
 
@@ -239,9 +268,12 @@ cont n z80env =
 --}
 
 
-cont_port : Int -> CpuTimeCTime -> CpuTimeCTime
-cont_port portn z80env =
+cont_port : Z80Word -> CpuTimeCTime -> CpuTimeCTime
+cont_port in_portn z80env =
     let
+        portn =
+            in_portn |> z80wordToInt
+
         n =
             z80env.cpu_time - z80env.ctime
 

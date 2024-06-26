@@ -2,6 +2,7 @@ module Group0x70 exposing (..)
 
 import CpuTimeCTime
 import Dict exposing (Dict)
+import Z80Byte exposing (Z80Byte)
 import Z80Core exposing (Z80Core, env_mem_hl_ixiy, hl_deref_with_z80_ixiy)
 import Z80Delta exposing (Z80Delta(..))
 import Z80Rom exposing (Z80ROM)
@@ -24,7 +25,7 @@ miniDict70 =
         ]
 
 
-execute_0x7077_ixiy : IXIY -> Z80ROM -> Z80Core -> Int -> Z80Delta
+execute_0x7077_ixiy : IXIY -> Z80ROM -> Z80Core -> Z80Byte -> Z80Delta
 execute_0x7077_ixiy ixiyhl rom48k z80 value =
     -- case 0x70: env.mem(HL,B); time+=3; break;
     -- case 0x70: env.mem(getd(xy),B); time+=3; break;
