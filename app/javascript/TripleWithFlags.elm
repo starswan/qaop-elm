@@ -3,13 +3,14 @@ module TripleWithFlags exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeIncrement, increment3)
 import Dict exposing (Dict)
+import Z80Byte exposing (Z80Byte)
 import Z80Flags exposing (FlagRegisters, c_FP, c_FS, get_flags)
 
 
 type TripleWithFlagsChange
     = Skip3ByteInstruction
     | AbsoluteJump Int
-    | TripleSetIndirect Int Int CpuTimeIncrement
+    | TripleSetIndirect Int Z80Byte CpuTimeIncrement
     | AbsoluteCall Int
 
 

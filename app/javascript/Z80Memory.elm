@@ -2,19 +2,20 @@ module Z80Memory exposing (..)
 
 import Dict exposing (Dict)
 import Utils exposing (toHexString)
+import Z80Byte exposing (Nybble(..), Z80Byte, zeroByte)
 import Z80Debug exposing (debugTodo)
 
 
 type Z80Memory
-    = Z80Memory (Dict Int Int)
+    = Z80Memory (Dict Int Z80Byte)
 
 
-constructor : List Int -> Z80Memory
+constructor : List Z80Byte -> Z80Memory
 constructor list =
     Z80Memory (ramListToDict list)
 
 
-ramListToDict : List Int -> Dict Int Int
+ramListToDict : List Z80Byte -> Dict Int Z80Byte
 ramListToDict list =
     let
         ramarray =
@@ -23,7 +24,7 @@ ramListToDict list =
     Dict.fromList ramarray
 
 
-getMemValue : Int -> Z80Memory -> Int
+getMemValue : Int -> Z80Memory -> Z80Byte
 getMemValue addr z80mem =
     case z80mem of
         Z80Memory z80dict ->
@@ -32,10 +33,10 @@ getMemValue addr z80mem =
                     a
 
                 Nothing ->
-                    debugTodo ("Z80Memory:getValue " ++ (addr |> toHexString)) (Dict.size z80dict |> toHexString) -1
+                    debugTodo ("Z80Memory:getValue " ++ (addr |> toHexString)) (Dict.size z80dict |> toHexString) zeroByte
 
 
-setMemValue : Int -> Int -> Z80Memory -> Z80Memory
+setMemValue : Int -> Z80Byte -> Z80Memory -> Z80Memory
 setMemValue addr value z80mem =
     case z80mem of
         Z80Memory dict ->
@@ -46,7 +47,7 @@ setMemValue addr value z80mem =
 -- This delivers the values in the order of the keys
 
 
-getDataItems : Z80Memory -> List Int
+getDataItems : Z80Memory -> List Z80Byte
 getDataItems z80mem =
     case z80mem of
         Z80Memory dict ->

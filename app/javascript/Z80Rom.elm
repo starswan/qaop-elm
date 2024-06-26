@@ -3,11 +3,12 @@ module Z80Rom exposing (..)
 import Array exposing (Array)
 import Dict exposing (Dict)
 import Utils exposing (listToDict, toHexString)
+import Z80Byte exposing (Z80Byte, intToz80byte, zeroByte)
 import Z80Debug exposing (debugTodo)
 
 
 type Z80ROM
-    = Z80ROM (Dict Int Int)
+    = Z80ROM (Dict Int Z80Byte)
 
 
 constructor : Z80ROM
@@ -17,7 +18,7 @@ constructor =
             List.range 0 16384
 
         rom_list =
-            List.indexedMap Tuple.pair rom48k
+            List.indexedMap (\a b -> (a, zeroByte)) rom48k
 
         rom_dict =
             Dict.fromList rom_list
@@ -25,7 +26,7 @@ constructor =
     Z80ROM rom_dict
 
 
-getROMValue : Int -> Z80ROM -> Int
+getROMValue : Int -> Z80ROM -> Z80Byte
 getROMValue addr z80rom =
     case z80rom of
         Z80ROM z80dict ->
@@ -34,14 +35,16 @@ getROMValue addr z80rom =
                     a
 
                 Nothing ->
-                    debugTodo "getROMValue" (String.fromInt addr) -1
+                    debugTodo "getROMValue" (String.fromInt addr) zeroByte
 
 
 make_spectrum_rom : Array Int -> Z80ROM
 make_spectrum_rom romdata =
     let
+        --romDict =
+        --    listToDict (Array.toList romdata |> List.map intToz80byte )
         romDict =
-            listToDict (Array.toList romdata)
+            romdata |> Array.toList |> List.map intToz80byte |> List.indexedMap (\a b -> (a, b)) |> Dict.fromList
     in
     Z80ROM romDict
 
