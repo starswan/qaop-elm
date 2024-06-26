@@ -1,32 +1,34 @@
 module SingleEnvWithMain exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, CpuTimeIncrement, addCpuTimeTime, addCpuTimeTimeInc, cpuTimeIncrement4, increment3)
+import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeAndZ80Byte, CpuTimeCTime, CpuTimeIncrement, addCpuTimeTime, addCpuTimeTimeInc, cpuTimeIncrement4, increment3)
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
 import Utils exposing (BitTest(..), shiftLeftBy8)
+import Z80Byte exposing (Z80Byte)
 import Z80Env exposing (Z80Env, addCpuTimeEnvInc, mem)
 import Z80Flags exposing (adc, sbc, testBit, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (MainWithIndexRegisters, Z80)
+import Z80Word exposing (Z80Word, incrementBy1, incrementBy2)
 
 
 type SingleEnvMainChange
-    = SingleEnvNewARegister Int CpuTimeCTime
-    | SingleEnvNewBRegister Int CpuTimeCTime
-    | SingleEnvNewCRegister Int CpuTimeCTime
-    | SingleEnvNewDRegister Int CpuTimeCTime
-    | SingleEnvNewERegister Int CpuTimeCTime
-    | SingleEnvNewHLRegister Int CpuTimeCTime
-    | SingleBitTest BitTest CpuTimeAndValue
-    | AdcARegister Int CpuTimeCTime
-    | AddARegister Int CpuTimeCTime
-    | SubARegister Int CpuTimeCTime
-    | SbcARegister Int CpuTimeCTime
-    | AndARegister Int CpuTimeCTime
-    | XorARegister Int CpuTimeCTime
-    | OrARegister Int CpuTimeCTime
-    | CpARegister Int CpuTimeCTime
+    = SingleEnvNewARegister Z80Byte CpuTimeCTime
+    | SingleEnvNewBRegister Z80Byte CpuTimeCTime
+    | SingleEnvNewCRegister Z80Byte CpuTimeCTime
+    | SingleEnvNewDRegister Z80Byte CpuTimeCTime
+    | SingleEnvNewERegister Z80Byte CpuTimeCTime
+    | SingleEnvNewHLRegister Z80Word CpuTimeCTime
+    | SingleBitTest BitTest CpuTimeAndZ80Byte
+    | AdcARegister Z80Byte CpuTimeCTime
+    | AddARegister Z80Byte CpuTimeCTime
+    | SubARegister Z80Byte CpuTimeCTime
+    | SbcARegister Z80Byte CpuTimeCTime
+    | AndARegister Z80Byte CpuTimeCTime
+    | XorARegister Z80Byte CpuTimeCTime
+    | OrARegister Z80Byte CpuTimeCTime
+    | CpARegister Z80Byte CpuTimeCTime
 
 
 singleEnvMainRegs : Dict Int ( MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange, PCIncrement )
@@ -71,10 +73,10 @@ applySingleEnvMainChange pcInc z80changeData z80 =
         new_pc =
             case pcInc of
                 IncrementByOne ->
-                    Bitwise.and (z80.pc + 1) 0xFFFF
+                    z80.pc |> incrementBy1
 
                 IncrementByTwo ->
-                    Bitwise.and (z80.pc + 2) 0xFFFF
+                    z80.pc |> incrementBy2
     in
     case z80changeData of
         SingleEnvNewARegister int cpuTimeCTime ->
@@ -291,8 +293,10 @@ ld_a_indirect_bc : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainCh
 ld_a_indirect_bc z80_main rom48k z80_env =
     -- case 0x0A: MP=(v=B<<8|C)+1; A=env.mem(v); time+=3; break;
     let
+        --v =
+        --    Bitwise.or (shiftLeftBy8 z80_main.b) z80_main.c
         v =
-            Bitwise.or (shiftLeftBy8 z80_main.b) z80_main.c
+            Z80Word z80_main.c z80_main.b
 
         new_a =
             mem v z80_env.time rom48k z80_env.ram
@@ -306,8 +310,10 @@ ld_a_indirect_de : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainCh
 ld_a_indirect_de z80_main rom48k z80_env =
     -- case 0x1A: MP=(v=D<<8|E)+1; A=env.mem(v); time+=3; break;
     let
+        --addr =
+        --    Bitwise.or (shiftLeftBy8 z80_main.d) z80_main.e
         addr =
-            Bitwise.or (shiftLeftBy8 z80_main.d) z80_main.e
+            Z80Word z80_main.e z80_main.d
 
         new_a =
             mem addr z80_env.time rom48k z80_env.ram

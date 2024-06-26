@@ -1,31 +1,33 @@
 module Z80Types exposing (..)
 
 import Bitwise exposing (shiftRightBy)
-import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimePcAnd16BitValue, CpuTimePcAndValue, addCpuTimeTime)
+import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimePcAnd16BitValue, CpuTimePcAndValue, CpuTimePcAndZ80Byte, CpuTimePcAndZ80Word, addCpuTimeTime)
 import Utils exposing (char, shiftLeftBy8, shiftRightBy8, wordPlusOffset)
+import Z80Byte exposing (Z80Byte)
 import Z80Env exposing (Z80Env, Z80EnvWithPC, addCpuTimeEnv, c_TIME_LIMIT, mem, mem16, setMem, z80_push)
 import Z80Flags exposing (FlagRegisters)
 import Z80Ram exposing (Z80Ram)
 import Z80Rom exposing (Z80ROM)
+import Z80Word exposing (Z80Word, incrementBy1, lower8Bits, top8Bits, wordPlusOffset, z80wordToInt)
 
 
 type alias MainRegisters =
-    { b : Int
-    , c : Int
-    , d : Int
-    , e : Int
+    { b : Z80Byte
+    , c : Z80Byte
+    , d : Z80Byte
+    , e : Z80Byte
     , hl : Int
     }
 
 
 type alias MainWithIndexRegisters =
-    { b : Int
-    , c : Int
-    , d : Int
-    , e : Int
-    , hl : Int
-    , ix : Int
-    , iy : Int
+    { b : Z80Byte
+    , c : Z80Byte
+    , d : Z80Byte
+    , e : Z80Byte
+    , hl : Z80Word
+    , ix : Z80Word
+    , iy : Z80Word
     }
 
 
@@ -40,7 +42,7 @@ type alias InterruptRegisters =
 
 type alias Z80 =
     { env : Z80Env
-    , pc : Int
+    , pc : Z80Word
     , main : MainWithIndexRegisters
     , flags : FlagRegisters
     , alt_main : MainRegisters
@@ -99,19 +101,19 @@ type IXIY
 --	}
 
 
-imm8 : Int -> CpuTimeCTime -> Z80ROM -> Z80Ram -> CpuTimePcAndValue
+imm8 : Z80Word -> CpuTimeCTime -> Z80ROM -> Z80Ram -> CpuTimePcAndZ80Byte
 imm8 pc time rom48k ram =
     let
         v =
             mem pc time rom48k ram
 
         new_pc =
-            Bitwise.and (pc + 1) 0xFFFF
+            pc |> incrementBy1
 
         env_1 =
             v.time |> addCpuTimeTime 3
     in
-    CpuTimePcAndValue env_1 new_pc v.value
+    CpuTimePcAndZ80Byte env_1 new_pc v.value
 
 
 
@@ -208,9 +210,9 @@ imm16 rom48k z80 =
 --    { z80 | env = pushed, pc = c - 199 }
 
 
-a_with_z80 : Z80 -> CpuTimePcAndValue
+a_with_z80 : Z80 -> CpuTimePcAndZ80Byte
 a_with_z80 z80 =
-    CpuTimePcAndValue z80.env.time z80.pc z80.flags.a
+    CpuTimePcAndZ80Byte z80.env.time z80.pc z80.flags.a
 
 
 add_cpu_time : Int -> Z80 -> Z80
@@ -222,7 +224,7 @@ add_cpu_time value z80 =
     { z80 | env = env }
 
 
-get_ixiy_xy : IXIY -> MainWithIndexRegisters -> Int
+get_ixiy_xy : IXIY -> MainWithIndexRegisters -> Z80Word
 get_ixiy_xy ixiy z80_main =
     case ixiy of
         IXIY_IX ->
@@ -239,9 +241,9 @@ hl_deref_with_z80_ixiy ixiyhl rom48k z80 =
             z80 |> env_mem_hl_ixiy ixiyhl rom48k
 
         new_b =
-            mem a.value16 z80.env.time rom48k z80.env.ram
+            mem a.value z80.env.time rom48k z80.env.ram
     in
-    CpuTimePcAndValue new_b.time a.pc new_b.value
+    CpuTimePcAndZ80Byte new_b.time a.pc new_b.value
 
 
 inc_pc : Z80 -> Int
@@ -260,37 +262,41 @@ set_h value ixiyhl z80 =
         xy =
             get_xy ixiyhl z80
     in
-    set_xy (Bitwise.or (Bitwise.and xy 0xFF) (shiftLeftBy8 value)) ixiyhl z80
+    --set_xy (Bitwise.or (Bitwise.and xy 0xFF) (value |> z80byteToInt |> shiftLeftBy8)) ixiyhl z80
+    set_xy (Z80Word (lower8Bits xy) value) ixiyhl z80
 
 
-set_h_ixiy : Int -> IXIY -> MainWithIndexRegisters -> MainWithIndexRegisters
+set_h_ixiy : Z80Byte -> IXIY -> MainWithIndexRegisters -> MainWithIndexRegisters
 set_h_ixiy value ixiyhl z80 =
     let
         xy =
             get_xy_ixiy ixiyhl z80
     in
-    set_xy_ixiy (Bitwise.or (Bitwise.and xy 0xFF) (shiftLeftBy8 value)) ixiyhl z80
+    --set_xy_ixiy (Bitwise.or (Bitwise.and xy 0xFF) (shiftLeftBy8 value)) ixiyhl z80
+    set_xy_ixiy (Z80Word (lower8Bits xy) value) ixiyhl z80
 
 
-set_l : Int -> IXIYHL -> MainWithIndexRegisters -> MainWithIndexRegisters
+set_l : Z80Byte -> IXIYHL -> MainWithIndexRegisters -> MainWithIndexRegisters
 set_l value ixiyhl z80 =
     let
         xy =
             get_xy ixiyhl z80
     in
-    set_xy (Bitwise.or (Bitwise.and xy 0xFF00) value) ixiyhl z80
+    --set_xy (Bitwise.or (Bitwise.and xy 0xFF00) (value |> z80byteToInt)) ixiyhl z80
+    set_xy (Z80Word value (top8Bits xy)) ixiyhl z80
 
 
-set_l_ixiy : Int -> IXIY -> MainWithIndexRegisters -> MainWithIndexRegisters
+set_l_ixiy : Z80Byte -> IXIY -> MainWithIndexRegisters -> MainWithIndexRegisters
 set_l_ixiy value ixiyhl z80 =
     let
         xy =
             get_xy_ixiy ixiyhl z80
     in
-    set_xy_ixiy (Bitwise.or (Bitwise.and xy 0xFF00) value) ixiyhl z80
+    --set_xy_ixiy (Bitwise.or (Bitwise.and xy 0xFF00) value) ixiyhl z80
+    set_xy_ixiy (Z80Word value (top8Bits xy)) ixiyhl z80
 
 
-get_xy : IXIYHL -> MainWithIndexRegisters -> Int
+get_xy : IXIYHL -> MainWithIndexRegisters -> Z80Word
 get_xy ixiyhl z80_main =
     case ixiyhl of
         IX ->
@@ -303,7 +309,7 @@ get_xy ixiyhl z80_main =
             z80_main.hl
 
 
-get_xy_ixiy : IXIY -> MainWithIndexRegisters -> Int
+get_xy_ixiy : IXIY -> MainWithIndexRegisters -> Z80Word
 get_xy_ixiy ixiyhl z80_main =
     case ixiyhl of
         IXIY_IX ->
@@ -313,7 +319,7 @@ get_xy_ixiy ixiyhl z80_main =
             z80_main.iy
 
 
-set_xy : Int -> IXIYHL -> MainWithIndexRegisters -> MainWithIndexRegisters
+set_xy : Z80Word -> IXIYHL -> MainWithIndexRegisters -> MainWithIndexRegisters
 set_xy value ixiyhl z80 =
     case ixiyhl of
         IX ->
@@ -326,7 +332,7 @@ set_xy value ixiyhl z80 =
             { z80 | hl = value }
 
 
-set_xy_ixiy : Int -> IXIY -> MainWithIndexRegisters -> MainWithIndexRegisters
+set_xy_ixiy : Z80Word -> IXIY -> MainWithIndexRegisters -> MainWithIndexRegisters
 set_xy_ixiy value ixiyhl z80 =
     case ixiyhl of
         IXIY_IX ->
@@ -353,11 +359,11 @@ set_xy_ixiy value ixiyhl z80 =
 --      CpuTimePcAndValue (d.time |> add_cpu_time_time 8) (char (z80.pc + 1)) (char (xy + byte d.value))
 
 
-env_mem_hl : IXIYHL -> Z80ROM -> Z80 -> CpuTimePcAnd16BitValue
+env_mem_hl : IXIYHL -> Z80ROM -> Z80 -> CpuTimePcAndZ80Word
 env_mem_hl ixiyhl rom48k z80 =
     case ixiyhl of
         HL ->
-            CpuTimePcAnd16BitValue z80.env.time z80.pc z80.main.hl
+            CpuTimePcAndZ80Word z80.env.time z80.pc z80.main.hl
 
         IX ->
             let
@@ -374,7 +380,7 @@ env_mem_hl ixiyhl rom48k z80 =
             CpuTimePcAnd16BitValue (dval.time |> addCpuTimeTime 8) (char (z80.pc + 1)) (z80.main.iy |> wordPlusOffset dval.value)
 
 
-env_mem_hl_ixiy : IXIY -> Z80ROM -> Z80 -> CpuTimePcAnd16BitValue
+env_mem_hl_ixiy : IXIY -> Z80ROM -> Z80 -> CpuTimePcAndZ80Word
 env_mem_hl_ixiy ixiyhl rom48k z80 =
     case ixiyhl of
         IXIY_IX ->
@@ -382,34 +388,34 @@ env_mem_hl_ixiy ixiyhl rom48k z80 =
                 dval =
                     mem z80.pc z80.env.time rom48k z80.env.ram
             in
-            CpuTimePcAnd16BitValue (dval.time |> addCpuTimeTime 8) (char (z80.pc + 1)) (z80.main.ix |> wordPlusOffset dval.value)
+            CpuTimePcAndZ80Word (dval.time |> addCpuTimeTime 8) (char (z80.pc + 1)) (z80.main.ix |> wordPlusOffset dval.value)
 
         IXIY_IY ->
             let
                 dval =
                     mem z80.pc z80.env.time rom48k z80.env.ram
             in
-            CpuTimePcAnd16BitValue (dval.time |> addCpuTimeTime 8) (char (z80.pc + 1)) (z80.main.iy |> wordPlusOffset dval.value)
+            CpuTimePcAndZ80Word (dval.time |> addCpuTimeTime 8) (char (z80.pc + 1)) (z80.main.iy |> wordPlusOffset dval.value)
 
 
 get_bc : MainWithIndexRegisters -> Int
 get_bc z80_main =
-    z80_main.b |> shiftLeftBy8 |> Bitwise.or z80_main.c
+    z80_main.b |> z80ToInt |> shiftLeftBy8 |> Bitwise.or (z80_main.c |> z80ToInt)
 
 
 get_de : MainWithIndexRegisters -> Int
-get_de z80 =
-    z80.d |> shiftLeftBy8 |> Bitwise.or z80.e
+get_de z80_main =
+    z80_main.d |> z80ToInt |> shiftLeftBy8 |> Bitwise.or (z80_main.e |> z80ToInt)
 
 
 set_bc_main : Int -> MainWithIndexRegisters -> MainWithIndexRegisters
 set_bc_main v z80_main =
-    { z80_main | b = shiftRightBy8 v, c = Bitwise.and v 0xFF }
+    { z80_main | b = v |> shiftRightBy8 |> intToz80byte, c = Bitwise.and v 0xFF |> intToz80byte }
 
 
 set_de_main : Int -> MainWithIndexRegisters -> MainWithIndexRegisters
 set_de_main v z80_main =
-    { z80_main | d = shiftRightBy8 v, e = Bitwise.and v 0xFF }
+    { z80_main | d = v |> shiftRightBy8 |> intToz80byte, e = Bitwise.and v 0xFF |> intToz80byte }
 
 
 
@@ -475,7 +481,7 @@ set_iff value z80 =
 --    z80.flags |> get_af
 
 
-set408bit : Int -> Int -> IXIYHL -> Z80 -> Z80
+set408bit : Int -> Z80Byte -> IXIYHL -> Z80 -> Z80
 set408bit c value ixiyhl z80 =
     case Bitwise.and c 0x07 of
         0 ->

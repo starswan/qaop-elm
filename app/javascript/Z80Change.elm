@@ -1,26 +1,28 @@
 module Z80Change exposing (..)
 
 import CpuTimeCTime exposing (CpuTimeIncrement)
+import Z80Byte exposing (Z80Byte)
 import Z80Env exposing (addCpuTimeEnvInc, setMem)
-import Z80Flags exposing (FlagRegisters, IntWithFlags)
+import Z80Flags exposing (FlagRegisters, IntWithFlags, Z80ByteWithFlags)
 import Z80Types exposing (Z80)
+import Z80Word exposing (Z80Word)
 
 
 type Z80Change
-    = FlagsWithBRegister IntWithFlags
-    | FlagsWithCRegister IntWithFlags
-    | FlagsWithDRegister IntWithFlags
-    | FlagsWithERegister FlagRegisters Int
+    = FlagsWithBRegister Z80ByteWithFlags
+    | FlagsWithCRegister Z80ByteWithFlags
+    | FlagsWithDRegister Z80ByteWithFlags
+    | FlagsWithERegister FlagRegisters Z80Byte
     | HLRegister Int FlagRegisters
     | IXRegister Int FlagRegisters
     | IYRegister Int FlagRegisters
-    | FlagsWithHLRegister FlagRegisters Int CpuTimeIncrement
+    | FlagsWithHLRegister FlagRegisters Z80Word CpuTimeIncrement
     | FlagsWithIXRegister FlagRegisters Int CpuTimeIncrement
     | FlagsWithIYRegister FlagRegisters Int CpuTimeIncrement
-    | Z80RegisterB Int
-    | Z80RegisterC Int
+    | Z80RegisterB Z80Byte
+    | Z80RegisterC Z80Byte
     | Z80ChangeFlags FlagRegisters
-    | Z80ChangeSetIndirect Int Int CpuTimeIncrement
+    | Z80ChangeSetIndirect Int Z80Byte CpuTimeIncrement
 
 
 type FlagChange
@@ -81,7 +83,7 @@ applyZ80Change change z80 =
             in
             { z80 | main = { main | ix = int }, flags = flags }
 
-        IYRegister int flags  ->
+        IYRegister int flags ->
             let
                 main =
                     z80.main

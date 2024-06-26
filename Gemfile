@@ -15,6 +15,7 @@ gem 'sqlite3', '~> 1.4'
 
 # mysql in production
 # gem 'mysql2'
+gem 'pg', platforms: :ruby
 # Use Passenger as the app server
 gem "passenger", "~> 5.0"
 # Use Puma as the app server

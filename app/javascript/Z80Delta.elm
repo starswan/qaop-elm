@@ -1,6 +1,7 @@
 module Z80Delta exposing (..)
 
 import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimeIncrement, addCpuTimeTime, addCpuTimeTimeInc)
+import Z80Byte exposing (Z80Byte)
 import Z80Env exposing (Z80Env, addCpuTimeEnv, setMem, setMem16, z80_push)
 import Z80Flags exposing (FlagRegisters, f_szh0n0p)
 import Z80Types exposing (IXIYHL(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters, Z80, add_cpu_time, set408bit)
@@ -36,11 +37,11 @@ type Z80Delta
     | PushWithCpuTimeAndPc Int CpuTimeCTime Int
     | PushWithMainSpCpuTimeAndPc Int MainWithIndexRegisters Int CpuTimeCTime Int
     | PushWithMainSpCpuTime Int MainWithIndexRegisters Int CpuTimeCTime
-    | SetMem8WithTime Int Int Int
+    | SetMem8WithTime Int Z80Byte Int
     | SetMem16WithTimeAndPc Int Int Int Int
-    | SetMem8WithCpuTimeIncrementAndPc Int Int CpuTimeCTime Int Int
-    | PcTimeSet408Bit Int CpuTimeCTime Int Int
-    | Fszh0n0pTimeDeltaSet408Bit Int Int Int
+    | SetMem8WithCpuTimeIncrementAndPc Int Z80Byte CpuTimeCTime Int Int
+    | PcTimeSet408Bit Int CpuTimeCTime Int Z80Byte
+    | Fszh0n0pTimeDeltaSet408Bit Int Int Z80Byte
 
 
 type alias DeltaWithChangesData =

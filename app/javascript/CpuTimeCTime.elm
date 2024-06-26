@@ -1,6 +1,8 @@
 module CpuTimeCTime exposing (..)
 
 import Bitwise exposing (shiftLeftBy, shiftRightBy)
+import Z80Byte exposing (Z80Byte)
+import Z80Word exposing (Z80Word)
 
 
 c_NOCONT =
@@ -23,6 +25,18 @@ type alias CpuTimeAndValue =
     }
 
 
+type alias CpuTimeAndWord =
+    { time : CpuTimeCTime
+    , value : Z80Word
+    }
+
+
+type alias CpuTimeAndZ80Byte =
+    { time : CpuTimeCTime
+    , value : Z80Byte
+    }
+
+
 type alias CpuTimeAnd16BitValue =
     { time : CpuTimeCTime
     , value16 : Int
@@ -36,11 +50,26 @@ type alias CpuTimePcAndValue =
     }
 
 
-type alias CpuTimePcAnd16BitValue =
+type alias CpuTimePcAndZ80Word =
     { time : CpuTimeCTime
     , pc : Int
-    , value16 : Int
+    , value : Z80Word
     }
+
+
+type alias CpuTimePcAndZ80Byte =
+    { time : CpuTimeCTime
+    , pc : Z80Word
+    , value : Z80Byte
+    }
+
+
+
+--type alias CpuTimePcAnd16BitValue =
+--    { time : CpuTimeCTime
+--    , pc : Int
+--    , value16 : Int
+--    }
 
 
 type alias CpuTimeSpAndValue =
