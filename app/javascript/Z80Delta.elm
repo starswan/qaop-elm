@@ -1,7 +1,7 @@
 module Z80Delta exposing (..)
 
 import CpuTimeCTime exposing (CpuTimeCTime, add_cpu_time_time)
-import Z80Env exposing (Z80Env, z80_push)
+import Z80Env exposing (Z80Env, add_cpu_time_env, z80_push)
 import Z80Flags exposing (FlagRegisters)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (InterruptRegisters, MainRegisters, MainWithIndexRegisters, Z80)
@@ -21,7 +21,6 @@ type Z80Delta
     | FlagsAndAlt FlagRegisters FlagRegisters
     | EnvWithFlags Z80Env FlagRegisters
     | CpuTimeWithFlags CpuTimeCTime FlagRegisters
-    | EnvWithFlagsAndPc Z80Env FlagRegisters Int
     | CpuTimeWithFlagsAndPc CpuTimeCTime FlagRegisters Int
     | MainRegsWithEnv MainWithIndexRegisters Z80Env
     | SpAndCpuTime Int Int
@@ -38,7 +37,6 @@ type Z80Delta
     | MainRegsWithSpPcAndTime MainWithIndexRegisters Int Int CpuTimeCTime
     | OnlyTime CpuTimeCTime
     | MainRegsWithAltRegs MainWithIndexRegisters MainRegisters
-    | MainRegsWithEnvAndPc MainWithIndexRegisters Z80Env Int
     | OnlyPush Int
     | PushWithCpuTimeAndPc Int CpuTimeCTime Int
 
@@ -62,200 +60,194 @@ apply_delta z80 z80delta =
                 env =
                     z80.env
             in
-            { z80 | pc = pc, env = { env | time = cpu_time }, main = mainRegisters, interrupts = z80delta.interrupts }
+            { z80 | env = { env | pc = pc, time = cpu_time }, main = mainRegisters, interrupts = z80delta.interrupts }
 
         OnlyEnv z80Env ->
-            { z80 | pc = z80delta.pc, env = z80Env, interrupts = z80delta.interrupts }
+            { z80 | env = z80Env, interrupts = z80delta.interrupts }
 
         MainRegsAndCpuTime mainRegisters cpu_time ->
             let
                 env =
                     z80.env
             in
-            { z80 | pc = z80delta.pc, env = { env | time = z80delta.time |> add_cpu_time_time cpu_time }, main = mainRegisters, interrupts = z80delta.interrupts }
+            { z80 | env = { env | pc = z80delta.pc, time = z80delta.time |> add_cpu_time_time cpu_time }, main = mainRegisters, interrupts = z80delta.interrupts }
 
         FlagsWithMain flagRegisters mainRegisters ->
             let
                 env =
                     z80.env
             in
-            { z80 | flags = flagRegisters, pc = z80delta.pc, env = { env | time = z80delta.time }, main = mainRegisters, interrupts = z80delta.interrupts }
+            { z80 | flags = flagRegisters, env = { env | pc = z80delta.pc, time = z80delta.time }, main = mainRegisters, interrupts = z80delta.interrupts }
 
         FlagRegs flagRegisters ->
             let
                 env =
                     z80.env
             in
-            { z80 | flags = flagRegisters, pc = z80delta.pc, env = { env | time = z80delta.time }, interrupts = z80delta.interrupts }
+            { z80 | flags = flagRegisters, env = { env | pc = z80delta.pc, time = z80delta.time }, interrupts = z80delta.interrupts }
 
         FlagsAndAlt flagRegisters altFlags ->
             let
                 env =
                     z80.env
             in
-            { z80 | flags = flagRegisters, alt_flags = altFlags, pc = z80delta.pc, env = { env | time = z80delta.time }, interrupts = z80delta.interrupts }
+            { z80 | flags = flagRegisters, alt_flags = altFlags, env = { env | pc = z80delta.pc, time = z80delta.time }, interrupts = z80delta.interrupts }
 
         EnvWithFlags z80Env flagRegisters ->
-            { z80 | flags = flagRegisters, pc = z80delta.pc, env = z80Env, interrupts = z80delta.interrupts }
+            { z80 | flags = flagRegisters, env = z80Env, interrupts = z80delta.interrupts }
 
         CpuTimeWithFlags time flagRegisters ->
             let
                 env =
                     z80.env
             in
-            { z80 | flags = flagRegisters, pc = z80delta.pc, env = { env | time = time }, interrupts = z80delta.interrupts }
+            { z80 | flags = flagRegisters, env = { env | pc = z80delta.pc, time = time }, interrupts = z80delta.interrupts }
+
+        MainRegsWithEnv mainRegisters z80Env ->
+            { z80 | env = z80Env, main = mainRegisters, interrupts = z80delta.interrupts }
 
         EnvWithPc z80Env programCounter ->
-            { z80 | env = z80Env, pc = programCounter, interrupts = z80delta.interrupts }
+            { z80 | env = { z80Env | pc = programCounter}, interrupts = z80delta.interrupts }
 
         CpuTimeWithPc cpu_time programCounter ->
             let
                 env =
                     z80.env
             in
-            { z80 | env = { env | time = cpu_time }, pc = programCounter, interrupts = z80delta.interrupts }
+            { z80 | env = { env | pc = programCounter, time = cpu_time }, interrupts = z80delta.interrupts }
 
         FlagsWithPCMainAndTime flagRegisters pc mainWithIndexRegisters cpu_time ->
             let
                 env =
                     z80.env
             in
-            { z80 | flags = flagRegisters, pc = pc, env = { env | time = z80delta.time |> add_cpu_time_time cpu_time }, main = mainWithIndexRegisters, interrupts = z80delta.interrupts }
+            { z80 | flags = flagRegisters, env = { env | pc = pc, time = z80delta.time |> add_cpu_time_time cpu_time }, main = mainWithIndexRegisters, interrupts = z80delta.interrupts }
 
         SpAndCpuTime sp cpu_time ->
             let
                 env =
                     z80.env
             in
-            { z80 | pc = z80delta.pc, env = { env | time = z80delta.time |> add_cpu_time_time cpu_time, sp = sp }, interrupts = z80delta.interrupts }
-
-        EnvWithFlagsAndPc z80Env flagRegisters pc ->
-            { z80 | flags = flagRegisters, pc = pc, env = z80Env, interrupts = z80delta.interrupts }
+            { z80 | env = { env | pc = z80delta.pc, sp = sp } |> add_cpu_time_env cpu_time, interrupts = z80delta.interrupts }
 
         CpuTimeWithFlagsAndPc cpu_time flagRegisters pc ->
             let
                 env =
                     z80.env
             in
-            { z80 | flags = flagRegisters, pc = pc, env = { env | time = cpu_time }, interrupts = z80delta.interrupts }
+            { z80 | flags = flagRegisters, env = { env | pc = pc, time = cpu_time }, interrupts = z80delta.interrupts }
 
         NoChange ->
             let
                 env =
                     z80.env
             in
-            { z80 | pc = z80delta.pc, env = { env | time = z80delta.time }, interrupts = z80delta.interrupts }
+            { z80 | env = { env | pc = z80delta.pc, time = z80delta.time }, interrupts = z80delta.interrupts }
 
         MainRegs mainWithIndexRegisters ->
             let
                 env =
                     z80.env
             in
-            { z80 | main = mainWithIndexRegisters, pc = z80delta.pc, env = { env | time = z80delta.time }, interrupts = z80delta.interrupts }
+            { z80 | main = mainWithIndexRegisters, env = { env | pc = z80delta.pc, time = z80delta.time }, interrupts = z80delta.interrupts }
 
         MainRegsWithPc mainWithIndexRegisters pc ->
             let
                 env =
                     z80.env
             in
-            { z80 | main = mainWithIndexRegisters, pc = pc, env = { env | time = z80delta.time }, interrupts = z80delta.interrupts }
+            { z80 | main = mainWithIndexRegisters, env = { env | pc = pc, time = z80delta.time }, interrupts = z80delta.interrupts }
 
         OnlyPc pc ->
             let
                 env =
                     z80.env
             in
-            { z80 | pc = pc, env = { env | time = z80delta.time }, interrupts = z80delta.interrupts }
+            { z80 | env = { env | pc = pc, time = z80delta.time }, interrupts = z80delta.interrupts }
 
         FlagsWithPcAndTime flags pc time ->
             let
                 env =
                     z80.env
             in
-            { z80 | pc = pc, flags = flags, env = { env | time = time }, interrupts = z80delta.interrupts }
+            { z80 | flags = flags, env = { env | pc = pc, time = time }, interrupts = z80delta.interrupts }
 
         CpuTimeWithSpAndPc time sp pc ->
             let
                 env =
                     z80.env
             in
-            { z80 | pc = pc, env = { env | time = time, sp = sp }, interrupts = z80delta.interrupts }
+            { z80 | env = { env | pc = pc, time = time, sp = sp }, interrupts = z80delta.interrupts }
 
         InterruptsWithCpuTime interruptRegisters cpuTimeCTime ->
             let
                 env =
                     z80.env
             in
-            { z80 | pc = z80delta.pc, env = { env | time = cpuTimeCTime }, interrupts = interruptRegisters }
+            { z80 | env = { env | pc = z80delta.pc, time = cpuTimeCTime }, interrupts = interruptRegisters }
 
         OnlyInterrupts interruptRegisters ->
             let
                 env =
                     z80.env
             in
-            { z80 | pc = z80delta.pc, env = { env | time = z80delta.time }, interrupts = interruptRegisters }
+            { z80 | env = { env | pc = z80delta.pc, time = z80delta.time }, interrupts = interruptRegisters }
 
         MainRegsWithSpAndTime main sp time ->
             let
                 env =
                     z80.env
             in
-            { z80 | main = main, pc = z80delta.pc, env = { env | sp = sp, time = time }, interrupts = z80delta.interrupts }
+            { z80 | main = main, env = { env | pc = z80delta.pc, sp = sp, time = time }, interrupts = z80delta.interrupts }
 
         MainRegsWithSpPcAndTime main sp pc time ->
             let
                 env =
                     z80.env
             in
-            { z80 | main = main, pc = pc, env = { env | sp = sp, time = time }, interrupts = z80delta.interrupts }
+            { z80 | main = main, env = { env | pc = pc, sp = sp, time = time }, interrupts = z80delta.interrupts }
 
         OnlyTime cpuTimeCTime ->
             let
                 env =
                     z80.env
             in
-            { z80 | pc = z80delta.pc, env = { env | time = cpuTimeCTime }, interrupts = z80delta.interrupts }
+            { z80 | env = { env | pc = z80delta.pc, time = cpuTimeCTime }, interrupts = z80delta.interrupts }
 
         MainRegsWithAltRegs main alt_main ->
             let
                 env =
                     z80.env
             in
-            { z80 | main = main, alt_main = alt_main, pc = z80delta.pc, env = { env | time = z80delta.time }, interrupts = z80delta.interrupts }
-
-        MainRegsWithEnv mainRegisters z80Env ->
-            { z80 | env = z80Env, pc = z80delta.pc, main = mainRegisters, interrupts = z80delta.interrupts }
-
-        MainRegsWithEnvAndPc mainWithIndexRegisters z80Env pc ->
-            { z80 | env = z80Env, pc = pc, main = mainWithIndexRegisters, interrupts = z80delta.interrupts }
+            { z80 | main = main, alt_main = alt_main, env = { env | pc = z80delta.pc, time = z80delta.time }, interrupts = z80delta.interrupts }
 
         FlagsWithPCMainAndCpuTime flagRegisters pc mainWithIndexRegisters time ->
             let
                 env =
                     z80.env
             in
-            { z80 | flags = flagRegisters, pc = pc, env = { env | time = time }, main = mainWithIndexRegisters, interrupts = z80delta.interrupts }
+            { z80 | flags = flagRegisters, env = { env | pc = pc, time = time }, main = mainWithIndexRegisters, interrupts = z80delta.interrupts }
 
         FlagsWithSpTimeAndPc flagRegisters sp time pc ->
             let
                 env =
                     z80.env
             in
-            { z80 | flags = flagRegisters, pc = pc, env = { env | time = time, sp = sp }, interrupts = z80delta.interrupts }
+            { z80 | flags = flagRegisters, env = { env | pc = pc, time = time, sp = sp }, interrupts = z80delta.interrupts }
 
         OnlyPush value ->
             let
                 env =
                     z80.env
             in
-            { z80 | pc = z80delta.pc, env = { env | time = z80delta.time } |> z80_push value, interrupts = z80delta.interrupts }
+            { z80 | env = { env | pc = z80delta.pc, time = z80delta.time } |> z80_push value, interrupts = z80delta.interrupts }
 
         PushWithCpuTimeAndPc value time pc ->
             let
                 env =
                     z80.env
             in
-            { z80 | pc = pc, env = { env | time = time } |> z80_push value, interrupts = z80delta.interrupts }
+            { z80 | env = { env | pc = pc, time = time } |> z80_push value, interrupts = z80delta.interrupts }
 
 
 delta_noop: Z80ROM -> Z80 -> Z80Delta

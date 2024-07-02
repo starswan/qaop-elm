@@ -80,7 +80,7 @@ execute_0x23 ixiyhl rom48k z80 =
             z80.main |> set_xy (char (xy + 1)) ixiyhl
     in
     --{ z80 | main = main } |> add_cpu_time 2
-    MainRegsWithPcAndCpuTime main z80.pc (z80.env.time |> add_cpu_time_time 2)
+    MainRegsWithPcAndCpuTime main z80.env.pc (z80.env.time |> add_cpu_time_time 2)
 
 
 execute_0x24 : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
@@ -102,7 +102,7 @@ execute_0x24 ixiyhl rom48k z80 =
             set_xy new_xy ixiyhl z80.main
     in
     --{ z80_1 | main = main }
-    FlagsWithPCMainAndTime value.flags z80.pc main 0
+    FlagsWithPCMainAndTime value.flags z80.env.pc main 0
 
 
 execute_0x25 : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
@@ -126,7 +126,7 @@ execute_0x25 ixiyhl rom48k z80 =
             set_xy new_xy ixiyhl z80_1.main
     in
     --{ z80_1 | main = main }
-    FlagsWithPCMainAndTime value.flags z80.pc main 0
+    FlagsWithPCMainAndTime value.flags z80.env.pc main 0
 
 
 execute_0x26 : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
@@ -193,7 +193,7 @@ execute_0x29 ixiyhl rom48k z80 =
             set_xy new_xy.value ixiyhl z80.main
     in
     --{ z80 | main = new_z80, flags = new_xy.flags } |> add_cpu_time new_xy.time
-    FlagsWithPCMainAndTime new_xy.flags z80.pc new_z80 new_xy.time
+    FlagsWithPCMainAndTime new_xy.flags z80.env.pc new_z80 new_xy.time
 
 
 execute_0x2A : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
@@ -231,7 +231,7 @@ execute_0x2B ixiyhl rom48k z80 =
             set_xy new_xy ixiyhl z80.main
     in
     --{ z80 | main = new_z80 } |> add_cpu_time 2
-    MainRegsWithPcAndCpuTime new_z80 z80.pc (z80.env.time |> add_cpu_time_time 2)
+    MainRegsWithPcAndCpuTime new_z80 z80.env.pc (z80.env.time |> add_cpu_time_time 2)
 
 
 execute_0x2C : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
@@ -259,7 +259,7 @@ execute_0x2C ixiyhl rom48k z80 =
             set_xy new_xy ixiyhl z80.main
     in
     --{ z80_1 | main = main }
-    FlagsWithPCMainAndTime l.flags z80.pc main 0
+    FlagsWithPCMainAndTime l.flags z80.env.pc main 0
 
 
 execute_0x2D : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
@@ -287,7 +287,7 @@ execute_0x2D ixiyhl rom48k z80 =
             set_xy new_xy ixiyhl z80.main
     in
     --{ new_z80 | main = main }
-    FlagsWithPCMainAndTime l.flags z80.pc main 0
+    FlagsWithPCMainAndTime l.flags z80.env.pc main 0
 
 
 execute_0x2E : IXIYHL -> Z80ROM -> Z80 -> Z80Delta

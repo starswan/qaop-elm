@@ -47,7 +47,7 @@ execute_0x44 ixiyhl rom z80 =
         main =
             z80.main
     in
-    MainRegsWithPc { main | b = get_h ixiyhl z80.main } z80.pc
+    MainRegsWithPc { main | b = get_h ixiyhl z80.main } z80.env.pc
 
 
 execute_0x45 : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
@@ -59,7 +59,7 @@ execute_0x45 ixiyhl rom z80 =
         main =
             z80.main
     in
-    MainRegsWithPc { main | b = get_l ixiyhl z80.main } z80.pc
+    MainRegsWithPc { main | b = get_l ixiyhl z80.main } z80.env.pc
 
 
 execute_0x46 : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
@@ -129,7 +129,7 @@ execute_0x4C ixiyhl rom z80 =
         main =
             z80.main
     in
-    MainRegsWithPc { main | c = get_h ixiyhl z80.main } z80.pc
+    MainRegsWithPc { main | c = get_h ixiyhl z80.main } z80.env.pc
 
 
 execute_0x4D : IXIYHL -> Z80ROM -> Z80 -> Z80Delta

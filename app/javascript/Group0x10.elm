@@ -53,7 +53,7 @@ execute_0x10 rom48k z80 =
             z80 |> add_cpu_time 1
 
         v =
-            z80_1.pc
+            z80_1.env.pc
 
         mem_value =
             z80_1.env |> mem v rom48k
@@ -200,10 +200,10 @@ execute_0x18 rom48k z80 =
     -- This is just an inlined jr() call
     let
         mem_value =
-            z80.env |> mem z80.pc rom48k
+            z80.env |> mem z80.env.pc rom48k
 
         pc_val =
-            z80.pc + 1 + byte mem_value.value
+            z80.env.pc + 1 + byte mem_value.value
 
         --pc_val = ProgramCounter dest
         --x = if (dest |> subName |> (String.startsWith "CALL-SUB")) then
@@ -238,7 +238,7 @@ execute_0x19 ixiyhl rom48k z80 =
             set_xy new_xy.value ixiyhl z80.main
     in
     --{ z80 | main = new_z80, flags = new_xy.flags} |> add_cpu_time new_xy.time
-    FlagsWithPCMainAndTime new_xy.flags z80.pc new_z80 new_xy.time
+    FlagsWithPCMainAndTime new_xy.flags z80.env.pc new_z80 new_xy.time
 
 
 execute_0x1A : Z80ROM -> Z80 -> Z80Delta

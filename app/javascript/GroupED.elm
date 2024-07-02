@@ -35,8 +35,8 @@ execute_ED43 rom48k z80 =
    -- case 0x43: MP=(v=imm16())+1; env.mem16(v,B<<8|C); time+=6; break;
    let
      v = z80 |> imm16 rom48k
-     z80_2 = { z80 | pc = v.pc }
-     env = z80_2.env |> set_mem16 v.value (Bitwise.or (shiftLeftBy8 z80.main.b) z80.main.c)
+     --z80_2 = { z80 | pc = v.pc }
+     env = z80.env |> set_mem16 v.value (Bitwise.or (shiftLeftBy8 z80.main.b) z80.main.c)
    in
      --{ z80_2 | env = env } |> add_cpu_time 6 |> Whole
      EnvWithPc env v.pc
@@ -76,8 +76,8 @@ execute_ED4B rom48k z80 =
    -- case 0x4B: MP=(v=imm16())+1; v=env.mem16(v); B=v>>>8; C=v&0xFF; time+=6; break;
   let
     v1 = z80 |> imm16 rom48k
-    z80_1 = { z80 | pc = v1.pc }
-    env = z80_1.env
+    --z80_1 = { z80 | pc = v1.pc }
+    env = z80.env
     v2 = { env | time = v1.time } |> mem16 v1.value rom48k
     --x = debug_log "LD BC,(nnnn)" (v2.value |> toHexString) Nothing
   in
@@ -98,8 +98,8 @@ execute_ED53 rom48k z80 =
    -- case 0x53: MP=(v=imm16())+1; env.mem16(v,D<<8|E); time+=6; break;
    let
      v =  z80 |> imm16 rom48k
-     z80_1 = { z80 | pc = v.pc }
-     env = z80_1.env |> set_mem16 v.value (Bitwise.or (shiftLeftBy8 z80.main.d) z80.main.e)
+     --z80_1 = { z80 | pc = v.pc }
+     env = z80.env |> set_mem16 v.value (Bitwise.or (shiftLeftBy8 z80.main.d) z80.main.e)
    in
      --{ z80_1 | env = env } |> add_cpu_time 6 |> Whole
      EnvWithPc (env |> add_cpu_time_env 6) v.pc
@@ -126,9 +126,9 @@ execute_ED73 rom48k z80 =
   -- case 0x73: MP=(v=imm16())+1; env.mem16(v,SP); time+=6; break;
   let
     v = z80 |> imm16 rom48k
-    z80_1 = { z80 | pc = v.pc }
+    --z80_1 = { z80 | pc = v.pc }
     env = z80.env
-    env2 = { env | time = v.time } |> set_mem16 v.value z80_1.env.sp
+    env2 = { env | time = v.time } |> set_mem16 v.value env.sp
   in
     --{ z80 | env = env2 } |> add_cpu_time 6 |> Whole
     EnvWithPc (env2 |> add_cpu_time_env 6) v.pc
@@ -144,15 +144,15 @@ execute_ED78 rom48k z80 =
       --env = z80.env
    in
       --{ z80 | env = { env | time = new_a.time |> add_cpu_time_time 4 } , flags = new_flags } |> Whole
-      CpuTimeWithFlagsAndPc (new_a.time |> add_cpu_time_time 4) new_flags z80.pc
+      CpuTimeWithFlagsAndPc (new_a.time |> add_cpu_time_time 4) new_flags z80.env.pc
 
 execute_ED7B: Z80ROM -> Z80 -> Z80Delta
 execute_ED7B rom48k z80 =
    -- case 0x7B: MP=(v=imm16())+1; SP=env.mem16(v); time+=6; break;
   let
     v = z80 |> imm16 rom48k
-    z80_1 = { z80 | pc = v.pc }
-    sp = z80_1.env |> mem16 v.value rom48k
+    --z80_1 = { z80 | pc = v.pc }
+    sp = z80.env |> mem16 v.value rom48k
     --env = z80_1.env
   in
     --{ z80_1 | env = { env | sp = sp.value, time = sp.time |> add_cpu_time_time 6 } } |> Whole
@@ -283,11 +283,12 @@ group_ed: Z80ROM -> Z80 -> Z80Delta
 group_ed rom48k z80_0 =
    let
       ints = z80_0.interrupts
-      c = z80.env |> m1 z80_0.pc (Bitwise.or z80_0.interrupts.ir (Bitwise.and z80_0.interrupts.r 0x7F)) rom48k
+      c = z80.env |> m1 z80_0.env.pc (Bitwise.or z80_0.interrupts.ir (Bitwise.and z80_0.interrupts.r 0x7F)) rom48k
       new_r = z80_0.interrupts.r + 1
       old_z80 = { z80_0 | interrupts = { ints | r = new_r } }
       new_pc = old_z80 |> inc_pc
-      z80 = { old_z80 | pc = new_pc } |> add_cpu_time 4
+      env = old_z80.env
+      z80 = { old_z80 | env = { env | pc = new_pc } } |> add_cpu_time 4
 
       ed_func = group_ed_dict |> Dict.get c.value
    in
@@ -418,7 +419,7 @@ sbc_hl b z80 =
       flags = z80.flags
    in
       --{ z80 | main = { main | hl = r }, flags = { flags | ff = ff, fa = fa, fb = fb, fr = fr} } |> add_cpu_time 7 |> Whole
-      FlagsWithPCMainAndCpuTime { flags | ff = ff, fa = fa, fb = fb, fr = fr} z80.pc { main | hl = r } (z80.env.time |> add_cpu_time_time 7)
+      FlagsWithPCMainAndCpuTime { flags | ff = ff, fa = fa, fb = fb, fr = fr} z80.env.pc { main | hl = r } (z80.env.time |> add_cpu_time_time 7)
 
 set_im_direct: Int -> Z80 -> Z80Delta
 set_im_direct value z80 =
