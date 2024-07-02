@@ -46,10 +46,10 @@ execute_0xE1 ixiyhl rom48k z80 =
     in
     case ixiyhl of
         IX ->
-            MainRegsWithSpPcAndTime { main | ix = hl.value } hl.sp z80.pc hl.time
+            MainRegsWithSpPcAndTime { main | ix = hl.value } hl.sp z80.env.pc hl.time
 
         IY ->
-            MainRegsWithSpPcAndTime { main | iy = hl.value } hl.sp z80.pc hl.time
+            MainRegsWithSpPcAndTime { main | iy = hl.value } hl.sp z80.env.pc hl.time
 
         HL ->
             MainRegsWithSpAndTime { main | hl = hl.value } hl.sp hl.time
@@ -81,10 +81,10 @@ execute_0xE3 ixiyhl rom48k z80 =
         --IY -> { z80_2 | main = { main | iy = v.value } }
         --HL -> { z80_2 | main = { main | hl = v.value } }
         IX ->
-            MainRegsWithEnvAndPc { main | ix = hl.value } pushed z80.pc
+            MainRegsWithEnv { main | ix = hl.value } pushed
 
         IY ->
-            MainRegsWithEnvAndPc { main | iy = hl.value } pushed z80.pc
+            MainRegsWithEnv { main | iy = hl.value } pushed
 
         HL ->
             MainRegsWithEnv { main | hl = hl.value } pushed
@@ -99,7 +99,7 @@ execute_0xE5 ixiyhl _ z80 =
             z80.env |> z80_push (z80.main |> get_xy ixiyhl)
     in
     --{ z80 | env = pushed }
-    EnvWithPc pushed z80.pc
+    OnlyEnv pushed
 
 
 execute_0xE6 : Z80ROM -> Z80 -> Z80Delta
@@ -113,7 +113,7 @@ execute_0xE6 rom48k z80 =
             z80.env
 
         z80_1 =
-            { z80 | env = { env_1 | time = a.time }, pc = a.pc }
+            { z80 | env = { env_1 | time = a.time, pc = a.pc } }
 
         flags =
             z80_1.flags |> z80_and a.value

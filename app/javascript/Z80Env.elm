@@ -25,6 +25,7 @@ type alias Z80Env =
     , keyboard : Keyboard
     , time : CpuTimeCTime
     , sp : Int
+    , pc:  Int
     }
 
 
@@ -46,7 +47,7 @@ type alias ValueWithTime =
 
 
 z80env_constructor =
-    Z80Env Z80Ram.constructor Keyboard.constructor (CpuTimeCTime c_FRSTART 0) 0
+    Z80Env Z80Ram.constructor Keyboard.constructor (CpuTimeCTime c_FRSTART 0) 0 0
 
 
 --set_rom : Array Int -> Z80Env -> Z80Env

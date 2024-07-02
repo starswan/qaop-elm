@@ -155,7 +155,7 @@ execute_0x09 ixiyhl rom48k z80 =
             set_xy new_xy.value ixiyhl z80.main
     in
     --Whole ({ z80 | main = new_z80, flags = new_xy.flags } |> add_cpu_time new_xy.time)
-    FlagsWithPCMainAndTime new_xy.flags z80.pc new_z80 new_xy.time
+    FlagsWithPCMainAndTime new_xy.flags z80.env.pc new_z80 new_xy.time
 
 
 execute_0x0A : Z80ROM -> Z80 -> Z80Delta

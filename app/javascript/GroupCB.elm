@@ -141,7 +141,7 @@ execute_CB06 rom48k z80 =
         env_1 =
             { env | time = x.time } |> setMem z80.main.hl x.value
     in
-    EnvWithFlagsAndPc env_1 x.flags x.pc
+    EnvWithFlags { env_1 | pc = x.pc } x.flags
 
 
 execute_CB07 : Z80 -> Z80Delta
@@ -172,19 +172,19 @@ group_cb rom48k tmp_z80 =
             Bitwise.or tmp_z80.interrupts.ir new_r
 
         c =
-            tmp_z80.env |> m1 tmp_z80.pc (Bitwise.or tmp_z80.interrupts.ir ir_or_r) rom48k
+            tmp_z80.env |> m1 tmp_z80.env.pc (Bitwise.or tmp_z80.interrupts.ir ir_or_r) rom48k
 
         env =
             tmp_z80.env
 
-        old_z80 =
-            { tmp_z80 | env = { env | time = c.time } }
-
         new_pc =
-            old_z80 |> inc_pc
+            tmp_z80 |> inc_pc
+
+        old_z80 =
+            { tmp_z80 | env = { env | pc = new_pc, time = c.time } }
 
         z80 =
-            { old_z80 | pc = new_pc } |> add_cpu_time 4
+            old_z80 |> add_cpu_time 4
 
         o =
             Bitwise.and (c.value |> shiftRightBy 3) 7
@@ -241,7 +241,7 @@ group_cb rom48k tmp_z80 =
                     --env_1 =
                     --    z80.env
                     --x =
-                    --    { z80 | pc = raw.pc, env = { env_1 | time = raw.time } } |> set_flag_regs flags
+                    --    { z80 | env = { env_1 | pc = raw.pc, time = raw.time } } |> set_flag_regs flags
                 in
                 --Whole x
                 CpuTimeWithFlagsAndPc raw.time flags raw.pc
@@ -265,7 +265,7 @@ group_cb rom48k tmp_z80 =
                     --env_1 =
                     --    z80.env
                     --x =
-                    --    { z80 | pc = raw.pc, env = { env_1 | time = raw.time } } |> set408bit caseval result HL
+                    --    { z80 | env = { env_1 | pc = raw.pc, time = raw.time } } |> set408bit caseval result HL
                 in
                 --Whole x
                 PcTimeSet408Bit raw.pc raw.time caseval result
@@ -289,7 +289,7 @@ group_cb rom48k tmp_z80 =
                     --env_1 =
                     --    z80.env
                     --x =
-                    --    { z80 | pc = raw.pc, env = { env_1 | time = raw.time } } |> set408bit caseval result HL
+                    --    { z80 | env = { env_1 | pc = raw.pc, time = raw.time } } |> set408bit caseval result HL
                 in
                 --Whole x
                 PcTimeSet408Bit raw.pc raw.time caseval result
@@ -320,7 +320,7 @@ group_xy_cb ixiyhl rom48k z80 =
             get_ixiy_xy ixiyhl z80.main
 
         offset =
-            z80.env |> mem z80.pc rom48k
+            z80.env |> mem z80.env.pc rom48k
 
         a =
             char (xy + byte offset.value)
@@ -332,7 +332,7 @@ group_xy_cb ixiyhl rom48k z80 =
             { z80 | env = { env_1 | time = offset.time |> addCpuTimeTime 3 } }
 
         c =
-            z80_1.env |> mem (char (z80.pc + 1)) rom48k
+            z80_1.env |> mem (char (z80.env.pc + 1)) rom48k
 
         new_pc =
             z80_1 |> inc_pc2
@@ -341,7 +341,7 @@ group_xy_cb ixiyhl rom48k z80 =
             z80_1.env
 
         z80_2 =
-            { z80_1 | env = { env_2 | time = c.time |> addCpuTimeTime 5 }, pc = new_pc }
+            { z80_1 | env = { env_2 | pc = new_pc, time = c.time |> addCpuTimeTime 5 } }
 
         v1 =
             z80_2.env |> mem a rom48k

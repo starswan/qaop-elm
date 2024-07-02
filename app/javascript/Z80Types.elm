@@ -39,15 +39,15 @@ type alias InterruptRegisters =
 
 
 type alias Z80 =
-    { env : Z80Env
-    , pc : Int
-    , main : MainWithIndexRegisters
-    , flags : FlagRegisters
-    , alt_main : MainRegisters
-    , alt_flags : FlagRegisters
-    , interrupts : InterruptRegisters
-    , time_limit : Int
-    }
+   {
+      env: Z80Env,
+      main: MainWithIndexRegisters,
+      flags: FlagRegisters,
+      alt_main: MainRegisters,
+      alt_flags: FlagRegisters,
+      interrupts: InterruptRegisters,
+      time_limit: Int
+   }
 
 
 type alias EnvWithPCAndValue =
@@ -96,10 +96,10 @@ imm8 : Z80ROM -> Z80 -> CpuTimePcAndValue
 imm8 rom48k z80 =
     let
         v =
-            z80.env |> mem z80.pc rom48k
+            z80.env |> mem z80.env.pc rom48k
 
         new_pc =
-            Bitwise.and (z80.pc + 1) 0xFFFF
+            Bitwise.and (z80.env.pc + 1) 0xFFFF
 
         env_1 =
             v.time |> addCpuTimeTime 3
@@ -125,10 +125,10 @@ imm16 : Z80ROM -> Z80 -> CpuTimePcAndValue
 imm16 rom48k z80 =
     let
         v =
-            z80.env |> mem16 z80.pc rom48k
+            z80.env |> mem16 z80.env.pc rom48k
 
         pc =
-            Bitwise.and (z80.pc + 2) 0xFFFF
+            Bitwise.and (z80.env.pc + 2) 0xFFFF
 
         env =
             v.time |> addCpuTimeTime 6
@@ -153,14 +153,13 @@ jp_z80 y rom48k z80 =
         env =
             z80.env
 
-        z80_1 =
-            { z80 | pc = a.pc, env = { env | time = a.time } }
+        --z80_1 =
+        --    { z80 | env = { env | pc = a.pc, time = a.time } }
     in
     if y then
-        { z80_1 | pc = a.value }
-
+        { z80 | env = { env | pc = a.value, time = a.time } }
     else
-        z80_1
+        { z80 | env = { env | pc = a.pc, time = a.time } }
 
 
 
@@ -171,7 +170,7 @@ jp_z80 y rom48k z80 =
 --	}
 
 
-call_if : Bool -> Z80ROM -> Z80 -> Z80EnvWithPC
+call_if : Bool -> Z80ROM -> Z80 -> Z80Env
 call_if y rom48k z80 =
     let
         a =
@@ -181,7 +180,7 @@ call_if y rom48k z80 =
             z80.env
 
         --z80_2 =
-        --    { z80 | pc = a.pc, env = { env | time = a.time } }
+        --    { z80 | env = { env | pc = a.pc, time = a.time } }
         new_env =
             { env | time = a.time }
     in
@@ -194,10 +193,10 @@ call_if y rom48k z80 =
 
             --z80_1 = { z80_2 | env = pushed, pc = a.value }
         in
-        Z80EnvWithPC pushed a.value
+        { pushed | pc = a.value }
 
     else
-        Z80EnvWithPC new_env a.pc
+        { new_env | pc = a.pc }
 
 
 rst_z80 : Int -> Z80 -> Z80
@@ -205,24 +204,24 @@ rst_z80 c z80 =
     --z80 |> push z80.pc |> set_pc (c - 199)
     let
         pushed =
-            z80.env |> z80_push z80.pc
+            z80.env |> z80_push z80.env.pc
     in
-    { z80 | env = pushed, pc = c - 199 }
+    { z80 | env = { pushed | pc = c - 199 } }
 
 
-rst : Int -> Z80 -> Z80EnvWithPC
+rst : Int -> Z80 -> Z80Env
 rst c z80 =
     --z80 |> push z80.pc |> set_pc (c - 199)
     let
         pushed =
-            z80.env |> z80_push z80.pc
+            z80.env |> z80_push z80.env.pc
     in
-    Z80EnvWithPC pushed (c - 199)
+    { pushed | pc = (c - 199) }
 
 
 a_with_z80 : Z80 -> CpuTimePcAndValue
 a_with_z80 z80 =
-    CpuTimePcAndValue z80.env.time z80.pc z80.flags.a
+    CpuTimePcAndValue z80.env.time z80.env.pc z80.flags.a
 
 
 add_cpu_time : Int -> Z80 -> Z80
@@ -236,22 +235,22 @@ add_cpu_time value z80 =
 
 b_with_z80 : Z80 -> CpuTimePcAndValue
 b_with_z80 z80 =
-    CpuTimePcAndValue z80.env.time z80.pc z80.main.b
+    CpuTimePcAndValue z80.env.time z80.env.pc z80.main.b
 
 
 c_with_z80 : Z80 -> CpuTimePcAndValue
 c_with_z80 z80 =
-    CpuTimePcAndValue z80.env.time z80.pc z80.main.c
+    CpuTimePcAndValue z80.env.time z80.env.pc z80.main.c
 
 
 d_with_z80 : Z80 -> CpuTimePcAndValue
 d_with_z80 z80 =
-    CpuTimePcAndValue z80.env.time z80.pc z80.main.d
+    CpuTimePcAndValue z80.env.time z80.env.pc z80.main.d
 
 
 e_with_z80 : Z80 -> CpuTimePcAndValue
 e_with_z80 z80 =
-    CpuTimePcAndValue z80.env.time z80.pc z80.main.e
+    CpuTimePcAndValue z80.env.time z80.env.pc z80.main.e
 
 
 get_ixiy_xy : IXIY -> MainWithIndexRegisters -> Int
@@ -266,7 +265,7 @@ get_ixiy_xy ixiy z80_main =
 
 h_with_z80 : IXIYHL -> Z80 -> CpuTimePcAndValue
 h_with_z80 ixiyhl z80 =
-    CpuTimePcAndValue z80.env.time z80.pc (shiftRightBy8 (get_xy ixiyhl z80.main))
+    CpuTimePcAndValue z80.env.time z80.env.pc (shiftRightBy8 (get_xy ixiyhl z80.main))
 
 
 hl_deref_with_z80 : IXIYHL -> Z80ROM -> Z80 -> CpuTimePcAndValue
@@ -283,17 +282,17 @@ hl_deref_with_z80 ixiyhl rom48k z80 =
 
 inc_pc : Z80 -> Int
 inc_pc z80 =
-    Bitwise.and (z80.pc + 1) 0xFFFF
+    Bitwise.and (z80.env.pc + 1) 0xFFFF
 
 
 inc_pc2 : Z80 -> Int
 inc_pc2 z80 =
-    Bitwise.and (z80.pc + 2) 0xFFFF
+    Bitwise.and (z80.env.pc + 2) 0xFFFF
 
 
 l_with_z80 : IXIYHL -> Z80 -> CpuTimePcAndValue
 l_with_z80 ixiyhl z80 =
-    CpuTimePcAndValue z80.env.time z80.pc (Bitwise.and (get_xy ixiyhl z80.main) 0xFF)
+    CpuTimePcAndValue z80.env.time z80.env.pc (Bitwise.and (get_xy ixiyhl z80.main) 0xFF)
 
 
 set_flag_regs : FlagRegisters -> Z80 -> Z80
@@ -366,21 +365,21 @@ env_mem_hl : IXIYHL -> Z80ROM -> Z80 -> CpuTimePcAndValue
 env_mem_hl ixiyhl rom48k z80 =
     case ixiyhl of
         HL ->
-            CpuTimePcAndValue z80.env.time z80.pc z80.main.hl
+            CpuTimePcAndValue z80.env.time z80.env.pc z80.main.hl
 
         IX ->
             let
                 dval =
-                    z80.env |> mem z80.pc rom48k
+                    z80.env |> mem z80.env.pc rom48k
             in
-            CpuTimePcAndValue (dval.time |> addCpuTimeTime 8) (char (z80.pc + 1)) (char (z80.main.ix + byte dval.value))
+            CpuTimePcAndValue (dval.time |> addCpuTimeTime 8) (char (z80.env.pc + 1)) (char (z80.main.ix + byte dval.value))
 
         IY ->
             let
                 dval =
-                    z80.env |> mem z80.pc rom48k
+                    z80.env |> mem z80.env.pc rom48k
             in
-            CpuTimePcAndValue (dval.time |> addCpuTimeTime 8) (char (z80.pc + 1)) (char (z80.main.iy + byte dval.value))
+            CpuTimePcAndValue (dval.time |> addCpuTimeTime 8) (char (z80.env.pc + 1)) (char (z80.main.iy + byte dval.value))
 
 
 get_bc : Z80 -> Int
@@ -395,7 +394,10 @@ get_de z80 =
 
 dec_pc2 : Z80 -> Z80
 dec_pc2 z80 =
-    { z80 | pc = Bitwise.and (z80.pc - 2) 0xFFFF }
+    let
+        env = z80.env
+    in
+    { z80 | env = { env | pc = Bitwise.and (z80.env.pc - 2) 0xFFFF } }
 
 
 
@@ -447,7 +449,7 @@ jr : Z80ROM -> Z80 -> CpuTimeAndPc
 jr rom48k z80 =
     let
         mempc =
-            z80.env |> mem z80.pc rom48k
+            z80.env |> mem z80.env.pc rom48k
 
         d =
             byte mempc.value
@@ -455,8 +457,7 @@ jr rom48k z80 =
         --x = Debug.log "jr" ((String.fromInt d.value) ++ " " ++ (String.fromInt (byte d.value)))
     in
     --z80 |> set_env mempc.env |> add_cpu_time 8 |> set_pc (z80.pc + d + 1)
-    CpuTimeAndPc (mempc.time |> addCpuTimeTime 8) (Bitwise.and (z80.pc + d + 1) 0xFFFF)
-
+    CpuTimeAndPc (mempc.time |> addCpuTimeTime 8) (Bitwise.and (z80.env.pc + d + 1) 0xFFFF)
 
 get_h : IXIYHL -> MainWithIndexRegisters -> Int
 get_h ixiyhl z80 =

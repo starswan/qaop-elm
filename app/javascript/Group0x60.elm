@@ -46,7 +46,7 @@ execute_0x60 ixiyhl rom z80 =
         value =
             z80.main |> set_h z80.main.b ixiyhl
     in
-    MainRegsWithPc value z80.pc
+    MainRegsWithPc value z80.env.pc
 
 
 execute_0x61 : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
@@ -58,7 +58,7 @@ execute_0x61 ixiyhl rom z80 =
         value =
             z80.main |> set_h z80.main.c ixiyhl
     in
-    MainRegsWithPc value z80.pc
+    MainRegsWithPc value z80.env.pc
 
 
 execute_0x62 : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
@@ -70,7 +70,7 @@ execute_0x62 ixiyhl rom z80 =
         value =
             z80.main |> set_h z80.main.d ixiyhl
     in
-    MainRegsWithPc value z80.pc
+    MainRegsWithPc value z80.env.pc
 
 
 execute_0x63 : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
@@ -82,7 +82,7 @@ execute_0x63 ixiyhl rom z80 =
         value =
             z80.main |> set_h z80.main.e ixiyhl
     in
-    MainRegsWithPc value z80.pc
+    MainRegsWithPc value z80.env.pc
 
 
 execute_0x65 : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
@@ -94,7 +94,7 @@ execute_0x65 ixiyhl rom z80 =
         value =
             z80.main |> set_h (get_l ixiyhl z80.main) ixiyhl
     in
-    MainRegsWithPc value z80.pc
+    MainRegsWithPc value z80.env.pc
 
 
 execute_0x66 : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
@@ -121,7 +121,7 @@ execute_0x67 ixiyhl rom z80 =
         value =
             z80.main |> set_h z80.flags.a ixiyhl
     in
-    MainRegsWithPc value z80.pc
+    MainRegsWithPc value z80.env.pc
 
 
 execute_0x68 : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
@@ -129,35 +129,35 @@ execute_0x68 ixiyhl rom z80 =
     -- case 0x68: HL=HL&0xFF00|B; break;
     -- case 0x68: xy=xy&0xFF00|B; break;
     --z80 |> set_l_z80 z80.main.b ixiyhl
-    MainRegsWithPc (z80.main |> set_l z80.main.b ixiyhl) z80.pc
+    MainRegsWithPc (z80.main |> set_l z80.main.b ixiyhl) z80.env.pc
 
 
 execute_0x69 : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
 execute_0x69 ixiyhl rom z80 =
     -- case 0x69: HL=HL&0xFF00|C; break;
     -- case 0x69: xy=xy&0xFF00|C; break;
-    MainRegsWithPc (z80.main |> set_l z80.main.c ixiyhl) z80.pc
+    MainRegsWithPc (z80.main |> set_l z80.main.c ixiyhl) z80.env.pc
 
 
 execute_0x6A : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
 execute_0x6A ixiyhl rom z80 =
     -- case 0x6A: HL=HL&0xFF00|D; break;
     -- case 0x6A: xy=xy&0xFF00|D; break;
-    MainRegsWithPc (z80.main |> set_l z80.main.d ixiyhl) z80.pc
+    MainRegsWithPc (z80.main |> set_l z80.main.d ixiyhl) z80.env.pc
 
 
 execute_0x6B : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
 execute_0x6B ixiyhl rom z80 =
     -- case 0x6B: HL=HL&0xFF00|E; break;
     -- case 0x6B: xy=xy&0xFF00|E; break;
-    MainRegsWithPc (z80.main |> set_l z80.main.e ixiyhl) z80.pc
+    MainRegsWithPc (z80.main |> set_l z80.main.e ixiyhl) z80.env.pc
 
 
 execute_0x6C : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
 execute_0x6C ixiyhl rom z80 =
     -- case 0x6C: HL=HL&0xFF00|HL>>>8; break;
     -- case 0x6C: xy=xy&0xFF00|xy>>>8; break;
-    MainRegsWithPc (z80.main |> set_l (get_h ixiyhl z80.main) ixiyhl) z80.pc
+    MainRegsWithPc (z80.main |> set_l (get_h ixiyhl z80.main) ixiyhl) z80.env.pc
 
 
 execute_0x6E : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
@@ -178,4 +178,4 @@ execute_0x6F : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
 execute_0x6F ixiyhl rom z80 =
     -- case 0x6F: HL=HL&0xFF00|A; break;
     -- case 0x6F: xy=xy&0xFF00|A; break;
-    MainRegsWithPc (z80.main |> set_l z80.flags.a ixiyhl) z80.pc
+    MainRegsWithPc (z80.main |> set_l z80.flags.a ixiyhl) z80.env.pc
