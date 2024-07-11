@@ -3786,6 +3786,17 @@ group_ed z80_0 =
 --		}
 --	}
 --
+
+execute_CB00: Z80 -> Z80
+execute_CB00 z80 =
+  z80
+
+group_cb_dict: Dict Int (Z80 -> Z80)
+group_cb_dict = Dict.fromList
+    [
+          (0x00, execute_CB00)
+    ]
+
 group_cb: Z80 -> Z80
 group_cb tmp_z80 =
 --	private void group_cb()
@@ -3804,6 +3815,8 @@ group_cb tmp_z80 =
       z80 = { old_z80 | pc = new_pc } |> add_cpu_time 4
       o = Bitwise.and (c.value |> shiftRightBy 3) 7
       caseval = Bitwise.and c.value 0xC7
+
+      cb_func = group_cb_dict |> Dict.get caseval
       --y = debug_log "group_cb caseval" (caseval |> toHexString2) Nothing
    in
       -- case 0x00: B=shifter(o,B); break;
