@@ -93,10 +93,10 @@ toHexString2 value =
 --           Task.perform identity
 
 
-delay : Float -> msg -> Cmd msg
-delay time msg =
-    Process.sleep time
-        |> Task.perform (\_ -> msg)
+--delay : Float -> msg -> Cmd msg
+--delay time msg =
+--    Process.sleep time
+--        |> Task.perform (\_ -> msg)
 
 
 c_DECIMAL_PLACES =
