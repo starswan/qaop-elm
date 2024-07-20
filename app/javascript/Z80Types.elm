@@ -182,32 +182,38 @@ jp y z80 =
 --		if(y) {push(PC); PC = a;}
 --	}
 
+type alias PcWithPushed =
+    {
+        pc: Int,
+        value: Maybe Int
+    }
 
-call_if : Bool -> Z80 -> Z80EnvWithPC
+
+call_if : Bool -> Z80 -> PcWithPushed
 call_if y z80 =
     let
         a =
             imm16 z80
 
-        env =
-            z80.env
+        --env =
+        --    z80.env
 
-        z80_2 =
-            { z80 | pc = a.pc, env = { env | time = a.time } }
+        --z80_2 =
+        --    { z80 | pc = a.pc, env = { env | time = a.time } }
     in
     if y then
-        let
+        --let
             --b = debug_log "call" (a.value |> subName) Nothing
-            --z80_1 = z80_2 |> push z80_2.pc |> set_pc a.value
-            pushed =
-                z80_2.env |> z80_push z80_2.pc
+            --pushed =
+            --    z80_2.env |> z80_push z80_2.pc
 
-            --z80_1 = { z80_2 | env = pushed, pc = a.value }
-        in
-        Z80EnvWithPC pushed a.value
+        --in
+        --Z80EnvWithPC pushed a.value
+        PcWithPushed a.value (Just a.pc)
 
     else
-        Z80EnvWithPC z80_2.env a.pc
+        --Z80EnvWithPC z80_2.env a.pc
+        PcWithPushed a.pc Nothing
 
 
 rst_z80 : Int -> Z80 -> Z80

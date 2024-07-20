@@ -1107,7 +1107,7 @@ execute_0xC4 z80 =
    let
      result = call_if (z80.flags.fr /= 0) z80
    in
-      EnvWithPc result.env result.pc
+      PushWithPc result.value result.pc
 
 execute_0xC5: Z80 -> Z80Delta
 execute_0xC5 z80 =
@@ -1202,7 +1202,7 @@ execute_0xCC z80 =
   let
     result = z80 |> call_if (z80.flags.fr == 0)
   in
-    EnvWithPc result.env result.pc
+    PushWithPc result.value result.pc
 
 call_0xCD: Z80 -> Z80Delta
 call_0xCD z80 =

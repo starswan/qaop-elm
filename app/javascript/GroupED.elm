@@ -38,7 +38,7 @@ execute_ED43 z80 =
      env = z80_2.env |> set_mem16 v.value (Bitwise.or (shiftLeftBy8 z80.main.b) z80.main.c)
    in
      --{ z80_2 | env = env } |> add_cpu_time 6 |> Whole
-     EnvWithPc env v.pc
+     EnvWithPc (env |> add_cpu_time_env 6) v.pc
 
 -- All these other ED codes are 'undocumented' and do inteeresting things,
 -- but point back to ED44 in Qaop Java version
