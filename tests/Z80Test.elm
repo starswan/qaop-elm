@@ -9,7 +9,7 @@ import Z80Env exposing (mem, mem16, set_mem, set_mem16)
 suite : Test
 suite =
    let
-       addr = 30000
+       addr = 0x8000
        old_z80 = Z80.constructor
        z80 = { old_z80 | pc = addr }
        flags = z80.flags
@@ -653,10 +653,10 @@ suite =
                   new_env = z80env
                                |> set_mem addr 0x22
                                |> set_mem (addr + 1) 0x77
-                               |> set_mem (addr + 2) 0x55
+                               |> set_mem (addr + 2) 0x65
                   new_z80 = execute_instruction { z80 | env = new_env,
                                                         main = { z80main | hl = 0x5D9F }, flags = { flags | a = 0x39 } }
-                  mem_value = mem16 0x5577 new_z80.env
+                  mem_value = mem16 0x6577 new_z80.env
                in
                   Expect.equal ((addr + 3), 0x5D9F) (new_z80.pc, mem_value.value)
          ],
@@ -726,8 +726,8 @@ suite =
                   new_env = z80env
                                |> set_mem addr 0x2A
                                |> set_mem (addr + 1) 0x34
-                               |> set_mem (addr + 2) 0x54
-                               |> set_mem16 0x5434 0x8723
+                               |> set_mem (addr + 2) 0x64
+                               |> set_mem16 0x6434 0x8723
                   new_z80 = execute_instruction { z80 | env = new_env,
                                                         main = { z80main | hl = 0x4334 } }
                in
@@ -739,8 +739,8 @@ suite =
                                |> set_mem addr 0xFD
                                |> set_mem (addr + 1) 0x2A
                                |> set_mem (addr + 2) 0x34
-                               |> set_mem (addr + 3) 0x54
-                               |> set_mem16 0x5434 0x8723
+                               |> set_mem (addr + 3) 0x64
+                               |> set_mem16 0x6434 0x8723
                   new_z80 = execute_instruction { z80 | env = new_env,
                                                         main = { z80main | iy = 0x4334, hl = 0x4334 } }
                in
@@ -1198,7 +1198,7 @@ suite =
             \_ ->
                let
                   stackp = 0xF000
-                  start = 0x5000
+                  start = 0x6000
                   new_env = z80env
                                |> set_mem start 0xC9
                                |> set_mem (start + 1) 0xCD
@@ -1210,8 +1210,8 @@ suite =
                   z80_2 = z80_1 |> execute_instruction
                in
                   Expect.equal
-                  {addr=start, sp1=stackp, stacked=start + 4, addr4=start + 4, sp2=stackp + 2}
-                  {addr=z80_1.pc, sp1=z80_1.env.sp, stacked=mem_value.value, addr4=z80_2.pc, sp2=z80_2.env.sp}
+                  {pc1=start, sp1=stackp, stacked=start + 4, pc2=start + 4, sp2=stackp + 2}
+                  {pc1=z80_1.pc, sp1=z80_1.env.sp, stacked=mem_value.value, pc2=z80_2.pc, sp2=z80_2.env.sp}
          ],
          describe "ADD A, n (0xC6)"
          [
