@@ -23,7 +23,6 @@ delta_dict_lite_10 =
     Dict.fromList
         [ ( 0x11, execute_0x11 )
         , ( 0x12, execute_0x12 )
-        , ( 0x16, execute_0x16 )
         , ( 0x18, execute_0x18 )
         , ( 0x1A, execute_0x1A )
         , ( 0x1E, execute_0x1E )
@@ -52,23 +51,6 @@ execute_0x12 rom48k z80 =
     in
     --z80.env |> set_mem addr z80.flags.a |> add_cpu_time_env 3 |> OnlyEnv
     SetMem8WithTime addr z80.flags.a 3
-
-
-execute_0x16 : Z80ROM -> Z80 -> Z80Delta
-execute_0x16 rom48k z80 =
-    -- case 0x16: D=imm8(); break;
-    let
-        z80_main =
-            z80.main
-
-        new_d =
-            imm8 z80.pc z80.env.time rom48k z80.env.ram
-
-        main_1 =
-            { z80_main | d = new_d.value }
-    in
-    --{ z80 | pc = new_d.pc, env = new_d.env, main = main_1 }
-    MainRegsWithPcAndCpuTime main_1 new_d.pc new_d.time
 
 
 execute_0x18 : Z80ROM -> Z80 -> Z80Delta

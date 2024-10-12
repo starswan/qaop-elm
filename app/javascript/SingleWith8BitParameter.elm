@@ -2,8 +2,7 @@ module SingleWith8BitParameter exposing (..)
 
 import Bitwise
 import Dict exposing (Dict)
-import Utils exposing (byte, char)
-import Z80Env exposing (addCpuTimeEnv)
+import Utils exposing (byte)
 import Z80Types exposing (MainWithIndexRegisters, Z80)
 
 
@@ -12,6 +11,7 @@ singleWith8BitParam =
     Dict.fromList
         [ ( 0x06, ld_b_n )
         , ( 0x0E, ld_c_n )
+        , ( 0x16, ld_d_n )
         ]
 
 
@@ -25,6 +25,7 @@ doubleWithRegisters =
 type Single8BitChange
     = NewBRegister Int
     | NewCRegister Int
+    | NewDRegister Int
 
 
 type DoubleWithRegisterChange
@@ -40,6 +41,9 @@ applySimple8BitChange change z80_main =
         NewCRegister int ->
             { z80_main | c = int }
 
+        NewDRegister int ->
+            { z80_main | d = int }
+
 
 ld_b_n : Int -> Single8BitChange
 ld_b_n param =
@@ -53,6 +57,12 @@ ld_c_n param =
     -- case 0x0E: C=imm8(); break;
     --{ z80 | env = new_c.env, pc = new_c.pc, main = { z80_main | c = new_c.value } }
     NewCRegister param
+
+
+ld_d_n : Int -> Single8BitChange
+ld_d_n param =
+    -- case 0x16: D=imm8(); break;
+    NewDRegister param
 
 
 djnz : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
