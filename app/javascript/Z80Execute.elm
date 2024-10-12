@@ -3,11 +3,11 @@ module Z80Execute exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, addCpuTimeTime)
 import RegisterChange exposing (RegisterChange, applyRegisterChange)
-import SingleWith8BitParameter exposing (Single8BitChange, applySimple8BitChange)
+import SingleWith8BitParameter exposing (DoubleWithRegisterChange(..), Single8BitChange, applySimple8BitChange)
 import Z80Change exposing (FlagChange(..), applyZ80Change)
 import Z80ChangeData exposing (RegisterChangeData, Z80ChangeData)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..), applyDeltaWithChanges)
-import Z80Env
+import Z80Env exposing (addCpuTimeEnv)
 import Z80Flags exposing (FlagRegisters)
 import Z80Types exposing (IXIYHL(..), Z80)
 
@@ -18,6 +18,7 @@ type DeltaWithChanges
     | FlagDelta CpuTimeCTime FlagChange
     | RegisterChangeDelta CpuTimeCTime RegisterChangeData
     | Simple8BitDelta CpuTimeCTime Single8BitChange
+    | DoubleWithRegistersDelta CpuTimeCTime DoubleWithRegisterChange
 
 
 apply_delta : Z80 -> DeltaWithChanges -> Z80
@@ -38,6 +39,37 @@ apply_delta z80 z80delta =
         Simple8BitDelta cpuTimeCTime single8BitChange ->
             z80 |> applySimple8BitDelta cpuTimeCTime single8BitChange
 
+        DoubleWithRegistersDelta cpuTimeCTime doubleWithRegisterChange ->
+            z80 |> applyDoubleWithRegistersDelta cpuTimeCTime doubleWithRegisterChange
+
+
+applyDoubleWithRegistersDelta : CpuTimeCTime -> DoubleWithRegisterChange -> Z80 -> Z80
+applyDoubleWithRegistersDelta cpu_time z80changeData tmp_z80 =
+    let
+        interrupts =
+            tmp_z80.interrupts
+
+        old_env =
+            tmp_z80.env
+    in
+    case z80changeData of
+        RelativeJumpWithTimeOffset single8BitChange maybeInt timeOffset ->
+            let
+                pc =
+                    case maybeInt of
+                        Just jump ->
+                            Bitwise.and (tmp_z80.pc + 2 + jump) 0xFFFF
+
+                        Nothing ->
+                            Bitwise.and (tmp_z80.pc + 2) 0xFFFF
+            in
+            { tmp_z80
+                | main = tmp_z80.main |> applySimple8BitChange single8BitChange
+                , pc = pc
+                , env = { old_env | time = cpu_time |> addCpuTimeTime timeOffset }
+                , interrupts = { interrupts | r = interrupts.r + 1 }
+            }
+
 
 applySimple8BitDelta : CpuTimeCTime -> Single8BitChange -> Z80 -> Z80
 applySimple8BitDelta cpu_time z80changeData tmp_z80 =
@@ -53,8 +85,11 @@ applySimple8BitDelta cpu_time z80changeData tmp_z80 =
 
         new_pc =
             Bitwise.and (z80.pc + 2) 0xFFFF
+
+        main =
+            z80.main |> applySimple8BitChange z80changeData
     in
-    { z80 | pc = new_pc } |> applySimple8BitChange z80changeData
+    { z80 | pc = new_pc, main = main }
 
 
 applyFlagDelta : CpuTimeCTime -> FlagChange -> Z80 -> Z80
