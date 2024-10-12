@@ -49,7 +49,7 @@ execute_0x30 rom48k z80 =
     else
         let
             v =
-                 imm8 z80.pc z80.env.time rom48k z80.env.ram
+                imm8 z80.pc z80.env.time rom48k z80.env.ram
         in
         --{ z80 | env = v.env, pc = v.pc }
         CpuTimeWithPc v.time v.pc
@@ -189,12 +189,11 @@ execute_0x36 ixiyhl rom48k z80 =
                 --z80_1 = { z80 | env = mempc.env } |> add_cpu_time 3
                 --z80_1_env =
                 --    { env_1 | time = mempc.time } |> addCpuTimeEnv 3
-
                 v =
                     mem (char (z80.pc + 1)) (mempc.time |> addCpuTimeTime 3) rom48k env_1.ram
 
                 z80_2 =
-                    { env_1 | time = (v.time |> addCpuTimeTime 5) }
+                    { env_1 | time = v.time |> addCpuTimeTime 5 }
 
                 x =
                     setMem a v.value z80_2
