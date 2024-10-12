@@ -23,7 +23,6 @@ delta_dict_lite_10 =
     Dict.fromList
         [ ( 0x11, execute_0x11 )
         , ( 0x12, execute_0x12 )
-        , ( 0x18, execute_0x18 )
         , ( 0x1A, execute_0x1A )
         , ( 0x1E, execute_0x1E )
         ]
@@ -51,35 +50,6 @@ execute_0x12 rom48k z80 =
     in
     --z80.env |> set_mem addr z80.flags.a |> add_cpu_time_env 3 |> OnlyEnv
     SetMem8WithTime addr z80.flags.a 3
-
-
-execute_0x18 : Z80ROM -> Z80 -> Z80Delta
-execute_0x18 rom48k z80 =
-    -- case 0x18: MP=PC=(char)(PC+1+(byte)env.mem(PC)); time+=8; break;
-    -- This is just an inlined jr() call
-    let
-        mem_value =
-            mem z80.pc z80.env.time rom48k z80.env.ram
-
-        pc_val =
-            z80.pc + 1 + byte mem_value.value
-
-        --pc_val = ProgramCounter dest
-        --x = if (dest |> subName |> (String.startsWith "CALL-SUB")) then
-        --      -- HL still need to be in-directed, so not a subroutine address yet
-        --      let
-        --         called = z80.env |> mem16 z80.main.hl
-        --      in
-        --         debug_log "CALL-SUB" ("from " ++ (z80.pc |> toHexString) ++ " to " ++ (called.value |> subName)) Nothing
-        --    else
-        --      if Dict.member dest Z80Rom.c_COMMON_NAMES then
-        --         Nothing
-        --      else
-        --         debug_log "jr" (dest |> subName) Nothing
-    in
-    --z80 |> set_pc dest |> add_cpu_time 8
-    --PcAndCpuTime pc_val 8
-    CpuTimeWithPc (mem_value.time |> addCpuTimeTime 8) pc_val
 
 
 execute_0x19 : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
