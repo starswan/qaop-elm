@@ -120,7 +120,7 @@ execute_0xC5 _ z80 =
     --z80 |> push (z80 |> get_bc)
     let
         bc =
-            z80 |> get_bc
+            z80.main |> get_bc
 
         --pushed = z80.env |> z80_push bc
     in

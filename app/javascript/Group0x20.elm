@@ -14,15 +14,13 @@ import Z80Types exposing (IXIY, IXIYHL, Z80, get_xy, get_xy_ixiy, imm16, imm8, j
 miniDict20 : Dict Int (IXIY -> Z80ROM -> Z80 -> Z80Delta)
 miniDict20 =
     Dict.fromList
-        [
-                 ( 0x23, execute_0x23 )
-                , ( 0x24, execute_0x24 )
-                , ( 0x25, execute_0x25 )
+        [ ( 0x23, execute_0x23 )
+        , ( 0x24, execute_0x24 )
+        , ( 0x25, execute_0x25 )
         , ( 0x29, add_hl_hl )
         , ( 0x2B, execute_0x2B )
         , ( 0x2C, execute_0x2C )
         , ( 0x2D, execute_0x2D )
-
         ]
 
 

@@ -7,7 +7,7 @@ import Utils exposing (char, shiftLeftBy8, shiftRightBy8)
 import Z80Change exposing (Z80Change(..))
 import Z80ChangeData exposing (RegisterChangeData, Z80ChangeData)
 import Z80Flags exposing (FlagRegisters, add16, cpl, daa, dec, inc, rot, scf_ccf)
-import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, Z80, get_xy)
+import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, Z80, get_bc, get_xy)
 
 
 singleByteMainAndFlagRegisters : Dict Int (MainWithIndexRegisters -> FlagRegisters -> Z80ChangeData)
@@ -15,6 +15,7 @@ singleByteMainAndFlagRegisters =
     Dict.fromList
         [ ( 0x04, inc_b )
         , ( 0x05, dec_b )
+        , ( 0x09, add_hl_bc )
         , ( 0x0C, inc_c )
         , ( 0x0D, dec_c )
         , ( 0x14, inc_d )
@@ -383,3 +384,21 @@ ld_c_l z80_main =
     -- case 0x4D: C=HL&0xFF; break;
     --z80 |> set_c (get_l ixiyhl z80.main)
     { changes = ChangeRegisterC (Bitwise.and z80_main.hl 0xFF), cpu_time = 0, pc_change = 1 }
+
+add_hl_bc : (MainWithIndexRegisters -> FlagRegisters ->  Z80ChangeData)
+add_hl_bc z80_main z80_flags =
+    --case 0x09: HL=add16(HL,B<<8|C); break;
+    --case 0x09: xy=add16(xy,B<<8|C); break;
+    let
+        xy =
+            z80_main.hl
+
+        new_xy =
+            add16 xy (get_bc z80_main) z80_flags
+
+        --new_z80 =
+        --    set_xy new_xy.value ixiyhl z80.main
+    in
+    --Whole ({ z80 | main = new_z80, flags = new_xy.flags } |> add_cpu_time new_xy.time)
+    --FlagsWithPCMainAndTime new_xy.flags z80.pc new_z80 new_xy.time
+    { changes = FlagsWithHLRegister new_xy.flags new_xy.value, cpu_time = new_xy.time, pc_change = 1 }

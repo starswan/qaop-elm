@@ -47,7 +47,7 @@ execute_0x10 rom48k z80 =
             z80_1.pc
 
         mem_value =
-             mem v z80_1.env.time rom48k z80_1.env.ram
+            mem v z80_1.env.time rom48k z80_1.env.ram
 
         d =
             byte mem_value.value

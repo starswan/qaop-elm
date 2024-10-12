@@ -28,7 +28,7 @@ execute_ED42 rom48k z80 =
     -- case 0x42: sbc_hl(B<<8|C); break;
     let
         bc =
-            z80 |> get_bc
+            z80.main |> get_bc
     in
     z80 |> sbc_hl bc
 
@@ -189,7 +189,7 @@ execute_ED78 _ z80 =
     --  case 0x78: MP=(v=B<<8|C)+1; f_szh0n0p(A=env.in(v)); time+=4; break;
     let
         v =
-            z80 |> get_bc
+            z80.main |> get_bc
 
         new_a =
             z80.env |> z80_in v
@@ -329,7 +329,7 @@ execute_ED40485058606870 : Int -> Z80 -> Z80Delta
 execute_ED40485058606870 value z80 =
     let
         bc =
-            z80 |> get_bc
+            z80.main |> get_bc
 
         inval =
             z80.env |> z80_in bc
@@ -636,7 +636,7 @@ ldir i r rom48k z80 =
         --		}
         --		Fa = Fb = v;
         a =
-            Bitwise.and ((z80_2 |> get_bc) - 1) 0xFFFF
+            Bitwise.and ((z80_2.main |> get_bc) - 1) 0xFFFF
 
         z80_3 =
             z80_2 |> set_bc a
