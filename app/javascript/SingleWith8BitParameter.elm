@@ -1,7 +1,10 @@
 module SingleWith8BitParameter exposing (..)
 
+import Bitwise
 import Dict exposing (Dict)
-import Z80Types exposing (Z80)
+import Utils exposing (byte, char)
+import Z80Env exposing (addCpuTimeEnv)
+import Z80Types exposing (MainWithIndexRegisters, Z80)
 
 
 singleWith8BitParam : Dict Int (Int -> Single8BitChange)
@@ -12,27 +15,30 @@ singleWith8BitParam =
         ]
 
 
+doubleWithRegisters : Dict Int (MainWithIndexRegisters -> Int -> DoubleWithRegisterChange)
+doubleWithRegisters =
+    Dict.fromList
+        [ ( 0x10, djnz )
+        ]
+
+
 type Single8BitChange
     = NewBRegister Int
     | NewCRegister Int
 
 
-applySimple8BitChange : Single8BitChange -> Z80 -> Z80
-applySimple8BitChange change z80 =
+type DoubleWithRegisterChange
+    = RelativeJumpWithTimeOffset Single8BitChange (Maybe Int) Int
+
+
+applySimple8BitChange : Single8BitChange -> MainWithIndexRegisters -> MainWithIndexRegisters
+applySimple8BitChange change z80_main =
     case change of
         NewBRegister int ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | main = { main | b = int } }
+            { z80_main | b = int }
 
         NewCRegister int ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | main = { main | c = int } }
+            { z80_main | c = int }
 
 
 ld_b_n : Int -> Single8BitChange
@@ -47,3 +53,25 @@ ld_c_n param =
     -- case 0x0E: C=imm8(); break;
     --{ z80 | env = new_c.env, pc = new_c.pc, main = { z80_main | c = new_c.value } }
     NewCRegister param
+
+
+djnz : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
+djnz z80_main param =
+    --case 0x10: {time++; v=PC; byte d=(byte)env.mem(v++); time+=3;
+    --if((B=B-1&0xFF)!=0) {time+=5; MP=v+=d;}
+    --PC=(char)v;} break;
+    let
+        d =
+            byte param
+
+        b =
+            Bitwise.and (z80_main.b - 1) 0xFF
+
+        ( time, jump ) =
+            if b /= 0 then
+                ( 9, Just d )
+
+            else
+                ( 4, Nothing )
+    in
+    RelativeJumpWithTimeOffset (NewBRegister b) jump time

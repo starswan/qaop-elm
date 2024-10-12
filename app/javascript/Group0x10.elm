@@ -21,55 +21,13 @@ delta_dict_10 =
 delta_dict_lite_10 : Dict Int (Z80ROM -> Z80 -> Z80Delta)
 delta_dict_lite_10 =
     Dict.fromList
-        [ ( 0x10, execute_0x10 )
-        , ( 0x11, execute_0x11 )
+        [ ( 0x11, execute_0x11 )
         , ( 0x12, execute_0x12 )
         , ( 0x16, execute_0x16 )
         , ( 0x18, execute_0x18 )
         , ( 0x1A, execute_0x1A )
         , ( 0x1E, execute_0x1E )
         ]
-
-
-execute_0x10 : Z80ROM -> Z80 -> Z80Delta
-execute_0x10 rom48k z80 =
-    --case 0x10: {time++; v=PC; byte d=(byte)env.mem(v++); time+=3;
-    --if((B=B-1&0xFF)!=0) {time+=5; MP=v+=d;}
-    --PC=(char)v;} break;
-    let
-        z80_main =
-            z80.main
-
-        z80_1 =
-            z80 |> add_cpu_time 1
-
-        v =
-            z80_1.pc
-
-        mem_value =
-            mem v z80_1.env.time rom48k z80_1.env.ram
-
-        d =
-            byte mem_value.value
-
-        env_0 =
-            z80.env
-
-        z80_2 =
-            { z80_1 | env = { env_0 | time = mem_value.time |> addCpuTimeTime 3 } }
-
-        b =
-            Bitwise.and (z80_2.main.b - 1) 0xFF
-
-        ( z80_3, v3 ) =
-            if b /= 0 then
-                ( z80_2.env.time |> addCpuTimeTime 5, v + 1 + d )
-
-            else
-                ( z80_2.env.time, v + 1 )
-    in
-    --{ z80_3 | main = { z80_main | b = b } } |> set_pc v3
-    MainRegsWithPcAndCpuTime { z80_main | b = b } v3 z80_3
 
 
 execute_0x11 : Z80ROM -> Z80 -> Z80Delta
