@@ -402,9 +402,9 @@ env_mem_hl ixiyhl rom48k z80 =
             CpuTimePcAndValue (dval.time |> addCpuTimeTime 8) (char (z80.pc + 1)) (char (z80.main.iy + byte dval.value))
 
 
-get_bc : Z80 -> Int
-get_bc z80 =
-    z80.main.b |> shiftLeftBy8 |> Bitwise.or z80.main.c
+get_bc : MainWithIndexRegisters -> Int
+get_bc z80_main =
+    z80_main.b |> shiftLeftBy8 |> Bitwise.or z80_main.c
 
 
 get_de : MainWithIndexRegisters -> Int

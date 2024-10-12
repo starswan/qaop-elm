@@ -7,7 +7,7 @@ import Array exposing (Array)
 import Bitwise exposing (and, or, shiftRightBy)
 import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAndValue, addCpuTimeTime)
 import Dict exposing (Dict)
-import Group0x00 exposing (delta_dict_00, delta_dict_lite_00)
+import Group0x00 exposing (delta_dict_00, delta_dict_lite_00, miniDict00)
 import Group0x10 exposing (delta_dict_10, delta_dict_lite_10)
 import Group0x20 exposing (delta_dict_20, delta_dict_lite_20, miniDict20)
 import Group0x30 exposing (delta_dict_30, delta_dict_lite_30)
@@ -411,6 +411,7 @@ execute_0xFF _ z80 =
 xYDict: Dict Int (IXIY -> Z80ROM -> Z80 -> Z80Delta)
 xYDict = miniDict40
     |> Dict.union miniDict20
+    |> Dict.union miniDict00
 
 lt40_delta_dict: Dict Int (IXIYHL -> Z80ROM -> Z80 -> Z80Delta)
 lt40_delta_dict = delta_dict_00
