@@ -21,6 +21,13 @@ doubleWithRegisters =
         [ ( 0x10, djnz )
         ]
 
+relativeJump: Dict Int (Int -> DoubleWithRegisterChange)
+relativeJump =
+    Dict.fromList
+    [
+    (0x18, jr_n)
+    ]
+
 
 type Single8BitChange
     = NewBRegister Int
@@ -29,8 +36,7 @@ type Single8BitChange
 
 
 type DoubleWithRegisterChange
-    = RelativeJumpWithTimeOffset Single8BitChange (Maybe Int) Int
-
+    = RelativeJumpWithTimeOffset (Maybe Single8BitChange) (Maybe Int) Int
 
 applySimple8BitChange : Single8BitChange -> MainWithIndexRegisters -> MainWithIndexRegisters
 applySimple8BitChange change z80_main =
@@ -84,4 +90,13 @@ djnz z80_main param =
             else
                 ( 4, Nothing )
     in
-    RelativeJumpWithTimeOffset (NewBRegister b) jump time
+    RelativeJumpWithTimeOffset (Just (NewBRegister b)) jump time
+
+jr_n : Int -> DoubleWithRegisterChange
+jr_n param =
+    -- case 0x18: MP=PC=(char)(PC+1+(byte)env.mem(PC)); time+=8; break;
+    -- This is just an inlined jr() call
+    --z80 |> set_pc dest |> add_cpu_time 8
+    RelativeJumpWithTimeOffset Nothing (Just param) 8
+
+
