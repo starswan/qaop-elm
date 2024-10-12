@@ -15,6 +15,7 @@ miniDict40 =
         , ( 0x4D, ld_c_l )
         ]
 
+
 delta_dict_40 : Dict Int (IXIYHL -> Z80ROM -> Z80 -> Z80Delta)
 delta_dict_40 =
     Dict.fromList
@@ -106,5 +107,3 @@ execute_0x4E ixiyhl rom48k z80 =
     in
     --{ z80 | pc = value.pc, env = value.env } |> set_c value.value
     MainRegsWithPcAndCpuTime { main | c = value.value } value.pc value.time
-
-
