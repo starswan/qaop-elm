@@ -1,19 +1,22 @@
 module Z80Test exposing (..)
 
-import Bitwise exposing (shiftRightBy)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (execute_instruction)
 import Z80Address exposing (Z80Address(..), fromInt, toInt)
-import Z80Env exposing (mem, mem16, setMem, setMem16)
+import Z80Env exposing (setMem)
 import Z80Rom
 import Z80WriteableAddress exposing (Z80WriteableAddress(..))
 
 suite : Test
 suite =
    let
-       addr = 30000
-       writeAddr = Z80MemoryAddress (30000 - 0x4000)
+       addrInt = 30000
+       addr = addrInt |> fromInt
+       writeAddr = Z80MemoryAddress (addrInt - 0x4000)
+       writeAddr_plus_1 = Z80MemoryAddress (addrInt +1  - 0x4000)
+       writeAddr_plus_2 = Z80MemoryAddress (addrInt +2  - 0x4000)
+       writeAddr_plus_3 = Z80MemoryAddress (addrInt +3  - 0x4000)
        old_z80 = Z80.constructor
        z80 = { old_z80 | pc = addr }
        flags = z80.flags
@@ -30,7 +33,7 @@ suite =
                      let
                         z80inc = { z80 | env = z80env |> setMem writeAddr 0x00 } |> Z80.execute_instruction z80rom
                      in
-                        Expect.equal ((addr + 1), 4) (z80inc.pc |> toInt, z80inc.env.time.cpu_time - z80.env.time.cpu_time)
+                        Expect.equal ((addrInt + 1), 4) (z80inc.pc |> toInt, z80inc.env.time.cpu_time - z80.env.time.cpu_time)
             ],
          describe "16 bit load immediate"
          [
@@ -1249,20 +1252,20 @@ suite =
          ],
          describe "IX things"
          [
-            --test "0xDD 0xCB nn 0xC6 SET 0, (IX + n)" <|
-            --\_ ->
-            --   let
-            --      new_env = z80env
-            --                   |> setMem addr 0xDD
-            --                   |> setMem (addr + 1) 0xCB
-            --                   |> setMem (addr + 2) 0x06
-            --                   |> setMem (addr + 3) 0xC6
-            --                   |> setMem 0xA086 0x10
-            --      new_z80 = execute_instruction z80rom { z80 | env = { new_env | sp = 0x8765 },
-            --                                            main = { z80main | ix=0xA080, hl = 0x6545, b = 0xA5 }, flags = { flags | a = 0x39 } }
-            --      mem_value = mem 0xA086 new_z80.env.time z80rom new_z80.env.ram
-            --   in
-            --      Expect.equal ((addr + 4), 0x11) (new_z80.pc, mem_value.value)
+            test "0xDD 0xCB nn 0xC6 SET 0, (IX + n)" <|
+            \_ ->
+               let
+                  new_env = z80env
+                               |> setMem writeAddr 0xDD
+                               |> setMem writeAddr_plus_1 0xCB
+                               |> setMem writeAddr_plus_2 0x06
+                               |> setMem writeAddr_plus_3 0xC6
+                               |> setMem 0xA086 0x10
+                  new_z80 = execute_instruction z80rom { z80 | env = { new_env | sp = 0x8765 },
+                                                        main = { z80main | ix=0xA080, hl = 0x6545, b = 0xA5 }, flags = { flags | a = 0x39 } }
+                  mem_value = mem 0xA086 new_z80.env.time z80rom new_z80.env.ram
+               in
+                  Expect.equal ((addr + 4), 0x11) (new_z80.pc, mem_value.value)
             --,test "0xFD 0xCB nn 0x9E RES 3, (IY + n) -ve" <|
             --\_ ->
             --   let
