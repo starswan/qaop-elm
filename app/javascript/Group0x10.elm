@@ -24,7 +24,6 @@ delta_dict_lite_10 =
         [ ( 0x11, execute_0x11 )
         , ( 0x12, execute_0x12 )
         , ( 0x1A, execute_0x1A )
-        , ( 0x1E, execute_0x1E )
         ]
 
 
@@ -96,18 +95,3 @@ execute_0x1A rom48k z80 =
     CpuTimeWithFlags env_1 new_flags
 
 
-execute_0x1E : Z80ROM -> Z80 -> Z80Delta
-execute_0x1E rom48k z80 =
-    -- case 0x1E: E=imm8(); break;
-    let
-        z80_main =
-            z80.main
-
-        new_e =
-            imm8 z80.pc z80.env.time rom48k z80.env.ram
-
-        main_1 =
-            { z80_main | e = new_e.value }
-    in
-    --{ z80 | env = new_e.env, pc = new_e.pc, main = main_1 }
-    MainRegsWithPcAndCpuTime main_1 new_e.pc new_e.time

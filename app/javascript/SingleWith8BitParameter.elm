@@ -12,6 +12,7 @@ singleWith8BitParam =
         [ ( 0x06, ld_b_n )
         , ( 0x0E, ld_c_n )
         , ( 0x16, ld_d_n )
+        , ( 0x1E, ld_e_n )
         ]
 
 
@@ -33,6 +34,7 @@ type Single8BitChange
     = NewBRegister Int
     | NewCRegister Int
     | NewDRegister Int
+    | NewERegister Int
 
 
 type DoubleWithRegisterChange
@@ -49,6 +51,9 @@ applySimple8BitChange change z80_main =
 
         NewDRegister int ->
             { z80_main | d = int }
+
+        NewERegister int ->
+            { z80_main | e = int }
 
 
 ld_b_n : Int -> Single8BitChange
@@ -69,6 +74,11 @@ ld_d_n : Int -> Single8BitChange
 ld_d_n param =
     -- case 0x16: D=imm8(); break;
     NewDRegister param
+
+ld_e_n : Int -> Single8BitChange
+ld_e_n param =
+    -- case 0x1E: E=imm8(); break;
+    NewERegister param
 
 
 djnz : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
