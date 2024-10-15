@@ -155,6 +155,21 @@ applyFlagDelta cpu_time z80_flags tmp_z80 =
             in
             { z80 | main = { main | c = int } }
 
+        FlagChangeD int ->
+            let
+                main =
+                    z80.main
+            in
+            { z80 | main = { main | d = int } }
+
+
+        FlagChangeE int ->
+            let
+                main =
+                    z80.main
+            in
+            { z80 | main = { main | e = int } }
+
 
 applyPureDelta : CpuTimeCTime -> Z80ChangeData -> Z80 -> Z80
 applyPureDelta cpu_time z80changeData tmp_z80 =
