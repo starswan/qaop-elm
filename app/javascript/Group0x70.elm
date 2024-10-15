@@ -22,13 +22,12 @@ delta_dict_70 =
         , ( 0x7E, execute_0x7E )
         ]
 
+
 miniDict70 : Dict Int (IXIY -> Z80ROM -> Z80 -> Z80Delta)
 miniDict70 =
     Dict.fromList
-        [
-         ( 0x7C, ld_a_h )
+        [ ( 0x7C, ld_a_h )
         , ( 0x7D, ld_a_l )
-
         ]
 
 
