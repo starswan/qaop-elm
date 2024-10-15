@@ -38,7 +38,6 @@ delta_dict_lite_20 : Dict Int (Z80ROM -> Z80 -> Z80Delta)
 delta_dict_lite_20 =
     Dict.fromList
         [ ( 0x22, execute_0x22 )
-        , ( 0x28, execute_0x28 )
         ]
 
 
@@ -160,26 +159,6 @@ execute_0x26 ixiyhl rom48k z80 =
     in
     --{ new_z80 | main = main }
     MainRegsWithPcAndCpuTime main value.pc value.time
-
-
-execute_0x28 : Z80ROM -> Z80 -> Z80Delta
-execute_0x28 rom48k z80 =
-    -- case 0x28: if(Fr==0) jr(); else imm8(); break;
-    if z80.flags.fr == 0 then
-        let
-            x =
-                z80 |> jr rom48k
-        in
-        --{ z80 | env = x.env, pc = x.register_value }
-        CpuTimeWithPc x.time x.pc
-
-    else
-        let
-            x =
-                imm8 z80.pc z80.env.time rom48k z80.env.ram
-        in
-        --{ z80 | env = x.env, pc = x.pc }
-        CpuTimeWithPc x.time x.pc
 
 
 add_hl_hl : IXIY -> Z80ROM -> Z80 -> Z80Delta

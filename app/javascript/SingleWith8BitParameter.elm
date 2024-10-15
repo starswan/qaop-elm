@@ -29,6 +29,9 @@ maybeRelativeJump =
     Dict.fromList
         [ ( 0x18, jr_n )
         , ( 0x20, jr_nz_d )
+        , ( 0x28, jr_z_d )
+        , ( 0x30, jr_nc_d )
+        , ( 0x38, jr_c_d )
         ]
 
 
@@ -124,6 +127,36 @@ jr_nz_d : Int -> FlagRegisters -> JumpChange
 jr_nz_d param z80_flags =
     -- case 0x20: if(Fr!=0) jr(); else imm8(); break;
     if z80_flags.fr /= 0 then
+        { jump = Just (byte param) }
+
+    else
+        { jump = Nothing }
+
+
+jr_z_d : Int -> FlagRegisters -> JumpChange
+jr_z_d param z80_flags =
+    -- case 0x28: if(Fr==0) jr(); else imm8(); break;
+    if z80_flags.fr == 0 then
+        { jump = Just (byte param) }
+
+    else
+        { jump = Nothing }
+
+
+jr_nc_d : Int -> FlagRegisters -> JumpChange
+jr_nc_d param z80_flags =
+    -- case 0x30: if((Ff&0x100)==0) jr(); else imm8(); break;
+    if Bitwise.and z80_flags.ff 0x0100 == 0 then
+        { jump = Just (byte param) }
+
+    else
+        { jump = Nothing }
+
+
+jr_c_d : Int -> FlagRegisters -> JumpChange
+jr_c_d param z80_flags =
+    -- case 0x38: if((Ff&0x100)!=0) jr(); else imm8(); break;
+    if Bitwise.and z80_flags.ff 0x0100 /= 0 then
         { jump = Just (byte param) }
 
     else
