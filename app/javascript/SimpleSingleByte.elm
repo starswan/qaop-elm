@@ -576,6 +576,7 @@ ld_l_h z80_main =
     -- case 0x6C: xy=xy&0xFF00|xy>>>8; break;
     { changes = ChangeRegisterHL (Bitwise.or (Bitwise.and z80_main.hl 0xFF00) (shiftRightBy8 z80_main.hl)), cpu_time = 0 }
 
+
 ld_a_b : MainWithIndexRegisters -> RegisterChangeData
 ld_a_b z80_main =
     -- case 0x78: A=B; break;
@@ -618,5 +619,3 @@ ld_a_l z80_main =
     -- case 0x7D: A=xy&0xFF; break;
     --z80 |> set_a (get_l ixiyhl z80.main)
     { changes = ChangeRegisterA (Bitwise.and z80_main.hl 0xFF), cpu_time = 0 }
-
-

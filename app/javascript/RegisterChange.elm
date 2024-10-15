@@ -15,29 +15,34 @@ type RegisterChange
     | ChangeRegisterA Int
 
 
-applyRegisterChange : RegisterChange -> FlagRegisters -> MainWithIndexRegisters -> (FlagRegisters, MainWithIndexRegisters)
+type RegisterChangeApplied
+    = MainRegsApplied MainWithIndexRegisters
+    | FlagRegsApplied FlagRegisters
+
+
+applyRegisterChange : RegisterChange -> FlagRegisters -> MainWithIndexRegisters -> RegisterChangeApplied
 applyRegisterChange change z80_flags main =
     case change of
         ChangeRegisterC int ->
-            (z80_flags, { main | c = int })
+            MainRegsApplied { main | c = int }
 
         ChangeRegisterBC b_value c_value ->
-            (z80_flags, { main | b = b_value, c = c_value })
+            MainRegsApplied { main | b = b_value, c = c_value }
 
         ChangeRegisterDE d_value e_value ->
-            (z80_flags,{ main | d = d_value, e = e_value })
+            MainRegsApplied { main | d = d_value, e = e_value }
 
         ChangeRegisterE int ->
-            (z80_flags, { main | e = int })
+            MainRegsApplied { main | e = int }
 
         ChangeRegisterHL int ->
-            (z80_flags, { main | hl = int })
+            MainRegsApplied { main | hl = int }
 
         ChangeRegisterB int ->
-            (z80_flags, { main | b = int })
+            MainRegsApplied { main | b = int }
 
         ChangeRegisterD int ->
-            (z80_flags, { main | d = int })
+            MainRegsApplied { main | d = int }
 
         ChangeRegisterA int ->
-            ({z80_flags | a = int}, main)
+            FlagRegsApplied { z80_flags | a = int }
