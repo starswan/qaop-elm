@@ -22,6 +22,7 @@ type FlagChange
     | FlagChangeD Int
     | FlagChangeE Int
     | FlagChangeH Int
+    | FlagChangeL Int
 
 
 applyZ80Change : Z80Change -> Z80 -> Z80
