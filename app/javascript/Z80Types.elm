@@ -328,6 +328,14 @@ set_l value ixiyhl z80 =
     in
     set_xy (Bitwise.or (Bitwise.and xy 0xFF00) value) ixiyhl z80
 
+set_l_ixiy : Int -> IXIY -> MainWithIndexRegisters -> MainWithIndexRegisters
+set_l_ixiy value ixiyhl z80 =
+    let
+        xy =
+            get_xy_ixiy ixiyhl z80
+    in
+    set_xy_ixiy (Bitwise.or (Bitwise.and xy 0xFF00) value) ixiyhl z80
+
 
 get_xy : IXIYHL -> MainWithIndexRegisters -> Int
 get_xy ixiyhl z80_main =

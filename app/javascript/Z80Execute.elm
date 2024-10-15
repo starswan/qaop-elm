@@ -177,6 +177,13 @@ applyFlagDelta cpu_time z80_flags tmp_z80 =
             in
             { z80 | main = { main | hl = Bitwise.or (shiftLeftBy8 int) (Bitwise.and main.hl 0xFF) } }
 
+        FlagChangeL int ->
+            let
+                main =
+                    z80.main
+            in
+            { z80 | main = { main | hl = Bitwise.or int (Bitwise.and main.hl 0xFF00) } }
+
 
 applyPureDelta : CpuTimeCTime -> Z80ChangeData -> Z80 -> Z80
 applyPureDelta cpu_time z80changeData tmp_z80 =

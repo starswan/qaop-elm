@@ -25,6 +25,7 @@ singleByteFlags =
         , ( 0x57, ld_d_a )
         , ( 0x5F, ld_e_a )
         , ( 0x67, ld_h_a )
+        , ( 0x6F, ld_l_a )
         ]
 
 
@@ -143,3 +144,9 @@ ld_h_a z80_flags =
     -- case 0x67: xy=xy&0xFF|A<<8; break;
     --z80 |> set_h_z80 z80.flags.a ixiyhl
     FlagChangeH z80_flags.a
+
+ld_l_a : FlagRegisters -> FlagChange
+ld_l_a z80_flags =
+    -- case 0x6F: HL=HL&0xFF00|A; break;
+    -- case 0x6F: xy=xy&0xFF00|A; break;
+    FlagChangeL z80_flags.a
