@@ -11,7 +11,7 @@ import Group0x40 exposing (delta_dict_40, miniDict40)
 import Group0x50 exposing (delta_dict_50, miniDict50)
 import Group0x60 exposing (delta_dict_60, miniDict60)
 import Group0x70 exposing (delta_dict_70, miniDict70)
-import Group0x80 exposing (delta_dict_80)
+import Group0x80 exposing (delta_dict_80, miniDict80)
 import Group0x90 exposing (delta_dict_90)
 import Group0xA0 exposing (delta_dict_A0)
 import Group0xB0 exposing (delta_dict_B0)
@@ -110,3 +110,4 @@ xYDict =
         |> Dict.union miniDict50
         |> Dict.union miniDict60
         |> Dict.union miniDict70
+        |> Dict.union miniDict80
