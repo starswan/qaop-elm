@@ -21,11 +21,8 @@ delta_dict_50 =
 delta_dict_lite_50 : Dict Int (Z80ROM -> Z80 -> Z80Delta)
 delta_dict_lite_50 =
     Dict.fromList
-        [ -- case 0x40: break;
-          ( 0x50, execute_0x50 )
-        , ( 0x51, execute_0x51 )
-        , ( 0x52, delta_noop )
-        , ( 0x53, execute_0x53 )
+        [ -- case 0x52: break;
+          ( 0x52, delta_noop )
         , ( 0x57, execute_0x57 )
         , ( 0x58, execute_0x58 )
         , ( 0x59, execute_0x59 )
@@ -34,39 +31,6 @@ delta_dict_lite_50 =
           ( 0x5B, delta_noop )
         , ( 0x5F, execute_0x5F )
         ]
-
-
-execute_0x50 : Z80ROM -> Z80 -> Z80Delta
-execute_0x50 rom z80 =
-    -- case 0x50: D=B; break;
-    --z80 |> set_d z80.main.b
-    let
-        main =
-            z80.main
-    in
-    { main | d = z80.main.b } |> MainRegs
-
-
-execute_0x51 : Z80ROM -> Z80 -> Z80Delta
-execute_0x51 rom z80 =
-    -- case 0x51: D=C; break;
-    --z80 |> set_d z80.main.c
-    let
-        main =
-            z80.main
-    in
-    { main | d = z80.main.c } |> MainRegs
-
-
-execute_0x53 : Z80ROM -> Z80 -> Z80Delta
-execute_0x53 rom z80 =
-    -- case 0x53: D=E; break;
-    --z80 |> set_d z80.main.e
-    let
-        main =
-            z80.main
-    in
-    { main | d = z80.main.e } |> MainRegs
 
 
 execute_0x54 : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
