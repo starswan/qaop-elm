@@ -11,8 +11,6 @@ delta_dict_80 : Dict Int (IXIYHL -> Z80ROM -> Z80 -> Z80Delta)
 delta_dict_80 =
     Dict.fromList
         [ ( 0x86, execute_0x86 )
-        , ( 0x8C, execute_0x8C )
-        , ( 0x8D, execute_0x8D )
         , ( 0x8E, execute_0x8E )
         ]
 
@@ -22,6 +20,8 @@ miniDict80 =
     Dict.fromList
         [ ( 0x84, add_a_h )
         , ( 0x85, add_a_l )
+        , ( 0x8C, adc_a_h )
+        , ( 0x8D, adc_a_l )
         ]
 
 
@@ -29,10 +29,6 @@ delta_dict_lite_80 : Dict Int (Z80ROM -> Z80 -> Z80Delta)
 delta_dict_lite_80 =
     Dict.fromList
         [ ( 0x87, execute_0x87 )
-        , ( 0x88, execute_0x88 )
-        , ( 0x89, execute_0x89 )
-        , ( 0x8A, execute_0x8A )
-        , ( 0x8B, execute_0x8B )
         , ( 0x8F, execute_0x8F )
         ]
 
@@ -79,47 +75,20 @@ execute_0x87 rom z80 =
     z80.flags |> z80_add z80.flags.a |> FlagRegs
 
 
-execute_0x88 : Z80ROM -> Z80 -> Z80Delta
-execute_0x88 rom z80 =
-    -- case 0x88: adc(B); break;
-    z80.flags |> adc z80.main.b |> FlagRegs
-
-
-execute_0x89 : Z80ROM -> Z80 -> Z80Delta
-execute_0x89 rom z80 =
-    -- case 0x89: adc(C); break;
-    --z80 |> set_flag_regs (adc z80.main.c z80.flags)
-    z80.flags |> adc z80.main.c |> FlagRegs
-
-
-execute_0x8A : Z80ROM -> Z80 -> Z80Delta
-execute_0x8A rom z80 =
-    -- case 0x8A: adc(D); break;
-    --z80 |> set_flag_regs (adc z80.main.d z80.flags)
-    z80.flags |> adc z80.main.d |> FlagRegs
-
-
-execute_0x8B : Z80ROM -> Z80 -> Z80Delta
-execute_0x8B rom z80 =
-    -- case 0x8B: adc(E); break;
-    --z80 |> set_flag_regs (adc z80.main.e z80.flags)
-    z80.flags |> adc z80.main.e |> FlagRegs
-
-
-execute_0x8C : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
-execute_0x8C ixiyhl rom z80 =
+adc_a_h : IXIY -> Z80ROM -> Z80 -> Z80Delta
+adc_a_h ixiyhl rom z80 =
     -- case 0x8C: adc(HL>>>8); break;
     -- case 0x8C: adc(xy>>>8); break;
     --z80 |> set_flag_regs (adc (get_h ixiyhl z80.main) z80.flags)
-    z80.flags |> adc (get_h ixiyhl z80.main) |> FlagRegs
+    z80.flags |> adc (get_h_ixiy ixiyhl z80.main) |> FlagRegs
 
 
-execute_0x8D : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
-execute_0x8D ixiyhl rom z80 =
+adc_a_l : IXIY -> Z80ROM -> Z80 -> Z80Delta
+adc_a_l ixiyhl rom z80 =
     -- case 0x8D: adc(HL&0xFF); break;
     -- case 0x8D: adc(xy&0xFF); break;
     --z80 |> set_flag_regs (adc (get_l ixiyhl z80.main) z80.flags)
-    z80.flags |> adc (get_l ixiyhl z80.main) |> FlagRegs
+    z80.flags |> adc (get_l_ixiy ixiyhl z80.main) |> FlagRegs
 
 
 execute_0x8E : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
