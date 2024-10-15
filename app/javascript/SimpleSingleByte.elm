@@ -59,6 +59,10 @@ singleByteMainRegs =
         , ( 0x5A, ld_e_d )
         , ( 0x5C, ld_e_h )
         , ( 0x5D, ld_e_l )
+        , ( 0x60, ld_h_b )
+        , ( 0x61, ld_h_c )
+        , ( 0x62, ld_h_d )
+        , ( 0x63, ld_h_e )
         ]
 
 
@@ -484,3 +488,33 @@ ld_d_l z80_main =
     --z80 |> set_d (get_l ixiyhl z80.main)
     { changes = ChangeRegisterD (Bitwise.and z80_main.hl 0xFF), cpu_time = 0 }
 
+
+ld_h_b : MainWithIndexRegisters -> RegisterChangeData
+ld_h_b z80_main =
+    -- case 0x60: HL=HL&0xFF|B<<8; break;
+    -- case 0x60: xy=xy&0xFF|B<<8; break;
+    --z80 |> set_h_z80 z80.main.b ixiyhl
+    { changes = ChangeRegisterHL (Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 z80_main.b)), cpu_time = 0 }
+
+
+ld_h_c : MainWithIndexRegisters -> RegisterChangeData
+ld_h_c z80_main =
+    -- case 0x61: HL=HL&0xFF|C<<8; break;
+    -- case 0x61: xy=xy&0xFF|C<<8; break;
+    --z80 |> set_h_z80 z80.main.c ixiyhl
+    { changes = ChangeRegisterHL (Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 z80_main.c)), cpu_time = 0 }
+
+
+ld_h_d : MainWithIndexRegisters -> RegisterChangeData
+ld_h_d z80_main =
+    -- case 0x62: HL=HL&0xFF|D<<8; break;
+    -- case 0x62: xy=xy&0xFF|D<<8; break;
+    --z80 |> set_h_z80 z80.main.d ixiyhl
+    { changes = ChangeRegisterHL (Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 z80_main.d)), cpu_time = 0 }
+
+ld_h_e : MainWithIndexRegisters -> RegisterChangeData
+ld_h_e z80_main =
+    -- case 0x63: HL=HL&0xFF|E<<8; break;
+    -- case 0x63: xy=xy&0xFF|E<<8; break;
+    --z80 |> set_h_z80 z80.main.e ixiyhl
+    { changes = ChangeRegisterHL (Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 z80_main.e)), cpu_time = 0 }

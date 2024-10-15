@@ -4,17 +4,13 @@ import CpuTimeCTime exposing (addCpuTimeTime)
 import Dict exposing (Dict)
 import Z80Delta exposing (Z80Delta(..), delta_noop)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIYHL(..), Z80, get_h, get_l, hl_deref_with_z80, set_h, set_l)
+import Z80Types exposing (IXIY, IXIYHL(..), Z80, get_h, get_l, hl_deref_with_z80, set_h, set_h_ixiy, set_l)
 
 
 delta_dict_60 : Dict Int (IXIYHL -> Z80ROM -> Z80 -> Z80Delta)
 delta_dict_60 =
     Dict.fromList
-        [ ( 0x60, execute_0x60 )
-        , ( 0x61, execute_0x61 )
-        , ( 0x62, execute_0x62 )
-        , ( 0x63, execute_0x63 )
-        , ( 0x65, execute_0x65 )
+        [ ( 0x65, execute_0x65 )
         , ( 0x66, execute_0x66 )
         , ( 0x67, execute_0x67 )
         , ( 0x68, execute_0x68 )
@@ -24,6 +20,16 @@ delta_dict_60 =
         , ( 0x6C, execute_0x6C )
         , ( 0x6E, execute_0x6E )
         , ( 0x6F, execute_0x6F )
+        ]
+
+
+miniDict60 : Dict Int (IXIY -> Z80ROM -> Z80 -> Z80Delta)
+miniDict60 =
+    Dict.fromList
+        [ ( 0x60, ld_h_b )
+        , ( 0x61, ld_h_c )
+        , ( 0x62, ld_h_d )
+        , ( 0x63, ld_h_e )
         ]
 
 
@@ -37,50 +43,50 @@ delta_dict_lite_60 =
         ]
 
 
-execute_0x60 : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
-execute_0x60 ixiyhl rom z80 =
+ld_h_b : IXIY -> Z80ROM -> Z80 -> Z80Delta
+ld_h_b ixiyhl rom z80 =
     -- case 0x60: HL=HL&0xFF|B<<8; break;
     -- case 0x60: xy=xy&0xFF|B<<8; break;
     --z80 |> set_h_z80 z80.main.b ixiyhl
     let
         value =
-            z80.main |> set_h z80.main.b ixiyhl
+            z80.main |> set_h_ixiy z80.main.b ixiyhl
     in
     MainRegsWithPc value z80.pc
 
 
-execute_0x61 : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
-execute_0x61 ixiyhl rom z80 =
+ld_h_c : IXIY -> Z80ROM -> Z80 -> Z80Delta
+ld_h_c ixiyhl rom z80 =
     -- case 0x61: HL=HL&0xFF|C<<8; break;
     -- case 0x61: xy=xy&0xFF|C<<8; break;
     --z80 |> set_h_z80 z80.main.c ixiyhl
     let
         value =
-            z80.main |> set_h z80.main.c ixiyhl
+            z80.main |> set_h_ixiy z80.main.c ixiyhl
     in
     MainRegsWithPc value z80.pc
 
 
-execute_0x62 : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
-execute_0x62 ixiyhl rom z80 =
+ld_h_d : IXIY -> Z80ROM -> Z80 -> Z80Delta
+ld_h_d ixiyhl rom z80 =
     -- case 0x62: HL=HL&0xFF|D<<8; break;
     -- case 0x62: xy=xy&0xFF|D<<8; break;
     --z80 |> set_h_z80 z80.main.d ixiyhl
     let
         value =
-            z80.main |> set_h z80.main.d ixiyhl
+            z80.main |> set_h_ixiy z80.main.d ixiyhl
     in
     MainRegsWithPc value z80.pc
 
 
-execute_0x63 : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
-execute_0x63 ixiyhl rom z80 =
+ld_h_e : IXIY -> Z80ROM -> Z80 -> Z80Delta
+ld_h_e ixiyhl rom z80 =
     -- case 0x63: HL=HL&0xFF|E<<8; break;
     -- case 0x63: xy=xy&0xFF|E<<8; break;
     --z80 |> set_h_z80 z80.main.e ixiyhl
     let
         value =
-            z80.main |> set_h z80.main.e ixiyhl
+            z80.main |> set_h_ixiy z80.main.e ixiyhl
     in
     MainRegsWithPc value z80.pc
 
