@@ -72,6 +72,7 @@ applyJumpChangeDelta cpu_time z80changeData tmp_z80 =
 
 applyDoubleWithRegistersDelta : CpuTimeCTime -> DoubleWithRegisterChange -> Z80 -> Z80
 applyDoubleWithRegistersDelta cpu_time z80changeData tmp_z80 =
+    -- This wouold appear to just be for DJNZ d
     let
         interrupts =
             tmp_z80.interrupts

@@ -385,7 +385,8 @@ ld_c_l z80_main =
     --z80 |> set_c (get_l ixiyhl z80.main)
     { changes = ChangeRegisterC (Bitwise.and z80_main.hl 0xFF), cpu_time = 0 }
 
-add_hl_bc : (MainWithIndexRegisters -> FlagRegisters ->  Z80ChangeData)
+
+add_hl_bc : MainWithIndexRegisters -> FlagRegisters -> Z80ChangeData
 add_hl_bc z80_main z80_flags =
     --case 0x09: HL=add16(HL,B<<8|C); break;
     --case 0x09: xy=add16(xy,B<<8|C); break;
