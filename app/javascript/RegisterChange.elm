@@ -1,5 +1,6 @@
 module RegisterChange exposing (..)
 
+import Z80Flags exposing (FlagRegisters)
 import Z80Types exposing (MainWithIndexRegisters, Z80)
 
 
@@ -11,28 +12,32 @@ type RegisterChange
     | ChangeRegisterE Int
     | ChangeRegisterHL Int
     | ChangeRegisterD Int
+    | ChangeRegisterA Int
 
 
-applyRegisterChange : RegisterChange -> MainWithIndexRegisters -> MainWithIndexRegisters
-applyRegisterChange change main =
+applyRegisterChange : RegisterChange -> FlagRegisters -> MainWithIndexRegisters -> (FlagRegisters, MainWithIndexRegisters)
+applyRegisterChange change z80_flags main =
     case change of
         ChangeRegisterC int ->
-            { main | c = int }
+            (z80_flags, { main | c = int })
 
         ChangeRegisterBC b_value c_value ->
-            { main | b = b_value, c = c_value }
+            (z80_flags, { main | b = b_value, c = c_value })
 
         ChangeRegisterDE d_value e_value ->
-            { main | d = d_value, e = e_value }
+            (z80_flags,{ main | d = d_value, e = e_value })
 
         ChangeRegisterE int ->
-            { main | e = int }
+            (z80_flags, { main | e = int })
 
         ChangeRegisterHL int ->
-            { main | hl = int }
+            (z80_flags, { main | hl = int })
 
         ChangeRegisterB int ->
-            { main | b = int }
+            (z80_flags, { main | b = int })
 
         ChangeRegisterD int ->
-            { main | d = int }
+            (z80_flags, { main | d = int })
+
+        ChangeRegisterA int ->
+            ({z80_flags | a = int}, main)
