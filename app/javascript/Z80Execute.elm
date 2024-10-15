@@ -7,7 +7,6 @@ import SingleWith8BitParameter exposing (DoubleWithRegisterChange(..), JumpChang
 import Z80Change exposing (FlagChange(..), applyZ80Change)
 import Z80ChangeData exposing (RegisterChangeData, Z80ChangeData)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..), applyDeltaWithChanges)
-import Z80Env
 import Z80Types exposing (IXIYHL(..), Z80)
 
 
