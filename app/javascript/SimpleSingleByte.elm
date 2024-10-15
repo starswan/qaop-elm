@@ -52,6 +52,13 @@ singleByteMainRegs =
         , ( 0x50, ld_d_b )
         , ( 0x51, ld_d_c )
         , ( 0x53, ld_d_e )
+        , ( 0x54, ld_d_h )
+        , ( 0x55, ld_d_l )
+        , ( 0x58, ld_e_b )
+        , ( 0x59, ld_e_c )
+        , ( 0x5A, ld_e_d )
+        , ( 0x5C, ld_e_h )
+        , ( 0x5D, ld_e_l )
         ]
 
 
@@ -427,3 +434,52 @@ ld_d_e z80_main =
     -- case 0x53: D=E; break;
     --z80 |> set_d z80.main.e
     { changes = ChangeRegisterD z80_main.e, cpu_time = 0 }
+
+
+ld_e_b : MainWithIndexRegisters -> RegisterChangeData
+ld_e_b z80_main =
+    -- case 0x58: E=B; break;
+    --z80 |> set_e z80.main.b
+    { changes = ChangeRegisterE z80_main.b, cpu_time = 0 }
+
+
+ld_e_c : MainWithIndexRegisters -> RegisterChangeData
+ld_e_c z80_main =
+    -- case 0x59: E=C; break;
+    --z80 |> set_e z80.main.c
+    { changes = ChangeRegisterE z80_main.c, cpu_time = 0 }
+
+
+ld_e_d : MainWithIndexRegisters -> RegisterChangeData
+ld_e_d z80_main =
+    -- case 0x5A: E=D; break;
+    --z80 |> set_e z80.main.d
+    { changes = ChangeRegisterE z80_main.d, cpu_time = 0 }
+
+
+ld_e_h : MainWithIndexRegisters -> RegisterChangeData
+ld_e_h z80_main =
+    -- case 0x5C: E=HL>>>8; break;
+    --z80 |> set_e (get_h ixiyhl z80.main)
+    { changes = ChangeRegisterE (shiftRightBy8 z80_main.hl), cpu_time = 0 }
+
+
+ld_e_l : MainWithIndexRegisters -> RegisterChangeData
+ld_e_l z80_main =
+    -- case 0x5D: E=HL&0xFF; break;
+    --z80 |> set_e (get_l ixiyhl z80.main)
+    { changes = ChangeRegisterE (Bitwise.and z80_main.hl 0xFF), cpu_time = 0 }
+
+
+ld_d_h : MainWithIndexRegisters -> RegisterChangeData
+ld_d_h z80_main =
+    -- case 0x54: D=HL>>>8; break;
+    --z80 |> set_d (get_h ixiyhl z80.main)
+    { changes = ChangeRegisterD (shiftRightBy8 z80_main.hl), cpu_time = 0 }
+
+
+ld_d_l : MainWithIndexRegisters -> RegisterChangeData
+ld_d_l z80_main =
+    -- case 0x55: D=HL&0xFF; break;
+    --z80 |> set_d (get_l ixiyhl z80.main)
+    { changes = ChangeRegisterD (Bitwise.and z80_main.hl 0xFF), cpu_time = 0 }
