@@ -1,6 +1,8 @@
 module RegisterChange exposing (..)
 
-import Z80Types exposing (Z80)
+import Z80Types exposing (MainWithIndexRegisters, Z80)
+
+
 type RegisterChange
     = ChangeRegisterC Int
     | ChangeRegisterBC Int Int
@@ -8,49 +10,29 @@ type RegisterChange
     | ChangeRegisterDE Int Int
     | ChangeRegisterE Int
     | ChangeRegisterHL Int
+    | ChangeRegisterD Int
 
-applyRegisterChange : RegisterChange -> Z80 -> Z80
-applyRegisterChange change z80 =
+
+applyRegisterChange : RegisterChange -> MainWithIndexRegisters -> MainWithIndexRegisters
+applyRegisterChange change main =
     case change of
         ChangeRegisterC int ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | main = { main | c = int } }
+            { main | c = int }
 
         ChangeRegisterBC b_value c_value ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | main = { main | b = b_value, c = c_value } }
+            { main | b = b_value, c = c_value }
 
         ChangeRegisterDE d_value e_value ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | main = { main | d = d_value, e = e_value } }
+            { main | d = d_value, e = e_value }
 
         ChangeRegisterE int ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | main = { main | e = int } }
+            { main | e = int }
 
         ChangeRegisterHL int ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | main = { main | hl = int } }
+            { main | hl = int }
 
         ChangeRegisterB int ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | main = { main | b = int } }
+            { main | b = int }
 
+        ChangeRegisterD int ->
+            { main | d = int }

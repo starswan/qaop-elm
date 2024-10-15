@@ -49,6 +49,9 @@ singleByteMainRegs =
         , ( 0x4B, ld_c_e )
         , ( 0x4C, ld_c_h )
         , ( 0x4D, ld_c_l )
+        , ( 0x50, ld_d_b )
+        , ( 0x51, ld_d_c )
+        , ( 0x53, ld_d_e )
         ]
 
 
@@ -403,3 +406,24 @@ add_hl_bc z80_main z80_flags =
     --Whole ({ z80 | main = new_z80, flags = new_xy.flags } |> add_cpu_time new_xy.time)
     --FlagsWithPCMainAndTime new_xy.flags z80.pc new_z80 new_xy.time
     { changes = FlagsWithHLRegister new_xy.flags new_xy.value, cpu_time = new_xy.time }
+
+
+ld_d_b : MainWithIndexRegisters -> RegisterChangeData
+ld_d_b z80_main =
+    -- case 0x50: D=B; break;
+    --z80 |> set_d z80.main.b
+    { changes = ChangeRegisterD z80_main.b, cpu_time = 0 }
+
+
+ld_d_c : MainWithIndexRegisters -> RegisterChangeData
+ld_d_c z80_main =
+    -- case 0x51: D=C; break;
+    --z80 |> set_d z80.main.c
+    { changes = ChangeRegisterD z80_main.c, cpu_time = 0 }
+
+
+ld_d_e : MainWithIndexRegisters -> RegisterChangeData
+ld_d_e z80_main =
+    -- case 0x53: D=E; break;
+    --z80 |> set_d z80.main.e
+    { changes = ChangeRegisterD z80_main.e, cpu_time = 0 }

@@ -188,5 +188,7 @@ applyRegisterDelta cpu_time z80changeData tmp_z80 =
 
         new_pc =
             Bitwise.and (z80.pc + 1) 0xFFFF
+
+        new_main = z80.main |> applyRegisterChange z80changeData.changes
     in
-    { z80 | pc = new_pc } |> applyRegisterChange z80changeData.changes
+    { z80 | pc = new_pc, main = new_main }
