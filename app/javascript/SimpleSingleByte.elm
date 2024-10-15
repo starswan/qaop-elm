@@ -3,11 +3,11 @@ module SimpleSingleByte exposing (..)
 import Bitwise
 import Dict exposing (Dict)
 import RegisterChange exposing (RegisterChange(..))
-import Utils exposing (char, shiftLeftBy8, shiftRightBy8)
+import Utils exposing (shiftLeftBy8, shiftRightBy8)
 import Z80Change exposing (Z80Change(..))
 import Z80ChangeData exposing (RegisterChangeData, Z80ChangeData)
-import Z80Flags exposing (FlagRegisters, add16, cpl, daa, dec, inc, rot, scf_ccf)
-import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, Z80, get_bc, get_xy)
+import Z80Flags exposing (FlagRegisters, add16, dec, inc)
+import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, Z80, get_bc)
 
 
 singleByteMainAndFlagRegisters : Dict Int (MainWithIndexRegisters -> FlagRegisters -> Z80ChangeData)
@@ -76,7 +76,7 @@ inc_b z80_main z80_flags =
     in
     --z80 |> set_flag_regs new_b.flags |> set_b new_b.value
     --FlagsWithMain new_b.flags { z80_main | b = new_b.value }
-    { changes = FlagsWithBRegister new_b.flags new_b.value, cpu_time = 0, pc_change = 1 }
+    { changes = FlagsWithBRegister new_b.flags new_b.value, cpu_time = 0 }
 
 
 dec_b : MainWithIndexRegisters -> FlagRegisters -> Z80ChangeData
@@ -88,7 +88,7 @@ dec_b z80_main z80_flags =
     in
     --z80 |> set_flag_regs new_b.flags |> set_b new_b.value
     --FlagsWithMain new_b.flags { z80_main | b = new_b.value }
-    { changes = FlagsWithBRegister new_b.flags new_b.value, cpu_time = 0, pc_change = 1 }
+    { changes = FlagsWithBRegister new_b.flags new_b.value, cpu_time = 0 }
 
 
 dec_bc : MainWithIndexRegisters -> RegisterChangeData
@@ -117,7 +117,7 @@ inc_c z80_main z80_flags =
             inc z80_main.c z80_flags
     in
     --z80 |> set_flag_regs new_c.flags |> set_c new_c.value
-    { changes = FlagsWithCRegister new_c.flags new_c.value, cpu_time = 0, pc_change = 1 }
+    { changes = FlagsWithCRegister new_c.flags new_c.value, cpu_time = 0 }
 
 
 dec_c : MainWithIndexRegisters -> FlagRegisters -> Z80ChangeData
@@ -128,7 +128,7 @@ dec_c z80_main z80_flags =
             dec z80_main.c z80_flags
     in
     --z80 |> set_flag_regs new_c.flags |> set_c new_c.value
-    { changes = FlagsWithCRegister new_c.flags new_c.value, cpu_time = 0, pc_change = 1 }
+    { changes = FlagsWithCRegister new_c.flags new_c.value, cpu_time = 0 }
 
 
 inc_de : MainWithIndexRegisters -> RegisterChangeData
@@ -165,7 +165,7 @@ inc_d z80_main z80_flags =
         changes =
             FlagsWithDRegister new_d.flags new_d.value
     in
-    { changes = changes, cpu_time = 0, pc_change = 1 }
+    { changes = changes, cpu_time = 0 }
 
 
 dec_d : MainWithIndexRegisters -> FlagRegisters -> Z80ChangeData
@@ -176,7 +176,7 @@ dec_d z80_main z80_flags =
             dec z80_main.d z80_flags
     in
     --{ z80 | flags = new_d.flags, main = main_1 }
-    { changes = FlagsWithDRegister new_d.flags new_d.value, cpu_time = 0, pc_change = 1 }
+    { changes = FlagsWithDRegister new_d.flags new_d.value, cpu_time = 0 }
 
 
 dec_de : MainWithIndexRegisters -> RegisterChangeData
@@ -204,7 +204,7 @@ inc_e z80_main z80_flags =
             inc z80_main.e z80_flags
     in
     --{ z80 | flags = new_e.flags, main = { z80_main | e = new_e.value } }
-    { changes = FlagsWithERegister new_e.flags new_e.value, cpu_time = 0, pc_change = 1 }
+    { changes = FlagsWithERegister new_e.flags new_e.value, cpu_time = 0 }
 
 
 dec_e : MainWithIndexRegisters -> FlagRegisters -> Z80ChangeData
@@ -214,7 +214,7 @@ dec_e z80_main z80_flags =
         new_e =
             dec z80_main.e z80_flags
     in
-    { changes = FlagsWithERegister new_e.flags new_e.value, cpu_time = 0, pc_change = 1 }
+    { changes = FlagsWithERegister new_e.flags new_e.value, cpu_time = 0 }
 
 
 inc_hl : MainWithIndexRegisters -> RegisterChangeData
@@ -236,7 +236,7 @@ inc_h z80_main z80_flags =
             Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 value.value)
     in
     --{ z80_1 | main = main }
-    { changes = FlagsWithHLRegister value.flags new_xy, cpu_time = 0, pc_change = 1 }
+    { changes = FlagsWithHLRegister value.flags new_xy, cpu_time = 0 }
 
 
 dec_h : MainWithIndexRegisters -> FlagRegisters -> Z80ChangeData
@@ -250,7 +250,7 @@ dec_h z80_main z80_flags =
         new_xy =
             Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 value.value)
     in
-    { changes = FlagsWithHLRegister value.flags new_xy, cpu_time = 0, pc_change = 1 }
+    { changes = FlagsWithHLRegister value.flags new_xy, cpu_time = 0 }
 
 
 dec_hl : MainWithIndexRegisters -> RegisterChangeData
@@ -280,7 +280,7 @@ inc_l z80_main z80_flags =
             Bitwise.or h l.value
     in
     --{ z80_1 | main = main }
-    { changes = HLRegister new_xy, cpu_time = 0, pc_change = 1 }
+    { changes = HLRegister new_xy, cpu_time = 0 }
 
 
 dec_l : MainWithIndexRegisters -> FlagRegisters -> Z80ChangeData
@@ -299,7 +299,7 @@ dec_l z80_main z80_flags =
             Bitwise.or h l.value
     in
     --{ new_z80 | main = main }
-    { changes = HLRegister new_xy, cpu_time = 0, pc_change = 1 }
+    { changes = HLRegister new_xy, cpu_time = 0 }
 
 
 ld_b_c : MainWithIndexRegisters -> RegisterChangeData
@@ -362,7 +362,7 @@ add_hl_hl z80_main z80_flags =
             add16 z80_main.hl z80_main.hl z80_flags
     in
     --{ z80 | main = new_z80, flags = new_xy.flags } |> add_cpu_time new_xy.time
-    { changes = FlagsWithHLRegister new_xy.flags new_xy.value, cpu_time = new_xy.time, pc_change = 1 }
+    { changes = FlagsWithHLRegister new_xy.flags new_xy.value, cpu_time = new_xy.time }
 
 
 ld_c_e : MainWithIndexRegisters -> RegisterChangeData
@@ -401,4 +401,4 @@ add_hl_bc z80_main z80_flags =
     in
     --Whole ({ z80 | main = new_z80, flags = new_xy.flags } |> add_cpu_time new_xy.time)
     --FlagsWithPCMainAndTime new_xy.flags z80.pc new_z80 new_xy.time
-    { changes = FlagsWithHLRegister new_xy.flags new_xy.value, cpu_time = new_xy.time, pc_change = 1 }
+    { changes = FlagsWithHLRegister new_xy.flags new_xy.value, cpu_time = new_xy.time }
