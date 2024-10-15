@@ -91,12 +91,7 @@ applyDoubleWithRegistersDelta cpu_time z80changeData tmp_z80 =
                             Bitwise.and (tmp_z80.pc + 2) 0xFFFF
 
                 main =
-                    case single8BitChange of
-                        Just change ->
-                            tmp_z80.main |> applySimple8BitChange change
-
-                        Nothing ->
-                            tmp_z80.main
+                    tmp_z80.main |> applySimple8BitChange single8BitChange
             in
             { tmp_z80
                 | main = main
@@ -192,6 +187,6 @@ applyRegisterDelta cpu_time z80changeData tmp_z80 =
             { tmp_z80 | env = { env | time = cpu_time |> addCpuTimeTime (4 + z80changeData.cpu_time) }, interrupts = { interrupts | r = interrupts.r + 1 } }
 
         new_pc =
-            Bitwise.and (z80.pc + z80changeData.pc_change) 0xFFFF
+            Bitwise.and (z80.pc + 1) 0xFFFF
     in
     { z80 | pc = new_pc } |> applyRegisterChange z80changeData.changes

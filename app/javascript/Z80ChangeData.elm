@@ -13,5 +13,4 @@ type alias RegisterChangeData =
         {
             cpu_time: Int
             , changes: RegisterChange
-            , pc_change: Int
         }

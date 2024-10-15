@@ -40,7 +40,7 @@ type Single8BitChange
 
 
 type DoubleWithRegisterChange
-    = RelativeJumpWithTimeOffset (Maybe Single8BitChange) (Maybe Int) Int
+    = RelativeJumpWithTimeOffset Single8BitChange (Maybe Int) Int
 
 
 type alias JumpChange =
@@ -109,7 +109,7 @@ djnz z80_main param =
             else
                 ( 4, Nothing )
     in
-    RelativeJumpWithTimeOffset (Just (NewBRegister b)) jump time
+    RelativeJumpWithTimeOffset (NewBRegister b) jump time
 
 
 jr_n : Int -> FlagRegisters -> JumpChange
@@ -123,14 +123,6 @@ jr_n param _ =
 jr_nz_d : Int -> FlagRegisters -> JumpChange
 jr_nz_d param z80_flags =
     -- case 0x20: if(Fr!=0) jr(); else imm8(); break;
-    --let
-    --    jump = z80_flags.fr /= 0
-    --in
-    --{ jump = jump, param = param }
-    --if z80_flags.fr /= 0 then
-    --    RelativeJumpWithTimeOffset Nothing (Just (byte param)) 8
-    --else
-    --    RelativeJumpWithTimeOffset Nothing Nothing 0
     if z80_flags.fr /= 0 then
         { jump = Just (byte param) }
 
