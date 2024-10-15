@@ -11,8 +11,6 @@ delta_dict_90 : Dict Int (IXIYHL -> Z80ROM -> Z80 -> Z80Delta)
 delta_dict_90 =
     Dict.fromList
         [ ( 0x96, execute_0x96 )
-        , ( 0x9C, execute_0x9C )
-        , ( 0x9D, execute_0x9D )
         , ( 0x9E, execute_0x9E )
         ]
 
@@ -22,6 +20,8 @@ miniDict90 =
     Dict.fromList
         [ ( 0x94, sub_h )
         , ( 0x95, sub_l )
+        , ( 0x9C, sbc_h )
+        , ( 0x9D, sbc_l )
         ]
 
 
@@ -29,10 +29,6 @@ delta_dict_lite_90 : Dict Int (Z80ROM -> Z80 -> Z80Delta)
 delta_dict_lite_90 =
     Dict.fromList
         [ ( 0x97, execute_0x97 )
-        , ( 0x98, execute_0x98 )
-        , ( 0x99, execute_0x99 )
-        , ( 0x9A, execute_0x9A )
-        , ( 0x9B, execute_0x9B )
         , ( 0x9F, execute_0x9F )
         ]
 
@@ -74,48 +70,20 @@ execute_0x97 _ z80 =
     z80.flags |> z80_sub z80.flags.a |> FlagRegs
 
 
-execute_0x98 : Z80ROM -> Z80 -> Z80Delta
-execute_0x98 _ z80 =
-    -- case 0x98: sbc(B); break;
-    --z80 |> set_flag_regs (sbc z80.main.b z80.flags)
-    z80.flags |> sbc z80.main.b |> FlagRegs
-
-
-execute_0x99 : Z80ROM -> Z80 -> Z80Delta
-execute_0x99 _ z80 =
-    -- case 0x99: sbc(C); break;
-    --z80 |> set_flag_regs (sbc z80.main.c z80.flags)
-    z80.flags |> sbc z80.main.c |> FlagRegs
-
-
-execute_0x9A : Z80ROM -> Z80 -> Z80Delta
-execute_0x9A _ z80 =
-    -- case 0x9A: sbc(D); break;
-    --z80 |> set_flag_regs (sbc z80.main.d z80.flags)
-    z80.flags |> sbc z80.main.d |> FlagRegs
-
-
-execute_0x9B : Z80ROM -> Z80 -> Z80Delta
-execute_0x9B _ z80 =
-    -- case 0x9B: sbc(E); break;
-    --z80 |> set_flag_regs (sbc z80.main.e z80.flags)
-    z80.flags |> sbc z80.main.e |> FlagRegs
-
-
-execute_0x9C : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
-execute_0x9C ixiyhl _ z80 =
+sbc_h : IXIY -> Z80ROM -> Z80 -> Z80Delta
+sbc_h ixiyhl _ z80 =
     -- case 0x9C: sbc(HL>>>8); break;
     -- case 0x9C: sbc(xy>>>8); break;
     --z80 |> set_flag_regs (sbc (get_h ixiyhl z80.main) z80.flags)
-    z80.flags |> sbc (get_h ixiyhl z80.main) |> FlagRegs
+    z80.flags |> sbc (get_h_ixiy ixiyhl z80.main) |> FlagRegs
 
 
-execute_0x9D : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
-execute_0x9D ixiyhl _ z80 =
+sbc_l : IXIY -> Z80ROM -> Z80 -> Z80Delta
+sbc_l ixiyhl _ z80 =
     -- case 0x9D: sbc(HL&0xFF); break;
     -- case 0x9D: sbc(xy&0xFF); break;
     --z80 |> set_flag_regs (sbc (get_l ixiyhl z80.main) z80.flags)
-    z80.flags |> sbc (get_l ixiyhl z80.main) |> FlagRegs
+    z80.flags |> sbc (get_l_ixiy ixiyhl z80.main) |> FlagRegs
 
 
 execute_0x9E : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
