@@ -3,6 +3,7 @@ module SingleWith8BitParameter exposing (..)
 import Bitwise
 import Dict exposing (Dict)
 import Utils exposing (byte)
+import Z80Flags exposing (FlagRegisters)
 import Z80Types exposing (MainWithIndexRegisters, Z80)
 
 
@@ -22,12 +23,13 @@ doubleWithRegisters =
         [ ( 0x10, djnz )
         ]
 
-relativeJump: Dict Int (Int -> DoubleWithRegisterChange)
-relativeJump =
+
+maybeRelativeJump : Dict Int (Int -> FlagRegisters -> JumpChange)
+maybeRelativeJump =
     Dict.fromList
-    [
-    (0x18, jr_n)
-    ]
+        [ ( 0x18, jr_n )
+        , ( 0x20, jr_nz_d )
+        ]
 
 
 type Single8BitChange
@@ -39,6 +41,12 @@ type Single8BitChange
 
 type DoubleWithRegisterChange
     = RelativeJumpWithTimeOffset (Maybe Single8BitChange) (Maybe Int) Int
+
+
+type alias JumpChange =
+    { jump : Maybe Int
+    }
+
 
 applySimple8BitChange : Single8BitChange -> MainWithIndexRegisters -> MainWithIndexRegisters
 applySimple8BitChange change z80_main =
@@ -75,6 +83,7 @@ ld_d_n param =
     -- case 0x16: D=imm8(); break;
     NewDRegister param
 
+
 ld_e_n : Int -> Single8BitChange
 ld_e_n param =
     -- case 0x1E: E=imm8(); break;
@@ -102,11 +111,28 @@ djnz z80_main param =
     in
     RelativeJumpWithTimeOffset (Just (NewBRegister b)) jump time
 
-jr_n : Int -> DoubleWithRegisterChange
-jr_n param =
+
+jr_n : Int -> FlagRegisters -> JumpChange
+jr_n param _ =
     -- case 0x18: MP=PC=(char)(PC+1+(byte)env.mem(PC)); time+=8; break;
     -- This is just an inlined jr() call
     --z80 |> set_pc dest |> add_cpu_time 8
-    RelativeJumpWithTimeOffset Nothing (Just param) 8
+    { jump = Just (byte param) }
 
 
+jr_nz_d : Int -> FlagRegisters -> JumpChange
+jr_nz_d param z80_flags =
+    -- case 0x20: if(Fr!=0) jr(); else imm8(); break;
+    --let
+    --    jump = z80_flags.fr /= 0
+    --in
+    --{ jump = jump, param = param }
+    --if z80_flags.fr /= 0 then
+    --    RelativeJumpWithTimeOffset Nothing (Just (byte param)) 8
+    --else
+    --    RelativeJumpWithTimeOffset Nothing Nothing 0
+    if z80_flags.fr /= 0 then
+        { jump = Just (byte param) }
+
+    else
+        { jump = Nothing }

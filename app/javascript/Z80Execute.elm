@@ -3,7 +3,7 @@ module Z80Execute exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, addCpuTimeTime)
 import RegisterChange exposing (RegisterChange, applyRegisterChange)
-import SingleWith8BitParameter exposing (DoubleWithRegisterChange(..), Single8BitChange, applySimple8BitChange)
+import SingleWith8BitParameter exposing (DoubleWithRegisterChange(..), JumpChange, Single8BitChange, applySimple8BitChange)
 import Z80Change exposing (FlagChange(..), applyZ80Change)
 import Z80ChangeData exposing (RegisterChangeData, Z80ChangeData)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..), applyDeltaWithChanges)
@@ -18,6 +18,7 @@ type DeltaWithChanges
     | RegisterChangeDelta CpuTimeCTime RegisterChangeData
     | Simple8BitDelta CpuTimeCTime Single8BitChange
     | DoubleWithRegistersDelta CpuTimeCTime DoubleWithRegisterChange
+    | JumpChangeDelta CpuTimeCTime JumpChange
 
 
 apply_delta : Z80 -> DeltaWithChanges -> Z80
@@ -41,6 +42,34 @@ apply_delta z80 z80delta =
         DoubleWithRegistersDelta cpuTimeCTime doubleWithRegisterChange ->
             z80 |> applyDoubleWithRegistersDelta cpuTimeCTime doubleWithRegisterChange
 
+        JumpChangeDelta cpuTimeCTime jumpChange ->
+            z80 |> applyJumpChangeDelta cpuTimeCTime jumpChange
+
+
+applyJumpChangeDelta : CpuTimeCTime -> JumpChange -> Z80 -> Z80
+applyJumpChangeDelta cpu_time z80changeData tmp_z80 =
+    let
+        interrupts =
+            tmp_z80.interrupts
+
+        old_env =
+            tmp_z80.env
+
+        pc =
+            case z80changeData.jump of
+                Just jump ->
+                    Bitwise.and (tmp_z80.pc + 2 + jump) 0xFFFF
+
+                Nothing ->
+                    Bitwise.and (tmp_z80.pc + 2) 0xFFFF
+    in
+    { tmp_z80
+        | pc = pc
+        , env = { old_env | time = cpu_time |> addCpuTimeTime 8 }
+        , interrupts = { interrupts | r = interrupts.r + 1 }
+    }
+
+
 applyDoubleWithRegistersDelta : CpuTimeCTime -> DoubleWithRegisterChange -> Z80 -> Z80
 applyDoubleWithRegistersDelta cpu_time z80changeData tmp_z80 =
     let
@@ -60,9 +89,14 @@ applyDoubleWithRegistersDelta cpu_time z80changeData tmp_z80 =
 
                         Nothing ->
                             Bitwise.and (tmp_z80.pc + 2) 0xFFFF
-                main = case single8BitChange of
-                    Just change -> tmp_z80.main |> applySimple8BitChange change
-                    Nothing -> tmp_z80.main
+
+                main =
+                    case single8BitChange of
+                        Just change ->
+                            tmp_z80.main |> applySimple8BitChange change
+
+                        Nothing ->
+                            tmp_z80.main
             in
             { tmp_z80
                 | main = main
