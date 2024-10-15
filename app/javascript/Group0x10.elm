@@ -3,12 +3,12 @@ module Group0x10 exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (addCpuTimeTime)
 import Dict exposing (Dict)
-import Utils exposing (byte, shiftLeftBy8, shiftRightBy8)
+import Utils exposing (shiftLeftBy8)
 import Z80Delta exposing (Z80Delta(..))
-import Z80Env exposing (addCpuTimeEnv, mem)
-import Z80Flags exposing (add16, dec, inc, rot)
+import Z80Env exposing (mem)
+import Z80Flags exposing (add16)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIYHL, Z80, add_cpu_time, get_de, get_xy, imm16, imm8, set_de_main, set_xy)
+import Z80Types exposing (IXIYHL, Z80, get_de, get_xy, imm16, set_de_main, set_xy)
 
 
 delta_dict_10 : Dict Int (IXIYHL -> Z80ROM -> Z80 -> Z80Delta)
@@ -93,5 +93,3 @@ execute_0x1A rom48k z80 =
     in
     --{ z80 | env = new_a.env, flags = new_flags } |> add_cpu_time 3
     CpuTimeWithFlags env_1 new_flags
-
-
