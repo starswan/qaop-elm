@@ -29,10 +29,8 @@ delta_dict_lite_50 =
     Dict.fromList
         [ -- case 0x52: break;
           ( 0x52, delta_noop )
-        , ( 0x57, execute_0x57 )
         , -- case 0x5B: break;
           ( 0x5B, delta_noop )
-        , ( 0x5F, execute_0x5F )
         ]
 
 
@@ -72,17 +70,6 @@ execute_0x56 ixiyhl rom48k z80 =
     MainRegsWithPcAndCpuTime { main | d = value.value } value.pc value.time
 
 
-execute_0x57 : Z80ROM -> Z80 -> Z80Delta
-execute_0x57 rom z80 =
-    -- case 0x57: D=A; break;
-    --z80 |> set_d z80.flags.a
-    let
-        main =
-            z80.main
-    in
-    { main | d = z80.flags.a } |> MainRegs
-
-
 ld_e_h : IXIY -> Z80ROM -> Z80 -> Z80Delta
 ld_e_h ixiyhl rom z80 =
     -- case 0x5C: E=HL>>>8; break;
@@ -119,12 +106,3 @@ execute_0x5E ixiyhl rom48k z80 =
     MainRegsWithPcAndCpuTime { main | e = value.value } value.pc value.time
 
 
-execute_0x5F : Z80ROM -> Z80 -> Z80Delta
-execute_0x5F rom z80 =
-    -- case 0x5F: E=A; break;
-    --z80 |> set_e z80.flags.a
-    let
-        main =
-            z80.main
-    in
-    { main | e = z80.flags.a } |> MainRegs

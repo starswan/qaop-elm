@@ -19,6 +19,8 @@ type FlagChange
     = OnlyFlags FlagRegisters
     | FlagChangeB Int
     | FlagChangeC Int
+    | FlagChangeD Int
+    | FlagChangeE Int
 
 
 applyZ80Change : Z80Change -> Z80 -> Z80

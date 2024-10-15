@@ -22,6 +22,8 @@ singleByteFlags =
         , ( 0x3F, ccf )
         , ( 0x47, ld_b_a )
         , ( 0x4F, ld_c_a )
+        , ( 0x57, ld_d_a )
+        , ( 0x5F, ld_e_a )
         ]
 
 
@@ -118,3 +120,16 @@ z80_daa z80_flags =
 z80_cpl : FlagRegisters -> FlagChange
 z80_cpl z80_flags =
     z80_flags |> cpl |> OnlyFlags
+
+ld_d_a : FlagRegisters -> FlagChange
+ld_d_a z80_flags =
+    -- case 0x57: D=A; break;
+    --z80 |> set_d z80.flags.a
+    FlagChangeD z80_flags.a
+
+
+ld_e_a : FlagRegisters -> FlagChange
+ld_e_a z80_flags =
+    -- case 0x5F: E=A; break;
+    --z80 |> set_e z80.flags.a
+    FlagChangeE z80_flags.a
