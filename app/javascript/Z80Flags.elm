@@ -356,11 +356,8 @@ inc v flagRegs =
 
         vv =
             Bitwise.and (v + 1) 0xFF
-
-        new_flags =
-            { flagRegs | ff = Bitwise.or ff vv, fb = 1, fa = v, fr = vv }
     in
-    IntWithFlags vv new_flags
+    IntWithFlags vv { flagRegs | ff = Bitwise.or ff vv, fb = 1, fa = v, fr = vv }
 
 
 dec : Int -> FlagRegisters -> IntWithFlags
