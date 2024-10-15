@@ -194,8 +194,14 @@ applyPureDelta cpu_time z80changeData tmp_z80 =
         env =
             tmp_z80.env
 
-        z80 =
-            { tmp_z80 | env = { env | time = cpu_time |> addCpuTimeTime (4 + z80changeData.cpu_time) }, interrupts = { interrupts | r = interrupts.r + 1 } }
+        z80 = case z80changeData.cpu_time of
+            Just time ->
+                { tmp_z80 | env = { env | time = cpu_time |> addCpuTimeTime (4 + time) }, interrupts = { interrupts | r = interrupts.r + 1 } }
+
+
+            Nothing ->
+                { tmp_z80 | env = { env | time = cpu_time |> addCpuTimeTime 4 }, interrupts = { interrupts | r = interrupts.r + 1 } }
+
 
         new_pc =
             Bitwise.and (z80.pc + 1) 0xFFFF
@@ -212,8 +218,13 @@ applyRegisterDelta cpu_time z80changeData tmp_z80 =
         env =
             tmp_z80.env
 
-        z80 =
-            { tmp_z80 | env = { env | time = cpu_time |> addCpuTimeTime (4 + z80changeData.cpu_time) }, interrupts = { interrupts | r = interrupts.r + 1 } }
+        z80 = case z80changeData.cpu_time of
+            Just time ->
+                { tmp_z80 | env = { env | time = cpu_time |> addCpuTimeTime (4 + time) }, interrupts = { interrupts | r = interrupts.r + 1 } }
+
+
+            Nothing ->
+                { tmp_z80 | env = { env | time = cpu_time |> addCpuTimeTime 4 }, interrupts = { interrupts | r = interrupts.r + 1 } }
 
         new_pc =
             Bitwise.and (z80.pc + 1) 0xFFFF
