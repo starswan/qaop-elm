@@ -4,6 +4,7 @@ import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, addCpuTimeTime)
 import RegisterChange exposing (RegisterChange, applyRegisterChange)
 import SingleWith8BitParameter exposing (DoubleWithRegisterChange(..), JumpChange, Single8BitChange, applySimple8BitChange)
+import Utils exposing (shiftLeftBy8)
 import Z80Change exposing (FlagChange(..), applyZ80Change)
 import Z80ChangeData exposing (RegisterChangeData, Z80ChangeData)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..), applyDeltaWithChanges)
@@ -162,13 +163,19 @@ applyFlagDelta cpu_time z80_flags tmp_z80 =
             in
             { z80 | main = { main | d = int } }
 
-
         FlagChangeE int ->
             let
                 main =
                     z80.main
             in
             { z80 | main = { main | e = int } }
+
+        FlagChangeH int ->
+            let
+                main =
+                    z80.main
+            in
+            { z80 | main = { main | hl = Bitwise.or (shiftLeftBy8 int) (Bitwise.and main.hl 0xFF) } }
 
 
 applyPureDelta : CpuTimeCTime -> Z80ChangeData -> Z80 -> Z80
@@ -204,6 +211,7 @@ applyRegisterDelta cpu_time z80changeData tmp_z80 =
         new_pc =
             Bitwise.and (z80.pc + 1) 0xFFFF
 
-        new_main = z80.main |> applyRegisterChange z80changeData.changes
+        new_main =
+            z80.main |> applyRegisterChange z80changeData.changes
     in
     { z80 | pc = new_pc, main = new_main }
