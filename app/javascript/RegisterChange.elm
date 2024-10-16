@@ -1,42 +1,50 @@
 module RegisterChange exposing (..)
 
+import Bitwise
+import CpuTimeCTime exposing (CpuTimeIncrement)
+import Utils exposing (shiftLeftBy8)
 import Z80Flags exposing (FlagRegisters)
 import Z80Types exposing (MainWithIndexRegisters, Z80)
 
 
 type RegisterChange
-    = ChangeRegisterC Int
-    | ChangeRegisterBC Int Int
+    = ChangeRegisterCWithTime Int CpuTimeIncrement
+    | ChangeRegisterBC Int Int CpuTimeIncrement
     | ChangeRegisterB Int
-    | ChangeRegisterDE Int Int
+    | ChangeRegisterDE Int Int CpuTimeIncrement
+    | ChangeRegisterEWithTime Int CpuTimeIncrement
     | ChangeRegisterE Int
-    | ChangeRegisterHL Int
+    | ChangeRegisterHL Int CpuTimeIncrement
     | ChangeRegisterD Int
     | ChangeRegisterA Int
+    | ChangeRegisterC Int
+    | ChangeRegisterH Int
+    | ChangeRegisterL Int
 
 
 type RegisterChangeApplied
     = MainRegsApplied MainWithIndexRegisters
+    | MainRegsWithTimeApplied MainWithIndexRegisters CpuTimeIncrement
     | FlagRegsApplied FlagRegisters
 
 
 applyRegisterChange : RegisterChange -> FlagRegisters -> MainWithIndexRegisters -> RegisterChangeApplied
 applyRegisterChange change z80_flags main =
     case change of
-        ChangeRegisterC int ->
-            MainRegsApplied { main | c = int }
+        ChangeRegisterCWithTime int time ->
+            MainRegsWithTimeApplied { main | c = int } time
 
-        ChangeRegisterBC b_value c_value ->
-            MainRegsApplied { main | b = b_value, c = c_value }
+        ChangeRegisterBC b_value c_value time ->
+            MainRegsWithTimeApplied { main | b = b_value, c = c_value } time
 
-        ChangeRegisterDE d_value e_value ->
-            MainRegsApplied { main | d = d_value, e = e_value }
+        ChangeRegisterDE d_value e_value time ->
+            MainRegsWithTimeApplied { main | d = d_value, e = e_value } time
 
-        ChangeRegisterE int ->
-            MainRegsApplied { main | e = int }
+        ChangeRegisterEWithTime int time ->
+            MainRegsWithTimeApplied { main | e = int } time
 
-        ChangeRegisterHL int ->
-            MainRegsApplied { main | hl = int }
+        ChangeRegisterHL int time ->
+            MainRegsWithTimeApplied { main | hl = int } time
 
         ChangeRegisterB int ->
             MainRegsApplied { main | b = int }
@@ -46,3 +54,19 @@ applyRegisterChange change z80_flags main =
 
         ChangeRegisterA int ->
             FlagRegsApplied { z80_flags | a = int }
+
+        ChangeRegisterE int ->
+            MainRegsApplied { main | e = int }
+
+
+        ChangeRegisterC int ->
+            MainRegsApplied { main | c = int }
+
+        ChangeRegisterH int ->
+            MainRegsApplied { main | hl = Bitwise.or (Bitwise.and main.hl 0xFF) (shiftLeftBy8 int) }
+
+
+        ChangeRegisterL int ->
+            MainRegsApplied { main | hl = Bitwise.or (Bitwise.and main.hl 0xFF00) int }
+
+
