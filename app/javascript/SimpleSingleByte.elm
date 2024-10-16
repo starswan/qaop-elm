@@ -125,7 +125,6 @@ inc_b z80_main z80_flags =
             inc z80_main.b z80_flags
     in
     --z80 |> set_flag_regs new_b.flags |> set_b new_b.value
-    --FlagsWithMain new_b.flags { z80_main | b = new_b.value }
     { changes = FlagsWithBRegister new_b.flags new_b.value, cpu_time = Nothing }
 
 
@@ -137,7 +136,6 @@ dec_b z80_main z80_flags =
             dec z80_main.b z80_flags
     in
     --z80 |> set_flag_regs new_b.flags |> set_b new_b.value
-    --FlagsWithMain new_b.flags { z80_main | b = new_b.value }
     { changes = FlagsWithBRegister new_b.flags new_b.value, cpu_time = Nothing }
 
 
@@ -201,7 +199,6 @@ inc_de z80_main =
         --    { z80_main | d = reg_d, e = reg_e }
     in
     --{ z80 | env = env_1, main = main_1 }
-    --MainRegsWithEnv main_1 env_1
     { changes = changes, cpu_time = Just 2 }
 
 

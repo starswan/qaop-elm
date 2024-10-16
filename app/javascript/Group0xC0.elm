@@ -150,7 +150,6 @@ execute_0xC7 _ z80 =
     --let
     --   result = z80 |> rst 0xC7
     --in
-    --  EnvWithPc result.env result.pc
     z80 |> rst_delta 0xC7
 
 
@@ -198,7 +197,6 @@ execute_0xCA rom48k z80 =
     --let
     --  result = z80 |> jp (z80.flags.fr == 0)
     --in
-    --  CpuTimeWithPc result.time result.pc
     z80 |> jp_delta (z80.flags.fr == 0) rom48k
 
 
@@ -238,7 +236,6 @@ call_0xCD rom48k z80 =
         --pushed = { env | time = v.time } |> z80_push v.pc
     in
     --{ z80_1 | env = pushed, pc = v.value }
-    --EnvWithPc pushed v.value
     PushWithCpuTimeAndPc v.pc v.time v.value
 
 
@@ -263,5 +260,4 @@ execute_0xCF _ z80 =
     --let
     --   result = z80 |> rst 0xCF
     --in
-    --   EnvWithPc result.env result.pc
     z80 |> rst_delta 0xCF
