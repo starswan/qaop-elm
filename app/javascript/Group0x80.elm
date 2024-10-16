@@ -25,14 +25,6 @@ miniDict80 =
         ]
 
 
-delta_dict_lite_80 : Dict Int (Z80ROM -> Z80 -> Z80Delta)
-delta_dict_lite_80 =
-    Dict.fromList
-        [ ( 0x87, execute_0x87 )
-        , ( 0x8F, execute_0x8F )
-        ]
-
-
 add_a_h : IXIY -> Z80ROM -> Z80 -> Z80Delta
 add_a_h ixiyhl rom z80 =
     -- case 0x84: add(HL>>>8); break;
@@ -69,12 +61,6 @@ execute_0x86 ixiyhl rom48k z80 =
 --{ z80_1 | flags = flags_one }
 
 
-execute_0x87 : Z80ROM -> Z80 -> Z80Delta
-execute_0x87 rom z80 =
-    -- case 0x87: add(A); break;
-    z80.flags |> z80_add z80.flags.a |> FlagRegs
-
-
 adc_a_h : IXIY -> Z80ROM -> Z80 -> Z80Delta
 adc_a_h ixiyhl rom z80 =
     -- case 0x8C: adc(HL>>>8); break;
@@ -105,7 +91,3 @@ execute_0x8E ixiyhl rom48k z80 =
     FlagsWithPcAndTime (z80.flags |> adc value.value) value.pc value.time
 
 
-execute_0x8F : Z80ROM -> Z80 -> Z80Delta
-execute_0x8F rom z80 =
-    -- case 0x8F: adc(A); break;
-    z80.flags |> adc z80.flags.a |> FlagRegs
