@@ -18,6 +18,47 @@ import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIYHL(..), InterruptRegisters, Z80, add_cpu_time, dec_pc2, f_szh0n0p, get_bc, get_de, imm16, inc_pc, set408bit, set_bc, set_bc_main, set_de, set_de_main)
 
 
+group_ed_dict : Dict Int (Z80ROM -> Z80 -> Z80Delta)
+group_ed_dict =
+    Dict.fromList
+        [ ( 0x40, execute_ED40 )
+        , ( 0x42, execute_ED42 )
+        , ( 0x43, execute_ED43 )
+        , ( 0x44, execute_ED44_neg )
+        , ( 0x46, execute_ED46 )
+        , ( 0x47, execute_ED47 )
+        , ( 0x48, execute_ED48 )
+        , ( 0x4B, execute_ED4B )
+        , ( 0x4E, execute_ED4E )
+        , ( 0x50, execute_ED50 )
+        , -- case 0x4F: r(A); time++; break;
+          -- case 0x57: ld_a_ir(IR>>>8); break;
+          -- case 0x5F: ld_a_ir(r()); break;
+          -- case 0x67: rrd(); break;
+          -- case 0x6F: rld(); break;
+          ( 0x6F, rld )
+        , ( 0x78, execute_ED78 )
+        , ( 0x52, execute_ED52 )
+        , ( 0x53, execute_ED53 )
+        , ( 0xB8, execute_EDB8 )
+        , ( 0xB0, execute_EDB0 )
+        , ( 0x7B, execute_ED7B )
+        , ( 0x73, execute_ED73 )
+        , ( 0x5B, execute_ED5B )
+        , ( 0x72, execute_ED72 )
+        , ( 0x56, execute_ED56 )
+        , ( 0x5E, execute_ED5E )
+        , ( 0x66, execute_ED66 )
+        , ( 0x6E, execute_ED6E )
+        , ( 0x76, execute_ED76 )
+        , ( 0x7E, execute_ED7E )
+        , ( 0x58, execute_ED58 )
+        , ( 0x60, execute_ED60 )
+        , ( 0x68, execute_ED68 )
+        , ( 0x70, execute_ED70 )
+        ]
+
+
 execute_ED40 : Z80ROM -> Z80 -> Z80Delta
 execute_ED40 rom48k z80 =
     z80 |> execute_ED40485058606870 0x40
@@ -236,47 +277,6 @@ execute_EDB8 : Z80ROM -> Z80 -> Z80Delta
 execute_EDB8 rom48k z80 =
     -- case 0xB8: ldir(-1,true); break;
     z80 |> ldir -1 True rom48k
-
-
-group_ed_dict : Dict Int (Z80ROM -> Z80 -> Z80Delta)
-group_ed_dict =
-    Dict.fromList
-        [ ( 0x40, execute_ED40 )
-        , ( 0x42, execute_ED42 )
-        , ( 0x43, execute_ED43 )
-        , ( 0x44, execute_ED44_neg )
-        , ( 0x46, execute_ED46 )
-        , ( 0x47, execute_ED47 )
-        , ( 0x48, execute_ED48 )
-        , ( 0x4B, execute_ED4B )
-        , ( 0x4E, execute_ED4E )
-        , ( 0x50, execute_ED50 )
-        , -- case 0x4F: r(A); time++; break;
-          -- case 0x57: ld_a_ir(IR>>>8); break;
-          -- case 0x5F: ld_a_ir(r()); break;
-          -- case 0x67: rrd(); break;
-          -- case 0x6F: rld(); break;
-          ( 0x6F, rld )
-        , ( 0x78, execute_ED78 )
-        , ( 0x52, execute_ED52 )
-        , ( 0x53, execute_ED53 )
-        , ( 0xB8, execute_EDB8 )
-        , ( 0xB0, execute_EDB0 )
-        , ( 0x7B, execute_ED7B )
-        , ( 0x73, execute_ED73 )
-        , ( 0x5B, execute_ED5B )
-        , ( 0x72, execute_ED72 )
-        , ( 0x56, execute_ED56 )
-        , ( 0x5E, execute_ED5E )
-        , ( 0x66, execute_ED66 )
-        , ( 0x6E, execute_ED6E )
-        , ( 0x76, execute_ED76 )
-        , ( 0x7E, execute_ED7E )
-        , ( 0x58, execute_ED58 )
-        , ( 0x60, execute_ED60 )
-        , ( 0x68, execute_ED68 )
-        , ( 0x70, execute_ED70 )
-        ]
 
 
 

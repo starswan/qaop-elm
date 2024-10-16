@@ -3,7 +3,7 @@ module GroupF0 exposing (..)
 import Array exposing (Array)
 import Bitwise
 import Dict exposing (Dict)
-import Group0x00 exposing (delta_dict_00, miniDict00)
+import Group0x00 exposing (miniDict00)
 import Group0x10 exposing (delta_dict_10)
 import Group0x20 exposing (delta_dict_20, miniDict20)
 import Group0x30 exposing (delta_dict_30)
@@ -73,8 +73,7 @@ execute_0xFF _ z80 =
 
 lt40_delta_dict : Dict Int (IXIYHL -> Z80ROM -> Z80 -> Z80Delta)
 lt40_delta_dict =
-    delta_dict_00
-        |> Dict.union delta_dict_80
+    delta_dict_80
         |> Dict.union delta_dict_90
         |> Dict.union delta_dict_A0
         |> Dict.union delta_dict_10

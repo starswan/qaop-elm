@@ -18,12 +18,6 @@ miniDict00 =
         ]
 
 
-delta_dict_00 : Dict Int (IXIYHL -> Z80ROM -> Z80 -> Z80Delta)
-delta_dict_00 =
-    Dict.fromList
-        []
-
-
 delta_dict_lite_00 : Dict Int (Z80ROM -> Z80 -> Z80Delta)
 delta_dict_lite_00 =
     Dict.fromList
