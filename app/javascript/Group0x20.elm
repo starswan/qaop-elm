@@ -70,7 +70,6 @@ execute_0x22 rom48k z80 =
         --    z80.env |> set_mem16 v.value z80.main.hl |> add_cpu_time_env 6
         --x = debug_log "LD nn, HL" ((z80.pc |> toHexString) ++ " addr " ++ (v.value |> toHexString) ++ " " ++ (new_z80.main.hl |> toHexString)) env
     in
-    --EnvWithPc env v.pc
     SetMem16WithTimeAndPc v.value z80.main.hl 6 v.pc
 
 

@@ -415,7 +415,6 @@ execute_0xD2 rom48k z80 =
   --let
   --  result = z80 |> jp ((Bitwise.and z80.flags.ff 0x100) == 0)
   --in
-  --  CpuTimeWithPc result.time result.pc
   z80 |> jp_delta ((Bitwise.and z80.flags.ff 0x100) == 0) rom48k
 
 execute_0xD3: Z80ROM -> Z80 -> Z80Delta

@@ -58,7 +58,6 @@ execute_0x7077 ixiyhl rom48k z80 value =
                 |> addCpuTimeEnv 3
     in
     --{ z80 | pc = mem_target.pc } |> set_env new_env |> add_cpu_time 3
-    --EnvWithPc new_env mem_target.pc
     SetMem8WithCpuTimeIncrementAndPc mem_target.value value mem_target.time 3 mem_target.pc
 
 
@@ -74,7 +73,6 @@ execute_0x70 ixiyhl rom48k z80 =
     --             |> add_cpu_time_env 3
     --in
     --   --{ z80 | pc = mem_target.pc } |> set_env new_env |> add_cpu_time 3
-    --   EnvWithPc new_env mem_target.pc
     execute_0x7077 ixiyhl rom48k z80 z80.main.b
 
 
@@ -90,7 +88,6 @@ execute_0x71 ixiyhl rom48k z80 =
     --              |> add_cpu_time_env 3
     --in
     --    --{ z80 | pc = mem_target.pc } |> set_env new_env |> add_cpu_time 3
-    --    EnvWithPc new_env mem_target.pc
     execute_0x7077 ixiyhl rom48k z80 z80.main.c
 
 
@@ -104,7 +101,6 @@ execute_0x72 ixiyhl rom48k z80 =
     --   new_env = { env_1 | time = mem_target.time } |> set_mem mem_target.value z80.main.d |> add_cpu_time_env 3
     --in
     --   --{ z80 | pc = mem_target.pc } |> set_env new_env |> add_cpu_time 3
-    --   EnvWithPc new_env mem_target.pc
     execute_0x7077 ixiyhl rom48k z80 z80.main.d
 
 
@@ -118,7 +114,6 @@ execute_0x73 ixiyhl rom48k z80 =
     --   new_env = { env_1 | time = mem_target.time } |> set_mem mem_target.value z80.main.e |> add_cpu_time_env 3
     --in
     --   --{ z80 | pc = mem_target.pc } |> set_env new_env |> add_cpu_time 3
-    --   EnvWithPc new_env mem_target.pc
     execute_0x7077 ixiyhl rom48k z80 z80.main.e
 
 
@@ -132,7 +127,6 @@ execute_0x74 ixiyhl rom48k z80 =
     --   new_env = { env_1 | time = mem_target.time } |> set_mem mem_target.value (get_h HL z80.main) |> add_cpu_time_env 3
     --in
     --   --{ z80 | pc = mem_target.pc } |> set_env new_env |> add_cpu_time 3
-    --    EnvWithPc new_env mem_target.pc
     execute_0x7077 ixiyhl rom48k z80 (get_h HL z80.main)
 
 
@@ -146,7 +140,6 @@ execute_0x75 ixiyhl rom48k z80 =
     --   new_env = { env_1 | time = mem_target.time } |> set_mem mem_target.value (get_l HL z80.main) |> add_cpu_time_env 3
     --in
     --   --{ z80 | pc = mem_target.pc } |> set_env new_env |> add_cpu_time 3
-    --   EnvWithPc new_env mem_target.pc
     execute_0x7077 ixiyhl rom48k z80 (get_l HL z80.main)
 
 
