@@ -5,15 +5,15 @@ import CpuTimeCTime exposing (CpuTimeCTime, addCpuTimeTime)
 import RegisterChange exposing (RegisterChange, RegisterChangeApplied(..), applyRegisterChange)
 import SingleWith8BitParameter exposing (DoubleWithRegisterChange(..), JumpChange, Single8BitChange, applySimple8BitChange)
 import Utils exposing (shiftLeftBy8)
-import Z80Change exposing (FlagChange(..), applyZ80Change)
-import Z80ChangeData exposing (RegisterChangeData, Z80ChangeData)
+import Z80Change exposing (FlagChange(..), Z80Change, applyZ80Change)
+import Z80ChangeData exposing (RegisterChangeData)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..), applyDeltaWithChanges)
 import Z80Types exposing (IXIYHL(..), Z80)
 
 
 type DeltaWithChanges
     = OldDeltaWithChanges DeltaWithChangesData
-    | PureDelta CpuTimeCTime Z80ChangeData
+    | PureDelta CpuTimeCTime Z80Change
     | FlagDelta CpuTimeCTime FlagChange
     | RegisterChangeDelta CpuTimeCTime RegisterChangeData
     | Simple8BitDelta CpuTimeCTime Single8BitChange
@@ -185,7 +185,7 @@ applyFlagDelta cpu_time z80_flags tmp_z80 =
             { z80 | main = { main | hl = Bitwise.or int (Bitwise.and main.hl 0xFF00) } }
 
 
-applyPureDelta : CpuTimeCTime -> Z80ChangeData -> Z80 -> Z80
+applyPureDelta : CpuTimeCTime -> Z80Change -> Z80 -> Z80
 applyPureDelta cpu_time z80changeData tmp_z80 =
     let
         interrupts =
@@ -194,19 +194,14 @@ applyPureDelta cpu_time z80changeData tmp_z80 =
         env =
             tmp_z80.env
 
-        z80 = case z80changeData.cpu_time of
-            Just time ->
-                { tmp_z80 | env = { env | time = cpu_time |> addCpuTimeTime (4 + time) }, interrupts = { interrupts | r = interrupts.r + 1 } }
-
-
-            Nothing ->
+        z80 =
                 { tmp_z80 | env = { env | time = cpu_time |> addCpuTimeTime 4 }, interrupts = { interrupts | r = interrupts.r + 1 } }
 
 
         new_pc =
             Bitwise.and (z80.pc + 1) 0xFFFF
     in
-    { z80 | pc = new_pc } |> applyZ80Change z80changeData.changes
+    { z80 | pc = new_pc } |> applyZ80Change z80changeData
 
 
 applyRegisterDelta : CpuTimeCTime -> RegisterChangeData -> Z80 -> Z80
