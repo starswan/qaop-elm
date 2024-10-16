@@ -4,7 +4,7 @@ import Bitwise
 import Dict exposing (Dict)
 import Utils exposing (shiftRightBy8)
 import Z80Change exposing (FlagChange(..))
-import Z80Flags exposing (FlagRegisters, adc, cpl, daa, dec, inc, rot, sbc, scf_ccf, z80_add, z80_and, z80_sub)
+import Z80Flags exposing (FlagRegisters, adc, cpl, daa, dec, inc, rot, sbc, scf_ccf, z80_add, z80_and, z80_sub, z80_xor)
 
 
 singleByteFlags : Dict Int (FlagRegisters -> FlagChange)
@@ -31,6 +31,7 @@ singleByteFlags =
         , ( 0x97, sub_a )
         , ( 0x9F, sbc_a )
         , ( 0xA7, and_a )
+        , ( 0xAF, xor_a )
         ]
 
 
@@ -189,3 +190,9 @@ and_a z80_flags =
     -- case 0xA7: Fa=~(Ff=Fr=A); Fb=0; break;
     -- and a is correct - I guess the above is a faster implementation
     z80_flags |> z80_and z80_flags.a |> OnlyFlags
+
+
+xor_a : FlagRegisters -> FlagChange
+xor_a z80_flags =
+    -- case 0xAF: A=Ff=Fr=Fb=0; Fa=0x100; break;
+    z80_flags |> z80_xor z80_flags.a |> OnlyFlags

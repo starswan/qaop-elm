@@ -11,8 +11,6 @@ delta_dict_A0 : Dict Int (IXIYHL -> Z80ROM -> Z80 -> Z80Delta)
 delta_dict_A0 =
     Dict.fromList
         [ ( 0xA6, execute_0xA6 )
-        , ( 0xAC, execute_0xAC )
-        , ( 0xAD, execute_0xAD )
         , ( 0xAE, execute_0xAE )
         ]
 
@@ -22,17 +20,8 @@ miniDictA0 =
     Dict.fromList
         [ ( 0xA4, and_h )
         , ( 0xA5, and_l )
-        ]
-
-
-delta_dict_lite_A0 : Dict Int (Z80ROM -> Z80 -> Z80Delta)
-delta_dict_lite_A0 =
-    Dict.fromList
-        [ ( 0xA8, execute_0xA8 )
-        , ( 0xA9, execute_0xA9 )
-        , ( 0xAA, execute_0xAA )
-        , ( 0xAB, execute_0xAB )
-        , ( 0xAF, execute_0xAF )
+        , ( 0xAC, xor_h )
+        , ( 0xAD, xor_l )
         ]
 
 
@@ -63,42 +52,18 @@ execute_0xA6 ixiyhl rom48k z80 =
     FlagsWithPcAndTime (z80.flags |> z80_and value.value) value.pc value.time
 
 
-execute_0xA8 : Z80ROM -> Z80 -> Z80Delta
-execute_0xA8 _ z80 =
-    -- case 0xA8: xor(B); break;
-    z80.flags |> z80_xor z80.main.b |> FlagRegs
-
-
-execute_0xA9 : Z80ROM -> Z80 -> Z80Delta
-execute_0xA9 _ z80 =
-    -- case 0xA9: xor(C); break;
-    z80.flags |> z80_xor z80.main.c |> FlagRegs
-
-
-execute_0xAA : Z80ROM -> Z80 -> Z80Delta
-execute_0xAA _ z80 =
-    -- case 0xAA: xor(D); break;
-    z80.flags |> z80_xor z80.main.d |> FlagRegs
-
-
-execute_0xAB : Z80ROM -> Z80 -> Z80Delta
-execute_0xAB _ z80 =
-    -- case 0xAB: xor(E); break;
-    z80.flags |> z80_xor z80.main.e |> FlagRegs
-
-
-execute_0xAC : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
-execute_0xAC ixiyhl _ z80 =
+xor_h : IXIY -> Z80ROM -> Z80 -> Z80Delta
+xor_h ixiyhl _ z80 =
     -- case 0xAC: xor(HL>>>8); break;
     -- case 0xAC: xor(xy>>>8); break;
-    z80.flags |> z80_xor (get_h ixiyhl z80.main) |> FlagRegs
+    z80.flags |> z80_xor (get_h_ixiy ixiyhl z80.main) |> FlagRegs
 
 
-execute_0xAD : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
-execute_0xAD ixiyhl _ z80 =
+xor_l : IXIY -> Z80ROM -> Z80 -> Z80Delta
+xor_l ixiyhl _ z80 =
     -- case 0xAD: xor(HL&0xFF); break;
     -- case 0xAD: xor(xy&0xFF); break;
-    z80.flags |> z80_xor (get_l ixiyhl z80.main) |> FlagRegs
+    z80.flags |> z80_xor (get_l_ixiy ixiyhl z80.main) |> FlagRegs
 
 
 execute_0xAE : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
@@ -110,9 +75,3 @@ execute_0xAE ixiyhl rom48k z80 =
             z80 |> hl_deref_with_z80 ixiyhl rom48k
     in
     FlagsWithPcAndTime (z80.flags |> z80_xor value.value) value.pc value.time
-
-
-execute_0xAF : Z80ROM -> Z80 -> Z80Delta
-execute_0xAF _ z80 =
-    -- case 0xAF: A=Ff=Fr=Fb=0; Fa=0x100; break;
-    z80.flags |> z80_xor z80.flags.a |> FlagRegs

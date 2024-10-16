@@ -15,7 +15,6 @@ import Group0x40 exposing (delta_dict_lite_40)
 import Group0x50 exposing (delta_dict_lite_50)
 import Group0x60 exposing (delta_dict_lite_60)
 import Group0x70 exposing (delta_dict_lite_70)
-import Group0xA0 exposing (delta_dict_lite_A0)
 import Group0xB0 exposing (delta_dict_lite_B0)
 import Group0xC0 exposing (delta_dict_lite_C0)
 import Group0xE0 exposing (delta_dict_lite_E0)
@@ -354,7 +353,6 @@ lt40_delta_dict_lite = Dict.fromList
           (0xFB, execute_0xFB),
           (0xFD, (\z80 -> group_xy IXIY_IY z80))
     ] |> Dict.union delta_dict_lite_00
-    |> Dict.union delta_dict_lite_A0
     |> Dict.union delta_dict_lite_10
     |> Dict.union delta_dict_lite_20
     |> Dict.union delta_dict_lite_30

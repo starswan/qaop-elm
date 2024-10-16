@@ -6,7 +6,7 @@ import Dict exposing (Dict)
 import RegisterChange exposing (RegisterChange(..))
 import Utils exposing (shiftLeftBy8, shiftRightBy8)
 import Z80Change exposing (Z80Change(..))
-import Z80Flags exposing (FlagRegisters, adc, add16, dec, inc, sbc, z80_add, z80_and, z80_sub)
+import Z80Flags exposing (FlagRegisters, adc, add16, dec, inc, sbc, z80_add, z80_and, z80_sub, z80_xor)
 import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, Z80, get_bc)
 
 
@@ -57,6 +57,12 @@ singleByteMainAndFlagRegisters =
         , ( 0xA3, and_e )
         , ( 0xA4, and_h )
         , ( 0xA5, and_l )
+        , ( 0xA8, xor_b )
+        , ( 0xA9, xor_c )
+        , ( 0xAA, xor_d )
+        , ( 0xAB, xor_e )
+        , ( 0xAC, xor_h )
+        , ( 0xAD, xor_l )
         ]
 
 
@@ -951,3 +957,41 @@ and_l z80_main z80_flags =
     -- case 0xA5: and(xy&0xFF); break;
     --z80 |> set_flag_regs (z80_and (get_l ixiyhl z80.main) z80.flags)
     z80_flags |> z80_and (Bitwise.and z80_main.hl 0xFF) |> Z80ChangeFlags
+
+
+xor_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+xor_b z80_main z80_flags =
+    -- case 0xA8: xor(B); break;
+    z80_flags |> z80_xor z80_main.b |> Z80ChangeFlags
+
+
+xor_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+xor_c z80_main z80_flags =
+    -- case 0xA9: xor(C); break;
+    z80_flags |> z80_xor z80_main.c |> Z80ChangeFlags
+
+
+xor_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+xor_d z80_main z80_flags =
+    -- case 0xAA: xor(D); break;
+    z80_flags |> z80_xor z80_main.d |> Z80ChangeFlags
+
+
+xor_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+xor_e z80_main z80_flags =
+    -- case 0xAB: xor(E); break;
+    z80_flags |> z80_xor z80_main.e |> Z80ChangeFlags
+
+
+xor_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+xor_h z80_main z80_flags =
+    -- case 0xAC: xor(HL>>>8); break;
+    -- case 0xAC: xor(xy>>>8); break;
+    z80_flags |> z80_xor (shiftRightBy8 z80_main.hl) |> Z80ChangeFlags
+
+
+xor_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+xor_l z80_main z80_flags =
+    -- case 0xAD: xor(HL&0xFF); break;
+    -- case 0xAD: xor(xy&0xFF); break;
+    z80_flags |> z80_xor (Bitwise.and z80_main.hl 0xFF) |> Z80ChangeFlags
