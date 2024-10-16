@@ -255,8 +255,8 @@ sbc b flagRegs =
     { flagRegs | fa = fa, fb = fb, ff = ff, fr = fr, a = fr }
 
 
-cp : Int -> FlagRegisters -> FlagRegisters
-cp b flagRegs =
+z80_cp : Int -> FlagRegisters -> FlagRegisters
+z80_cp b flagRegs =
     let
         fa =
             flagRegs.a
