@@ -4,7 +4,7 @@ import Bitwise
 import Dict exposing (Dict)
 import Utils exposing (shiftRightBy8)
 import Z80Change exposing (FlagChange(..))
-import Z80Flags exposing (FlagRegisters, adc, cpl, daa, dec, inc, rot, sbc, scf_ccf, z80_add, z80_and, z80_sub, z80_xor)
+import Z80Flags exposing (FlagRegisters, adc, cpl, daa, dec, inc, rot, sbc, scf_ccf, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
 
 
 singleByteFlags : Dict Int (FlagRegisters -> FlagChange)
@@ -32,6 +32,8 @@ singleByteFlags =
         , ( 0x9F, sbc_a )
         , ( 0xA7, and_a )
         , ( 0xAF, xor_a )
+        , ( 0xB7, or_a )
+        , ( 0xBF, cp_a )
         ]
 
 
@@ -196,3 +198,17 @@ xor_a : FlagRegisters -> FlagChange
 xor_a z80_flags =
     -- case 0xAF: A=Ff=Fr=Fb=0; Fa=0x100; break;
     z80_flags |> z80_xor z80_flags.a |> OnlyFlags
+
+
+or_a : FlagRegisters -> FlagChange
+or_a z80_flags =
+    -- case 0xB7: or(A); break;
+    --z80 |> set_flag_regs (z80_or z80.flags.a z80.flags)
+    z80_flags |> z80_or z80_flags.a |> OnlyFlags
+
+
+cp_a : FlagRegisters -> FlagChange
+cp_a z80_flags =
+    -- case 0xBF: cp(A); break;
+    --z80 |> set_flag_regs (cp z80.flags.a z80.flags)
+    z80_flags |> z80_cp z80_flags.a |> OnlyFlags

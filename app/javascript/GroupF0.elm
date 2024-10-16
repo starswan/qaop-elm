@@ -14,12 +14,12 @@ import Group0x70 exposing (delta_dict_70, miniDict70)
 import Group0x80 exposing (delta_dict_80, miniDict80)
 import Group0x90 exposing (delta_dict_90, miniDict90)
 import Group0xA0 exposing (delta_dict_A0, miniDictA0)
-import Group0xB0 exposing (delta_dict_B0)
+import Group0xB0 exposing (delta_dict_B0, miniDictB0)
 import Group0xC0 exposing (delta_dict_C0)
 import Group0xE0 exposing (delta_dict_E0)
 import Z80Delta exposing (Z80Delta)
 import Z80Env exposing (addCpuTimeEnv)
-import Z80Flags exposing (c_FS, cp)
+import Z80Flags exposing (c_FS, z80_cp)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIY, IXIYHL, Z80, imm8, jp_z80, rst_z80)
 
@@ -58,7 +58,7 @@ execute_0xFE rom48k z80 =
             imm8 z80.pc z80.env.time rom48k z80.env.ram
 
         flags =
-            z80.flags |> cp v.value
+            z80.flags |> z80_cp v.value
 
         env_1 =
             z80.env
@@ -113,3 +113,4 @@ xYDict =
         |> Dict.union miniDict80
         |> Dict.union miniDict90
         |> Dict.union miniDictA0
+        |> Dict.union miniDictB0
