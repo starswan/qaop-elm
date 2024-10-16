@@ -25,14 +25,6 @@ miniDict90 =
         ]
 
 
-delta_dict_lite_90 : Dict Int (Z80ROM -> Z80 -> Z80Delta)
-delta_dict_lite_90 =
-    Dict.fromList
-        [ ( 0x97, execute_0x97 )
-        , ( 0x9F, execute_0x9F )
-        ]
-
-
 sub_h : IXIY -> Z80ROM -> Z80 -> Z80Delta
 sub_h ixiyhl _ z80 =
     -- case 0x94: sub(HL>>>8); break;
@@ -61,13 +53,6 @@ execute_0x96 ixiyhl rom48k z80 =
     in
     --{ z80 | pc = value.pc, env = { env_1 | time = value.time } } |> set_flag_regs (z80_sub value.value z80.flags)
     FlagsWithPcAndTime (z80.flags |> z80_sub value.value) value.pc value.time
-
-
-execute_0x97 : Z80ROM -> Z80 -> Z80Delta
-execute_0x97 _ z80 =
-    -- case 0x97: sub(A); break;
-    --z80 |> set_flag_regs (z80_sub z80.flags.a z80.flags)
-    z80.flags |> z80_sub z80.flags.a |> FlagRegs
 
 
 sbc_h : IXIY -> Z80ROM -> Z80 -> Z80Delta
@@ -100,8 +85,3 @@ execute_0x9E ixiyhl rom48k z80 =
     FlagsWithPcAndTime (z80.flags |> sbc value.value) value.pc value.time
 
 
-execute_0x9F : Z80ROM -> Z80 -> Z80Delta
-execute_0x9F _ z80 =
-    -- case 0x9F: sbc(A); break;
-    --z80 |> set_flag_regs (sbc z80.flags.a z80.flags)
-    z80.flags |> sbc z80.flags.a |> FlagRegs
