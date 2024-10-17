@@ -1,7 +1,6 @@
 module Z80Delta exposing (..)
 
 import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, addCpuTimeTime)
-import Z80ChangeData exposing (Z80ChangeData)
 import Z80Env exposing (Z80Env, addCpuTimeEnv, setMem, setMem16, z80_push)
 import Z80Flags exposing (FlagRegisters)
 import Z80Rom exposing (Z80ROM)
@@ -11,8 +10,6 @@ import Z80Types exposing (IXIYHL(..), InterruptRegisters, MainRegisters, MainWit
 type Z80Delta
     = Whole Z80
     | MainRegsWithPcAndCpuTime MainWithIndexRegisters Int CpuTimeCTime
-    | MainRegsAndCpuTime MainWithIndexRegisters Int
-    | FlagsWithMain FlagRegisters MainWithIndexRegisters
     | FlagsWithPCMainAndTime FlagRegisters Int MainWithIndexRegisters Int
     | FlagsWithPCMainAndCpuTime FlagRegisters Int MainWithIndexRegisters CpuTimeCTime
     | FlagRegs FlagRegisters
@@ -67,12 +64,6 @@ applyDeltaWithChanges z80delta z80  =
 
         MainRegsWithPcAndCpuTime mainRegisters pc cpu_time ->
             { z80 | pc = pc, env = { z80_env | time = cpu_time }, main = mainRegisters, interrupts = z80delta.interrupts }
-
-        MainRegsAndCpuTime mainRegisters cpu_time ->
-            { z80 | pc = z80delta.pc, env = { z80_env | time = z80delta.time |> addCpuTimeTime cpu_time }, main = mainRegisters, interrupts = z80delta.interrupts }
-
-        FlagsWithMain flagRegisters mainRegisters ->
-            { z80 | flags = flagRegisters, pc = z80delta.pc, env = { z80_env | time = z80delta.time }, main = mainRegisters, interrupts = z80delta.interrupts }
 
         FlagRegs flagRegisters ->
             { z80 | flags = flagRegisters, pc = z80delta.pc, env = { z80_env | time = z80delta.time }, interrupts = z80delta.interrupts }
