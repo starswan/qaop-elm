@@ -4,7 +4,7 @@ import Array exposing (Array)
 import Bitwise
 import Dict exposing (Dict)
 import Group0x00 exposing (miniDict00)
-import Group0x10 exposing (delta_dict_10)
+import Group0x10 exposing (miniDict10)
 import Group0x20 exposing (delta_dict_20, miniDict20)
 import Group0x30 exposing (delta_dict_30)
 import Group0x40 exposing (delta_dict_40, miniDict40)
@@ -76,7 +76,6 @@ lt40_delta_dict =
     delta_dict_80
         |> Dict.union delta_dict_90
         |> Dict.union delta_dict_A0
-        |> Dict.union delta_dict_10
         |> Dict.union delta_dict_20
         |> Dict.union delta_dict_30
         |> Dict.union delta_dict_B0
@@ -106,6 +105,7 @@ xYDict =
     miniDict40
         |> Dict.union miniDict20
         |> Dict.union miniDict00
+        |> Dict.union miniDict10
         |> Dict.union miniDict50
         |> Dict.union miniDict60
         |> Dict.union miniDict70

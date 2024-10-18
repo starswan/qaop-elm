@@ -7,7 +7,7 @@ import RegisterChange exposing (RegisterChange(..))
 import Utils exposing (shiftLeftBy8, shiftRightBy8)
 import Z80Change exposing (Z80Change(..))
 import Z80Flags exposing (FlagRegisters, adc, add16, dec, inc, sbc, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
-import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, Z80, get_bc)
+import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, Z80, get_bc, get_de)
 
 
 singleByteMainAndFlagRegisters : Dict Int (MainWithIndexRegisters -> FlagRegisters -> Z80Change)
@@ -20,6 +20,7 @@ singleByteMainAndFlagRegisters =
         , ( 0x0D, dec_c )
         , ( 0x14, inc_d )
         , ( 0x15, dec_d )
+        , ( 0x19, add_hl_de )
         , ( 0x1C, inc_e )
         , ( 0x1D, dec_e )
         , ( 0x24, inc_h )
@@ -975,3 +976,14 @@ cp_l z80_main z80_flags =
     -- case 0xBD: cp(xy&0xFF); break;
     --z80 |> set_flag_regs (cp (get_l ixiyhl z80.main) z80.flags)
     z80_flags |> z80_cp (Bitwise.and z80_main.hl 0xFF) |> Z80ChangeFlags
+
+
+add_hl_de : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+add_hl_de z80_main z80_flags =
+    -- case 0x19: HL=add16(HL,D<<8|E); break;
+    -- case 0x19: xy=add16(xy,D<<8|E); break;
+    let
+        new_xy =
+            add16 z80_main.hl (get_de z80_main) z80_flags
+    in
+    FlagsWithHLRegister new_xy.flags new_xy.value new_xy.time
