@@ -1,5 +1,6 @@
 module Z80Change exposing (..)
 
+import Z80Env exposing (addCpuTimeEnv)
 import Z80Flags exposing (FlagRegisters)
 import Z80Types exposing (Z80)
 
@@ -10,15 +11,20 @@ type Z80Change
     | FlagsWithDRegister FlagRegisters Int
     | FlagsWithERegister FlagRegisters Int
     | HLRegister Int
-    | FlagsWithHLRegister FlagRegisters Int
+    | FlagsWithHLRegister FlagRegisters Int Int
     | Z80RegisterB Int
     | Z80RegisterC Int
+    | Z80ChangeFlags FlagRegisters
 
 
 type FlagChange
     = OnlyFlags FlagRegisters
     | FlagChangeB Int
     | FlagChangeC Int
+    | FlagChangeD Int
+    | FlagChangeE Int
+    | FlagChangeH Int
+    | FlagChangeL Int
 
 
 applyZ80Change : Z80Change -> Z80 -> Z80
@@ -59,12 +65,13 @@ applyZ80Change change z80 =
             in
             { z80 | main = { main | hl = int } }
 
-        FlagsWithHLRegister flagRegisters int ->
+        FlagsWithHLRegister flagRegisters int time ->
             let
                 main =
                     z80.main
+                env = z80.env |> addCpuTimeEnv time
             in
-            { z80 | flags = flagRegisters, main = { main | hl = int } }
+            { z80 | env = env, flags = flagRegisters, main = { main | hl = int } }
 
         Z80RegisterB int ->
             let
@@ -79,3 +86,6 @@ applyZ80Change change z80 =
                     z80.main
             in
             { z80 | main = { main | c = int } }
+
+        Z80ChangeFlags flagRegisters ->
+            { z80 | flags = flagRegisters }

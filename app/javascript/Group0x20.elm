@@ -6,7 +6,7 @@ import Dict exposing (Dict)
 import Utils exposing (char, shiftLeftBy8, shiftRightBy8)
 import Z80Delta exposing (Z80Delta(..))
 import Z80Env exposing (mem16)
-import Z80Flags exposing (add16, cpl, daa, dec, inc)
+import Z80Flags exposing (add16, dec, inc)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIY, IXIYHL, Z80, get_xy, get_xy_ixiy, imm16, imm8, jr, set_xy, set_xy_ixiy)
 
@@ -14,15 +14,13 @@ import Z80Types exposing (IXIY, IXIYHL, Z80, get_xy, get_xy_ixiy, imm16, imm8, j
 miniDict20 : Dict Int (IXIY -> Z80ROM -> Z80 -> Z80Delta)
 miniDict20 =
     Dict.fromList
-        [
-                 ( 0x23, execute_0x23 )
-                , ( 0x24, execute_0x24 )
-                , ( 0x25, execute_0x25 )
+        [ ( 0x23, execute_0x23 )
+        , ( 0x24, execute_0x24 )
+        , ( 0x25, execute_0x25 )
         , ( 0x29, add_hl_hl )
         , ( 0x2B, execute_0x2B )
         , ( 0x2C, execute_0x2C )
         , ( 0x2D, execute_0x2D )
-
         ]
 
 
@@ -39,30 +37,8 @@ delta_dict_20 =
 delta_dict_lite_20 : Dict Int (Z80ROM -> Z80 -> Z80Delta)
 delta_dict_lite_20 =
     Dict.fromList
-        [ ( 0x20, execute_0x20 )
-        , ( 0x22, execute_0x22 )
-        , ( 0x28, execute_0x28 )
+        [ ( 0x22, execute_0x22 )
         ]
-
-
-execute_0x20 : Z80ROM -> Z80 -> Z80Delta
-execute_0x20 rom48k z80 =
-    -- case 0x20: if(Fr!=0) jr(); else imm8(); break;
-    if z80.flags.fr /= 0 then
-        let
-            x =
-                z80 |> jr rom48k
-        in
-        --{ z80 | pc = x.register_value, env = x.env }
-        CpuTimeWithPc x.time x.pc
-
-    else
-        let
-            x =
-                imm8 z80.pc z80.env.time rom48k z80.env.ram
-        in
-        --{ z80 | env = x.env, pc = x.pc }
-        CpuTimeWithPc x.time x.pc
 
 
 execute_0x21 : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
@@ -94,7 +70,6 @@ execute_0x22 rom48k z80 =
         --    z80.env |> set_mem16 v.value z80.main.hl |> add_cpu_time_env 6
         --x = debug_log "LD nn, HL" ((z80.pc |> toHexString) ++ " addr " ++ (v.value |> toHexString) ++ " " ++ (new_z80.main.hl |> toHexString)) env
     in
-    --EnvWithPc env v.pc
     SetMem16WithTimeAndPc v.value z80.main.hl 6 v.pc
 
 
@@ -183,26 +158,6 @@ execute_0x26 ixiyhl rom48k z80 =
     in
     --{ new_z80 | main = main }
     MainRegsWithPcAndCpuTime main value.pc value.time
-
-
-execute_0x28 : Z80ROM -> Z80 -> Z80Delta
-execute_0x28 rom48k z80 =
-    -- case 0x28: if(Fr==0) jr(); else imm8(); break;
-    if z80.flags.fr == 0 then
-        let
-            x =
-                z80 |> jr rom48k
-        in
-        --{ z80 | env = x.env, pc = x.register_value }
-        CpuTimeWithPc x.time x.pc
-
-    else
-        let
-            x =
-                imm8 z80.pc z80.env.time rom48k z80.env.ram
-        in
-        --{ z80 | env = x.env, pc = x.pc }
-        CpuTimeWithPc x.time x.pc
 
 
 add_hl_hl : IXIY -> Z80ROM -> Z80 -> Z80Delta

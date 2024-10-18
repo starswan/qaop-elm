@@ -24,35 +24,13 @@ delta_dict_30 =
 delta_dict_lite_30 : Dict Int (Z80ROM -> Z80 -> Z80Delta)
 delta_dict_lite_30 =
     Dict.fromList
-        [ ( 0x30, execute_0x30 )
-        , ( 0x31, execute_0x31 )
+        [ ( 0x31, execute_0x31 )
         , ( 0x32, execute_0x32 )
         , ( 0x33, execute_0x33 )
-        , ( 0x38, execute_0x38 )
         , ( 0x3A, execute_0x3A )
         , ( 0x3B, execute_0x3B )
         , ( 0x3E, execute_0x3E )
         ]
-
-
-execute_0x30 : Z80ROM -> Z80 -> Z80Delta
-execute_0x30 rom48k z80 =
-    -- case 0x30: if((Ff&0x100)==0) jr(); else imm8(); break;
-    if Bitwise.and z80.flags.ff 0x0100 == 0 then
-        let
-            x =
-                z80 |> jr rom48k
-        in
-        --{ z80 | env = x.env, pc = x.register_value }
-        CpuTimeWithPc x.time x.pc
-
-    else
-        let
-            v =
-                 imm8 z80.pc z80.env.time rom48k z80.env.ram
-        in
-        --{ z80 | env = v.env, pc = v.pc }
-        CpuTimeWithPc v.time v.pc
 
 
 execute_0x31 : Z80ROM -> Z80 -> Z80Delta
@@ -189,12 +167,11 @@ execute_0x36 ixiyhl rom48k z80 =
                 --z80_1 = { z80 | env = mempc.env } |> add_cpu_time 3
                 --z80_1_env =
                 --    { env_1 | time = mempc.time } |> addCpuTimeEnv 3
-
                 v =
                     mem (char (z80.pc + 1)) (mempc.time |> addCpuTimeTime 3) rom48k env_1.ram
 
                 z80_2 =
-                    { env_1 | time = (v.time |> addCpuTimeTime 5) }
+                    { env_1 | time = v.time |> addCpuTimeTime 5 }
 
                 x =
                     setMem a v.value z80_2
@@ -204,26 +181,6 @@ execute_0x36 ixiyhl rom48k z80 =
             in
             --{ z80_2 | env = x, pc = new_pc } |> add_cpu_time 3
             EnvWithPc (x |> addCpuTimeEnv 3) new_pc
-
-
-execute_0x38 : Z80ROM -> Z80 -> Z80Delta
-execute_0x38 rom48k z80 =
-    -- case 0x38: if((Ff&0x100)!=0) jr(); else imm8(); break;
-    if Bitwise.and z80.flags.ff 0x0100 /= 0 then
-        let
-            x =
-                z80 |> jr rom48k
-        in
-        --{ z80 | env = x.env, pc = x.register_value }
-        CpuTimeWithPc x.time x.pc
-
-    else
-        let
-            v =
-                imm8 z80.pc z80.env.time rom48k z80.env.ram
-        in
-        --{ z80 | env = v.env, pc = v.pc }
-        CpuTimeWithPc v.time v.pc
 
 
 execute_0x39 : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
