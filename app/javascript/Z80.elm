@@ -372,17 +372,16 @@ execute_delta ct rom48k z80 =
                                             (Bitwise.or 0xCB00 param.value, param.time, IncrementByOne)
                                     0xDD ->
                                         let
-                                            param = mem ((z80.pc |> incrementBy1 |> toInt)) ct.time rom48k z80.env.ram
+                                            param = mem (z80.pc |> incrementBy1 |> toInt) ct.time rom48k tmp_z80.env.ram
                                         in
                                             (Bitwise.or 0xDD00 param.value, param.time, IncrementByTwo)
                                     0xFD ->
                                         let
-                                            param = mem (z80.pc |> incrementBy1 |> toInt) ct.time rom48k z80.env.ram
+                                            param = mem (z80.pc |> incrementBy1 |> toInt) ct.time rom48k tmp_z80.env.ram
                                         in
                                             (Bitwise.or 0xFD00 param.value, param.time, IncrementByTwo)
                                     _ ->
                                         (ct.value,ct.time, IncrementByOne)
-      tripleMain = z80 |> parseTripleMain instrCode rom48k paramOffset
    in
    case tripleMain of
        Just delta ->

@@ -47,7 +47,7 @@ suite =
                         new_z80 =
                             execute_instruction z80rom { z80 | env = new_env }
                     in
-                    Expect.equal ( addr + 3, 0x45, 0x34 ) ( new_z80.pc |> toInt, new_z80.main.d, new_z80.main.e )
+                    Expect.equal ( addr + 3, 0x45, 0x34) (new_z80.pc |> toInt, new_z80.main.d, new_z80.main.e )
             ]
         , describe "ADD HL, 16-bit"
             [ test "0x19 ADD HL, DE" <|
@@ -60,7 +60,7 @@ suite =
                                     , main = { z80main | d = 0x12, e = 0x23, hl = 0x3445 |> fromInt }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x4668 ) ( z80_after_01.pc |> toInt, z80_after_01.main.hl |> toInt )
+                    Expect.equal ( addr + 1, 0x4668) (z80_after_01.pc |> toInt, z80_after_01.main.hl |> toInt )
             , test "0xDD 0x19 ADD IX, DE" <|
                 \_ ->
                     let
@@ -79,10 +79,9 @@ suite =
                             execute_instruction z80rom
                                 { z80
                                     | env = z80env |> setMem addr 0xFD |> setMem (addr + 1) 0x19
-                                    , main = { z80main | iy = 0x05 |> fromInt, d = 0x01, e = 0x02, hl = 0x3445 |> fromInt }
-                                }
-                    in
-                    Expect.equal ( addr + 2, 0x3445, 0x0107 ) ( z80_after_01.pc |> toInt, z80_after_01.main.hl |> toInt, z80_after_01.main.iy |> toInt )
+                                    , main = { z80main | iy = 0x05 |> fromInt, d = 0x01, e = 0x02, hl = 0x3445 |> fromInt } }
+               in
+                  Expect.equal (addr + 2, 0x3445, 0x0107) (z80_after_01.pc |> toInt, z80_after_01.main.hl |> toInt, z80_after_01.main.iy |> toInt)
             ]
         , describe "LD A, (16 bit)"
             [ test "0x1A - LD A,(DE)" <|
@@ -100,7 +99,7 @@ suite =
                                     , main = { z80main | d = 0x45, e = 0x46 }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x78 ) ( z80_after_01.pc |> toInt, z80_after_01.flags.a )
+                    Expect.equal ( addr + 1, 0x78) (z80_after_01.pc |> toInt, z80_after_01.flags.a )
             ]
         , describe "DEC 16 bit"
             [ test "0x1B DEC DE" <|
@@ -113,7 +112,7 @@ suite =
                                     , main = { z80main | d = 0x45, e = 0x00 }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x44, 0xFF ) ( z80_after_01.pc |> toInt, z80_after_01.main.d, z80_after_01.main.e )
+                    Expect.equal ( addr + 1, 0x44, 0xFF) (z80_after_01.pc |> toInt, z80_after_01.main.d, z80_after_01.main.e )
             ]
         , describe "INC 8 bit"
             [ test "INC D 0x14" <|
@@ -131,7 +130,7 @@ suite =
                                     , flags = { flags | a = 0x38 }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x66, 0xFF ) ( new_z80.pc |> toInt, new_z80.main.d, new_z80.main.e )
+                    Expect.equal ( addr + 1, 0x66, 0xFF) (new_z80.pc |> toInt, new_z80.main.d, new_z80.main.e )
             , test "INC E - 0x1C" <|
                 \_ ->
                     let
@@ -142,7 +141,7 @@ suite =
                                     , main = { z80main | d = 0x45, e = 0x00 }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x45, 0x01 ) ( z80_after_01.pc |> toInt, z80_after_01.main.d, z80_after_01.main.e )
+                    Expect.equal ( addr + 1, 0x45, 0x01) (z80_after_01.pc |> toInt, z80_after_01.main.d, z80_after_01.main.e )
             ]
         , describe "DEC 8 bit"
             [ test "DEC E - 0x1D" <|
@@ -155,7 +154,7 @@ suite =
                                     , main = { z80main | d = 0x45, e = 0x00 }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x45, 0xFF ) ( z80_after_01.pc |> toInt, z80_after_01.main.d, z80_after_01.main.e )
+                    Expect.equal ( addr + 1, 0x45, 0xFF) (z80_after_01.pc |> toInt, z80_after_01.main.d, z80_after_01.main.e )
             ]
         , describe "LD 8-bit,n"
             [ test "LD D,n - 0x16" <|
@@ -174,7 +173,7 @@ suite =
                                     , flags = { flags | a = 0x38 }
                                 }
                     in
-                    Expect.equal ( addr + 2, 0x34, 0xFF ) ( new_z80.pc |> toInt, new_z80.main.d, new_z80.main.e )
+                    Expect.equal ( addr + 2, 0x34, 0xFF) (new_z80.pc |> toInt, new_z80.main.d, new_z80.main.e )
             , test "LD E,n - 0x1E" <|
                 \_ ->
                     let
@@ -190,7 +189,7 @@ suite =
                                     , main = { z80main | d = 0x45, e = 0x00 }
                                 }
                     in
-                    Expect.equal ( addr + 2, 0x78 ) ( z80_after_01.pc |> toInt, z80_after_01.main.e )
+                    Expect.equal ( addr + 2, 0x78) (z80_after_01.pc |> toInt, z80_after_01.main.e )
             ]
         , describe "DJNZ - 0x10"
             [ test "Jump" <|
@@ -203,7 +202,7 @@ suite =
                                     , main = { z80main | b = 0x45 }
                                 }
                     in
-                    Expect.equal ( addr + 4, 0x44 ) ( z80_after_01.pc |> toInt, z80_after_01.main.b )
+                    Expect.equal ( addr + 4, 0x44) (z80_after_01.pc |> toInt, z80_after_01.main.b )
             , test "Dont jump" <|
                 \_ ->
                     let

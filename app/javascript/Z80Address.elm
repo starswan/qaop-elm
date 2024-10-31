@@ -51,10 +51,7 @@ fromInt raw_addr =
     Bitwise.and raw_addr 0xFFFF |> fromSafeInt
 
 
-
 -- if we know the address is in bounds, we can call this instead
-
-
 fromSafeInt : Int -> Z80Address
 fromSafeInt raw_addr =
     let
@@ -190,7 +187,6 @@ incrementBy2 z80_address =
 incrementBy3 : Z80Address -> Z80Address
 incrementBy3 z80_address =
     z80_address |> incrementBy1 |> incrementBy2
-
 
 incrementBy4 : Z80Address -> Z80Address
 incrementBy4 z80_address =
