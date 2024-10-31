@@ -4,7 +4,7 @@ import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeSingleInstruction)
 import Z80Address exposing (fromInt, toInt)
-import Z80Address exposing (fromInt, toInt)
+import Z80Address exposing (fromInt, incrementBy1, incrementBy2, toInt)
 import Z80Env exposing (mem, setMem)
 import Z80Rom
 
@@ -12,14 +12,17 @@ import Z80Rom
 suite : Test
 suite =
     let
-        addr =
+        z80_addr =
             30000
+
+        addr =
+            z80_addr |> fromInt
 
         old_z80 =
             Z80.constructor
 
         z80 =
-            { old_z80 | pc = addr |> fromInt }
+            { old_z80 | pc = addr }
 
         flags =
             z80.flags
@@ -42,22 +45,22 @@ suite =
                         z80_after_01 =
                             executeSingleInstruction z80rom
                                 { z80
-                                    | env = z80env |> setMem addr 0x10 |> setMem (addr + 1) 0x02
+                                    | env = z80env |> setMem addr 0x10 |> setMem (addr |> incrementBy1) 0x02
                                     , main = { z80main | b = 0x45 }
                                 }
                     in
-                    Expect.equal ( addr + 4, 0x44) (z80_after_01.pc |> toInt, z80_after_01.main.b )
+                    Expect.equal ( z80_addr + 4, 0x44) (z80_after_01.pc |> toInt, z80_after_01.main.b )
             , test "Dont jump" <|
                 \_ ->
                     let
                         z80_after_01 =
                             executeSingleInstruction z80rom
                                 { z80
-                                    | env = z80env |> setMem addr 0x10 |> setMem (addr + 1) 0x02
+                                    | env = z80env |> setMem addr 0x10 |> setMem (addr |> incrementBy1) 0x02
                                     , main = { z80main | b = 0x01 }
                                 }
                     in
-                    Expect.equal ( addr + 2, 0x00 ) ( z80_after_01.pc |> toInt, z80_after_01.main.b )
+                    Expect.equal ( z80_addr + 2, 0x00 ) ( z80_after_01.pc |> toInt, z80_after_01.main.b )
             ]
         , describe "16 bit load immediate"
             [ test "0x11 LD DE,nn" <|
@@ -91,9 +94,9 @@ suite =
                                 }
 
                         mem_value =
-                            mem 0x6545 new_z80.env.time z80rom new_z80.env.ram
+                            mem (0x6545 |> fromInt) new_z80.env.time z80rom new_z80.env.ram
                     in
-                    Expect.equal ( addr + 1, 0x38 ) ( new_z80.pc |> toInt, mem_value.value )
+                    Expect.equal ( z80_addr + 1, 0x38 ) ( new_z80.pc |> toInt, mem_value.value )
             ]
         , describe "INC DE"
             [ test "Do it 0x13" <|
@@ -111,7 +114,7 @@ suite =
                                     , flags = { flags | a = 0x38 }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x66, 0x00 ) ( new_z80.pc |> toInt, new_z80.main.d, new_z80.main.e )
+                    Expect.equal ( z80_addr + 1, 0x66, 0x00 ) ( new_z80.pc |> toInt, new_z80.main.d, new_z80.main.e )
             ]
         , describe "0x14"
             [ test "INC D 0x14" <|
@@ -147,7 +150,7 @@ suite =
                                     , flags = { flags | a = 0x38 }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x64, 0xFF ) ( new_z80.pc |> toInt, new_z80.main.d, new_z80.main.e )
+                    Expect.equal ( z80_addr + 1, 0x64, 0xFF ) ( new_z80.pc |> toInt, new_z80.main.d, new_z80.main.e )
             ]
         , describe "0x16"
             [ test "LD D,n - 0x16" <|
@@ -175,7 +178,7 @@ suite =
                         new_env =
                             z80env
                                 |> setMem addr 0x17
-                                |> setMem (addr + 1) 0x34
+                                |> setMem (addr |> incrementBy1) 0x34
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -185,7 +188,7 @@ suite =
                                     , flags = { flags | a = 0x39 }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x72 ) ( new_z80.pc |> toInt, new_z80.flags.a )
+                    Expect.equal ( z80_addr + 1, 0x72 ) ( new_z80.pc |> toInt, new_z80.flags.a )
             ]
         , describe "JR n"
             [ test "Do it 0x18" <|
@@ -194,7 +197,7 @@ suite =
                         new_env =
                             z80env
                                 |> setMem addr 0x18
-                                |> setMem (addr + 1) 0x05
+                                |> setMem (addr |> incrementBy1) 0x05
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -204,7 +207,7 @@ suite =
                                     , flags = { flags | a = 0x39 }
                                 }
                     in
-                    Expect.equal (addr + 7) (new_z80.pc |> toInt)
+                    Expect.equal (z80_addr + 7) (new_z80.pc |> toInt)
             ]
         , describe "ADD HL, 16-bit"
             [ test "0x19 ADD HL, DE" <|
@@ -332,6 +335,6 @@ suite =
                                     , flags = { flags | a = 0x39 }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x1C ) ( new_z80.pc |> toInt, new_z80.flags.a )
+                    Expect.equal ( z80_addr + 1, 0x1C ) ( new_z80.pc |> toInt, new_z80.flags.a )
             ]
         ]

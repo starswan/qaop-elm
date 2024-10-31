@@ -4,7 +4,7 @@ import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeSingleInstruction)
 import Z80Address exposing (fromInt, toInt)
-import Z80Address exposing (fromInt, toInt)
+import Z80Address exposing (fromInt, incrementBy1, incrementBy2, incrementBy3, toInt)
 import Z80Env exposing (mem, setMem)
 import Z80Rom
 
@@ -12,13 +12,14 @@ import Z80Rom
 suite : Test
 suite =
    let
-       addr = 0x5800
+       int_addr = 0x5800
+       addr = int_addr |> fromInt
        sp = 0xF765
        hl = 0x1234
        old_z80 = Z80.constructor
        old_z80env = old_z80.env
        z80main = old_z80.main
-       z80 = { old_z80 | pc = addr |> fromInt, env = { old_z80env | sp = sp |> fromInt }, main = { z80main | hl = hl |> fromInt } }
+       z80 = { old_z80 | pc = addr, env = { old_z80env | sp = sp |> fromInt }, main = { z80main | hl = hl |> fromInt } }
 
 
 

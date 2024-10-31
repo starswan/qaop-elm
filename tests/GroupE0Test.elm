@@ -12,7 +12,7 @@ import Z80Rom
 suite : Test
 suite =
     let
-        addr =
+        int_addr =
             0x5800
 
         sp =
@@ -20,6 +20,9 @@ suite =
 
         hl =
             0x1234|> fromInt
+
+        addr =
+            int_addr |> fromInt
 
         old_z80 =
             Z80.constructor
@@ -51,8 +54,8 @@ suite =
                         new_env =
                             z80env
                                 |> setMem addr 0xE1
-                                |> setMem 0xFF77 0x16
-                                |> setMem 0xFF78 0x56
+                                |> setMem (0xFF77 |> fromInt) 0x16
+                                |> setMem (0xFF78 |> fromInt) 0x56
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -170,6 +173,6 @@ suite =
                                 , flags = { flags | a = 0x60 }
                             }
                 in
-                Expect.equal { pc = addr + 1, hl = 0x6000, d = 0x50, e = 0x51 }
+                Expect.equal { pc = int_addr + 1, hl = 0x6000, d = 0x50, e = 0x51 }
                     { pc = new_z80.pc|> toInt, hl = new_z80.main.hl|> toInt, d = new_z80.main.d, e = new_z80.main.e }
         ]

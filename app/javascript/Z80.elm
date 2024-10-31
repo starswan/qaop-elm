@@ -5,7 +5,7 @@ module Z80 exposing (..)
 
 import Array exposing (Array)
 import Bitwise exposing (and, or)
-import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAndValue, addCpuTimeTime)
+import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, addCpuTimeTime)
 import Dict exposing (Dict)
 import Group0x30 exposing (delta_dict_lite_30)
 import Group0xE0 exposing (delta_dict_lite_E0)
@@ -20,7 +20,7 @@ import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters)
 import SingleNoParams exposing (singleWithNoParam)
 import SingleWith8BitParameter exposing (singleWith8BitParam)
 import Utils exposing (toHexString)
-import Z80Address exposing (Z80Address, addIndexOffset, fromInt, incrementBy1, incrementBy2, toInt)
+import Z80Address exposing (Z80Address, fromInt, incrementBy1, incrementBy2)
 import Z80Debug exposing (debugTodo)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..))
 import Z80Env exposing (Z80Env, c_TIME_LIMIT, m1, mem, z80env_constructor)
@@ -317,17 +317,17 @@ execute_delta ct rom48k z80 =
                                     0xCB ->
                                         let
                                             --param = mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k z80.env.ram
-                                            param = mem (z80.pc |> incrementBy1 |> toInt) ct.time rom48k z80.env.ram
+                                            param = mem (z80.pc |> incrementBy1) ct.time rom48k z80.env.ram
                                         in
                                             (Bitwise.or 0xCB00 param.value, param.time, IncrementByOne)
                                     0xDD ->
                                         let
-                                            param = mem (z80.pc |> incrementBy1 |> toInt) ct.time rom48k tmp_z80.env.ram
+                                            param = mem (z80.pc |> incrementBy1) ct.time rom48k tmp_z80.env.ram
                                         in
                                             (Bitwise.or 0xDD00 param.value, param.time, IncrementByTwo)
                                     0xFD ->
                                         let
-                                            param = mem (z80.pc |> incrementBy1 |> toInt) ct.time rom48k tmp_z80.env.ram
+                                            param = mem (z80.pc |> incrementBy1) ct.time rom48k tmp_z80.env.ram
                                         in
                                             (Bitwise.or 0xFD00 param.value, param.time, IncrementByTwo)
                                     _ ->
@@ -390,10 +390,10 @@ singleByte ctime instr_code tmp_z80 rom48k =
                                    let
                                       param = case pcInc of
                                           IncreaseByTwo ->
-                                                mem (tmp_z80.pc |> incrementBy1 |> toInt) ctime rom48k tmp_z80.env.ram
+                                                mem (tmp_z80.pc |> incrementBy1) ctime rom48k tmp_z80.env.ram
 
                                           IncreaseByThree ->
-                                                mem (tmp_z80.pc |> incrementBy2 |> toInt) ctime rom48k tmp_z80.env.ram
+                                                mem (tmp_z80.pc |> incrementBy2) ctime rom48k tmp_z80.env.ram
 
                                    in
                                    -- duplicate of code in imm8 - add 3 to the cpu_time
@@ -493,7 +493,7 @@ execute rom48k z80 =
 group_xy: IXIY -> Z80ROM -> Z80 -> Z80Delta
 group_xy ixiy rom48k old_z80 =
   let
-    c = old_z80.env |> m1 (old_z80.pc |> toInt) (or old_z80.interrupts.ir (and old_z80.r 0x7F)) rom48k
+    c = old_z80.env |> m1 (old_z80.pc) (or old_z80.interrupts.ir (and old_z80.r 0x7F)) rom48k
     --intr = old_z80.interrupts
     env = old_z80.env
     z80_1 = { old_z80 | env = { env | time = c.time }, r = old_z80.r + 1 }

@@ -10,7 +10,7 @@ import Utils exposing (char, shiftRightBy8)
 import Vector8
 import Z80 exposing (execute)
 import Z80Address exposing (Z80Address, incrementBy2, lower8Bits, toInt, top8Bits)
-import Z80Address exposing (incrementBy2, toInt)
+import Z80Address exposing (fromInt, incrementBy2, toInt)
 import Z80Debug exposing (debugLog)
 import Z80Env exposing (mem, mem16, reset_cpu_time)
 import Z80Flags exposing (c_FC, c_FZ, get_flags, set_flags)
@@ -1029,11 +1029,11 @@ checkLoad spectrum =
                     let
                         ( pc2, sp2 ) =
                             --( cpu.env |> mem16 sp1 spectrum.rom48k |> .value, char sp1 + 2 )
-                            ( cpu.env |> mem16 (sp1 |> toInt) spectrum.rom48k |> .value, sp1 |> incrementBy2 )
+                            ( cpu.env |> mem16 sp1 spectrum.rom48k |> .address |> toInt, sp1 |> incrementBy2 )
                     in
                     if pc2 == 0x05E6 then
                         --( cpu.env |> mem16 sp2 spectrum.rom48k |> .value, char sp2 + 2 )
-                        ( cpu.env |> mem16 (sp2 |> toInt) spectrum.rom48k |> .value, sp2 |> incrementBy2 )
+                        ( cpu.env |> mem16 (sp2) spectrum.rom48k|> .address |> toInt, sp2 |> incrementBy2 )
 
                     else
                         ( pc2, sp2 )
@@ -1323,7 +1323,7 @@ doLoad cpu z80rom tape =
                                                         else
                                                             let
                                                                 new_a =
-                                                                    Bitwise.xor (mem state.ix cpu.env.time z80rom cpu.env.ram |> .value) l
+                                                                    Bitwise.xor (mem (state.ix |> fromInt) cpu.env.time z80rom cpu.env.ram |> .value) l
                                                             in
                                                             if new_a /= 0 then
                                                                 { a_rf_f_break_1 | a = new_a, rf = 0, break = True }

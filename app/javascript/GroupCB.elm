@@ -1,10 +1,10 @@
 module GroupCB exposing (..)
 
 import Bitwise exposing (complement, shiftLeftBy, shiftRightBy)
-import CpuTimeCTime exposing (CpuTimePcAndValue, addCpuTimeTime)
+import CpuTimeCTime exposing (CpuTimePcAndInt, addCpuTimeTime)
 import Dict exposing (Dict)
 import Utils exposing (toHexString)
-import Z80Address exposing (addIndexOffset, incrementBy1, incrementBy2, toInt)
+import Z80Address exposing (addIndexOffset, incrementBy1, incrementBy2, top8Bits)
 import Z80Debug exposing (debugTodo)
 import Z80Delta exposing (Z80Delta(..))
 import Z80Env exposing (addCpuTimeEnv, m1, mem, setMem)
@@ -45,7 +45,7 @@ group_cb_dict =
 --         x = { z80 | pc = raw.pc, env = { env_1 | time = raw.time } } |> set_flag_regs value.flags |> set408bit caseval value.value HL
 --       in
 --         Whole x
---execute_CB0007 : CpuTimePcAndValue -> Z80 -> IntWithFlagsTimeAndPC
+--execute_CB0007 : CpuTimePcAndInt -> Z80 -> IntWithFlagsTimeAndPC
 --execute_CB0007 raw z80 =
 --    let
 --        --o = Bitwise.and (c_value |> shiftRightBy 3) 7
@@ -75,6 +75,10 @@ group_cb_dict =
         --  ROMAddress int -> { env | time = x.time }
         --  RAMAddress ramAddress ->
         --    { env | time = x.time } |> setMem ramAddress x.value
+        --env_1 = case z80.main.hl of
+        --  ROMAddress int -> { env | time = x.time }
+        --  RAMAddress ramAddress ->
+        --    { env | time = x.time } |> setMem ramAddress x.value
 --    in
 --    EnvWithFlagsAndPc env_1 x.flags x.pc
 
@@ -95,7 +99,7 @@ group_cb rom48k tmp_z80 =
             Bitwise.or tmp_z80.interrupts.ir new_r
 
         c =
-            tmp_z80.env |> m1 (tmp_z80.pc |> toInt) (Bitwise.or tmp_z80.interrupts.ir ir_or_r) rom48k
+            tmp_z80.env |> m1 (tmp_z80.pc) (Bitwise.or tmp_z80.interrupts.ir ir_or_r) rom48k
 
         env =
             tmp_z80.env
@@ -202,18 +206,18 @@ group_xy_cb ixiyhl rom48k z80 =
             get_ixiy_xy ixiyhl z80.main
 
         offset =
-            mem (z80.pc |> toInt) z80.env.time rom48k z80.env.ram
+            mem (z80.pc) z80.env.time rom48k z80.env.ram
 
         addr =
             --char (xy + byte offset.value)
-            xy |> addIndexOffset offset.value |> toInt
+            xy |> addIndexOffset offset.value
 
         env_1 =
             z80.env
 
         c =
             --mem (char (z80.pc + 1)) (offset.time |> addCpuTimeTime 3) rom48k z80.env.ram
-            mem ((z80.pc |> incrementBy1) |> toInt) (offset.time |> addCpuTimeTime 3) rom48k z80.env.ram
+            mem ((z80.pc |> incrementBy1)) (offset.time |> addCpuTimeTime 3) rom48k z80.env.ram
 
         new_pc =
             z80.pc |> incrementBy2
@@ -246,7 +250,7 @@ group_xy_cb ixiyhl rom48k z80 =
                         flags =
                             bit o v1.value z80_3.flags
                     in
-                    IntWithFlags v1.value { flags | ff = Bitwise.or (Bitwise.and flags.ff (complement c_F53)) (shiftRightBy (Bitwise.and 8 c_F53) addr) }
+                    IntWithFlags v1.value { flags | ff = Bitwise.or (Bitwise.and flags.ff (complement c_F53)) (addr |> top8Bits |> (Bitwise.and c_F53)) }
 
                 0x80 ->
                     IntWithFlags (Bitwise.and v1.value (complement (shiftLeftBy o 1))) z80_3.flags
@@ -260,6 +264,10 @@ group_xy_cb ixiyhl rom48k z80 =
 
             else
                 z80_3.env |> setMem addr v2.value |> addCpuTimeEnv 3
+              --case a of
+              --  ROMAddress int -> z80_3.env
+              --  RAMAddress ramAddress ->
+              --    z80_3.env |> setMem ramAddress v2.value |> addCpuTimeEnv 3
               --case a of
               --  ROMAddress int -> z80_3.env
               --  RAMAddress ramAddress ->
@@ -302,7 +310,7 @@ group_xy_cb ixiyhl rom48k z80 =
 -- this complexity as we're just doing LD A,B or something similar - so stop using it in those cases
 
 
-load408bit : Int -> IXIYHL -> Z80ROM -> Z80 -> CpuTimePcAndValue
+load408bit : Int -> IXIYHL -> Z80ROM -> Z80 -> CpuTimePcAndInt
 load408bit c_value ixiyhl rom48k z80 =
     case Bitwise.and c_value 0x07 of
         0 ->

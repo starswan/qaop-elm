@@ -53,10 +53,10 @@ pop_hl ixiyhl rom48k z80 =
     in
     case ixiyhl of
         IXIY_IX ->
-            MainRegsWithSpPcAndTime { main | ix = hl.value } hl.sp z80.pc hl.time
+            MainRegsWithSpPcAndTime { main | ix = hl.address } hl.sp z80.pc hl.time
 
         IXIY_IY ->
-            MainRegsWithSpPcAndTime { main | iy = hl.value } hl.sp z80.pc hl.time
+            MainRegsWithSpPcAndTime { main | iy = hl.address } hl.sp z80.pc hl.time
 
 
 ex_indirect_sp_hl : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
@@ -89,14 +89,14 @@ ex_indirect_sp_hl ixiyhl rom48k z80 =
         --IY -> { z80_2 | main = { main | iy = v.value } }
         --HL -> { z80_2 | main = { main | hl = v.value } }
         IX ->
-            --MainRegsWithEnvAndPc { main | ix = hl.value } pushed z80.pc
+            --MainRegsWithEnvAndPc { main | ix = hl.address } pushed z80.pc
             PushWithMainSpCpuTimeAndPc toBePushed { main | ix = hl.value } hl.sp hl_time z80.pc
         IY ->
-            --MainRegsWithEnvAndPc { main | iy = hl.value } pushed z80.pc
+            --MainRegsWithEnvAndPc { main | iy = hl.address } pushed z80.pc
             PushWithMainSpCpuTimeAndPc toBePushed { main | iy = hl.value } hl.sp hl_time z80.pc
 
         HL ->
-            --MainRegsWithEnv { main | hl = hl.value } pushed
+            --MainRegsWithEnv { main | hl = hl.address} pushed
             PushWithMainSpCpuTime toBePushed { main | hl = hl.value } hl.sp hl_time
 
 

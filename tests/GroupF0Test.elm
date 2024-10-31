@@ -40,7 +40,7 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xF5
+                            |> setMem (addr |> fromInt) 0xF5
 
                     new_z80 =
                         executeSingleInstruction z80rom
@@ -51,9 +51,9 @@ suite =
                             }
 
                     pushed =
-                        new_z80.env |> mem16 0xFF75 z80rom
+                        new_z80.env |> mem16 (0xFF75 |> fromInt) z80rom
                 in
-                Expect.equal { pc = addr + 1, sp = 0xFF75, push = 0x7640 } { pc=(new_z80.pc |> toInt), sp = (new_z80.env.sp |> toInt), push = pushed.value }
+                Expect.equal { pc = addr + 1, sp = 0xFF75, push = 0x7640 } { pc = new_z80.pc |> toInt, sp = new_z80.env.sp |> toInt, push = pushed.address |> toInt }
         , describe "0xF9 LD SP,HL"
             [
             test "LD SP,HL" <|
@@ -61,7 +61,7 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0xF9
+                                |> setMem (addr |> fromInt) 0xF9
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -102,6 +102,6 @@ suite =
                                     , main = { z80main | iy = 0x5050|> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 2, sp = 0x5050 } { pc=(new_z80.pc|> toInt), sp = (new_z80.env.sp|> toInt) }
+                    Expect.equal { pc = addr + 2, sp = 0x5050 } { pc = new_z80.pc|> toInt, sp = new_z80.env.sp|> toInt }
             ]
         ]
