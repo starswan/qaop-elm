@@ -13,7 +13,7 @@ import TripleByte exposing (TripleByteChange(..), tripleByteWith16BitParam)
 import TripleWithFlags exposing (TripleWithFlagsChange(..), triple16WithFlags)
 import TripleWithMain exposing (TripleMainChange, applyTripleMainChange, tripleMainRegs)
 import Utils exposing (shiftLeftBy8)
-import Z80Address exposing (Z80Address, addIndexOffset, fromInt, incrementBy1, incrementBy2, incrementBy3, incrementBy4, lower8Bits, toInt, top8BitsWithoutShift)
+import Z80Address exposing (Z80Address, addIndexOffset, fromInt, incrementBy1, incrementBy2, incrementBy3, incrementBy4, lower8Bits, top8BitsWithoutShift)
 import Z80Change exposing (FlagChange(..), Z80Change, applyZ80Change)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..), applyDeltaWithChanges)
 import Z80Env exposing (Z80Env, addCpuTimeEnvInc, mem, mem16, setMem, z80_pop, z80_push)
@@ -165,7 +165,7 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData z80 =
                     z80.pc |> incrementBy2
 
                 env_1 =
-                    { old_env | time = cpu_time } |> setMem (addr |> toInt) value
+                    { old_env | time = cpu_time } |> setMem (addr) value
             in
             { z80
                 | pc = pc
@@ -325,7 +325,7 @@ applyFlagDelta pcInc cpu_time z80_flags rom48k tmp_z80 =
 
                 --x = debug_log "ret nz" (result.value |> subName) Nothing
             in
-            { z80 | pc = result.value, env = { env1 | time = result.time |> addCpuTimeTimeInc timeIncrement, sp = result.sp } }
+            { z80 | pc = result.address, env = { env1 | time = result.time |> addCpuTimeTimeInc timeIncrement, sp = result.sp } }
 
         EmptyFlagChange timeIncrement ->
             let
@@ -410,7 +410,7 @@ applyRegisterDelta pc_inc cpu_time z80changeData rom48k z80 =
             -- This should be a primitive operation on Z80Env to increment a stored value
             let
                 value =
-                    mem (addr |> toInt) cpu_time rom48k z80.env.ram
+                    mem (addr) cpu_time rom48k z80.env.ram
 
                 env_2 =
                     { env | time = value.time }
@@ -419,7 +419,7 @@ applyRegisterDelta pc_inc cpu_time z80changeData rom48k z80 =
                     z80.flags |> inc value.value
 
                 env_3 =
-                    env_2 |> setMem (addr |> toInt) flags.value |> addCpuTimeEnvInc cpuTimeIncrement
+                    env_2 |> setMem (addr) flags.value |> addCpuTimeEnvInc cpuTimeIncrement
             in
             { z80 | pc = new_pc, env = env_3, flags = flags.flags, interrupts = { interrupts | r = interrupts.r + 1 } }
 
@@ -427,7 +427,7 @@ applyRegisterDelta pc_inc cpu_time z80changeData rom48k z80 =
             -- This should be a primitive operation on Z80Env to decrement a stored value
             let
                 value =
-                    mem (addr |> toInt) cpu_time rom48k z80.env.ram
+                    mem (addr) cpu_time rom48k z80.env.ram
 
                 env_2 =
                     { env | time = value.time }
@@ -436,14 +436,14 @@ applyRegisterDelta pc_inc cpu_time z80changeData rom48k z80 =
                     z80.flags |> dec value.value
 
                 env_3 =
-                    env_2 |> setMem (addr |> toInt) flags.value |> addCpuTimeEnvInc cpuTimeIncrement
+                    env_2 |> setMem (addr) flags.value |> addCpuTimeEnvInc cpuTimeIncrement
             in
             { z80 | pc = new_pc, env = env_3, flags = flags.flags, interrupts = { interrupts | r = interrupts.r + 1 } }
 
         SetIndirectApplied addr value cpuTimeIncrement ->
             let
                 env_1 =
-                    env |> setMem (addr |> toInt) value |> addCpuTimeEnvInc cpuTimeIncrement
+                    env |> setMem (addr) value |> addCpuTimeEnvInc cpuTimeIncrement
             in
             { z80 | pc = new_pc, env = env_1, interrupts = { interrupts | r = interrupts.r + 1 } }
 
@@ -476,7 +476,7 @@ applyShifter : Z80Address -> (Int -> FlagRegisters -> IntWithFlags) -> Z80Addres
 applyShifter new_pc shifterFunc addr cpuTimeIncrement cpu_time rom48k z80 =
     let
         value =
-            mem (addr |> toInt) cpu_time rom48k z80.env.ram
+            mem (addr) cpu_time rom48k z80.env.ram
 
         result =
             z80.flags |> shifterFunc value.value
@@ -491,7 +491,7 @@ applyShifter new_pc shifterFunc addr cpuTimeIncrement cpu_time rom48k z80 =
             { env | time = value.time }
 
         env_2 =
-            env_1 |> setMem (addr |> toInt) result.value |> addCpuTimeEnvInc cpuTimeIncrement
+            env_1 |> setMem (addr) result.value |> addCpuTimeEnvInc cpuTimeIncrement
     in
     { z80 | pc = new_pc, env = env_2, interrupts = { interrupts | r = interrupts.r + 1 } }
 
@@ -592,7 +592,7 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
                     { env | time = cpu_time } |> mem16 int rom48k
             in
             { z80
-                | main = { main | hl = value.value |> fromInt }
+                | main = { main | hl = value.address  }
                 , pc = new_pc
                 , env = { env | time = value.time |> addCpuTimeTimeInc cpuTimeIncrement4 }
                 , interrupts = { interrupts | r = interrupts.r + 1 }
@@ -607,7 +607,7 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
                     { env | time = cpu_time } |> mem16 int rom48k
             in
             { z80
-                | main = { main | ix = value.value |> fromInt }
+                | main = { main | ix = value.address }
                 , pc = new_pc
                 , env = { env | time = value.time |> addCpuTimeTimeInc cpuTimeIncrement4 }
                 , interrupts = { interrupts | r = interrupts.r + 1 }
@@ -622,7 +622,7 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
                     { env | time = cpu_time } |> mem16 int rom48k
             in
             { z80
-                | main = { main | iy = value.value |> fromInt }
+                | main = { main | iy = value.address }
                 , pc = new_pc
                 , env = { env | time = value.time |> addCpuTimeTimeInc cpuTimeIncrement4 }
                 , interrupts = { interrupts | r = interrupts.r + 1 }

@@ -3,7 +3,7 @@ module GroupD0Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (execute_instruction)
-import Z80Address exposing (fromInt, toInt)
+import Z80Address exposing (fromInt, incrementBy1, toInt)
 import Z80Env exposing (setMem)
 import Z80Rom
 
@@ -14,15 +14,17 @@ suite =
         addr =
             30000
 
+        z80_addr =
+            addr |> fromInt
+
         old_z80 =
             Z80.constructor
 
         z80 =
             { old_z80 | pc = addr |> fromInt }
 
-        flags =
-            z80.flags
-
+        --flags =
+        --    z80.flags
         z80env =
             z80.env
 
@@ -40,9 +42,9 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0xD1
-                                |> setMem 0xFF77 0x16
-                                |> setMem 0xFF78 0x56
+                                |> setMem z80_addr 0xD1
+                                |> setMem (0xFF77 |> fromInt) 0x16
+                                |> setMem (0xFF78 |> fromInt) 0x56
 
                         new_z80 =
                             execute_instruction z80rom
@@ -61,8 +63,8 @@ suite =
 
                     new_env =
                         z80env
-                            |> setMem addr 0xD9
-                            |> setMem (addr + 1) 0x16
+                            |> setMem z80_addr 0xD9
+                            |> setMem (z80_addr |> incrementBy1) 0x16
 
                     new_z80 =
                         execute_instruction z80rom
