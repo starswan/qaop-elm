@@ -40,7 +40,7 @@ suite =
             z80.flags
 
         z80env =
-            z80.env |> setMem addr 0xCB
+            z80.env|> setMem addr 0xCB
 
         z80rom =
             Z80Rom.constructor
@@ -138,6 +138,7 @@ suite =
                         z80env
                             |> setMem addr_plus_1 0x04
 
+
                     new_z80 =
                         executeSingleInstruction z80rom
                             { z80
@@ -154,6 +155,7 @@ suite =
                         z80env
                             |> setMem addr_plus_1 0x05
 
+
                     new_z80 =
                         executeSingleInstruction z80rom
                             { z80
@@ -167,7 +169,8 @@ suite =
             \_ ->
                 let
                     new_env =
-                        z80env
+
+                            z80env
                             |> setMem addr_plus_1 0x06
                             |> setMem 0x6545 0x31
 
@@ -176,8 +179,7 @@ suite =
                             { z80
                                 | env = new_env
                                 , main = { z80main | hl = 0x6545 |> fromInt, b = 0xA5 }
-                                , flags = { flags | a = 0x39 }
-                            }
+                                , flags = { flags | a = 0x39 } }
 
                     mem_value =
                         mem 0x6545 new_z80.env.time z80rom new_z80.env.ram
@@ -199,9 +201,7 @@ suite =
                             { z80
                                 | env = { new_env | sp = 0x8765 |> fromInt }
                                 , main = { z80main | ix = 0x6500 |> fromInt, b = 0xA5 }
-                                , flags = { flags | a = 0x39 }
-                            }
-
+                                , flags = { flags | a = 0x39 }                 }
                     mem_value =
                         mem 0x6545 new_z80.env.time z80rom new_z80.env.ram
                 in
@@ -222,9 +222,7 @@ suite =
                             { z80
                                 | env = { new_env | sp = 0x8765 |> fromInt }
                                 , main = { z80main | iy = 0x6500 |> fromInt, b = 0xA5 }
-                                , flags = { flags | a = 0x39 }
-                            }
-
+                                , flags = { flags | a = 0x39 }                    }
                     mem_value =
                         mem 0x6545 new_z80.env.time z80rom new_z80.env.ram
                 in
@@ -235,6 +233,7 @@ suite =
                     new_env =
                         z80env
                             |> setMem addr_plus_1 0x07
+
 
                     new_z80 =
                         executeSingleInstruction z80rom
@@ -252,6 +251,7 @@ suite =
                         z80env
                             |> setMem addr_plus_1 0x08
 
+
                     new_z80 =
                         executeSingleInstruction z80rom
                             { z80
@@ -267,6 +267,7 @@ suite =
                     new_env =
                         z80env
                             |> setMem addr_plus_1 0x09
+
 
                     new_z80 =
                         executeSingleInstruction z80rom
@@ -284,6 +285,7 @@ suite =
                         z80env
                             |> setMem addr_plus_1 0x0A
 
+
                     new_z80 =
                         executeSingleInstruction z80rom
                             { z80
@@ -299,6 +301,7 @@ suite =
                     new_env =
                         z80env
                             |> setMem addr_plus_1 0x0B
+
 
                     new_z80 =
                         executeSingleInstruction z80rom
@@ -316,6 +319,7 @@ suite =
                         z80env
                             |> setMem addr_plus_1 0x0C
 
+
                     new_z80 =
                         executeSingleInstruction z80rom
                             { z80
@@ -332,6 +336,7 @@ suite =
                         z80env
                             |> setMem addr_plus_1 0x0D
 
+
                     new_z80 =
                         executeSingleInstruction z80rom
                             { z80
@@ -345,7 +350,8 @@ suite =
             \_ ->
                 let
                     new_env =
-                        z80env
+
+                            z80env
                             |> setMem addr_plus_1 0x0E
                             |> setMem 0x6545 0x31
 
@@ -354,9 +360,7 @@ suite =
                             { z80
                                 | env = new_env
                                 , main = { z80main | hl = 0x6545 |> fromInt, b = 0xA5 }
-                                , flags = { flags | a = 0x39 }
-                            }
-
+                                , flags = { flags | a = 0x39 }                                                    }
                     mem_value =
                         mem 0x6545 new_z80.env.time z80rom new_z80.env.ram
                 in
@@ -367,6 +371,7 @@ suite =
                     new_env =
                         z80env
                             |> setMem addr_plus_1 0x0F
+
 
                     new_z80 =
                         executeSingleInstruction z80rom

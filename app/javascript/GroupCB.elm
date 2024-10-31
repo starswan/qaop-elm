@@ -71,10 +71,10 @@ group_cb_dict =
 --
 --        env_1 =
 --            { env | time = x.time } |> setMem (z80.main.hl |> toInt) x.value
---env_1 = case z80.main.hl of
---  ROMAddress int -> { env | time = x.time }
---  RAMAddress ramAddress ->
---    { env | time = x.time } |> setMem ramAddress x.value
+        --env_1 = case z80.main.hl of
+        --  ROMAddress int -> { env | time = x.time }
+        --  RAMAddress ramAddress ->
+        --    { env | time = x.time } |> setMem ramAddress x.value
 --    in
 --    EnvWithFlagsAndPc env_1 x.flags x.pc
 
@@ -260,6 +260,10 @@ group_xy_cb ixiyhl rom48k z80 =
 
             else
                 z80_3.env |> setMem addr v2.value |> addCpuTimeEnv 3
+              --case a of
+              --  ROMAddress int -> z80_3.env
+              --  RAMAddress ramAddress ->
+              --    z80_3.env |> setMem ramAddress v2.value |> addCpuTimeEnv 3
 
         --case a of
         --  ROMAddress int -> z80_3.env

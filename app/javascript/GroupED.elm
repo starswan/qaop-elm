@@ -232,7 +232,6 @@ execute_ED73 rom48k z80 =
 
         env2 =
             { env | time = v.time } |> setMem16 v.value (z80_1.env.sp |> toInt)
-
         --env2 = case v.value |> fromInt of
         --  Z80Address.ROMAddress int -> env
         --  Z80Address.RAMAddress ramAddress ->
@@ -533,7 +532,6 @@ rld rom48k z80 =
 
         env_1 =
             { env_0 | time = v_lhs_1.time } |> setMem (z80_1.main.hl |> toInt) (Bitwise.and v 0xFF)
-
         --env_1 = case z80_1.main.hl of
         --  ROMAddress int ->
         --    { env_0 | time = v_lhs_1.time }
@@ -632,13 +630,9 @@ ldir i r rom48k z80 =
         env_0 =
             z80.env
 
-        new_hl =
-            case i of
-                Forwards ->
-                    a1 |> incrementBy1
-
-                Backwards ->
-                    a1 |> decrement
+        new_hl = case i of
+          Forwards -> a1 |> incrementBy1
+          Backwards -> a1|> decrement
 
         z80_1 =
             --{ z80 | env = { env_0 | time = v1.time }, main = { main | hl = char (a1 + i) } } |> add_cpu_time 3
@@ -776,4 +770,4 @@ adc_hl b z80 =
             z80.flags
     in
     --{ z80 | main = { main | hl = r }, flags = { flags | ff = ff, fa = fa, fb = fb, fr = fr} } |> add_cpu_time 7
-    FlagsWithMainAndTime { flags | ff = ff, fa = fa, fb = fb, fr = fr } { main | hl = r |> fromInt } 7
+    FlagsWithMainAndTime { flags | ff = ff, fa = fa, fb = fb, fr = fr } { main | hl = r |>fromInt } 7

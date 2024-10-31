@@ -297,6 +297,7 @@ suite =
                                 , main = { z80main | ix = 0x6540 |> fromInt, b = 0xA5 }
                                 , flags = { flags | a = 0x39 }
                             }
+
                 in
                 Expect.equal ( addr + 4, 0x00 ) ( new_z80.pc |> toInt, new_z80.flags.fr )
         , test "0xDD 0xCB 0x05 0x56 BIT 2, (IX + d) set" <|
@@ -317,6 +318,7 @@ suite =
                                 , main = { z80main | ix = 0x6540 |> fromInt, b = 0xA5 }
                                 , flags = { flags | a = 0x39 }
                             }
+
                 in
                 Expect.equal ( addr + 4, True ) ( new_z80.pc |> toInt, new_z80.flags.fr /= 0 )
         , test "0xCB 0x57 BIT 2,A (unset)" <|

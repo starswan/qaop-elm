@@ -11,27 +11,14 @@ import Z80Rom
 
 suite : Test
 suite =
-    let
-        addr =
-            0x5800
-
-        sp =
-            0xF765
-
-        hl =
-            0x1234
-
-        old_z80 =
-            Z80.constructor
-
-        old_z80env =
-            old_z80.env
-
-        z80main =
-            old_z80.main
-
-        z80 =
-            { old_z80 | pc = addr |> fromInt, env = { old_z80env | sp = sp |> fromInt }, main = { z80main | hl = hl |> fromInt } }
+   let
+       addr = 0x5800
+       sp = 0xF765
+       hl = 0x1234
+       old_z80 = Z80.constructor
+       old_z80env = old_z80.env
+       z80main = old_z80.main
+       z80 = { old_z80 | pc = addr |> fromInt, env = { old_z80env | sp = sp |> fromInt }, main = { z80main | hl = hl |> fromInt } }
 
 
 

@@ -67,8 +67,6 @@ type DoubleWithRegisterChange
     | NewHLRegisterValue Z80Address
     | NewIXRegisterValue Z80Address
     | NewIYRegisterValue Z80Address
-
-
 type JumpChange
     = ActualJump Int
     | NoJump
@@ -121,7 +119,6 @@ ld_h_n : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
 ld_h_n z80_main param =
     -- case 0x26: HL=HL&0xFF|imm8()<<8; break;
     Bitwise.or (param |> shiftLeftBy8) (lower8Bits z80_main.hl) |> fromInt |> NewHLRegisterValue
-
 
 ld_ix_h_n : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
 ld_ix_h_n z80_main param =
@@ -184,14 +181,14 @@ jr_n param _ =
     -- case 0x18: MP=PC=(char)(PC+1+(byte)env.mem(PC)); time+=8; break;
     -- This is just an inlined jr() call
     --z80 |> set_pc dest |> add_cpu_time 8
-    ActualJump param
+    ActualJump (param)
 
 
 jr_nz_d : Int -> FlagRegisters -> JumpChange
 jr_nz_d param z80_flags =
     -- case 0x20: if(Fr!=0) jr(); else imm8(); break;
     if z80_flags.fr /= 0 then
-        ActualJump param
+        ActualJump (param)
 
     else
         NoJump
@@ -201,7 +198,7 @@ jr_z_d : Int -> FlagRegisters -> JumpChange
 jr_z_d param z80_flags =
     -- case 0x28: if(Fr==0) jr(); else imm8(); break;
     if z80_flags.fr == 0 then
-        ActualJump param
+        ActualJump (param)
 
     else
         NoJump
@@ -211,7 +208,7 @@ jr_nc_d : Int -> FlagRegisters -> JumpChange
 jr_nc_d param z80_flags =
     -- case 0x30: if((Ff&0x100)==0) jr(); else imm8(); break;
     if Bitwise.and z80_flags.ff 0x0100 == 0 then
-        ActualJump param
+        ActualJump (param)
 
     else
         NoJump
@@ -221,7 +218,7 @@ jr_c_d : Int -> FlagRegisters -> JumpChange
 jr_c_d param z80_flags =
     -- case 0x38: if((Ff&0x100)!=0) jr(); else imm8(); break;
     if Bitwise.and z80_flags.ff 0x0100 /= 0 then
-        ActualJump param
+        ActualJump (param)
 
     else
         NoJump

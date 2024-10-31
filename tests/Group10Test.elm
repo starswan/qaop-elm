@@ -46,7 +46,7 @@ suite =
                                     , main = { z80main | b = 0x45 }
                                 }
                     in
-                    Expect.equal ( addr + 4, 0x44 ) ( z80_after_01.pc |> toInt, z80_after_01.main.b )
+                    Expect.equal ( addr + 4, 0x44) (z80_after_01.pc |> toInt, z80_after_01.main.b )
             , test "Dont jump" <|
                 \_ ->
                     let

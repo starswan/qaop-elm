@@ -288,7 +288,7 @@ hl_deref_with_z80_ixiy ixiyhl rom48k z80 =
 inc_pc : Z80 -> Z80Address
 inc_pc z80 =
     --Bitwise.and (z80.pc + 1) 0xFFFF
-    z80.pc |> incrementBy1
+   z80.pc |> incrementBy1
 
 
 l_with_z80 : IXIYHL -> Z80 -> CpuTimePcAndValue
@@ -314,7 +314,7 @@ set_h_ixiy value ixiyhl z80 =
             get_xy_ixiy ixiyhl z80
     in
     --set_xy_ixiy (Bitwise.or (Bitwise.and xy 0xFF) (shiftLeftBy8 value)) ixiyhl z80
-    set_xy_ixiy (Bitwise.or (lower8Bits xy) (shiftLeftBy8 value) |> fromInt) ixiyhl z80
+    set_xy_ixiy ((Bitwise.or (lower8Bits xy) (shiftLeftBy8 value)) |> fromInt) ixiyhl z80
 
 
 set_l : Int -> IXIYHL -> MainWithIndexRegisters -> MainWithIndexRegisters
@@ -334,7 +334,7 @@ set_l_ixiy value ixiyhl z80 =
             get_xy_ixiy ixiyhl z80
     in
     --set_xy_ixiy (Bitwise.or (Bitwise.and xy 0xFF00) value) ixiyhl z80
-    set_xy_ixiy (Bitwise.or (top8BitsWithoutShift xy) value |> fromInt) ixiyhl z80
+    set_xy_ixiy ((Bitwise.or (top8BitsWithoutShift xy) value) |> fromInt) ixiyhl z80
 
 
 get_xy : IXIYHL -> MainWithIndexRegisters -> Z80Address
@@ -458,6 +458,7 @@ get_de z80 =
 --dec_pc2 z80 =
 --{ z80 | pc = Bitwise.and (z80.pc - 2) 0xFFFF }
 --    { z80 | pc = z80.pc |> decrement2 }
+
 --	void bc(int v) {C=v&0xFF; B=v>>>8;}
 
 

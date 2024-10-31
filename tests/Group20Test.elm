@@ -102,7 +102,7 @@ suite =
                                     , flags = { flags | a = 0x39 }
                                 }
                     in
-                    Expect.equal ( addr + 3, 0x15C6 ) ( new_z80.pc |> toInt, new_z80.main.hl |> toInt )
+                    Expect.equal ( addr + 3, 0x15C6 ) ( (new_z80.pc |> toInt), (new_z80.main.hl |> toInt) )
             , test "0xFD 0x21 - LD IX, nn" <|
                 \_ ->
                     let
@@ -138,7 +138,7 @@ suite =
                                     , flags = { flags | a = 0x39 }
                                 }
                     in
-                    Expect.equal ( addr + 4, 0x0705 ) ( new_z80.pc |> toInt, new_z80.main.iy |> toInt )
+                    Expect.equal ( addr + 4, 0x0705 ) ( (new_z80.pc |> toInt), (new_z80.main.iy |> toInt) )
             ]
         , describe "16 bit store"
             [ test "0x22 LD (nn), HL" <|
@@ -154,7 +154,7 @@ suite =
                             executeSingleInstruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | hl = 0x5D9F |> fromInt }
+                                    , main = { z80main | hl = 0x5D9F  |> fromInt }
                                     , flags = { flags | a = 0x39 }
                                 }
 
@@ -205,7 +205,7 @@ suite =
                         mem_value =
                             new_z80.env |> mem16 0x5577 z80rom
                     in
-                    Expect.equal ( addr + 4, 0x5D9F ) ( new_z80.pc |> toInt, mem_value.value )
+                    Expect.equal ( addr + 4, 0x5D9F ) ( (new_z80.pc |> toInt), mem_value.value )
             ]
         , describe "16 bit Increment"
             [ test "0x23 INC HL" <|
@@ -219,11 +219,11 @@ suite =
                             executeSingleInstruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | hl = 0x6545 |> fromInt }
+                                    , main = { z80main | hl = 0x6545  |> fromInt }
                                     , flags = { flags | a = 0x39 }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x6546 ) ( new_z80.pc |> toInt, new_z80.main.hl |> toInt )
+                    Expect.equal ( addr + 1, 0x6546 ) ( (new_z80.pc |> toInt), (new_z80.main.hl |> toInt) )
             , test "0xDD 0x23 INC IX" <|
                 \_ ->
                     let
@@ -240,7 +240,7 @@ suite =
                                     , flags = { flags | a = 0x39 }
                                 }
                     in
-                    Expect.equal ( addr + 2, 0x6545, 0 ) ( new_z80.pc |> toInt, new_z80.main.hl |> toInt, new_z80.main.ix |> toInt )
+                    Expect.equal ( addr + 2, 0x6545, 0 ) ( (new_z80.pc |> toInt), (new_z80.main.hl |> toInt), (new_z80.main.ix |> toInt) )
             , test "0xFD 0x23 INC IY" <|
                 \_ ->
                     let
@@ -274,7 +274,7 @@ suite =
                                 , flags = { flags | a = 0x39 }
                             }
                 in
-                Expect.equal ( addr + 1, 0x6645, 0x6545 ) ( new_z80.pc |> toInt, new_z80.main.hl |> toInt, new_z80.main.iy |> toInt )
+                Expect.equal ( addr + 1, 0x6645, 0x6545 ) ( (new_z80.pc |> toInt), (new_z80.main.hl |> toInt), (new_z80.main.iy |> toInt) )
         , test "0xDD 0x24 INC IXH" <|
             \_ ->
                 let
@@ -308,7 +308,7 @@ suite =
                                 , flags = { flags | a = 0x39 }
                             }
                 in
-                Expect.equal ( addr + 2, 0x6545, 0x6645 ) ( new_z80.pc |> toInt, new_z80.main.hl |> toInt, new_z80.main.iy |> toInt )
+                Expect.equal ( addr + 2, 0x6545, 0x6645 ) ( (new_z80.pc |> toInt),(new_z80.main.hl |> toInt), (new_z80.main.iy |> toInt) )
         , test "0x25 DEC H" <|
             \_ ->
                 let
@@ -324,7 +324,7 @@ suite =
                                 , flags = { flags | a = 0x39 }
                             }
                 in
-                Expect.equal ( addr + 1, 0x6445 ) ( new_z80.pc |> toInt, new_z80.main.hl |> toInt )
+                Expect.equal ( addr + 1, 0x6445 ) ( (new_z80.pc |> toInt), (new_z80.main.hl |> toInt) )
         , test "0xDD 0x25 DEC IXH" <|
             \_ ->
                 let
@@ -341,7 +341,7 @@ suite =
                                 , flags = { flags | a = 0x39 }
                             }
                 in
-                Expect.equal ( addr + 2, 0x6545, 0xFF45 ) ( new_z80.pc |> toInt, new_z80.main.hl |> toInt, new_z80.main.ix |> toInt )
+                Expect.equal ( addr + 2, 0x6545, 0xFF45 ) ( (new_z80.pc |> toInt), (new_z80.main.hl |> toInt), (new_z80.main.ix |> toInt) )
         , test "0xFD 0x25 DEC IYH" <|
             \_ ->
                 let
@@ -374,7 +374,7 @@ suite =
                                 , main = { z80main | hl = 0x6545 |> fromInt }
                             }
                 in
-                Expect.equal ( addr + 2, 0x0545 ) ( new_z80.pc |> toInt, new_z80.main.hl |> toInt )
+                Expect.equal ( addr + 2, 0x0545 ) ( (new_z80.pc |> toInt), (new_z80.main.hl |> toInt) )
         , test "0xDD 0x26 - LD IXH,n" <|
             \_ ->
                 let
@@ -408,7 +408,7 @@ suite =
                                 , main = { z80main | iy = 0x6545 |> fromInt, hl = 0x6545 |> fromInt }
                             }
                 in
-                Expect.equal ( addr + 3, 0x6545, 0x0545 ) ( new_z80.pc |> toInt, new_z80.main.hl |> toInt, new_z80.main.iy |> toInt )
+                Expect.equal ( addr + 3, 0x6545, 0x0545 ) ( (new_z80.pc |> toInt), (new_z80.main.hl |> toInt), (new_z80.main.iy |> toInt) )
         , describe "0x27 - DAA"
             [ test "No idea how to do this..." <|
                 \_ ->
@@ -425,7 +425,7 @@ suite =
                                     , flags = { flags | a = 0x39 }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x39 ) ( new_z80.pc |> toInt, new_z80.flags.a )
+                    Expect.equal ( addr + 1, 0x39 ) ( (new_z80.pc |> toInt), new_z80.flags.a )
             ]
         , describe "0x28 JR Z, n"
             [ test "Dont jump" <|
@@ -476,7 +476,7 @@ suite =
                                     , main = { z80main | hl = 0x4334 |> fromInt }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x8668 ) ( new_z80.pc |> toInt, new_z80.main.hl |> toInt )
+                    Expect.equal ( addr + 1, 0x8668 ) ( (new_z80.pc |> toInt), (new_z80.main.hl |> toInt) )
             , test "0xDD 0x29 ADD IX, IX" <|
                 \_ ->
                     let
@@ -487,7 +487,7 @@ suite =
                                     , main = { z80main | ix = 0x05 |> fromInt, b = 0x01, c = 0x02, hl = 0x3445 |> fromInt }
                                 }
                     in
-                    Expect.equal ( addr + 2, 0x3445, 0x0A ) ( new_z80.pc |> toInt, new_z80.main.hl |> toInt, new_z80.main.ix |> toInt )
+                    Expect.equal ( addr + 2, 0x3445, 0x0A ) ( (new_z80.pc |> toInt), (new_z80.main.hl |> toInt), (new_z80.main.ix|> toInt) )
             , test "0xFD 0x29 ADD IY, IY" <|
                 \_ ->
                     let
@@ -518,7 +518,7 @@ suite =
                                     , main = { z80main | hl = 0x4334 |> fromInt }
                                 }
                     in
-                    Expect.equal ( addr + 3, 0x8723 ) ( new_z80.pc |> toInt, new_z80.main.hl |> toInt )
+                    Expect.equal ( addr + 3, 0x8723 ) ( (new_z80.pc |> toInt), (new_z80.main.hl |> toInt) )
             , test "0xDD 0x2A LD IX,(nn)" <|
                 \_ ->
                     let
@@ -556,7 +556,7 @@ suite =
                                     , main = { z80main | iy = 0x4334 |> fromInt, hl = 0x4334 |> fromInt }
                                 }
                     in
-                    Expect.equal ( addr + 4, 0x8723 ) ( new_z80.pc |> toInt, new_z80.main.iy |> toInt )
+                    Expect.equal ( addr + 4, 0x8723 ) ( (new_z80.pc |> toInt), (new_z80.main.iy |> toInt) )
             ]
         , describe "DEC 16 bit"
             [ test "0x2B DEC HL" <|
@@ -570,11 +570,11 @@ suite =
                             executeSingleInstruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | hl = 0x6500 |> fromInt }
+                                    , main = { z80main | hl = 0x6500  |> fromInt }
                                     , flags = { flags | a = 0x39 }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x64FF ) ( new_z80.pc |> toInt, new_z80.main.hl |> toInt )
+                    Expect.equal ( addr + 1, 0x64FF ) ( (new_z80.pc |> toInt), (new_z80.main.hl |> toInt) )
             , test "0xDD 0x2B DEC IX" <|
                 \_ ->
                     let
@@ -591,7 +591,7 @@ suite =
                                     , flags = { flags | a = 0x39 }
                                 }
                     in
-                    Expect.equal ( addr + 2, 0x6500, 0xFFFF ) ( new_z80.pc |> toInt, new_z80.main.hl |> toInt, new_z80.main.ix |> toInt )
+                    Expect.equal ( addr + 2, 0x6500, 0xFFFF ) ( (new_z80.pc |> toInt), (new_z80.main.hl |> toInt), (new_z80.main.ix |> toInt) )
             , test "0xFD 0x2B DEC IY" <|
                 \_ ->
                     let
@@ -622,11 +622,11 @@ suite =
                             executeSingleInstruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | hl = 0x6500 |> fromInt }
+                                    , main = { z80main | hl = 0x6500  |> fromInt }
                                     , flags = { flags | a = 0x39 }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x6501 ) ( new_z80.pc |> toInt, new_z80.main.hl |> toInt )
+                    Expect.equal ( addr + 1, 0x6501 ) ( (new_z80.pc |> toInt), (new_z80.main.hl |> toInt) )
             , test "0xDD 0x2C INC IXL" <|
                 \_ ->
                     let
@@ -656,11 +656,11 @@ suite =
                             executeSingleInstruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | iy = 0x6500 |> fromInt, hl = 0x6500 |> fromInt }
+                                    , main = { z80main | iy = 0x6500 |> fromInt, hl = 0x6500  |> fromInt }
                                     , flags = { flags | a = 0x39 }
                                 }
                     in
-                    Expect.equal ( addr + 2, 0x6500, 0x6501 ) ( new_z80.pc |> toInt, new_z80.main.hl |> toInt, new_z80.main.iy |> toInt )
+                    Expect.equal ( addr + 2, 0x6500, 0x6501 ) ( (new_z80.pc |> toInt), (new_z80.main.hl |> toInt), (new_z80.main.iy |> toInt) )
             , test "0x2D DEC L" <|
                 \_ ->
                     let
@@ -676,7 +676,7 @@ suite =
                                     , flags = { flags | a = 0x39 }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x65FF ) ( new_z80.pc |> toInt, new_z80.main.hl |> toInt )
+                    Expect.equal ( addr + 1, 0x65FF ) ( (new_z80.pc |> toInt), (new_z80.main.hl |> toInt) )
             , test "0xDD 0x2D DEC IXL" <|
                 \_ ->
                     let
@@ -706,11 +706,11 @@ suite =
                             executeSingleInstruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | iy = 0x6500 |> fromInt, hl = 0x6500 |> fromInt }
+                                    , main = { z80main | iy = 0x6500  |> fromInt, hl = 0x6500 |> fromInt }
                                     , flags = { flags | a = 0x39 }
                                 }
                     in
-                    Expect.equal ( addr + 2, 0x65FF, 0x6500 ) ( new_z80.pc |> toInt, new_z80.main.iy |> toInt, new_z80.main.hl |> toInt )
+                    Expect.equal ( addr + 2, 0x65FF, 0x6500 ) ( (new_z80.pc |> toInt), (new_z80.main.iy |> toInt), (new_z80.main.hl |> toInt) )
             ]
         , describe "LD 8-bit,n"
             [ test "0x2E LD L,n" <|
@@ -729,7 +729,7 @@ suite =
                                     , flags = { flags | a = 0x39 }
                                 }
                     in
-                    Expect.equal ( addr + 2, 0x6534 ) ( new_z80.pc |> toInt, new_z80.main.hl |> toInt )
+                    Expect.equal ( addr + 2, 0x6534 ) ( (new_z80.pc |> toInt), (new_z80.main.hl |> toInt) )
             , test "0xDD 0x2E LD IXL,n" <|
                 \_ ->
                     let
@@ -747,7 +747,7 @@ suite =
                                     , flags = { flags | a = 0x39 }
                                 }
                     in
-                    Expect.equal ( addr + 3, 0x6534, 0x6500 ) ( new_z80.pc |> toInt, new_z80.main.ix |> toInt, new_z80.main.hl |> toInt )
+                    Expect.equal ( addr + 3, 0x6534, 0x6500 ) ( (new_z80.pc |> toInt), (new_z80.main.ix |> toInt), (new_z80.main.hl |> toInt) )
             , test "0xFD 0x2E LD IYL,n" <|
                 \_ ->
                     let
@@ -783,6 +783,6 @@ suite =
                                     , flags = { flags | a = 0x39 }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0xC6 ) ( new_z80.pc |> toInt, new_z80.flags.a )
+                    Expect.equal ( addr + 1, 0xC6 ) ( (new_z80.pc |> toInt), new_z80.flags.a )
             ]
         ]

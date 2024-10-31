@@ -191,6 +191,7 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData z80 =
 
         NewIXRegisterValue int ->
             let
+
                 env_1 =
                     { old_env | time = cpu_time }
 

@@ -184,7 +184,7 @@ dec_ix z80_main =
     -- case 0x2B: xy=(char)(xy-1); time+=2; break;
     let
         new_xy =
-            z80_main.ix |> decrement
+            (z80_main.ix |> decrement)
     in
     ChangeRegisterIX new_xy (CpuTimeIncrement 2)
 
@@ -194,7 +194,7 @@ dec_iy z80_main =
     -- case 0x2B: xy=(char)(xy-1); time+=2; break;
     let
         new_xy =
-            z80_main.iy |> decrement
+            (z80_main.iy |> decrement)
     in
     ChangeRegisterIY new_xy (CpuTimeIncrement 2)
 

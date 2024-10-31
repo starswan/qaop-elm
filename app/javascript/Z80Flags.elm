@@ -604,9 +604,7 @@ shifter7 v_in flagRegs =
 add16 : Z80Address -> Int -> FlagRegisters -> IntWithFlagsAndTime
 add16 a_in b main_flags =
     let
-        a =
-            a_in |> toInt
-
+        a = a_in |> toInt
         r =
             a + b
 

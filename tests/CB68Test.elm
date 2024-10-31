@@ -201,7 +201,7 @@ suite =
                             executeSingleInstruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | hl = 0x45 |> fromInt }
+                                    , main = { z80main | hl = 0x0045 |> fromInt}
                                 }
                     in
                     Expect.equal ( addr + 2, 0x00 ) ( new_z80.pc |> toInt, new_z80.flags.fr )

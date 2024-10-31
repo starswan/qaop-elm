@@ -15,8 +15,7 @@ suite =
         addr_int =
             0x5800
 
-        addr =
-            addr_int |> fromInt
+        addr = addr_int |> fromInt
 
         addr_int_1 =
             addr_int + 1
@@ -64,7 +63,7 @@ suite =
                                     , main = { z80main | b = 0x00 }
                                 }
                     in
-                    Expect.equal ( addr_int + 2, 0x00 ) ( new_z80.pc |> toInt, new_z80.flags.fr )
+                    Expect.equal ( addr_int +2, 0x00 ) ( new_z80.pc |> toInt, new_z80.flags.fr )
             , test "set" <|
                 \_ ->
                     let
@@ -79,7 +78,7 @@ suite =
                                     , main = { z80main | b = 0x80 }
                                 }
                     in
-                    Expect.equal ( addr_int + 2, True ) ( new_z80.pc |> toInt, new_z80.flags.fr /= 0 )
+                    Expect.equal ( addr_int +2, True ) ( new_z80.pc|> toInt, new_z80.flags.fr /= 0 )
             ]
         , describe "0xCB 0x79 BIT 7,C"
             [ test "unset" <|
@@ -96,7 +95,7 @@ suite =
                                     , main = { z80main | c = 0x00 }
                                 }
                     in
-                    Expect.equal ( addr_int + 2, 0x00 ) ( new_z80.pc |> toInt, new_z80.flags.fr )
+                    Expect.equal ( addr_int +2, 0x00 ) ( new_z80.pc|> toInt, new_z80.flags.fr )
             , test "set" <|
                 \_ ->
                     let
@@ -111,7 +110,7 @@ suite =
                                     , main = { z80main | c = 0x80 }
                                 }
                     in
-                    Expect.equal ( addr_int + 2, True ) ( new_z80.pc |> toInt, new_z80.flags.fr /= 0 )
+                    Expect.equal ( addr_int +2, True ) ( new_z80.pc|> toInt, new_z80.flags.fr /= 0 )
             ]
         , describe "0xCB 0x7A BIT 7,D"
             [ test "(unset)" <|
@@ -119,7 +118,7 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr_int_1 0x7A
+                                |> setMem (addr_int_1) 0x7A
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -128,13 +127,13 @@ suite =
                                     , main = { z80main | hl = 0x6545 |> fromInt, d = 0x00 }
                                 }
                     in
-                    Expect.equal ( addr_int + 2, 0x00 ) ( new_z80.pc |> toInt, new_z80.flags.fr )
+                    Expect.equal ( addr_int +2, 0x00 ) ( new_z80.pc|> toInt, new_z80.flags.fr )
             , test "(set)" <|
                 \_ ->
                     let
                         new_env =
                             z80env
-                                |> setMem addr_int_1 0x7A
+                                |> setMem (addr_int_1) 0x7A
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -143,7 +142,7 @@ suite =
                                     , main = { z80main | d = 0x80 }
                                 }
                     in
-                    Expect.equal ( addr_int + 2, True ) ( new_z80.pc |> toInt, new_z80.flags.fr /= 0 )
+                    Expect.equal ( addr_int +2, True ) ( new_z80.pc|> toInt, new_z80.flags.fr /= 0 )
             ]
         , describe "0xCB 0x7B BIT 7,E"
             [ test "(unset)" <|
@@ -151,7 +150,7 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr_int_1 0x7B
+                                |> setMem (addr_int_1) 0x7B
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -160,13 +159,13 @@ suite =
                                     , main = { z80main | e = 0x00 }
                                 }
                     in
-                    Expect.equal ( addr_int + 2, 0x00 ) ( new_z80.pc |> toInt, new_z80.flags.fr )
+                    Expect.equal ( addr_int +2, 0x00 ) ( new_z80.pc|> toInt, new_z80.flags.fr )
             , test "(set)" <|
                 \_ ->
                     let
                         new_env =
                             z80env
-                                |> setMem addr_int_1 0x7B
+                                |> setMem (addr_int_1) 0x7B
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -175,7 +174,7 @@ suite =
                                     , main = { z80main | e = 0x84 }
                                 }
                     in
-                    Expect.equal ( addr_int + 2, True ) ( new_z80.pc |> toInt, new_z80.flags.fr /= 0 )
+                    Expect.equal ( addr_int +2, True ) ( new_z80.pc |> toInt, new_z80.flags.fr /= 0 )
             ]
         , describe "0xCB 0x7C BIT 7,H"
             [ test "(unset)" <|
@@ -183,7 +182,7 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr_int_1 0x7C
+                                |> setMem (addr_int_1) 0x7C
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -192,13 +191,13 @@ suite =
                                     , main = { z80main | hl = 0x7F45 |> fromInt }
                                 }
                     in
-                    Expect.equal ( addr_int + 2, 0x00 ) ( new_z80.pc |> toInt, new_z80.flags.fr )
+                    Expect.equal ( addr_int +2, 0x00 ) ( new_z80.pc|> toInt, new_z80.flags.fr )
             , test "(set)" <|
                 \_ ->
                     let
                         new_env =
                             z80env
-                                |> setMem addr_int_1 0x7C
+                                |> setMem (addr_int_1) 0x7C
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -207,7 +206,7 @@ suite =
                                     , main = { z80main | hl = 0x8045 |> fromInt }
                                 }
                     in
-                    Expect.equal ( addr_int + 2, True ) ( new_z80.pc |> toInt, new_z80.flags.fr /= 0 )
+                    Expect.equal ( addr_int +2, True ) ( new_z80.pc|> toInt, new_z80.flags.fr /= 0 )
             ]
         , describe "0xCB 0x7D BIT 7,L"
             [ test "(unset)" <|
@@ -215,7 +214,7 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr_int_1 0x7D
+                                |> setMem (addr_int_1) 0x7D
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -224,13 +223,13 @@ suite =
                                     , main = { z80main | hl = 0x647F |> fromInt }
                                 }
                     in
-                    Expect.equal ( addr_int + 2, 0x00 ) ( new_z80.pc |> toInt, new_z80.flags.fr )
+                    Expect.equal ( addr_int +2, 0x00 ) ( new_z80.pc|> toInt, new_z80.flags.fr )
             , test "(set)" <|
                 \_ ->
                     let
                         new_env =
                             z80env
-                                |> setMem addr_int_1 0x7D
+                                |> setMem (addr_int_1) 0x7D
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -239,7 +238,7 @@ suite =
                                     , main = { z80main | hl = 0x6580 |> fromInt }
                                 }
                     in
-                    Expect.equal ( addr_int + 2, True ) ( new_z80.pc |> toInt, new_z80.flags.fr /= 0 )
+                    Expect.equal ( addr_int +2, True ) ( new_z80.pc|> toInt, new_z80.flags.fr /= 0 )
             ]
         , describe "0xCB 0x7E BIT 7,(HL)"
             [ test "set" <|
@@ -247,7 +246,7 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr_int_1 0x7E
+                                |> setMem (addr_int_1) 0x7E
                                 |> setMem 0x6545 0x80
 
                         new_z80 =
@@ -257,14 +256,14 @@ suite =
                                     , main = { z80main | hl = 0x6545 |> fromInt }
                                 }
                     in
-                    Expect.equal ( addr_int + 2, True ) ( new_z80.pc |> toInt, new_z80.flags.fr /= 0 )
+                    Expect.equal ( addr_int +2, True ) ( new_z80.pc|> toInt, new_z80.flags.fr /= 0 )
             , test "BIT 7, (IX + d) unset" <|
                 \_ ->
                     let
                         new_env =
                             z80env
                                 |> setMem addr_int 0xDD
-                                |> setMem addr_int_1 0xCB
+                                |> setMem (addr_int_1) 0xCB
                                 |> setMem (addr_int + 2) 0x05
                                 |> setMem (addr_int + 3) 0x7E
                                 |> setMem 0x6545 0x7F
@@ -283,7 +282,7 @@ suite =
                         new_env =
                             z80env
                                 |> setMem addr_int 0xDD
-                                |> setMem addr_int_1 0xCB
+                                |> setMem (addr_int_1) 0xCB
                                 |> setMem (addr_int + 2) 0x05
                                 |> setMem (addr_int + 3) 0x7E
                                 |> setMem 0x6545 0x80
@@ -303,7 +302,7 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr_int_1 0x7F
+                                |> setMem (addr_int_1) 0x7F
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -312,13 +311,13 @@ suite =
                                     , flags = { flags | a = 0x7F }
                                 }
                     in
-                    Expect.equal ( addr_int + 2, 0x00 ) ( new_z80.pc |> toInt, new_z80.flags.fr )
+                    Expect.equal ( addr_int +2, 0x00 ) ( new_z80.pc|> toInt, new_z80.flags.fr )
             , test "(set)" <|
                 \_ ->
                     let
                         new_env =
                             z80env
-                                |> setMem addr_int_1 0x7F
+                                |> setMem (addr_int_1) 0x7F
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -327,6 +326,6 @@ suite =
                                     , flags = { flags | a = 0x80 }
                                 }
                     in
-                    Expect.equal ( addr_int + 2, True ) ( new_z80.pc |> toInt, new_z80.flags.fr /= 0 )
+                    Expect.equal ( addr_int +2, True ) ( new_z80.pc|> toInt, new_z80.flags.fr /= 0 )
             ]
         ]

@@ -40,7 +40,7 @@ type Z80Delta
     | SetMem8WithTime Int Int Int
     | SetMem16WithTimeAndPc Int Int Int Z80Address
     | SetMem8WithCpuTimeIncrementAndPc Int Int CpuTimeCTime Int Z80Address
-      --| PcTimeFlagsSet408Bit Z80Address CpuTimeCTime FlagRegisters Int Int
+    --| PcTimeFlagsSet408Bit Z80Address CpuTimeCTime FlagRegisters Int Int
     | PcTimeSet408Bit Z80Address CpuTimeCTime Int Int
     | Fszh0n0pTimeDeltaSet408Bit Int Int Int
 
