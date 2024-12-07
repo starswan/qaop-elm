@@ -2,7 +2,7 @@ module Z80AddressTest exposing (..)
 
 import Expect exposing (Expectation)
 import Test exposing (..)
-import Z80Address exposing (fromInt, incrementBy1, incrementBy2, toInt)
+import Z80Address exposing (decrement, fromInt, incrementBy1, incrementBy2, toInt)
 
 
 suite : Test
@@ -91,6 +91,48 @@ suite =
                                 b |> incrementBy2
                         in
                         (c |> toInt) |> Expect.equal 0
+                ]
+            , describe "decrement"
+                [ test "ROM boundary" <|
+                    \_ ->
+                        let
+                            b =
+                                fromInt 0x4000
+
+                            c =
+                                b |> decrement
+                        in
+                        (c |> toInt) |> Expect.equal 0x3FFF
+                , test "Screen boundary" <|
+                    \_ ->
+                        let
+                            b =
+                                fromInt (16384 + 6912)
+
+                            c =
+                                b |> decrement
+                        in
+                        (c |> toInt) |> Expect.equal (16384 + 6911)
+                , test "Lomem boundary" <|
+                    \_ ->
+                        let
+                            b =
+                                fromInt 0x8000
+
+                            c =
+                                b |> decrement
+                        in
+                        (c |> toInt) |> Expect.equal 0x7FFF
+                , test "Himem boundary" <|
+                    \_ ->
+                        let
+                            b =
+                                fromInt 0
+
+                            c =
+                                b |> decrement
+                        in
+                        (c |> toInt) |> Expect.equal 0xFFFF
                 ]
             ]
         ]
