@@ -1,10 +1,8 @@
 module Z80Ram exposing (..)
 
 import Bitwise
-import Hex
 import ScreenStorage exposing (Z80Screen, getScreenValue, setScreenValue)
 import Utils exposing (shiftLeftBy8)
-import Z80Debug exposing (debugLog)
 import Z80Memory exposing (Z80Memory, getMemValue, setMemValue)
 
 

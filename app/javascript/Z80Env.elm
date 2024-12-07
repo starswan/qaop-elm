@@ -10,9 +10,9 @@ import CpuTimeCTime exposing (CpuTimeAndAddress, CpuTimeAndValue, CpuTimeCTime, 
 import Keyboard exposing (Keyboard, z80_keyboard_input)
 import ScreenStorage exposing (getScreenValue)
 import Utils exposing (shiftLeftBy8, shiftRightBy8, toHexString2)
-import Z80Address exposing (AddressType(..), Z80Address(..), decrement, decrement2, fromInt, incrementBy1, incrementBy2, toInt)
+import Z80Address exposing (Z80Address(..), decrement, decrement2, fromInt, incrementBy1, incrementBy2, toInt)
 import Z80Debug exposing (debugLog)
-import Z80Memory exposing (getMemValue)
+import Z80Memory exposing (getMemValue, setMemValue)
 import Z80Ram exposing (Z80Ram)
 import Z80Rom exposing (Z80ROM, getROMValue)
 
@@ -111,20 +111,20 @@ m1 z80_addr ir rom48k z80env =
 
         ( value, z80env_1_time ) =
             case z80_addr of
-                Z80Address addr addressType ->
-                    case addressType of
-                        ROM ->
-                            -- not implementing IF1 switching for now
-                            ( rom48k |> getROMValue addr, z80env_time )
+                --Z80Address addr addressType ->
+                --    case addressType of
+                ROM addr ->
+                    -- not implementing IF1 switching for now
+                    ( rom48k |> getROMValue addr, z80env_time )
 
-                        Screen ->
-                            ( z80env.ram.screen |> getScreenValue addr, z80env_time |> cont1 0 )
+                Screen addr ->
+                    ( z80env.ram.screen |> getScreenValue addr, z80env_time |> cont1 0 )
 
-                        Lomem ->
-                            ( z80env.ram.non_screen |> getMemValue addr, z80env_time |> cont1 0 )
+                Lomem addr ->
+                    ( z80env.ram.non_screen |> getMemValue addr, z80env_time |> cont1 0 )
 
-                        HiMem ->
-                            ( z80env.ram.non_screen |> getMemValue addr, z80env_time )
+                HiMem addr ->
+                    ( z80env.ram.non_screen |> getMemValue addr, z80env_time )
 
         ctime =
             if Bitwise.and ir 0xC000 == 0x4000 then
@@ -173,27 +173,27 @@ mem z80_addr time rom48k ram =
         --    base_addr - 0x4000
         ( new_time, ctime, value ) =
             case z80_addr of
-                Z80Address addr_value addressType ->
-                    case addressType of
-                        ROM ->
-                            ( z80env_time, c_NOCONT, rom48k |> getROMValue addr_value )
+                --Z80Address addr_value addressType ->
+                --    case addressType of
+                ROM addr_value ->
+                    ( z80env_time, c_NOCONT, rom48k |> getROMValue addr_value )
 
-                        Screen ->
-                            let
-                                new_z80 =
-                                    z80env_time |> cont1 0
-                            in
-                            ( new_z80, new_z80.cpu_time + 3, ram.screen |> getScreenValue addr_value )
+                Screen addr_value ->
+                    let
+                        new_z80 =
+                            z80env_time |> cont1 0
+                    in
+                    ( new_z80, new_z80.cpu_time + 3, ram.screen |> getScreenValue addr_value )
 
-                        Lomem ->
-                            let
-                                new_z80 =
-                                    z80env_time |> cont1 0
-                            in
-                            ( new_z80, new_z80.cpu_time + 3, ram.non_screen |> getMemValue addr_value )
+                Lomem addr_value ->
+                    let
+                        new_z80 =
+                            z80env_time |> cont1 0
+                    in
+                    ( new_z80, new_z80.cpu_time + 3, ram.non_screen |> getMemValue addr_value )
 
-                        HiMem ->
-                            ( z80env_time, c_NOCONT, ram.non_screen |> getMemValue addr_value )
+                HiMem addr_value ->
+                    ( z80env_time, c_NOCONT, ram.non_screen |> getMemValue addr_value )
 
         --if addr >= 0 then
         --    if addr < 0x4000 then
@@ -262,119 +262,195 @@ mem16 z80_addr rom48k z80env =
             z80_addr |> incrementBy1
     in
     case z80_addr of
-        Z80Address loAddr loAddrType ->
-            case loAddrType of
-                ROM ->
-                    case addrNext of
-                        Z80Address hiAddr hiAddrType ->
-                            case hiAddrType of
-                                ROM ->
-                                    let
-                                        low =
-                                            getROMValue loAddr rom48k
+        --Z80Address loAddr loAddrType ->
+        --    case loAddrType of
+        ROM loAddr ->
+            case addrNext of
+                --Z80Address hiAddr hiAddrType ->
+                --    case hiAddrType of
+                ROM hiAddr ->
+                    let
+                        low =
+                            getROMValue loAddr rom48k
 
-                                        high =
-                                            getROMValue hiAddr rom48k
-                                    in
-                                    CpuTimeAndAddress { z80env_time | ctime = c_NOCONT } (Bitwise.or low (shiftLeftBy8 high) |> fromInt)
+                        high =
+                            getROMValue hiAddr rom48k
+                    in
+                    CpuTimeAndAddress { z80env_time | ctime = c_NOCONT } (Bitwise.or low (shiftLeftBy8 high) |> fromInt)
 
-                                _ ->
-                                    let
-                                        new_z80_time =
-                                            cont1 3 z80env_time
+                _ ->
+                    let
+                        new_z80_time =
+                            cont1 3 z80env_time
 
-                                        low =
-                                            rom48k |> getROMValue loAddr
+                        low =
+                            rom48k |> getROMValue loAddr
 
-                                        high =
-                                            getScreenValue 0 z80env.ram.screen
-                                    in
-                                    CpuTimeAndAddress new_z80_time (or low (shiftLeftBy8 high) |> fromInt)
+                        high =
+                            getScreenValue 0 z80env.ram.screen
+                    in
+                    CpuTimeAndAddress new_z80_time (or low (shiftLeftBy8 high) |> fromInt)
 
-                Screen ->
-                    case addrNext of
-                        Z80Address hiAddr hiAddrType ->
-                            case hiAddrType of
-                                Screen ->
-                                    let
-                                        new_env_time =
-                                            z80env_time |> cont1 0
+        Screen loAddr ->
+            case addrNext of
+                --Z80Address hiAddr hiAddrType ->
+                --    case hiAddrType of
+                Screen hiAddr ->
+                    let
+                        new_env_time =
+                            z80env_time |> cont1 0
 
-                                        low =
-                                            getScreenValue loAddr z80env.ram.screen
+                        low =
+                            getScreenValue loAddr z80env.ram.screen
 
-                                        high =
-                                            getScreenValue hiAddr z80env.ram.screen
-                                    in
-                                    CpuTimeAndAddress new_env_time (or low (shiftLeftBy8 high) |> fromInt)
+                        high =
+                            getScreenValue hiAddr z80env.ram.screen
+                    in
+                    CpuTimeAndAddress new_env_time (or low (shiftLeftBy8 high) |> fromInt)
 
-                                _ ->
-                                    let
-                                        new_env_time =
-                                            z80env_time |> cont1 0
+                Lomem hiAddr ->
+                    let
+                        new_env_time =
+                            z80env_time |> cont1 0
 
-                                        low =
-                                            getScreenValue loAddr z80env.ram.screen
+                        low =
+                            getScreenValue loAddr z80env.ram.screen
 
-                                        high =
-                                            getMemValue hiAddr z80env.ram.non_screen
-                                    in
-                                    CpuTimeAndAddress new_env_time (or low (shiftLeftBy8 high) |> fromInt)
+                        high =
+                            getMemValue hiAddr z80env.ram.non_screen
+                    in
+                    CpuTimeAndAddress new_env_time (or low (shiftLeftBy8 high) |> fromInt)
 
-                Lomem ->
-                    case addrNext of
-                        Z80Address hiAddr hiAddrType ->
-                            case hiAddrType of
-                                Lomem ->
-                                    let
-                                        low =
-                                            getMemValue loAddr z80env.ram.non_screen
+                --    These last 2 can't actuallt happen
+                HiMem hiAddr ->
+                    let
+                        new_env_time =
+                            z80env_time |> cont1 0
 
-                                        high =
-                                            getMemValue hiAddr z80env.ram.non_screen
+                        low =
+                            getScreenValue loAddr z80env.ram.screen
 
-                                        z80env_1_time =
-                                            z80env_time |> cont1 0 |> cont1 3 |> addCpuTimeTime 6
-                                    in
-                                    CpuTimeAndAddress z80env_1_time (Bitwise.or low (shiftLeftBy8 high) |> fromInt)
+                        high =
+                            getMemValue hiAddr z80env.ram.non_screen
+                    in
+                    CpuTimeAndAddress new_env_time (or low (shiftLeftBy8 high) |> fromInt)
 
-                                _ ->
-                                    let
-                                        low =
-                                            getMemValue loAddr z80env.ram.non_screen
+                ROM hiAddr ->
+                    let
+                        new_env_time =
+                            z80env_time |> cont1 0
 
-                                        high =
-                                            getMemValue hiAddr z80env.ram.non_screen
+                        low =
+                            getScreenValue loAddr z80env.ram.screen
 
-                                        z80env_1_time =
-                                            --CpuTimeCTime z80env_time.cpu_time c_NOCONT
-                                            { z80env_time | ctime = c_NOCONT }
-                                    in
-                                    CpuTimeAndAddress z80env_1_time (Bitwise.or low (shiftLeftBy8 high) |> fromInt)
+                        high =
+                            getMemValue hiAddr z80env.ram.non_screen
+                    in
+                    CpuTimeAndAddress new_env_time (or low (shiftLeftBy8 high) |> fromInt)
 
-                HiMem ->
-                    case addrNext of
-                        Z80Address hiAddr hiAddrType ->
-                            case hiAddrType of
-                                ROM ->
-                                    let
-                                        low =
-                                            getMemValue (0xBFFF - 6912) z80env.ram.non_screen
+        Lomem loAddr ->
+            case addrNext of
+                --Z80Address hiAddr hiAddrType ->
+                --    case hiAddrType of
+                Lomem hiAddr ->
+                    let
+                        low =
+                            getMemValue loAddr z80env.ram.non_screen
 
-                                        high =
-                                            getROMValue 0 rom48k
-                                    in
-                                    CpuTimeAndAddress { z80env_time | ctime = c_NOCONT } (or low (shiftLeftBy8 high) |> fromInt)
+                        high =
+                            getMemValue hiAddr z80env.ram.non_screen
 
-                                _ ->
-                                    let
-                                        low =
-                                            getMemValue loAddr z80env.ram.non_screen
+                        z80env_1_time =
+                            z80env_time |> cont1 0 |> cont1 3 |> addCpuTimeTime 6
+                    in
+                    CpuTimeAndAddress z80env_1_time (Bitwise.or low (shiftLeftBy8 high) |> fromInt)
 
-                                        high =
-                                            getMemValue hiAddr z80env.ram.non_screen
-                                    in
-                                    CpuTimeAndAddress { z80env_time | ctime = c_NOCONT } (or low (shiftLeftBy8 high) |> fromInt)
+                HiMem hiAddr ->
+                    let
+                        low =
+                            getMemValue loAddr z80env.ram.non_screen
+
+                        high =
+                            getMemValue hiAddr z80env.ram.non_screen
+
+                        z80env_1_time =
+                            --CpuTimeCTime z80env_time.cpu_time c_NOCONT
+                            { z80env_time | ctime = c_NOCONT }
+                    in
+                    CpuTimeAndAddress z80env_1_time (Bitwise.or low (shiftLeftBy8 high) |> fromInt)
+
+                --    last 2 can't happen
+                ROM hiAddr ->
+                    let
+                        low =
+                            getMemValue loAddr z80env.ram.non_screen
+
+                        high =
+                            getMemValue hiAddr z80env.ram.non_screen
+
+                        z80env_1_time =
+                            --CpuTimeCTime z80env_time.cpu_time c_NOCONT
+                            { z80env_time | ctime = c_NOCONT }
+                    in
+                    CpuTimeAndAddress z80env_1_time (Bitwise.or low (shiftLeftBy8 high) |> fromInt)
+
+                Screen hiAddr ->
+                    let
+                        low =
+                            getMemValue loAddr z80env.ram.non_screen
+
+                        high =
+                            getMemValue hiAddr z80env.ram.non_screen
+
+                        z80env_1_time =
+                            --CpuTimeCTime z80env_time.cpu_time c_NOCONT
+                            { z80env_time | ctime = c_NOCONT }
+                    in
+                    CpuTimeAndAddress z80env_1_time (Bitwise.or low (shiftLeftBy8 high) |> fromInt)
+
+        HiMem loAddr ->
+            case addrNext of
+                --Z80Address hiAddr hiAddrType ->
+                --    case hiAddrType of
+                ROM _ ->
+                    let
+                        low =
+                            getMemValue (0xBFFF - 6912) z80env.ram.non_screen
+
+                        high =
+                            getROMValue 0 rom48k
+                    in
+                    CpuTimeAndAddress { z80env_time | ctime = c_NOCONT } (or low (shiftLeftBy8 high) |> fromInt)
+
+                HiMem hiAddr ->
+                    let
+                        low =
+                            getMemValue loAddr z80env.ram.non_screen
+
+                        high =
+                            getMemValue hiAddr z80env.ram.non_screen
+                    in
+                    CpuTimeAndAddress { z80env_time | ctime = c_NOCONT } (or low (shiftLeftBy8 high) |> fromInt)
+
+                Lomem hiAddr ->
+                    let
+                        low =
+                            getMemValue loAddr z80env.ram.non_screen
+
+                        high =
+                            getMemValue hiAddr z80env.ram.non_screen
+                    in
+                    CpuTimeAndAddress { z80env_time | ctime = c_NOCONT } (or low (shiftLeftBy8 high) |> fromInt)
+
+                Screen hiAddr ->
+                    let
+                        low =
+                            getMemValue loAddr z80env.ram.non_screen
+
+                        high =
+                            getMemValue hiAddr z80env.ram.non_screen
+                    in
+                    CpuTimeAndAddress { z80env_time | ctime = c_NOCONT } (or low (shiftLeftBy8 high) |> fromInt)
 
 
 
@@ -491,9 +567,11 @@ setRam addr value z80env =
 setMem : Z80Address -> Int -> Z80Env -> Z80Env
 setMem in_addr value z80env =
     let
-        z80_addr = in_addr |> toInt
+        z80_addr =
+            in_addr |> toInt
 
-        z80_time = z80env.time
+        z80_time =
+            z80env.time
 
         n =
             z80_time.cpu_time - z80_time.ctime
@@ -510,44 +588,53 @@ setMem in_addr value z80env =
 
         ( new_env, ctime ) =
             case in_addr of
-                Z80Address addr_value addressType ->
-                    case addressType of
-                        ROM -> ( z80env, c_NOCONT )
-                        HiMem -> ( z80env |> setRam addr value, c_NOCONT )
+                --Z80Address addr_value addressType ->
+                --    case addressType of
+                ROM _ ->
+                    ( z80env, c_NOCONT )
 
-                        Screen ->
-                            let
-                                z80env_1_time =
-                                    z80env_time |> cont1 0
+                HiMem addr_value ->
+                    let
+                        z80ram = z80env.ram
+                        --ram =  z80env.ram |> Z80Ram.setRamValue addr value
+                        --{ z80ram | non_screen = z80ram.non_screen |> setMemValue (addr - 6912) value }
+                        ram = { z80ram | non_screen = z80ram.non_screen |> setMemValue addr_value value }
+                    in
+                    ( { z80env | ram = ram }, c_NOCONT )
 
-                                new_time =
-                                    z80env_1_time.cpu_time + 3
+                Screen addr_value ->
+                    let
+                        z80env_1_time =
+                            z80env_time |> cont1 0
 
-                                ram_value =
-                                    getScreenValue addr_value z80env.ram.screen
-                            in
-                            if ram_value == value then
-                                ( z80env, new_time )
+                        new_time =
+                            z80env_1_time.cpu_time + 3
 
-                            else
-                                ( z80env |> setRam addr value, new_time )
+                        ram_value =
+                            getScreenValue addr_value z80env.ram.screen
+                    in
+                    if ram_value == value then
+                        ( z80env, new_time )
 
-                        Lomem ->
-                            let
-                                z80env_1_time =
-                                    z80env_time |> cont1 0
+                    else
+                        ( z80env |> setRam addr value, new_time )
 
-                                new_time =
-                                    z80env_1_time.cpu_time + 3
+                Lomem addr_value ->
+                    let
+                        z80env_1_time =
+                            z80env_time |> cont1 0
 
-                                ram_value =
-                                    getMemValue addr_value z80env.ram.non_screen
-                            in
-                            if ram_value == value then
-                                ( z80env, new_time )
+                        new_time =
+                            z80env_1_time.cpu_time + 3
 
-                            else
-                                ( z80env |> setRam addr value, new_time )
+                        ram_value =
+                            getMemValue addr_value z80env.ram.non_screen
+                    in
+                    if ram_value == value then
+                        ( z80env, new_time )
+
+                    else
+                        ( z80env |> setRam addr value, new_time )
     in
     { new_env | time = { z80env_time | ctime = ctime } }
 
@@ -578,7 +665,8 @@ setMem in_addr value z80env =
 setMem16 : Z80Address -> Int -> Z80Env -> Z80Env
 setMem16 z80_addr value z80env =
     let
-        addr = z80_addr |> toInt
+        addr =
+            z80_addr |> toInt
 
         addr1 =
             addr - 0x3FFF
@@ -685,7 +773,6 @@ addCpuTimeEnv value z80env =
     { z80env | time = z80env.time |> addCpuTimeTime value }
 
 
-
 addCpuTimeEnvInc : CpuTimeIncrement -> Z80Env -> Z80Env
 addCpuTimeEnvInc value z80env =
     { z80env | time = z80env.time |> addCpuTimeTimeInc value }
@@ -725,10 +812,10 @@ z80_push v z80env =
         env_2 =
             z80env
                 |> addCpuTimeEnv 1
-                |> setMem (sp_minus_1) (shiftRightBy8 value)
+                |> setMem sp_minus_1 (shiftRightBy8 value)
                 --|> setMem sp_minus_1 (top8Bits v)
                 |> addCpuTimeEnv 3
-                |> setMem (new_sp) (Bitwise.and value 0xFF)
+                |> setMem new_sp (Bitwise.and value 0xFF)
                 --|> setMem new_sp (lower8Bits v)
                 |> addCpuTimeEnv 3
     in
