@@ -163,13 +163,20 @@ incrementBy2 z80_address =
                         Z80Address (addr + 2) ROM
 
                 Screen ->
+                    if addr >= 6910 then
+                        Z80Address (addr - 6910) Lomem
+
+                    else
+                        Z80Address (addr + 2) Screen
+
+                Lomem ->
                     let
                         ( new_addr, new_type ) =
-                            Bitwise.and (addr + 0x4002) 0xFFFF |> decodeType
+                            Bitwise.and (addr + 0x4002 + 6912) 0xFFFF |> decodeType
                     in
                     Z80Address new_addr new_type
 
-                _ ->
+                HiMem ->
                     let
                         ( new_addr, new_type ) =
                             Bitwise.and (addr + 0x4002 + 6912) 0xFFFF |> decodeType
