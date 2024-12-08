@@ -28,7 +28,7 @@ end
 
 # runtime dependencies
 # depend :remote, :gem, "bundler", ">=1.0.0.rc.2"
-set :linked_dirs, fetch(:linked_dirs, []) << "games" << "z80test"
+set :linked_files, fetch(:linked_files, []) << "games" << "z80test"
 
 # tasks
 namespace :deploy do
@@ -52,10 +52,6 @@ namespace :deploy do
     # run "ln -nfs #{shared_path}/config/database.yml #{release_path}/config/database.yml"
     fetch(:linked_files, []).each do |f|
       run "ln -nfs #{shared_path}/#{f} #{release_path}/#{f}"
-    end
-
-    fetch(:linked_dirs, []).each do |f|
-      run "ln -nfs #{shared_path}/#{f} #{release_path}/../public/#{f}"
     end
   end
 
