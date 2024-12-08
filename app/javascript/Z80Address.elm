@@ -1,6 +1,6 @@
-module Z80Address exposing (fromInt, toInt, Z80Address, AddressType, decrement, decrement2, incrementBy1, incrementBy2, incrementBy3, addIndexOffset, lower8Bits, top8BitsWithoutShift, top8Bits)
---module Z80Address exposing (..)
+module Z80Address exposing (AddressType, Z80Address, addIndexOffset, decrement, decrement2, fromInt, incrementBy1, incrementBy2, incrementBy3, lower8Bits, toInt, top8Bits, top8BitsWithoutShift)
 
+--module Z80Address exposing (..)
 --import Z80WriteableAddress exposing (Z80WriteableAddress(..))
 --type Z80Address
 --    = ROMAddress Int
@@ -48,9 +48,15 @@ decodeType addr =
 
 fromInt : Int -> Z80Address
 fromInt raw_addr =
+    Bitwise.and raw_addr 0xFFFF |> fromSafeInt
+
+
+-- if we know the address is in bounds, we can call this instead
+fromSafeInt : Int -> Z80Address
+fromSafeInt raw_addr =
     let
         ( addr, addrType ) =
-            Bitwise.and raw_addr 0xFFFF |> decodeType
+            raw_addr |> decodeType
     in
     Z80Address addr addrType
 
