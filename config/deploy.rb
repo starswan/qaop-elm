@@ -28,6 +28,7 @@ end
 
 # runtime dependencies
 # depend :remote, :gem, "bundler", ">=1.0.0.rc.2"
+set :linked_dirs, fetch(:linked_dirs, []) << "games" << "z80test"
 
 # tasks
 namespace :deploy do
