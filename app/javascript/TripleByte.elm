@@ -1,15 +1,16 @@
 module TripleByte exposing (..)
 
 import Dict exposing (Dict)
+import Z80Address exposing (Z80Address, fromInt)
 
 
 type TripleByteChange
     = NewBCRegister Int
     | NewDERegister Int
-    | NewHLRegister Int
-    | NewSPRegister Int
-    | NewPCRegister Int
-    | CallImmediate Int
+    | NewHLRegister Z80Address
+    | NewSPRegister Z80Address
+    | NewPCRegister Z80Address
+    | CallImmediate Z80Address
 
 
 tripleByteWith16BitParam : Dict Int (Int -> TripleByteChange)
@@ -64,7 +65,7 @@ ld_hl_nn param16 =
     --        z80.main |> set_xy_ixiy new_xy.value ixiyhl
     --in
     ----{ z80_1 | main = main }
-    NewHLRegister param16
+    NewHLRegister (param16 |> fromInt)
 
 
 ld_sp_nn : Int -> TripleByteChange
@@ -75,7 +76,7 @@ ld_sp_nn param16 =
     --        z80 |> imm16 rom48k
     --in
     ----{ z80 | env = v.env, pc = v.pc, sp = v.value }
-    NewSPRegister param16
+    NewSPRegister (param16 |> fromInt)
 
 
 jp_nn : Int -> TripleByteChange
@@ -90,7 +91,8 @@ jp_nn param16 =
     --    --y = debug_log "jp" (v.value |> subName) Nothing
     --in
     ----z80_1 |> set_pc v.value
-    NewPCRegister param16
+    NewPCRegister (param16 |> fromInt)
+
 
 
 call_0xCD : Int -> TripleByteChange
@@ -106,4 +108,4 @@ call_0xCD param16 =
     --in
     ----{ z80_1 | env = pushed, pc = v.value }
     --PushWithCpuTimeAndPc v.pc v.time v.value
-    CallImmediate param16
+    CallImmediate (param16 |> fromInt)
