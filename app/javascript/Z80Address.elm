@@ -2,6 +2,7 @@
 
 
 module Z80Address exposing (..)
+
 --import Z80WriteableAddress exposing (Z80WriteableAddress(..))
 --type Z80Address
 --    = ROMAddress Int
@@ -24,11 +25,12 @@ type Z80Address
 
 
 fromInt : Int -> Z80Address
-fromInt in_addr =
-    let
-        addr =
-            in_addr |> Bitwise.and 0xFFFF
-    in
+fromInt addr =
+    addr |> Bitwise.and 0xFFFF |> fromSafeInt
+
+
+fromSafeInt : Int -> Z80Address
+fromSafeInt addr =
     if addr <= 0x3FFF then
         addr |> ROM
 
