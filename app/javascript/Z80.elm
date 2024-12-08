@@ -5,7 +5,7 @@ module Z80 exposing (..)
 
 import Array exposing (Array)
 import Bitwise exposing (and, or, shiftRightBy)
-import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAndValue, addCpuTimeTime)
+import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, addCpuTimeTime)
 import Dict exposing (Dict)
 import Group0x20 exposing (delta_dict_lite_20)
 import Group0x30 exposing (delta_dict_lite_30)
@@ -22,7 +22,7 @@ import SingleWith8BitParameter exposing (doubleWithRegisters, maybeRelativeJump,
 import TripleByte exposing (tripleByteWith16BitParam)
 import TripleWithFlags exposing (triple16WithFlags)
 import Utils exposing (toHexString)
-import Z80Address exposing (Z80Address, fromInt, incrementBy1, toInt)
+import Z80Address exposing (Z80Address, fromInt, incrementBy1)
 import Z80Debug exposing (debugTodo)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..))
 import Z80Env exposing (Z80Env, addCpuTimeEnv, c_TIME_LIMIT, m1, mem, mem16, z80_push, z80env_constructor)
@@ -362,13 +362,13 @@ execute_delta rom48k tmp_z80 =
    --switch(c) {
    let
       interrupts = tmp_z80.interrupts
-      ct = tmp_z80.env |> m1 (tmp_z80.pc |> toInt) (Bitwise.or interrupts.ir (Bitwise.and interrupts.r 0x7F)) rom48k
+      ct = tmp_z80.env |> m1 tmp_z80.pc (Bitwise.or interrupts.ir (Bitwise.and interrupts.r 0x7F)) rom48k
 
       -- CB is just another lookup (hopefully) as they are all quite different
       (instrCode, instrTime) = if ct.value == 0xCB then
                                    let
                                       --param = mem (Bitwise.and (tmp_z80.pc + 1) 0xFFFF) ct.time rom48k tmp_z80.env.ram
-                                      param = mem (tmp_z80.pc |> incrementBy1 |> toInt) ct.time rom48k tmp_z80.env.ram
+                                      param = mem (tmp_z80.pc |> incrementBy1) ct.time rom48k tmp_z80.env.ram
                                    in
                                       (Bitwise.or 0xCB00 param.value, param.time)
                                  else
@@ -378,25 +378,25 @@ execute_delta rom48k tmp_z80 =
        Just f ->
          let
             --doubleParam = tmp_z80.env |> mem16 (Bitwise.and (tmp_z80.pc + 1) 0xFFFF) rom48k
-            doubleParam = tmp_z80.env |> mem16 (tmp_z80.pc |> incrementBy1 |> toInt) rom48k
+            doubleParam = tmp_z80.env |> mem16 (tmp_z80.pc |> incrementBy1) rom48k
          in
            -- duplicate of code in imm16 - add 6 to the cpu_time
-           TripleFlagDelta (doubleParam.time |> addCpuTimeTime 6) (f doubleParam.value tmp_z80.flags)
+           TripleFlagDelta (doubleParam.time |> addCpuTimeTime 6) (f doubleParam.address tmp_z80.flags)
        Nothing ->
            case tripleByteWith16BitParam |> Dict.get instrCode of
               Just f ->
                  let
                     --doubleParam = tmp_z80.env |> mem16 (Bitwise.and (tmp_z80.pc + 1) 0xFFFF) rom48k
-                    doubleParam = tmp_z80.env |> mem16 (tmp_z80.pc |> incrementBy1 |> toInt) rom48k
+                    doubleParam = tmp_z80.env |> mem16 (tmp_z80.pc |> incrementBy1) rom48k
                  in
                    -- duplicate of code in imm16 - add 6 to the cpu_time
-                   TripleChangeDelta (doubleParam.time |> addCpuTimeTime 6) (f doubleParam.value)
+                   TripleChangeDelta (doubleParam.time |> addCpuTimeTime 6) (f doubleParam.address)
               Nothing ->
                 case maybeRelativeJump |> Dict.get instrCode of
                    Just f ->
                        let
                           --param = mem (Bitwise.and (tmp_z80.pc + 1) 0xFFFF) instrTime rom48k tmp_z80.env.ram
-                          param = mem (tmp_z80.pc |> incrementBy1 |> toInt) instrTime rom48k tmp_z80.env.ram
+                          param = mem (tmp_z80.pc |> incrementBy1) instrTime rom48k tmp_z80.env.ram
                        in
                        -- duplicate of code in imm8 - add 3 to the cpu_time
                        JumpChangeDelta (param.time |> addCpuTimeTime 3) (f param.value tmp_z80.flags)
@@ -405,7 +405,7 @@ execute_delta rom48k tmp_z80 =
                            Just f ->
                                let
                                   --param = mem (Bitwise.and (tmp_z80.pc + 1) 0xFFFF) instrTime rom48k tmp_z80.env.ram
-                                  param = mem (tmp_z80.pc |> incrementBy1 |> toInt) instrTime rom48k tmp_z80.env.ram
+                                  param = mem (tmp_z80.pc |> incrementBy1) instrTime rom48k tmp_z80.env.ram
                                in
                                -- duplicate of code in imm8 - add 3 to the cpu_time
                                DoubleWithRegistersDelta (param.time |> addCpuTimeTime 3) (f tmp_z80.main param.value)
@@ -438,7 +438,7 @@ singleByte ctime instr_code tmp_z80 rom48k =
                                Just f ->
                                    let
                                       --param = mem (Bitwise.and (tmp_z80.pc + 1) 0xFFFF) ctime rom48k tmp_z80.env.ram
-                                      param = mem (tmp_z80.pc |> incrementBy1 |> toInt) ctime rom48k tmp_z80.env.ram
+                                      param = mem (tmp_z80.pc |> incrementBy1) ctime rom48k tmp_z80.env.ram
                                    in
                                    -- duplicate of code in imm8 - add 3 to the cpu_time
                                    Just (Simple8BitDelta (param.time |> addCpuTimeTime 3) (f param.value))
@@ -534,7 +534,7 @@ execute rom48k z80 =
 group_xy: IXIY -> Z80ROM -> Z80 -> Z80Delta
 group_xy ixiy rom48k old_z80 =
   let
-    c = old_z80.env |> m1 (old_z80.pc |> toInt) (or old_z80.interrupts.ir (and old_z80.interrupts.r 0x7F)) rom48k
+    c = old_z80.env |> m1 old_z80.pc (or old_z80.interrupts.ir (and old_z80.interrupts.r 0x7F)) rom48k
     intr = old_z80.interrupts
     env = old_z80.env
     z80_1 = { old_z80 | env = { env | time = c.time }, interrupts = { intr | r = intr.r + 1 } }
@@ -650,10 +650,10 @@ interrupt bus rom48k z80 =
                 3 -> let
                         new_ir = Bitwise.and ints.ir 0xFF00
                         addr = Bitwise.or new_ir bus
-                        env_and_pc = z80.env |> mem16 addr rom48k
+                        env_and_pc = z80.env |> mem16 (addr |> fromInt) rom48k
                         env = z80.env
                       in
-                        { new_z80 | env = { env | time = env_and_pc.time } |> addCpuTimeEnv 6, pc = env_and_pc.value |> fromInt }
+                        { new_z80 | env = { env | time = env_and_pc.time } |> addCpuTimeEnv 6, pc = env_and_pc.address }
                 _ -> new_z80
 
 --set_env: Z80Env -> Z80 -> Z80

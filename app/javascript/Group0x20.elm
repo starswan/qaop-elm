@@ -53,7 +53,7 @@ ld_hl_nn ixiyhl rom48k z80 =
         --z80_1 = { z80 | env = new_xy.env, pc = new_xy.pc }
         --x = debug_log ("LD " ++ (ixiyhl |> toString) ++ "," ++ (new_xy.value |> toHexString)) ("pc = " ++ (z80.pc |> toHexString)) Nothing
         main =
-            z80.main |> set_xy_ixiy (new_xy.value |> fromInt) ixiyhl
+            z80.main |> set_xy_ixiy new_xy.address ixiyhl
     in
     --{ z80_1 | main = main }
     MainRegsWithPcAndCpuTime main new_xy.pc new_xy.time
@@ -73,7 +73,7 @@ ld_nn_indirect_hl rom48k z80 =
         --    z80.env |> set_mem16 v.value z80.main.hl |> add_cpu_time_env 6
         --x = debug_log "LD nn, HL" ((z80.pc |> toHexString) ++ " addr " ++ (v.value |> toHexString) ++ " " ++ (new_z80.main.hl |> toHexString)) env
     in
-    SetMem16WithTimeAndPc v.value (z80.main.hl |> toInt) 6 v.pc
+    SetMem16WithTimeAndPc v.address (z80.main.hl |> toInt) 6 v.pc
     --case (v.value |> fromInt) of
     --  Z80Address.ROMAddress int ->
     --    NoChange
@@ -198,11 +198,11 @@ ld_hl_indirect_nn ixiyhl rom48k z80 =
 
         --z80_1 = { z80 | pc = v.pc }
         new_xy =
-            z80.env |> mem16 v.value rom48k
+            z80.env |> mem16 v.address rom48k
 
         --z80_2 = { z80_1 | env = new_xy.env }
         main =
-            z80.main |> set_xy (new_xy.value |> fromInt) ixiyhl
+            z80.main |> set_xy new_xy.address ixiyhl
     in
     --{ z80_2 | main = main } |> add_cpu_time 6
     MainRegsWithPcAndCpuTime main v.pc (new_xy.time |> addCpuTimeTime 6)
