@@ -53,6 +53,10 @@ namespace :deploy do
     fetch(:linked_files, []).each do |f|
       run "ln -nfs #{shared_path}/#{f} #{release_path}/#{f}"
     end
+
+    fetch(:linked_dirs, []).each do |f|
+      run "ln -nfs #{shared_path}/#{f} #{release_path}/#{f}"
+    end
   end
 
   desc "Copy Undebug module"
