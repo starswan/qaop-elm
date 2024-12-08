@@ -274,6 +274,23 @@ suite =
                             }
                 in
                 Expect.equal ( addr + 1, 0x6645, 0x6545 ) ( new_z80.pc, new_z80.main.hl, new_z80.main.iy )
+        , test "0xDD 0x24 INC IXH" <|
+            \_ ->
+                let
+                    new_env =
+                        z80env
+                            |> setMem addr 0xDD
+                            |> setMem (addr + 1) 0x24
+
+                    new_z80 =
+                        execute_instruction z80rom
+                            { z80
+                                | env = new_env
+                                , main = { z80main | ix = 0x6545, hl = 0x6545 }
+                                , flags = { flags | a = 0x39 }
+                            }
+                in
+                Expect.equal ( addr + 2, 0x6545, 0x6645 ) ( new_z80.pc, new_z80.main.hl, new_z80.main.ix )
         , test "0xFD 0x24 INC IYH" <|
             \_ ->
                 let
