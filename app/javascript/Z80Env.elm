@@ -63,7 +63,6 @@ z80env_constructor =
 
 
 
-
 --set_rom : Array Int -> Z80Env -> Z80Env
 --set_rom romdata z80env =
 --    let
@@ -556,7 +555,8 @@ z80_push v z80env =
             --Bitwise.and (z80env.sp - 2) 0xFFFF
             z80env.sp |> decrement2
 
-        value = v |> toInt
+        value =
+            v |> toInt
 
         env_2 =
             z80env
