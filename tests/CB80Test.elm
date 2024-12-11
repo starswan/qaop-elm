@@ -3,6 +3,7 @@ module CB80Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeSingleInstruction)
+import Z80Address exposing (fromInt, toInt)
 import Z80Env exposing (mem, setMem)
 import Z80Rom
 
@@ -29,7 +30,7 @@ suite =
             old_z80.main
 
         z80 =
-            { old_z80 | pc = addr, env = { old_z80env | sp = sp }, main = { z80main | hl = hl } }
+            { old_z80 | pc = addr|>fromInt, env = { old_z80env | sp = sp|>fromInt }, main = { z80main | hl = hl|>fromInt } }
 
         z80env =
             z80.env
@@ -53,7 +54,7 @@ suite =
                                 , main = { z80main | b = 0xFF }
                             }
                 in
-                Expect.equal ( addr + 2, 0xFE ) ( new_z80.pc, new_z80.main.b )
+                Expect.equal ( addr + 2, 0xFE ) ( new_z80.pc|> toInt, new_z80.main.b )
         , test "0xCB 81 RES 0,C" <|
             \_ ->
                 let
@@ -69,7 +70,7 @@ suite =
                                 , main = { z80main | c = 0xFF }
                             }
                 in
-                Expect.equal ( addr + 2, 0xFE ) ( new_z80.pc, new_z80.main.c )
+                Expect.equal ( addr + 2, 0xFE ) ( new_z80.pc|> toInt, new_z80.main.c )
         , test "0xCB 88 RES 1,B" <|
             \_ ->
                 let
@@ -85,7 +86,7 @@ suite =
                                 , main = { z80main | b = 0xFF }
                             }
                 in
-                Expect.equal ( addr + 2, 0xFD ) ( new_z80.pc, new_z80.main.b )
+                Expect.equal ( addr + 2, 0xFD ) ( new_z80.pc|> toInt, new_z80.main.b )
         , test "0xFD 0xCB nn 0x8E RES 1, (IY + n) -ve" <|
             \_ ->
                 let
@@ -101,11 +102,11 @@ suite =
                         executeSingleInstruction z80rom
                             { z80
                                 | env = new_env
-                                , main = { z80main | iy = 0xA080, hl = 0x6545, b = 0xA5 }
+                                , main = { z80main | iy = 0xA080|>fromInt, hl = 0x6545|>fromInt, b = 0xA5 }
                             }
 
                     mem_value =
                         mem 0xA07E new_z80.env.time z80rom new_z80.env.ram
                 in
-                Expect.equal ( addr + 4, 0xFD ) ( new_z80.pc, mem_value.value )
+                Expect.equal ( addr + 4, 0xFD ) ( new_z80.pc|> toInt, mem_value.value )
         ]
