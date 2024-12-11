@@ -3,6 +3,7 @@ module GroupD0Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeSingleInstruction)
+import Z80Address exposing (fromInt, toInt)
 import Z80Env exposing (mem16, setMem)
 import Z80Rom
 
@@ -23,7 +24,7 @@ suite =
             old_z80.env
 
         z80 =
-            { old_z80 | pc = addr, env = { old_z80env | sp = sp } }
+            { old_z80 | pc = addr|> fromInt, env = { old_z80env | sp = sp|> fromInt } }
 
         z80env =
             z80.env
@@ -52,11 +53,11 @@ suite =
                         new_z80 =
                             executeSingleInstruction z80rom
                                 { z80
-                                    | env = { new_env | sp = 0xFF77 }
-                                    , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                                    | env = { new_env | sp = 0xFF77 |> fromInt }
+                                    , main = { z80main | hl = 0x5050 |> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 1, d = 0x56, e = 0x16, sp = 0xFF79 } { sp = new_z80.env.sp, pc = new_z80.pc, d = new_z80.main.d, e = new_z80.main.e }
+                    Expect.equal { pc = addr + 1, d = 0x56, e = 0x16, sp = 0xFF79 } { sp = new_z80.env.sp |> toInt, pc = new_z80.pc |> toInt, d = new_z80.main.d, e = new_z80.main.e }
             ]
         , describe "0xD2 - JP NC,nn"
             [ test "Dont jump" <|
@@ -75,7 +76,7 @@ suite =
                                     , flags = { flags | a = 0x39, ff = 0x100 }
                                 }
                     in
-                    Expect.equal (addr + 3) new_z80.pc
+                    Expect.equal (addr + 3) (new_z80.pc|> toInt)
             , test "Jump" <|
                 \_ ->
                     let
@@ -92,7 +93,7 @@ suite =
                                     , flags = { flags | a = 0x39, ff = 0x200 }
                                 }
                     in
-                    Expect.equal 0x3405 new_z80.pc
+                    Expect.equal 0x3405 (new_z80.pc|> toInt)
             ]
         , describe "0xD4 CALL NC"
             [ test "Dont jump" <|
@@ -111,7 +112,7 @@ suite =
                                     , flags = { flags | a = 0x39, ff = 0x100 }
                                 }
                     in
-                    Expect.equal ( addr + 3, 0xF765 ) ( new_z80.pc, new_z80.env.sp )
+                    Expect.equal ( addr + 3, 0xF765 ) ( new_z80.pc|> toInt, new_z80.env.sp|> toInt )
             , test "Jump" <|
                 \_ ->
                     let
@@ -128,7 +129,7 @@ suite =
                                     , flags = { flags | a = 0x39, ff = 0x200 }
                                 }
                     in
-                    Expect.equal ( 0x3405, 0xF763 ) ( new_z80.pc, new_z80.env.sp )
+                    Expect.equal ( 0x3405, 0xF763 ) ( new_z80.pc|> toInt, new_z80.env.sp|> toInt )
             ]
         , test "0xD7 RST 10" <|
             \_ ->
@@ -142,11 +143,11 @@ suite =
                     new_z80 =
                         executeSingleInstruction z80rom
                             { z80
-                                | env = { new_env | sp = 0xFF77 }
-                                , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                                | env = { new_env | sp = 0xFF77|> fromInt }
+                                , main = { z80main | hl = 0x5050|> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                             }
                 in
-                Expect.equal { pc = 0x10, sp = 0xFF75 } { sp = new_z80.env.sp, pc = new_z80.pc }
+                Expect.equal { pc = 0x10, sp = 0xFF75 } { sp = new_z80.env.sp|> toInt, pc = new_z80.pc|> toInt }
         , test "0xD9 EXX" <|
             \_ ->
                 let
@@ -161,12 +162,12 @@ suite =
                     new_z80 =
                         executeSingleInstruction z80rom
                             { z80
-                                | env = { new_env | sp = 0xFF77 }
-                                , alt_main = { alt | hl = 0x4040, b = 0x67, c = 0x34, d = 0x12, e = 0x81 }
-                                , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                                | env = { new_env | sp = 0xFF77 |> fromInt }
+                                , alt_main = { alt | hl = 0x4040 |> fromInt, b = 0x67, c = 0x34, d = 0x12, e = 0x81 }
+                                , main = { z80main | hl = 0x5050 |> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                             }
                 in
-                Expect.equal { pc = addr + 1, hl = 0x4040 } { pc = new_z80.pc, hl = new_z80.main.hl }
+                Expect.equal { pc = addr + 1, hl = 0x4040 } { pc = new_z80.pc|> toInt, hl = new_z80.main.hl|> toInt }
         , test "0xDF RST 18" <|
             \_ ->
                 let
@@ -179,9 +180,9 @@ suite =
                     new_z80 =
                         executeSingleInstruction z80rom
                             { z80
-                                | env = { new_env | sp = 0xFF77 }
-                                , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                                | env = { new_env | sp = 0xFF77|> fromInt }
+                                , main = { z80main | hl = 0x5050|> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                             }
                 in
-                Expect.equal { pc = 0x18, sp = 0xFF75, mem = addr + 1 } { sp = new_z80.env.sp, pc = new_z80.pc, mem = mem16 0xFF75 z80rom new_z80.env |> .value }
+                Expect.equal { pc = 0x18, sp = 0xFF75, mem = addr + 1 } { sp = new_z80.env.sp|> toInt, pc = new_z80.pc|> toInt, mem = mem16 0xFF75 z80rom new_z80.env |> .value }
         ]

@@ -9,12 +9,13 @@ import Tapfile exposing (Tapfile)
 import Utils exposing (char)
 import Vector8
 import Z80 exposing (execute)
+import Z80Address exposing (Z80Address, incrementBy2, lower8Bits, toInt, top8Bits)
 import Z80Debug exposing (debugLog)
 import Z80Env exposing (mem, mem16, reset_cpu_time)
 import Z80Flags exposing (c_FC, c_FZ, get_flags, set_flags)
 import Z80Rom exposing (Z80ROM, make_spectrum_rom)
 import Z80Tape exposing (TapePosition, Z80Tape, newPosition)
-import Z80Types exposing (IXIYHL(..), Z80, get_de, get_ei, get_h, get_l, interrupt)
+import Z80Types exposing (IXIYHL(..), Z80, get_de, get_ei, interrupt)
 
 
 type alias Audio =
@@ -1012,7 +1013,7 @@ checkLoad spectrum =
             spectrum.cpu
 
         pc1 =
-            cpu.pc
+            cpu.pc |> toInt
     in
     if (cpu |> get_ei) || pc1 < 0x056B || pc1 > 0x0604 then
         Nothing
@@ -1026,10 +1027,12 @@ checkLoad spectrum =
                 if pc1 >= 0x05E3 then
                     let
                         ( pc2, sp2 ) =
-                            ( cpu.env |> mem16 sp1 spectrum.rom48k |> .value, char sp1 + 2 )
+                            --( cpu.env |> mem16 sp1 spectrum.rom48k |> .value, char sp1 + 2 )
+                            ( cpu.env |> mem16 (sp1 |> toInt) spectrum.rom48k |> .value, sp1 |> incrementBy2 )
                     in
                     if pc2 == 0x05E6 then
-                        ( cpu.env |> mem16 sp2 spectrum.rom48k |> .value, char sp2 + 2 )
+                        --( cpu.env |> mem16 sp2 spectrum.rom48k |> .value, char sp2 + 2 )
+                        ( cpu.env |> mem16 (sp2 |> toInt) spectrum.rom48k |> .value, sp2 |> incrementBy2 )
 
                     else
                         ( pc2, sp2 )
@@ -1199,10 +1202,10 @@ doLoad cpu z80rom tape =
         let
             initial = {
                 p = tape.tapePos.position,
-                ix = cpu.main.ix,
+                ix = cpu.main.ix |> toInt,
                 de = cpu.main |> get_de,
-                h = cpu.main.hl |> shiftRightBy 8,
-                l = cpu.main.hl |> Bitwise.and 0xFF,
+                h = cpu.main.hl |> top8Bits,
+                l = cpu.main.hl |> lower8Bits,
                 a = cpu.flags.a,
                 f = cpu.flags |> get_flags,
                 rf = -1,

@@ -3,6 +3,7 @@ module Group90Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeSingleInstruction)
+import Z80Address exposing (fromInt, toInt)
 import Z80Env exposing (setMem)
 import Z80Rom
 
@@ -17,7 +18,7 @@ suite =
             Z80.constructor
 
         z80 =
-            { old_z80 | pc = addr }
+            { old_z80 | pc = addr |> fromInt }
 
         flags =
             z80.flags
@@ -44,12 +45,12 @@ suite =
                         new_z80 =
                             executeSingleInstruction z80rom
                                 { z80
-                                    | env = { new_env | sp = 0xFF77 }
+                                    | env = { new_env | sp = 0xFF77 |> fromInt }
                                     , flags = { flags | a = 0x76 }
-                                    , main = { z80main | hl = 0x5080, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                                    , main = { z80main | hl = 0x5080 |> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 1, a = 0x26 } { pc = new_z80.pc, a = new_z80.flags.a }
+                    Expect.equal { pc = addr + 1, a = 0x26 } { pc = new_z80.pc |> toInt, a = new_z80.flags.a }
             , test "SUB IXH" <|
                 \_ ->
                     let
@@ -61,12 +62,12 @@ suite =
                         new_z80 =
                             executeSingleInstruction z80rom
                                 { z80
-                                    | env = { new_env | sp = 0xFF77 }
+                                    | env = { new_env | sp = 0xFF77 |> fromInt }
                                     , flags = { flags | a = 0x76 }
-                                    , main = { z80main | ix = 0x5052, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                                    , main = { z80main | ix = 0x5052 |> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 2, a = 0x26 } { pc = new_z80.pc, a = new_z80.flags.a }
+                    Expect.equal { pc = addr + 2, a = 0x26 } { pc = new_z80.pc |> toInt, a = new_z80.flags.a }
             , test "SUB IYH" <|
                 \_ ->
                     let
@@ -78,12 +79,12 @@ suite =
                         new_z80 =
                             executeSingleInstruction z80rom
                                 { z80
-                                    | env = { new_env | sp = 0xFF77 }
+                                    | env = { new_env | sp = 0xFF77 |> fromInt }
                                     , flags = { flags | a = 0x76 }
-                                    , main = { z80main | iy = 0x5052, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                                    , main = { z80main | iy = 0x5052 |> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 2, a = 0x26 } { pc = new_z80.pc, a = new_z80.flags.a }
+                    Expect.equal { pc = addr + 2, a = 0x26 } { pc = new_z80.pc |> toInt, a = new_z80.flags.a }
             ]
         , describe "0x95 SUB L"
             [ test "SUB L" <|
@@ -96,12 +97,12 @@ suite =
                         new_z80 =
                             executeSingleInstruction z80rom
                                 { z80
-                                    | env = { new_env | sp = 0xFF77 }
+                                    | env = { new_env | sp = 0xFF77 |> fromInt }
                                     , flags = { flags | a = 0x76 }
-                                    , main = { z80main | hl = 0x3050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                                    , main = { z80main | hl = 0x3050 |> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 1, a = 0x26 } { pc = new_z80.pc, a = new_z80.flags.a }
+                    Expect.equal { pc = addr + 1, a = 0x26 } { pc = new_z80.pc |> toInt, a = new_z80.flags.a }
             , test "SUB IXL" <|
                 \_ ->
                     let
@@ -113,12 +114,12 @@ suite =
                         new_z80 =
                             executeSingleInstruction z80rom
                                 { z80
-                                    | env = { new_env | sp = 0xFF77 }
+                                    | env = { new_env | sp = 0xFF77 |> fromInt }
                                     , flags = { flags | a = 0x76 }
-                                    , main = { z80main | ix = 0x5052, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                                    , main = { z80main | ix = 0x5052 |> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 2, a = 0x24 } { pc = new_z80.pc, a = new_z80.flags.a }
+                    Expect.equal { pc = addr + 2, a = 0x24 } { pc = new_z80.pc |> toInt, a = new_z80.flags.a }
             , test "SUB IYL" <|
                 \_ ->
                     let
@@ -130,12 +131,12 @@ suite =
                         new_z80 =
                             executeSingleInstruction z80rom
                                 { z80
-                                    | env = { new_env | sp = 0xFF77 }
+                                    | env = { new_env | sp = 0xFF77 |> fromInt }
                                     , flags = { flags | a = 0x76 }
-                                    , main = { z80main | iy = 0x2050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                                    , main = { z80main | iy = 0x2050 |> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 2, a = 0x26 } { pc = new_z80.pc, a = new_z80.flags.a }
+                    Expect.equal { pc = addr + 2, a = 0x26 } { pc = new_z80.pc |> toInt, a = new_z80.flags.a }
             ]
         , describe "0x96 SUB (HL)"
             [ test "SUB (HL)" <|
@@ -149,16 +150,15 @@ suite =
                         new_z80 =
                             executeSingleInstruction z80rom
                                 { z80
-                                    | env = { new_env | sp = 0xFF77 }
+                                    | env = { new_env | sp = 0xFF77 |> fromInt }
                                     , flags = { flags | a = 0x76 }
-                                    , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                                    , main = { z80main | hl = 0x5050 |> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 1, a = 0x65 } { pc = new_z80.pc, a = new_z80.flags.a }
+                    Expect.equal { pc = addr + 1, a = 0x65 } { pc = new_z80.pc |> toInt, a = new_z80.flags.a }
             , test "0xDD 0x96 0x01 SUB (IX + n)" <|
                 \_ ->
                     let
-
                         new_env =
                             z80env
                                 |> setMem addr 0xDD
@@ -169,16 +169,15 @@ suite =
                         new_z80 =
                             executeSingleInstruction z80rom
                                 { z80
-                                    | env = { new_env | sp = 0xFF77 }
+                                    | env = { new_env | sp = 0xFF77 |> fromInt }
                                     , flags = { flags | a = 0x76 }
-                                    , main = { z80main | ix = 0x5052, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                                    , main = { z80main | ix = 0x5052 |> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 3, a = 0x65 } { pc = new_z80.pc, a = new_z80.flags.a }
+                    Expect.equal { pc = addr + 3, a = 0x65 } { pc = new_z80.pc |> toInt, a = new_z80.flags.a }
             , test "0xFD 0x96 0x01 SUB (IY + n)" <|
                 \_ ->
                     let
-
                         new_env =
                             z80env
                                 |> setMem addr 0xFD
@@ -189,32 +188,13 @@ suite =
                         new_z80 =
                             executeSingleInstruction z80rom
                                 { z80
-                                    | env = { new_env | sp = 0xFF77 }
+                                    | env = { new_env | sp = 0xFF77 |> fromInt }
                                     , flags = { flags | a = 0x76 }
-                                    , main = { z80main | iy = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                                    , main = { z80main | iy = 0x5050 |> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 3, a = 0x65 } { pc = new_z80.pc, a = new_z80.flags.a }
+                    Expect.equal { pc = addr + 3, a = 0x65 } { pc = new_z80.pc |> toInt, a = new_z80.flags.a }
             ]
-
-        --, describe "8 bit loads"
-        --    [ test "0x87 ADD A,A" <|
-        --        \_ ->
-        --            let
-        --                new_env =
-        --                    z80env
-        --                        |> setMem addr 0x87
-        --
-        --                new_z80 =
-        --                    execute_instruction z80rom
-        --                        { z80
-        --                            | env = new_env
-        --                            , flags = { flags | a = 0x02 }
-        --                            , main = { z80main | hl = 0x6545 }
-        --                        }
-        --            in
-        --            Expect.equal ( addr + 1, 0x04 ) ( new_z80.pc, new_z80.flags.a )
-        --    ]
         , describe "0x9C SBC H"
             [ test "SBC H" <|
                 \_ ->
@@ -226,12 +206,12 @@ suite =
                         new_z80 =
                             executeSingleInstruction z80rom
                                 { z80
-                                    | env = { new_env | sp = 0xFF77 }
+                                    | env = { new_env | sp = 0xFF77 |> fromInt }
                                     , flags = { flags | a = 0x76 }
-                                    , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                                    , main = { z80main | hl = 0x5050 |> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 1, a = 0x26 } { pc = new_z80.pc, a = new_z80.flags.a }
+                    Expect.equal { pc = addr + 1, a = 0x26 } { pc = new_z80.pc |> toInt, a = new_z80.flags.a }
             , test "SBC IXH" <|
                 \_ ->
                     let
@@ -243,12 +223,12 @@ suite =
                         new_z80 =
                             executeSingleInstruction z80rom
                                 { z80
-                                    | env = { new_env | sp = 0xFF77 }
+                                    | env = { new_env | sp = 0xFF77 |> fromInt }
                                     , flags = { flags | a = 0x76 }
-                                    , main = { z80main | ix = 0x5052, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                                    , main = { z80main | ix = 0x5052 |> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 2, a = 0x26 } { pc = new_z80.pc, a = new_z80.flags.a }
+                    Expect.equal { pc = addr + 2, a = 0x26 } { pc = new_z80.pc |> toInt, a = new_z80.flags.a }
             , test "SBC IYH" <|
                 \_ ->
                     let
@@ -260,12 +240,12 @@ suite =
                         new_z80 =
                             executeSingleInstruction z80rom
                                 { z80
-                                    | env = { new_env | sp = 0xFF77 }
+                                    | env = { new_env | sp = 0xFF77 |> fromInt }
                                     , flags = { flags | a = 0x76 }
-                                    , main = { z80main | iy = 0x5054, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                                    , main = { z80main | iy = 0x5054 |> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 2, a = 0x26 } { pc = new_z80.pc, a = new_z80.flags.a }
+                    Expect.equal { pc = addr + 2, a = 0x26 } { pc = new_z80.pc |> toInt, a = new_z80.flags.a }
             ]
         , describe "0x9D SBC L"
             [ test "SBC L" <|
@@ -278,12 +258,12 @@ suite =
                         new_z80 =
                             executeSingleInstruction z80rom
                                 { z80
-                                    | env = { new_env | sp = 0xFF77 }
+                                    | env = { new_env | sp = 0xFF77 |> fromInt }
                                     , flags = { flags | a = 0x76 }
-                                    , main = { z80main | hl = 0x2050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                                    , main = { z80main | hl = 0x2050 |> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 1, a = 0x26 } { pc = new_z80.pc, a = new_z80.flags.a }
+                    Expect.equal { pc = addr + 1, a = 0x26 } { pc = new_z80.pc |> toInt, a = new_z80.flags.a }
             , test "SBC IXL" <|
                 \_ ->
                     let
@@ -295,12 +275,12 @@ suite =
                         new_z80 =
                             executeSingleInstruction z80rom
                                 { z80
-                                    | env = { new_env | sp = 0xFF77 }
+                                    | env = { new_env | sp = 0xFF77 |> fromInt }
                                     , flags = { flags | a = 0x76 }
-                                    , main = { z80main | ix = 0x5052, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                                    , main = { z80main | ix = 0x5052 |> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 2, a = 0x24 } { pc = new_z80.pc, a = new_z80.flags.a }
+                    Expect.equal { pc = addr + 2, a = 0x24 } { pc = new_z80.pc |> toInt, a = new_z80.flags.a }
             , test "SBC IYL" <|
                 \_ ->
                     let
@@ -312,12 +292,12 @@ suite =
                         new_z80 =
                             executeSingleInstruction z80rom
                                 { z80
-                                    | env = { new_env | sp = 0xFF77 }
+                                    | env = { new_env | sp = 0xFF77 |> fromInt }
                                     , flags = { flags | a = 0x76 }
-                                    , main = { z80main | iy = 0x2050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                                    , main = { z80main | iy = 0x2050 |> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 2, a = 0x26 } { pc = new_z80.pc, a = new_z80.flags.a }
+                    Expect.equal { pc = addr + 2, a = 0x26 } { pc = new_z80.pc |> toInt, a = new_z80.flags.a }
             ]
         , describe "0x9E SBC (HL)"
             [ test "SBC (HL)" <|
@@ -331,12 +311,12 @@ suite =
                         new_z80 =
                             executeSingleInstruction z80rom
                                 { z80
-                                    | env = { new_env | sp = 0xFF77 }
+                                    | env = { new_env | sp = 0xFF77 |> fromInt }
                                     , flags = { flags | a = 0x76, ff = 0x0100 }
-                                    , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                                    , main = { z80main | hl = 0x5050 |> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 1, a = 0x64 } { pc = new_z80.pc, a = new_z80.flags.a }
+                    Expect.equal { pc = addr + 1, a = 0x64 } { pc = new_z80.pc |> toInt, a = new_z80.flags.a }
             , test "0xDD 0x9E SBC (IX + n)" <|
                 \_ ->
                     let
@@ -350,12 +330,12 @@ suite =
                         new_z80 =
                             executeSingleInstruction z80rom
                                 { z80
-                                    | env = { new_env | sp = 0xFF77 }
+                                    | env = { new_env | sp = 0xFF77 |> fromInt }
                                     , flags = { flags | a = 0x76, ff = 0x0100 }
-                                    , main = { z80main | ix = 0x5052, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                                    , main = { z80main | ix = 0x5052 |> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 3, a = 0x64 } { pc = new_z80.pc, a = new_z80.flags.a }
+                    Expect.equal { pc = addr + 3, a = 0x64 } { pc = new_z80.pc |> toInt, a = new_z80.flags.a }
             , test "0xFD 0x9E 0x01 SBC (IY + n)" <|
                 \_ ->
                     let
@@ -369,11 +349,11 @@ suite =
                         new_z80 =
                             executeSingleInstruction z80rom
                                 { z80
-                                    | env = { new_env | sp = 0xFF77 }
+                                    | env = { new_env | sp = 0xFF77 |> fromInt }
                                     , flags = { flags | a = 0x76, ff = 0x0100 }
-                                    , main = { z80main | iy = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                                    , main = { z80main | iy = 0x5050 |> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 3, a = 0x64 } { pc = new_z80.pc, a = new_z80.flags.a }
+                    Expect.equal { pc = addr + 3, a = 0x64 } { pc = new_z80.pc |> toInt, a = new_z80.flags.a }
             ]
         ]
