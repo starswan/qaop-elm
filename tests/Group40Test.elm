@@ -3,6 +3,7 @@ module Group40Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (execute_instruction)
+import Z80Address exposing (fromInt, toInt)
 import Z80Env exposing (mem, setMem)
 import Z80Rom
 
@@ -17,7 +18,7 @@ suite =
             Z80.constructor
 
         z80 =
-            { old_z80 | pc = addr }
+            { old_z80 | pc = addr |> fromInt }
 
         flags =
             z80.flags
@@ -45,10 +46,10 @@ suite =
                             execute_instruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | hl = 0x6545, c = 0x76 }
+                                    , main = { z80main | hl = 0x6545 |> fromInt, c = 0x76 }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x76 ) ( new_z80.pc, new_z80.main.b )
+                    Expect.equal ( addr + 1, 0x76 ) ( new_z80.pc |> toInt, new_z80.main.b )
             ]
         , describe "0x44 LD B,H"
             [ test "LD B,H" <|
@@ -62,10 +63,10 @@ suite =
                             execute_instruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | hl = 0x6545, c = 0x76 }
+                                    , main = { z80main | hl = 0x6545 |> fromInt, c = 0x76 }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x65 ) ( new_z80.pc, new_z80.main.b )
+                    Expect.equal ( addr + 1, 0x65 ) ( new_z80.pc |> toInt, new_z80.main.b )
             , test "0xDD 0x44 LD B,IXH" <|
                 \_ ->
                     let
@@ -78,10 +79,10 @@ suite =
                             execute_instruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | ix = 0x2398, hl = 0x6545, c = 0x76 }
+                                    , main = { z80main | ix = 0x2398 |> fromInt, hl = 0x6545 |> fromInt, c = 0x76 }
                                 }
                     in
-                    Expect.equal ( addr + 2, 0x23 ) ( new_z80.pc, new_z80.main.b )
+                    Expect.equal ( addr + 2, 0x23 ) ( new_z80.pc |> toInt, new_z80.main.b )
             , test "0xFD 0x44 LD B,IYH" <|
                 \_ ->
                     let
@@ -94,10 +95,10 @@ suite =
                             execute_instruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | iy = 0x2398, hl = 0x6545, c = 0x76 }
+                                    , main = { z80main | iy = 0x2398 |> fromInt, hl = 0x6545 |> fromInt, c = 0x76 }
                                 }
                     in
-                    Expect.equal ( addr + 2, 0x23 ) ( new_z80.pc, new_z80.main.b )
+                    Expect.equal ( addr + 2, 0x23 ) ( new_z80.pc |> toInt, new_z80.main.b )
             ]
         , describe "0x45 LD B,L"
             [ test "LD B,L" <|
@@ -111,10 +112,10 @@ suite =
                             execute_instruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | hl = 0x6545, c = 0x76 }
+                                    , main = { z80main | hl = 0x6545 |> fromInt, c = 0x76 }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x45 ) ( new_z80.pc, new_z80.main.b )
+                    Expect.equal ( addr + 1, 0x45 ) ( new_z80.pc |> toInt, new_z80.main.b )
             , test "0xDD 0x45 LD B,IXL" <|
                 \_ ->
                     let
@@ -127,10 +128,10 @@ suite =
                             execute_instruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | ix = 0x2398, hl = 0x6545, c = 0x76 }
+                                    , main = { z80main | ix = 0x2398 |> fromInt, hl = 0x6545 |> fromInt, c = 0x76 }
                                 }
                     in
-                    Expect.equal ( addr + 2, 0x98 ) ( new_z80.pc, new_z80.main.b )
+                    Expect.equal ( addr + 2, 0x98 ) ( new_z80.pc |> toInt, new_z80.main.b )
             , test "0xFD 0x45 LD B,IYL" <|
                 \_ ->
                     let
@@ -143,10 +144,10 @@ suite =
                             execute_instruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | iy = 0x2398, hl = 0x6545, c = 0x76 }
+                                    , main = { z80main | iy = 0x2398 |> fromInt, hl = 0x6545 |> fromInt, c = 0x76 }
                                 }
                     in
-                    Expect.equal ( addr + 2, 0x98 ) ( new_z80.pc, new_z80.main.b )
+                    Expect.equal ( addr + 2, 0x98 ) ( new_z80.pc |> toInt, new_z80.main.b )
             ]
         , describe "0x46 Ld B, (HL)"
             [ test "LD B,(HL)" <|
@@ -161,10 +162,10 @@ suite =
                             execute_instruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | b = 0x45, c = 0x46, hl = 0x4546 }
+                                    , main = { z80main | b = 0x45, c = 0x46, hl = 0x4546 |> fromInt }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x78 ) ( z80_after_01.pc, z80_after_01.main.b )
+                    Expect.equal ( addr + 1, 0x78 ) ( z80_after_01.pc |> toInt, z80_after_01.main.b )
             , test "0xDD46 - LD B,(IX+d)" <|
                 \_ ->
                     let
@@ -179,10 +180,10 @@ suite =
                             execute_instruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | b = 0x45, c = 0x46, ix = 0x4547 }
+                                    , main = { z80main | b = 0x45, c = 0x46, ix = 0x4547 |> fromInt }
                                 }
                     in
-                    Expect.equal ( addr + 3, 0x78 ) ( z80_after_01.pc, z80_after_01.main.b )
+                    Expect.equal ( addr + 3, 0x78 ) ( z80_after_01.pc |> toInt, z80_after_01.main.b )
             , test "0xFD46 - LD B,(IY+d)" <|
                 \_ ->
                     let
@@ -197,10 +198,10 @@ suite =
                             execute_instruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | b = 0x45, c = 0x46, iy = 0x4547 }
+                                    , main = { z80main | b = 0x45, c = 0x46, iy = 0x4547 |> fromInt }
                                 }
                     in
-                    Expect.equal ( addr + 3, 0x78 ) ( z80_after_01.pc, z80_after_01.main.b )
+                    Expect.equal ( addr + 3, 0x78 ) ( z80_after_01.pc |> toInt, z80_after_01.main.b )
             ]
         , describe "0x48 etc"
             [ test "0x48 LD C,B" <|
@@ -214,10 +215,10 @@ suite =
                             execute_instruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | hl = 0x6545, b = 0x76 }
+                                    , main = { z80main | hl = 0x6545 |> fromInt, b = 0x76 }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x76 ) ( new_z80.pc, new_z80.main.c )
+                    Expect.equal ( addr + 1, 0x76 ) ( new_z80.pc |> toInt, new_z80.main.c )
             , test "0x4C LD C,H" <|
                 \_ ->
                     let
@@ -229,10 +230,10 @@ suite =
                             execute_instruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | hl = 0x6545, c = 0x76 }
+                                    , main = { z80main | hl = 0x6545 |> fromInt, c = 0x76 }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x65 ) ( new_z80.pc, new_z80.main.c )
+                    Expect.equal ( addr + 1, 0x65 ) ( new_z80.pc |> toInt, new_z80.main.c )
             , test "0xDD 0x4C LD C,IXH" <|
                 \_ ->
                     let
@@ -245,10 +246,10 @@ suite =
                             execute_instruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | ix = 0x2398, hl = 0x6545, c = 0x76 }
+                                    , main = { z80main | ix = 0x2398 |> fromInt, hl = 0x6545 |> fromInt, c = 0x76 }
                                 }
                     in
-                    Expect.equal ( addr + 2, 0x23 ) ( new_z80.pc, new_z80.main.c )
+                    Expect.equal ( addr + 2, 0x23 ) ( new_z80.pc |> toInt, new_z80.main.c )
             , test "0xFD 0x4C LD C,IYH" <|
                 \_ ->
                     let
@@ -261,10 +262,10 @@ suite =
                             execute_instruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | iy = 0x2398, hl = 0x6545, c = 0x76 }
+                                    , main = { z80main | iy = 0x2398 |> fromInt, hl = 0x6545 |> fromInt, c = 0x76 }
                                 }
                     in
-                    Expect.equal ( addr + 2, 0x23 ) ( new_z80.pc, new_z80.main.c )
+                    Expect.equal ( addr + 2, 0x23 ) ( new_z80.pc |> toInt, new_z80.main.c )
             , test "0x4D LD C,L" <|
                 \_ ->
                     let
@@ -276,10 +277,10 @@ suite =
                             execute_instruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | hl = 0x6545, c = 0x76 }
+                                    , main = { z80main | hl = 0x6545 |> fromInt, c = 0x76 }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x45 ) ( new_z80.pc, new_z80.main.c )
+                    Expect.equal ( addr + 1, 0x45 ) ( new_z80.pc |> toInt, new_z80.main.c )
             , test "0xDD 0x4D LD C,IXL" <|
                 \_ ->
                     let
@@ -292,10 +293,10 @@ suite =
                             execute_instruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | ix = 0x2398, hl = 0x6545, c = 0x76 }
+                                    , main = { z80main | ix = 0x2398 |> fromInt, hl = 0x6545 |> fromInt, c = 0x76 }
                                 }
                     in
-                    Expect.equal ( addr + 2, 0x98 ) ( new_z80.pc, new_z80.main.c )
+                    Expect.equal ( addr + 2, 0x98 ) ( new_z80.pc |> toInt, new_z80.main.c )
             , test "0xFD 0x4D LD C,IYL" <|
                 \_ ->
                     let
@@ -308,10 +309,10 @@ suite =
                             execute_instruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | iy = 0x2398, hl = 0x6545, c = 0x76 }
+                                    , main = { z80main | iy = 0x2398 |> fromInt, hl = 0x6545 |> fromInt, c = 0x76 }
                                 }
                     in
-                    Expect.equal ( addr + 2, 0x98 ) ( new_z80.pc, new_z80.main.c )
+                    Expect.equal ( addr + 2, 0x98 ) ( new_z80.pc |> toInt, new_z80.main.c )
             , test "0x4E - LD C,(HL)" <|
                 \_ ->
                     let
@@ -324,10 +325,10 @@ suite =
                             execute_instruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | b = 0x45, c = 0x46, hl = 0x4546 }
+                                    , main = { z80main | b = 0x45, c = 0x46, hl = 0x4546 |> fromInt }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x78 ) ( z80_after_01.pc, z80_after_01.main.c )
+                    Expect.equal ( addr + 1, 0x78 ) ( z80_after_01.pc |> toInt, z80_after_01.main.c )
             , test "0xDD4E - LD C,(IX+d)" <|
                 \_ ->
                     let
@@ -342,10 +343,10 @@ suite =
                             execute_instruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | b = 0x45, c = 0x46, ix = 0x4547 }
+                                    , main = { z80main | b = 0x45, c = 0x46, ix = 0x4547 |> fromInt }
                                 }
                     in
-                    Expect.equal ( addr + 3, 0x78 ) ( z80_after_01.pc, z80_after_01.main.c )
+                    Expect.equal ( addr + 3, 0x78 ) ( z80_after_01.pc |> toInt, z80_after_01.main.c )
             , test "0xFD4E - LD C,(IY+d)" <|
                 \_ ->
                     let
@@ -360,9 +361,9 @@ suite =
                             execute_instruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | b = 0x45, c = 0x46, iy = 0x4545 }
+                                    , main = { z80main | b = 0x45, c = 0x46, iy = 0x4545 |> fromInt }
                                 }
                     in
-                    Expect.equal ( addr + 3, 0x78 ) ( z80_after_01.pc, z80_after_01.main.c )
+                    Expect.equal ( addr + 3, 0x78 ) ( z80_after_01.pc |> toInt, z80_after_01.main.c )
             ]
         ]
