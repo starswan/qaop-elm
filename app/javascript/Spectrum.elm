@@ -6,10 +6,11 @@ import Dict
 import Keyboard exposing (KeyEvent, Keyboard, update_keyboard)
 import SingleNoParams exposing (ex_af)
 import Tapfile exposing (Tapfile)
-import Utils exposing (char)
+import Utils exposing (char, shiftRightBy8)
 import Vector8
 import Z80 exposing (execute)
 import Z80Address exposing (Z80Address, incrementBy2, lower8Bits, toInt, top8Bits)
+import Z80Address exposing (incrementBy2, toInt)
 import Z80Debug exposing (debugLog)
 import Z80Env exposing (mem, mem16, reset_cpu_time)
 import Z80Flags exposing (c_FC, c_FZ, get_flags, set_flags)

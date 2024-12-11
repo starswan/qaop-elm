@@ -5,6 +5,7 @@ import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeSingleInstruction)
 import Z80Address exposing (fromInt, toInt)
+import Z80Address exposing (fromInt, toInt)
 import Z80Env exposing (mem, setMem)
 import Z80Rom
 
