@@ -2,149 +2,206 @@ module RegisterChange exposing (..)
 
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeIncrement)
+import TransformTypes exposing (InstructionDuration(..))
 import Utils exposing (shiftLeftBy8)
-import Z80Flags exposing (FlagRegisters)
+import Z80Flags exposing (FlagRegisters, adc, sbc, z80_add, z80_sub)
+import Z80Transform exposing (ChangeEnvOperation(..), ChangeEnvWithFlagsOperation(..), ChangeMainOperation(..), InstructionLength, Z80Operation(..))
 import Z80Types exposing (MainWithIndexRegisters, Z80, set_de_main)
 
 
 type RegisterChange
-    = ChangeRegisterCWithTime Int CpuTimeIncrement
-    | ChangeRegisterBC Int Int CpuTimeIncrement
+    = ChangeRegisterA Int
+    | ChangeRegisterBC Int Int
     | ChangeRegisterB Int
-    | ChangeRegisterDE Int Int CpuTimeIncrement
-    | ChangeRegisterEWithTime Int CpuTimeIncrement
-    | ChangeRegisterE Int
-    | ChangeRegisterHL Int CpuTimeIncrement
-    | ChangeRegisterIX Int CpuTimeIncrement
-    | ChangeRegisterIY Int CpuTimeIncrement
-    | ChangeRegisterD Int
-    | ChangeRegisterA Int
     | ChangeRegisterC Int
+    | ChangeRegisterC6TStates Int
+    | ChangeRegisterDE Int Int
+    | ChangeRegisterE6States Int
+    | ChangeRegisterE Int
+    | ChangeRegisterHL Int
+    | ChangeRegisterIX Int
+    | ChangeRegisterIY Int
+    | ChangeRegisterD Int
+    | AddToRegisterA Int
+    | AdcRegisterA Int
+    | SubRegisterA Int
+    | SbcRegisterA Int
     | ChangeRegisterH Int
+    | ChangeRegisterIXH Int
+    | ChangeRegisterIXL Int
+    | ChangeRegisterIYH Int
+    | ChangeRegisterIYL Int
     | ChangeRegisterL Int
     | PushedValue Int
-    | RegChangeNewSP Int CpuTimeIncrement
-    | IncrementIndirect Int CpuTimeIncrement
-    | DecrementIndirect Int CpuTimeIncrement
+    | RegChangeNewSP Int
+    | IncrementIndirect Int
+    | DecrementIndirect Int
     | RegisterChangeJump Int
-    | SetIndirect Int Int CpuTimeIncrement
+    | SetIndirect Int Int
     | ChangeRegisterDEAndHL Int Int
-    | Shifter0 Int CpuTimeIncrement
-    | Shifter1 Int CpuTimeIncrement
-    | Shifter2 Int CpuTimeIncrement
-    | Shifter3 Int CpuTimeIncrement
-    | Shifter4 Int CpuTimeIncrement
-    | Shifter5 Int CpuTimeIncrement
-    | Shifter6 Int CpuTimeIncrement
-    | Shifter7 Int CpuTimeIncrement
+    | Shifter0 Int
+    | Shifter1 Int
+    | Shifter2 Int
+    | Shifter3 Int
+    | Shifter4 Int
+    | Shifter5 Int
+    | Shifter6 Int
+    | Shifter7 Int
 
 
 type RegisterChangeApplied
-    = MainRegsApplied MainWithIndexRegisters
-    | MainRegsWithTimeApplied MainWithIndexRegisters CpuTimeIncrement
-    | FlagRegsApplied FlagRegisters
-    | PushedValueApplied Int
-    | NewSPApplied Int CpuTimeIncrement
-    | IncrementIndirectApplied Int CpuTimeIncrement
-    | DecrementIndirectApplied Int CpuTimeIncrement
+    = FlagRegsApplied FlagRegisters
+    | IncrementIndirectApplied Int
+    | DecrementIndirectApplied Int
     | JumpApplied Int
-    | SetIndirectApplied Int Int CpuTimeIncrement
-    | Shifter0Applied Int CpuTimeIncrement
-    | Shifter1Applied Int CpuTimeIncrement
-    | Shifter2Applied Int CpuTimeIncrement
-    | Shifter3Applied Int CpuTimeIncrement
-    | Shifter4Applied Int CpuTimeIncrement
-    | Shifter5Applied Int CpuTimeIncrement
-    | Shifter6Applied Int CpuTimeIncrement
-    | Shifter7Applied Int CpuTimeIncrement
+    | OperationApplied Z80Operation
+    | OperationWithDurationApplied Z80Operation InstructionDuration
 
 
 applyRegisterChange : RegisterChange -> FlagRegisters -> MainWithIndexRegisters -> RegisterChangeApplied
-applyRegisterChange change z80_flags main =
+applyRegisterChange change z80_flags z80_main =
     case change of
-        ChangeRegisterCWithTime int time ->
-            MainRegsWithTimeApplied { main | c = int } time
+        ChangeRegisterC6TStates int ->
+            OperationWithDurationApplied (ChangeMain (ChangeCRegister int)) SixTStates
 
-        ChangeRegisterBC b_value c_value time ->
-            MainRegsWithTimeApplied { main | b = b_value, c = c_value } time
+        ChangeRegisterBC b_value c_value ->
+            OperationWithDurationApplied (ChangeMain (ChangeRegisterBAndC b_value c_value)) SixTStates
 
-        ChangeRegisterDE d_value e_value time ->
-            MainRegsWithTimeApplied { main | d = d_value, e = e_value } time
+        ChangeRegisterDE d_value e_value ->
+            OperationWithDurationApplied (ChangeMain (ChangeRegisterDAndE d_value e_value)) SixTStates
 
-        ChangeRegisterEWithTime int time ->
-            MainRegsWithTimeApplied { main | e = int } time
+        ChangeRegisterE6States int ->
+            OperationWithDurationApplied (ChangeMain (ChangeERegister int)) SixTStates
 
-        ChangeRegisterHL int time ->
-            MainRegsWithTimeApplied { main | hl = int } time
+        ChangeRegisterHL int ->
+            OperationWithDurationApplied (ChangeMain (ChangeHLRegister int)) SixTStates
 
-        ChangeRegisterIX int cpuTimeIncrement ->
-            MainRegsWithTimeApplied { main | ix = int } cpuTimeIncrement
+        ChangeRegisterIX int ->
+            OperationWithDurationApplied (ChangeMain (ChangeIXRegister int)) SixTStates
 
-        ChangeRegisterIY int cpuTimeIncrement ->
-            MainRegsWithTimeApplied { main | iy = int } cpuTimeIncrement
+        ChangeRegisterIY int ->
+            OperationWithDurationApplied (ChangeMain (ChangeIYRegister int)) SixTStates
 
         ChangeRegisterB int ->
-            MainRegsApplied { main | b = int }
+            OperationApplied (ChangeMain (ChangeBRegister int))
 
         ChangeRegisterD int ->
-            MainRegsApplied { main | d = int }
+            OperationApplied (ChangeMain (ChangeDRegister int))
 
         ChangeRegisterA int ->
             FlagRegsApplied { z80_flags | a = int }
 
+        AddToRegisterA value ->
+            FlagRegsApplied (z80_flags |> z80_add value)
+
+        AdcRegisterA value ->
+            FlagRegsApplied (z80_flags |> adc value)
+
+        SubRegisterA value ->
+            FlagRegsApplied (z80_flags |> z80_sub value)
+
+        SbcRegisterA value ->
+            FlagRegsApplied (z80_flags |> sbc value)
+
         ChangeRegisterE int ->
-            MainRegsApplied { main | e = int }
+            OperationApplied (ChangeMain (ChangeERegister int))
 
         ChangeRegisterC int ->
-            MainRegsApplied { main | c = int }
+            OperationApplied (ChangeMain (ChangeCRegister int))
 
         ChangeRegisterH int ->
-            MainRegsApplied { main | hl = Bitwise.or (Bitwise.and main.hl 0xFF) (shiftLeftBy8 int) }
+            OperationApplied (ChangeMain (ChangeHRegister int))
+
+        ChangeRegisterIXH int ->
+            OperationApplied (ChangeMain (ChangeIXHRegister int))
+
+        ChangeRegisterIXL int ->
+            OperationApplied (ChangeMain (ChangeIXLRegister int))
+
+        ChangeRegisterIYL int ->
+            --MainRegsApplied { z80_main | iy = Bitwise.or (Bitwise.and z80_main.iy 0xFF00) int }
+            OperationApplied (ChangeMain (ChangeIYLRegister int))
+        ChangeRegisterIYH int ->
+            --MainRegsApplied { z80_main | iy = Bitwise.or (Bitwise.and z80_main.iy 0xFF) (shiftLeftBy8 int) }
+            OperationApplied (ChangeMain (ChangeIYHRegister int))
 
         ChangeRegisterL int ->
-            MainRegsApplied { main | hl = Bitwise.or (Bitwise.and main.hl 0xFF00) int }
+            OperationApplied (ChangeMain (ChangeLRegister int))
 
         PushedValue int ->
-            PushedValueApplied int
+            OperationApplied (ChangeEnv (PushValue int))
 
-        RegChangeNewSP int cpuTimeIncrement ->
-            NewSPApplied int cpuTimeIncrement
+        RegChangeNewSP int ->
+            OperationApplied (ChangeEnv (ChangeSPRegister int))
 
-        IncrementIndirect int cpuTimeIncrement ->
-            IncrementIndirectApplied int cpuTimeIncrement
+        IncrementIndirect int ->
+            IncrementIndirectApplied int
 
-        DecrementIndirect int cpuTimeIncrement ->
-            DecrementIndirectApplied int cpuTimeIncrement
+        DecrementIndirect int ->
+            DecrementIndirectApplied int
 
         RegisterChangeJump int ->
             JumpApplied int
 
-        SetIndirect addr value cpuTimeIncrement ->
-            SetIndirectApplied addr value cpuTimeIncrement
+        SetIndirect addr value ->
+            OperationWithDurationApplied (ChangeEnv (Store8BitMemoryValue addr value)) SevenTStates
 
         ChangeRegisterDEAndHL de hl ->
-            MainRegsApplied ({ main | hl = hl } |> set_de_main de)
+            --MainRegsApplied ({ z80_main | hl = hl } |> set_de_main de)
+            OperationApplied (ChangeMain (ChangeMainDEAndHL de hl))
 
-        Shifter0 int cpuTimeIncrement ->
-            Shifter0Applied int cpuTimeIncrement
+        Shifter0 addr ->
+            if addr >= 0x4000 then
+                OperationWithDurationApplied (ChangeEnvWithFlags (ApplyShifter0 (addr - 0x4000))) SevenTStates
 
-        Shifter1 int cpuTimeIncrement ->
-            Shifter1Applied int cpuTimeIncrement
+            else
+                OperationApplied ChangeNothing
 
-        Shifter2 int cpuTimeIncrement ->
-            Shifter2Applied int cpuTimeIncrement
+        Shifter1 addr ->
+            if addr >= 0x4000 then
+                OperationWithDurationApplied (ChangeEnvWithFlags (ApplyShifter1 (addr - 0x4000))) SevenTStates
 
-        Shifter3 int cpuTimeIncrement ->
-            Shifter3Applied int cpuTimeIncrement
+            else
+                OperationApplied ChangeNothing
 
-        Shifter4 int cpuTimeIncrement ->
-            Shifter4Applied int cpuTimeIncrement
+        Shifter2 addr ->
+            if addr >= 0x4000 then
+                OperationWithDurationApplied (ChangeEnvWithFlags (ApplyShifter2 (addr - 0x4000))) SevenTStates
 
-        Shifter5 int cpuTimeIncrement ->
-            Shifter5Applied int cpuTimeIncrement
+            else
+                OperationApplied ChangeNothing
 
-        Shifter6 int cpuTimeIncrement ->
-            Shifter6Applied int cpuTimeIncrement
+        Shifter3 addr ->
+            if addr >= 0x4000 then
+                OperationWithDurationApplied (ChangeEnvWithFlags (ApplyShifter3 (addr - 0x4000))) SevenTStates
 
-        Shifter7 int cpuTimeIncrement ->
-            Shifter7Applied int cpuTimeIncrement
+            else
+                OperationApplied ChangeNothing
+
+        Shifter4 addr ->
+            if addr >= 0x4000 then
+                OperationWithDurationApplied (ChangeEnvWithFlags (ApplyShifter4 (addr - 0x4000))) SevenTStates
+
+            else
+                OperationApplied ChangeNothing
+
+        Shifter5 addr ->
+            if addr >= 0x4000 then
+                OperationWithDurationApplied (ChangeEnvWithFlags (ApplyShifter5 (addr - 0x4000))) SevenTStates
+
+            else
+                OperationApplied ChangeNothing
+
+        Shifter6 addr ->
+            if addr >= 0x4000 then
+                OperationWithDurationApplied (ChangeEnvWithFlags (ApplyShifter6 (addr - 0x4000))) SevenTStates
+
+            else
+                OperationApplied ChangeNothing
+
+        Shifter7 addr ->
+            if addr >= 0x4000 then
+                OperationWithDurationApplied (ChangeEnvWithFlags (ApplyShifter7 (addr - 0x4000))) SevenTStates
+
+            else
+                OperationApplied ChangeNothing
