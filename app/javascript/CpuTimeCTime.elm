@@ -79,12 +79,28 @@ cpuTimeIncrement4 =
     CpuTimeIncrement 4
 
 
-increment2 =
-    CpuTimeIncrement 2
+cpuTimeIncrement5 =
+    CpuTimeIncrement 5
 
 
-increment0 =
-    CpuTimeIncrement 0
+cpuTimeIncrement6 =
+    CpuTimeIncrement 6
+
+
+cpuTimeIncrement8 =
+    CpuTimeIncrement 8
+
+
+cpuTimeIncrement10 =
+    CpuTimeIncrement 10
+
+
+cpuTimeIncrement15 =
+    CpuTimeIncrement 15
+
+
+cpuTimeIncrement11 =
+    CpuTimeIncrement 11
 
 
 
