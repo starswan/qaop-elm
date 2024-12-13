@@ -1,7 +1,13 @@
 module TripleByte exposing (..)
 
+import Bitwise
+import CpuTimeCTime exposing (CpuTimeCTime, addCpuTimeTime)
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..), TriplePCIncrement(..))
+import Z80Env exposing (mem16)
+import Z80Rom exposing (Z80ROM)
+import Z80Transform exposing (ChangeEnvOperation(..), ChangeMainOperation(..), InstructionDuration(..), InstructionLength(..), Z80Operation(..), Z80Transform)
+import Z80Types exposing (Z80)
 
 
 type TripleByteChange
@@ -33,6 +39,92 @@ tripleByteWith16BitParam =
         , ( 0xC3, ( jp_nn, IncrementByThree ) )
         , ( 0xCD, ( call_0xCD, IncrementByThree ) )
         ]
+
+
+parseTriple16Param : Int -> Z80ROM -> Int -> Z80 -> Maybe Z80Transform
+parseTriple16Param instrCode rom48k paramOffset z80 =
+    case tripleByteWith16BitParam |> Dict.get instrCode of
+        Just ( f, pcInc ) ->
+            let
+                doubleParam =
+                    z80.env |> mem16 (Bitwise.and (z80.pc + paramOffset) 0xFFFF) rom48k
+
+                new_pc =
+                    case pcInc of
+                        IncrementByThree ->
+                            --Bitwise.and (z80.pc + 3) 0xFFFF
+                            ThreeByteInstruction
+
+                        IncrementByFour ->
+                            --Bitwise.and (z80.pc + 4) 0xFFFF
+                            FourByteInstruction
+            in
+            case f doubleParam.value of
+                NewBCRegister int ->
+                    Just { pcIncrement = new_pc, time = doubleParam.time, timeIncrement = TenTStates, operation = ChangeMain (ChangeBCRegister int) }
+
+                NewDERegister int ->
+                    Just { pcIncrement = new_pc, time = doubleParam.time, timeIncrement = TenTStates, operation = ChangeMain (ChangeDERegister int) }
+
+                NewHLRegister int ->
+                    Just { pcIncrement = new_pc, time = doubleParam.time, timeIncrement = TenTStates, operation = ChangeMain (ChangeHLRegister int) }
+
+                NewSPRegister int ->
+                    Just { pcIncrement = new_pc, time = doubleParam.time, timeIncrement = TenTStates, operation = ChangeEnv (ChangeSPRegister int) }
+
+                NewPCRegister int ->
+                    Just { pcIncrement = JumpInstruction int, time = doubleParam.time, timeIncrement = TenTStates, operation = ChangeEnv DoNothing }
+
+                CallImmediate int ->
+                    let
+                        pc_value =
+                            case pcInc of
+                                IncrementByThree ->
+                                    Bitwise.and (z80.pc + 3) 0xFFFF
+
+                                IncrementByFour ->
+                                    Bitwise.and (z80.pc + 4) 0xFFFF
+                    in
+                    Just { pcIncrement = JumpInstruction int, time = doubleParam.time, timeIncrement = TenTStates, operation = ChangeEnv (PushValue pc_value) }
+
+                NewIXRegister int ->
+                    Just { pcIncrement = new_pc, time = doubleParam.time, timeIncrement = TenTStates, operation = ChangeMain (ChangeIXRegister int) }
+
+                NewIYRegister int ->
+                    Just { pcIncrement = new_pc, time = doubleParam.time, timeIncrement = TenTStates, operation = ChangeMain (ChangeIYRegister int) }
+
+                NewHLIndirect int ->
+                    let
+                        env =
+                            z80.env
+
+                        value =
+                            { env | time = doubleParam.time } |> mem16 int rom48k
+                    in
+                    Just { pcIncrement = new_pc, time = value.time, timeIncrement = TenTStates, operation = ChangeMain (ChangeHLRegister value.value) }
+
+                NewIXIndirect int ->
+                    let
+                        env =
+                            z80.env
+
+                        value =
+                            { env | time = doubleParam.time } |> mem16 int rom48k
+                    in
+                    Just { pcIncrement = new_pc, time = value.time, timeIncrement = TenTStates, operation = ChangeMain (ChangeIXRegister value.value) }
+
+                NewIYIndirect int ->
+                    let
+                        env =
+                            z80.env
+
+                        value =
+                            { env | time = doubleParam.time } |> mem16 int rom48k
+                    in
+                    Just { pcIncrement = new_pc, time = value.time, timeIncrement = TenTStates, operation = ChangeMain (ChangeIYRegister value.value) }
+
+        Nothing ->
+            Nothing
 
 
 ld_bc_nn : Int -> TripleByteChange
