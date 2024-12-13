@@ -55,7 +55,8 @@ constructor =
         interrupts =
             InterruptRegisters 0 0 0 False
     in
-    Z80 z80env_constructor 0 main main_flags alternate alt_flags 0 interrupts
+    --Z80 z80env_constructor 0 main main_flags alternate alt_flags 0 interrupts
+    Z80 z80env_constructor 0 main main_flags alternate alt_flags 0 interrupts Dict.empty
 
 
 
