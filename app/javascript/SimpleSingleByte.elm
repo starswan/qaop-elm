@@ -1,95 +1,91 @@
 module SimpleSingleByte exposing (..)
 
 import Bitwise exposing (complement)
-import CpuTimeCTime exposing (CpuTimeIncrement(..), increment3, increment7)
+import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..))
 import Dict exposing (Dict)
-import PCIncrement exposing (PCIncrement(..))
-import RegisterChange exposing (RegisterChange(..), Shifter(..))
+import RegisterChange exposing (RegisterChange(..), RegisterChangeApplied(..), applyRegisterChange)
+import TransformTypes exposing (InstructionDuration(..))
 import Utils exposing (BitTest(..), bitMaskFromBit, shiftRightBy8)
+import Z80Flags exposing (FlagRegisters)
+import Z80Rom exposing (Z80ROM)
+import Z80Transform exposing (ChangeEnvOperation(..), ChangeMainOperation(..), ChangeMemoryOperation(..), InstructionLength(..), Z80Operation(..), Z80Transform)
 import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, Z80, get_bc, get_de)
 
 
-singleByteMainRegs : Dict Int ( MainWithIndexRegisters -> RegisterChange, PCIncrement )
+singleByteMainRegs : Dict Int (MainWithIndexRegisters -> RegisterChange)
 singleByteMainRegs =
     Dict.fromList
-        [ ( 0x03, ( inc_bc, IncrementByOne ) )
-        , ( 0x0B, ( dec_bc, IncrementByOne ) )
-        , ( 0x13, ( inc_de, IncrementByOne ) )
-        , ( 0x1B, ( dec_de, IncrementByOne ) )
-        , ( 0x23, ( inc_hl, IncrementByOne ) )
-        , ( 0xDD23, ( inc_ix, IncrementByTwo ) )
-        , ( 0xFD23, ( inc_iy, IncrementByTwo ) )
-        , ( 0x2B, ( dec_hl, IncrementByOne ) )
-        , ( 0xDD2B, ( dec_ix, IncrementByTwo ) )
-        , ( 0xFD2B, ( dec_iy, IncrementByTwo ) )
-        , ( 0x34, ( inc_indirect_hl, IncrementByOne ) )
-        , ( 0x35, ( dec_indirect_hl, IncrementByOne ) )
-        , ( 0x41, ( ld_b_c, IncrementByOne ) )
-        , ( 0x42, ( ld_b_d, IncrementByOne ) )
-        , ( 0x43, ( ld_b_e, IncrementByOne ) )
-        , ( 0x44, ( ld_b_h, IncrementByOne ) )
-        , ( 0x45, ( ld_b_l, IncrementByOne ) )
-        , ( 0x48, ( ld_c_b, IncrementByOne ) )
-        , ( 0x4A, ( ld_c_d, IncrementByOne ) )
-        , ( 0x4B, ( ld_c_e, IncrementByOne ) )
-        , ( 0x4C, ( ld_c_h, IncrementByOne ) )
-        , ( 0x4D, ( ld_c_l, IncrementByOne ) )
-        , ( 0x50, ( ld_d_b, IncrementByOne ) )
-        , ( 0x51, ( ld_d_c, IncrementByOne ) )
-        , ( 0x53, ( ld_d_e, IncrementByOne ) )
-        , ( 0x54, ( ld_d_h, IncrementByOne ) )
-        , ( 0x55, ( ld_d_l, IncrementByOne ) )
-        , ( 0x58, ( ld_e_b, IncrementByOne ) )
-        , ( 0x59, ( ld_e_c, IncrementByOne ) )
-        , ( 0x5A, ( ld_e_d, IncrementByOne ) )
-        , ( 0x5C, ( ld_e_h, IncrementByOne ) )
-        , ( 0x5D, ( ld_e_l, IncrementByOne ) )
-        , ( 0x60, ( ld_h_b, IncrementByOne ) )
-        , ( 0x61, ( ld_h_c, IncrementByOne ) )
-        , ( 0x62, ( ld_h_d, IncrementByOne ) )
-        , ( 0x63, ( ld_h_e, IncrementByOne ) )
-        , ( 0x65, ( ld_h_l, IncrementByOne ) )
-        , ( 0x68, ( ld_l_b, IncrementByOne ) )
-        , ( 0x69, ( ld_l_c, IncrementByOne ) )
-        , ( 0x6A, ( ld_l_d, IncrementByOne ) )
-        , ( 0x6B, ( ld_l_e, IncrementByOne ) )
-        , ( 0x6C, ( ld_l_h, IncrementByOne ) )
-        , ( 0x70, ( ld_indirect_hl_b, IncrementByOne ) )
-        , ( 0x71, ( ld_indirect_hl_c, IncrementByOne ) )
-        , ( 0x72, ( ld_indirect_hl_d, IncrementByOne ) )
-        , ( 0x73, ( ld_indirect_hl_e, IncrementByOne ) )
-        , ( 0x74, ( ld_indirect_hl_h, IncrementByOne ) )
-        , ( 0x75, ( ld_indirect_hl_l, IncrementByOne ) )
-        , ( 0x78, ( ld_a_b, IncrementByOne ) )
-        , ( 0x79, ( ld_a_c, IncrementByOne ) )
-        , ( 0x7A, ( ld_a_d, IncrementByOne ) )
-        , ( 0x7B, ( ld_a_e, IncrementByOne ) )
-        , ( 0x7C, ( ld_a_h, IncrementByOne ) )
-        , ( 0x7D, ( ld_a_l, IncrementByOne ) )
-        , ( 0xC5, ( push_bc, IncrementByOne ) )
-        , ( 0xD5, ( push_de, IncrementByOne ) )
-        , ( 0xE5, ( push_hl, IncrementByOne ) )
-        , ( 0xEB, ( ex_de_hl, IncrementByOne ) )
-        , ( 0xE9, ( jp_hl, IncrementByOne ) )
-        , ( 0xF9, ( ld_sp_hl, IncrementByOne ) )
-        , ( 0xCB06, ( rlc_indirect_hl, IncrementByTwo ) )
-        , ( 0xCB0E, ( rrc_indirect_hl, IncrementByTwo ) )
-        , ( 0xCB16, ( rl_indirect_hl, IncrementByTwo ) )
-        , ( 0xCB1E, ( rr_indirect_hl, IncrementByTwo ) )
-        , ( 0xCB26, ( sla_indirect_hl, IncrementByTwo ) )
-        , ( 0xCB2E, ( sra_indirect_hl, IncrementByTwo ) )
-        , ( 0xCB36, ( sll_indirect_hl, IncrementByTwo ) )
-        , ( 0xCB3E, ( srl_indirect_hl, IncrementByTwo ) )
-        , ( 0xCB80, ( resetBbit Bit_0, IncrementByTwo ) )
-        , ( 0xCB81, ( resetCbit Bit_0, IncrementByTwo ) )
-        , ( 0xCB88, ( resetBbit Bit_1, IncrementByTwo ) )
-        , ( 0xCB90, ( resetBbit Bit_2, IncrementByTwo ) )
-        , ( 0xCB98, ( resetBbit Bit_3, IncrementByTwo ) )
-        , ( 0xCBA0, ( resetBbit Bit_4, IncrementByTwo ) )
-        , ( 0xCBA8, ( resetBbit Bit_5, IncrementByTwo ) )
-        , ( 0xCBB0, ( resetBbit Bit_6, IncrementByTwo ) )
-        , ( 0xCBB8, ( resetBbit Bit_7, IncrementByTwo ) )
+        [ ( 0x03, inc_bc )
+        , ( 0x0B, dec_bc )
+        , ( 0x13, inc_de )
+        , ( 0x1B, dec_de )
+        , ( 0x23, inc_hl )
+        , ( 0x2B, dec_hl )
+        , ( 0x34, inc_indirect_hl )
+        , ( 0x35, dec_indirect_hl )
+        , ( 0x41, ld_b_c )
+        , ( 0x42, ld_b_d )
+        , ( 0x43, ld_b_e )
+        , ( 0x44, ld_b_h )
+        , ( 0x45, ld_b_l )
+        , ( 0x48, ld_c_b )
+        , ( 0x4A, ld_c_d )
+        , ( 0x4B, ld_c_e )
+        , ( 0x4C, ld_c_h )
+        , ( 0x4D, ld_c_l )
+        , ( 0x50, ld_d_b )
+        , ( 0x51, ld_d_c )
+        , ( 0x53, ld_d_e )
+        , ( 0x54, ld_d_h )
+        , ( 0x55, ld_d_l )
+        , ( 0x58, ld_e_b )
+        , ( 0x59, ld_e_c )
+        , ( 0x5A, ld_e_d )
+        , ( 0x5C, ld_e_h )
+        , ( 0x5D, ld_e_l )
+        , ( 0x60, ld_h_b )
+        , ( 0x61, ld_h_c )
+        , ( 0x62, ld_h_d )
+        , ( 0x63, ld_h_e )
+        , ( 0x65, ld_h_l )
+        , ( 0x68, ld_l_b )
+        , ( 0x69, ld_l_c )
+        , ( 0x6A, ld_l_d )
+        , ( 0x6B, ld_l_e )
+        , ( 0x6C, ld_l_h )
+        , ( 0x70, ld_indirect_hl_b )
+        , ( 0x71, ld_indirect_hl_c )
+        , ( 0x72, ld_indirect_hl_d )
+        , ( 0x73, ld_indirect_hl_e )
+        , ( 0x74, ld_indirect_hl_h )
+        , ( 0x75, ld_indirect_hl_l )
+        , ( 0x78, ld_a_b )
+        , ( 0x79, ld_a_c )
+        , ( 0x7A, ld_a_d )
+        , ( 0x7B, ld_a_e )
+        , ( 0x7C, ld_a_h )
+        , ( 0x7D, ld_a_l )
+        , ( 0xC5, push_bc )
+        , ( 0xD5, push_de )
+        , ( 0xE5, push_hl )
+
+        -- case 0xEB: v=HL; HL=D<<8|E; D=v>>>8; E=v&0xFF; break;
+        , ( 0xEB, \z80_main -> ChangeRegisterDEAndHL z80_main.hl (z80_main |> get_de) )
+
+        -- case 0xE9: PC=HL; break;
+        , ( 0xE9, \z80_main -> RegisterChangeJump z80_main.hl )
+        , ( 0xF9, ld_sp_hl )
         ]
+
+
+parseSimpleSingleByte : Dict Int (MainWithIndexRegisters -> RegisterChange) -> InstructionLength -> CpuTimeCTime -> Int -> Z80ROM -> Z80 -> Maybe Z80Transform
+parseSimpleSingleByte lookupTable increment instrTime instrCode _ z80 =
+    case lookupTable |> Dict.get instrCode of
+        Just mainRegFunc ->
+            Just (applyRegisterDelta increment instrTime (mainRegFunc z80.main) z80.main z80.flags)
+
+        Nothing ->
+            Nothing
 
 
 inc_bc : MainWithIndexRegisters -> RegisterChange
@@ -97,10 +93,10 @@ inc_bc z80_main =
     -- case 0x03: if(++C==256) {B=B+1&0xFF;C=0;} time+=2; break;
     ----{ z80 | main = { z80_main | b = reg_b, c = reg_c } } |> add_cpu_time 2
     if z80_main.c == 0xFF then
-        ChangeRegisterBC (Bitwise.and (z80_main.b + 1) 0xFF) 0 (CpuTimeIncrement 2)
+        ChangeRegisterBC (Bitwise.and (z80_main.b + 1) 0xFF) 0
 
     else
-        ChangeRegisterCWithTime (z80_main.c + 1) (CpuTimeIncrement 2)
+        ChangeRegisterC6TStates (z80_main.c + 1)
 
 
 dec_bc : MainWithIndexRegisters -> RegisterChange
@@ -112,56 +108,44 @@ dec_bc z80_main =
             z80_main.c - 1
     in
     if tmp_c < 0 then
-        ChangeRegisterBC (Bitwise.and (z80_main.b - 1) 0xFF) 0xFF (CpuTimeIncrement 2)
+        ChangeRegisterBC (Bitwise.and (z80_main.b - 1) 0xFF) 0xFF
 
     else
-        ChangeRegisterCWithTime tmp_c (CpuTimeIncrement 2)
+        ChangeRegisterC6TStates tmp_c
 
 
 inc_de : MainWithIndexRegisters -> RegisterChange
 inc_de z80_main =
     -- case 0x13: if(++E==256) {D=D+1&0xFF;E=0;} time+=2; break;
     let
-        new_e =
+        tmp_e =
             z80_main.e + 1
     in
-    if new_e == 256 then
-        ChangeRegisterDE (Bitwise.and (z80_main.d + 1) 0xFF) 0 (CpuTimeIncrement 2)
+    if tmp_e == 256 then
+        ChangeRegisterDE (Bitwise.and (z80_main.d + 1) 0xFF) 0
 
     else
-        ChangeRegisterE new_e
+        ChangeRegisterE6States tmp_e
 
 
 dec_de : MainWithIndexRegisters -> RegisterChange
 dec_de z80_main =
     -- case 0x1B: if(--E<0) D=D-1&(E=0xFF); time+=2; break;
     let
-        new_e =
+        tmp_e =
             z80_main.e - 1
     in
-    if new_e < 0 then
-        ChangeRegisterDE (Bitwise.and (z80_main.d - 1) 0xFF) 0xFF (CpuTimeIncrement 2)
+    if tmp_e < 0 then
+        ChangeRegisterDE (Bitwise.and (z80_main.d - 1) 0xFF) 0xFF
 
     else
-        ChangeRegisterE new_e
+        ChangeRegisterE6States tmp_e
 
 
 inc_hl : MainWithIndexRegisters -> RegisterChange
 inc_hl z80_main =
     -- case 0x23: HL=(char)(HL+1); time+=2; break;
-    ChangeRegisterHL (Bitwise.and (z80_main.hl + 1) 0xFFFF) (CpuTimeIncrement 2)
-
-
-inc_ix : MainWithIndexRegisters -> RegisterChange
-inc_ix z80_main =
-    -- case 0x23: xy=(char)(xy+1); time+=2; break;
-    ChangeRegisterIX (Bitwise.and (z80_main.ix + 1) 0xFFFF) (CpuTimeIncrement 2)
-
-
-inc_iy : MainWithIndexRegisters -> RegisterChange
-inc_iy z80_main =
-    -- case 0x23: xy=(char)(xy+1); time+=2; break;
-    ChangeRegisterIY (Bitwise.and (z80_main.iy + 1) 0xFFFF) (CpuTimeIncrement 2)
+    ChangeRegisterHL (Bitwise.and (z80_main.hl + 1) 0xFFFF)
 
 
 dec_hl : MainWithIndexRegisters -> RegisterChange
@@ -171,27 +155,7 @@ dec_hl z80_main =
         new_xy =
             Bitwise.and (z80_main.hl - 1) 0xFFFF
     in
-    ChangeRegisterHL new_xy (CpuTimeIncrement 2)
-
-
-dec_ix : MainWithIndexRegisters -> RegisterChange
-dec_ix z80_main =
-    -- case 0x2B: xy=(char)(xy-1); time+=2; break;
-    let
-        new_xy =
-            Bitwise.and (z80_main.ix - 1) 0xFFFF
-    in
-    ChangeRegisterIX new_xy (CpuTimeIncrement 2)
-
-
-dec_iy : MainWithIndexRegisters -> RegisterChange
-dec_iy z80_main =
-    -- case 0x2B: xy=(char)(xy-1); time+=2; break;
-    let
-        new_xy =
-            Bitwise.and (z80_main.iy - 1) 0xFFFF
-    in
-    ChangeRegisterIY new_xy (CpuTimeIncrement 2)
+    ChangeRegisterHL new_xy
 
 
 ld_b_c : MainWithIndexRegisters -> RegisterChange
@@ -339,7 +303,6 @@ ld_d_l z80_main =
 ld_h_b : MainWithIndexRegisters -> RegisterChange
 ld_h_b z80_main =
     -- case 0x60: HL=HL&0xFF|B<<8; break;
-    -- case 0x60: xy=xy&0xFF|B<<8; break;
     --z80 |> set_h_z80 z80.main.b ixiyhl
     ChangeRegisterH z80_main.b
 
@@ -460,163 +423,123 @@ push_bc : MainWithIndexRegisters -> RegisterChange
 push_bc z80_main =
     -- case 0xC5: push(B<<8|C); break;
     --z80 |> push (z80 |> get_bc)
-    let
-        bc =
-            z80_main |> get_bc
-
-        --pushed = z80.env |> z80_push bc
-    in
-    --{ z80 | env = pushed }
-    PushedValue bc
+    PushedValue (z80_main |> get_bc)
 
 
 push_de : MainWithIndexRegisters -> RegisterChange
 push_de z80_main =
     -- case 0xD5: push(D<<8|E); break;
     --z80 |> push (z80 |> get_de)
-    let
-        de =
-            z80_main |> get_de
-
-        --pushed = z80.env |> z80_push de
-    in
-    --{ z80 | env = pushed }
-    PushedValue de
+    PushedValue (z80_main |> get_de)
 
 
 push_hl : MainWithIndexRegisters -> RegisterChange
 push_hl z80_main =
     -- case 0xE5: push(HL); break;
     -- case 0xE5: push(xy); break;
-    --let
-    --    pushed =
-    --        z80.env |> z80_push (z80.main |> get_xy ixiyhl)
-    --in
-    ----{ z80 | env = pushed }
     PushedValue z80_main.hl
 
 
 ld_sp_hl : MainWithIndexRegisters -> RegisterChange
 ld_sp_hl z80_main =
     -- case 0xF9: SP=HL; time+=2; break;
-    RegChangeNewSP z80_main.hl (CpuTimeIncrement 2)
+    RegChangeNewSP z80_main.hl
 
 
 inc_indirect_hl : MainWithIndexRegisters -> RegisterChange
 inc_indirect_hl z80_main =
     -- case 0x34: v=inc(env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     -- case 0x34: {int a; v=inc(env.mem(a=getd(xy))); time+=4; env.mem(a,v); time+=3;} break;
-    IncrementIndirect z80_main.hl increment7
+    IncrementIndirect z80_main.hl
 
 
 dec_indirect_hl : MainWithIndexRegisters -> RegisterChange
 dec_indirect_hl z80_main =
     -- case 0x35: v=dec(env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     -- case 0x35: {int a; v=dec(env.mem(a=getd(xy))); time+=4; env.mem(a,v); time+=3;} break;
-    DecrementIndirect z80_main.hl increment7
-
-
-jp_hl : MainWithIndexRegisters -> RegisterChange
-jp_hl z80_main =
-    -- case 0xE9: PC=HL; break;
-    -- case 0xE9: PC=xy; break;
-    RegisterChangeJump z80_main.hl
+    DecrementIndirect z80_main.hl
 
 
 ld_indirect_hl_b : MainWithIndexRegisters -> RegisterChange
 ld_indirect_hl_b z80_main =
     -- case 0x70: env.mem(HL,B); time+=3; break;
     -- case 0x70: env.mem(getd(xy),B); time+=3; break;
-    SetIndirect z80_main.hl z80_main.b increment3
+    SetIndirect z80_main.hl z80_main.b
 
 
 ld_indirect_hl_c : MainWithIndexRegisters -> RegisterChange
 ld_indirect_hl_c z80_main =
     -- case 0x71: env.mem(HL,C); time+=3; break;
     -- case 0x71: env.mem(getd(xy),C); time+=3; break;
-    SetIndirect z80_main.hl z80_main.c increment3
+    SetIndirect z80_main.hl z80_main.c
 
 
 ld_indirect_hl_d : MainWithIndexRegisters -> RegisterChange
 ld_indirect_hl_d z80_main =
     -- case 0x72: env.mem(HL,D); time+=3; break;
     -- case 0x72: env.mem(getd(xy),D); time+=3; break;
-    SetIndirect z80_main.hl z80_main.d increment3
+    SetIndirect z80_main.hl z80_main.d
 
 
 ld_indirect_hl_e : MainWithIndexRegisters -> RegisterChange
 ld_indirect_hl_e z80_main =
     -- case 0x73: env.mem(HL,E); time+=3; break;
     -- case 0x73: env.mem(getd(xy),E); time+=3; break;
-    SetIndirect z80_main.hl z80_main.e increment3
+    SetIndirect z80_main.hl z80_main.e
 
 
 ld_indirect_hl_h : MainWithIndexRegisters -> RegisterChange
 ld_indirect_hl_h z80_main =
     -- case 0x74: env.mem(HL,HL>>>8); time+=3; break;
     -- case 0x74: env.mem(getd(xy),HL>>>8); time+=3; break;
-    SetIndirect z80_main.hl (z80_main.hl |> shiftRightBy8) increment3
+    SetIndirect z80_main.hl (z80_main.hl |> shiftRightBy8)
 
 
 ld_indirect_hl_l : MainWithIndexRegisters -> RegisterChange
 ld_indirect_hl_l z80_main =
     -- case 0x75: env.mem(HL,HL&0xFF); time+=3; break;
     -- case 0x75: env.mem(getd(xy),HL&0xFF); time+=3; break;
-    SetIndirect z80_main.hl (z80_main.hl |> Bitwise.and 0xFF) increment3
+    SetIndirect z80_main.hl (z80_main.hl |> Bitwise.and 0xFF)
 
 
-ex_de_hl : MainWithIndexRegisters -> RegisterChange
-ex_de_hl z80_main =
-    -- case 0xEB: v=HL; HL=D<<8|E; D=v>>>8; E=v&0xFF; break;
-    ChangeRegisterDEAndHL z80_main.hl (z80_main |> get_de)
+applyRegisterDelta : InstructionLength -> CpuTimeCTime -> RegisterChange -> MainWithIndexRegisters -> FlagRegisters -> Z80Transform
+applyRegisterDelta increment cpu_time z80changeData z80_main z80_flags =
+    case z80_main |> applyRegisterChange z80changeData z80_flags of
+        FlagRegsApplied new_flags ->
+            --{ z80 | pc = new_pc, flags = new_flags, env = { env | time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement4 }, interrupts = { interrupts | r = interrupts.r + 1 } }
+            { pcIncrement = increment, time = cpu_time, timeIncrement = FourTStates, operation = ChangeFlagRegisters new_flags }
 
+        JumpApplied int ->
+            --{ z80 | pc = int, env = { env | time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement4 }, interrupts = { interrupts | r = interrupts.r + 1 } }
+            { pcIncrement = JumpInstruction int, time = cpu_time, timeIncrement = FourTStates, operation = ChangeNothing }
 
-rlc_indirect_hl : MainWithIndexRegisters -> RegisterChange
-rlc_indirect_hl z80_main =
-    -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
-    RegisterChangeShifter Shifter0 z80_main.hl increment7
+        IncrementIndirectApplied addr ->
+            let
+                ram_addr =
+                    addr - 0x4000
+            in
+            if ram_addr >= 0 then
+                { pcIncrement = increment, time = cpu_time, timeIncrement = ElevenTStates, operation = ChangeMemory (IncrementMemory ram_addr) }
 
+            else
+                { pcIncrement = increment, time = cpu_time, timeIncrement = ElevenTStates, operation = ChangeNothing }
 
-rrc_indirect_hl : MainWithIndexRegisters -> RegisterChange
-rrc_indirect_hl z80_main =
-    -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
-    RegisterChangeShifter Shifter1 z80_main.hl increment7
+        DecrementIndirectApplied addr ->
+            let
+                ram_addr =
+                    addr - 0x4000
+            in
+            if ram_addr >= 0 then
+                { pcIncrement = increment, time = cpu_time, timeIncrement = SevenTStates, operation = ChangeMemory (DecrementMemory ram_addr) }
 
+            else
+                { pcIncrement = increment, time = cpu_time, timeIncrement = SevenTStates, operation = ChangeNothing }
 
-rl_indirect_hl : MainWithIndexRegisters -> RegisterChange
-rl_indirect_hl z80_main =
-    -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
-    RegisterChangeShifter Shifter2 z80_main.hl increment7
+        OperationApplied operation ->
+            { pcIncrement = increment, time = cpu_time, timeIncrement = FourTStates, operation = operation }
 
-
-rr_indirect_hl : MainWithIndexRegisters -> RegisterChange
-rr_indirect_hl z80_main =
-    -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
-    RegisterChangeShifter Shifter3 z80_main.hl increment7
-
-
-sla_indirect_hl : MainWithIndexRegisters -> RegisterChange
-sla_indirect_hl z80_main =
-    -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
-    RegisterChangeShifter Shifter4 z80_main.hl increment7
-
-
-sra_indirect_hl : MainWithIndexRegisters -> RegisterChange
-sra_indirect_hl z80_main =
-    -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
-    RegisterChangeShifter Shifter5 z80_main.hl increment7
-
-
-sll_indirect_hl : MainWithIndexRegisters -> RegisterChange
-sll_indirect_hl z80_main =
-    -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
-    RegisterChangeShifter Shifter6 z80_main.hl increment7
-
-
-srl_indirect_hl : MainWithIndexRegisters -> RegisterChange
-srl_indirect_hl z80_main =
-    -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
-    RegisterChangeShifter Shifter7 z80_main.hl increment7
+        OperationWithDurationApplied operation duration ->
+            { pcIncrement = increment, time = cpu_time, timeIncrement = duration, operation = operation }
 
 
 resetBbit : BitTest -> MainWithIndexRegisters -> RegisterChange
