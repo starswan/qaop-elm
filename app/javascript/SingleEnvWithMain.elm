@@ -1,13 +1,14 @@
 module SingleEnvWithMain exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, CpuTimeIncrement, addCpuTimeTime, addCpuTimeTimeInc, cpuTimeIncrement4, increment3)
+import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, CpuTimeIncrement, addCpuTimeTime, addCpuTimeTimeInc, increment3)
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
 import Utils exposing (shiftLeftBy8)
-import Z80Env exposing (Z80Env, addCpuTimeEnvInc, mem)
+import Z80Env exposing (Z80Env, mem)
 import Z80Flags exposing (BitTest(..), testBit)
 import Z80Rom exposing (Z80ROM)
+import Z80Transform exposing (ChangeMainOperation(..), InstructionDuration(..), InstructionLength(..), Z80Operation(..), Z80Transform)
 import Z80Types exposing (MainWithIndexRegisters, Z80)
 
 
@@ -44,121 +45,148 @@ singleEnvMainRegs =
         ]
 
 
-applySingleEnvMainChange : PCIncrement -> SingleEnvMainChange -> Z80 -> Z80
+parseSingleEnvMain : Int -> Z80ROM -> CpuTimeCTime -> Z80 -> Maybe Z80Transform
+parseSingleEnvMain instrCode rom48k instrTime z80 =
+
+        case singleEnvMainRegs |> Dict.get instrCode of
+            Just (f, pcInc) ->
+                let
+                    x = z80 |> applySingleEnvMainChange pcInc (f z80.main rom48k z80.env)
+                in
+                    Just x
+
+            Nothing ->
+                Nothing
+
+
+
+applySingleEnvMainChange : PCIncrement -> SingleEnvMainChange -> Z80 -> Z80Transform
 applySingleEnvMainChange pcInc z80changeData z80 =
     let
-        interrupts =
-            z80.interrupts
+        --interrupts =
+        --    z80.interrupts
 
-        env =
-            z80.env
+        --env =
+        --    z80.env
 
         new_pc =
             case pcInc of
                 IncrementByOne ->
-                    Bitwise.and (z80.pc + 1) 0xFFFF
+                    OneByteInstruction
 
+                --Bitwise.and (z80.pc + 1) 0xFFFF
+                --
                 IncrementByTwo ->
-                    Bitwise.and (z80.pc + 2) 0xFFFF
+                    TwoByteInstruction
+
+        --Bitwise.and (z80.pc + 2) 0xFFFF
     in
     case z80changeData of
         SingleEnvNewARegister int cpuTimeCTime ->
             let
-                env1 =
-                    { env | time = cpuTimeCTime } |> addCpuTimeEnvInc cpuTimeIncrement4
-
+                --    env1 =
+                --        { env | time = cpuTimeCTime } |> addCpuTimeEnvInc cpuTimeIncrement4
+                --
                 flags =
                     z80.flags
             in
-            { z80
-                | pc = new_pc
-                , flags = { flags | a = int }
-                , env = env1
-                , interrupts = { interrupts | r = interrupts.r + 1 }
-            }
+            --{ z80
+            --    | pc = new_pc
+            --    , flags = { flags | a = int }
+            --    , env = env1
+            --    , interrupts = { interrupts | r = interrupts.r + 1 }
+            --}
+            { pcIncrement = new_pc, time = cpuTimeCTime, timeIncrement = FourTStates, operation = ChangeFlagRegisters { flags | a = int } }
 
         SingleEnvNewBRegister int cpuTimeCTime ->
             let
-                env1 =
-                    { env | time = cpuTimeCTime } |> addCpuTimeEnvInc cpuTimeIncrement4
-
+                --env1 =
+                --    { env | time = cpuTimeCTime } |> addCpuTimeEnvInc cpuTimeIncrement4
                 main =
                     z80.main
             in
-            { z80
-                | pc = new_pc
-                , main = { main | b = int }
-                , env = env1
-                , interrupts = { interrupts | r = interrupts.r + 1 }
-            }
+            --{ z80
+            --    | pc = new_pc
+            --    , main = { main | b = int }
+            --    , env = env1
+            --    , interrupts = { interrupts | r = interrupts.r + 1 }
+            --}
+            { pcIncrement = new_pc, time = cpuTimeCTime, timeIncrement = FourTStates, operation = ChangeMain (ChangeBRegister int) }
 
         SingleEnvNewCRegister int cpuTimeCTime ->
             let
-                env1 =
-                    { env | time = cpuTimeCTime } |> addCpuTimeEnvInc cpuTimeIncrement4
+                --env1 =
+                --    { env | time = cpuTimeCTime } |> addCpuTimeEnvInc cpuTimeIncrement4
 
                 main =
                     z80.main
             in
-            { z80
-                | pc = new_pc
-                , main = { main | c = int }
-                , env = env1
-                , interrupts = { interrupts | r = interrupts.r + 1 }
-            }
+            --{ z80
+            --    | pc = new_pc
+            --    , main = { main | c = int }
+            --    , env = env1
+            --    , interrupts = { interrupts | r = interrupts.r + 1 }
+            --}
+            { pcIncrement = new_pc, time = cpuTimeCTime, timeIncrement = FourTStates, operation = ChangeMain (ChangeCRegister int) }
 
         SingleEnvNewDRegister int cpuTimeCTime ->
             let
-                env1 =
-                    { env | time = cpuTimeCTime } |> addCpuTimeEnvInc cpuTimeIncrement4
-
+                --env1 =
+                --    { env | time = cpuTimeCTime } |> addCpuTimeEnvInc cpuTimeIncrement4
                 main =
                     z80.main
             in
-            { z80
-                | pc = new_pc
-                , main = { main | d = int }
-                , env = env1
-                , interrupts = { interrupts | r = interrupts.r + 1 }
-            }
+            --{ z80
+            --    | pc = new_pc
+            --    , main = { main | d = int }
+            --    , env = env1
+            --    , interrupts = { interrupts | r = interrupts.r + 1 }
+            --}
+            { pcIncrement = new_pc, time = cpuTimeCTime, timeIncrement = FourTStates, operation = ChangeMain (ChangeDRegister int) }
 
         SingleEnvNewERegister int cpuTimeCTime ->
             let
-                env1 =
-                    { env | time = cpuTimeCTime } |> addCpuTimeEnvInc cpuTimeIncrement4
-
+                --env1 =
+                --    { env | time = cpuTimeCTime } |> addCpuTimeEnvInc cpuTimeIncrement4
                 main =
                     z80.main
             in
-            { z80
-                | pc = new_pc
-                , main = { main | e = int }
-                , env = env1
-                , interrupts = { interrupts | r = interrupts.r + 1 }
-            }
+            --{ z80
+            --    | pc = new_pc
+            --    , main = { main | e = int }
+            --    , env = env1
+            --    , interrupts = { interrupts | r = interrupts.r + 1 }
+            --}
+            { pcIncrement = new_pc, time = cpuTimeCTime, timeIncrement = FourTStates, operation = ChangeMain (ChangeERegister int) }
 
         SingleEnvNewHLRegister int cpuTimeCTime ->
             let
-                env1 =
-                    { env | time = cpuTimeCTime } |> addCpuTimeEnvInc cpuTimeIncrement4
+                --env1 =
+                --    { env | time = cpuTimeCTime } |> addCpuTimeEnvInc cpuTimeIncrement4
 
                 main =
                     z80.main
             in
-            { z80
-                | pc = new_pc
-                , main = { main | hl = int }
-                , env = env1
-                , interrupts = { interrupts | r = interrupts.r + 1 }
-            }
+            --{ z80
+            --    | pc = new_pc
+            --    , main = { main | hl = int }
+            --    , env = env1
+            --    , interrupts = { interrupts | r = interrupts.r + 1 }
+            --}
+            { pcIncrement = new_pc, time = cpuTimeCTime, timeIncrement = FourTStates, operation = ChangeMain (ChangeHLRegister int) }
 
         SingleBitTest bitTest intwithTime ->
-            { z80
-                | pc = new_pc
-                , env = { env | time = intwithTime.time }
-                , flags = z80.flags |> testBit bitTest intwithTime.value
-                , interrupts = { interrupts | r = interrupts.r + 1 }
-            }
+            let
+                --{ z80
+                --    | pc = new_pc
+                --    , env = { env | time = intwithTime.time }
+                --    , flags = z80.flags |> testBit bitTest intwithTime.value
+                --    , interrupts = { interrupts | r = interrupts.r + 1 }
+                --}
+                flags =
+                    z80.flags |> testBit bitTest intwithTime.value
+            in
+            { pcIncrement = new_pc, time = intwithTime.time, timeIncrement = FourTStates, operation = ChangeFlagRegisters flags }
 
 
 ld_a_indirect_bc : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange

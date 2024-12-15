@@ -1,11 +1,12 @@
 module SingleWith8BitParameter exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeIncrement, increment3)
+import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement, increment3)
 import Dict exposing (Dict)
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..))
 import Utils exposing (byte, shiftLeftBy8)
 import Z80Flags exposing (FlagRegisters, adc, sbc, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
+import Z80Transform exposing (ChangeMainOperation(..), InstructionDuration(..), InstructionLength(..), Z80Operation(..), Z80Transform)
 import Z80Types exposing (MainWithIndexRegisters, Z80)
 
 
@@ -19,11 +20,11 @@ singleWith8BitParam =
         ]
 
 
-doubleWithRegisters : Dict Int ((MainWithIndexRegisters -> Int -> DoubleWithRegisterChange), MediumPCIncrement)
+doubleWithRegisters : Dict Int ( MainWithIndexRegisters -> Int -> DoubleWithRegisterChange, MediumPCIncrement )
 doubleWithRegisters =
     Dict.fromList
-        [ ( 0x10, (djnz, IncreaseByTwo) )
-        , ( 0x36, (ld_indirect_hl_n, IncreaseByTwo) )
+        [ ( 0x10, ( djnz, IncreaseByTwo ) )
+        , ( 0x36, ( ld_indirect_hl_n, IncreaseByTwo ) )
         , ( 0x26, ( ld_h_n, IncreaseByTwo ) )
         , ( 0xDD26, ( ld_ix_h_n, IncreaseByThree ) )
         , ( 0xFD26, ( ld_iy_h_n, IncreaseByThree ) )
@@ -89,6 +90,48 @@ applySimple8BitChange change z80_main =
         NewERegister int ->
             { z80_main | e = int }
 
+
+applySimple8BitDelta : MediumPCIncrement -> CpuTimeCTime -> Single8BitChange -> Z80 -> Z80Transform
+applySimple8BitDelta pcInc cpu_time z80changeData tmp_z80 =
+    let
+        interrupts =
+            tmp_z80.interrupts
+
+        env =
+            tmp_z80.env
+
+        z80 =
+            { tmp_z80 | env = { env | time = cpu_time }, interrupts = { interrupts | r = interrupts.r + 1 } }
+
+        new_pc =
+            case pcInc of
+                IncreaseByTwo ->
+                    TwoByteInstruction
+
+                --Bitwise.and (z80.pc + 2) 0xFFFF
+                IncreaseByThree ->
+                    ThreeByteInstruction
+
+        --Bitwise.and (z80.pc + 3) 0xFFFF
+        --main =
+        --    z80.main |> applySimple8BitChange z80changeData
+    in
+    --{ z80 | pc = new_pc, main = main }
+    case z80changeData of
+        NewBRegister int ->
+            { pcIncrement = new_pc, time = cpu_time, timeIncrement = FourTStates, operation = ChangeMain (ChangeBRegister int) }
+
+        --{ z80_main | b = int }
+        NewCRegister int ->
+            { pcIncrement = new_pc, time = cpu_time, timeIncrement = FourTStates, operation = ChangeMain (ChangeCRegister int) }
+
+        NewDRegister int ->
+            { pcIncrement = new_pc, time = cpu_time, timeIncrement = FourTStates, operation = ChangeMain (ChangeDRegister int) }
+
+        NewERegister int ->
+            { pcIncrement = new_pc, time = cpu_time, timeIncrement = FourTStates, operation = ChangeMain (ChangeERegister int) }
+
+
 ld_b_n : Int -> Single8BitChange
 ld_b_n param =
     -- case 0x06: B=imm8(); break;
@@ -120,6 +163,7 @@ ld_h_n z80_main param =
     -- case 0x26: HL=HL&0xFF|imm8()<<8; break;
     Bitwise.or (param |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF) |> NewHLRegisterValue
 
+
 ld_ix_h_n : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
 ld_ix_h_n z80_main param =
     -- case 0x26: xy=xy&0xFF|imm8()<<8; break;
@@ -144,7 +188,7 @@ ld_ix_l_n z80_main param =
     Bitwise.or param (Bitwise.and z80_main.ix 0xFF00) |> NewIXRegisterValue
 
 
-ld_iy_l_n : MainWithIndexRegisters ->  Int -> DoubleWithRegisterChange
+ld_iy_l_n : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
 ld_iy_l_n z80_main param =
     -- case 0x2E: xy=xy&0xFF00|imm8(); break;
     Bitwise.or param (Bitwise.and z80_main.iy 0xFF00) |> NewIYRegisterValue
