@@ -34,8 +34,8 @@ triple16WithFlags =
         ]
 
 
-parseTriple16Flags : Int -> Z80ROM -> Int -> Z80 -> Maybe Z80Transform
-parseTriple16Flags instrCode rom48k paramOffset z80 =
+parseTriple16Flags : Int -> Int -> Z80ROM -> Z80 -> Maybe Z80Transform
+parseTriple16Flags instrCode  paramOffset rom48k z80 =
     case triple16WithFlags |> Dict.get instrCode of
         Just f ->
             let

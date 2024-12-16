@@ -378,8 +378,8 @@ execute_delta ct rom48k z80 =
                                     _ ->
                                         (ct.value,ct.time, 1)
       tripleMain = parseTripleMain paramOffset instrCode rom48k
-      triple16Flags = parseTriple16Flags instrCode rom48k paramOffset
-      triple16Param = parseTriple16Param instrCode rom48k paramOffset
+      triple16Flags = parseTriple16Flags instrCode paramOffset rom48k
+      triple16Param = parseTriple16Param instrCode paramOffset rom48k
       relJump = parseRelativeJump instrCode rom48k instrTime
       singleEnvMain = parseSingleEnvMain instrCode rom48k
       singleEnv = parseSingleEnv instrCode instrTime rom48k

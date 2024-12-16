@@ -41,8 +41,8 @@ tripleByteWith16BitParam =
         ]
 
 
-parseTriple16Param : Int -> Z80ROM -> Int -> Z80 -> Maybe Z80Transform
-parseTriple16Param instrCode rom48k paramOffset z80 =
+parseTriple16Param : Int -> Int -> Z80ROM -> Z80 -> Maybe Z80Transform
+parseTriple16Param instrCode  paramOffset rom48k z80 =
     case tripleByteWith16BitParam |> Dict.get instrCode of
         Just ( f, pcInc ) ->
             let
