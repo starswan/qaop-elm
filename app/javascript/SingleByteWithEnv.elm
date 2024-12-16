@@ -4,6 +4,7 @@ import Bitwise exposing (shiftRightBy)
 import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..))
 import Dict exposing (Dict)
 import Z80Env exposing (Z80Env, c_TIME_LIMIT)
+import Z80Rom exposing (Z80ROM)
 import Z80Transform exposing (ChangeEnvOperation(..), InstructionDuration(..), InstructionLength(..), Z80Operation(..), Z80Transform)
 import Z80Types exposing (Z80)
 
@@ -22,8 +23,8 @@ singleByteZ80Env =
         ]
 
 
-parseSingleEnv : Int -> CpuTimeCTime -> Z80 -> Maybe Z80Transform
-parseSingleEnv instrCode instrTime z80 =
+parseSingleEnv : Int -> CpuTimeCTime -> Z80ROM -> Z80 -> Maybe Z80Transform
+parseSingleEnv instrCode instrTime _ z80 =
     case singleByteZ80Env |> Dict.get instrCode of
         Just f ->
             case f z80.env of

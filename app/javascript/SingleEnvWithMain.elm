@@ -45,19 +45,18 @@ singleEnvMainRegs =
         ]
 
 
-parseSingleEnvMain : Int -> Z80ROM -> CpuTimeCTime -> Z80 -> Maybe Z80Transform
-parseSingleEnvMain instrCode rom48k instrTime z80 =
+parseSingleEnvMain : Int -> Z80ROM -> Z80 -> Maybe Z80Transform
+parseSingleEnvMain instrCode rom48k z80 =
+    case singleEnvMainRegs |> Dict.get instrCode of
+        Just ( f, pcInc ) ->
+            let
+                x =
+                    z80 |> applySingleEnvMainChange pcInc (f z80.main rom48k z80.env)
+            in
+            Just x
 
-        case singleEnvMainRegs |> Dict.get instrCode of
-            Just (f, pcInc) ->
-                let
-                    x = z80 |> applySingleEnvMainChange pcInc (f z80.main rom48k z80.env)
-                in
-                    Just x
-
-            Nothing ->
-                Nothing
-
+        Nothing ->
+            Nothing
 
 
 applySingleEnvMainChange : PCIncrement -> SingleEnvMainChange -> Z80 -> Z80Transform
@@ -65,10 +64,8 @@ applySingleEnvMainChange pcInc z80changeData z80 =
     let
         --interrupts =
         --    z80.interrupts
-
         --env =
         --    z80.env
-
         new_pc =
             case pcInc of
                 IncrementByOne ->
@@ -117,7 +114,6 @@ applySingleEnvMainChange pcInc z80changeData z80 =
             let
                 --env1 =
                 --    { env | time = cpuTimeCTime } |> addCpuTimeEnvInc cpuTimeIncrement4
-
                 main =
                     z80.main
             in
@@ -163,7 +159,6 @@ applySingleEnvMainChange pcInc z80changeData z80 =
             let
                 --env1 =
                 --    { env | time = cpuTimeCTime } |> addCpuTimeEnvInc cpuTimeIncrement4
-
                 main =
                     z80.main
             in

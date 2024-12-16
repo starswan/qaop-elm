@@ -381,8 +381,8 @@ execute_delta ct rom48k z80 =
       triple16Flags = parseTriple16Flags instrCode rom48k paramOffset
       triple16Param = parseTriple16Param instrCode rom48k paramOffset
       relJump = parseRelativeJump instrCode rom48k instrTime
-      singleEnvMain = parseSingleEnvMain instrCode rom48k instrTime
-      singleEnv = parseSingleEnv instrCode instrTime
+      singleEnvMain = parseSingleEnvMain instrCode rom48k
+      singleEnv = parseSingleEnv instrCode instrTime rom48k
       singleByteParam = parseSingleByteWithParam instrTime instrCode rom48k
 
       funcList = [triple16Flags, triple16Param, tripleMain, relJump, singleEnvMain, singleEnv, singleByteParam]
