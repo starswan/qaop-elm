@@ -383,14 +383,18 @@ execute_delta ct rom48k z80 =
       relJump = parseRelativeJump instrCode rom48k instrTime
       singleEnvMain = parseSingleEnvMain instrCode rom48k
       singleEnv = parseSingleEnv instrCode instrTime rom48k
-      singleByteParam = parseSingleByteWithParam instrTime instrCode rom48k
+      singleByteParam = parseSingleByteWithParam instrTime rom48k instrCode
 
       funcList = [triple16Flags, triple16Param, tripleMain, relJump, singleEnvMain, singleEnv, singleByteParam]
 
-      result = funcList |> findMap (\f -> z80 |> f)
+      -- This allows us to capture the index of the successful map function
+      result = funcList |> List.indexedMap Tuple.pair |> findMap (\(index, f) -> case f z80 of
+                                          Just xz -> Just (index, xz)
+                                          Nothing -> Nothing
+                                    )
    in
    case result of
-       Just delta ->
+       Just (index, delta) ->
            Transformer delta
        Nothing ->
           let

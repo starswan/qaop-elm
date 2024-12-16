@@ -69,8 +69,8 @@ parseDoubleWithRegs instrCode rom48k instrTime z80 =
             Nothing
 
 
-parseSingleByteWithParam : CpuTimeCTime -> Int -> Z80ROM -> Z80 -> Maybe Z80Transform
-parseSingleByteWithParam ctime instr_code rom48k z80 =
+parseSingleByteWithParam : CpuTimeCTime -> Z80ROM -> Int -> Z80 -> Maybe Z80Transform
+parseSingleByteWithParam ctime  rom48k instr_code z80 =
     case singleWith8BitParam |> Dict.get instr_code of
         Just ( f, pcInc ) ->
             let
