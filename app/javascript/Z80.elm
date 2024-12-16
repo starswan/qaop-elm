@@ -385,7 +385,9 @@ execute_delta ct rom48k z80 =
       singleEnv = parseSingleEnv instrCode instrTime
       singleByteParam = parseSingleByteWithParam instrTime instrCode rom48k
 
-      result = findMap (\f -> z80 |> f) [triple16Flags, triple16Param, tripleMain, relJump, singleEnvMain, singleEnv, singleByteParam]
+      funcList = [triple16Flags, triple16Param, tripleMain, relJump, singleEnvMain, singleEnv, singleByteParam]
+
+      result = funcList |> findMap (\f -> z80 |> f)
    in
    case result of
        Just delta ->
