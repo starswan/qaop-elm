@@ -1,13 +1,14 @@
 module SingleMainWithFlags exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeIncrement(..), increment0, increment3)
+import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), increment0, increment3)
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
 import Utils exposing (shiftLeftBy8, shiftRightBy8)
 import Z80Change exposing (Z80Change(..))
+import Z80Execute exposing (DeltaWithChanges(..))
 import Z80Flags exposing (BitTest(..), FlagRegisters, IntWithFlags, adc, add16, dec, inc, sbc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
-import Z80Types exposing (MainWithIndexRegisters, get_bc, get_de)
+import Z80Types exposing (MainWithIndexRegisters, Z80, get_bc, get_de)
 
 
 singleByteMainAndFlagRegisters : Dict Int ( MainWithIndexRegisters -> FlagRegisters -> Z80Change, PCIncrement )
@@ -192,6 +193,16 @@ singleByteMainAndFlagRegisters =
         ]
 
 
+parseSingleByteMainAndFlags : CpuTimeCTime -> Int -> Z80 -> Maybe DeltaWithChanges
+parseSingleByteMainAndFlags ctime instr_code z80 =
+    case singleByteMainAndFlagRegisters |> Dict.get instr_code of
+        Just ( f, pcInc ) ->
+            Just (PureDelta pcInc ctime (f z80.main z80.flags))
+
+        Nothing ->
+            Nothing
+
+
 inc_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 inc_b z80_main z80_flags =
     -- case 0x04: B=inc(B); break;
@@ -350,6 +361,7 @@ inc_l z80_main z80_flags =
     in
     HLRegister new_xy l.flags
 
+
 inc_ix_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 inc_ix_l z80_main z80_flags =
     -- case 0x2C: HL=HL&0xFF00|inc(HL&0xFF); break;
@@ -365,6 +377,7 @@ inc_ix_l z80_main z80_flags =
             Bitwise.or h l.value
     in
     IXRegister new_xy l.flags
+
 
 inc_iy_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 inc_iy_l z80_main z80_flags =
@@ -399,6 +412,7 @@ dec_l z80_main z80_flags =
     in
     HLRegister new_xy l.flags
 
+
 dec_ix_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 dec_ix_l z80_main z80_flags =
     -- case 0x2D: HL=HL&0xFF00|dec(HL&0xFF); break;
@@ -414,6 +428,7 @@ dec_ix_l z80_main z80_flags =
             Bitwise.or h l.value
     in
     IXRegister new_xy l.flags
+
 
 dec_iy_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 dec_iy_l z80_main z80_flags =

@@ -1,15 +1,19 @@
 module TripleWithFlags exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeIncrement, increment3)
+import CpuTimeCTime exposing (CpuTimeCTime)
 import Dict exposing (Dict)
+import Z80Env exposing (mem16)
 import Z80Flags exposing (FlagRegisters, c_FP, c_FS, get_flags)
+import Z80Rom exposing (Z80ROM)
+import Z80Transform exposing (ChangeEnvOperation(..), InstructionDuration(..), InstructionLength(..), Z80Operation(..), Z80Transform)
+import Z80Types exposing (Z80)
 
 
 type TripleWithFlagsChange
     = Skip3ByteInstruction
     | AbsoluteJump Int
-    | TripleSetIndirect Int Int CpuTimeIncrement
+    | TripleSetIndirect Int Int
     | AbsoluteCall Int
 
 
@@ -28,6 +32,32 @@ triple16WithFlags =
         , ( 0xF2, jp_p_nn )
         , ( 0xFA, jp_m_nn )
         ]
+
+
+parseTriple16Flags : Int -> Int -> Z80ROM -> Z80 -> Maybe Z80Transform
+parseTriple16Flags instrCode  paramOffset rom48k z80 =
+    case triple16WithFlags |> Dict.get instrCode of
+        Just f ->
+            let
+                doubleParam =
+                    z80.env |> mem16 (Bitwise.and (z80.pc + paramOffset) 0xFFFF) rom48k
+            in
+            case f doubleParam.value z80.flags of
+                --Just (applyTripleFlagChange doubleParam.time (f doubleParam.value z80.flags) z80)
+                Skip3ByteInstruction ->
+                    Just { pcIncrement = ThreeByteInstruction, time = doubleParam.time, timeIncrement = FourTStates, operation = ChangeEnv DoNothing }
+
+                AbsoluteJump int ->
+                    Just { pcIncrement = JumpInstruction int, time = doubleParam.time, timeIncrement = FourTStates, operation = ChangeEnv DoNothing }
+
+                TripleSetIndirect addr value ->
+                    Just { pcIncrement = ThreeByteInstruction, time = doubleParam.time, timeIncrement = SevenTStates, operation = ChangeEnv (Store16BitMemoryValue addr value) }
+
+                AbsoluteCall int ->
+                    Just { pcIncrement = JumpInstruction int, time = doubleParam.time, timeIncrement = FourTStates, operation = ChangeEnv (PushValue (Bitwise.and (z80.pc + 3) 0xFFFF)) }
+
+        Nothing ->
+            Nothing
 
 
 jp_nz : Int -> FlagRegisters -> TripleWithFlagsChange
@@ -117,7 +147,7 @@ jp_m_nn param z80_flags =
 ld_indirect_nn_a : Int -> FlagRegisters -> TripleWithFlagsChange
 ld_indirect_nn_a param z80_flags =
     -- case 0x32: MP=(v=imm16())+1&0xFF|A<<8; env.mem(v,A); time+=3; break;
-    TripleSetIndirect param z80_flags.a increment3
+    TripleSetIndirect param z80_flags.a
 
 
 call_nz_nn : Int -> FlagRegisters -> TripleWithFlagsChange
