@@ -21,11 +21,11 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        #  3.2 tested locally, so just test 3.3 (we're writing Elm, not Ruby here)
-        ruby-version: ['3.3', '3.4']
+        #  3.3 tested locally, so just test 3.4 (we're writing Elm, not Ruby here)
+        ruby-version: ['3.4']
 
     env:
-      HZ: 22.88
+      HZ: 26.47
     steps:
       - uses: actions/checkout@v4
       - name: Set up Ruby
