@@ -13,12 +13,14 @@ suite =
     let
         addr =
             30000
+        z80_addr =
+            addr |> fromInt
 
         old_z80 =
             Z80.constructor
 
         z80 =
-            { old_z80 | pc = addr |> fromInt }
+            { old_z80 | pc = z80_addr }
 
         flags =
             z80.flags
@@ -40,7 +42,7 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0x78
+                                |> setMem z80_addr 0x78
 
                         new_z80 =
                             execute_instruction z80rom
@@ -55,7 +57,7 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0x70
+                                |> setMem z80_addr 0x70
 
                         new_z80 =
                             execute_instruction z80rom
@@ -66,7 +68,7 @@ suite =
                                 }
 
                         mem_value =
-                            mem 0x6545 new_z80.env.time z80rom new_z80.env.ram
+                            mem (0x6545 |> fromInt) new_z80.env.time z80rom new_z80.env.ram
                     in
                     Expect.equal ( addr + 1, 0xA5 ) ( new_z80.pc |> toInt, mem_value.value )
             , test "0xFD 0x70 LD (IY+m), B" <|
@@ -74,10 +76,10 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0xFD
-                                |> setMem (addr + 1) 0x70
-                                |> setMem (addr + 2) 0x02
-                                |> setMem 0x6545 0x78
+                                |> setMem z80_addr 0xFD
+                                |> setMem ((addr + 1) |> fromInt) 0x70
+                                |> setMem ((addr + 2) |> fromInt) 0x02
+                                |> setMem (0x6545 |> fromInt) 0x78
 
                         new_z80 =
                             execute_instruction z80rom
@@ -88,7 +90,7 @@ suite =
                                 }
 
                         mem_value =
-                            mem 0x6545 new_z80.env.time z80rom new_z80.env.ram
+                            mem (0x6545 |> fromInt) new_z80.env.time z80rom new_z80.env.ram
                     in
                     Expect.equal ( addr + 3, 0xA5 ) ( new_z80.pc |> toInt, mem_value.value )
             , test "0x74 LD (HL),H" <|
@@ -96,7 +98,7 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0x74
+                                |> setMem z80_addr 0x74
 
                         new_z80 =
                             execute_instruction z80rom
@@ -107,7 +109,7 @@ suite =
                                 }
 
                         mem_value =
-                            mem 0x6545 new_z80.env.time z80rom new_z80.env.ram
+                            mem (0x6545 |> fromInt) new_z80.env.time z80rom new_z80.env.ram
                     in
                     Expect.equal ( addr + 1, 0x65 ) ( new_z80.pc |> toInt, mem_value.value )
             , test "0xFD 0x74 LD (IY+m),H" <|
@@ -115,10 +117,10 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0xFD
-                                |> setMem (addr + 1) 0x74
-                                |> setMem (addr + 2) 0x02
-                                |> setMem 0x6545 0x78
+                                |> setMem z80_addr 0xFD
+                                |> setMem (addr + 1 |> fromInt) 0x74
+                                |> setMem (addr + 2 |> fromInt) 0x02
+                                |> setMem (0x6545 |> fromInt) 0x78
 
                         new_z80 =
                             execute_instruction z80rom
@@ -129,7 +131,7 @@ suite =
                                 }
 
                         mem_value =
-                            mem 0x6545 new_z80.env.time z80rom new_z80.env.ram
+                            mem (0x6545 |> fromInt) new_z80.env.time z80rom new_z80.env.ram
                     in
                     Expect.equal ( addr + 3, 0x25 ) ( new_z80.pc |> toInt, mem_value.value )
             , test "0xDD 0x74 LD (IX+m),H" <|
@@ -137,10 +139,10 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0xDD
-                                |> setMem (addr + 1) 0x74
-                                |> setMem (addr + 2) 0x02
-                                |> setMem 0x6545 0x78
+                                |> setMem z80_addr 0xDD
+                                |> setMem (addr + 1 |> fromInt) 0x74
+                                |> setMem (addr + 2 |> fromInt) 0x02
+                                |> setMem (0x6545 |> fromInt) 0x78
 
                         new_z80 =
                             execute_instruction z80rom
@@ -151,7 +153,7 @@ suite =
                                 }
 
                         mem_value =
-                            mem 0x6545 new_z80.env.time z80rom new_z80.env.ram
+                            mem (0x6545 |> fromInt) new_z80.env.time z80rom new_z80.env.ram
                     in
                     Expect.equal ( addr + 3, 0x25 ) ( new_z80.pc |> toInt, mem_value.value )
             ]

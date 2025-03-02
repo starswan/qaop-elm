@@ -52,7 +52,7 @@ suite =
                                     , flags = { flags | a = 0x02 }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x04 ) ( new_z80.pc |> toInt, new_z80.flags.a )
+                    Expect.equal ( addr_int + 1, 0x04 ) ( new_z80.pc |> toInt, new_z80.flags.a )
             ]
         , describe "0xB8 - -xBF CP"
             [ test "0xBC CP H greater" <|

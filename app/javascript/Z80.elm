@@ -382,6 +382,7 @@ execute_delta ct rom48k z80 =
                                             (Bitwise.or 0xFD00 param.value, param.time, IncrementByTwo)
                                     _ ->
                                         (ct.value,ct.time, IncrementByOne)
+      tripleMain = z80 |> parseTripleMain instrCode rom48k paramOffset
    in
    case tripleMain of
        Just delta ->
@@ -501,7 +502,7 @@ oldDelta c interrupts tmp_z80 rom48k =
 execute_instruction: Z80ROM -> Z80 -> Z80
 execute_instruction rom48k z80 =
    let
-        ct = z80.env |> m1 (z80.pc |> toInt) (Bitwise.or z80.interrupts.ir (Bitwise.and z80.interrupts.r 0x7F)) rom48k
+        ct = z80.env |> m1 (z80.pc) (Bitwise.or z80.interrupts.ir (Bitwise.and z80.interrupts.r 0x7F)) rom48k
         result = z80 |> execute_delta ct rom48k
    in
    case result of
