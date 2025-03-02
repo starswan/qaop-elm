@@ -11,7 +11,7 @@ import Group0x30 exposing (delta_dict_lite_30)
 import Group0xE0 exposing (delta_dict_lite_E0)
 import Group0xF0 exposing (list0255, lt40_array, xYDict)
 import Loop
-import PCIncrement exposing (MediumPCIncrement(..))
+import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..))
 import SimpleFlagOps exposing (singleByteFlags)
 import SimpleSingleByte exposing (singleByteMainRegs)
 import SingleByteWithEnv exposing (singleByteZ80Env)
@@ -20,6 +20,7 @@ import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters)
 import SingleNoParams exposing (singleWithNoParam)
 import SingleWith8BitParameter exposing (singleWith8BitParam)
 import Utils exposing (toHexString)
+import Z80Address exposing (Z80Address, addIndexOffset, fromInt, incrementBy1, incrementBy2, toInt)
 import Z80Debug exposing (debugTodo)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..))
 import Z80Env exposing (Z80Env, addCpuTimeEnv, c_TIME_LIMIT, m1, mem, mem16, z80_push, z80env_constructor)
@@ -32,14 +33,14 @@ import Z80Types exposing (IXIY(..), IXIYHL(..), IntWithFlagsTimeAndPC, Interrupt
 constructor: Z80
 constructor =
     let
-        main = Z80Types.MainWithIndexRegisters 0 0 0 0 0 0 0
-        alternate = MainRegisters 0 0 0 0 0
+        main = Z80Types.MainWithIndexRegisters 0 0 0 0 (0 |> fromInt) (0 |> fromInt) (0 |> fromInt)
+        alternate = MainRegisters 0 0 0 0 (0 |> fromInt)
         main_flags = FlagRegisters 0 0 0 0 0
         alt_flags = FlagRegisters 0 0 0 0 0
         interrupts = InterruptRegisters 0 0 0 0 False
     in
         --Z80 z80env_constructor 0 main main_flags alternate alt_flags interrupts (c_FRSTART + c_FRTIME)
-        Z80 z80env_constructor 0 main main_flags alternate alt_flags interrupts
+        Z80 z80env_constructor (0 |> fromInt) main main_flags alternate alt_flags interrupts
 --	int a() {return A;}
 --get_a: Z80 -> Int
 --get_a z80 =
@@ -92,37 +93,31 @@ get_ei z80 =
 --    { z80 | iy = iy }
 
 --	void pc(int v) {PC = v;}
-set_pc: Int -> Z80 -> Z80
-set_pc pc z80 =
-   let
-      -- ignore common routines and LDIR/LDDR and friends (jump back 2)
-      --y = if Dict.member pc Z80Rom.c_COMMON_NAMES || pc == z80.pc - 2 then
-      --      Nothing
-      --    else
-      --      let
-      --        sub_name = pc |> subName
-      --      in
-      --        if sub_name|> String.startsWith "CHAN-OPEN" then
-      --          debug_log sub_name (z80.flags.a |> toHexString2) Nothing
-      --        else if sub_name |> String.startsWith "PRINT-OUT " then
-      --           debug_log sub_name (z80.flags.a |> toHexString2) Nothing
-      --        else if sub_name |> String.startsWith "PO-CHAR " then
-      --           debug_log sub_name ("DE " ++ (z80 |> get_de |> toHexString) ++
-      --                                        " HL " ++ (z80.main.hl |> toHexString) ++
-      --                                        " BC " ++ (z80 |> get_bc |> toHexString) ++
-      --                                        " A " ++ (z80.flags.a |> toHexString2)) Nothing
-      --        else if sub_name |> String.startsWith "PR-ALL-3 " then
-      --           debug_log sub_name ("DE " ++ (z80 |> get_de |> toHexString) ++
-      --                                        " HL " ++ (z80.main.hl |> toHexString) ++
-      --                                        " B " ++ (z80.main.b |> toHexString2) ++
-      --                                        " C " ++ (z80.main.c |> toHexString2)) Nothing
-      --      else
-      --          debug_log "set_pc" ("from " ++ (z80.pc |> toHexString) ++
-      --                           " to " ++ (pc |> subName) ++
-      --                           " (sp " ++ (z80.sp |> toHexString) ++ ")") Nothing
-      z80_1 =  { z80 | pc = Bitwise.and pc 0xFFFF }
-   in
-      z80_1
+-- ignore common routines and LDIR/LDDR and friends (jump back 2)
+--y = if Dict.member pc Z80Rom.c_COMMON_NAMES || pc == z80.pc - 2 then
+--      Nothing
+--    else
+--      let
+--        sub_name = pc |> subName
+--      in
+--        if sub_name|> String.startsWith "CHAN-OPEN" then
+--          debug_log sub_name (z80.flags.a |> toHexString2) Nothing
+--        else if sub_name |> String.startsWith "PRINT-OUT " then
+--           debug_log sub_name (z80.flags.a |> toHexString2) Nothing
+--        else if sub_name |> String.startsWith "PO-CHAR " then
+--           debug_log sub_name ("DE " ++ (z80 |> get_de |> toHexString) ++
+--                                        " HL " ++ (z80.main.hl |> toHexString) ++
+--                                        " BC " ++ (z80 |> get_bc |> toHexString) ++
+--                                        " A " ++ (z80.flags.a |> toHexString2)) Nothing
+--        else if sub_name |> String.startsWith "PR-ALL-3 " then
+--           debug_log sub_name ("DE " ++ (z80 |> get_de |> toHexString) ++
+--                                        " HL " ++ (z80.main.hl |> toHexString) ++
+--                                        " B " ++ (z80.main.b |> toHexString2) ++
+--                                        " C " ++ (z80.main.c |> toHexString2)) Nothing
+--      else
+--          debug_log "set_pc" ("from " ++ (z80.pc |> toHexString) ++
+--                           " to " ++ (pc |> subName) ++
+--                           " (sp " ++ (z80.sp |> toHexString) ++ ")") Nothing
 
 --	void sp(int v) {SP = v;}
 --set_sp: Int -> Z80 -> Z80
@@ -371,21 +366,22 @@ execute_delta ct rom48k z80 =
       (instrCode, instrTime, paramOffset) = case ct.value of
                                     0xCB ->
                                         let
-                                            param = mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k z80.env.ram
+                                            --param = mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k z80.env.ram
+                                            param = mem (z80.pc |> incrementBy1 |> toInt) ct.time rom48k z80.env.ram
                                         in
-                                            (Bitwise.or 0xCB00 param.value, param.time, 1)
+                                            (Bitwise.or 0xCB00 param.value, param.time, IncrementByOne)
                                     0xDD ->
                                         let
-                                            param = mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k z80.env.ram
+                                            param = mem ((z80.pc |> incrementBy1 |> toInt)) ct.time rom48k z80.env.ram
                                         in
-                                            (Bitwise.or 0xDD00 param.value, param.time, 2)
+                                            (Bitwise.or 0xDD00 param.value, param.time, IncrementByTwo)
                                     0xFD ->
                                         let
-                                            param = mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k z80.env.ram
+                                            param = mem (z80.pc |> incrementBy1 |> toInt) ct.time rom48k z80.env.ram
                                         in
-                                            (Bitwise.or 0xFD00 param.value, param.time, 2)
+                                            (Bitwise.or 0xFD00 param.value, param.time, IncrementByTwo)
                                     _ ->
-                                        (ct.value,ct.time, 1)
+                                        (ct.value,ct.time, IncrementByOne)
       tripleMain = z80 |> parseTripleMain instrCode rom48k paramOffset
    in
    case tripleMain of
@@ -449,10 +445,10 @@ singleByte ctime instr_code tmp_z80 rom48k =
                                    let
                                       param = case pcInc of
                                           IncreaseByTwo ->
-                                                mem (Bitwise.and (tmp_z80.pc + 1) 0xFFFF) ctime rom48k tmp_z80.env.ram
+                                                mem (tmp_z80.pc |> incrementBy1 |> toInt) ctime rom48k tmp_z80.env.ram
 
                                           IncreaseByThree ->
-                                                mem (Bitwise.and (tmp_z80.pc + 2) 0xFFFF) ctime rom48k tmp_z80.env.ram
+                                                mem (tmp_z80.pc |> incrementBy2 |> toInt) ctime rom48k tmp_z80.env.ram
 
                                    in
                                    -- duplicate of code in imm8 - add 3 to the cpu_time
@@ -474,7 +470,8 @@ oldDelta c interrupts tmp_z80 rom48k =
   let
      env = tmp_z80.env
      old_z80 = { tmp_z80 | env = { env | time = c.time }, interrupts = { interrupts | r = interrupts.r + 1 } }
-     new_pc = Bitwise.and (old_z80.pc + 1) 0xFFFF
+     --new_pc = Bitwise.and (old_z80.pc + 1) 0xFFFF
+     new_pc = old_z80.pc |> incrementBy1
      z80 = { old_z80 | pc = new_pc } |> add_cpu_time 4
      new_time = z80.env.time
   in
@@ -505,7 +502,7 @@ oldDelta c interrupts tmp_z80 rom48k =
 execute_instruction: Z80ROM -> Z80 -> Z80
 execute_instruction rom48k z80 =
    let
-        ct = z80.env |> m1 z80.pc (Bitwise.or z80.interrupts.ir (Bitwise.and z80.interrupts.r 0x7F)) rom48k
+        ct = z80.env |> m1 (z80.pc |> toInt) (Bitwise.or z80.interrupts.ir (Bitwise.and z80.interrupts.r 0x7F)) rom48k
         result = z80 |> execute_delta ct rom48k
    in
    case result of
@@ -557,7 +554,7 @@ execute rom48k z80 =
 group_xy: IXIY -> Z80ROM -> Z80 -> Z80Delta
 group_xy ixiy rom48k old_z80 =
   let
-    c = old_z80.env |> m1 old_z80.pc (or old_z80.interrupts.ir (and old_z80.interrupts.r 0x7F)) rom48k
+    c = old_z80.env |> m1 (old_z80.pc |> toInt) (or old_z80.interrupts.ir (and old_z80.interrupts.r 0x7F)) rom48k
     intr = old_z80.interrupts
     env = old_z80.env
     z80_1 = { old_z80 | env = { env | time = c.time }, interrupts = { intr | r = intr.r + 1 } }
@@ -645,9 +642,9 @@ im0: Int -> Z80 -> Z80
 im0 bus z80 =
     if and bus 0x38 == 0xFF then
         let
-            new_pc = bus - 199
+            new_pc = bus - 199 |> fromInt
         in
-            z80 |> set_pc new_pc
+            { z80 | pc = new_pc }
     else
         z80
 
@@ -669,14 +666,14 @@ interrupt bus rom48k z80 =
             case ints.iM of
                 0 -> new_z80 |> im0 bus
                 1 -> new_z80 |> im0 bus
-                2 -> { new_z80 | pc = 0x38 }
+                2 -> { new_z80 | pc = 0x38 |> fromInt }
                 3 -> let
                         new_ir = Bitwise.and ints.ir 0xFF00
                         addr = Bitwise.or new_ir bus
                         env_and_pc = z80.env |> mem16 addr rom48k
                         env = z80.env
                       in
-                        { new_z80 | env = { env | time = env_and_pc.time } |> addCpuTimeEnv 6, pc = env_and_pc.value }
+                        { new_z80 | env = { env | time = env_and_pc.time } |> addCpuTimeEnv 6, pc = env_and_pc.value |> fromInt }
                 _ -> new_z80
 
 --set_env: Z80Env -> Z80 -> Z80
