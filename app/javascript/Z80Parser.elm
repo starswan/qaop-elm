@@ -39,7 +39,6 @@ parseTripleMain instrCode rom48k paramOffset z80 =
 
 
 
-
 parseTriple16Flags : Int -> Z80ROM -> PCIncrement -> Z80 -> Maybe Z80
 parseTriple16Flags instrCode rom48k paramOffset z80 =
     case triple16WithFlags |> Dict.get instrCode of
