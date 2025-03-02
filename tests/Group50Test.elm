@@ -3,6 +3,7 @@ module Group50Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (execute_instruction)
+import Z80Address exposing (fromInt, toInt)
 import Z80Env exposing (mem, setMem)
 import Z80Rom
 
@@ -13,11 +14,14 @@ suite =
         addr =
             30000
 
+        z80_addr =
+            addr |> fromInt
+
         old_z80 =
             Z80.constructor
 
         z80 =
-            { old_z80 | pc = addr }
+            { old_z80 | pc = addr |> fromInt }
 
         z80env =
             z80.env
@@ -36,46 +40,46 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0x53
+                                |> setMem z80_addr 0x53
 
                         new_z80 =
                             execute_instruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | hl = 0x6545, e = 0x76 }
+                                    , main = { z80main | hl = 0x6545 |> fromInt, e = 0x76 }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x76 ) ( new_z80.pc, new_z80.main.d )
+                    Expect.equal ( addr + 1, 0x76 ) ( new_z80.pc |> toInt, new_z80.main.d )
             , test "0x5A LD E,D" <|
                 \_ ->
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0x5A
+                                |> setMem z80_addr 0x5A
 
                         new_z80 =
                             execute_instruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | hl = 0x6545, d = 0x34 }
+                                    , main = { z80main | hl = 0x6545 |> fromInt, d = 0x34 }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x34 ) ( new_z80.pc, new_z80.main.e )
+                    Expect.equal ( addr + 1, 0x34 ) ( new_z80.pc |> toInt, new_z80.main.e )
             , test "0x5E LD E, (HL)" <|
                 \_ ->
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0x5E
-                                |> setMem 0x6545 0x27
+                                |> setMem z80_addr 0x5E
+                                |> setMem (0x6545 |> fromInt) 0x27
 
                         new_z80 =
                             execute_instruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | hl = 0x6545, d = 0x34 }
+                                    , main = { z80main | hl = 0x6545 |> fromInt, d = 0x34 }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x27 ) ( new_z80.pc, new_z80.main.e )
+                    Expect.equal ( addr + 1, 0x27 ) ( new_z80.pc |> toInt, new_z80.main.e )
             ]
         ]

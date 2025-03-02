@@ -1,6 +1,7 @@
 module CpuTimeCTime exposing (..)
 
 import Bitwise exposing (shiftLeftBy, shiftRightBy)
+import Z80Address exposing (Z80Address)
 
 
 c_NOCONT =
@@ -23,23 +24,35 @@ type alias CpuTimeAndValue =
     }
 
 
-type alias CpuTimePcAndValue =
+type alias CpuTimeAndAddress =
     { time : CpuTimeCTime
-    , pc : Int
+    , address : Z80Address
+    }
+
+
+type alias CpuTimePcAndInt =
+    { time : CpuTimeCTime
+    , pc : Z80Address
     , value : Int
+    }
+
+type alias CpuTimePcAndAddress =
+    { time : CpuTimeCTime
+    , pc : Z80Address
+    , address : Z80Address
     }
 
 
 type alias CpuTimeSpAndValue =
     { time : CpuTimeCTime
-    , sp : Int
-    , value : Int
+    , sp : Z80Address
+    , address : Z80Address
     }
 
 
 type alias CpuTimeAndPc =
     { time : CpuTimeCTime
-    , pc : Int
+    , pc : Z80Address
     }
 
 

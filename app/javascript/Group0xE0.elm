@@ -4,6 +4,7 @@ import Bitwise
 import Dict exposing (Dict)
 import GroupED exposing (group_ed)
 import Utils exposing (shiftLeftBy8)
+import Z80Address exposing (fromInt, toInt)
 import Z80Delta exposing (Z80Delta(..))
 import Z80Env exposing (addCpuTimeEnv, out, z80_in, z80_pop, z80_push)
 import Z80Rom exposing (Z80ROM)
@@ -51,10 +52,10 @@ pop_hl ixiyhl rom48k z80 =
     in
     case ixiyhl of
         IXIY_IX ->
-            MainRegsWithSpPcAndTime { main | ix = hl.value } hl.sp z80.pc hl.time
+            MainRegsWithSpPcAndTime { main | ix = hl.address } hl.sp z80.pc hl.time
 
         IXIY_IY ->
-            MainRegsWithSpPcAndTime { main | iy = hl.value } hl.sp z80.pc hl.time
+            MainRegsWithSpPcAndTime { main | iy = hl.address } hl.sp z80.pc hl.time
 
 
 ex_indirect_sp_hl : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
@@ -83,13 +84,13 @@ ex_indirect_sp_hl ixiyhl rom48k z80 =
         --IY -> { z80_2 | main = { main | iy = v.value } }
         --HL -> { z80_2 | main = { main | hl = v.value } }
         IX ->
-            MainRegsWithEnvAndPc { main | ix = hl.value } pushed z80.pc
+            MainRegsWithEnvAndPc { main | ix = hl.address } pushed z80.pc
 
         IY ->
-            MainRegsWithEnvAndPc { main | iy = hl.value } pushed z80.pc
+            MainRegsWithEnvAndPc { main | iy = hl.address } pushed z80.pc
 
         HL ->
-            MainRegsWithEnv { main | hl = hl.value } pushed
+            MainRegsWithEnv { main | hl = hl.address} pushed
 
 
 push_hl : IXIY -> Z80ROM -> Z80 -> Z80Delta
@@ -126,7 +127,7 @@ ex_de_hl ixiyhl _ z80 =
     -- case 0xEB: v=HL; HL=D<<8|E; D=v>>>8; E=v&0xFF; break;
     let
         v =
-            z80.main |> get_xy_ixiy ixiyhl
+            z80.main |> get_xy_ixiy ixiyhl |> toInt
 
         de =
             z80.main |> get_de
@@ -138,10 +139,10 @@ ex_de_hl ixiyhl _ z80 =
     --z80 |> set_de v |> set_hl de
     case ixiyhl of
         IXIY_IX ->
-            MainRegs { main | ix = de }
+            MainRegs { main | ix = de |> fromInt }
 
         IXIY_IY ->
-            MainRegs { main | iy = de }
+            MainRegs { main | iy = de |> fromInt }
 
 
 execute_0xD3 : Z80ROM -> Z80 -> Z80Delta
