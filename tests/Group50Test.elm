@@ -15,6 +15,9 @@ suite =
         addr =
             30000
 
+        z80_addr =
+            addr |> fromInt
+
         old_z80 =
             Z80.constructor
 
@@ -38,7 +41,7 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0x53
+                                |> setMem z80_addr 0x53
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -53,7 +56,7 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0x5A
+                                |> setMem z80_addr 0x5A
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -68,8 +71,8 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0x5E
-                                |> setMem 0x6545 0x27
+                                |> setMem z80_addr 0x5E
+                                |> setMem (0x6545 |> fromInt) 0x27
 
                         new_z80 =
                             executeSingleInstruction z80rom

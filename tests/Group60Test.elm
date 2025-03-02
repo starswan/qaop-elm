@@ -15,11 +15,14 @@ suite =
         addr =
             30000
 
+        z80_addr =
+            addr |> fromInt
+
         old_z80 =
             Z80.constructor
 
         z80 =
-            { old_z80 | pc = addr |> fromInt }
+            { old_z80 | pc = z80_addr }
 
         flags =
             z80.flags
@@ -41,7 +44,7 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0x60
+                                |> setMem z80_addr 0x60
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -72,8 +75,8 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0xFD
-                                |> setMem (addr + 1) 0x60
+                                |> setMem z80_addr 0xFD
+                                |> setMem (addr + 1 |> fromInt) 0x60
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -286,8 +289,8 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0x66
-                                |> setMem 0x6545 0x78
+                                |> setMem z80_addr 0x66
+                                |> setMem (0x6545 |> fromInt) 0x78
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -303,10 +306,10 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0xDD
-                                |> setMem (addr + 1) 0x66
-                                |> setMem (addr + 2) 0x02
-                                |> setMem 0x6545 0x78
+                                |> setMem z80_addr 0xDD
+                                |> setMem (addr + 1 |> fromInt) 0x66
+                                |> setMem (addr + 2 |> fromInt) 0x02
+                                |> setMem (0x6545 |> fromInt) 0x78
 
                         new_z80 =
                             executeSingleInstruction z80rom
