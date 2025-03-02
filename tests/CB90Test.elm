@@ -21,10 +21,12 @@ suite =
        z80main = old_z80.main
        z80 = { old_z80 | pc = addr , env = { old_z80env | sp = sp  |> fromInt }, main = { z80main | hl = hl |> fromInt } }
 
-        z80env =
+
+
+       z80env =
             z80.env
 
-        z80rom =
+       z80rom =
             Z80Rom.constructor
     in
     describe "Bit instructions (CB)"

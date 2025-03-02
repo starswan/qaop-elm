@@ -23,10 +23,10 @@ suite =
 
 
 
-        z80env =
+       z80env =
             z80.env
 
-        z80rom =
+       z80rom =
             Z80Rom.constructor
     in
     describe "Bit instructions (CB)"
