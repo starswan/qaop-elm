@@ -24,13 +24,13 @@ parseTripleMain instrCode rom48k paramOffset z80 =
                 doubleParam =
                     case paramOffset of
                         IncrementByOne ->
-                            z80.env |> mem16 ((z80.pc |> incrementBy1) |> toInt) rom48k
+                            z80.env |> mem16 ((z80.pc |> incrementBy1)) rom48k
 
                         IncrementByTwo ->
-                            z80.env |> mem16 ((z80.pc |> incrementBy2) |> toInt) rom48k
+                            z80.env |> mem16 ((z80.pc |> incrementBy2)) rom48k
             in
             -- duplicate of code in imm16 - add 6 to the cpu_time
-            Just (z80 |> applyTripleMainChange (doubleParam.time |> addCpuTimeTime 6) pcInc (f doubleParam.value z80.main))
+            Just (z80 |> applyTripleMainChange (doubleParam.time |> addCpuTimeTime 6) pcInc (f doubleParam.address z80.main))
 
         Nothing ->
             Nothing
@@ -52,13 +52,13 @@ parseTriple16Flags instrCode rom48k paramOffset z80 =
                 doubleParam =
                     case paramOffset of
                         IncrementByOne ->
-                            z80.env |> mem16 ((z80.pc |> incrementBy1) |> toInt) rom48k
+                            z80.env |> mem16 ((z80.pc |> incrementBy1)) rom48k
 
                         IncrementByTwo ->
-                            z80.env |> mem16 ((z80.pc |> incrementBy2) |> toInt) rom48k
+                            z80.env |> mem16 ((z80.pc |> incrementBy2)) rom48k
             in
             -- duplicate of code in imm16 - add 6 to the cpu_time
-            Just (z80 |> applyTripleFlagChange (doubleParam.time |> addCpuTimeTime 6) (f doubleParam.value z80.flags))
+            Just (z80 |> applyTripleFlagChange (doubleParam.time |> addCpuTimeTime 6) (f doubleParam.address z80.flags))
 
         Nothing ->
             Nothing
@@ -74,14 +74,14 @@ parseTriple16Param instrCode rom48k paramOffset z80 =
                 doubleParam =
                     case paramOffset of
                         IncrementByOne ->
-                            z80.env |> mem16 ((z80.pc |> incrementBy1) |> toInt) rom48k
+                            z80.env |> mem16 ((z80.pc |> incrementBy1)) rom48k
 
                         IncrementByTwo ->
-                            z80.env |> mem16 ((z80.pc |> incrementBy2) |> toInt) rom48k
+                            z80.env |> mem16 ((z80.pc |> incrementBy2)) rom48k
             in
             -- duplicate of code in imm16 - add 6 to the cpu_time
             --Just (TripleChangeDelta pcInc (doubleParam.time |> addCpuTimeTime 6) (f doubleParam.value))
-            Just (z80 |> applyTripleChangeDelta rom48k pcInc (doubleParam.time |> addCpuTimeTime 6) (f doubleParam.value))
+            Just (z80 |> applyTripleChangeDelta rom48k pcInc (doubleParam.time |> addCpuTimeTime 6) (f doubleParam.address))
 
         Nothing ->
             Nothing
@@ -93,7 +93,7 @@ parseRelativeJump instrCode rom48k instrTime z80 =
         Just f ->
             let
                 param =
-                    mem (z80.pc |> incrementBy1 |> toInt) instrTime rom48k z80.env.ram
+                    mem (z80.pc |> incrementBy1) instrTime rom48k z80.env.ram
             in
             -- duplicate of code in imm8 - add 3 to the cpu_time
             Just (JumpChangeDelta (param.time |> addCpuTimeTime 3) (f param.value z80.flags))
@@ -110,10 +110,10 @@ parseDoubleWithRegs instrCode rom48k instrTime z80 =
                 param =
                     case pcInc of
                         IncreaseByTwo ->
-                            mem (z80.pc |> incrementBy1 |> toInt) instrTime rom48k z80.env.ram
+                            mem (z80.pc |> incrementBy1) instrTime rom48k z80.env.ram
 
                         IncreaseByThree ->
-                            mem (z80.pc |> incrementBy2 |> toInt) instrTime rom48k z80.env.ram
+                            mem (z80.pc |> incrementBy2) instrTime rom48k z80.env.ram
             in
             -- duplicate of code in imm8 - add 3 to the cpu_time
             Just (DoubleWithRegistersDelta pcInc (param.time |> addCpuTimeTime 3) (f z80.main param.value))
