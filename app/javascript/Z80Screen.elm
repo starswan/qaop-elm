@@ -6,6 +6,7 @@ import Byte exposing (Byte, getBit)
 import Maybe
 import ScreenStorage exposing (RawScreenData, Z80Screen, rawScreenData)
 import SpectrumColour exposing (SpectrumColour, spectrumColour)
+import Vector32
 
 
 type alias ScreenData =
