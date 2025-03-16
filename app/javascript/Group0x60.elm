@@ -4,7 +4,7 @@ import CpuTimeCTime exposing (addCpuTimeTime)
 import Dict exposing (Dict)
 import Z80Delta exposing (Z80Delta(..))
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIY, IXIYHL(..), Z80, get_h_ixiy, get_l_ixiy, hl_deref_with_z80_ixiy, set_h, set_h_ixiy, set_l_ixiy)
+import Z80Types exposing (IXIY, IXIYHL(..), Z80, get_h_ixiy, get_l_ixiy, hl_deref_with_z80_ixiy, set_h, set_h_ixiy, set_l, set_l_ixiy)
 
 
 miniDict60 : Dict Int (IXIY -> Z80ROM -> Z80 -> Z80Delta)
@@ -161,7 +161,7 @@ ld_l_indirect_hl ixiyhl rom48k z80 =
         main =
             z80.main
     in
-    MainRegsWithPcAndCpuTime (main |> set_h value.value HL) value.pc (value.time |> addCpuTimeTime 3)
+    MainRegsWithPcAndCpuTime (main |> set_l value.value HL) value.pc (value.time |> addCpuTimeTime 3)
 
 
 ld_l_a : IXIY -> Z80ROM -> Z80 -> Z80Delta
