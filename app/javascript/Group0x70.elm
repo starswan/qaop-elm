@@ -149,7 +149,7 @@ ld_a_h ixiyhl rom z80 =
         flags =
             z80.flags
     in
-    FlagRegs { flags | a = get_h_ixiy ixiyhl z80.main }
+    FlagRegsWithPc { flags | a = get_h_ixiy ixiyhl z80.main } z80.pc
 
 
 ld_a_l : IXIY -> Z80ROM -> Z80 -> Z80Delta
@@ -161,7 +161,7 @@ ld_a_l ixiyhl rom z80 =
         flags =
             z80.flags
     in
-    FlagRegs { flags | a = get_l_ixiy ixiyhl z80.main }
+    FlagRegsWithPc { flags | a = get_l_ixiy ixiyhl z80.main } z80.pc
 
 
 ld_a_indirect_hl : IXIY -> Z80ROM -> Z80 -> Z80Delta
