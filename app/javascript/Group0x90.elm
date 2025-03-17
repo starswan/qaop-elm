@@ -30,7 +30,7 @@ sub_h ixiyhl _ z80 =
     -- case 0x94: sub(HL>>>8); break;
     -- case 0x94: sub(xy>>>8); break;
     --z80 |> set_flag_regs (z80_sub (get_h ixiyhl z80.main) z80.flags)
-    z80.flags |> z80_sub (get_h_ixiy ixiyhl z80.main) |> FlagRegs
+    FlagRegsWithPc (z80.flags |> z80_sub (get_h_ixiy ixiyhl z80.main)) z80.pc
 
 
 sub_l : IXIY -> Z80ROM -> Z80 -> Z80Delta
@@ -38,7 +38,7 @@ sub_l ixiyhl _ z80 =
     -- case 0x95: sub(HL&0xFF); break;
     -- case 0x95: sub(xy&0xFF); break;
     --z80 |> set_flag_regs (z80_sub (get_l ixiyhl z80.main) z80.flags)
-    z80.flags |> z80_sub (get_l_ixiy ixiyhl z80.main) |> FlagRegs
+    FlagRegsWithPc (z80.flags |> z80_sub (get_l_ixiy ixiyhl z80.main)) z80.pc
 
 
 sub_indirect_hl : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
@@ -60,7 +60,7 @@ sbc_h ixiyhl _ z80 =
     -- case 0x9C: sbc(HL>>>8); break;
     -- case 0x9C: sbc(xy>>>8); break;
     --z80 |> set_flag_regs (sbc (get_h ixiyhl z80.main) z80.flags)
-    z80.flags |> sbc (get_h_ixiy ixiyhl z80.main) |> FlagRegs
+    FlagRegsWithPc (z80.flags |> sbc (get_h_ixiy ixiyhl z80.main)) z80.pc
 
 
 sbc_l : IXIY -> Z80ROM -> Z80 -> Z80Delta
@@ -68,7 +68,7 @@ sbc_l ixiyhl _ z80 =
     -- case 0x9D: sbc(HL&0xFF); break;
     -- case 0x9D: sbc(xy&0xFF); break;
     --z80 |> set_flag_regs (sbc (get_l ixiyhl z80.main) z80.flags)
-    z80.flags |> sbc (get_l_ixiy ixiyhl z80.main) |> FlagRegs
+    FlagRegsWithPc (z80.flags |> sbc (get_l_ixiy ixiyhl z80.main)) z80.pc
 
 
 sbc_indirect_hl : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
@@ -83,5 +83,3 @@ sbc_indirect_hl ixiyhl rom48k z80 =
     in
     --{ z80 | pc = value.pc, env = { env_1 | time = value.time } } |> set_flag_regs (sbc value.value z80.flags)
     FlagsWithPcAndTime (z80.flags |> sbc value.value) value.pc value.time
-
-
