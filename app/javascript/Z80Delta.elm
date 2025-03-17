@@ -13,6 +13,7 @@ type Z80Delta
     | FlagsWithMainAndTime FlagRegisters MainWithIndexRegisters Int
     | FlagsWithPCMainAndCpuTime FlagRegisters Int MainWithIndexRegisters CpuTimeCTime
     | FlagRegs FlagRegisters
+    | FlagRegsWithPc FlagRegisters Int
     | MainRegs MainWithIndexRegisters
     | MainRegsWithPc MainWithIndexRegisters Int
     | CpuTimeWithFlags CpuTimeCTime FlagRegisters
@@ -58,6 +59,9 @@ applyDeltaWithChanges z80delta z80 =
 
         FlagRegs flagRegisters ->
             { z80 | flags = flagRegisters, pc = z80delta.pc, env = { z80_env | time = z80delta.time }, interrupts = z80delta.interrupts }
+
+        FlagRegsWithPc flagRegisters pc ->
+            { z80 | flags = flagRegisters, pc = pc, env = { z80_env | time = z80delta.time }, interrupts = z80delta.interrupts }
 
         CpuTimeWithFlags time flagRegisters ->
             { z80 | flags = flagRegisters, pc = z80delta.pc, env = { z80_env | time = time }, interrupts = z80delta.interrupts }
