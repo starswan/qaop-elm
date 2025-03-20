@@ -8,31 +8,42 @@ import Z80Types exposing (IXIYHL(..), InterruptRegisters, MainRegisters, MainWit
 
 type Z80Delta
     = Whole Z80
+    -- 2 in GroupED
     | MainRegsWithPcAndCpuTime MainWithIndexRegisters Int CpuTimeCTime
-    | FlagsWithPCMainAndTime FlagRegisters Int MainWithIndexRegisters CpuTimeIncrement
+    -- 1 in GroupED
     | FlagsWithMainAndTime FlagRegisters MainWithIndexRegisters Int
+    -- 1 in GroupED
     | FlagsWithPCMainAndCpuTime FlagRegisters Int MainWithIndexRegisters CpuTimeCTime
+    -- lots of these left
     | FlagRegs FlagRegisters
-    | FlagRegsWithPc FlagRegisters Int
+    -- 1 left in Group0xE0
     | MainRegs MainWithIndexRegisters
-    | MainRegsWithPc MainWithIndexRegisters Int
-    | CpuTimeWithFlags CpuTimeCTime FlagRegisters
-    | EnvWithFlagsAndPc Z80Env FlagRegisters Int
+    --| MainRegsWithPc MainWithIndexRegisters Int
+    -- 1 in GroupE0, 1 in GroupED
     | CpuTimeWithFlagsAndPc CpuTimeCTime FlagRegisters Int
+    --1 left in GroupE0 EX (SP), HL
     | MainRegsWithEnv MainWithIndexRegisters Z80Env
+    -- 1 left in GroupF0 LD SP, HL
     | SpAndCpuTime Int Int
+    -- 1 in GroupED, 1 in GroupE0
     | EnvWithPc Z80Env Int
+    -- 1 in GroupED
     | CpuTimeWithSpAndPc CpuTimeCTime Int Int
+    -- 1 in GroupE0
     | OnlyPc Int
+    -- lots of these left
     | FlagsWithPcAndTime FlagRegisters Int CpuTimeCTime
+    -- 1 in GroupED
     | InterruptsWithCpuTime InterruptRegisters CpuTimeCTime
+    -- 2 in GroupE0
     | MainRegsWithSpPcAndTime MainWithIndexRegisters Int Int CpuTimeCTime
+    -- 2 in GroupE0
     | MainRegsWithEnvAndPc MainWithIndexRegisters Z80Env Int
-    | PushWithCpuTimeAndPc Int CpuTimeCTime Int
-    | SetMem8WithTime Int Int Int
-    | SetMem16WithTimeAndPc Int Int Int Int
+    -- 1 left in Group70
     | SetMem8WithCpuTimeIncrementAndPc Int Int CpuTimeCTime Int Int
+    -- 2 in GroupCB
     | PcTimeSet408Bit Int CpuTimeCTime Int Int
+    -- 1 in GroupED
     | Fszh0n0pTimeDeltaSet408Bit Int Int Int
 
 
@@ -60,17 +71,8 @@ applyDeltaWithChanges z80delta z80 =
         FlagRegs flagRegisters ->
             { z80 | flags = flagRegisters, pc = z80delta.pc, env = { z80_env | time = z80delta.time }, interrupts = z80delta.interrupts }
 
-        FlagRegsWithPc flagRegisters pc ->
-            { z80 | flags = flagRegisters, pc = pc, env = { z80_env | time = z80delta.time }, interrupts = z80delta.interrupts }
-
-        CpuTimeWithFlags time flagRegisters ->
-            { z80 | flags = flagRegisters, pc = z80delta.pc, env = { z80_env | time = time }, interrupts = z80delta.interrupts }
-
         EnvWithPc z80Env programCounter ->
             { z80 | env = z80Env, pc = programCounter, interrupts = z80delta.interrupts }
-
-        FlagsWithPCMainAndTime flagRegisters pc mainWithIndexRegisters cpu_time ->
-            { z80 | flags = flagRegisters, pc = pc, env = { z80_env | time = z80delta.time |> addCpuTimeTimeInc cpu_time }, main = mainWithIndexRegisters, interrupts = z80delta.interrupts }
 
         FlagsWithMainAndTime flagRegisters mainWithIndexRegisters cpu_time ->
             { z80 | flags = flagRegisters, pc = z80delta.pc, env = { z80_env | time = z80delta.time |> addCpuTimeTime cpu_time }, main = mainWithIndexRegisters, interrupts = z80delta.interrupts }
@@ -78,17 +80,14 @@ applyDeltaWithChanges z80delta z80 =
         SpAndCpuTime sp cpu_time ->
             { z80 | pc = z80delta.pc, env = { z80_env | time = z80delta.time |> addCpuTimeTime cpu_time, sp = sp }, interrupts = z80delta.interrupts }
 
-        EnvWithFlagsAndPc z80Env flagRegisters pc ->
-            { z80 | flags = flagRegisters, pc = pc, env = z80Env, interrupts = z80delta.interrupts }
-
         CpuTimeWithFlagsAndPc cpu_time flagRegisters pc ->
             { z80 | flags = flagRegisters, pc = pc, env = { z80_env | time = cpu_time }, interrupts = z80delta.interrupts }
 
         MainRegs mainWithIndexRegisters ->
             { z80 | main = mainWithIndexRegisters, pc = z80delta.pc, env = { z80_env | time = z80delta.time }, interrupts = z80delta.interrupts }
 
-        MainRegsWithPc mainWithIndexRegisters pc ->
-            { z80 | main = mainWithIndexRegisters, pc = pc, env = { z80_env | time = z80delta.time }, interrupts = z80delta.interrupts }
+        --MainRegsWithPc mainWithIndexRegisters pc ->
+        --    { z80 | main = mainWithIndexRegisters, pc = pc, env = { z80_env | time = z80delta.time }, interrupts = z80delta.interrupts }
 
         OnlyPc pc ->
             { z80 | pc = pc, env = { z80_env | time = z80delta.time }, interrupts = z80delta.interrupts }
@@ -113,15 +112,6 @@ applyDeltaWithChanges z80delta z80 =
 
         FlagsWithPCMainAndCpuTime flagRegisters pc mainWithIndexRegisters time ->
             { z80 | flags = flagRegisters, pc = pc, env = { z80_env | time = time }, main = mainWithIndexRegisters, interrupts = z80delta.interrupts }
-
-        PushWithCpuTimeAndPc value time pc ->
-            { z80 | pc = pc, env = { z80_env | time = time } |> z80_push value, interrupts = z80delta.interrupts }
-
-        SetMem8WithTime addr value time ->
-            { z80 | pc = z80delta.pc, env = z80.env |> setMem addr value |> addCpuTimeEnv time, interrupts = z80delta.interrupts }
-
-        SetMem16WithTimeAndPc addr value time pc ->
-            { z80 | pc = pc, env = z80.env |> setMem16 addr value |> addCpuTimeEnv time, interrupts = z80delta.interrupts }
 
         SetMem8WithCpuTimeIncrementAndPc addr value cpuTimeCTime time pc ->
             { z80 | pc = pc, env = { z80_env | time = cpuTimeCTime } |> setMem addr value |> addCpuTimeEnv time, interrupts = z80delta.interrupts }
