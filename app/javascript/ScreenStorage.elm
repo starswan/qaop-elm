@@ -54,7 +54,6 @@ type alias Z80Screen =
     , attrs : Vector24 (Vector32 Int)
     , border : Int
     , flash : Bool
-
     --refrs_a: Int,
     --refrs_b: Int,
     --refrs_t: Int,
