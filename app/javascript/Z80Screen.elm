@@ -142,7 +142,7 @@ foldUp raw list =
     case list of
         head :: tail ->
             if head.colour == raw.colour then
-                ScreenData raw.colour (head.data ++ [ raw.data ]) :: tail
+                ScreenData raw.colour (raw.data :: head.data) :: tail
 
             else
                 ScreenData raw.colour [ raw.data ] :: list
@@ -153,7 +153,10 @@ foldUp raw list =
 
 screenLines : Z80Screen -> List (List ScreenColourRun)
 screenLines z80_screen =
+    let
+        foldDrawn = toDrawn z80_screen.flash
+    in
     z80_screen
         |> rawScreenData
         |> List.map (\x -> x |> Vector32.foldr foldUp [])
-        |> List.map (\x -> x |> List.foldr (toDrawn z80_screen.flash) [])
+        |> List.map (\x -> x |> List.foldr foldDrawn [])
