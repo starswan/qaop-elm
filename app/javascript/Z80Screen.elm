@@ -101,19 +101,20 @@ pairToColour globalFlash raw_colour runcount =
         paper =
             Bitwise.and raw_colour 0x38 |> shiftRightBy 3
 
-        ( fg, bg ) =
-            if flash && globalFlash then
-                ( paper, ink )
-
-            else
-                ( ink, paper )
-
         colour =
             if runcount.value then
-                fg
+                if flash && globalFlash then
+                    paper
+
+                else
+                    ink
 
             else
-                bg
+                if flash && globalFlash then
+                    ink
+
+                else
+                    paper
     in
     ScreenColourRun runcount.start runcount.count (spectrumColour colour bright)
 
