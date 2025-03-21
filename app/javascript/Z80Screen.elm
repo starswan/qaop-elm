@@ -3,11 +3,10 @@ module Z80Screen exposing (..)
 import Array exposing (Array)
 import Bitwise exposing (shiftRightBy)
 import Byte exposing (Byte, getBit)
-import Dict exposing (Dict)
 import Maybe
 import ScreenStorage exposing (RawScreenData, Z80Screen, rawScreenData)
 import SpectrumColour exposing (SpectrumColour, spectrumColour)
-import Vector32
+import Vector32 exposing (Vector32)
 
 
 type alias ScreenData =
@@ -19,14 +18,6 @@ type alias ScreenData =
 
 -- line definition - length colour (3 bits) and brightness
 -- ignore flash for now
-
-
-type alias ScreenColourRun =
-    { start : Int
-    , length : Int
-    , colour : SpectrumColour
-    , flash : Bool
-    }
 
 
 isBitSet : Byte -> Int -> Bool
@@ -46,47 +37,22 @@ type alias RunCount =
     }
 
 
-pairToColour : Int -> RunCount -> ScreenColourRun
-pairToColour raw_colour runcount =
-    let
-        colour_byte =
-            Byte.fromInt raw_colour
-
-        bright =
-            colour_byte |> getBit 6
-
-        flash =
-            colour_byte |> getBit 7
-
-        colour =
-            if runcount.value then
-                Bitwise.and raw_colour 0x07
-
-            else
-                Bitwise.and raw_colour 0x38 |> shiftRightBy 3
-    in
-    ScreenColourRun runcount.start runcount.count (spectrumColour colour bright) flash
+ints0to255 =
+    List.range 0 255
 
 
 bytes0to255 =
-    List.range 0 255 |> List.map Byte.fromInt
-
-
-
--- optimization of intToBools
+    ints0to255 |> List.map Byte.fromInt
 
 
 intToBoolsCache : Array (List Bool)
 intToBoolsCache =
-    List.map bitsToLines bytes0to255 |> Array.fromList
+    bytes0to255 |> List.map bitsToLines |> Array.fromList
 
 
-intsToBools : List Int -> List Bool
-intsToBools data =
-    data
-        |> List.map (\index -> Array.get index intToBoolsCache)
-        |> List.map (Maybe.withDefault [])
-        |> List.concat
+intToBools : Int -> List Bool
+intToBools index =
+    intToBoolsCache |> Array.get index |> Maybe.withDefault []
 
 
 foldRunCounts : Bool -> List RunCount -> List RunCount
@@ -110,21 +76,65 @@ foldRunCounts item list =
 -- screenline is start length colour (0-7) and flash
 
 
-toDrawn : ScreenData -> List ScreenColourRun -> List ScreenColourRun
-toDrawn screendata linelist =
+type alias ScreenColourRun =
+    { start : Int
+    , length : Int
+    , colour : SpectrumColour
+    }
+
+
+pairToColour : Bool -> Int -> RunCount -> ScreenColourRun
+pairToColour globalFlash raw_colour runcount =
     let
-        newList =
+        colour_byte =
+            Byte.fromInt raw_colour
+
+        bright =
+            colour_byte |> getBit 6
+
+        flash =
+            colour_byte |> getBit 7
+
+        ink =
+            Bitwise.and raw_colour 0x07
+
+        paper =
+            Bitwise.and raw_colour 0x38 |> shiftRightBy 3
+
+        ( fg, bg ) =
+            if flash && globalFlash then
+                ( paper, ink )
+
+            else
+                ( ink, paper )
+
+        colour =
+            if runcount.value then
+                fg
+
+            else
+                bg
+    in
+    ScreenColourRun runcount.start runcount.count (spectrumColour colour bright)
+
+
+toDrawn : Bool -> ScreenData -> List ScreenColourRun -> List ScreenColourRun
+toDrawn globalFlash screendata linelist =
+    let
+        listBools : List Bool
+        listBools =
             screendata.data
-                |> intsToBools
+                |> List.map intToBools
+                |> List.concat
+
+        newList : List ScreenColourRun
+        newList =
+            listBools
                 |> List.foldl foldRunCounts []
                 |> List.reverse
-                |> List.map (pairToColour screendata.colour)
+                |> List.map (pairToColour globalFlash screendata.colour)
     in
-    newList :: List.singleton linelist |> List.concat
-
-
-
--- convert a row of data, colour into a combo of repeated blocks
+    newList ++ linelist
 
 
 foldUp : RawScreenData -> List ScreenData -> List ScreenData
@@ -132,7 +142,7 @@ foldUp raw list =
     case list of
         head :: tail ->
             if head.colour == raw.colour then
-                ScreenData raw.colour (raw.data :: head.data) :: tail
+                ScreenData raw.colour (head.data ++ [ raw.data ]) :: tail
 
             else
                 ScreenData raw.colour [ raw.data ] :: list
@@ -146,4 +156,4 @@ screenLines z80_screen =
     z80_screen
         |> rawScreenData
         |> List.map (\x -> x |> Vector32.foldr foldUp [])
-        |> List.map (\x -> x |> List.foldr toDrawn [])
+        |> List.map (\x -> x |> List.foldr (toDrawn z80_screen.flash) [])
