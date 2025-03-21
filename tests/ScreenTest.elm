@@ -28,7 +28,7 @@ suite =
          test "runCounts" <|
             \_ ->
                let
-                  a = [0x80, 0x03] |> Z80Screen.intsToBools
+                  a = [0x80, 0x03] |> List.map Z80Screen.intToBools |> List.concat
                in
                   Expect.equal [
                   {start=0,count=1,value=True},
