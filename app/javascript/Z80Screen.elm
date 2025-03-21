@@ -101,20 +101,17 @@ pairToColour globalFlash raw_colour runcount =
         paper =
             Bitwise.and raw_colour 0x38 |> shiftRightBy 3
 
-        colour =
-            if runcount.value then
-                if flash && globalFlash then
-                    paper
-
+        value = if flash && globalFlash then
+                   not runcount.value
                 else
-                    ink
+                   runcount.value
+
+        colour =
+            if value then
+                ink
 
             else
-                if flash && globalFlash then
-                    ink
-
-                else
-                    paper
+                paper
     in
     ScreenColourRun runcount.start runcount.count (spectrumColour colour bright)
 
@@ -155,7 +152,8 @@ foldUp raw list =
 screenLines : Z80Screen -> List (List ScreenColourRun)
 screenLines z80_screen =
     let
-        foldDrawn = toDrawn z80_screen.flash
+        foldDrawn =
+            toDrawn z80_screen.flash
     in
     z80_screen
         |> rawScreenData
