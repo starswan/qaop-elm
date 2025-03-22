@@ -53,8 +53,8 @@ type alias Z80Screen =
     { data : Z80Memory
     , attrs : Vector24 (Vector32 Int)
     , border : Int
+    , flash : Bool
 
-    --flash: Int,
     --refrs_a: Int,
     --refrs_b: Int,
     --refrs_t: Int,
@@ -87,7 +87,7 @@ constructor =
         attributes =
             Vector24.repeat attr_line
     in
-    Z80Screen screen_data attributes 7
+    Z80Screen screen_data attributes 7 False
 
 
 calcDataOffset : Int -> Int
