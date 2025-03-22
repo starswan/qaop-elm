@@ -227,30 +227,12 @@ toDrawn globalFlash screendata linelist =
     newList ++ linelist
 
 
-toDrawn2 : Bool -> RawScreenData -> List ScreenColourRun -> List ScreenColourRun
-toDrawn2 globalFlash screendata linelist =
-    let
-        listBools : List Bool
-        listBools =
-            screendata.data
-                |> intToBools
-
-        newList : List ScreenColourRun
-        newList =
-            listBools
-                |> List.foldl foldRunCounts []
-                |> List.reverse
-                |> List.map (pairToColour globalFlash screendata.colour)
-    in
-    newList ++ linelist
-
-
 foldUp : RawScreenData -> List ScreenData -> List ScreenData
 foldUp raw list =
     case list of
         head :: tail ->
             if head.colour == raw.colour then
-                ScreenData raw.colour (head.groupedPixelData ++ [ raw.data ]) :: tail
+                ScreenData raw.colour (raw.data :: head.groupedPixelData) :: tail
 
             else
                 ScreenData raw.colour [ raw.data ] :: list
