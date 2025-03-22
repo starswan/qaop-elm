@@ -11,7 +11,7 @@ import Vector32 exposing (Vector32)
 
 type alias ScreenData =
     { colour : Int
-    , data : List Int
+    , groupedPixelData : List Int
     }
 
 
@@ -198,8 +198,16 @@ toDrawn globalFlash screendata linelist =
     let
         listlistBools : List (List Bool)
         listlistBools =
-            screendata.data
+            screendata.groupedPixelData
                 |> List.map intToBools
+
+        rcList2 : List RunCount
+        rcList2 =
+            listlistBools
+                |> List.map (\listbool8 -> listbool8
+                    |> List.foldr foldRunCounts []
+                    |> List.reverse
+                ) |> List.concat
 
         listBools : List Bool
         listBools =
@@ -242,7 +250,7 @@ foldUp raw list =
     case list of
         head :: tail ->
             if head.colour == raw.colour then
-                ScreenData raw.colour (head.data ++ [ raw.data ]) :: tail
+                ScreenData raw.colour (head.groupedPixelData ++ [ raw.data ]) :: tail
 
             else
                 ScreenData raw.colour [ raw.data ] :: list
