@@ -64,10 +64,6 @@ intToBools index =
     intToBoolsCache |> Array.get index |> Maybe.withDefault []
 
 
-
---|> List.concat
-
-
 foldRunCounts : Bool -> List RunCount -> List RunCount
 foldRunCounts item list =
     case list of
@@ -206,12 +202,14 @@ toDrawn globalFlash screendata linelist =
                 |> List.map intToBools
                 |> List.concat
 
-        newList : List ScreenColourRun
-        newList =
+        rcList =
             listBools
                 |> List.foldl foldRunCounts []
                 |> List.reverse
-                |> List.map (pairToColour globalFlash screendata.colour)
+
+        newList : List ScreenColourRun
+        newList =
+            rcList |> List.map (pairToColour globalFlash screendata.colour)
     in
     newList ++ linelist
 
