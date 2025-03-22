@@ -202,6 +202,7 @@ toDrawn globalFlash screendata linelist =
                 |> List.map intToBools
                 |> List.concat
 
+        rcList : List RunCount
         rcList =
             listBools
                 |> List.foldl foldRunCounts []
