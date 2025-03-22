@@ -204,10 +204,13 @@ toDrawn globalFlash screendata linelist =
         rcList2 : List RunCount
         rcList2 =
             listlistBools
-                |> List.map (\listbool8 -> listbool8
-                    |> List.foldr foldRunCounts []
-                    |> List.reverse
-                ) |> List.concat
+                |> List.map
+                    (\listbool8 ->
+                        listbool8
+                            |> List.foldl foldRunCounts []
+                            |> List.reverse
+                    )
+                |> List.concat
 
         listBools : List Bool
         listBools =
