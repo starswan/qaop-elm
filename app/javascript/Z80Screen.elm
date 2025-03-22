@@ -196,10 +196,14 @@ allColourRunsLookup =
 toDrawn : Bool -> ScreenData -> List ScreenColourRun -> List ScreenColourRun
 toDrawn globalFlash screendata linelist =
     let
-        listBools : List Bool
-        listBools =
+        listlistBools : List (List Bool)
+        listlistBools =
             screendata.data
                 |> List.map intToBools
+
+        listBools : List Bool
+        listBools =
+            listlistBools
                 |> List.concat
 
         rcList : List RunCount
