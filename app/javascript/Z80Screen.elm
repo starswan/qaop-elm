@@ -31,8 +31,7 @@ bitsToLines datum =
 
 
 type alias RunCount =
-    { start : Int
-    , value : Bool
+    { value : Bool
     , count : Int
     }
 
@@ -55,18 +54,18 @@ intToBools index =
     intToBoolsCache |> Array.get index |> Maybe.withDefault []
 
 
-foldRunCounts : Bool -> List RunCount -> List RunCount
-foldRunCounts item list =
+foldBoolRunCounts : Bool -> List RunCount -> List RunCount
+foldBoolRunCounts item list =
     case list of
         runcount :: tail ->
             if item == runcount.value then
-                RunCount runcount.start runcount.value (runcount.count + 1) :: tail
+                RunCount runcount.value (runcount.count + 1) :: tail
 
             else
-                RunCount (runcount.start + runcount.count) item 1 :: list
+                RunCount item 1 :: list
 
         _ ->
-            [ RunCount 0 item 1 ]
+            [ RunCount item 1 ]
 
 
 
@@ -77,8 +76,7 @@ foldRunCounts item list =
 
 
 type alias ScreenColourRun =
-    { start : Int
-    , length : Int
+    { length : Int
     , colour : SpectrumColour
     }
 
@@ -95,41 +93,72 @@ pairToColour globalFlash raw_colour runcount =
         flash =
             colour_byte |> getBit 7
 
-        ink =
-            Bitwise.and raw_colour 0x07
+        value =
+            if flash && globalFlash then
+                not runcount.value
 
-        paper =
-            Bitwise.and raw_colour 0x38 |> shiftRightBy 3
-
-        value = if flash && globalFlash then
-                   not runcount.value
-                else
-                   runcount.value
+            else
+                runcount.value
 
         colour =
             if value then
-                ink
+                -- ink
+                Bitwise.and raw_colour 0x07
 
             else
-                paper
+                --paper
+                Bitwise.and raw_colour 0x38 |> shiftRightBy 3
     in
-    ScreenColourRun runcount.start runcount.count (spectrumColour colour bright)
+    ScreenColourRun runcount.count (spectrumColour colour bright)
+
+
+runCounts0to255 : Array (List RunCount)
+runCounts0to255 =
+    -- lookup of data byte to [rc1, rc2, rc3]
+    ints0to255
+        |> List.map
+            (\value ->
+                value
+                    |> intToBools
+                    |> List.foldl foldBoolRunCounts []
+                    |> List.reverse
+            )
+        |> Array.fromList
+
+
+intToRcList : Int -> List RunCount
+intToRcList index =
+    runCounts0to255 |> Array.get index |> Maybe.withDefault []
+
+
+foldRunCounts : RunCount -> List RunCount -> List RunCount
+foldRunCounts item list =
+    case list of
+        runcount :: tail ->
+            if item.value == runcount.value then
+                RunCount runcount.value (runcount.count + item.count) :: tail
+
+            else
+                item :: list
+
+        _ ->
+            List.singleton item
 
 
 toDrawn : Bool -> ScreenData -> List ScreenColourRun -> List ScreenColourRun
 toDrawn globalFlash screendata linelist =
     let
-        listBools : List Bool
-        listBools =
+        list2 : List RunCount
+        list2 =
             screendata.data
-                |> List.map intToBools
+                |> List.map intToRcList
                 |> List.concat
+                |> List.foldl foldRunCounts []
+                |> List.reverse
 
         newList : List ScreenColourRun
         newList =
-            listBools
-                |> List.foldl foldRunCounts []
-                |> List.reverse
+            list2
                 |> List.map (pairToColour globalFlash screendata.colour)
     in
     newList ++ linelist

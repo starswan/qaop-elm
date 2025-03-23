@@ -102,21 +102,31 @@ init data =
     ( Model newQaop c_TICKTIME 0 0 Nothing, cmd )
 
 
-lineToSvg : Int -> ScreenColourRun -> Svg Message
-lineToSvg y_index linedata =
+lineToSvg : Int -> ( Int, ScreenColourRun ) -> Svg Message
+lineToSvg y_index ( start, linedata ) =
     line
-        [ x1 (48 + linedata.start |> String.fromInt)
+        [ x1 (48 + start |> String.fromInt)
         , y1 (40 + y_index |> String.fromInt)
-        , x2 ((48 + linedata.start + linedata.length) |> String.fromInt)
+        , x2 ((48 + start + linedata.length) |> String.fromInt)
         , y2 (40 + y_index |> String.fromInt)
         , stroke (linedata.colour |> .colour)
         ]
         []
 
 
-lineListToSvg : Int -> List ScreenColourRun -> List (Svg Message)
+lineListToSvg : Int -> List ( Int, ScreenColourRun ) -> List (Svg Message)
 lineListToSvg y_index linelist =
     linelist |> List.map (lineToSvg y_index)
+
+
+foldScr : ScreenColourRun -> List ( Int, ScreenColourRun ) -> List ( Int, ScreenColourRun )
+foldScr item list =
+    case list of
+        ( head, headScr ) :: tail ->
+            ( head + headScr.length, item ) :: list
+
+        _ ->
+            List.singleton ( 0, item )
 
 
 view : Model -> Html Message
@@ -125,9 +135,20 @@ view model =
         screen =
             model.qaop.spectrum.cpu.env.ram.screen
 
-        screen_data =
+        -- List (0-255) of List SCR
+        screen1 : List (List ScreenColourRun)
+        screen1 =
             screen
                 |> screenLines
+
+        screen2 : List (List ( Int, ScreenColourRun ))
+        screen2 =
+            screen1
+                |> List.map (\scrList -> scrList |> List.foldl foldScr [] |> List.reverse)
+
+        screen_data : List (List (Svg Message))
+        screen_data =
+            screen2
                 |> List.indexedMap lineListToSvg
 
         -- border colour is never bright
