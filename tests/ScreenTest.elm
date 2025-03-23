@@ -25,7 +25,7 @@ suite =
       ],
       describe "rawToLines"
       [
-         test "runCounts" <|
+         test "foldBoolRunCounts" <|
             \_ ->
                let
                   a = [0x80, 0x03] |> List.map Z80Screen.intToBools |> List.concat
