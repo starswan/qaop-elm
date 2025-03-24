@@ -82,54 +82,6 @@ type alias ScreenColourRun =
     }
 
 
-intToColour : Bool -> Int -> Bool -> SpectrumColour
-intToColour globalFlash raw_colour bitValue =
-    let
-        colour_byte =
-            Byte.fromInt raw_colour
-
-        bright =
-            --(raw_colour |> Bitwise.and 0x40) /= 0
-            colour_byte |> getBit 6
-
-        --
-        flash =
-            --(raw_colour |> Bitwise.and 0x80) /= 0
-            colour_byte |> getBit 7
-
-        --(flash, bright) = case raw_colour |> Bitwise.and 0xC0 of
-        --    0 -> (False, False)
-        --    1 -> (False, True)
-        --    2 -> (True, False)
-        --    _ -> (True, True)
-        value =
-            if flash && globalFlash then
-                not bitValue
-
-            else
-                bitValue
-
-        colour =
-            if value then
-                -- ink
-                Bitwise.and raw_colour 0x07
-
-            else
-                --paper
-                Bitwise.and raw_colour 0x38 |> shiftRightBy 3
-    in
-    spectrumColour colour bright
-
-
-pairToColour : Bool -> Int -> RunCount -> ScreenColourRun
-pairToColour globalFlash raw_colour runcount =
-    let
-        colour =
-            intToColour globalFlash raw_colour runcount.value
-    in
-    ScreenColourRun runcount.count colour
-
-
 runCounts0to255 : Array (List RunCount)
 runCounts0to255 =
     -- lookup of data byte to [rc1, rc2, rc3]
@@ -163,6 +115,104 @@ foldRunCounts item list =
             List.singleton item
 
 
+pairToColour : Bool -> Int -> RunCount -> ScreenColourRun
+pairToColour globalFlash raw_colour runcount =
+    let
+        colour_byte =
+            Byte.fromInt raw_colour
+
+        bright =
+            colour_byte |> getBit 6
+
+        flash =
+            colour_byte |> getBit 7
+
+        value =
+            if flash && globalFlash then
+                not runcount.value
+
+            else
+                runcount.value
+
+        colour =
+            if value then
+                -- ink
+                Bitwise.and raw_colour 0x07
+
+            else
+                --paper
+                Bitwise.and raw_colour 0x38 |> shiftRightBy 3
+    in
+    ScreenColourRun runcount.count (spectrumColour colour bright)
+
+
+makeColourRun : Bool -> Int -> Array (List ScreenColourRun)
+makeColourRun globalFlash colourValue =
+    ints0to255
+        |> List.map
+            (\dataValue ->
+                let
+                    runCountList : List RunCount
+                    runCountList =
+                        runCounts0to255 |> Array.get dataValue |> Maybe.withDefault []
+                in
+                runCountList
+                    |> List.map (\rc -> pairToColour globalFlash colourValue rc)
+            )
+        |> Array.fromList
+
+
+
+--(plainColourRuns, flashColourRuns) : Array ( Array (List ScreenColourRun), Array (List ScreenColourRun) )
+
+
+plainColourRuns : Array (Array (List ScreenColourRun))
+plainColourRuns =
+    -- 1st lookup is for global flash off, the other for global flash on
+    -- Array (data) -> Array (colour) -> (List ScreenColourRun)
+    ints0to255
+        |> List.map
+            (\colourValue ->
+                let
+                    plainColour : Array (List ScreenColourRun)
+                    plainColour =
+                        makeColourRun False colourValue
+                in
+                plainColour
+            )
+        |> Array.fromList
+
+
+flashColourRuns : Array (Array (List ScreenColourRun))
+flashColourRuns =
+    -- 1st lookup is for global flash off, the other for global flash on
+    -- Array (data) -> Array (colour) -> (List ScreenColourRun)
+    ints0to255
+        |> List.map
+            (\colourValue ->
+                let
+                    flashColour : Array (List ScreenColourRun)
+                    flashColour =
+                        makeColourRun True colourValue
+                in
+                flashColour
+            )
+        |> Array.fromList
+
+
+
+--lookupColour : Bool -> Int -> RunCount -> ScreenColourRun
+--lookupColour globalFlash raw_colour runcount =
+--    let
+--        lookup = if globalFlash then
+--                    flashColourRuns
+--                 else
+--                    plainColourRuns
+--        rcList = lookup |> Array.get raw_colour |> Maybe.withDefault ([] |> Array.fromList)
+--    in
+--
+
+
 toDrawn : Bool -> ScreenData -> List ScreenColourRun -> List ScreenColourRun
 toDrawn globalFlash screendata linelist =
     let
@@ -171,7 +221,8 @@ toDrawn globalFlash screendata linelist =
             screendata.data
                 |> List.map intToRcList
                 |> List.concat
-                |> List.foldr foldRunCounts []
+                |> List.foldl foldRunCounts []
+                |> List.reverse
 
         newList : List ScreenColourRun
         newList =
