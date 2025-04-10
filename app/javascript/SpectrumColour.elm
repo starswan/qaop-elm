@@ -93,7 +93,7 @@ spectrumBrightColours =
 spectrumColour : Int -> Bool -> SpectrumColour
 spectrumColour value bright =
     if bright then
-        Dict.get value spectrumBrightColours |> withDefault { value = White, colour = c_UNBRIGHT_WHITE }
+        Dict.get value spectrumBrightColours |> withDefault { value = BrightWhite, colour = c_UNBRIGHT_WHITE }
 
     else
         Dict.get value spectrumColours |> withDefault { value = White, colour = c_UNBRIGHT_WHITE }
