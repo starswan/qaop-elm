@@ -30,7 +30,7 @@ and_h ixiyhl _ z80 =
     -- case 0xA4: and(HL>>>8); break;
     -- case 0xA4: and(xy>>>8); break;
     --z80 |> set_flag_regs (z80_and (get_h ixiyhl z80.main) z80.flags)
-    z80.flags |> z80_and (get_h_ixiy ixiyhl z80.main) |> FlagRegs
+    FlagRegsWithPc (z80.flags |> z80_and (get_h_ixiy ixiyhl z80.main)) z80.pc
 
 
 and_l : IXIY -> Z80ROM -> Z80 -> Z80Delta
@@ -38,8 +38,7 @@ and_l ixiyhl _ z80 =
     -- case 0xA5: and(HL&0xFF); break;
     -- case 0xA5: and(xy&0xFF); break;
     --z80 |> set_flag_regs (z80_and (get_l ixiyhl z80.main) z80.flags)
-    z80.flags |> z80_and (get_l_ixiy ixiyhl z80.main) |> FlagRegs
-
+    FlagRegsWithPc (z80.flags |> z80_and (get_l_ixiy ixiyhl z80.main)) z80.pc
 
 and_indirect_hl : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
 and_indirect_hl ixiyhl rom48k z80 =
@@ -56,14 +55,14 @@ xor_h : IXIY -> Z80ROM -> Z80 -> Z80Delta
 xor_h ixiyhl _ z80 =
     -- case 0xAC: xor(HL>>>8); break;
     -- case 0xAC: xor(xy>>>8); break;
-    z80.flags |> z80_xor (get_h_ixiy ixiyhl z80.main) |> FlagRegs
+    FlagRegsWithPc (z80.flags |> z80_xor (get_h_ixiy ixiyhl z80.main)) z80.pc
 
 
 xor_l : IXIY -> Z80ROM -> Z80 -> Z80Delta
 xor_l ixiyhl _ z80 =
     -- case 0xAD: xor(HL&0xFF); break;
     -- case 0xAD: xor(xy&0xFF); break;
-    z80.flags |> z80_xor (get_l_ixiy ixiyhl z80.main) |> FlagRegs
+    FlagRegsWithPc (z80.flags |> z80_xor (get_l_ixiy ixiyhl z80.main)) z80.pc
 
 
 xor_indirect_hl : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
