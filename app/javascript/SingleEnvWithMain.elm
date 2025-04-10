@@ -6,7 +6,7 @@ import Dict exposing (Dict)
 import TransformTypes exposing (InstructionDuration(..))
 import Utils exposing (shiftLeftBy8)
 import Z80Env exposing (Z80Env, mem)
-import Z80Flags exposing (BitTest(..), FlagRegisters, adc, add16, sbc, testBit, z80_add, z80_and, z80_sub, z80_xor)
+import Z80Flags exposing (BitTest(..), FlagRegisters, adc, add16, sbc, testBit, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
 import Z80Rom exposing (Z80ROM)
 import Z80Transform exposing (ChangeMainFlagsOperation(..), ChangeMainOperation(..), InstructionLength(..), Z80Operation(..), Z80Transform)
 import Z80Types exposing (MainWithIndexRegisters, Z80)
@@ -29,6 +29,8 @@ type SingleEnvMainChange
     | SbcARegister Int CpuTimeCTime
     | AndARegister Int CpuTimeCTime
     | XorARegister Int CpuTimeCTime
+    | OrARegister Int CpuTimeCTime
+    | CpARegister Int CpuTimeCTime
 
 
 standardSingleEnvMain : Dict Int (MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange)
@@ -50,6 +52,8 @@ standardSingleEnvMain =
         , ( 0x9E, sbc_indirect_hl )
         , ( 0xA6, and_indirect_hl )
         , ( 0xAE, xor_indirect_hl )
+        , ( 0xB6, or_indirect_hl )
+        , ( 0xBE, cp_indirect_hl )
         ]
 
 
@@ -94,21 +98,20 @@ parseSingleEnvMain operationDict increment _ instrCode rom48k z80 =
 applySingleEnvMainChange : InstructionLength -> SingleEnvMainChange -> FlagRegisters -> Z80Transform
 applySingleEnvMainChange new_pc z80changeData z80_flags =
     --let
-        --interrupts =
-        --    z80.interrupts
-        --env =
-        --    z80.env
-        --new_pc =
-        --    case pcInc of
-        --        IncrementByOne ->
-        --            OneByteInstruction
-        --
-        --        --Bitwise.and (z80.pc + 1) 0xFFFF
-        --        --
-        --        IncrementByTwo ->
-        --            TwoByteInstruction
-
-        --Bitwise.and (z80.pc + 2) 0xFFFF
+    --interrupts =
+    --    z80.interrupts
+    --env =
+    --    z80.env
+    --new_pc =
+    --    case pcInc of
+    --        IncrementByOne ->
+    --            OneByteInstruction
+    --
+    --        --Bitwise.and (z80.pc + 1) 0xFFFF
+    --        --
+    --        IncrementByTwo ->
+    --            TwoByteInstruction
+    --Bitwise.and (z80.pc + 2) 0xFFFF
     --in
     case z80changeData of
         SingleEnvNewARegister timeValue ->
@@ -131,6 +134,12 @@ applySingleEnvMainChange new_pc z80changeData z80_flags =
 
         XorARegister int cpuTimeCTime ->
             { pcIncrement = new_pc, time = cpuTimeCTime, timeIncrement = FourTStates, operation = ChangeFlagRegisters (z80_flags |> z80_xor int) }
+
+        OrARegister int cpuTimeCTime ->
+            { pcIncrement = new_pc, time = cpuTimeCTime, timeIncrement = FourTStates, operation = ChangeFlagRegisters (z80_flags |> z80_or int) }
+
+        CpARegister int cpuTimeCTime ->
+            { pcIncrement = new_pc, time = cpuTimeCTime, timeIncrement = FourTStates, operation = ChangeFlagRegisters (z80_flags |> z80_cp int) }
 
         SingleEnvNewBRegister int cpuTimeCTime ->
             { pcIncrement = new_pc, time = cpuTimeCTime, timeIncrement = FourTStates, operation = ChangeMain (ChangeBRegister int) }
@@ -443,6 +452,7 @@ sbc_indirect_hl z80_main rom48k z80_env =
     in
     SbcARegister value.value value.time
 
+
 and_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
 and_indirect_hl z80_main rom48k z80_env =
     -- case 0x9E: sbc(env.mem(HL)); time+=3; break;
@@ -452,6 +462,7 @@ and_indirect_hl z80_main rom48k z80_env =
     in
     AndARegister value.value value.time
 
+
 xor_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
 xor_indirect_hl z80_main rom48k z80_env =
     -- case 0x9E: sbc(env.mem(HL)); time+=3; break;
@@ -460,3 +471,23 @@ xor_indirect_hl z80_main rom48k z80_env =
             mem z80_main.hl z80_env.time rom48k z80_env.ram
     in
     XorARegister value.value value.time
+
+
+or_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
+or_indirect_hl z80_main rom48k z80_env =
+    -- case 0x9E: sbc(env.mem(HL)); time+=3; break;
+    let
+        value =
+            mem z80_main.hl z80_env.time rom48k z80_env.ram
+    in
+    OrARegister value.value value.time
+
+
+cp_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
+cp_indirect_hl z80_main rom48k z80_env =
+    -- case 0x9E: sbc(env.mem(HL)); time+=3; break;
+    let
+        value =
+            mem z80_main.hl z80_env.time rom48k z80_env.ram
+    in
+    CpARegister value.value value.time

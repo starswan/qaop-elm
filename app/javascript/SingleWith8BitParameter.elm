@@ -54,6 +54,8 @@ ixDouble =
         , ( 0xDD9E, ( \z80_main param -> SbcIndexedIndirect z80_main.ix param, IncreaseByThree ) )
         , ( 0xDDA6, ( \z80_main param -> AndIndexedIndirect z80_main.ix param, IncreaseByThree ) )
         , ( 0xDDAE, ( \z80_main param -> XorIndexedIndirect z80_main.ix param, IncreaseByThree ) )
+        , ( 0xDDB6, ( \z80_main param -> OrIndexedIndirect z80_main.ix param, IncreaseByThree ) )
+        , ( 0xDDBE, ( \z80_main param -> CpIndexedIndirect z80_main.ix param, IncreaseByThree ) )
         ]
 
 
@@ -76,6 +78,8 @@ iyDouble =
         , ( 0xFD9E, ( \z80_main param -> SbcIndexedIndirect z80_main.iy param, IncreaseByThree ) )
         , ( 0xFDA6, ( \z80_main param -> AndIndexedIndirect z80_main.iy param, IncreaseByThree ) )
         , ( 0xFDAE, ( \z80_main param -> XorIndexedIndirect z80_main.iy param, IncreaseByThree ) )
+        , ( 0xFDB6, ( \z80_main param -> OrIndexedIndirect z80_main.iy param, IncreaseByThree ) )
+        , ( 0xFDBE, ( \z80_main param -> CpIndexedIndirect z80_main.iy param, IncreaseByThree ) )
         ]
 
 
@@ -132,6 +136,8 @@ type DoubleWithRegisterChange
     | SbcIndexedIndirect Int Int
     | AndIndexedIndirect Int Int
     | XorIndexedIndirect Int Int
+    | OrIndexedIndirect Int Int
+    | CpIndexedIndirect Int Int
 
 
 type JumpChange
@@ -349,6 +355,25 @@ parseDoubleWithRegs operationDict instrTime instrCode rom48k z80 =
                     in
                     Just { pcIncrement = new_pc, time = cpu_time, timeIncrement = FifteenTStates, operation = ChangeFlagRegisters (z80.flags |> z80_xor value.value) }
 
+                OrIndexedIndirect addr offset ->
+                    let
+                        address =
+                            addr + byte offset |> Bitwise.and 0xFFFF
+
+                        value =
+                            mem address cpu_time rom48k z80.env.ram
+                    in
+                    Just { pcIncrement = new_pc, time = cpu_time, timeIncrement = FifteenTStates, operation = ChangeFlagRegisters (z80.flags |> z80_or value.value) }
+
+                CpIndexedIndirect addr offset ->
+                    let
+                        address =
+                            addr + byte offset |> Bitwise.and 0xFFFF
+
+                        value =
+                            mem address cpu_time rom48k z80.env.ram
+                    in
+                    Just { pcIncrement = new_pc, time = cpu_time, timeIncrement = FifteenTStates, operation = ChangeFlagRegisters (z80.flags |> z80_cp value.value) }
 
         Nothing ->
             Nothing
