@@ -2,9 +2,8 @@ module Z80Delta exposing (..)
 
 import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimeIncrement, addCpuTimeTime, addCpuTimeTimeInc)
 import Z80Env exposing (Z80Env, addCpuTimeEnv, setMem, setMem16, z80_push)
-import Z80Flags exposing (FlagRegisters)
-import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIYHL(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters, Z80, add_cpu_time, f_szh0n0p, imm16, set408bit, set_flag_regs)
+import Z80Flags exposing (FlagRegisters, f_szh0n0p)
+import Z80Types exposing (IXIYHL(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters, Z80, add_cpu_time, set408bit)
 
 
 type Z80Delta
@@ -28,9 +27,9 @@ type Z80Delta
     | FlagsWithPcAndTime FlagRegisters Int CpuTimeCTime
     | InterruptsWithCpuTime InterruptRegisters CpuTimeCTime
     | MainRegsWithSpPcAndTime MainWithIndexRegisters Int Int CpuTimeCTime
-    | MainRegsWithEnvAndPc MainWithIndexRegisters Z80Env Int
-    | OnlyTime CpuTimeCTime
-    | MainRegsWithAltRegs MainWithIndexRegisters MainRegisters
+    --| MainRegsWithEnvAndPc MainWithIndexRegisters Z80Env Int
+    --| OnlyTime CpuTimeCTime
+    --| MainRegsWithAltRegs MainWithIndexRegisters MainRegisters
     | OnlyPush Int
     | PushWithPc Int Int
     | PushWithCpuTimeAndPc Int CpuTimeCTime Int
@@ -118,9 +117,6 @@ applyDeltaWithChanges z80delta z80 =
         FlagsWithPCMainAndCpuTime flagRegisters pc mainWithIndexRegisters time ->
             { z80 | flags = flagRegisters, pc = pc, env = { z80_env | time = time }, main = mainWithIndexRegisters, interrupts = z80delta.interrupts }
 
-        FlagsWithSpTimeAndPc flagRegisters sp time pc ->
-            { z80 | flags = flagRegisters, pc = pc, env = { z80_env | time = time, sp = sp }, interrupts = z80delta.interrupts }
-
         OnlyPush value ->
             { z80 | pc = z80delta.pc, env = { z80_env | time = z80delta.time } |> z80_push value, interrupts = z80delta.interrupts }
 
@@ -168,31 +164,31 @@ applyDeltaWithChanges z80delta z80 =
             { z80 | main = mainWithIndexRegisters, pc = z80delta.pc, env = { env | time = time, sp = sp } |> z80_push value, interrupts = z80delta.interrupts }
 
 
-delta_noop : Z80ROM -> Z80 -> Z80Delta
-delta_noop _ _ =
-    NoChange
+--delta_noop : Z80ROM -> Z80 -> Z80Delta
+--delta_noop _ _ =
+--    NoChange
 
 
-jp_delta : Bool -> Z80ROM -> Z80 -> Z80Delta
-jp_delta y rom48k z80 =
-    let
-        result =
-            z80 |> jp y rom48k
-    in
-    CpuTimeWithPc result.time result.pc
+--jp_delta : Bool -> Z80ROM -> Z80 -> Z80Delta
+--jp_delta y rom48k z80 =
+--    let
+--        result =
+--            z80 |> jp y rom48k
+--    in
+--    CpuTimeWithPc result.time result.pc
 
 
-jp : Bool -> Z80ROM -> Z80 -> CpuTimeAndPc
-jp y rom48k z80 =
-    let
-        a =
-            z80 |> imm16 rom48k
-    in
-    if y then
-        CpuTimeAndPc a.time a.value
-
-    else
-        CpuTimeAndPc a.time a.pc
+--jp : Bool -> Z80ROM -> Z80 -> CpuTimeAndPc
+--jp y rom48k z80 =
+--    let
+--        a =
+--            z80 |> imm16 rom48k
+--    in
+--    if y then
+--        CpuTimeAndPc a.time a.value
+--
+--    else
+--        CpuTimeAndPc a.time a.pc
 
 --rst : Int -> Z80 -> (Int, Int)
 --rst c z80 =

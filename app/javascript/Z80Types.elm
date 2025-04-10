@@ -1,6 +1,6 @@
 module Z80Types exposing (..)
 
-import Bitwise exposing (complement)
+import Bitwise
 import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimePcAndValue, addCpuTimeTime)
 import Utils exposing (byte, char, shiftLeftBy8, shiftRightBy8)
 import Z80Env exposing (Z80Env, Z80EnvWithPC, addCpuTimeEnv, mem, mem16, setMem)
@@ -173,43 +173,43 @@ imm16 rom48k z80 =
 --	}
 
 
-call_if : Bool -> Z80ROM -> Z80 -> Z80EnvWithPC
-call_if y rom48k z80 =
-    let
-        a =
-            z80 |> imm16 rom48k
+--call_if : Bool -> Z80ROM -> Z80 -> Z80EnvWithPC
+--call_if y rom48k z80 =
+--    let
+--        a =
+--            z80 |> imm16 rom48k
+--
+--        env =
+--            z80.env
+--
+--        --z80_2 =
+--        --    { z80 | pc = a.pc, env = { env | time = a.time } }
+--        new_env =
+--            { env | time = a.time }
+--    in
+--    if y then
+--        let
+--            --b = debug_log "call" (a.value |> subName) Nothing
+--            --z80_1 = z80_2 |> push z80_2.pc |> set_pc a.value
+--            pushed =
+--                new_env |> z80_push a.pc
+--
+--            --z80_1 = { z80_2 | env = pushed, pc = a.value }
+--        in
+--        Z80EnvWithPC pushed a.value
+--
+--    else
+--        Z80EnvWithPC new_env a.pc
 
-        env =
-            z80.env
 
-        --z80_2 =
-        --    { z80 | pc = a.pc, env = { env | time = a.time } }
-        new_env =
-            { env | time = a.time }
-    in
-    if y then
-        let
-            --b = debug_log "call" (a.value |> subName) Nothing
-            --z80_1 = z80_2 |> push z80_2.pc |> set_pc a.value
-            pushed =
-                new_env |> z80_push a.pc
-
-            --z80_1 = { z80_2 | env = pushed, pc = a.value }
-        in
-        Z80EnvWithPC pushed a.value
-
-    else
-        Z80EnvWithPC new_env a.pc
-
-
-rst_z80 : Int -> Z80 -> Z80
-rst_z80 c z80 =
-    --z80 |> push z80.pc |> set_pc (c - 199)
-    let
-        pushed =
-            z80.env |> z80_push z80.pc
-    in
-    { z80 | env = pushed, pc = c - 199 }
+--rst_z80 : Int -> Z80 -> Z80
+--rst_z80 c z80 =
+--    --z80 |> push z80.pc |> set_pc (c - 199)
+--    let
+--        pushed =
+--            z80.env |> z80_push z80.pc
+--    in
+--    { z80 | env = pushed, pc = c - 199 }
 
 
 a_with_z80 : Z80 -> CpuTimePcAndValue

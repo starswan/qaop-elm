@@ -1,11 +1,12 @@
 module Group0xE0 exposing (..)
 
+import Bitwise
 import CpuTimeCTime exposing (addCpuTimeTime)
 import Dict exposing (Dict)
 import GroupED exposing (group_ed)
-import Z80Delta exposing (Z80Delta(..), rst_delta)
-import Z80Env exposing (pop)
-import Z80Flags exposing (z80_and, z80_xor)
+import Utils exposing (shiftLeftBy8)
+import Z80Delta exposing (Z80Delta(..))
+import Z80Env exposing (addCpuTimeEnv, out, z80_in, z80_pop)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIY(..), IXIYHL(..), Z80, get_de, get_xy, get_xy_ixiy, imm8, set_de_main)
 
@@ -103,7 +104,7 @@ push_hl ixiyhl _ z80 =
     -- case 0xE5: push(HL); break;
     -- case 0xE5: push(xy); break;
     let
-        toBePushed = (z80.main |> get_xy ixiyhl)
+        toBePushed = (z80.main |> get_xy_ixiy ixiyhl)
         --pushed =
         --    z80.env |> z80_push toBePushed
     in
