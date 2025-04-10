@@ -81,24 +81,32 @@ type alias ScreenColourRun =
     }
 
 
-pairToColour : Bool -> Int -> RunCount -> ScreenColourRun
-pairToColour globalFlash raw_colour runcount =
+intToColour : Bool -> Int -> Bool -> SpectrumColour
+intToColour globalFlash raw_colour bitValue =
     let
         colour_byte =
             Byte.fromInt raw_colour
 
         bright =
+            --(raw_colour |> Bitwise.and 0x40) /= 0
             colour_byte |> getBit 6
 
+        --
         flash =
+            --(raw_colour |> Bitwise.and 0x80) /= 0
             colour_byte |> getBit 7
 
+        --(flash, bright) = case raw_colour |> Bitwise.and 0xC0 of
+        --    0 -> (False, False)
+        --    1 -> (False, True)
+        --    2 -> (True, False)
+        --    _ -> (True, True)
         value =
             if flash && globalFlash then
-                not runcount.value
+                not bitValue
 
             else
-                runcount.value
+                bitValue
 
         colour =
             if value then
@@ -109,7 +117,16 @@ pairToColour globalFlash raw_colour runcount =
                 --paper
                 Bitwise.and raw_colour 0x38 |> shiftRightBy 3
     in
-    ScreenColourRun runcount.count (spectrumColour colour bright)
+    spectrumColour colour bright
+
+
+pairToColour : Bool -> Int -> RunCount -> ScreenColourRun
+pairToColour globalFlash raw_colour runcount =
+    let
+        colour =
+            intToColour globalFlash raw_colour runcount.value
+    in
+    ScreenColourRun runcount.count colour
 
 
 runCounts0to255 : Array (List RunCount)
@@ -153,8 +170,7 @@ toDrawn globalFlash screendata linelist =
             screendata.data
                 |> List.map intToRcList
                 |> List.concat
-                |> List.foldl foldRunCounts []
-                |> List.reverse
+                |> List.foldr foldRunCounts []
 
         newList : List ScreenColourRun
         newList =
