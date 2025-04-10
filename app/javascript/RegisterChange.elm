@@ -1,7 +1,7 @@
 module RegisterChange exposing (..)
 
 import TransformTypes exposing (InstructionDuration(..))
-import Z80Flags exposing (FlagRegisters, adc, sbc, z80_add, z80_and, z80_sub, z80_xor)
+import Z80Flags exposing (FlagRegisters, adc, sbc, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
 import Z80Transform exposing (ChangeEnvOperation(..), ChangeEnvWithFlagsOperation(..), ChangeMainOperation(..), InstructionLength, Z80Operation(..))
 import Z80Types exposing (MainWithIndexRegisters, Z80)
 
@@ -25,6 +25,8 @@ type RegisterChange
     | SbcRegisterA Int
     | AndRegisterA Int
     | XorRegisterA Int
+    | OrRegisterA Int
+    | CpRegisterA Int
     | ChangeRegisterH Int
     | ChangeRegisterIXH Int
     | ChangeRegisterIXL Int
@@ -107,6 +109,12 @@ applyRegisterChange change z80_flags z80_main =
 
         XorRegisterA value ->
             FlagRegsApplied (z80_flags |> z80_xor value)
+
+        OrRegisterA value ->
+            FlagRegsApplied (z80_flags |> z80_or value)
+
+        CpRegisterA value ->
+            FlagRegsApplied (z80_flags |> z80_cp value)
 
         ChangeRegisterE int ->
             OperationApplied (ChangeMain (ChangeERegister int))

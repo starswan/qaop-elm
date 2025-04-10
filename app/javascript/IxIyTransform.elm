@@ -47,6 +47,10 @@ ixSingleByteMain =
         , ( 0xDDA5, \z80_main -> AndRegisterA (z80_main.ix |> Bitwise.and 0xFF) )
         , ( 0xDDAC, \z80_main -> XorRegisterA (z80_main.ix |> shiftRightBy8) )
         , ( 0xDDAD, \z80_main -> XorRegisterA (z80_main.ix |> Bitwise.and 0xFF) )
+        , ( 0xDDB4, \z80_main -> OrRegisterA (z80_main.ix |> shiftRightBy8) )
+        , ( 0xDDB5, \z80_main -> OrRegisterA (z80_main.ix |> Bitwise.and 0xFF) )
+        , ( 0xDDBC, \z80_main -> CpRegisterA (z80_main.ix |> shiftRightBy8) )
+        , ( 0xDDBD, \z80_main -> CpRegisterA (z80_main.ix |> Bitwise.and 0xFF) )
         ]
 
 
@@ -90,6 +94,10 @@ iySingleByteMain =
         , ( 0xFDA5, \z80_main -> AndRegisterA (z80_main.iy |> Bitwise.and 0xFF) )
         , ( 0xFDAC, \z80_main -> XorRegisterA (z80_main.iy |> shiftRightBy8) )
         , ( 0xFDAD, \z80_main -> XorRegisterA (z80_main.iy |> Bitwise.and 0xFF) )
+        , ( 0xFDB4, \z80_main -> OrRegisterA (z80_main.iy |> shiftRightBy8) )
+        , ( 0xFDB5, \z80_main -> OrRegisterA (z80_main.iy |> Bitwise.and 0xFF) )
+        , ( 0xFDBC, \z80_main -> CpRegisterA (z80_main.iy |> shiftRightBy8) )
+        , ( 0xFDBD, \z80_main -> CpRegisterA (z80_main.iy |> Bitwise.and 0xFF) )
         ]
 
 

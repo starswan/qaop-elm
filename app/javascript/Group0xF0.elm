@@ -3,7 +3,7 @@ module Group0xF0 exposing (..)
 import Array exposing (Array)
 import Dict exposing (Dict)
 import Group0x70 exposing (miniDict70)
-import Group0xB0 exposing (delta_dict_B0, miniDictB0)
+import Group0xB0 exposing (delta_dict_B0)
 import Group0xC0 exposing (delta_dict_C0)
 import Group0xE0 exposing (delta_dict_E0, miniDictE0)
 import Z80Delta exposing (Z80Delta(..))
@@ -58,5 +58,4 @@ xYDict : Dict Int (IXIY -> Z80ROM -> Z80 -> Z80Delta)
 xYDict =
     miniDictF0
         |> Dict.union miniDict70
-        |> Dict.union miniDictB0
         |> Dict.union miniDictE0
