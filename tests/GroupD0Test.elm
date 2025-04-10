@@ -3,7 +3,7 @@ module GroupD0Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (execute_instruction)
-import Z80Env exposing (setMem)
+import Z80Env exposing (mem16, setMem)
 import Z80Rom
 
 
@@ -52,6 +52,23 @@ suite =
                     in
                     Expect.equal { pc = addr + 1, d = 0x56, e = 0x16, sp = 0xFF79 } { sp = new_z80.env.sp, pc = new_z80.pc, d = new_z80.main.d, e = new_z80.main.e }
             ]
+        , test "0xD7 RST 10" <|
+            \_ ->
+                let
+                    new_env =
+                        z80env
+                            |> setMem addr 0xD7
+                            |> setMem 0xFF77 0x16
+                            |> setMem 0xFF78 0x56
+
+                    new_z80 =
+                        execute_instruction z80rom
+                            { z80
+                                | env = { new_env | sp = 0xFF77 }
+                                , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                            }
+                in
+                Expect.equal { pc = 0x10, sp = 0xFF75 } { sp = new_z80.env.sp, pc = new_z80.pc }
         , test "0xD9 EXX" <|
             \_ ->
                 let
@@ -72,4 +89,21 @@ suite =
                             }
                 in
                 Expect.equal { pc = addr + 1, hl = 0x4040 } { pc = new_z80.pc, hl = new_z80.main.hl }
+        , test "0xDF RST 18" <|
+            \_ ->
+                let
+                    new_env =
+                        z80env
+                            |> setMem addr 0xDF
+                            |> setMem 0xFF75 0x16
+                            |> setMem 0xFF76 0x56
+
+                    new_z80 =
+                        execute_instruction z80rom
+                            { z80
+                                | env = { new_env | sp = 0xFF77 }
+                                , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                            }
+                in
+                Expect.equal { pc = 0x18, sp = 0xFF75, mem = addr + 1 } { sp = new_z80.env.sp, pc = new_z80.pc, mem = mem16 0xFF75 z80rom new_z80.env |> .value }
         ]
