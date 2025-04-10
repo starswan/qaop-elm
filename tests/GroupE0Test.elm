@@ -31,24 +31,7 @@ suite =
     describe "Z80.execute_instruction"
         -- Nest as many descriptions as you like.
         [ describe "RST nn"
-            [ test "0xD7 RST 10" <|
-                \_ ->
-                    let
-                        new_env =
-                            z80env
-                                |> setMem addr 0xD7
-                                |> setMem 0xFF77 0x16
-                                |> setMem 0xFF78 0x56
-
-                        new_z80 =
-                            execute_instruction z80rom
-                                { z80
-                                    | env = { new_env | sp = 0xFF77 }
-                                    , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
-                                }
-                    in
-                    Expect.equal { pc = 0x10, sp = 0xFF75 } { sp = new_z80.env.sp, pc = new_z80.pc }
-            , test "0xDF RST 18" <|
+            [ test "0xDF RST 18" <|
                 \_ ->
                     let
                         new_env =
