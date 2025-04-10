@@ -1,6 +1,6 @@
 module Z80Types exposing (..)
 
-import Bitwise exposing (complement)
+import Bitwise
 import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimePcAndValue, addCpuTimeTime)
 import Utils exposing (byte, char, shiftLeftBy8, shiftRightBy8)
 import Z80Env exposing (Z80Env, Z80EnvWithPC, addCpuTimeEnv, mem, mem16, setMem)
@@ -64,6 +64,11 @@ type alias IntWithFlagsTimeAndPC =
     , flags : FlagRegisters
     , time : CpuTimeCTime
     , pc : Int
+    }
+
+
+type alias Z80PushValue =
+    { value : Int
     }
 
 
@@ -166,6 +171,8 @@ imm16 rom48k z80 =
 --		int a = MP = imm16();
 --		if(y) {push(PC); PC = a;}
 --	}
+
+
 --call_if : Bool -> Z80ROM -> Z80 -> Z80EnvWithPC
 --call_if y rom48k z80 =
 --    let
@@ -193,6 +200,8 @@ imm16 rom48k z80 =
 --
 --    else
 --        Z80EnvWithPC new_env a.pc
+
+
 --rst_z80 : Int -> Z80 -> Z80
 --rst_z80 c z80 =
 --    --z80 |> push z80.pc |> set_pc (c - 199)
@@ -201,14 +210,6 @@ imm16 rom48k z80 =
 --            z80.env |> z80_push z80.pc
 --    in
 --    { z80 | env = pushed, pc = c - 199 }
---rst : Int -> Z80 -> Z80EnvWithPC
---rst c z80 =
---    --z80 |> push z80.pc |> set_pc (c - 199)
---    let
---        pushed =
---            z80.env |> z80_push z80.pc
---    in
---    Z80EnvWithPC pushed (c - 199)
 
 
 a_with_z80 : Z80 -> CpuTimePcAndValue
