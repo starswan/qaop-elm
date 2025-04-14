@@ -33,7 +33,7 @@ suite =
     in
     describe "Z80.execute_instruction"
         -- Nest as many descriptions as you like.
-        [ describe "8 bit loads"
+        [ describe "0x40 is a NO-OP"
             [ test "0x41 LD B,C" <|
                 \_ ->
                     let
