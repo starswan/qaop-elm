@@ -311,22 +311,6 @@ suite =
                                 }
                     in
                     Expect.equal ( addr + 1, 0x0100 ) ( new_z80.pc, Bitwise.and new_z80.flags.ff 0x0100 )
-            , test "0x3F CCF" <|
-                \_ ->
-                    let
-                        new_env =
-                            z80env
-                                |> setMem addr 0x3F
-
-                        new_z80 =
-                            execute_instruction z80rom
-                                { z80
-                                    | env = { new_env | sp = 0x8765 }
-                                    , main = { z80main | hl = 0x6545 }
-                                    , flags = { flags | ff = 0x0100 }
-                                }
-                    in
-                    Expect.equal ( addr + 1, 0 ) ( new_z80.pc, Bitwise.and new_z80.flags.ff 0x0100 )
             ]
         , describe "0x38 JR C, n"
             [ test "Dont jump" <|
@@ -488,4 +472,20 @@ suite =
                     in
                     Expect.equal ( addr + 2, 0x78 ) ( z80_after_01.pc, z80_after_01.flags.a )
             ]
+        , test "0x3F CCF" <|
+            \_ ->
+                let
+                    new_env =
+                        z80env
+                            |> setMem addr 0x3F
+
+                    new_z80 =
+                        execute_instruction z80rom
+                            { z80
+                                | env = { new_env | sp = 0x8765 }
+                                , main = { z80main | hl = 0x6545 }
+                                , flags = { flags | ff = 0x0100 }
+                            }
+                in
+                Expect.equal ( addr + 1, 0 ) ( new_z80.pc, Bitwise.and new_z80.flags.ff 0x0100 )
         ]
