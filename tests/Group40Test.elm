@@ -32,24 +32,52 @@ suite =
             Z80Rom.constructor
     in
     describe "Z80.execute_instruction"
-        -- Nest as many descriptions as you like.
-        [ describe "0x40 is a NO-OP"
-            [ test "0x41 LD B,C" <|
-                \_ ->
-                    let
-                        new_env =
-                            z80env
-                                |> setMem addr 0x41
+        -- 0x40 is a NO-OP
+        [ test "0x41 LD B,C" <|
+            \_ ->
+                let
+                    new_env =
+                        z80env
+                            |> setMem addr 0x41
 
-                        new_z80 =
-                            execute_instruction z80rom
-                                { z80
-                                    | env = new_env
-                                    , main = { z80main | hl = 0x6545, c = 0x76 }
-                                }
-                    in
-                    Expect.equal ( addr + 1, 0x76 ) ( new_z80.pc, new_z80.main.b )
-            ]
+                    new_z80 =
+                        execute_instruction z80rom
+                            { z80
+                                | env = new_env
+                                , main = { z80main | hl = 0x6545, c = 0x76 }
+                            }
+                in
+                Expect.equal ( addr + 1, 0x76 ) ( new_z80.pc, new_z80.main.b )
+        , test "0x42 LD B,D" <|
+            \_ ->
+                let
+                    new_env =
+                        z80env
+                            |> setMem addr 0x42
+
+                    new_z80 =
+                        execute_instruction z80rom
+                            { z80
+                                | env = new_env
+                                , main = { z80main | hl = 0x6545, d = 0x76 }
+                            }
+                in
+                Expect.equal ( addr + 1, 0x76 ) ( new_z80.pc, new_z80.main.b )
+        , test "0x43 LD B,E" <|
+            \_ ->
+                let
+                    new_env =
+                        z80env
+                            |> setMem addr 0x43
+
+                    new_z80 =
+                        execute_instruction z80rom
+                            { z80
+                                | env = new_env
+                                , main = { z80main | hl = 0x6545, e = 0x76 }
+                            }
+                in
+                Expect.equal ( addr + 1, 0x76 ) ( new_z80.pc, new_z80.main.b )
         , describe "0x44 LD B,H"
             [ test "LD B,H" <|
                 \_ ->
@@ -148,7 +176,7 @@ suite =
                     in
                     Expect.equal ( addr + 2, 0x98 ) ( new_z80.pc, new_z80.main.b )
             ]
-        , describe "0x46 Ld B, (HL)"
+        , describe "0x46 LD B, (HL)"
             [ test "LD B,(HL)" <|
                 \_ ->
                     let
@@ -202,23 +230,69 @@ suite =
                     in
                     Expect.equal ( addr + 3, 0x78 ) ( z80_after_01.pc, z80_after_01.main.b )
             ]
-        , describe "0x48 etc"
-            [ test "0x48 LD C,B" <|
-                \_ ->
-                    let
-                        new_env =
-                            z80env
-                                |> setMem addr 0x48
+        , test "0x47 LD B,A" <|
+            \_ ->
+                let
+                    new_env =
+                        z80env
+                            |> setMem addr 0x47
 
-                        new_z80 =
-                            execute_instruction z80rom
-                                { z80
-                                    | env = new_env
-                                    , main = { z80main | hl = 0x6545, b = 0x76 }
-                                }
-                    in
-                    Expect.equal ( addr + 1, 0x76 ) ( new_z80.pc, new_z80.main.c )
-            , test "0x4C LD C,H" <|
+                    new_z80 =
+                        execute_instruction z80rom
+                            { z80
+                                | env = new_env
+                                , main = { z80main | hl = 0x6545, e = 0x76 }
+                                , flags = { flags | a = 0x38 }
+                            }
+                in
+                Expect.equal ( addr + 1, 0x38 ) ( new_z80.pc, new_z80.main.b )
+        , test "0x48 LD C,B" <|
+            \_ ->
+                let
+                    new_env =
+                        z80env
+                            |> setMem addr 0x48
+
+                    new_z80 =
+                        execute_instruction z80rom
+                            { z80
+                                | env = new_env
+                                , main = { z80main | hl = 0x6545, b = 0x76 }
+                            }
+                in
+                Expect.equal ( addr + 1, 0x76 ) ( new_z80.pc, new_z80.main.c )
+        , test "0x4A LD C,D" <|
+            \_ ->
+                let
+                    new_env =
+                        z80env
+                            |> setMem addr 0x4A
+
+                    new_z80 =
+                        execute_instruction z80rom
+                            { z80
+                                | env = new_env
+                                , main = { z80main | hl = 0x6545, d = 0x76 }
+                            }
+                in
+                Expect.equal ( addr + 1, 0x76 ) ( new_z80.pc, new_z80.main.c )
+        , test "0x4B LD C,E" <|
+            \_ ->
+                let
+                    new_env =
+                        z80env
+                            |> setMem addr 0x4B
+
+                    new_z80 =
+                        execute_instruction z80rom
+                            { z80
+                                | env = new_env
+                                , main = { z80main | hl = 0x6545, e = 0x76 }
+                            }
+                in
+                Expect.equal ( addr + 1, 0x76 ) ( new_z80.pc, new_z80.main.c )
+        , describe "0x4C"
+            [ test "0x4C LD C,H" <|
                 \_ ->
                     let
                         new_env =
@@ -265,7 +339,9 @@ suite =
                                 }
                     in
                     Expect.equal ( addr + 2, 0x23 ) ( new_z80.pc, new_z80.main.c )
-            , test "0x4D LD C,L" <|
+            ]
+        , describe "0x4D"
+            [ test "0x4D LD C,L" <|
                 \_ ->
                     let
                         new_env =
@@ -312,7 +388,9 @@ suite =
                                 }
                     in
                     Expect.equal ( addr + 2, 0x98 ) ( new_z80.pc, new_z80.main.c )
-            , test "0x4E - LD C,(HL)" <|
+            ]
+        , describe "0x4E"
+            [ test "0x4E - LD C,(HL)" <|
                 \_ ->
                     let
                         new_env =
@@ -365,4 +443,20 @@ suite =
                     in
                     Expect.equal ( addr + 3, 0x78 ) ( z80_after_01.pc, z80_after_01.main.c )
             ]
+        , test "0x4F LD C,A" <|
+            \_ ->
+                let
+                    new_env =
+                        z80env
+                            |> setMem addr 0x4F
+
+                    new_z80 =
+                        execute_instruction z80rom
+                            { z80
+                                | env = new_env
+                                , main = { z80main | hl = 0x6545, e = 0x76 }
+                                , flags = { flags | a = 0x38 }
+                            }
+                in
+                Expect.equal ( addr + 1, 0x38 ) ( new_z80.pc, new_z80.main.c )
         ]
