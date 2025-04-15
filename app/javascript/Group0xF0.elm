@@ -10,29 +10,6 @@ import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIY(..), IXIYHL, Z80)
 
 
-miniDictF0 : Dict Int (IXIY -> Z80ROM -> Z80 -> Z80Delta)
-miniDictF0 =
-    Dict.fromList
-        [ ( 0xF9, ld_sp_hl )
-        ]
-
-
-ld_sp_hl : IXIY -> Z80ROM -> Z80 -> Z80Delta
-ld_sp_hl ixiyhl rom48k z80 =
-    -- case 0xF9: SP=xy; time+=2; break;
-    let
-        v =
-            case ixiyhl of
-                IXIY_IX ->
-                    z80.main.ix
-
-                IXIY_IY ->
-                    z80.main.iy
-    in
-    --{ z80 | env = { env | sp = v } |> addCpuTimeEnv 2 }
-    SpAndCpuTimeWithPc v 2 z80.pc
-
-
 lt40_delta_dict : Dict Int (IXIYHL -> Z80ROM -> Z80 -> Z80Delta)
 lt40_delta_dict =
     delta_dict_E0
@@ -54,6 +31,5 @@ lt40_array =
 
 xYDict : Dict Int (IXIY -> Z80ROM -> Z80 -> Z80Delta)
 xYDict =
-    miniDictF0
+    miniDictE0
         |> Dict.union miniDict70
-        |> Dict.union miniDictE0

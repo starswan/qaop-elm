@@ -51,6 +51,7 @@ ixSingleByteMain =
         , ( 0xDDB5, \z80_main -> OrRegisterA (z80_main.ix |> Bitwise.and 0xFF) )
         , ( 0xDDBC, \z80_main -> CpRegisterA (z80_main.ix |> shiftRightBy8) )
         , ( 0xDDBD, \z80_main -> CpRegisterA (z80_main.ix |> Bitwise.and 0xFF) )
+        , ( 0xDDF9, \z80_main -> RegChangeNewSP z80_main.ix )
         ]
 
 
@@ -98,6 +99,7 @@ iySingleByteMain =
         , ( 0xFDB5, \z80_main -> OrRegisterA (z80_main.iy |> Bitwise.and 0xFF) )
         , ( 0xFDBC, \z80_main -> CpRegisterA (z80_main.iy |> shiftRightBy8) )
         , ( 0xFDBD, \z80_main -> CpRegisterA (z80_main.iy |> Bitwise.and 0xFF) )
+        , ( 0xFDF9, \z80_main -> RegChangeNewSP z80_main.iy )
         ]
 
 
