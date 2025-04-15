@@ -56,23 +56,64 @@ suite =
                         new_z80.env |> mem16 0xFF75 z80rom
                 in
                 Expect.equal { pc = addr + 1, sp = 0xFF75, push = 0x7640 } { pc = new_z80.pc, sp = new_z80.env.sp, push = pushed.value }
-        , test "0xF9 LD SP,HL" <|
-            \_ ->
-                let
-                    alt =
-                        z80.alt_main
+        , describe "0xF9 LD SP,HL"
+            [
+            test "LD SP,HL" <|
+                \_ ->
+                    let
+                        alt =
+                            z80.alt_main
 
-                    new_env =
-                        z80env
-                            |> setMem addr 0xF9
+                        new_env =
+                            z80env
+                                |> setMem addr 0xF9
 
-                    new_z80 =
-                        execute_instruction z80rom
-                            { z80
-                                | env = { new_env | sp = 0xFF77 }
-                                , alt_main = { alt | hl = 0x4040, b = 0x67, c = 0x34, d = 0x12, e = 0x81 }
-                                , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
-                            }
-                in
-                Expect.equal { pc = addr + 1, sp = 0x5050 } { pc = new_z80.pc, sp = new_z80.env.sp }
+                        new_z80 =
+                            execute_instruction z80rom
+                                { z80
+                                    | env = { new_env | sp = 0xFF77 }
+                                    , alt_main = { alt | hl = 0x4040, b = 0x67, c = 0x34, d = 0x12, e = 0x81 }
+                                    , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                                }
+                    in
+                    Expect.equal { pc = addr + 1, sp = 0x5050 } { pc = new_z80.pc, sp = new_z80.env.sp }
+            ,test "LD SP,IX" <|
+                \_ ->
+                    let
+                        alt =
+                            z80.alt_main
+
+                        new_env =
+                            z80env
+                                |> setMem addr 0xDD
+                                |> setMem (addr  + 1 ) 0xF9
+
+                        new_z80 =
+                            execute_instruction z80rom
+                                { z80
+                                    | env = { new_env | sp = 0xFF77 }
+                                    , main = { z80main | ix = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                                }
+                    in
+                    Expect.equal { pc = addr + 2, sp = 0x5050 } { pc = new_z80.pc, sp = new_z80.env.sp }
+            ,test "LD SP,IY" <|
+                \_ ->
+                    let
+                        alt =
+                            z80.alt_main
+
+                        new_env =
+                            z80env
+                                |> setMem addr 0xFD
+                                |> setMem (addr  + 1 ) 0xF9
+
+                        new_z80 =
+                            execute_instruction z80rom
+                                { z80
+                                    | env = { new_env | sp = 0xFF77 }
+                                    , main = { z80main | iy = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                                }
+                    in
+                    Expect.equal { pc = addr + 2, sp = 0x5050 } { pc = new_z80.pc, sp = new_z80.env.sp }
+            ]
         ]

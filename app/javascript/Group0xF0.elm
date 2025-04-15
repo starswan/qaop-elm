@@ -38,7 +38,7 @@ ld_sp_hl ixiyhl rom48k z80 =
                     z80.main.iy
     in
     --{ z80 | env = { env | sp = v } |> addCpuTimeEnv 2 }
-    SpAndCpuTime v 2
+    SpAndCpuTimeWithPc v 2 z80.pc
 
 
 lt40_delta_dict : Dict Int (IXIYHL -> Z80ROM -> Z80 -> Z80Delta)
