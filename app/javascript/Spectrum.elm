@@ -299,12 +299,16 @@ frames keys speccy =
         ( new_loading, cpu ) =
             case loading_z80 of
                 Just z80 ->
-                    let
-                        --cpu2 = cpu1 |> doLoad
-                        a =
-                            1
-                    in
-                    ( True, cpu1 )
+                    case speccy.tape of
+                        Just z80_tape ->
+                            let
+                                ( new_z80, z80_load ) =
+                                    doLoad z80 speccy.rom48k z80_tape
+                            in
+                            ( z80_load, new_z80 )
+
+                        Nothing ->
+                            ( False, z80 )
 
                 Nothing ->
                     ( False
