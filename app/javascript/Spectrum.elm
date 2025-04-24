@@ -13,7 +13,7 @@ import Z80Debug exposing (debugLog)
 import Z80Env exposing (mem, mem16, reset_cpu_time)
 import Z80Flags exposing (c_FC, c_FZ, get_flags, set_flags)
 import Z80Rom exposing (Z80ROM, make_spectrum_rom)
-import Z80Tape exposing (Z80Tape)
+import Z80Tape exposing (TapePosition, Z80Tape, newPosition)
 import Z80Types exposing (IXIYHL(..), Z80, get_de, get_ei, get_h, get_l, interrupt)
 
 
@@ -296,28 +296,33 @@ frames keys speccy =
             else
                 Nothing
 
-        ( new_loading, cpu ) =
+        ( new_loading, cpu, new_pos ) =
             case loading_z80 of
                 Just z80 ->
                     case speccy.tape of
                         Just z80_tape ->
                             let
-                                ( new_z80, z80_load ) =
+                                ( new_z80, z80_load, tape_position ) =
                                     doLoad z80 speccy.rom48k z80_tape
                             in
-                            ( z80_load, new_z80 )
+                            ( z80_load, new_z80, tape_position )
 
                         Nothing ->
-                            ( False, z80 )
+                            ( False, z80, newPosition )
 
                 Nothing ->
                     ( False
                     , cpu1
                         |> interrupt 0xFF speccy.rom48k
                         |> execute speccy.rom48k
+                        , newPosition
                     )
     in
-    { speccy | loading = new_loading, cpu = cpu }
+    case speccy.tape of
+        Just z80_tape ->
+            { speccy | loading = new_loading, cpu = cpu, tape = Just { z80_tape | tapePos = new_pos } }
+        Nothing ->
+            { speccy | loading = new_loading, cpu = cpu }
 
 
 
@@ -1093,7 +1098,7 @@ type alias TapeState =
     }
 
 
-doLoad : Z80 -> Z80ROM -> Z80Tape -> ( Z80, Bool )
+doLoad : Z80 -> Z80ROM -> Z80Tape -> ( Z80, Bool, TapePosition )
 doLoad cpu z80rom tape =
     --		if(tape_changed || (keyboard[7]&1)==0) {
     --			cpu.f(0);
@@ -1104,7 +1109,7 @@ doLoad cpu z80rom tape =
             flags =
                 set_flags 0 cpu.flags.a
         in
-        ( { cpu | flags = flags }, False )
+        ( { cpu | flags = flags }, False, tape.tapePos )
 
     else
         --		int p = tape_pos;
@@ -1282,7 +1287,7 @@ doLoad cpu z80rom tape =
                     Nothing ->
                         False
         in
-        ( cpu, bool )
+        ( cpu, bool, tape.tapePos )
 
 
 
