@@ -315,12 +315,13 @@ frames keys speccy =
                     , cpu1
                         |> interrupt 0xFF speccy.rom48k
                         |> execute speccy.rom48k
-                        , newPosition
+                    , newPosition
                     )
     in
     case speccy.tape of
         Just z80_tape ->
             { speccy | loading = new_loading, cpu = cpu, tape = Just { z80_tape | tapePos = new_pos } }
+
         Nothing ->
             { speccy | loading = new_loading, cpu = cpu }
 
@@ -1080,8 +1081,6 @@ checkLoad spectrum =
 --		this.tape = tape;
 --	}
 --
---	private final boolean do_load(byte[] tape, boolean ready)
---	{
 
 
 type alias TapeState =
@@ -1098,6 +1097,91 @@ type alias TapeState =
     }
 
 
+
+--	private final boolean do_load(byte[] tape, boolean ready)
+--	{
+--		if(tape_changed || (keyboard[7]&1)==0) {
+--			cpu.f(0);
+--			return false;
+--		}
+--
+--		int p = tape_pos;
+--
+--		int ix = cpu.ix();
+--		int de = cpu.de();
+--		int h, l = cpu.hl(); h = l>>8 & 0xFF; l &= 0xFF;
+--		int a = cpu.a();
+--		int f = cpu.f();
+--		int rf = -1;
+--
+--		if(p == tape_blk) {
+--			p += 2;
+--			if(tape.length < p) {
+--				if(ready) {
+--					cpu.pc(cpu.pop());
+--					cpu.f(cpu.FZ);
+--				}
+--				return !ready;
+--			}
+--			tape_blk = p + (tape[p-2]&0xFF | tape[p-1]<<8&0xFF00);
+--			h = 0;
+--		}
+--
+--		for(;;) {
+--			if(p == tape_blk) {
+--				rf = cpu.FZ;
+--				break;
+--			}
+--			if(p == tape.length) {
+--				if(ready)
+--					rf = cpu.FZ;
+--				break;
+--			}
+--			l = tape[p++]&0xFF;
+--			h ^= l;
+--			if(de == 0) {
+--				a = h;
+--				rf = 0;
+--				if(a<1)
+--					rf = cpu.FC;
+--				break;
+--			}
+--			if((f&cpu.FZ)==0) {
+--				a ^= l;
+--				if(a != 0) {
+--					rf = 0;
+--					break;
+--				}
+--				f |= cpu.FZ;
+--				continue;
+--			}
+--			if((f&cpu.FC)!=0)
+--				mem(ix, l);
+--			else {
+--				a = mem(ix) ^ l;
+--				if(a != 0) {
+--					rf = 0;
+--					break;
+--				}
+--			}
+--			ix = (char)(ix+1);
+--			de--;
+--		}
+--
+--		cpu.ix(ix);
+--		cpu.de(de);
+--		cpu.hl(h<<8|l);
+--		cpu.a(a);
+--		if(rf>=0) {
+--			f = rf;
+--			cpu.pc(cpu.pop());
+--		}
+--		cpu.f(f);
+--		tape_pos = p;
+--		return rf<0;
+--	}
+
+
 doLoad : Z80 -> Z80ROM -> Z80Tape -> ( Z80, Bool, TapePosition )
 doLoad cpu z80rom tape =
     --		if(tape_changed || (keyboard[7]&1)==0) {
@@ -1112,39 +1196,22 @@ doLoad cpu z80rom tape =
         ( { cpu | flags = flags }, False, tape.tapePos )
 
     else
-        --		int p = tape_pos;
-        --
-        --		int ix = cpu.ix();
-        --		int de = cpu.de();
-        --		int h, l = cpu.hl(); h = l>>8 & 0xFF; l &= 0xFF;
-        --		int a = cpu.a();
-        --		int f = cpu.f();
-        --		int rf = -1;
-        --		if(p == tape_blk) {
-        --			p += 2;
-        --			if(tape.length < p) {
-        --				if(ready) {
-        --					cpu.pc(cpu.pop());
-        --					cpu.f(cpu.FZ);
-        --				}
-        --				return !ready;
-        --			}
-        --			tape_blk = p + (tape[p-2]&0xFF | tape[p-1]<<8&0xFF00);
-        --			h = 0;
-        --		}
         let
+            initial = {
+                p = tape.tapePos.position,
+                ix = cpu.main.ix,
+                de = cpu.main |> get_de,
+                h = cpu.main.hl |> shiftRightBy 8,
+                l = cpu.main.hl |> Bitwise.and 0xFF,
+                a = cpu.flags.a,
+                f = cpu.flags |> get_flags,
+                rf = -1,
+                data = Dict.empty,
+                break = False
+                }
+
             p =
                 tape.tapePos
-
-            h0 =
-                cpu.main |> get_h HL
-
-            h1 =
-                if p.position == 0 then
-                    0
-
-                else
-                    h0
 
             bool =
                 case tape.tapfiles |> Dict.get p.tapfileNumber of
@@ -1153,8 +1220,7 @@ doLoad cpu z80rom tape =
                             tapeBlk =
                                 aTapfile.block.dataLength
 
-                            startState =
-                                { p = tape.tapePos.position, ix = cpu.main.ix, de = cpu.main |> get_de, h = h1, l = cpu.main |> get_l HL, a = cpu.flags.a, f = cpu.flags |> get_flags, rf = -1, data = Dict.empty, break = False }
+                            startState = initial
 
                             new_data =
                                 --		for(;;) {
