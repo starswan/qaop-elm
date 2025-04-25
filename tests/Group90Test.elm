@@ -53,9 +53,6 @@ suite =
             , test "SUB IXH" <|
                 \_ ->
                     let
-                        alt =
-                            z80.alt_main
-
                         new_env =
                             z80env
                                 |> setMem addr 0xDD
@@ -73,9 +70,6 @@ suite =
             , test "SUB IYH" <|
                 \_ ->
                     let
-                        alt =
-                            z80.alt_main
-
                         new_env =
                             z80env
                                 |> setMem addr 0xFD
@@ -111,9 +105,6 @@ suite =
             , test "SUB IXL" <|
                 \_ ->
                     let
-                        alt =
-                            z80.alt_main
-
                         new_env =
                             z80env
                                 |> setMem addr 0xDD
@@ -131,9 +122,6 @@ suite =
             , test "SUB IYL" <|
                 \_ ->
                     let
-                        alt =
-                            z80.alt_main
-
                         new_env =
                             z80env
                                 |> setMem addr 0xFD
@@ -170,8 +158,6 @@ suite =
             , test "0xDD 0x96 0x01 SUB (IX + n)" <|
                 \_ ->
                     let
-                        alt =
-                            z80.alt_main
 
                         new_env =
                             z80env
@@ -192,8 +178,6 @@ suite =
             , test "0xFD 0x96 0x01 SUB (IY + n)" <|
                 \_ ->
                     let
-                        alt =
-                            z80.alt_main
 
                         new_env =
                             z80env
@@ -251,9 +235,6 @@ suite =
             , test "SBC IXH" <|
                 \_ ->
                     let
-                        alt =
-                            z80.alt_main
-
                         new_env =
                             z80env
                                 |> setMem addr 0xDD
@@ -271,9 +252,6 @@ suite =
             , test "SBC IYH" <|
                 \_ ->
                     let
-                        alt =
-                            z80.alt_main
-
                         new_env =
                             z80env
                                 |> setMem addr 0xFD
@@ -309,9 +287,6 @@ suite =
             , test "SBC IXL" <|
                 \_ ->
                     let
-                        alt =
-                            z80.alt_main
-
                         new_env =
                             z80env
                                 |> setMem addr 0xDD
@@ -329,9 +304,6 @@ suite =
             , test "SBC IYL" <|
                 \_ ->
                     let
-                        alt =
-                            z80.alt_main
-
                         new_env =
                             z80env
                                 |> setMem addr 0xFD
@@ -368,9 +340,6 @@ suite =
             , test "0xDD 0x9E SBC (IX + n)" <|
                 \_ ->
                     let
-                        alt =
-                            z80.alt_main
-
                         new_env =
                             z80env
                                 |> setMem addr 0xDD
@@ -390,9 +359,6 @@ suite =
             , test "0xFD 0x9E 0x01 SBC (IY + n)" <|
                 \_ ->
                     let
-                        alt =
-                            z80.alt_main
-
                         new_env =
                             z80env
                                 |> setMem addr 0xFD

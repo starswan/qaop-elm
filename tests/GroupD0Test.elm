@@ -19,9 +19,6 @@ suite =
         z80 =
             { old_z80 | pc = addr }
 
-        flags =
-            z80.flags
-
         z80env =
             z80.env
 

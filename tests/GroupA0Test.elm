@@ -53,9 +53,6 @@ suite =
             , test "AND IXH" <|
                 \_ ->
                     let
-                        alt =
-                            z80.alt_main
-
                         new_env =
                             z80env
                                 |> setMem addr 0xDD
@@ -73,9 +70,6 @@ suite =
             , test "AND IYH" <|
                 \_ ->
                     let
-                        alt =
-                            z80.alt_main
-
                         new_env =
                             z80env
                                 |> setMem addr 0xFD
@@ -111,9 +105,6 @@ suite =
             , test "SUB IXL" <|
                 \_ ->
                     let
-                        alt =
-                            z80.alt_main
-
                         new_env =
                             z80env
                                 |> setMem addr 0xDD
@@ -131,9 +122,6 @@ suite =
             , test "AND IYL" <|
                 \_ ->
                     let
-                        alt =
-                            z80.alt_main
-
                         new_env =
                             z80env
                                 |> setMem addr 0xFD
@@ -170,9 +158,6 @@ suite =
             , test "0xDD 0xA6 0x01 AND (IX + n)" <|
                 \_ ->
                     let
-                        alt =
-                            z80.alt_main
-
                         new_env =
                             z80env
                                 |> setMem addr 0xDD
@@ -192,9 +177,6 @@ suite =
             , test "0xFD 0xA6 0x01 AND (IY + n)" <|
                 \_ ->
                     let
-                        alt =
-                            z80.alt_main
-
                         new_env =
                             z80env
                                 |> setMem addr 0xFD
@@ -232,9 +214,6 @@ suite =
             , test "XOR IXH" <|
                 \_ ->
                     let
-                        alt =
-                            z80.alt_main
-
                         new_env =
                             z80env
                                 |> setMem addr 0xDD
@@ -252,9 +231,6 @@ suite =
             , test "XOR IYH" <|
                 \_ ->
                     let
-                        alt =
-                            z80.alt_main
-
                         new_env =
                             z80env
                                 |> setMem addr 0xFD
@@ -290,9 +266,6 @@ suite =
             , test "XOR IXL" <|
                 \_ ->
                     let
-                        alt =
-                            z80.alt_main
-
                         new_env =
                             z80env
                                 |> setMem addr 0xDD
@@ -310,9 +283,6 @@ suite =
             , test "XOR IYL" <|
                 \_ ->
                     let
-                        alt =
-                            z80.alt_main
-
                         new_env =
                             z80env
                                 |> setMem addr 0xFD
@@ -349,9 +319,6 @@ suite =
             , test "0xDD 0xAE 0x01 XOR (IX + n)" <|
                 \_ ->
                     let
-                        alt =
-                            z80.alt_main
-
                         new_env =
                             z80env
                                 |> setMem addr 0xDD
@@ -371,9 +338,6 @@ suite =
             , test "0xFD 0xAE 0x01 AND (IY + n)" <|
                 \_ ->
                     let
-                        alt =
-                            z80.alt_main
-
                         new_env =
                             z80env
                                 |> setMem addr 0xFD
