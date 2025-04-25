@@ -36,9 +36,6 @@ suite =
         [ test "0xF5 PUSH AF" <|
             \_ ->
                 let
-                    alt =
-                        z80.alt_main
-
                     new_env =
                         z80env
                             |> setMem addr 0xF5
@@ -48,7 +45,6 @@ suite =
                             { z80
                                 | env = { new_env | sp = 0xFF77 }
                                 , flags = { flags | a = 0x76 }
-                                , alt_main = { alt | hl = 0x4040, b = 0x67, c = 0x34, d = 0x12, e = 0x81 }
                                 , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                             }
 
@@ -61,9 +57,6 @@ suite =
             test "LD SP,HL" <|
                 \_ ->
                     let
-                        alt =
-                            z80.alt_main
-
                         new_env =
                             z80env
                                 |> setMem addr 0xF9
@@ -72,7 +65,6 @@ suite =
                             execute_instruction z80rom
                                 { z80
                                     | env = { new_env | sp = 0xFF77 }
-                                    , alt_main = { alt | hl = 0x4040, b = 0x67, c = 0x34, d = 0x12, e = 0x81 }
                                     , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
@@ -80,9 +72,6 @@ suite =
             ,test "LD SP,IX" <|
                 \_ ->
                     let
-                        alt =
-                            z80.alt_main
-
                         new_env =
                             z80env
                                 |> setMem addr 0xDD
@@ -99,9 +88,6 @@ suite =
             ,test "LD SP,IY" <|
                 \_ ->
                     let
-                        alt =
-                            z80.alt_main
-
                         new_env =
                             z80env
                                 |> setMem addr 0xFD
