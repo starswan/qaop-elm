@@ -59,10 +59,11 @@ byte value =
         value
 
 
-char : Int -> Int
-char value =
-    Bitwise.and value 0xFFFF
+--char : Int -> Int
+--char value =
+--    Bitwise.and value 0xFFFF
 
+char = 0xFFFF |> Bitwise.and
 
 toHexString : Int -> String
 toHexString value =
