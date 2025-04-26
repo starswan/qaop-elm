@@ -2,7 +2,7 @@ module CB68Test exposing (..)
 
 import Expect exposing (Expectation)
 import Test exposing (..)
-import Z80 exposing (execute_instruction)
+import Z80 exposing (executeSingleInstruction)
 import Z80Env exposing (setMem)
 import Z80Rom
 
@@ -53,7 +53,7 @@ suite =
                                 |> setMem addr_1 0x68
 
                         new_z80 =
-                            execute_instruction z80rom
+                            executeSingleInstruction z80rom
                                 { z80
                                     | env = new_env
                                     , main = { z80main | b = 0x00 }
@@ -68,7 +68,7 @@ suite =
                                 |> setMem addr_1 0x68
 
                         new_z80 =
-                            execute_instruction z80rom
+                            executeSingleInstruction z80rom
                                 { z80
                                     | env = new_env
                                     , main = { z80main | b = 0x20 }
@@ -85,7 +85,7 @@ suite =
                                 |> setMem addr_1 0x69
 
                         new_z80 =
-                            execute_instruction z80rom
+                            executeSingleInstruction z80rom
                                 { z80
                                     | env = new_env
                                     , main = { z80main | c = 0x00 }
@@ -100,7 +100,7 @@ suite =
                                 |> setMem addr_1 0x69
 
                         new_z80 =
-                            execute_instruction z80rom
+                            executeSingleInstruction z80rom
                                 { z80
                                     | env = new_env
                                     , main = { z80main | c = 0x20 }
@@ -117,7 +117,7 @@ suite =
                                 |> setMem (addr + 1) 0x6A
 
                         new_z80 =
-                            execute_instruction z80rom
+                            executeSingleInstruction z80rom
                                 { z80
                                     | env = new_env
                                     , main = { z80main | hl = 0x6545, d = 0x00 }
@@ -132,7 +132,7 @@ suite =
                                 |> setMem (addr + 1) 0x6A
 
                         new_z80 =
-                            execute_instruction z80rom
+                            executeSingleInstruction z80rom
                                 { z80
                                     | env = new_env
                                     , main = { z80main | d = 0x20 }
@@ -149,7 +149,7 @@ suite =
                                 |> setMem (addr + 1) 0x6B
 
                         new_z80 =
-                            execute_instruction z80rom
+                            executeSingleInstruction z80rom
                                 { z80
                                     | env = new_env
                                     , main = { z80main | e = 0x00 }
@@ -164,7 +164,7 @@ suite =
                                 |> setMem (addr + 1) 0x6B
 
                         new_z80 =
-                            execute_instruction z80rom
+                            executeSingleInstruction z80rom
                                 { z80
                                     | env = new_env
                                     , main = { z80main | hl = 0x6545, e = 0x74 }
@@ -181,7 +181,7 @@ suite =
                                 |> setMem (addr + 1) 0x6C
 
                         new_z80 =
-                            execute_instruction z80rom
+                            executeSingleInstruction z80rom
                                 { z80
                                     | env = new_env
                                     , main = { z80main | hl = 0x2045 }
@@ -196,7 +196,7 @@ suite =
                                 |> setMem (addr + 1) 0x6C
 
                         new_z80 =
-                            execute_instruction z80rom
+                            executeSingleInstruction z80rom
                                 { z80
                                     | env = new_env
                                     , main = { z80main | hl = 0x45 }
@@ -213,7 +213,7 @@ suite =
                                 |> setMem (addr + 1) 0x6D
 
                         new_z80 =
-                            execute_instruction z80rom
+                            executeSingleInstruction z80rom
                                 { z80
                                     | env = new_env
                                     , main = { z80main | hl = 0x6525 }
@@ -228,7 +228,7 @@ suite =
                                 |> setMem (addr + 1) 0x6D
 
                         new_z80 =
-                            execute_instruction z80rom
+                            executeSingleInstruction z80rom
                                 { z80
                                     | env = new_env
                                     , main = { z80main | hl = 0x6440 }
@@ -246,7 +246,7 @@ suite =
                                 |> setMem 0x6545 0x20
 
                         new_z80 =
-                            execute_instruction z80rom
+                            executeSingleInstruction z80rom
                                 { z80
                                     | env = new_env
                                     , main = { z80main | hl = 0x6545 }
@@ -265,7 +265,7 @@ suite =
                                 |> setMem 0x6545 0x00
 
                         new_z80 =
-                            execute_instruction z80rom
+                            executeSingleInstruction z80rom
                                 { z80
                                 | env = new_env
                                     , main = { z80main | ix = 0x6540 }
@@ -284,7 +284,7 @@ suite =
                                 |> setMem 0x6545 0x20
 
                         new_z80 =
-                            execute_instruction z80rom
+                            executeSingleInstruction z80rom
                                 { z80
                                 | env = new_env
                                     , main = { z80main | ix = 0x6540 }
@@ -301,7 +301,7 @@ suite =
                                 |> setMem (addr + 1) 0x6F
 
                         new_z80 =
-                            execute_instruction z80rom
+                            executeSingleInstruction z80rom
                                 { z80
                                 | env = new_env
                                     , flags = { flags | a = 0x00 }
@@ -316,7 +316,7 @@ suite =
                                 |> setMem (addr + 1) 0x6F
 
                         new_z80 =
-                            execute_instruction z80rom
+                            executeSingleInstruction z80rom
                                 { z80
                                 | env = new_env
                                     , flags = { flags | a = 0x20 }
