@@ -22,6 +22,7 @@ triple16WithFlags =
         , ( 0xCA, jp_z_nn )
         , ( 0xCC, call_z_nn )
         , ( 0xD2, jp_nc_nn )
+        , ( 0xD4, call_nc_nn )
         , ( 0xDA, jp_c_nn )
         , ( 0xE2, jp_po_nn )
         , ( 0xEA, jp_pe_nn )
@@ -135,6 +136,15 @@ call_z_nn param z80_flags =
     -- case 0xCC: call(Fr==0); break;
     --call_z80 (z80.flags.fr == 0) z80
     if z80_flags.fr == 0 then
+        AbsoluteCall param
+
+    else
+        Skip3ByteInstruction
+
+call_nc_nn : Int -> FlagRegisters -> TripleWithFlagsChange
+call_nc_nn param z80_flags =
+    -- case 0xD4: call((Ff&0x100)==0); break;
+    if Bitwise.and z80_flags.ff 0x0100 == 0 then
         AbsoluteCall param
 
     else

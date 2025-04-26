@@ -13,11 +13,17 @@ suite =
         addr =
             30000
 
+        sp =
+            0xF765
+
         old_z80 =
             Z80.constructor
 
+        old_z80env =
+            old_z80.env
+
         z80 =
-            { old_z80 | pc = addr }
+            { old_z80 | pc = addr, env = { old_z80env | sp = sp } }
 
         z80env =
             z80.env
@@ -87,6 +93,42 @@ suite =
                                 }
                     in
                     Expect.equal 0x3405 new_z80.pc
+            ]
+        , describe "0xD4 CALL NC"
+            [ test "Dont jump" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xD4
+                                |> setMem (addr + 1) 0x05
+                                |> setMem (addr + 2) 0x34
+
+                        new_z80 =
+                            executeSingleInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , flags = { flags | a = 0x39, ff = 0x100 }
+                                }
+                    in
+                    Expect.equal ( addr + 3, 0xF765 ) ( new_z80.pc, new_z80.env.sp )
+            , test "Jump" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xD4
+                                |> setMem (addr + 1) 0x05
+                                |> setMem (addr + 2) 0x34
+
+                        new_z80 =
+                            executeSingleInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , flags = { flags | a = 0x39, ff = 0x200 }
+                                }
+                    in
+                    Expect.equal ( 0x3405, 0xF763 ) ( new_z80.pc, new_z80.env.sp )
             ]
         , test "0xD7 RST 10" <|
             \_ ->
