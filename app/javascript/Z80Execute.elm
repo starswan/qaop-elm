@@ -31,7 +31,11 @@ type DeltaWithChanges
     | SingleEnvDelta CpuTimeCTime SingleByteEnvChange
     | MainWithEnvDelta PCIncrement SingleEnvMainChange
 
-type ExecuteResult = Z80DeltaChange DeltaWithChanges | Z80Result Z80
+
+type ExecuteResult
+    = Z80DeltaChange DeltaWithChanges
+    | Z80Result Z80
+
 
 apply_delta : Z80 -> Z80ROM -> DeltaWithChanges -> Z80
 apply_delta z80 rom48k z80delta =
@@ -70,9 +74,6 @@ apply_delta z80 rom48k z80delta =
 applyJumpChangeDelta : CpuTimeCTime -> JumpChange -> Z80 -> Z80
 applyJumpChangeDelta cpu_time z80changeData z80 =
     let
-        --interrupts =
-        --    z80.interrupts
-
         old_env =
             z80.env
     in
@@ -115,9 +116,6 @@ applyJumpChangeDelta cpu_time z80changeData z80 =
 applyDoubleWithRegistersDelta : MediumPCIncrement -> CpuTimeCTime -> DoubleWithRegisterChange -> Z80 -> Z80
 applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData z80 =
     let
-        --interrupts =
-        --    z80.interrupts
-
         old_env =
             z80.env
 
@@ -220,17 +218,13 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData z80 =
 
 
 applySimple8BitDelta : MediumPCIncrement -> CpuTimeCTime -> Single8BitChange -> Z80 -> Z80
-applySimple8BitDelta pcInc cpu_time z80changeData tmp_z80 =
+applySimple8BitDelta pcInc cpu_time z80changeData z80 =
     let
-        --interrupts =
-        --    tmp_z80.interrupts
+        z80_env =
+            z80.env
 
-        env =
-            tmp_z80.env
-
-        z80 =
-            { tmp_z80 | env = { env | time = cpu_time } }
-
+        --z80 =
+        --    { tmp_z80 | env = { z80_env | time = cpu_time } }
         new_pc =
             case pcInc of
                 IncreaseByTwo ->
@@ -242,23 +236,16 @@ applySimple8BitDelta pcInc cpu_time z80changeData tmp_z80 =
         main =
             z80.main |> applySimple8BitChange z80changeData
     in
-    { z80 | pc = new_pc
-                    , r = z80.r + 1
-
-    , main = main }
+    { z80 | pc = new_pc, r = z80.r + 1, main = main, env = { z80_env | time = cpu_time } }
 
 
 applyFlagDelta : PCIncrement -> CpuTimeCTime -> FlagChange -> Z80ROM -> Z80 -> Z80
 applyFlagDelta pcInc cpu_time z80_flags rom48k tmp_z80 =
     let
-        interrupts =
-            tmp_z80.interrupts
-
         env =
             tmp_z80.env
 
         new_pc =
-            --Bitwise.and (tmp_z80.pc + pcInc) 0xFFFF
             case pcInc of
                 IncrementByOne ->
                     (tmp_z80.pc + 1) |> Bitwise.and 0xFFFF
@@ -351,7 +338,6 @@ applyPureDelta cpuInc cpu_time z80changeData tmp_z80 =
             { tmp_z80 | env = { env | time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement4 } }
 
         new_pc =
-            --Bitwise.and (z80.pc + cpuInc) 0xFFFF
             case cpuInc of
                 IncrementByOne ->
                     (z80.pc + 1) |> Bitwise.and 0xFFFF
@@ -359,18 +345,12 @@ applyPureDelta cpuInc cpu_time z80changeData tmp_z80 =
                 IncrementByTwo ->
                     (z80.pc + 2) |> Bitwise.and 0xFFFF
     in
-    { z80 | pc = new_pc
-                    , r = z80.r + 1
-
-     } |> applyZ80Change z80changeData
+    { z80 | pc = new_pc, r = z80.r + 1 } |> applyZ80Change z80changeData
 
 
 applyRegisterDelta : PCIncrement -> CpuTimeCTime -> RegisterChange -> Z80ROM -> Z80 -> Z80
 applyRegisterDelta pc_inc cpu_time z80changeData rom48k z80 =
     let
-        interrupts =
-            z80.interrupts
-
         env =
             z80.env
 
@@ -384,21 +364,30 @@ applyRegisterDelta pc_inc cpu_time z80changeData rom48k z80 =
     in
     case z80.main |> applyRegisterChange z80changeData z80.flags of
         MainRegsApplied new_main ->
-            { z80 | pc = new_pc, main = new_main, env = { env | time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement4 }
+            { z80
+                | pc = new_pc
+                , main = new_main
+                , env = { env | time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement4 }
                 , r = z80.r + 1
             }
 
         FlagRegsApplied new_flags ->
-            { z80 | pc = new_pc, flags = new_flags, env = { env | time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement4 }
+            { z80
+                | pc = new_pc
+                , flags = new_flags
+                , env = { env | time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement4 }
                 , r = z80.r + 1
-             }
+            }
 
         MainRegsWithTimeApplied mainWithIndexRegisters timeIncrement ->
             let
                 env_1 =
                     { env | time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement4 |> addCpuTimeTimeInc timeIncrement }
             in
-            { z80 | env = env_1, pc = new_pc, main = mainWithIndexRegisters
+            { z80
+                | env = env_1
+                , pc = new_pc
+                , main = mainWithIndexRegisters
                 , r = z80.r + 1
             }
 
@@ -407,17 +396,23 @@ applyRegisterDelta pc_inc cpu_time z80changeData rom48k z80 =
                 env1 =
                     env |> z80_push int
             in
-            { z80 | pc = new_pc, env = { env1 | time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement4 }
+            { z80
+                | pc = new_pc
+                , env = { env1 | time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement4 }
                 , r = z80.r + 1
-             }
+            }
 
         NewSPApplied int cpuTimeIncrement ->
-            { z80 | pc = new_pc, env = { env | sp = int, time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement |> addCpuTimeTimeInc cpuTimeIncrement4 }
+            { z80
+                | pc = new_pc
+                , env = { env | sp = int, time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement |> addCpuTimeTimeInc cpuTimeIncrement4 }
                 , r = z80.r + 1
             }
 
         JumpApplied int ->
-            { z80 | pc = int, env = { env | time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement4 }
+            { z80
+                | pc = int
+                , env = { env | time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement4 }
                 , r = z80.r + 1
             }
 
@@ -436,9 +431,7 @@ applyRegisterDelta pc_inc cpu_time z80changeData rom48k z80 =
                 env_3 =
                     env_2 |> setMem addr flags.value |> addCpuTimeEnvInc cpuTimeIncrement
             in
-            { z80 | pc = new_pc, env = env_3, flags = flags.flags
-                , r = z80.r + 1
-            }
+            { z80 | pc = new_pc, env = env_3, flags = flags.flags, r = z80.r + 1 }
 
         DecrementIndirectApplied addr cpuTimeIncrement ->
             -- This should be a primitive operation on Z80Env to decrement a stored value
@@ -455,18 +448,14 @@ applyRegisterDelta pc_inc cpu_time z80changeData rom48k z80 =
                 env_3 =
                     env_2 |> setMem addr flags.value |> addCpuTimeEnvInc cpuTimeIncrement
             in
-            { z80 | pc = new_pc, env = env_3, flags = flags.flags
-                , r = z80.r + 1
-            }
+            { z80 | pc = new_pc, env = env_3, flags = flags.flags, r = z80.r + 1 }
 
         SetIndirectApplied addr value cpuTimeIncrement ->
             let
                 env_1 =
                     env |> setMem addr value |> addCpuTimeEnvInc cpuTimeIncrement
             in
-            { z80 | pc = new_pc, env = env_1
-                , r = z80.r + 1
-            }
+            { z80 | pc = new_pc, env = env_1, r = z80.r + 1 }
 
         Shifter0Applied addr cpuTimeIncrement ->
             z80 |> applyShifter new_pc shifter0 addr cpuTimeIncrement cpu_time rom48k
@@ -505,26 +494,18 @@ applyShifter new_pc shifterFunc addr cpuTimeIncrement cpu_time rom48k z80 =
         env =
             z80.env
 
-        interrupts =
-            z80.interrupts
-
         env_1 =
             { env | time = value.time }
 
         env_2 =
             env_1 |> setMem addr result.value |> addCpuTimeEnvInc cpuTimeIncrement
     in
-    { z80 | pc = new_pc, env = env_2
-                , r = z80.r + 1
-    }
+    { z80 | pc = new_pc, env = env_2, r = z80.r + 1 }
 
 
 applyTripleChangeDelta : Z80ROM -> TriplePCIncrement -> CpuTimeCTime -> TripleByteChange -> Z80 -> Z80
 applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
     let
-        interrupts =
-            z80.interrupts
-
         new_pc =
             case pc_increment of
                 IncrementByThree ->
@@ -655,28 +636,18 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
 z80_call : Int -> CpuTimeCTime -> Z80 -> Z80
 z80_call addr cpu_time z80 =
     let
-        interrupts =
-            z80.interrupts
-
         new_pc =
             Bitwise.and (z80.pc + 3) 0xFFFF
 
         env_1 =
             z80.env |> z80_push new_pc
     in
-    { z80
-        | pc = addr
-        , env = { env_1 | time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement4 }
-                , r = z80.r + 1
-    }
+    { z80 | pc = addr, env = { env_1 | time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement4 }, r = z80.r + 1 }
 
 
 applyTripleFlagChange : CpuTimeCTime -> TripleWithFlagsChange -> Z80 -> Z80
 applyTripleFlagChange cpu_time z80changeData z80 =
     let
-        interrupts =
-            z80.interrupts
-
         env =
             z80.env
     in
@@ -715,5 +686,3 @@ applyTripleFlagChange cpu_time z80changeData z80 =
 
         AbsoluteCall int ->
             z80 |> z80_call int cpu_time
-
-

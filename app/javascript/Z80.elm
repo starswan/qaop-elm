@@ -351,10 +351,7 @@ execute_delta ct rom48k z80 =
                                        Just delta16 ->
                                            Z80Result delta16
                                        Nothing ->
-                                           let
-                                               triplr16Param = z80 |> parseTriple16Param instrCode rom48k paramOffset
-                                           in
-                                           case triplr16Param of
+                                           case z80 |> parseTriple16Param instrCode rom48k paramOffset of
                                               Just deltaParam16 ->
                                                   Z80Result deltaParam16
                                               Nothing ->
