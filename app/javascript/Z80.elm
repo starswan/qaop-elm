@@ -365,10 +365,7 @@ execute_delta ct rom48k z80 =
                                               Just jumper ->
                                                 Z80DeltaChange jumper
                                               Nothing ->
-                                                  let
-                                                      doubler = z80 |>  parseDoubleWithRegs instrCode rom48k instrTime
-                                                  in
-                                                  case doubler of
+                                                  case z80 |>  parseDoubleWithRegs instrCode rom48k instrTime of
                                                       Just adoubler ->
                                                           Z80DeltaChange adoubler
                                                       Nothing ->
