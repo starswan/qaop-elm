@@ -123,7 +123,6 @@ ld_indirect_nn_a param z80_flags =
 call_nz_nn : Int -> FlagRegisters -> TripleWithFlagsChange
 call_nz_nn param z80_flags =
     -- case 0xC4: call(Fr!=0); break;
-    --call_z80 (z80.flags.fr /= 0) z80
     if z80_flags.fr /= 0 then
         AbsoluteCall param
 

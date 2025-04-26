@@ -513,7 +513,6 @@ group_xy ixiy rom48k old_z80 =
 -- case 0xED: group_ed(); break;
 -- case 0xC0: time++; if(Fr!=0) MP=PC=pop(); break;
 -- case 0xC2: jp(Fr!=0); break;
--- case 0xC4: call(Fr!=0); break;
 -- case 0xC8: time++; if(Fr==0) MP=PC=pop(); break;
 -- case 0xCA: jp(Fr==0); break;
 -- case 0xCC: call(Fr==0); break;
