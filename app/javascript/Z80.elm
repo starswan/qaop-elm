@@ -413,12 +413,9 @@ singleByte ctime instr_code tmp_z80 rom48k =
                                    -- duplicate of code in imm8 - add 3 to the cpu_time
                                    Just (Simple8BitDelta pcInc (param.time |> addCpuTimeTime 3) (f param.value))
                                Nothing ->
-                                   --case singleByteFlags |> Dict.get instr_code of
-                                   --     Just (flagFunc, t) -> Just (FlagDelta t ctime (flagFunc tmp_z80.flags))
-                                   --     Nothing ->
-                                          case singleByteMainAndFlagRegisters |> Dict.get instr_code of
-                                              Just (f, pcInc) -> Just (PureDelta pcInc ctime (f tmp_z80.main tmp_z80.flags))
-                                              Nothing -> Nothing
+                                  case singleByteMainAndFlagRegisters |> Dict.get instr_code of
+                                      Just (f, pcInc) -> Just (PureDelta pcInc ctime (f tmp_z80.main tmp_z80.flags))
+                                      Nothing -> Nothing
 
 
 oldDelta: CpuTimeAndValue -> InterruptRegisters -> Z80 -> Z80ROM -> DeltaWithChanges
