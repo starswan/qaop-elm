@@ -10,6 +10,7 @@ import SingleNoParams exposing (NoParamChange(..), applyNoParamsDelta)
 import SingleWith8BitParameter exposing (DoubleWithRegisterChange(..), JumpChange(..), Single8BitChange, applySimple8BitChange)
 import TripleByte exposing (TripleByteChange(..))
 import TripleWithFlags exposing (TripleWithFlagsChange(..))
+import TripleWithMain exposing (TripleMainChange, applyTripleMainChange)
 import Utils exposing (shiftLeftBy8)
 import Z80Change exposing (FlagChange(..), Z80Change, applyZ80Change)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..), applyDeltaWithChanges)
@@ -30,6 +31,7 @@ type DeltaWithChanges
     | NoParamsDelta CpuTimeCTime NoParamChange
     | SingleEnvDelta CpuTimeCTime SingleByteEnvChange
     | MainWithEnvDelta PCIncrement SingleEnvMainChange
+    | TripleMainChangeDalta CpuTimeCTime TriplePCIncrement TripleMainChange
 
 
 type ExecuteResult
@@ -69,6 +71,9 @@ apply_delta z80 rom48k z80delta =
 
         MainWithEnvDelta pcInc singleEnvMainChange ->
             z80 |> applySingleEnvMainChange pcInc singleEnvMainChange
+
+        TripleMainChangeDalta cpuTimeCTime triplePCIncrement tripleMainChange ->
+            z80 |> applyTripleMainChange cpuTimeCTime triplePCIncrement tripleMainChange
 
 
 applyJumpChangeDelta : CpuTimeCTime -> JumpChange -> Z80 -> Z80
