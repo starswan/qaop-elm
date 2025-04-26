@@ -1,9 +1,9 @@
 module Z80Types exposing (..)
 
-import Bitwise
+import Bitwise exposing (shiftRightBy)
 import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimePcAndValue, addCpuTimeTime)
 import Utils exposing (byte, char, shiftLeftBy8, shiftRightBy8)
-import Z80Env exposing (Z80Env, Z80EnvWithPC, addCpuTimeEnv, mem, mem16, setMem, z80_push)
+import Z80Env exposing (Z80Env, Z80EnvWithPC, addCpuTimeEnv, c_TIME_LIMIT, mem, mem16, setMem, z80_push)
 import Z80Flags exposing (FlagRegisters)
 import Z80Ram exposing (Z80Ram)
 import Z80Rom exposing (Z80ROM)
@@ -706,7 +706,32 @@ set_pc pc z80 =
     in
     z80_1
 
+
+
 --	boolean ei() {return (IFF&1)!=0;}
-get_ei: Z80 -> Bool
+
+
+get_ei : Z80 -> Bool
 get_ei z80 =
-    (Bitwise.and z80.interrupts.iff 1) /= 0
+    Bitwise.and z80.interrupts.iff 1 /= 0
+
+
+z80_halt : Z80 -> Z80
+z80_halt z80 =
+    let
+        interrupts =
+            z80.interrupts
+
+        --n = shiftRightBy 2 (z80.time_limit - z80.env.time.cpu_time + 3)
+        n =
+            shiftRightBy 2 (c_TIME_LIMIT - z80.env.time.cpu_time + 3)
+
+        z80_1 =
+            if n > 0 then
+                -- turns out env.halt(n, r) just returns n...?
+                { z80 | r = z80.r + n } |> add_cpu_time (4 * n)
+
+            else
+                z80
+    in
+    { z80_1 | interrupts = { interrupts | halted = True } }

@@ -4,7 +4,7 @@
 module Z80 exposing (..)
 
 import Array exposing (Array)
-import Bitwise exposing (and, or, shiftRightBy)
+import Bitwise exposing (and, or)
 import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAndValue, addCpuTimeTime)
 import Dict exposing (Dict)
 import Group0x30 exposing (delta_dict_lite_30)
@@ -22,12 +22,12 @@ import SingleWith8BitParameter exposing (singleWith8BitParam)
 import Utils exposing (toHexString)
 import Z80Debug exposing (debugTodo)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..))
-import Z80Env exposing (Z80Env, addCpuTimeEnv, c_TIME_LIMIT, m1, mem, mem16, z80_push, z80env_constructor)
+import Z80Env exposing (Z80Env, c_TIME_LIMIT, m1, mem, z80env_constructor)
 import Z80Execute exposing (DeltaWithChanges(..), ExecuteResult(..), apply_delta)
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
 import Z80Parser exposing (parseDoubleWithRegs, parseRelativeJump, parseTriple16Flags, parseTriple16Param, parseTripleMain)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIY(..), IXIYHL(..), IntWithFlagsTimeAndPC, InterruptRegisters, MainRegisters, MainWithIndexRegisters, Z80, add_cpu_time, inc_pc)
+import Z80Types exposing (IXIY(..), IXIYHL(..), IntWithFlagsTimeAndPC, InterruptRegisters, MainRegisters, MainWithIndexRegisters, Z80, add_cpu_time, inc_pc, z80_halt)
 
 constructor: Z80
 constructor =
@@ -217,20 +217,6 @@ execute_ltC0_xy c ixoriy rom48k z80 =
                         Just f_without_ixiyhl -> Just (z80 |> f_without_ixiyhl rom48k)
                         Nothing -> Nothing
 
-
-z80_halt: Z80 -> Z80
-z80_halt z80 =
-   let
-      interrupts = z80.interrupts
-      --n = shiftRightBy 2 (z80.time_limit - z80.env.time.cpu_time + 3)
-      n = shiftRightBy 2 (c_TIME_LIMIT - z80.env.time.cpu_time + 3)
-      z80_1 = if n > 0 then
-                 -- turns out env.halt(n, r) just returns n...?
-                 { z80 | r = z80.r + n } |> add_cpu_time (4 * n)
-              else
-                 z80
-    in
-      { z80_1 | interrupts = { interrupts | halted = True } }
 
 
 --z80_to_delta: Maybe (Z80ROM -> Z80 -> Z80) -> Maybe (Z80ROM -> Z80 -> Z80Delta)
