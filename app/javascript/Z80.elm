@@ -339,41 +339,45 @@ execute_delta ct rom48k z80 =
        Just (mainRegFunc, t) ->
            Z80DeltaChange (RegisterChangeDelta t instrTime (mainRegFunc z80.main))
        Nothing ->
-           case z80 |> parseTripleMain instrCode rom48k paramOffset of
-               Just delta ->
-                   Z80Result delta
+           case singleByteFlags |> Dict.get instrCode of
+               Just (flagFunc, t) ->
+                   Z80DeltaChange (FlagDelta t instrTime (flagFunc z80.flags))
                Nothing ->
-                   let
-                       triple16Flags = z80 |> parseTriple16Flags instrCode rom48k paramOffset
-                   in
-                   case triple16Flags of
-                       Just delta16 ->
-                           Z80Result delta16
+                   case z80 |> parseTripleMain instrCode rom48k paramOffset of
+                       Just delta ->
+                           Z80Result delta
                        Nothing ->
                            let
-                               triplr16Param = z80 |> parseTriple16Param instrCode rom48k paramOffset
+                               triple16Flags = z80 |> parseTriple16Flags instrCode rom48k paramOffset
                            in
-                           case triplr16Param of
-                              Just deltaParam16 ->
-                                  Z80Result deltaParam16
-                              Nothing ->
-                                  let
-                                      relJump = z80 |> parseRelativeJump instrCode rom48k instrTime
-                                  in
-                                  case relJump of
-                                      Just jumper ->
-                                        Z80DeltaChange jumper
+                           case triple16Flags of
+                               Just delta16 ->
+                                   Z80Result delta16
+                               Nothing ->
+                                   let
+                                       triplr16Param = z80 |> parseTriple16Param instrCode rom48k paramOffset
+                                   in
+                                   case triplr16Param of
+                                      Just deltaParam16 ->
+                                          Z80Result deltaParam16
                                       Nothing ->
                                           let
-                                              doubler = z80 |>  parseDoubleWithRegs instrCode rom48k instrTime
+                                              relJump = z80 |> parseRelativeJump instrCode rom48k instrTime
                                           in
-                                          case doubler of
-                                              Just adoubler ->
-                                                  Z80DeltaChange adoubler
+                                          case relJump of
+                                              Just jumper ->
+                                                Z80DeltaChange jumper
                                               Nothing ->
-                                                  case singleByte instrTime instrCode z80 rom48k of
-                                                      Just deltaThing -> Z80DeltaChange deltaThing
-                                                      Nothing -> Z80DeltaChange (oldDelta ct interrupts z80 rom48k)
+                                                  let
+                                                      doubler = z80 |>  parseDoubleWithRegs instrCode rom48k instrTime
+                                                  in
+                                                  case doubler of
+                                                      Just adoubler ->
+                                                          Z80DeltaChange adoubler
+                                                      Nothing ->
+                                                          case singleByte instrTime instrCode z80 rom48k of
+                                                              Just deltaThing -> Z80DeltaChange deltaThing
+                                                              Nothing -> Z80DeltaChange (oldDelta ct interrupts z80 rom48k)
 -- case 0xD4: call((Ff&0x100)==0); break;
 -- case 0xE4: call((flags()&FP)==0); break;
 -- case 0xEC: call((flags()&FP)!=0); break;
@@ -409,9 +413,9 @@ singleByte ctime instr_code tmp_z80 rom48k =
                                    -- duplicate of code in imm8 - add 3 to the cpu_time
                                    Just (Simple8BitDelta pcInc (param.time |> addCpuTimeTime 3) (f param.value))
                                Nothing ->
-                                   case singleByteFlags |> Dict.get instr_code of
-                                        Just (flagFunc, t) -> Just (FlagDelta t ctime (flagFunc tmp_z80.flags))
-                                        Nothing ->
+                                   --case singleByteFlags |> Dict.get instr_code of
+                                   --     Just (flagFunc, t) -> Just (FlagDelta t ctime (flagFunc tmp_z80.flags))
+                                   --     Nothing ->
                                           case singleByteMainAndFlagRegisters |> Dict.get instr_code of
                                               Just (f, pcInc) -> Just (PureDelta pcInc ctime (f tmp_z80.main tmp_z80.flags))
                                               Nothing -> Nothing
