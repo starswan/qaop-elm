@@ -14,7 +14,7 @@ import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (Z80)
 
 
-parseTripleMain : Int -> Z80ROM -> Int -> Z80 -> Maybe Z80
+parseTripleMain : Int -> Z80ROM -> Int -> Z80 -> Maybe DeltaWithChanges
 parseTripleMain instrCode rom48k paramOffset z80 =
     case tripleMainRegs |> Dict.get instrCode of
         Just ( f, pcInc ) ->
@@ -23,8 +23,8 @@ parseTripleMain instrCode rom48k paramOffset z80 =
                     z80.env |> mem16 (Bitwise.and (z80.pc + paramOffset) 0xFFFF) rom48k
             in
             -- duplicate of code in imm16 - add 6 to the cpu_time
-            Just (z80 |> applyTripleMainChange (doubleParam.time |> addCpuTimeTime 6) pcInc (f doubleParam.value z80.main))
-
+            --Just (z80 |> applyTripleMainChange (doubleParam.time |> addCpuTimeTime 6) pcInc (f doubleParam.value z80.main))
+            Just (TripleMainChangeDalta (doubleParam.time |> addCpuTimeTime 6) pcInc (f doubleParam.value z80.main))
         Nothing ->
             Nothing
 
