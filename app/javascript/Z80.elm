@@ -361,10 +361,7 @@ execute_delta ct rom48k z80 =
                                       Just deltaParam16 ->
                                           Z80Result deltaParam16
                                       Nothing ->
-                                          let
-                                              relJump = z80 |> parseRelativeJump instrCode rom48k instrTime
-                                          in
-                                          case relJump of
+                                          case z80 |> parseRelativeJump instrCode rom48k instrTime of
                                               Just jumper ->
                                                 Z80DeltaChange jumper
                                               Nothing ->
