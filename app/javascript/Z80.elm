@@ -312,10 +312,6 @@ execute_delta ct rom48k z80 =
    --PC = (char)(PC+1); time += 4;
    --switch(c) {
    let
-      interrupts = z80.interrupts
-      --ct = z80.env |> m1 z80.pc (Bitwise.or interrupts.ir (Bitwise.and interrupts.r 0x7F)) rom48k
-
-      -- CB is just another lookup (hopefully) as they are all quite different
       (instrCode, instrTime, paramOffset) = case ct.value of
                                     0xCB ->
                                         let
@@ -368,7 +364,7 @@ execute_delta ct rom48k z80 =
                                                       Nothing ->
                                                           case singleByte instrTime instrCode z80 rom48k of
                                                               Just deltaThing -> Z80DeltaChange deltaThing
-                                                              Nothing -> Z80DeltaChange (oldDelta ct interrupts z80 rom48k)
+                                                              Nothing -> Z80DeltaChange (oldDelta ct z80.interrupts z80 rom48k)
 -- case 0xD4: call((Ff&0x100)==0); break;
 -- case 0xE4: call((flags()&FP)==0); break;
 -- case 0xEC: call((flags()&FP)!=0); break;
