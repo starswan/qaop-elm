@@ -347,23 +347,20 @@ execute_delta ct rom48k z80 =
                        Just delta ->
                            Z80Result delta
                        Nothing ->
-                           let
-                               triple16Flags = z80 |> parseTriple16Flags instrCode rom48k paramOffset
-                           in
-                           case triple16Flags of
-                               Just delta16 ->
-                                   Z80Result delta16
-                               Nothing ->
-                                   let
-                                       triplr16Param = z80 |> parseTriple16Param instrCode rom48k paramOffset
-                                   in
-                                   case triplr16Param of
-                                      Just deltaParam16 ->
-                                          Z80Result deltaParam16
-                                      Nothing ->
-                                          case z80 |> parseRelativeJump instrCode rom48k instrTime of
-                                              Just jumper ->
-                                                Z80DeltaChange jumper
+                          case z80 |> parseRelativeJump instrCode rom48k instrTime of
+                              Just jumper ->
+                                Z80DeltaChange jumper
+                              Nothing ->
+                                   case z80 |> parseTriple16Flags instrCode rom48k paramOffset of
+                                       Just delta16 ->
+                                           Z80Result delta16
+                                       Nothing ->
+                                           let
+                                               triplr16Param = z80 |> parseTriple16Param instrCode rom48k paramOffset
+                                           in
+                                           case triplr16Param of
+                                              Just deltaParam16 ->
+                                                  Z80Result deltaParam16
                                               Nothing ->
                                                   case z80 |>  parseDoubleWithRegs instrCode rom48k instrTime of
                                                       Just adoubler ->
