@@ -67,10 +67,6 @@ constructor =
 --        v = z80.interrupts.iM
 --    in
 --        if v == 0 then v else v - 1
---	boolean ei() {return (IFF&1)!=0;}
-get_ei: Z80 -> Bool
-get_ei z80 =
-    (Bitwise.and z80.interrupts.iff 1) /= 0  -- slightly odd != operator in Elm
 --	void f(int v) {flags(v);}
 --set_f: Int -> Int -> FlagRegisters
 --set_f v a =
@@ -90,39 +86,6 @@ get_ei z80 =
 --set_iy: Z80 -> Int -> Z80
 --set_iy z80 iy =
 --    { z80 | iy = iy }
-
---	void pc(int v) {PC = v;}
-set_pc: Int -> Z80 -> Z80
-set_pc pc z80 =
-   let
-      -- ignore common routines and LDIR/LDDR and friends (jump back 2)
-      --y = if Dict.member pc Z80Rom.c_COMMON_NAMES || pc == z80.pc - 2 then
-      --      Nothing
-      --    else
-      --      let
-      --        sub_name = pc |> subName
-      --      in
-      --        if sub_name|> String.startsWith "CHAN-OPEN" then
-      --          debug_log sub_name (z80.flags.a |> toHexString2) Nothing
-      --        else if sub_name |> String.startsWith "PRINT-OUT " then
-      --           debug_log sub_name (z80.flags.a |> toHexString2) Nothing
-      --        else if sub_name |> String.startsWith "PO-CHAR " then
-      --           debug_log sub_name ("DE " ++ (z80 |> get_de |> toHexString) ++
-      --                                        " HL " ++ (z80.main.hl |> toHexString) ++
-      --                                        " BC " ++ (z80 |> get_bc |> toHexString) ++
-      --                                        " A " ++ (z80.flags.a |> toHexString2)) Nothing
-      --        else if sub_name |> String.startsWith "PR-ALL-3 " then
-      --           debug_log sub_name ("DE " ++ (z80 |> get_de |> toHexString) ++
-      --                                        " HL " ++ (z80.main.hl |> toHexString) ++
-      --                                        " B " ++ (z80.main.b |> toHexString2) ++
-      --                                        " C " ++ (z80.main.c |> toHexString2)) Nothing
-      --      else
-      --          debug_log "set_pc" ("from " ++ (z80.pc |> toHexString) ++
-      --                           " to " ++ (pc |> subName) ++
-      --                           " (sp " ++ (z80.sp |> toHexString) ++ ")") Nothing
-      z80_1 =  { z80 | pc = Bitwise.and pc 0xFFFF }
-   in
-      z80_1
 
 --	void sp(int v) {SP = v;}
 --set_sp: Int -> Z80 -> Z80
@@ -501,8 +464,8 @@ oldDelta c interrupts tmp_z80 rom48k =
          OldDeltaWithChanges (DeltaWithChangesData delta interrupts new_pc new_time)
 
 
-execute_instruction: Z80ROM -> Z80 -> Z80
-execute_instruction rom48k z80 =
+executeSingleInstruction: Z80ROM -> Z80 -> Z80
+executeSingleInstruction rom48k z80 =
    let
         ct = z80.env |> m1 z80.pc (Bitwise.or z80.interrupts.ir (Bitwise.and z80.r 0x7F)) rom48k
         result = z80 |> execute_delta ct rom48k
@@ -520,7 +483,7 @@ execute rom48k z80 =
         z80_halt z80
     else
         let
-            execute_f = execute_instruction rom48k
+            execute_f = executeSingleInstruction rom48k
         in
         Loop.while (\x -> c_TIME_LIMIT > x.env.time.cpu_time) execute_f z80
 --	void execute()
@@ -640,44 +603,6 @@ group_xy ixiy rom48k old_z80 =
 --		}
 --	}
 --
-im0: Int -> Z80 -> Z80
-im0 bus z80 =
-    if and bus 0x38 == 0xFF then
-        let
-            new_pc = bus - 199
-        in
-            z80 |> set_pc new_pc
-    else
-        z80
-
-interrupt: Int -> Z80ROM -> Z80 -> Z80
-interrupt bus rom48k z80 =
-   let
-      ints = z80.interrupts
-   in
-      if (and ints.iff 1) == 0 then
-         z80
-      else
-        let
-            --z81 = debug_log "interrupt" "keyboard scan" z80
-            new_ints = { ints | iff = 0, halted = False }
-            z80_1 = { z80 | interrupts = new_ints }
-            pushed = z80_1.env |> z80_push z80_1.pc
-            new_z80 = { z80_1 | env = pushed |> addCpuTimeEnv 6 }
-        in
-            case ints.iM of
-                0 -> new_z80 |> im0 bus
-                1 -> new_z80 |> im0 bus
-                2 -> { new_z80 | pc = 0x38 }
-                3 -> let
-                        new_ir = Bitwise.and ints.ir 0xFF00
-                        addr = Bitwise.or new_ir bus
-                        env_and_pc = z80.env |> mem16 addr rom48k
-                        env = z80.env
-                      in
-                        { new_z80 | env = { env | time = env_and_pc.time } |> addCpuTimeEnv 6, pc = env_and_pc.value }
-                _ -> new_z80
-
 --set_env: Z80Env -> Z80 -> Z80
 --set_env z80env z80 =
 --   { z80 | env = z80env }

@@ -2,7 +2,7 @@ module Z80Test exposing (..)
 
 import Expect exposing (Expectation)
 import Test exposing (..)
-import Z80 exposing (execute_instruction)
+import Z80 exposing (executeSingleInstruction)
 import Z80Env exposing (mem, setMem)
 import Z80Rom
 
@@ -38,7 +38,7 @@ suite =
                 \_ ->
                     let
                         new_z80 =
-                            execute_instruction z80rom
+                            executeSingleInstruction z80rom
                                 { z80
                                     | env = z80env |> setMem addr 0xBC
                                     , main = { z80main | hl = 0x0245 }
@@ -51,7 +51,7 @@ suite =
                 \_ ->
                     let
                         new_z80 =
-                            execute_instruction z80rom
+                            executeSingleInstruction z80rom
                                 { z80
                                     | env = z80env |> setMem addr 0xBC
                                     , main = { z80main | hl = 0x0645 }
@@ -64,7 +64,7 @@ suite =
                 \_ ->
                     let
                         new_z80 =
-                            execute_instruction z80rom
+                            executeSingleInstruction z80rom
                                 { z80
                                     | env = z80env |> setMem addr 0xBC
                                     , main = { z80main | hl = 0x0645 }

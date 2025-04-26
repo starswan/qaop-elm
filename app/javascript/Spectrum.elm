@@ -8,13 +8,13 @@ import SingleNoParams exposing (ex_af)
 import Tapfile exposing (Tapfile)
 import Utils exposing (char)
 import Vector8
-import Z80 exposing (execute, get_ei, interrupt)
+import Z80 exposing (execute)
 import Z80Debug exposing (debugLog)
 import Z80Env exposing (mem, mem16, reset_cpu_time)
 import Z80Flags exposing (c_FC, c_FZ, get_flags, set_flags)
 import Z80Rom exposing (Z80ROM, make_spectrum_rom)
 import Z80Tape exposing (Z80Tape)
-import Z80Types exposing (IXIYHL(..), Z80, get_de, get_h, get_l)
+import Z80Types exposing (IXIYHL(..), Z80, get_de, get_ei, get_h, get_l, interrupt)
 
 
 type alias Audio =

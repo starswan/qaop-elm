@@ -2,7 +2,7 @@ module CBC0Test exposing (..)
 
 import Expect exposing (Expectation)
 import Test exposing (..)
-import Z80 exposing (execute_instruction)
+import Z80 exposing (executeSingleInstruction)
 import Z80Env exposing (mem, setMem)
 import Z80Rom
 
@@ -31,7 +31,7 @@ suite =
                                |> setMem (addr + 2) 0x06
                                |> setMem (addr + 3) 0xC6
                                |> setMem 0xA086 0x10
-                  new_z80 = execute_instruction z80rom { z80 | env = { new_env | sp = 0x8765 },
+                  new_z80 = executeSingleInstruction z80rom { z80 | env = { new_env | sp = 0x8765 },
                                                         main = { z80main | ix=0xA080, hl = 0x6545, b = 0xA5 }, flags = { flags | a = 0x39 } }
                   mem_value = mem 0xA086 new_z80.env.time z80rom new_z80.env.ram
                in
