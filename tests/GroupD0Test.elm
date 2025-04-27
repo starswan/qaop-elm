@@ -13,17 +13,26 @@ suite =
         addr =
             30000
 
+        sp =
+            0xF765
+
         old_z80 =
             Z80.constructor
 
+        old_z80env =
+            old_z80.env
+
         z80 =
-            { old_z80 | pc = addr }
+            { old_z80 | pc = addr, env = { old_z80env | sp = sp } }
 
         z80env =
             z80.env
 
         z80main =
             z80.main
+
+        flags =
+            z80.flags
 
         z80rom =
             Z80Rom.constructor
@@ -48,6 +57,78 @@ suite =
                                 }
                     in
                     Expect.equal { pc = addr + 1, d = 0x56, e = 0x16, sp = 0xFF79 } { sp = new_z80.env.sp, pc = new_z80.pc, d = new_z80.main.d, e = new_z80.main.e }
+            ]
+        , describe "0xD2 - JP NC,nn"
+            [ test "Dont jump" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xD2
+                                |> setMem (addr + 1) 0x05
+                                |> setMem (addr + 2) 0x34
+
+                        new_z80 =
+                            executeSingleInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , flags = { flags | a = 0x39, ff = 0x100 }
+                                }
+                    in
+                    Expect.equal (addr + 3) new_z80.pc
+            , test "Jump" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xD2
+                                |> setMem (addr + 1) 0x05
+                                |> setMem (addr + 2) 0x34
+
+                        new_z80 =
+                            executeSingleInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , flags = { flags | a = 0x39, ff = 0x200 }
+                                }
+                    in
+                    Expect.equal 0x3405 new_z80.pc
+            ]
+        , describe "0xD4 CALL NC"
+            [ test "Dont jump" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xD4
+                                |> setMem (addr + 1) 0x05
+                                |> setMem (addr + 2) 0x34
+
+                        new_z80 =
+                            executeSingleInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , flags = { flags | a = 0x39, ff = 0x100 }
+                                }
+                    in
+                    Expect.equal ( addr + 3, 0xF765 ) ( new_z80.pc, new_z80.env.sp )
+            , test "Jump" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xD4
+                                |> setMem (addr + 1) 0x05
+                                |> setMem (addr + 2) 0x34
+
+                        new_z80 =
+                            executeSingleInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , flags = { flags | a = 0x39, ff = 0x200 }
+                                }
+                    in
+                    Expect.equal ( 0x3405, 0xF763 ) ( new_z80.pc, new_z80.env.sp )
             ]
         , test "0xD7 RST 10" <|
             \_ ->
