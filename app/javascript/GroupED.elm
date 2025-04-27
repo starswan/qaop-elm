@@ -584,7 +584,8 @@ set_im_direct value z80 =
         ints =
             debugLog "set_im" value z80.interrupts
     in
-    { z80 | interrupts = { ints | iM = value } } |> Whole
+    --{ z80 | interrupts = { ints | iM = value } } |> Whole
+    SetImValue value
 
 
 
