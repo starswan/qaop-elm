@@ -31,8 +31,8 @@ suite =
                                |> setMem (addr + 2) 0x06
                                |> setMem (addr + 3) 0xE6
                                |> setMem 0xA086 0x00
-                  new_z80 = executeSingleInstruction z80rom { z80 | env = { new_env | sp = 0x8765 },
-                                                        main = { z80main | ix=0xA080, hl = 0x6545, b = 0xA5 }, flags = { flags | a = 0x39 } }
+                  new_z80 = executeSingleInstruction z80rom { z80 | env = new_env,
+                                                        main = { z80main | ix=0xA080 } }
                   mem_value = mem 0xA086 new_z80.env.time z80rom new_z80.env.ram
                in
                   Expect.equal ((addr + 4), 0x10) (new_z80.pc, mem_value.value)
