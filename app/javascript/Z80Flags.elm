@@ -467,6 +467,7 @@ dec v flagRegs =
 
 bit : Int -> Int -> FlagRegisters -> FlagRegisters
 bit n v flagRegs =
+    -- used by group_xy_cb only
     let
         fr =
             Bitwise.and v (shiftLeftBy n 1)

@@ -22,7 +22,17 @@ suite =
    in
        describe "Bit instructions (CB)"
          [
-            test "0xFD 0xCB nn 0x9E RES 3, (IY + n) -ve" <|
+            test "0xCB 90 RES 2,B" <|
+            \_ ->
+               let
+                  new_env = z80env
+                               |> setMem addr 0xCB
+                               |> setMem (addr + 1) 0x90
+                  new_z80 = executeSingleInstruction z80rom { z80 | env = new_env,
+                                                        main = { z80main | b = 0xFF } }
+               in
+                  Expect.equal ((addr + 2), 0xFB) (new_z80.pc, new_z80.main.b)
+ ,            test "0xFD 0xCB nn 0x9E RES 3, (IY + n) -ve" <|
             \_ ->
                let
                   new_env = z80env

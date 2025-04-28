@@ -81,6 +81,7 @@ singleByteMainRegs =
         , ( 0xCB36, ( sll_indirect_hl, IncrementByTwo ) )
         , ( 0xCB3E, ( srl_indirect_hl, IncrementByTwo ) )
         , ( 0xCB80, ( resetBbit 0xFE, IncrementByTwo ) )
+        , ( 0xCB88, ( resetBbit 0xFD, IncrementByTwo ) )
         , ( 0xCB81, ( resetCbit 0xFE, IncrementByTwo ) )
         ]
 
