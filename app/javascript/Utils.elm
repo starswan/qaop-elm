@@ -59,11 +59,15 @@ byte value =
         value
 
 
+
 --char : Int -> Int
 --char value =
 --    Bitwise.and value 0xFFFF
 
-char = 0xFFFF |> Bitwise.and
+
+char =
+    0xFFFF |> Bitwise.and
+
 
 toHexString : Int -> String
 toHexString value =
@@ -148,3 +152,42 @@ speed_in_hz elapsed_millis count =
             speed_in_mhz |> modBy 1000
     in
     (speed_in_hz_mant |> String.fromInt) ++ "." ++ (speed_in_hz_frac |> String.fromInt |> String.padLeft 3 '0')
+
+
+type BitTest
+    = Bit_0
+    | Bit_1
+    | Bit_2
+    | Bit_3
+    | Bit_4
+    | Bit_5
+    | Bit_6
+    | Bit_7
+
+
+bitMaskFromBit : BitTest -> Int
+bitMaskFromBit testType =
+    case testType of
+        Bit_0 ->
+            0x01
+
+        Bit_1 ->
+            0x02
+
+        Bit_2 ->
+            0x04
+
+        Bit_3 ->
+            0x08
+
+        Bit_4 ->
+            0x10
+
+        Bit_5 ->
+            0x20
+
+        Bit_6 ->
+            0x40
+
+        Bit_7 ->
+            0x80

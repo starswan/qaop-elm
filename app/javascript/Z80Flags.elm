@@ -2,7 +2,7 @@ module Z80Flags exposing (..)
 
 import Bitwise exposing (complement, shiftLeftBy, shiftRightBy)
 import CpuTimeCTime exposing (CpuTimeIncrement, increment7)
-import Utils exposing (shiftLeftBy1, shiftLeftBy8, shiftRightBy1, shiftRightBy8)
+import Utils exposing (BitTest, bitMaskFromBit, shiftLeftBy1, shiftLeftBy8, shiftRightBy1, shiftRightBy8)
 
 
 type alias FlagRegisters =
@@ -27,15 +27,6 @@ type alias IntWithFlagsAndTime =
     }
 
 
-type BitTest
-    = Bit_0
-    | Bit_1
-    | Bit_2
-    | Bit_3
-    | Bit_4
-    | Bit_5
-    | Bit_6
-    | Bit_7
 
 
 
@@ -480,50 +471,32 @@ bit n v flagRegs =
 
 testBit : BitTest -> Int -> FlagRegisters -> FlagRegisters
 testBit testType v flagRegs =
+    --private void bit(int n, int v)
+    --{
+    --    int m = v & 1<<n;
+    --    Ff = Ff&~0xFF | v&F53 | m;
+    --    Fa = ~(Fr = m);
+    --    Fb = 0;
+    --}
     let
-        fr =
-            case testType of
-                Bit_0 ->
-                    Bitwise.and 0x01 v
-
-                Bit_1 ->
-                    Bitwise.and 0x02 v
-
-                Bit_2 ->
-                    Bitwise.and 0x04 v
-
-                Bit_3 ->
-                    Bitwise.and 0x08 v
-
-                Bit_4 ->
-                    Bitwise.and 0x10 v
-
-                Bit_5 ->
-                    Bitwise.and 0x20 v
-
-                Bit_6 ->
-                    Bitwise.and 0x40 v
-
-                Bit_7 ->
-                    Bitwise.and 0x80 v
+        m =
+            testType |> bitMaskFromBit |> Bitwise.and v
 
         ff =
-            Bitwise.or (Bitwise.and flagRegs.ff (complement 0xFF)) (Bitwise.or (Bitwise.and v c_F53) fr)
+            Bitwise.or (Bitwise.and flagRegs.ff (complement 0xFF)) (Bitwise.or (Bitwise.and v c_F53) m)
+            --flagRegs.ff |> Bitwise.and (0xFF |> Bitwise.or (Bitwise.and v c_F53) |> Bitwise.or m |>  complement)
     in
-    { flagRegs | ff = ff, fr = fr, fa = complement fr, fb = 0 }
-
-
-
---private void rot(int a)
---{
---    Ff = Ff&0xD7 | a&0x128;
---    Fb &= 0x80; Fa = Fa&~FH | Fr&FH; // reset H, N
---    A = a&0xFF;
---}
+    { flagRegs | ff = ff, fr = m, fa = complement m, fb = 0 }
 
 
 rot : Int -> FlagRegisters -> FlagRegisters
 rot a flagRegs =
+    --private void rot(int a)
+    --{
+    --    Ff = Ff&0xD7 | a&0x128;
+    --    Fb &= 0x80; Fa = Fa&~FH | Fr&FH; // reset H, N
+    --    A = a&0xFF;
+    --}
     let
         ff =
             Bitwise.or (Bitwise.and flagRegs.ff 0x07) (Bitwise.and a 0x0128)

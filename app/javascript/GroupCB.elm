@@ -126,8 +126,8 @@ group_cb rom48k tmp_z80 =
             z80 |> f
 
         Nothing ->
-            if caseval >= 0x80 && caseval <= 0x87 then
-            --if caseval >= 0x81 && caseval <= 0x87 then
+            --if caseval >= 0x80 && caseval <= 0x87 then
+            if caseval >= 0x81 && caseval <= 0x87 then
                 -- case 0x80: B=B&~(1<<o); break;
                 -- case 0x81: C=C&~(1<<o); break;
                 -- case 0x82: D=D&~(1<<o); break;
