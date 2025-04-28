@@ -80,6 +80,8 @@ singleByteMainRegs =
         , ( 0xCB2E, ( sra_indirect_hl, IncrementByTwo ) )
         , ( 0xCB36, ( sll_indirect_hl, IncrementByTwo ) )
         , ( 0xCB3E, ( srl_indirect_hl, IncrementByTwo ) )
+        , ( 0xCB80, ( resetBbit 0xFE, IncrementByTwo ) )
+        , ( 0xCB81, ( resetCbit 0xFE, IncrementByTwo ) )
         ]
 
 
@@ -608,3 +610,15 @@ srl_indirect_hl : MainWithIndexRegisters -> RegisterChange
 srl_indirect_hl z80_main =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     Shifter7 z80_main.hl increment7
+
+
+resetBbit : Int -> MainWithIndexRegisters -> RegisterChange
+resetBbit bitMask z80_main =
+    --Bitwise.and raw.value (1 |> shiftLeftBy o |> complement)
+    -- case 0x80: B=B&~(1<<o); break;
+    ChangeRegisterB (z80_main.b |> Bitwise.and bitMask)
+
+resetCbit : Int -> MainWithIndexRegisters -> RegisterChange
+resetCbit bitMask z80_main =
+    -- case 0x81: C=C&~(1<<o); break;
+    ChangeRegisterC (z80_main.c |> Bitwise.and bitMask)
