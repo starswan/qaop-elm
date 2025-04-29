@@ -1,11 +1,11 @@
 module SimpleSingleByte exposing (..)
 
-import Bitwise
+import Bitwise exposing (complement)
 import CpuTimeCTime exposing (CpuTimeIncrement(..), increment3, increment7)
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
 import RegisterChange exposing (RegisterChange(..))
-import Utils exposing (shiftRightBy8)
+import Utils exposing (BitTest(..), bitMaskFromBit, shiftRightBy8)
 import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, Z80, get_bc, get_de)
 
 
@@ -80,6 +80,15 @@ singleByteMainRegs =
         , ( 0xCB2E, ( sra_indirect_hl, IncrementByTwo ) )
         , ( 0xCB36, ( sll_indirect_hl, IncrementByTwo ) )
         , ( 0xCB3E, ( srl_indirect_hl, IncrementByTwo ) )
+        , ( 0xCB80, ( resetBbit Bit_0, IncrementByTwo ) )
+        , ( 0xCB81, ( resetCbit Bit_0, IncrementByTwo ) )
+        , ( 0xCB88, ( resetBbit Bit_1, IncrementByTwo ) )
+        , ( 0xCB90, ( resetBbit Bit_2, IncrementByTwo ) )
+        , ( 0xCB98, ( resetBbit Bit_3, IncrementByTwo ) )
+        , ( 0xCBA0, ( resetBbit Bit_4, IncrementByTwo ) )
+        , ( 0xCBA8, ( resetBbit Bit_5, IncrementByTwo ) )
+        , ( 0xCBB0, ( resetBbit Bit_6, IncrementByTwo ) )
+        , ( 0xCBB8, ( resetBbit Bit_7, IncrementByTwo ) )
         ]
 
 
@@ -608,3 +617,16 @@ srl_indirect_hl : MainWithIndexRegisters -> RegisterChange
 srl_indirect_hl z80_main =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     Shifter7 z80_main.hl increment7
+
+
+resetBbit : BitTest -> MainWithIndexRegisters -> RegisterChange
+resetBbit bitMask z80_main =
+    --Bitwise.and raw.value (1 |> shiftLeftBy o |> complement)
+    -- case 0x80: B=B&~(1<<o); break;
+    ChangeRegisterB (bitMask |> bitMaskFromBit |> complement |> Bitwise.and z80_main.b)
+
+
+resetCbit : BitTest -> MainWithIndexRegisters -> RegisterChange
+resetCbit bitMask z80_main =
+    -- case 0x81: C=C&~(1<<o); break;
+    ChangeRegisterC (bitMask |> bitMaskFromBit |> complement |> Bitwise.and z80_main.c)
