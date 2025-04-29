@@ -2,8 +2,9 @@ module Spectrum exposing (..)
 
 import Array exposing (Array)
 import Bitwise exposing (complement, shiftRightBy)
-import Dict
+import Dict exposing (Dict)
 import Keyboard exposing (KeyEvent, Keyboard, update_keyboard)
+import Loop
 import SingleNoParams exposing (ex_af)
 import Tapfile exposing (Tapfile)
 import Utils exposing (char)
@@ -1092,8 +1093,9 @@ type alias TapeState =
     , a : Int
     , f : Int
     , rf : Int
-    , data : List Int
+    , data : Dict Int Int
     , break : Bool
+    , tapeBlk : Int
     }
 
 
@@ -1222,6 +1224,27 @@ doLoad cpu z80rom tape =
 
                             startState =
                                 initial
+            initial : TapeState
+            initial =
+                { p = tape.tapePos.position
+                , ix = cpu.main.ix
+                , de = cpu.main |> get_de
+                , h = cpu.main.hl |> shiftRightBy 8
+                , l = cpu.main.hl |> Bitwise.and 0xFF
+                , a = cpu.flags.a
+                , f = cpu.flags |> get_flags
+                , rf = -1
+                , data = Dict.empty
+                , break = False
+                , tapeBlk = 0
+                            startState =
+                                { initial | tapeBlk = tapeBlk }
+
+                            --loadFunc =
+                            --    loadOne aTapfile
+
+                            --tape_data =
+                            --    Loop.while (\x -> not x.break) loadFunc startState
 
                             new_data =
                                 --		for(;;) {
@@ -1355,6 +1378,67 @@ doLoad cpu z80rom tape =
                         False
         in
         ( cpu, bool, tape.tapePos )
+
+
+loadOne : Tapfile -> TapeState -> TapeState
+loadOne tapFile state =
+    let
+        --		for(;;) {
+        --			if(p == tape_blk) {
+        --				rf = cpu.FZ;
+        --				break;
+        --			}
+        ( break1, rf1 ) =
+            if not state.break && state.p == state.tapeBlk then
+                ( True, c_FZ )
+
+            else
+                ( state.break, state.rf )
+
+        --			if(p == tape.length) {
+        --				if(ready)
+        --					rf = cpu.FZ;
+        --				break;
+        --			}
+        ( break2, rf2 ) =
+            if not break1 && state.p == tapFile.length then
+                ( True, c_FZ )
+
+            else
+                ( break1, rf1 )
+
+        --			l = tape[p++]&0xFF;
+        --			h ^= l;
+        --			if(de == 0) {
+        --				a = h;
+        --				rf = 0;
+        --				if(a<1)
+        --					rf = cpu.FC;
+        --				break;
+        --			}
+        --			if((f&cpu.FZ)==0) {
+        --				a ^= l;
+        --				if(a != 0) {
+        --					rf = 0;
+        --					break;
+        --				}
+        --				f |= cpu.FZ;
+        --				continue;
+        --			}
+        --			if((f&cpu.FC)!=0)
+        --				mem(ix, l);
+        --			else {
+        --				a = mem(ix) ^ l;
+        --				if(a != 0) {
+        --					rf = 0;
+        --					break;
+        --				}
+        --			}
+        --			ix = (char)(ix+1);
+        --			de--;
+        --		}
+    in
+    state
 
 
 
