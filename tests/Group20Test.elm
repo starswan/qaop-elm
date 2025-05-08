@@ -153,14 +153,14 @@ suite =
                             executeSingleInstruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | hl = 0x5D9F }
+                                    , main = { z80main | hl = 0x4D8F }
                                     , flags = { flags | a = 0x39 }
                                 }
 
                         mem_value =
                             new_z80.env |> mem16 0x5577 z80rom
                     in
-                    ( new_z80.pc, mem_value.value ) |> Expect.equal ( addr + 3, 0x5D9F )
+                    ( new_z80.pc, mem_value.value ) |> Expect.equal ( addr + 3, 0x4D8F )
             ,test "0xDD 22 LD (nn), IX" <|
                 \_ ->
                     let

@@ -4,7 +4,7 @@ import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime)
 import Dict exposing (Dict)
 import PCIncrement exposing (TriplePCIncrement(..))
-import Z80Env exposing (Z80Env, setMem)
+import Z80Env exposing (Z80Env, setMem, setMem16)
 import Z80Types exposing (MainWithIndexRegisters, Z80)
 
 
@@ -24,9 +24,6 @@ tripleMainRegs =
 applyTripleMainChange : CpuTimeCTime -> TriplePCIncrement -> TripleMainChange -> Z80 -> Z80
 applyTripleMainChange time pcInc z80changeData z80 =
     let
-        --interrupts =
-        --    z80.interrupts
-
         env =
             z80.env
 
@@ -42,7 +39,7 @@ applyTripleMainChange time pcInc z80changeData z80 =
         Store16BitValue address value ->
             let
                 env1 =
-                    { env | time = time } |> setMem address value
+                    { env | time = time } |> setMem16 address value
             in
             { z80
                 | pc = new_pc
