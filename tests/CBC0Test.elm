@@ -3,7 +3,6 @@ module CBC0Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeSingleInstruction)
-import Z80Address exposing (fromInt, toInt)
 import Z80Address exposing (fromInt, incrementBy1, incrementBy2, incrementBy3, toInt)
 import Z80Env exposing (mem, setMem)
 import Z80Rom
@@ -11,22 +10,35 @@ import Z80Rom
 
 suite : Test
 suite =
-   let
-       int_addr = 0x5800
-       addr = int_addr |> fromInt
-       sp = 0xF765
-       hl = 0x1234
-       old_z80 = Z80.constructor
-       old_z80env = old_z80.env
-       z80main = old_z80.main
-       z80 = { old_z80 | pc = addr, env = { old_z80env | sp = sp |> fromInt }, main = { z80main | hl = hl |> fromInt } }
+    let
+        int_addr =
+            0x5800
 
+        addr =
+            int_addr |> fromInt
 
+        sp =
+            0xF765
 
-       z80env =
+        hl =
+            0x1234
+
+        old_z80 =
+            Z80.constructor
+
+        old_z80env =
+            old_z80.env
+
+        z80main =
+            old_z80.main
+
+        z80 =
+            { old_z80 | pc = addr, env = { old_z80env | sp = sp |> fromInt }, main = { z80main | hl = hl |> fromInt } }
+
+        z80env =
             z80.env
 
-       z80rom =
+        z80rom =
             Z80Rom.constructor
     in
     describe "Bit instructions (CB)"
@@ -36,10 +48,10 @@ suite =
                     new_env =
                         z80env
                             |> setMem addr 0xDD
-                            |> setMem (addr + 1) 0xCB
-                            |> setMem (addr + 2) 0x06
-                            |> setMem (addr + 3) 0xC6
-                            |> setMem 0xA086 0x10
+                            |> setMem (addr |> incrementBy1) 0xCB
+                            |> setMem (addr |> incrementBy2) 0x06
+                            |> setMem (addr |> incrementBy3) 0xC6
+                            |> setMem (0xA086 |> fromInt) 0x10
 
                     new_z80 =
                         executeSingleInstruction z80rom
@@ -49,7 +61,7 @@ suite =
                             }
 
                     mem_value =
-                        mem 0xA086 new_z80.env.time z80rom new_z80.env.ram
+                        mem (0xA086 |> fromInt) new_z80.env.time z80rom new_z80.env.ram
                 in
-                Expect.equal ( addr + 4, 0x11 ) ( new_z80.pc |> toInt, mem_value.value )
+                Expect.equal ( int_addr + 4, 0x11 ) ( new_z80.pc |> toInt, mem_value.value )
         ]
