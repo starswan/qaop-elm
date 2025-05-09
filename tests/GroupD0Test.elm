@@ -3,7 +3,7 @@ module GroupD0Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeSingleInstruction)
-import Z80Address exposing (fromInt, toInt)
+import Z80Address exposing (fromInt, incrementBy2, toInt)
 import Z80Address exposing (fromInt, incrementBy1, toInt)
 import Z80Env exposing (mem16, setMem)
 import Z80Rom
@@ -14,6 +14,8 @@ suite =
     let
         addr =
             30000
+
+        z80_addr = addr |> fromInt
 
         sp =
             0xF765
@@ -66,9 +68,9 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0xD2
-                                |> setMem (addr + 1) 0x05
-                                |> setMem (addr + 2) 0x34
+                                |> setMem z80_addr 0xD2
+                                |> setMem (z80_addr |> incrementBy1) 0x05
+                                |> setMem (z80_addr |> incrementBy2) 0x34
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -83,9 +85,9 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0xD2
-                                |> setMem (addr + 1) 0x05
-                                |> setMem (addr + 2) 0x34
+                                |> setMem (z80_addr) 0xD2
+                                |> setMem (z80_addr |> incrementBy1) 0x05
+                                |> setMem (z80_addr |> incrementBy2) 0x34
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -102,9 +104,9 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0xD4
-                                |> setMem (addr + 1) 0x05
-                                |> setMem (addr + 2) 0x34
+                                |> setMem (z80_addr) 0xD4
+                                |> setMem (z80_addr |> incrementBy1) 0x05
+                                |> setMem (z80_addr |> incrementBy2) 0x34
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -119,9 +121,9 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0xD4
-                                |> setMem (addr + 1) 0x05
-                                |> setMem (addr + 2) 0x34
+                                |> setMem (z80_addr) 0xD4
+                                |> setMem (z80_addr |> incrementBy1) 0x05
+                                |> setMem (z80_addr |> incrementBy2) 0x34
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -137,9 +139,9 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xD7
-                            |> setMem 0xFF77 0x16
-                            |> setMem 0xFF78 0x56
+                            |> setMem (z80_addr) 0xD7
+                            |> setMem (0xFF77 |> fromInt) 0x16
+                            |> setMem (0xFF78 |> fromInt) 0x56
 
                     new_z80 =
                         executeSingleInstruction z80rom
@@ -174,9 +176,9 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xDF
-                            |> setMem 0xFF75 0x16
-                            |> setMem 0xFF76 0x56
+                            |> setMem (z80_addr) 0xDF
+                            |> setMem (0xFF75 |> fromInt) 0x16
+                            |> setMem (0xFF76 |> fromInt) 0x56
 
                     new_z80 =
                         executeSingleInstruction z80rom
@@ -185,5 +187,5 @@ suite =
                                 , main = { z80main | hl = 0x5050|> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                             }
                 in
-                Expect.equal { pc = 0x18, sp = 0xFF75, mem = addr + 1 } { sp = new_z80.env.sp|> toInt, pc = new_z80.pc|> toInt, mem = mem16 0xFF75 z80rom new_z80.env |> .value }
+                Expect.equal { pc = 0x18, sp = 0xFF75, mem = addr + 1 } { sp = new_z80.env.sp|> toInt, pc = new_z80.pc|> toInt, mem = mem16 (0xFF75 |> fromInt) z80rom new_z80.env |> .address |> toInt }
         ]

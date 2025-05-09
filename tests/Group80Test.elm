@@ -54,14 +54,14 @@ suite =
                                     , main = { z80main | hl = 0x5050|> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 1, a = 0xC6 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
+                    Expect.equal { pc = int_addr + 1, a = 0xC6 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
             , test "ADD A,IXH" <|
                 \_ ->
                     let
                         new_env =
                             z80env
                                 |> setMem addr 0xDD
-                                |> setMem (addr + 1) 0x84
+                                |> setMem (addr |> incrementBy1) 0x84
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -71,14 +71,14 @@ suite =
                                     , main = { z80main | ix = 0x5052|> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 2, a = 0xC6 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
+                    Expect.equal { pc = int_addr + 2, a = 0xC6 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
             , test "ADD A,IYH" <|
                 \_ ->
                     let
                         new_env =
                             z80env
                                 |> setMem addr 0xFD
-                                |> setMem (addr + 1) 0x84
+                                |> setMem (addr |> incrementBy1) 0x84
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -88,7 +88,7 @@ suite =
                                     , main = { z80main | iy = 0x5050|> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 2, a = 0xC6 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
+                    Expect.equal { pc = int_addr + 2, a = 0xC6 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
             ]
         , describe "0x85 ADD A, L"
             [ test "ADD A, L" <|
@@ -106,14 +106,14 @@ suite =
                                     , main = { z80main | hl = 0x3050|> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 1, a = 0xC6 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
+                    Expect.equal { pc = int_addr + 1, a = 0xC6 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
             , test "ADD A,IXL" <|
                 \_ ->
                     let
                         new_env =
                             z80env
                                 |> setMem addr 0xDD
-                                |> setMem (addr + 1) 0x85
+                                |> setMem (addr |> incrementBy1) 0x85
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -123,14 +123,14 @@ suite =
                                     , main = { z80main | ix = 0x5052|> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 2, a = 0xC8 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
+                    Expect.equal { pc = int_addr + 2, a = 0xC8 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
             , test "ADD A,IYL" <|
                 \_ ->
                     let
                         new_env =
                             z80env
                                 |> setMem addr 0xFD
-                                |> setMem (addr + 1) 0x85
+                                |> setMem (addr |> incrementBy1) 0x85
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -140,7 +140,7 @@ suite =
                                     , main = { z80main | iy = 0x2050|> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 2, a = 0xC6 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
+                    Expect.equal { pc = int_addr + 2, a = 0xC6 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
             ]
         , describe "0x86 ADD A, (HL)"
             [ test "ADD A, (HL)" <|
@@ -166,9 +166,9 @@ suite =
                         new_env =
                             z80env
                                 |> setMem addr 0xDD
-                                |> setMem (addr + 1) 0x86
-                                |> setMem (addr + 2) 0xFF
-                                |> setMem 0x5051 0x11
+                                |> setMem (addr |> incrementBy1) 0x86
+                                |> setMem (addr |> incrementBy2) 0xFF
+                                |> setMem (0x5051 |> fromInt) 0x11
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -178,7 +178,7 @@ suite =
                                     , main = { z80main | ix = 0x5052|> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 3, a = 0x87 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
+                    Expect.equal { pc = int_addr + 3, a = 0x87 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
             , test "0xFD 0x86 0x01 ADD A,(IY + n)" <|
                 \_ ->
                     let
@@ -215,7 +215,7 @@ suite =
                                     , main = { z80main | hl = 0x6545|> fromInt }
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x04 ) ( new_z80.pc|> toInt, new_z80.flags.a )
+                    Expect.equal ( int_addr + 1, 0x04 ) ( new_z80.pc|> toInt, new_z80.flags.a )
             ]
         , describe "0x8C ADC A, H"
             [ test "ADC A, H" <|
@@ -233,14 +233,14 @@ suite =
                                     , main = { z80main | hl = 0x5050|> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 1, a = 0xC6 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
+                    Expect.equal { pc = int_addr + 1, a = 0xC6 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
             , test "ADC A,IXH" <|
                 \_ ->
                     let
                         new_env =
                             z80env
                                 |> setMem addr 0xDD
-                                |> setMem (addr + 1) 0x8C
+                                |> setMem (addr |> incrementBy1) 0x8C
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -250,14 +250,14 @@ suite =
                                     , main = { z80main | ix = 0x5052|> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 2, a = 0xC6 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
+                    Expect.equal { pc = int_addr + 2, a = 0xC6 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
             , test "ADC A,IYH" <|
                 \_ ->
                     let
                         new_env =
                             z80env
                                 |> setMem addr 0xFD
-                                |> setMem (addr + 1) 0x8C
+                                |> setMem (addr |> incrementBy1) 0x8C
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -267,7 +267,7 @@ suite =
                                     , main = { z80main | iy = 0x5050|> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 2, a = 0xC6 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
+                    Expect.equal { pc = int_addr + 2, a = 0xC6 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
             ]
         , describe "0x8D ADC A,L"
             [ test "ADC A,L" <|
@@ -285,14 +285,14 @@ suite =
                                     , main = { z80main | hl = 0x2050|> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 1, a = 0xC6 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
+                    Expect.equal { pc = int_addr + 1, a = 0xC6 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
             , test "ADC A,IXL" <|
                 \_ ->
                     let
                         new_env =
                             z80env
                                 |> setMem addr 0xDD
-                                |> setMem (addr + 1) 0x8D
+                                |> setMem (addr |> incrementBy1) 0x8D
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -302,14 +302,14 @@ suite =
                                     , main = { z80main | ix = 0x5052|> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 2, a = 0xC8 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
+                    Expect.equal { pc = int_addr + 2, a = 0xC8 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
             , test "ADC A,IYL" <|
                 \_ ->
                     let
                         new_env =
                             z80env
                                 |> setMem addr 0xFD
-                                |> setMem (addr + 1) 0x8D
+                                |> setMem (addr |> incrementBy1) 0x8D
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -319,7 +319,7 @@ suite =
                                     , main = { z80main | iy = 0x2050|> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 2, a = 0xC6 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
+                    Expect.equal { pc = int_addr + 2, a = 0xC6 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
             ]
         , describe "0x8E ADC A, (HL)"
             [ test "ADC A, (HL)" <|
@@ -328,7 +328,7 @@ suite =
                         new_env =
                             z80env
                                 |> setMem addr 0x8E
-                                |> setMem 0x5050 0x11
+                                |> setMem (0x5050 |> fromInt) 0x11
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -338,16 +338,16 @@ suite =
                                     , main = { z80main | hl = 0x5050|> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 1, a = 0x88 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
+                    Expect.equal { pc = int_addr + 1, a = 0x88 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
             , test "0xDD 0x8E ADC A,(IX + n)" <|
                 \_ ->
                     let
                         new_env =
                             z80env
                                 |> setMem addr 0xDD
-                                |> setMem (addr + 1) 0x8E
-                                |> setMem (addr + 2) 0xFF
-                                |> setMem 0x5051 0x11
+                                |> setMem (addr |> incrementBy1) 0x8E
+                                |> setMem (addr |> incrementBy2) 0xFF
+                                |> setMem (0x5051 |> fromInt) 0x11
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -357,16 +357,16 @@ suite =
                                     , main = { z80main | ix = 0x5052|> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 3, a = 0x88 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
+                    Expect.equal { pc = int_addr + 3, a = 0x88 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
             , test "0xFD 0x8E 0x01 ADC A,(IY + n)" <|
                 \_ ->
                     let
                         new_env =
                             z80env
                                 |> setMem addr 0xFD
-                                |> setMem (addr + 1) 0x8E
-                                |> setMem (addr + 2) 0x01
-                                |> setMem 0x5051 0x11
+                                |> setMem (addr |> incrementBy1) 0x8E
+                                |> setMem (addr |> incrementBy2) 0x01
+                                |> setMem (0x5051 |> fromInt) 0x11
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -376,6 +376,6 @@ suite =
                                     , main = { z80main | iy = 0x5050|> fromInt, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
                     in
-                    Expect.equal { pc = addr + 3, a = 0x88 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
+                    Expect.equal { pc = int_addr + 3, a = 0x88 } { pc = new_z80.pc|> toInt, a = new_z80.flags.a }
             ]
         ]

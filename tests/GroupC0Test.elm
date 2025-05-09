@@ -16,6 +16,8 @@ suite =
         addr =
             30000
 
+        z80_addr = addr |> fromInt
+
         sp =
             0xF765
 
@@ -101,9 +103,9 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0xC4
-                                |> setMem (addr + 1) 0x05
-                                |> setMem (addr + 2) 0x34
+                                |> setMem (z80_addr) 0xC4
+                                |> setMem (z80_addr |> incrementBy1) 0x05
+                                |> setMem (z80_addr |> incrementBy2) 0x34
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -118,9 +120,9 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0xC4
-                                |> setMem (addr + 1) 0x05
-                                |> setMem (addr + 2) 0x34
+                                |> setMem (z80_addr) 0xC4
+                                |> setMem (z80_addr |> incrementBy1) 0x05
+                                |> setMem (z80_addr |> incrementBy2) 0x34
 
                         new_z80 =
                             executeSingleInstruction z80rom

@@ -486,7 +486,7 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0x3F
+                            |> setMem z80_addr 0x3F
 
                     new_z80 =
                         executeSingleInstruction z80rom
