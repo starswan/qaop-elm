@@ -3,7 +3,6 @@ module Z80Types exposing (..)
 import Bitwise exposing (shiftRightBy)
 import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimePcAndAddress, CpuTimePcAndInt, addCpuTimeTime)
 import Utils exposing (shiftLeftBy8, shiftRightBy8)
-import Z80Address exposing (Z80Address, addIndexOffset, fromInt, incrementBy1, incrementBy2, lower8Bits, toInt, top8Bits, top8BitsWithoutShift)
 import Z80Address exposing (Z80Address, addIndexOffset, fromInt, incrementBy1, incrementBy2, lower8Bits, top8Bits, top8BitsWithoutShift)
 import Z80Env exposing (Z80Env, Z80EnvWithPC, addCpuTimeEnv, c_TIME_LIMIT, mem, mem16, setMem, z80_push)
 import Z80Flags exposing (FlagRegisters)
@@ -661,7 +660,7 @@ interrupt bus rom48k z80 =
                         Bitwise.and ints.ir 0xFF00
 
                     addr =
-                        Bitwise.or new_ir bus
+                        Bitwise.or new_ir bus |> fromInt
 
                     env_and_pc =
                         z80.env |> mem16 addr rom48k
@@ -669,7 +668,7 @@ interrupt bus rom48k z80 =
                     env =
                         z80.env
                 in
-                { new_z80 | env = { env | time = env_and_pc.time } |> addCpuTimeEnv 6, pc = env_and_pc.value |> fromInt }
+                { new_z80 | env = { env | time = env_and_pc.time } |> addCpuTimeEnv 6, pc = env_and_pc.address }
 
             _ ->
                 new_z80

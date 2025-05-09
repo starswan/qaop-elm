@@ -142,11 +142,11 @@ call_z_nn param16 z80_flags =
     else
         Skip3ByteInstruction
 
-call_nc_nn : Int -> FlagRegisters -> TripleWithFlagsChange
+call_nc_nn : Z80Address -> FlagRegisters -> TripleWithFlagsChange
 call_nc_nn param z80_flags =
     -- case 0xD4: call((Ff&0x100)==0); break;
     if Bitwise.and z80_flags.ff 0x0100 == 0 then
-        AbsoluteCall (param |> fromInt)
+        AbsoluteCall (param)
 
     else
         Skip3ByteInstruction

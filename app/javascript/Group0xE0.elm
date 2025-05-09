@@ -90,14 +90,14 @@ ex_indirect_sp_hl ixiyhl rom48k z80 =
         --HL -> { z80_2 | main = { main | hl = v.value } }
         IX ->
             --MainRegsWithEnvAndPc { main | ix = hl.address } pushed z80.pc
-            PushWithMainSpCpuTimeAndPc toBePushed { main | ix = hl.value } hl.sp hl_time z80.pc
+            PushWithMainSpCpuTimeAndPc toBePushed { main | ix = hl.address } hl.sp hl_time z80.pc
         IY ->
             --MainRegsWithEnvAndPc { main | iy = hl.address } pushed z80.pc
-            PushWithMainSpCpuTimeAndPc toBePushed { main | iy = hl.value } hl.sp hl_time z80.pc
+            PushWithMainSpCpuTimeAndPc toBePushed { main | iy = hl.address } hl.sp hl_time z80.pc
 
         HL ->
             --MainRegsWithEnv { main | hl = hl.address} pushed
-            PushWithMainSpCpuTime toBePushed { main | hl = hl.value } hl.sp hl_time
+            PushWithMainSpCpuTime toBePushed { main | hl = hl.address } hl.sp hl_time
 
 
 push_hl : IXIY -> Z80ROM -> Z80 -> Z80Delta

@@ -6,8 +6,8 @@ import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..), TriplePCInc
 import SingleWith8BitParameter exposing (doubleWithRegisters, maybeRelativeJump)
 import TripleByte exposing (tripleByteWith16BitParam)
 import TripleWithFlags exposing (triple16WithFlags)
-import TripleWithMain exposing (TripleMainChange, applyTripleMainChange, tripleMainRegs)
-import Z80Address exposing (addIndexOffset, incrementBy1, incrementBy2, toInt)
+import TripleWithMain exposing (TripleMainChange, tripleMainRegs)
+import Z80Address exposing (incrementBy1, incrementBy2)
 import Z80Env exposing (mem, mem16)
 import Z80Execute exposing (DeltaWithChanges(..), applyTripleChangeDelta, applyTripleFlagChange)
 import Z80Rom exposing (Z80ROM)
@@ -31,7 +31,7 @@ parseTripleMain instrCode rom48k paramOffset z80 =
             in
             -- duplicate of code in imm16 - add 6 to the cpu_time
             --Just (z80 |> applyTripleMainChange (doubleParam.time |> addCpuTimeTime 6) pcInc (f doubleParam.address z80.main))
-            Just (TripleMainChangeDalta (doubleParam.time |> addCpuTimeTime 6) pcInc (f doubleParam.value z80.main))
+            Just (TripleMainChangeDalta (doubleParam.time |> addCpuTimeTime 6) pcInc (f doubleParam.address z80.main))
         Nothing ->
             Nothing
 
