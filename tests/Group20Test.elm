@@ -3,7 +3,7 @@ module Group20Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeSingleInstruction)
-import Z80Env exposing (mem16, setMem, setMem16)
+import Z80Env exposing (m1, setMem, setMem16)
 import Z80Rom
 
 
@@ -139,8 +139,7 @@ suite =
                     Expect.equal ( addr + 4, 0x0705 ) ( new_z80.pc, new_z80.main.iy )
             ]
         , describe "16 bit store"
-            [
-            test "0x22 LD (nn), HL" <|
+            [ test "0x22 LD (nn), HL" <|
                 \_ ->
                     let
                         new_env =
@@ -157,11 +156,14 @@ suite =
                                     , flags = { flags | a = 0x39 }
                                 }
 
-                        mem_value =
-                            new_z80.env |> mem16 0x5577 z80rom
+                        lo_value =
+                            new_z80.env |> m1 0x5577 0 z80rom
+
+                        high_value =
+                            new_z80.env |> m1 0x5578 0 z80rom
                     in
-                    ( new_z80.pc, mem_value.value ) |> Expect.equal ( addr + 3, 0x4D8F )
-            ,test "0xDD 22 LD (nn), IX" <|
+                    ( new_z80.pc, lo_value.value, high_value.value ) |> Expect.equal ( addr + 3, 0x8F, 0x4D )
+            , test "0xDD 22 LD (nn), IX" <|
                 \_ ->
                     let
                         new_env =
@@ -175,15 +177,18 @@ suite =
                             executeSingleInstruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | ix = 0x5D9F }
+                                    , main = { z80main | ix = 0x4D8F }
                                     , flags = { flags | a = 0x39 }
                                 }
 
-                        mem_value =
-                            new_z80.env |> mem16 0x5577 z80rom
+                        lo_value =
+                            new_z80.env |> m1 0x5577 0 z80rom
+
+                        high_value =
+                            new_z80.env |> m1 0x5578 0 z80rom
                     in
-                    Expect.equal ( addr + 4, 0x5D9F ) ( new_z80.pc, mem_value.value )
-            ,test "0xFD 22 LD (nn), IY" <|
+                    Expect.equal ( addr + 4, 0x8F, 0x4D ) ( new_z80.pc, lo_value.value, high_value.value )
+            , test "0xFD 22 LD (nn), IY" <|
                 \_ ->
                     let
                         new_env =
@@ -197,14 +202,17 @@ suite =
                             executeSingleInstruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | iy = 0x5D9F }
+                                    , main = { z80main | iy = 0x4D8F }
                                     , flags = { flags | a = 0x39 }
                                 }
 
-                        mem_value =
-                            new_z80.env |> mem16 0x5577 z80rom
+                        lo_value =
+                            new_z80.env |> m1 0x5577 0 z80rom
+
+                        high_value =
+                            new_z80.env |> m1 0x5578 0 z80rom
                     in
-                    Expect.equal ( addr + 4, 0x5D9F ) ( new_z80.pc, mem_value.value )
+                    Expect.equal ( addr + 4, 0x8F, 0x4D ) ( new_z80.pc, lo_value.value, high_value.value )
             ]
         , describe "16 bit Increment"
             [ test "0x23 INC HL" <|

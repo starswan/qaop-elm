@@ -4,7 +4,7 @@ import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime)
 import Dict exposing (Dict)
 import PCIncrement exposing (TriplePCIncrement(..))
-import Z80Env exposing (Z80Env, setMem16)
+import Z80Env exposing (Z80Env, setMem, setMem16)
 import Z80Types exposing (MainWithIndexRegisters, Z80)
 
 

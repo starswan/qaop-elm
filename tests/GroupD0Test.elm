@@ -3,7 +3,7 @@ module GroupD0Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeSingleInstruction)
-import Z80Env exposing (mem16, setMem)
+import Z80Env exposing (m1, setMem)
 import Z80Rom
 
 
@@ -11,7 +11,7 @@ suite : Test
 suite =
     let
         addr =
-            30000
+            0x8000
 
         sp =
             0xF765
@@ -72,7 +72,7 @@ suite =
                             executeSingleInstruction z80rom
                                 { z80
                                     | env = new_env
-                                    , flags = { flags | a = 0x39, ff = 0x100 }
+                                    , flags = { flags | a = 0x39, ff = 0x0100 }
                                 }
                     in
                     Expect.equal (addr + 3) new_z80.pc
@@ -89,7 +89,7 @@ suite =
                             executeSingleInstruction z80rom
                                 { z80
                                     | env = new_env
-                                    , flags = { flags | a = 0x39, ff = 0x200 }
+                                    , flags = { flags | a = 0x39, ff = 0x0200 }
                                 }
                     in
                     Expect.equal 0x3405 new_z80.pc
@@ -108,7 +108,7 @@ suite =
                             executeSingleInstruction z80rom
                                 { z80
                                     | env = new_env
-                                    , flags = { flags | a = 0x39, ff = 0x100 }
+                                    , flags = { flags | a = 0x39, ff = 0x0100 }
                                 }
                     in
                     Expect.equal ( addr + 3, 0xF765 ) ( new_z80.pc, new_z80.env.sp )
@@ -125,7 +125,7 @@ suite =
                             executeSingleInstruction z80rom
                                 { z80
                                     | env = new_env
-                                    , flags = { flags | a = 0x39, ff = 0x200 }
+                                    , flags = { flags | a = 0x39, ff = 0x0200 }
                                 }
                     in
                     Expect.equal ( 0x3405, 0xF763 ) ( new_z80.pc, new_z80.env.sp )
@@ -182,6 +182,12 @@ suite =
                                 | env = { new_env | sp = 0xFF77 }
                                 , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                             }
+
+                    lo_value =
+                        m1 0xFF75 0 z80rom new_z80.env |> .value
+
+                    hi_value =
+                        m1 0xFF76 0 z80rom new_z80.env |> .value
                 in
-                Expect.equal { pc = 0x18, sp = 0xFF75, mem = addr + 1 } { sp = new_z80.env.sp, pc = new_z80.pc, mem = mem16 0xFF75 z80rom new_z80.env |> .value }
+                Expect.equal { pc = 0x18, sp = 0xFF75, lowmem = 1, highmem = 0x80 } { sp = new_z80.env.sp, pc = new_z80.pc, lowmem = lo_value, highmem = hi_value }
         ]

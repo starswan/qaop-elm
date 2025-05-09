@@ -3,7 +3,7 @@ module GroupE0Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeSingleInstruction)
-import Z80Env exposing (mem16, setMem)
+import Z80Env exposing (m1, mem16, setMem)
 import Z80Rom
 
 
@@ -94,10 +94,16 @@ suite =
                                 | env = new_env
                                 , main = { z80main | hl = 0xA000 }
                             }
+
+                    top_lo =
+                        (new_z80.env |> m1 sp 0 z80rom).value
+
+                    top_hi =
+                        (new_z80.env |> m1 (sp + 1) 0 z80rom).value
                 in
                 Expect.equal
-                    { pc = new_z80.pc, sp = new_z80.env.sp, hl = new_z80.main.hl, top = (new_z80.env |> mem16 sp z80rom).value }
-                    { pc = addr + 1, sp = sp, hl = 0x3445, top = 0xA000 }
+                    { pc = new_z80.pc, sp = new_z80.env.sp, hl = new_z80.main.hl, top_lo = top_lo, top_hi = top_hi }
+                    { pc = addr + 1, sp = sp, hl = 0x3445, top_lo = 0x00, top_hi = 0xA0 }
         , test "0xDD 0xE3 EX (SP),IX" <|
             \_ ->
                 let
