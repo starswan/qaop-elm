@@ -3,7 +3,7 @@ module GroupF0Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeSingleInstruction)
-import Z80Env exposing (mem16, setMem)
+import Z80Env exposing (m1, setMem)
 import Z80Rom
 
 
@@ -48,13 +48,15 @@ suite =
                                 , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                             }
 
-                    pushed =
-                        new_z80.env |> mem16 0xFF75 z80rom
+                    pushed_low =
+                        new_z80.env |> m1 0xFF75 0 z80rom |> .value
+
+                    pushed_high =
+                        new_z80.env |> m1 0xFF76 0 z80rom |> .value
                 in
-                Expect.equal { pc = addr + 1, sp = 0xFF75, push = 0x7640 } { pc = new_z80.pc, sp = new_z80.env.sp, push = pushed.value }
+                Expect.equal { pc = addr + 1, sp = 0xFF75, push_lo = 0x40, push_hi = 0x76 } { pc = new_z80.pc, sp = new_z80.env.sp, push_lo = pushed_low, push_hi = pushed_high }
         , describe "0xF9 LD SP,HL"
-            [
-            test "LD SP,HL" <|
+            [ test "LD SP,HL" <|
                 \_ ->
                     let
                         new_env =
@@ -69,13 +71,13 @@ suite =
                                 }
                     in
                     Expect.equal { pc = addr + 1, sp = 0x5050 } { pc = new_z80.pc, sp = new_z80.env.sp }
-            ,test "LD SP,IX" <|
+            , test "LD SP,IX" <|
                 \_ ->
                     let
                         new_env =
                             z80env
                                 |> setMem addr 0xDD
-                                |> setMem (addr  + 1 ) 0xF9
+                                |> setMem (addr + 1) 0xF9
 
                         new_z80 =
                             executeSingleInstruction z80rom
@@ -85,13 +87,13 @@ suite =
                                 }
                     in
                     Expect.equal { pc = addr + 2, sp = 0x5050 } { pc = new_z80.pc, sp = new_z80.env.sp }
-            ,test "LD SP,IY" <|
+            , test "LD SP,IY" <|
                 \_ ->
                     let
                         new_env =
                             z80env
                                 |> setMem addr 0xFD
-                                |> setMem (addr  + 1 ) 0xF9
+                                |> setMem (addr + 1) 0xF9
 
                         new_z80 =
                             executeSingleInstruction z80rom

@@ -87,17 +87,12 @@ execute_ED43 rom48k z80 =
 
         env =
             z80_2.env |> setMem16 v.value (Bitwise.or (shiftLeftBy8 z80.main.b) z80.main.c)
-        --env = case (v.value |> fromInt) of
-        --  Z80Address.ROMAddress int -> z80_2.env
-        --  Z80Address.RAMAddress ramAddress ->
-        --    z80_2.env |> setMem16 ramAddress (Bitwise.or (shiftLeftBy8 z80.main.b) z80.main.c)
     in
-    --{ z80_2 | env = env } |> add_cpu_time 6 |> Whole
     EnvWithPc env v.pc
 
 
 
--- All these other ED codes are 'undocumented' and do inteeresting things,
+-- All these other ED codes are 'undocumented' and do interesting things,
 -- but point back to ED44 in Qaop Java version
 --case 0x44:
 --case 0x4C:

@@ -4,7 +4,7 @@ import Bitwise exposing (shiftRightBy)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeSingleInstruction)
-import Z80Env exposing (mem16, setMem)
+import Z80Env exposing (m1, setMem)
 import Z80Rom
 
 
@@ -208,14 +208,17 @@ suite =
                             }
                                 |> executeSingleInstruction z80rom
 
-                        mem_value =
-                            z80_1.env |> mem16 stackp z80rom
+                        lo_value =
+                            z80_1.env |> m1 stackp 0 z80rom |> .value
+
+                        high_value =
+                            z80_1.env |> m1 (stackp + 1) 0 z80rom |> .value
 
                         z80_2 =
                             z80_1 |> executeSingleInstruction z80rom
                     in
                     Expect.equal
-                        { addr = start, sp1 = stackp, stacked = start + 4, addr4 = start + 4, sp2 = stackp + 2 }
-                        { addr = z80_1.pc, sp1 = z80_1.env.sp, stacked = mem_value.value, addr4 = z80_2.pc, sp2 = z80_2.env.sp }
+                        { addr = start, sp1 = stackp, stack_low = 4, stack_high = 0x50, addr4 = start + 4, sp2 = stackp + 2 }
+                        { addr = z80_1.pc, sp1 = z80_1.env.sp, stack_low = lo_value, stack_high = high_value, addr4 = z80_2.pc, sp2 = z80_2.env.sp }
             ]
         ]
