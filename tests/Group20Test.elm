@@ -3,7 +3,7 @@ module Group20Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeSingleInstruction)
-import Z80Env exposing (m1, setMem, setMem16)
+import Z80Env exposing (m1, mem, setMem, setMem16)
 import Z80Rom
 
 
@@ -157,10 +157,10 @@ suite =
                                 }
 
                         lo_value =
-                            new_z80.env |> m1 0x5577 0 z80rom
+                            new_z80.env.ram |> mem 0x5577 new_env.time z80rom
 
                         high_value =
-                            new_z80.env |> m1 0x5578 0 z80rom
+                            new_z80.env.ram |> mem 0x5578 new_env.time z80rom
                     in
                     ( new_z80.pc, lo_value.value, high_value.value ) |> Expect.equal ( addr + 3, 0x8F, 0x4D )
             , test "0xDD 22 LD (nn), IX" <|

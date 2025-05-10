@@ -1197,17 +1197,17 @@ doLoad cpu z80rom tape =
 
     else
         let
-            initial = {
-                p = tape.tapePos.position,
-                ix = cpu.main.ix,
-                de = cpu.main |> get_de,
-                h = cpu.main.hl |> shiftRightBy 8,
-                l = cpu.main.hl |> Bitwise.and 0xFF,
-                a = cpu.flags.a,
-                f = cpu.flags |> get_flags,
-                rf = -1,
-                data = Dict.empty,
-                break = False
+            initial =
+                { p = tape.tapePos.position
+                , ix = cpu.main.ix
+                , de = cpu.main |> get_de
+                , h = cpu.main.hl |> shiftRightBy 8
+                , l = cpu.main.hl |> Bitwise.and 0xFF
+                , a = cpu.flags.a
+                , f = cpu.flags |> get_flags
+                , rf = -1
+                , data = Dict.empty
+                , break = False
                 }
 
             p =
@@ -1220,7 +1220,8 @@ doLoad cpu z80rom tape =
                             tapeBlk =
                                 aTapfile.block.dataLength
 
-                            startState = initial
+                            startState =
+                                initial
 
                             new_data =
                                 --		for(;;) {
