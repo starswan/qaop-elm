@@ -11,7 +11,7 @@ import Group0x30 exposing (delta_dict_lite_30)
 import Group0xE0 exposing (delta_dict_lite_E0)
 import Group0xF0 exposing (list0255, lt40_array, xYDict)
 import Loop
-import PCIncrement exposing (MediumPCIncrement(..))
+import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..))
 import SimpleFlagOps exposing (singleByteFlags)
 import SimpleSingleByte exposing (singleByteMainRegs)
 import SingleByteWithEnv exposing (singleByteZ80Env)
@@ -20,6 +20,7 @@ import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters)
 import SingleNoParams exposing (singleWithNoParam)
 import SingleWith8BitParameter exposing (singleWith8BitParam)
 import Utils exposing (toHexString)
+import Z80Address exposing (Z80Address, addIndexOffset, fromInt, incrementBy1, incrementBy2, toInt)
 import Z80Debug exposing (debugTodo)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..))
 import Z80Env exposing (Z80Env, c_TIME_LIMIT, m1, mem, z80env_constructor)
@@ -32,14 +33,14 @@ import Z80Types exposing (IXIY(..), IXIYHL(..), IntWithFlagsTimeAndPC, Interrupt
 constructor: Z80
 constructor =
     let
-        main = Z80Types.MainWithIndexRegisters 0 0 0 0 0 0 0
-        alternate = MainRegisters 0 0 0 0 0
+        main = Z80Types.MainWithIndexRegisters 0 0 0 0 (0 |> fromInt) (0 |> fromInt) (0 |> fromInt)
+        alternate = MainRegisters 0 0 0 0 (0 |> fromInt)
         main_flags = FlagRegisters 0 0 0 0 0
         alt_flags = FlagRegisters 0 0 0 0 0
         interrupts = InterruptRegisters 0 0 0 False
     in
         --Z80 z80env_constructor 0 main main_flags alternate alt_flags interrupts (c_FRSTART + c_FRTIME)
-        Z80 z80env_constructor 0 main main_flags alternate alt_flags 0 interrupts
+        Z80 z80env_constructor (0 |> fromInt) main main_flags alternate alt_flags 0 interrupts
 --	int a() {return A;}
 --get_a: Z80 -> Int
 --get_a z80 =
@@ -315,21 +316,22 @@ execute_delta ct rom48k z80 =
       (instrCode, instrTime, paramOffset) = case ct.value of
                                     0xCB ->
                                         let
-                                            param = mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k z80.env.ram
+                                            --param = mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k z80.env.ram
+                                            param = mem (z80.pc |> incrementBy1 |> toInt) ct.time rom48k z80.env.ram
                                         in
-                                            (Bitwise.or 0xCB00 param.value, param.time, 1)
+                                            (Bitwise.or 0xCB00 param.value, param.time, IncrementByOne)
                                     0xDD ->
                                         let
-                                            param = mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k z80.env.ram
+                                            param = mem ((z80.pc |> incrementBy1 |> toInt)) ct.time rom48k z80.env.ram
                                         in
-                                            (Bitwise.or 0xDD00 param.value, param.time, 2)
+                                            (Bitwise.or 0xDD00 param.value, param.time, IncrementByTwo)
                                     0xFD ->
                                         let
-                                            param = mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k z80.env.ram
+                                            param = mem (z80.pc |> incrementBy1 |> toInt) ct.time rom48k z80.env.ram
                                         in
-                                            (Bitwise.or 0xFD00 param.value, param.time, 2)
+                                            (Bitwise.or 0xFD00 param.value, param.time, IncrementByTwo)
                                     _ ->
-                                        (ct.value,ct.time, 1)
+                                        (ct.value,ct.time, IncrementByOne)
    in
    case singleByteMainRegs  |> Dict.get instrCode of
        Just (mainRegFunc, t) ->
@@ -388,10 +390,10 @@ singleByte ctime instr_code tmp_z80 rom48k =
                                    let
                                       param = case pcInc of
                                           IncreaseByTwo ->
-                                                mem (Bitwise.and (tmp_z80.pc + 1) 0xFFFF) ctime rom48k tmp_z80.env.ram
+                                                mem (tmp_z80.pc |> incrementBy1 |> toInt) ctime rom48k tmp_z80.env.ram
 
                                           IncreaseByThree ->
-                                                mem (Bitwise.and (tmp_z80.pc + 2) 0xFFFF) ctime rom48k tmp_z80.env.ram
+                                                mem (tmp_z80.pc |> incrementBy2 |> toInt) ctime rom48k tmp_z80.env.ram
 
                                    in
                                    -- duplicate of code in imm8 - add 3 to the cpu_time
@@ -407,7 +409,8 @@ oldDelta c interrupts tmp_z80 rom48k =
   let
      env = tmp_z80.env
      old_z80 = { tmp_z80 | env = { env | time = c.time }, r = tmp_z80.r + 1 }
-     new_pc = Bitwise.and (old_z80.pc + 1) 0xFFFF
+     --new_pc = Bitwise.and (old_z80.pc + 1) 0xFFFF
+     new_pc = old_z80.pc |> incrementBy1
      z80 = { old_z80 | pc = new_pc } |> add_cpu_time 4
      new_time = z80.env.time
   in
@@ -438,7 +441,7 @@ oldDelta c interrupts tmp_z80 rom48k =
 executeSingleInstruction: Z80ROM -> Z80 -> Z80
 executeSingleInstruction rom48k z80 =
    let
-        ct = z80.env |> m1 z80.pc (Bitwise.or z80.interrupts.ir (Bitwise.and z80.r 0x7F)) rom48k
+        ct = z80.env |> m1 (z80.pc |> toInt) (Bitwise.or z80.interrupts.ir (Bitwise.and z80.r 0x7F)) rom48k
         result = z80 |> execute_delta ct rom48k
    in
    case result of
@@ -490,7 +493,7 @@ execute rom48k z80 =
 group_xy: IXIY -> Z80ROM -> Z80 -> Z80Delta
 group_xy ixiy rom48k old_z80 =
   let
-    c = old_z80.env |> m1 old_z80.pc (or old_z80.interrupts.ir (and old_z80.r 0x7F)) rom48k
+    c = old_z80.env |> m1 (old_z80.pc |> toInt) (or old_z80.interrupts.ir (and old_z80.r 0x7F)) rom48k
     --intr = old_z80.interrupts
     env = old_z80.env
     z80_1 = { old_z80 | env = { env | time = c.time }, r = old_z80.r + 1 }

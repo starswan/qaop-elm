@@ -3,6 +3,7 @@ module CBC0Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeSingleInstruction)
+import Z80Address exposing (fromInt, toInt)
 import Z80Env exposing (mem, setMem)
 import Z80Rom
 
@@ -29,7 +30,7 @@ suite =
             old_z80.main
 
         z80 =
-            { old_z80 | pc = addr, env = { old_z80env | sp = sp }, main = { z80main | hl = hl } }
+            { old_z80 | pc = addr |> fromInt, env = { old_z80env | sp = sp |> fromInt }, main = { z80main | hl = hl |> fromInt } }
 
         z80env =
             z80.env
@@ -53,11 +54,11 @@ suite =
                         executeSingleInstruction z80rom
                             { z80
                                 | env = new_env
-                                , main = { z80main | ix = 0xA080 }
+                                , main = { z80main | ix = 0xA080 |> fromInt }
                             }
 
                     mem_value =
                         mem 0xA086 new_z80.env.time z80rom new_z80.env.ram
                 in
-                Expect.equal ( addr + 4, 0x11 ) ( new_z80.pc, mem_value.value )
+                Expect.equal ( addr + 4, 0x11 ) ( new_z80.pc |> toInt, mem_value.value )
         ]
