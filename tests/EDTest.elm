@@ -5,18 +5,18 @@ import Test exposing (..)
 import Z80 exposing (executeSingleInstruction)
 import Z80Address exposing (fromInt, toInt)
 import Z80Address exposing (fromInt, incrementBy1, incrementBy2, incrementBy3, toInt)
-import Z80Env exposing (mem, mem16, setMem)
+import Z80Env exposing (mem, setMem)
 import Z80Rom
 
 
 suite : Test
 suite =
     let
-        addr_int =
+        int_addr =
             0x5800
 
         addr =
-            addr_int |> fromInt
+            int_addr |> fromInt
 
         sp =
             0xF765
@@ -64,7 +64,7 @@ suite =
                                     , flags = { flags | a = 0x47 }
                                 }
                     in
-                    Expect.equal ( addr_int + 2, 0x40 ) ( new_z80.pc |> toInt, new_z80.flags.a )
+                    Expect.equal ( int_addr + 2, 0x40 ) ( new_z80.pc |> toInt, new_z80.flags.a )
             , test "0xED 0x7B LD SP,(nn)" <|
                 \_ ->
                     let
@@ -86,7 +86,7 @@ suite =
                                     , flags = { flags | a = 0x47 }
                                 }
                     in
-                    Expect.equal ( addr_int + 4, 0x0201 ) ( new_z80.pc |> toInt, new_z80.env.sp |> toInt )
+                    Expect.equal ( int_addr + 4, 0x0201 ) ( new_z80.pc |> toInt, new_z80.env.sp |> toInt )
             , test "LDIR ED B0" <|
                 \_ ->
                     let
@@ -119,7 +119,7 @@ suite =
                             , (mem (0x6004 |> fromInt) new_z80.env.time z80rom new_z80.env.ram).value
                             ]
                     in
-                    Expect.equal { pc = addr_int + 2, b = 0x00, c = 0x00, d = 0x60, e = 0x05, hl = 0x5055, mem = [ 0xA0, 0xA5, 0xAA, 0xBA, 0xB5 ] }
+                    Expect.equal { pc = int_addr + 2, b = 0x00, c = 0x00, d = 0x60, e = 0x05, hl = 0x5055, mem = [ 0xA0, 0xA5, 0xAA, 0xBA, 0xB5 ] }
                         { pc = new_z80.pc |> toInt, b = new_z80.main.b, c = new_z80.main.c, e = new_z80.main.e, d = new_z80.main.d, hl = new_z80.main.hl |> toInt, mem = mem_vals }
             , test "0xED 78 IN A, (C)" <|
                 \_ ->
@@ -137,6 +137,6 @@ suite =
                                     , flags = { flags | a = 0x39 }
                                 }
                     in
-                    Expect.equal { pc = addr + 2, fr = 0xFF, a = 0xFF } { pc = new_z80.pc |> toInt, fr = new_z80.flags.fr, a = new_z80.flags.a }
+                    Expect.equal { pc = int_addr + 2, fr = 0xFF, a = 0xFF } { pc = new_z80.pc |> toInt, fr = new_z80.flags.fr, a = new_z80.flags.a }
             ]
         ]

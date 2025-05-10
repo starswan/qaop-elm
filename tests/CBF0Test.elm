@@ -3,7 +3,7 @@ module CBF0Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeSingleInstruction)
-import Z80Address exposing (fromInt, toInt)
+import Z80Address exposing (fromInt, incrementBy1, incrementBy2, incrementBy3, toInt)
 import Z80Env exposing (mem, setMem)
 import Z80Rom
 
@@ -13,6 +13,7 @@ suite =
     let
         addr =
             0x5800
+        z80_addr = addr |> fromInt
 
         sp =
             0xF765
@@ -44,11 +45,11 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xDD
-                            |> setMem (addr + 1) 0xCB
-                            |> setMem (addr + 2) 0x06
-                            |> setMem (addr + 3) 0xF6
-                            |> setMem 0xA086 0x00
+                            |> setMem z80_addr 0xDD
+                            |> setMem (z80_addr |> incrementBy1) 0xCB
+                            |> setMem (z80_addr |> incrementBy2) 0x06
+                            |> setMem ((z80_addr |> incrementBy3)) 0xF6
+                            |> setMem (0xA086 |> fromInt) 0x00
 
                     new_z80 =
                         executeSingleInstruction z80rom
@@ -58,7 +59,7 @@ suite =
                             }
 
                     mem_value =
-                        mem 0xA086 new_z80.env.time z80rom new_z80.env.ram
+                        mem (0xA086 |> fromInt) new_z80.env.time z80rom new_z80.env.ram
                 in
                 Expect.equal ( addr + 4, 0x40 ) ( new_z80.pc |> toInt, mem_value.value )
         ]
