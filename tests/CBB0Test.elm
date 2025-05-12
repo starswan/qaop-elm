@@ -48,7 +48,7 @@ suite =
                             |> setMem z80_addr 0xFD
                             |> setMem (z80_addr |> incrementBy1) 0xCB
                             |> setMem (z80_addr |> incrementBy2) 0x06
-                            |> setMem ((z80_addr |> incrementBy3)) 0xF6
+                            |> setMem ((z80_addr |> incrementBy3)) 0xBE
                             |> setMem (0xA07E |> fromInt) 0xFF
 
                     new_z80 =
