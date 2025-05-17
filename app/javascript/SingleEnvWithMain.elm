@@ -19,6 +19,17 @@ type SingleEnvMainChange
     | SingleEnvNewERegister Int CpuTimeCTime
     | SingleEnvNewHLRegister Int CpuTimeCTime
     | SingleBitTest BitTest CpuTimeAndValue
+      --| AdcARegister Int CpuTimeCTime
+    | AddARegister Int CpuTimeCTime
+
+
+
+--| SubARegister Int CpuTimeCTime
+--| SbcARegister Int CpuTimeCTime
+--| AndARegister Int CpuTimeCTime
+--| XorARegister Int CpuTimeCTime
+--| OrARegister Int CpuTimeCTime
+--| CpARegister Int CpuTimeCTime
 
 
 singleEnvMainRegs : Dict Int ( MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange, PCIncrement )
