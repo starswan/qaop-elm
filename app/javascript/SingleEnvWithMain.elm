@@ -6,7 +6,7 @@ import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
 import Utils exposing (BitTest(..), shiftLeftBy8)
 import Z80Env exposing (Z80Env, addCpuTimeEnvInc, mem)
-import Z80Flags exposing (testBit)
+import Z80Flags exposing (testBit, z80_add)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (MainWithIndexRegisters, Z80)
 
@@ -168,6 +168,21 @@ applySingleEnvMainChange pcInc z80changeData z80 =
                 | pc = new_pc
                 , env = { env | time = intwithTime.time }
                 , flags = z80.flags |> testBit bitTest intwithTime.value
+                , r = z80.r + 1
+            }
+
+        AddARegister int cpuTimeCTime ->
+            let
+                env1 =
+                    { env | time = cpuTimeCTime } |> addCpuTimeEnvInc cpuTimeIncrement4
+
+                flags =
+                    z80.flags
+            in
+            { z80
+                | pc = new_pc
+                , flags = flags |> z80_add int
+                , env = env1
                 , r = z80.r + 1
             }
 
@@ -375,7 +390,7 @@ bit_7_indirect_hl z80_main rom48k z80_env =
 
 add_a_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
 add_a_indirect_hl z80_main rom48k z80_env =
-    -- case 0x8E: adc(env.mem(HL)); time+=3; break;
+    -- case 0x86: add(env.mem(HL)); time+=3; break;
     let
         value =
             mem z80_main.hl z80_env.time rom48k z80_env.ram
