@@ -10,8 +10,7 @@ import Z80Types exposing (IXIY, IXIYHL, Z80, get_h_ixiy, get_l_ixiy, hl_deref_wi
 delta_dict_80 : Dict Int (IXIYHL -> Z80ROM -> Z80 -> Z80Delta)
 delta_dict_80 =
     Dict.fromList
-        [ ( 0x8E, adc_a_indirect_hl ) -- need single with main flags and env
-        ]
+        []
 
 
 miniDict80 : Dict Int (IXIY -> Z80ROM -> Z80 -> Z80Delta)
@@ -22,6 +21,7 @@ miniDict80 =
         , ( 0x86, add_a_indirect_hl )
         , ( 0x8C, adc_a_h )
         , ( 0x8D, adc_a_l )
+        , ( 0x8E, adc_a_indirect_hl )
         ]
 
 
@@ -41,22 +41,6 @@ add_a_l ixiyhl rom z80 =
     FlagRegsWithPc (z80_add (get_l_ixiy ixiyhl z80.main) z80.flags) z80.pc
 
 
-add_a_indirect_hl : IXIY -> Z80ROM -> Z80 -> Z80Delta
-add_a_indirect_hl ixiyhl rom48k z80 =
-    -- case 0x86: add(env.mem(HL)); time+=3; break;
-    -- case 0x86: add(env.mem(getd(xy))); time+=3; break;
-    let
-        value =
-            z80 |> hl_deref_with_z80_ixiy ixiyhl rom48k
-
-        --env_1 = z80.env
-        --z80_1 = { z80 | pc = value.pc, env = { env_1 | time = value.time } }
-        flags_one =
-            z80_add value.value z80.flags
-    in
-    FlagsWithPcAndTime flags_one value.pc value.time
-
-
 adc_a_h : IXIY -> Z80ROM -> Z80 -> Z80Delta
 adc_a_h ixiyhl rom z80 =
     -- case 0x8C: adc(HL>>>8); break;
@@ -73,13 +57,27 @@ adc_a_l ixiyhl rom z80 =
     FlagRegsWithPc (z80.flags |> adc (get_l_ixiy ixiyhl z80.main)) z80.pc
 
 
-adc_a_indirect_hl : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
+add_a_indirect_hl : IXIY -> Z80ROM -> Z80 -> Z80Delta
+add_a_indirect_hl ixiyhl rom48k z80 =
+    -- case 0x86: add(env.mem(HL)); time+=3; break;
+    -- case 0x86: add(env.mem(getd(xy))); time+=3; break;
+    let
+        value =
+            z80 |> hl_deref_with_z80_ixiy ixiyhl rom48k
+
+        flags_one =
+            z80_add value.value z80.flags
+    in
+    FlagsWithPcAndTime flags_one value.pc value.time
+
+
+adc_a_indirect_hl : IXIY -> Z80ROM -> Z80 -> Z80Delta
 adc_a_indirect_hl ixiyhl rom48k z80 =
     -- case 0x8E: adc(env.mem(HL)); time+=3; break;
     -- case 0x8E: adc(env.mem(getd(xy))); time+=3; break;
     let
         value =
-            z80 |> hl_deref_with_z80 ixiyhl rom48k
+            z80 |> hl_deref_with_z80_ixiy ixiyhl rom48k
 
         --env_1 = z80.env
     in

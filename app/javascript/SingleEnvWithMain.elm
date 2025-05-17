@@ -6,7 +6,7 @@ import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
 import Utils exposing (BitTest(..), shiftLeftBy8)
 import Z80Env exposing (Z80Env, addCpuTimeEnvInc, mem)
-import Z80Flags exposing (testBit, z80_add)
+import Z80Flags exposing (adc, testBit, z80_add)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (MainWithIndexRegisters, Z80)
 
@@ -19,7 +19,7 @@ type SingleEnvMainChange
     | SingleEnvNewERegister Int CpuTimeCTime
     | SingleEnvNewHLRegister Int CpuTimeCTime
     | SingleBitTest BitTest CpuTimeAndValue
-      --| AdcARegister Int CpuTimeCTime
+    | AdcARegister Int CpuTimeCTime
     | AddARegister Int CpuTimeCTime
 
 
@@ -45,6 +45,7 @@ singleEnvMainRegs =
         , ( 0x6E, ( ld_l_indirect_hl, IncrementByOne ) )
         , ( 0x7E, ( ld_a_indirect_hl, IncrementByOne ) )
         , ( 0x86, ( add_a_indirect_hl, IncrementByOne ) )
+        , ( 0x8E, ( adc_a_indirect_hl, IncrementByOne ) )
         , ( 0xCB46, ( bit_0_indirect_hl, IncrementByTwo ) )
         , ( 0xCB4E, ( bit_1_indirect_hl, IncrementByTwo ) )
         , ( 0xCB56, ( bit_2_indirect_hl, IncrementByTwo ) )
@@ -171,10 +172,25 @@ applySingleEnvMainChange pcInc z80changeData z80 =
                 , r = z80.r + 1
             }
 
+        AdcARegister int cpuTimeCTime ->
+            let
+                env1 =
+                    { env | time = cpuTimeCTime }
+
+                flags =
+                    z80.flags
+            in
+            { z80
+                | pc = new_pc
+                , flags = flags |> adc int
+                , env = env1
+                , r = z80.r + 1
+            }
+
         AddARegister int cpuTimeCTime ->
             let
                 env1 =
-                    { env | time = cpuTimeCTime } |> addCpuTimeEnvInc cpuTimeIncrement4
+                    { env | time = cpuTimeCTime }
 
                 flags =
                     z80.flags
@@ -396,3 +412,13 @@ add_a_indirect_hl z80_main rom48k z80_env =
             mem z80_main.hl z80_env.time rom48k z80_env.ram
     in
     AddARegister value.value value.time
+
+
+adc_a_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
+adc_a_indirect_hl z80_main rom48k z80_env =
+    -- case 0x8E: adc(env.mem(HL)); time+=3; break;
+    let
+        value =
+            mem z80_main.hl z80_env.time rom48k z80_env.ram
+    in
+    AdcARegister value.value value.time
