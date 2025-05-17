@@ -222,26 +222,6 @@ add_cpu_time value z80 =
     { z80 | env = env }
 
 
-b_with_z80 : Z80 -> CpuTimePcAndValue
-b_with_z80 z80 =
-    CpuTimePcAndValue z80.env.time z80.pc z80.main.b
-
-
-c_with_z80 : Z80 -> CpuTimePcAndValue
-c_with_z80 z80 =
-    CpuTimePcAndValue z80.env.time z80.pc z80.main.c
-
-
-d_with_z80 : Z80 -> CpuTimePcAndValue
-d_with_z80 z80 =
-    CpuTimePcAndValue z80.env.time z80.pc z80.main.d
-
-
-e_with_z80 : Z80 -> CpuTimePcAndValue
-e_with_z80 z80 =
-    CpuTimePcAndValue z80.env.time z80.pc z80.main.e
-
-
 get_ixiy_xy : IXIY -> MainWithIndexRegisters -> Int
 get_ixiy_xy ixiy z80_main =
     case ixiy of

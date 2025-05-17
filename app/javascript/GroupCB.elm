@@ -9,7 +9,7 @@ import Z80Delta exposing (Z80Delta(..))
 import Z80Env exposing (addCpuTimeEnv, m1, mem, setMem)
 import Z80Flags exposing (IntWithFlags, bit, c_F53, shifter)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIY, IXIYHL(..), IntWithFlagsTimeAndPC, Z80, a_with_z80, add_cpu_time, b_with_z80, c_with_z80, d_with_z80, e_with_z80, get_ixiy_xy, inc_pc, inc_pc2, set408bit)
+import Z80Types exposing (IXIY, IXIYHL(..), IntWithFlagsTimeAndPC, Z80, a_with_z80, add_cpu_time, get_ixiy_xy, inc_pc, inc_pc2, set408bit)
 
 
 group_cb_dict : Dict Int (Z80 -> Z80Delta)
@@ -291,16 +291,16 @@ load408bitHL : Int -> Z80ROM -> Z80 -> CpuTimePcAndValue
 load408bitHL c_value rom48k z80 =
     case Bitwise.and c_value 0x07 of
         0 ->
-            b_with_z80 z80
+            CpuTimePcAndValue z80.env.time z80.pc z80.main.b
 
         1 ->
-            c_with_z80 z80
+            CpuTimePcAndValue z80.env.time z80.pc z80.main.c
 
         2 ->
-            d_with_z80 z80
+            CpuTimePcAndValue z80.env.time z80.pc z80.main.d
 
         3 ->
-            e_with_z80 z80
+            CpuTimePcAndValue z80.env.time z80.pc z80.main.e
 
         4 ->
             CpuTimePcAndValue z80.env.time z80.pc (shiftRightBy8 z80.main.hl)
