@@ -1,7 +1,7 @@
 module Z80Types exposing (..)
 
 import Bitwise exposing (shiftRightBy)
-import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimePcAndValue, addCpuTimeTime)
+import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimePcAnd16BitValue, CpuTimePcAndValue, addCpuTimeTime)
 import Utils exposing (byte, char, shiftLeftBy8, shiftRightBy8)
 import Z80Env exposing (Z80Env, Z80EnvWithPC, addCpuTimeEnv, c_TIME_LIMIT, mem, mem16, setMem, z80_push)
 import Z80Flags exposing (FlagRegisters)
@@ -264,7 +264,7 @@ hl_deref_with_z80 ixiyhl rom48k z80 =
             z80 |> env_mem_hl ixiyhl rom48k
 
         new_b =
-            mem a.value z80.env.time rom48k z80.env.ram
+            mem a.value16 z80.env.time rom48k z80.env.ram
     in
     CpuTimePcAndValue new_b.time a.pc new_b.value
 
@@ -276,7 +276,7 @@ hl_deref_with_z80_ixiy ixiyhl rom48k z80 =
             z80 |> env_mem_hl_ixiy ixiyhl rom48k
 
         new_b =
-            mem a.value z80.env.time rom48k z80.env.ram
+            mem a.value16 z80.env.time rom48k z80.env.ram
     in
     CpuTimePcAndValue new_b.time a.pc new_b.value
 
@@ -395,28 +395,28 @@ set_xy_ixiy value ixiyhl z80 =
 --      CpuTimePcAndValue (d.time |> add_cpu_time_time 8) (char (z80.pc + 1)) (char (xy + byte d.value))
 
 
-env_mem_hl : IXIYHL -> Z80ROM -> Z80 -> CpuTimePcAndValue
+env_mem_hl : IXIYHL -> Z80ROM -> Z80 -> CpuTimePcAnd16BitValue
 env_mem_hl ixiyhl rom48k z80 =
     case ixiyhl of
         HL ->
-            CpuTimePcAndValue z80.env.time z80.pc z80.main.hl
+            CpuTimePcAnd16BitValue z80.env.time z80.pc z80.main.hl
 
         IX ->
             let
                 dval =
                     mem z80.pc z80.env.time rom48k z80.env.ram
             in
-            CpuTimePcAndValue (dval.time |> addCpuTimeTime 8) (char (z80.pc + 1)) (char (z80.main.ix + byte dval.value))
+            CpuTimePcAnd16BitValue (dval.time |> addCpuTimeTime 8) (char (z80.pc + 1)) (char (z80.main.ix + byte dval.value))
 
         IY ->
             let
                 dval =
                     mem z80.pc z80.env.time rom48k z80.env.ram
             in
-            CpuTimePcAndValue (dval.time |> addCpuTimeTime 8) (char (z80.pc + 1)) (char (z80.main.iy + byte dval.value))
+            CpuTimePcAnd16BitValue (dval.time |> addCpuTimeTime 8) (char (z80.pc + 1)) (char (z80.main.iy + byte dval.value))
 
 
-env_mem_hl_ixiy : IXIY -> Z80ROM -> Z80 -> CpuTimePcAndValue
+env_mem_hl_ixiy : IXIY -> Z80ROM -> Z80 -> CpuTimePcAnd16BitValue
 env_mem_hl_ixiy ixiyhl rom48k z80 =
     case ixiyhl of
         IXIY_IX ->
@@ -424,14 +424,14 @@ env_mem_hl_ixiy ixiyhl rom48k z80 =
                 dval =
                     mem z80.pc z80.env.time rom48k z80.env.ram
             in
-            CpuTimePcAndValue (dval.time |> addCpuTimeTime 8) (char (z80.pc + 1)) (char (z80.main.ix + byte dval.value))
+            CpuTimePcAnd16BitValue (dval.time |> addCpuTimeTime 8) (char (z80.pc + 1)) (char (z80.main.ix + byte dval.value))
 
         IXIY_IY ->
             let
                 dval =
                     mem z80.pc z80.env.time rom48k z80.env.ram
             in
-            CpuTimePcAndValue (dval.time |> addCpuTimeTime 8) (char (z80.pc + 1)) (char (z80.main.iy + byte dval.value))
+            CpuTimePcAnd16BitValue (dval.time |> addCpuTimeTime 8) (char (z80.pc + 1)) (char (z80.main.iy + byte dval.value))
 
 
 get_bc : MainWithIndexRegisters -> Int
