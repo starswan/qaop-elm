@@ -252,18 +252,6 @@ get_ixiy_xy ixiy z80_main =
             z80_main.iy
 
 
-hl_deref_with_z80 : IXIYHL -> Z80ROM -> Z80 -> CpuTimePcAndValue
-hl_deref_with_z80 ixiyhl rom48k z80 =
-    let
-        a =
-            z80 |> env_mem_hl ixiyhl rom48k
-
-        new_b =
-            mem a.value16 z80.env.time rom48k z80.env.ram
-    in
-    CpuTimePcAndValue new_b.time a.pc new_b.value
-
-
 hl_deref_with_z80_ixiy : IXIY -> Z80ROM -> Z80 -> CpuTimePcAndValue
 hl_deref_with_z80_ixiy ixiyhl rom48k z80 =
     let

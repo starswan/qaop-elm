@@ -6,7 +6,7 @@ import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
 import Utils exposing (BitTest(..), shiftLeftBy8)
 import Z80Env exposing (Z80Env, addCpuTimeEnvInc, mem)
-import Z80Flags exposing (adc, testBit, z80_add)
+import Z80Flags exposing (adc, sbc, testBit, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (MainWithIndexRegisters, Z80)
 
@@ -45,6 +45,10 @@ singleEnvMainRegs =
         , ( 0x8E, ( adc_a_indirect_hl, IncrementByOne ) )
         , ( 0x96, ( sub_indirect_hl, IncrementByOne ) )
         , ( 0x9E, ( sbc_indirect_hl, IncrementByOne ) )
+        , ( 0xA6, ( and_indirect_hl, IncrementByOne ) )
+        , ( 0xAE, ( xor_indirect_hl, IncrementByOne ) )
+        , ( 0xB6, ( or_indirect_hl, IncrementByOne ) )
+        , ( 0xBE, ( cp_indirect_hl, IncrementByOne ) )
         , ( 0xCB46, ( bit_0_indirect_hl, IncrementByTwo ) )
         , ( 0xCB4E, ( bit_1_indirect_hl, IncrementByTwo ) )
         , ( 0xCB56, ( bit_2_indirect_hl, IncrementByTwo ) )
@@ -197,6 +201,87 @@ applySingleEnvMainChange pcInc z80changeData z80 =
             { z80
                 | pc = new_pc
                 , flags = flags |> z80_add int
+                , env = env1
+                , r = z80.r + 1
+            }
+
+        SubARegister int cpuTimeCTime ->
+            let
+                env1 =
+                    { env | time = cpuTimeCTime }
+
+                flags =
+                    z80.flags
+            in
+            { z80
+                | pc = new_pc
+                , flags = flags |> z80_sub int
+                , env = env1
+                , r = z80.r + 1
+            }
+
+        SbcARegister int cpuTimeCTime ->
+            let
+                env1 =
+                    { env | time = cpuTimeCTime }
+
+                flags =
+                    z80.flags
+            in
+            { z80
+                | pc = new_pc
+                , flags = flags |> sbc int
+                , env = env1
+                , r = z80.r + 1
+            }
+
+        AndARegister int cpuTimeCTime ->
+            let
+                env1 =
+                    { env | time = cpuTimeCTime }
+
+                flags =
+                    z80.flags
+            in
+            { z80
+                | pc = new_pc
+                , flags = flags |> z80_and int
+                , env = env1
+                , r = z80.r + 1
+            }
+
+        XorARegister int cpuTimeCTime ->
+            let
+                env1 =
+                    { env | time = cpuTimeCTime }
+            in
+            { z80
+                | pc = new_pc
+                , flags = z80.flags |> z80_xor int
+                , env = env1
+                , r = z80.r + 1
+            }
+
+        OrARegister int cpuTimeCTime ->
+            let
+                env1 =
+                    { env | time = cpuTimeCTime }
+            in
+            { z80
+                | pc = new_pc
+                , flags = z80.flags |> z80_or int
+                , env = env1
+                , r = z80.r + 1
+            }
+
+        CpARegister int cpuTimeCTime ->
+            let
+                env1 =
+                    { env | time = cpuTimeCTime }
+            in
+            { z80
+                | pc = new_pc
+                , flags = z80.flags |> z80_cp int
                 , env = env1
                 , r = z80.r + 1
             }

@@ -4,15 +4,7 @@ import Dict exposing (Dict)
 import Z80Delta exposing (Z80Delta(..))
 import Z80Flags exposing (z80_and, z80_xor)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIY, IXIYHL, Z80, get_h_ixiy, get_l_ixiy, hl_deref_with_z80)
-
-
-delta_dict_A0 : Dict Int (IXIYHL -> Z80ROM -> Z80 -> Z80Delta)
-delta_dict_A0 =
-    Dict.fromList
-        [ ( 0xA6, and_indirect_hl ) -- need single with main flags and env
-        , ( 0xAE, xor_indirect_hl ) -- need single with main flags and env
-        ]
+import Z80Types exposing (IXIY, IXIYHL, Z80, get_h_ixiy, get_l_ixiy, hl_deref_with_z80_ixiy)
 
 
 miniDictA0 : Dict Int (IXIY -> Z80ROM -> Z80 -> Z80Delta)
@@ -22,6 +14,8 @@ miniDictA0 =
         , ( 0xA5, and_l )
         , ( 0xAC, xor_h )
         , ( 0xAD, xor_l )
+        , ( 0xA6, and_indirect_hl )
+        , ( 0xAE, xor_indirect_hl )
         ]
 
 
@@ -41,13 +35,13 @@ and_l ixiyhl _ z80 =
     FlagRegsWithPc (z80.flags |> z80_and (get_l_ixiy ixiyhl z80.main)) z80.pc
 
 
-and_indirect_hl : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
+and_indirect_hl : IXIY -> Z80ROM -> Z80 -> Z80Delta
 and_indirect_hl ixiyhl rom48k z80 =
     -- case 0xA6: and(env.mem(HL)); time+=3; break;
     -- case 0xA6: and(env.mem(getd(xy))); time+=3; break;
     let
         value =
-            z80 |> hl_deref_with_z80 ixiyhl rom48k
+            z80 |> hl_deref_with_z80_ixiy ixiyhl rom48k
     in
     FlagsWithPcAndTime (z80.flags |> z80_and value.value) value.pc value.time
 
@@ -66,12 +60,12 @@ xor_l ixiyhl _ z80 =
     FlagRegsWithPc (z80.flags |> z80_xor (get_l_ixiy ixiyhl z80.main)) z80.pc
 
 
-xor_indirect_hl : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
+xor_indirect_hl : IXIY -> Z80ROM -> Z80 -> Z80Delta
 xor_indirect_hl ixiyhl rom48k z80 =
     -- case 0xAE: xor(env.mem(HL)); time+=3; break;
     -- case 0xAE: xor(env.mem(getd(xy))); time+=3; break;
     let
         value =
-            z80 |> hl_deref_with_z80 ixiyhl rom48k
+            z80 |> hl_deref_with_z80_ixiy ixiyhl rom48k
     in
     FlagsWithPcAndTime (z80.flags |> z80_xor value.value) value.pc value.time

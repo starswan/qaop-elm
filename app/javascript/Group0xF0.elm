@@ -7,10 +7,10 @@ import Group0x40 exposing (miniDict40)
 import Group0x50 exposing (miniDict50)
 import Group0x60 exposing (miniDict60)
 import Group0x70 exposing (miniDict70)
-import Group0x80 exposing (delta_dict_80, miniDict80)
-import Group0x90 exposing (delta_dict_90, miniDict90)
-import Group0xA0 exposing (delta_dict_A0, miniDictA0)
-import Group0xB0 exposing (delta_dict_B0, miniDictB0)
+import Group0x80 exposing (miniDict80)
+import Group0x90 exposing (miniDict90)
+import Group0xA0 exposing (miniDictA0)
+import Group0xB0 exposing (miniDictB0)
 import Group0xC0 exposing (delta_dict_C0)
 import Group0xE0 exposing (delta_dict_E0, miniDictE0)
 import Z80Delta exposing (Z80Delta(..))
@@ -43,13 +43,9 @@ ld_sp_hl ixiyhl rom48k z80 =
 
 lt40_delta_dict : Dict Int (IXIYHL -> Z80ROM -> Z80 -> Z80Delta)
 lt40_delta_dict =
-    delta_dict_80
-        |> Dict.union delta_dict_90
-        |> Dict.union delta_dict_A0
+    delta_dict_E0
         |> Dict.union delta_dict_30
-        |> Dict.union delta_dict_B0
         |> Dict.union delta_dict_C0
-        |> Dict.union delta_dict_E0
 
 
 list0255 =
