@@ -7,7 +7,7 @@ import PCIncrement exposing (MediumPCIncrement(..), TriplePCIncrement)
 import SingleWith8BitParameter exposing (doubleWithRegisters, maybeRelativeJump)
 import TripleByte exposing (tripleByteWith16BitParam)
 import TripleWithFlags exposing (triple16WithFlags)
-import TripleWithMain exposing (TripleMainChange, applyTripleMainChange, tripleMainRegs)
+import TripleWithMain exposing (TripleMainChange, tripleMainRegs)
 import Z80Env exposing (mem, mem16)
 import Z80Execute exposing (DeltaWithChanges(..), applyTripleChangeDelta, applyTripleFlagChange)
 import Z80Rom exposing (Z80ROM)
@@ -24,7 +24,8 @@ parseTripleMain instrCode rom48k paramOffset z80 =
             in
             -- duplicate of code in imm16 - add 6 to the cpu_time
             --Just (z80 |> applyTripleMainChange (doubleParam.time |> addCpuTimeTime 6) pcInc (f doubleParam.value z80.main))
-            Just (TripleMainChangeDalta (doubleParam.time |> addCpuTimeTime 6) pcInc (f doubleParam.value z80.main))
+            Just (TripleMainChangeDalta (doubleParam.time |> addCpuTimeTime 6) pcInc (f doubleParam.value16 z80.main))
+
         Nothing ->
             Nothing
 
@@ -38,7 +39,7 @@ parseTriple16Flags instrCode rom48k paramOffset z80 =
                     z80.env |> mem16 (Bitwise.and (z80.pc + paramOffset) 0xFFFF) rom48k
             in
             -- duplicate of code in imm16 - add 6 to the cpu_time
-            Just (z80 |> applyTripleFlagChange (doubleParam.time |> addCpuTimeTime 6) (f doubleParam.value z80.flags))
+            Just (z80 |> applyTripleFlagChange (doubleParam.time |> addCpuTimeTime 6) (f doubleParam.value16 z80.flags))
 
         Nothing ->
             Nothing
@@ -54,7 +55,7 @@ parseTriple16Param instrCode rom48k paramOffset z80 =
             in
             -- duplicate of code in imm16 - add 6 to the cpu_time
             --Just (TripleChangeDelta pcInc (doubleParam.time |> addCpuTimeTime 6) (f doubleParam.value))
-            Just (z80 |> applyTripleChangeDelta rom48k pcInc (doubleParam.time |> addCpuTimeTime 6) (f doubleParam.value))
+            Just (z80 |> applyTripleChangeDelta rom48k pcInc (doubleParam.time |> addCpuTimeTime 6) (f doubleParam.value16))
 
         Nothing ->
             Nothing

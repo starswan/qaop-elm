@@ -128,7 +128,7 @@ imm8 pc time rom48k ram =
 --	}
 
 
-imm16 : Z80ROM -> Z80 -> CpuTimePcAndValue
+imm16 : Z80ROM -> Z80 -> CpuTimePcAnd16BitValue
 imm16 rom48k z80 =
     let
         v =
@@ -140,7 +140,7 @@ imm16 rom48k z80 =
         env =
             v.time |> addCpuTimeTime 6
     in
-    CpuTimePcAndValue env pc v.value
+    CpuTimePcAnd16BitValue env pc v.value16
 
 
 
@@ -663,7 +663,7 @@ interrupt bus rom48k z80 =
                     env =
                         z80.env
                 in
-                { new_z80 | env = { env | time = env_and_pc.time } |> addCpuTimeEnv 6, pc = env_and_pc.value }
+                { new_z80 | env = { env | time = env_and_pc.time } |> addCpuTimeEnv 6, pc = env_and_pc.value16 }
 
             _ ->
                 new_z80

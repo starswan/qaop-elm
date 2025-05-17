@@ -122,7 +122,7 @@ suite =
                             }
                 in
                 Expect.equal
-                    { pc = new_z80.pc, sp = new_z80.env.sp, ix = new_z80.main.ix, top = (new_z80.env |> mem16 sp z80rom).value }
+                    { pc = new_z80.pc, sp = new_z80.env.sp, ix = new_z80.main.ix, top = (new_z80.env |> mem16 sp z80rom).value16 }
                     { pc = addr + 2, sp = sp, ix = 0x3445, top = 0xA000 }
         , test "0xE5 PUSH HL" <|
             \_ ->
@@ -139,7 +139,7 @@ suite =
                             }
                 in
                 Expect.equal
-                    { pc = new_z80.pc, sp = new_z80.env.sp, top = (new_z80.env |> mem16 (sp - 2) z80rom).value }
+                    { pc = new_z80.pc, sp = new_z80.env.sp, top = (new_z80.env |> mem16 (sp - 2) z80rom).value16 }
                     { pc = addr + 1, sp = sp - 2, top = 0xA000 }
         , test "0xFD 0xE5 PUSH IY" <|
             \_ ->
@@ -157,7 +157,7 @@ suite =
                             }
                 in
                 Expect.equal
-                    { pc = new_z80.pc, sp = new_z80.env.sp, top = (new_z80.env |> mem16 (sp - 2) z80rom).value }
+                    { pc = new_z80.pc, sp = new_z80.env.sp, top = (new_z80.env |> mem16 (sp - 2) z80rom).value16 }
                     { pc = addr + 2, sp = sp - 2, top = 0xA000 }
         , test "0xEB (EX DE, HL)" <|
             \_ ->

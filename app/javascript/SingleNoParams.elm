@@ -82,7 +82,6 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
     let
         --interrupts =
         --    z80.interrupts
-
         old_env =
             z80.env
 
@@ -111,7 +110,7 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
             in
             { z80
                 | pc = pc
-                , main = z80.main |> set_bc_main v.value
+                , main = z80.main |> set_bc_main v.value16
                 , env = { env1 | time = v.time, sp = v.sp }
                 , r = z80.r + 1
             }
@@ -129,7 +128,7 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
             in
             { z80
                 | pc = pc
-                , main = { main | hl = v.value }
+                , main = { main | hl = v.value16 }
                 , env = { env1 | time = v.time, sp = v.sp }
                 , r = z80.r + 1
             }
@@ -142,8 +141,8 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
             in
             { z80
                 | pc = pc
-                , interrupts = ints,
-                r = z80.r + 1
+                , interrupts = ints
+                , r = z80.r + 1
             }
 
         EnableInterrupts ->
@@ -154,8 +153,8 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
             in
             { z80
                 | pc = pc
-                , interrupts = ints,
-                 r = z80.r + 1
+                , interrupts = ints
+                , r = z80.r + 1
             }
 
         ExAfAfDash ->
@@ -196,7 +195,7 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
             in
             { z80
                 | pc = pc
-                , flags = set_af v.value
+                , flags = set_af v.value16
                 , env = { env1 | time = v.time, sp = v.sp }
                 , r = z80.r + 1
             }
@@ -212,7 +211,7 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
             in
             { z80
                 | pc = pc
-                , main = z80.main |> set_de_main v.value
+                , main = z80.main |> set_de_main v.value16
                 , env = { env1 | time = v.time, sp = v.sp }
                 , r = z80.r + 1
             }
@@ -263,7 +262,7 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
             in
             { z80
                 | env = { old_env | time = a.time, sp = a.sp }
-                , pc = a.value
+                , pc = a.value16
                 , r = z80.r + 1
             }
 
@@ -273,7 +272,6 @@ rst value cpu_time z80 =
     let
         --interrupts =
         --    z80.interrupts
-
         old_env =
             z80.env
 
@@ -283,7 +281,7 @@ rst value cpu_time z80 =
     { z80
         | pc = value - 199
         , env = { old_env | time = cpu_time } |> z80_push pc
-                , r = z80.r + 1
+        , r = z80.r + 1
     }
 
 

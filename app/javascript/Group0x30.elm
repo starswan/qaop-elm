@@ -154,6 +154,6 @@ ld_a_indirect_nn rom48k z80 =
             z80 |> imm16 rom48k
 
         mem_value =
-            mem v.value z80.env.time rom48k z80.env.ram
+            mem v.value16 z80.env.time rom48k z80.env.ram
     in
     CpuTimeWithFlagsAndPc (mem_value.time |> addCpuTimeTime 3) { z80_flags | a = mem_value.value } v.pc
