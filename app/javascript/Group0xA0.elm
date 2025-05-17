@@ -40,6 +40,7 @@ and_l ixiyhl _ z80 =
     --z80 |> set_flag_regs (z80_and (get_l ixiyhl z80.main) z80.flags)
     FlagRegsWithPc (z80.flags |> z80_and (get_l_ixiy ixiyhl z80.main)) z80.pc
 
+
 and_indirect_hl : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
 and_indirect_hl ixiyhl rom48k z80 =
     -- case 0xA6: and(env.mem(HL)); time+=3; break;

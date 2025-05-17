@@ -2,7 +2,7 @@ module Z80Types exposing (..)
 
 import Bitwise exposing (shiftRightBy)
 import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimePcAnd16BitValue, CpuTimePcAndValue, addCpuTimeTime)
-import Utils exposing (byte, char, shiftLeftBy8, shiftRightBy8)
+import Utils exposing (char, shiftLeftBy8, shiftRightBy8, wordPlusOffset)
 import Z80Env exposing (Z80Env, Z80EnvWithPC, addCpuTimeEnv, c_TIME_LIMIT, mem, mem16, setMem, z80_push)
 import Z80Flags exposing (FlagRegisters)
 import Z80Ram exposing (Z80Ram)
@@ -252,11 +252,6 @@ get_ixiy_xy ixiy z80_main =
             z80_main.iy
 
 
-h_with_z80 : IXIYHL -> Z80 -> CpuTimePcAndValue
-h_with_z80 ixiyhl z80 =
-    CpuTimePcAndValue z80.env.time z80.pc (shiftRightBy8 (get_xy ixiyhl z80.main))
-
-
 hl_deref_with_z80 : IXIYHL -> Z80ROM -> Z80 -> CpuTimePcAndValue
 hl_deref_with_z80 ixiyhl rom48k z80 =
     let
@@ -289,11 +284,6 @@ inc_pc z80 =
 inc_pc2 : Z80 -> Int
 inc_pc2 z80 =
     Bitwise.and (z80.pc + 2) 0xFFFF
-
-
-l_with_z80 : IXIYHL -> Z80 -> CpuTimePcAndValue
-l_with_z80 ixiyhl z80 =
-    CpuTimePcAndValue z80.env.time z80.pc (Bitwise.and (get_xy ixiyhl z80.main) 0xFF)
 
 
 set_h : Int -> IXIYHL -> MainWithIndexRegisters -> MainWithIndexRegisters
@@ -442,35 +432,6 @@ get_bc z80_main =
 get_de : MainWithIndexRegisters -> Int
 get_de z80 =
     z80.d |> shiftLeftBy8 |> Bitwise.or z80.e
-
-
-
---dec_pc2 : Z80 -> Z80
---dec_pc2 z80 =
---    { z80 | pc = Bitwise.and (z80.pc - 2) 0xFFFF }
---	void bc(int v) {C=v&0xFF; B=v>>>8;}
-
-
-set_bc : Int -> Z80 -> Z80
-set_bc v z80 =
-    let
-        z80_main =
-            z80.main
-    in
-    { z80 | main = { z80_main | b = shiftRightBy8 v, c = Bitwise.and v 0xFF } }
-
-
-
---	void de(int v) {E=v&0xFF; D=v>>>8;}
-
-
-set_de : Int -> Z80 -> Z80
-set_de v z80 =
-    let
-        z80_main =
-            z80.main
-    in
-    { z80 | main = { z80_main | d = shiftRightBy8 v, e = Bitwise.and v 0xFF } }
 
 
 set_bc_main : Int -> MainWithIndexRegisters -> MainWithIndexRegisters

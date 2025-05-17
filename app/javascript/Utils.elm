@@ -191,3 +191,13 @@ bitMaskFromBit testType =
 
         Bit_7 ->
             0x80
+
+
+wordPlusOffset : Int -> Int -> Int
+wordPlusOffset z80byte z80word =
+    let
+        newvalue =
+            z80word + byte z80byte |> char
+    in
+    --Z80Word loval hival
+    newvalue

@@ -15,7 +15,7 @@ import Z80Delta exposing (Z80Delta(..))
 import Z80Env exposing (addCpuTimeEnv, m1, mem, mem16, setMem, setMem16, z80_in)
 import Z80Flags exposing (FlagRegisters, c_F3, c_F5, c_F53, c_FC, f_szh0n0p, z80_sub)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIYHL(..), InterruptRegisters, Z80, add_cpu_time, get_bc, get_de, imm16, inc_pc, set_bc, set_bc_main, set_de, set_de_main)
+import Z80Types exposing (IXIYHL(..), InterruptRegisters, Z80, add_cpu_time, get_bc, get_de, imm16, inc_pc, set_bc_main, set_de_main)
 
 
 group_ed_dict : Dict Int (Z80ROM -> Z80 -> Z80Delta)
@@ -644,7 +644,7 @@ ldir i r rom48k z80 =
                     a2 - 1 |> char
 
         z80_2 =
-            { z80_1 | env = env_1 } |> set_de new_de |> add_cpu_time 5
+            { z80_1 | env = env_1, main = z80_1.main |> set_de_main new_de } |> add_cpu_time 5
 
         --if(Fr!=0) Fr = 1; // keep Z
         --v += A;
@@ -692,7 +692,7 @@ ldir i r rom48k z80 =
         env_2 =
             z80_2.env |> addCpuTimeEnv time
     in
-    { z80_2 | pc = pc, env = env_2, flags = { flags | fr = fr, ff = ff, fa = v, fb = v } } |> set_bc a |> Whole
+    { z80_2 | main = z80_2.main |> set_bc_main a, pc = pc, env = env_2, flags = { flags | fr = fr, ff = ff, fa = v, fb = v } } |> Whole
 
 
 
