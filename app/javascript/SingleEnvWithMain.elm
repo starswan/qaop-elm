@@ -49,7 +49,6 @@ applySingleEnvMainChange pcInc z80changeData z80 =
     let
         --interrupts =
         --    z80.interrupts
-
         env =
             z80.env
 
@@ -360,3 +359,13 @@ bit_7_indirect_hl z80_main rom48k z80_env =
             mem z80_main.hl z80_env.time rom48k z80_env.ram
     in
     SingleBitTest Bit_7 value
+
+
+add_a_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
+add_a_indirect_hl z80_main rom48k z80_env =
+    -- case 0x8E: adc(env.mem(HL)); time+=3; break;
+    let
+        value =
+            mem z80_main.hl z80_env.time rom48k z80_env.ram
+    in
+    AddARegister value.value value.time
