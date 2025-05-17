@@ -8,7 +8,7 @@ import Z80Delta exposing (Z80Delta(..))
 import Z80Env exposing (addCpuTimeEnv, mem, setMem)
 import Z80Flags exposing (add16, dec, inc)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIY, IXIYHL(..), Z80, env_mem_hl_ixiy, get_xy, get_xy_ixiy, imm16, imm8, set_xy)
+import Z80Types exposing (IXIY, IXIYHL(..), Z80, env_mem_hl_ixiy, get_xy, get_xy_ixiy, imm16, set_xy)
 
 
 miniDict30 : Dict Int (IXIY -> Z80ROM -> Z80 -> Z80Delta)
@@ -46,13 +46,13 @@ inc_indirect_hl ixiyhl rom48k z80 =
             z80.env
 
         cpuTimeAndValue =
-            mem cpuTimePcAndValue.value cpuTimePcAndValue.time rom48k env_1.ram
+            mem cpuTimePcAndValue.value16 cpuTimePcAndValue.time rom48k env_1.ram
 
         valueWithFlags =
             z80.flags |> inc cpuTimeAndValue.value
 
         new_env =
-            { env_1 | time = cpuTimeAndValue.time |> addCpuTimeTime 4 } |> setMem cpuTimePcAndValue.value valueWithFlags.value
+            { env_1 | time = cpuTimeAndValue.time |> addCpuTimeTime 4 } |> setMem cpuTimePcAndValue.value16 valueWithFlags.value
     in
     --{ z80_1 | env = new_env, flags = v.flags } |> add_cpu_time 3
     EnvWithFlagsAndPc (new_env |> addCpuTimeEnv 3) valueWithFlags.flags cpuTimePcAndValue.pc
@@ -68,7 +68,7 @@ dec_indirect_hl ixiyhl rom48k z80 =
 
         --z80_1 = { z80 | pc = a.pc }
         value =
-            mem a.value z80.env.time rom48k z80.env.ram
+            mem a.value16 z80.env.time rom48k z80.env.ram
 
         env_1 =
             z80.env
@@ -77,7 +77,7 @@ dec_indirect_hl ixiyhl rom48k z80 =
             z80.flags |> dec value.value
 
         new_env =
-            { env_1 | time = value.time } |> addCpuTimeEnv 4 |> setMem a.value v.value
+            { env_1 | time = value.time } |> addCpuTimeEnv 4 |> setMem a.value16 v.value
 
         env_2 =
             new_env |> addCpuTimeEnv 3

@@ -30,6 +30,13 @@ type alias CpuTimePcAndValue =
     }
 
 
+type alias CpuTimePcAnd16BitValue =
+    { time : CpuTimeCTime
+    , pc : Int
+    , value16 : Int
+    }
+
+
 type alias CpuTimeSpAndValue =
     { time : CpuTimeCTime
     , sp : Int

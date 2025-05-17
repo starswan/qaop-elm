@@ -1,10 +1,8 @@
 module Group0x70 exposing (..)
 
-import Bitwise exposing (shiftRightBy)
-import CpuTimeCTime exposing (addCpuTimeTime)
+import CpuTimeCTime
 import Dict exposing (Dict)
 import Z80Delta exposing (Z80Delta(..))
-import Z80Env exposing (addCpuTimeEnv, c_TIME_LIMIT, setMem)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIY, IXIYHL(..), Z80, env_mem_hl_ixiy, get_h, get_h_ixiy, get_l, get_l_ixiy, hl_deref_with_z80_ixiy)
 
@@ -35,14 +33,13 @@ execute_0x7077_ixiy ixiyhl rom48k z80 value =
 
         --env_1 =
         --    z80.env
-
         --new_env =
         --    { env_1 | time = mem_target.time }
         --        |> setMem mem_target.value value
         --        |> addCpuTimeEnv 3
     in
     --{ z80 | pc = mem_target.pc } |> set_env new_env |> add_cpu_time 3
-    SetMem8WithCpuTimeIncrementAndPc mem_target.value value mem_target.time 3 mem_target.pc
+    SetMem8WithCpuTimeIncrementAndPc mem_target.value16 value mem_target.time 3 mem_target.pc
 
 
 ld_indirect_hl_b : IXIY -> Z80ROM -> Z80 -> Z80Delta
