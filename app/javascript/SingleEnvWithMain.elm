@@ -21,15 +21,12 @@ type SingleEnvMainChange
     | SingleBitTest BitTest CpuTimeAndValue
     | AdcARegister Int CpuTimeCTime
     | AddARegister Int CpuTimeCTime
-
-
-
---| SubARegister Int CpuTimeCTime
---| SbcARegister Int CpuTimeCTime
---| AndARegister Int CpuTimeCTime
---| XorARegister Int CpuTimeCTime
---| OrARegister Int CpuTimeCTime
---| CpARegister Int CpuTimeCTime
+    | SubARegister Int CpuTimeCTime
+    | SbcARegister Int CpuTimeCTime
+    | AndARegister Int CpuTimeCTime
+    | XorARegister Int CpuTimeCTime
+    | OrARegister Int CpuTimeCTime
+    | CpARegister Int CpuTimeCTime
 
 
 singleEnvMainRegs : Dict Int ( MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange, PCIncrement )
@@ -46,8 +43,8 @@ singleEnvMainRegs =
         , ( 0x7E, ( ld_a_indirect_hl, IncrementByOne ) )
         , ( 0x86, ( add_a_indirect_hl, IncrementByOne ) )
         , ( 0x8E, ( adc_a_indirect_hl, IncrementByOne ) )
-        ,( 0x96, sub_indirect_hl,  IncrementByOne ) )
-                , ( 0x9E, sbc_indirect_hl,  IncrementByOne ) )
+        , ( 0x96, ( sub_indirect_hl, IncrementByOne ) )
+        , ( 0x9E, ( sbc_indirect_hl, IncrementByOne ) )
         , ( 0xCB46, ( bit_0_indirect_hl, IncrementByTwo ) )
         , ( 0xCB4E, ( bit_1_indirect_hl, IncrementByTwo ) )
         , ( 0xCB56, ( bit_2_indirect_hl, IncrementByTwo ) )
@@ -424,3 +421,63 @@ adc_a_indirect_hl z80_main rom48k z80_env =
             mem z80_main.hl z80_env.time rom48k z80_env.ram
     in
     AdcARegister value.value value.time
+
+
+sub_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
+sub_indirect_hl z80_main rom48k z80_env =
+    -- case 0x96: sub(env.mem(HL)); time+=3; break;
+    let
+        value =
+            mem z80_main.hl z80_env.time rom48k z80_env.ram
+    in
+    SubARegister value.value value.time
+
+
+sbc_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
+sbc_indirect_hl z80_main rom48k z80_env =
+    -- case 0x9E: sbc(env.mem(HL)); time+=3; break;
+    let
+        value =
+            mem z80_main.hl z80_env.time rom48k z80_env.ram
+    in
+    SbcARegister value.value value.time
+
+
+and_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
+and_indirect_hl z80_main rom48k z80_env =
+    -- case 0x9E: sbc(env.mem(HL)); time+=3; break;
+    let
+        value =
+            mem z80_main.hl z80_env.time rom48k z80_env.ram
+    in
+    AndARegister value.value value.time
+
+
+xor_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
+xor_indirect_hl z80_main rom48k z80_env =
+    -- case 0x9E: sbc(env.mem(HL)); time+=3; break;
+    let
+        value =
+            mem z80_main.hl z80_env.time rom48k z80_env.ram
+    in
+    XorARegister value.value value.time
+
+
+or_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
+or_indirect_hl z80_main rom48k z80_env =
+    -- case 0x9E: sbc(env.mem(HL)); time+=3; break;
+    let
+        value =
+            mem z80_main.hl z80_env.time rom48k z80_env.ram
+    in
+    OrARegister value.value value.time
+
+
+cp_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
+cp_indirect_hl z80_main rom48k z80_env =
+    -- case 0x9E: sbc(env.mem(HL)); time+=3; break;
+    let
+        value =
+            mem z80_main.hl z80_env.time rom48k z80_env.ram
+    in
+    CpARegister value.value value.time
