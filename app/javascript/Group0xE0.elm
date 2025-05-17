@@ -52,10 +52,10 @@ pop_hl ixiyhl rom48k z80 =
     in
     case ixiyhl of
         IXIY_IX ->
-            MainRegsWithSpPcAndTime { main | ix = hl.value } hl.sp z80.pc hl.time
+            MainRegsWithSpPcAndTime { main | ix = hl.value16 } hl.sp z80.pc hl.time
 
         IXIY_IY ->
-            MainRegsWithSpPcAndTime { main | iy = hl.value } hl.sp z80.pc hl.time
+            MainRegsWithSpPcAndTime { main | iy = hl.value16 } hl.sp z80.pc hl.time
 
 
 ex_indirect_sp_hl : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
@@ -72,14 +72,12 @@ ex_indirect_sp_hl ixiyhl rom48k z80 =
         z80_1 =
             { z80 | env = { env | time = hl.time, sp = hl.sp } }
 
-        toBePushed = (z80_1.main |> get_xy ixiyhl)
+        toBePushed =
+            z80_1.main |> get_xy ixiyhl
 
-        --pushed =
-        --    z80_1.env |> z80_push toBePushed |> addCpuTimeEnv 2
+        hl_time =
+            hl.time |> addCpuTimeTime 2
 
-        hl_time = hl.time |> addCpuTimeTime 2
-
-        --z80_2 = { z80_1 | env = pushed }
         main =
             z80_1.main
     in
@@ -89,14 +87,15 @@ ex_indirect_sp_hl ixiyhl rom48k z80 =
         --HL -> { z80_2 | main = { main | hl = v.value } }
         IX ->
             --MainRegsWithEnvAndPc { main | ix = hl.value } pushed z80.pc
-            PushWithMainSpCpuTimeAndPc toBePushed { main | ix = hl.value } hl.sp hl_time z80.pc
+            PushWithMainSpCpuTimeAndPc toBePushed { main | ix = hl.value16 } hl.sp hl_time z80.pc
+
         IY ->
             --MainRegsWithEnvAndPc { main | iy = hl.value } pushed z80.pc
-            PushWithMainSpCpuTimeAndPc toBePushed { main | iy = hl.value } hl.sp hl_time z80.pc
+            PushWithMainSpCpuTimeAndPc toBePushed { main | iy = hl.value16 } hl.sp hl_time z80.pc
 
         HL ->
             --MainRegsWithEnv { main | hl = hl.value } pushed
-            PushWithMainSpCpuTime toBePushed { main | hl = hl.value } hl.sp hl_time
+            PushWithMainSpCpuTime toBePushed { main | hl = hl.value16 } hl.sp hl_time
 
 
 push_hl : IXIY -> Z80ROM -> Z80 -> Z80Delta
@@ -104,7 +103,9 @@ push_hl ixiyhl _ z80 =
     -- case 0xE5: push(HL); break;
     -- case 0xE5: push(xy); break;
     let
-        toBePushed = (z80.main |> get_xy_ixiy ixiyhl)
+        toBePushed =
+            z80.main |> get_xy_ixiy ixiyhl
+
         --pushed =
         --    z80.env |> z80_push toBePushed
     in

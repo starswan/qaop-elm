@@ -317,7 +317,7 @@ applyFlagDelta pcInc cpu_time z80_flags rom48k tmp_z80 =
 
                 --x = debug_log "ret nz" (result.value |> subName) Nothing
             in
-            { z80 | pc = result.value, env = { env1 | time = result.time |> addCpuTimeTimeInc timeIncrement, sp = result.sp } }
+            { z80 | pc = result.value16, env = { env1 | time = result.time |> addCpuTimeTimeInc timeIncrement, sp = result.sp } }
 
         EmptyFlagChange timeIncrement ->
             let
@@ -333,9 +333,6 @@ applyFlagDelta pcInc cpu_time z80_flags rom48k tmp_z80 =
 applyPureDelta : PCIncrement -> CpuTimeCTime -> Z80Change -> Z80 -> Z80
 applyPureDelta cpuInc cpu_time z80changeData tmp_z80 =
     let
-        interrupts =
-            tmp_z80.interrupts
-
         env =
             tmp_z80.env
 
@@ -601,7 +598,7 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
                     { env | time = cpu_time } |> mem16 int rom48k
             in
             { z80
-                | main = { main | hl = value.value }
+                | main = { main | hl = value.value16 }
                 , pc = new_pc
                 , env = { env | time = value.time |> addCpuTimeTimeInc cpuTimeIncrement4 }
                 , r = z80.r + 1
@@ -616,7 +613,7 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
                     { env | time = cpu_time } |> mem16 int rom48k
             in
             { z80
-                | main = { main | ix = value.value }
+                | main = { main | ix = value.value16 }
                 , pc = new_pc
                 , env = { env | time = value.time |> addCpuTimeTimeInc cpuTimeIncrement4 }
                 , r = z80.r + 1
@@ -631,7 +628,7 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
                     { env | time = cpu_time } |> mem16 int rom48k
             in
             { z80
-                | main = { main | iy = value.value }
+                | main = { main | iy = value.value16 }
                 , pc = new_pc
                 , env = { env | time = value.time |> addCpuTimeTimeInc cpuTimeIncrement4 }
                 , r = z80.r + 1

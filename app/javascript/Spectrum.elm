@@ -14,7 +14,7 @@ import Z80Env exposing (mem, mem16, reset_cpu_time)
 import Z80Flags exposing (c_FC, c_FZ, get_flags, set_flags)
 import Z80Rom exposing (Z80ROM, make_spectrum_rom)
 import Z80Tape exposing (TapePosition, Z80Tape, newPosition)
-import Z80Types exposing (IXIYHL(..), Z80, get_de, get_ei, get_h, get_l, interrupt)
+import Z80Types exposing (IXIYHL(..), Z80, get_de, get_ei, interrupt)
 
 
 type alias Audio =
@@ -1026,10 +1026,10 @@ checkLoad spectrum =
                 if pc1 >= 0x05E3 then
                     let
                         ( pc2, sp2 ) =
-                            ( cpu.env |> mem16 sp1 spectrum.rom48k |> .value, char sp1 + 2 )
+                            ( cpu.env |> mem16 sp1 spectrum.rom48k |> .value16, char sp1 + 2 )
                     in
                     if pc2 == 0x05E6 then
-                        ( cpu.env |> mem16 sp2 spectrum.rom48k |> .value, char sp2 + 2 )
+                        ( cpu.env |> mem16 sp2 spectrum.rom48k |> .value16, char sp2 + 2 )
 
                     else
                         ( pc2, sp2 )
