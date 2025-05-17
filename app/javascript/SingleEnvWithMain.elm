@@ -46,6 +46,8 @@ singleEnvMainRegs =
         , ( 0x7E, ( ld_a_indirect_hl, IncrementByOne ) )
         , ( 0x86, ( add_a_indirect_hl, IncrementByOne ) )
         , ( 0x8E, ( adc_a_indirect_hl, IncrementByOne ) )
+        ,( 0x96, sub_indirect_hl,  IncrementByOne ) )
+                , ( 0x9E, sbc_indirect_hl,  IncrementByOne ) )
         , ( 0xCB46, ( bit_0_indirect_hl, IncrementByTwo ) )
         , ( 0xCB4E, ( bit_1_indirect_hl, IncrementByTwo ) )
         , ( 0xCB56, ( bit_2_indirect_hl, IncrementByTwo ) )
