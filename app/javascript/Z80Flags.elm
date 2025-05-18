@@ -27,6 +27,15 @@ type alias IntWithFlagsAndTime =
     }
 
 
+type FlagFunc
+    = AdcA
+    | AddA
+    | SubA
+    | SbcA
+    | AndA
+    | XorA
+    | OrA
+    | CpA
 
 
 
@@ -484,7 +493,8 @@ testBit testType v flagRegs =
 
         ff =
             Bitwise.or (Bitwise.and flagRegs.ff (complement 0xFF)) (Bitwise.or (Bitwise.and v c_F53) m)
-            --flagRegs.ff |> Bitwise.and (0xFF |> Bitwise.or (Bitwise.and v c_F53) |> Bitwise.or m |>  complement)
+
+        --flagRegs.ff |> Bitwise.and (0xFF |> Bitwise.or (Bitwise.and v c_F53) |> Bitwise.or m |>  complement)
     in
     { flagRegs | ff = ff, fr = m, fa = complement m, fb = 0 }
 
@@ -753,3 +763,31 @@ f_szh0n0p r flags =
             Bitwise.or r 0x0100
     in
     { flags | fr = fr, ff = ff, fa = fa, fb = 0 }
+
+
+changeFlags : FlagFunc -> Int -> FlagRegisters -> FlagRegisters
+changeFlags flagFunc int flags =
+    case flagFunc of
+        AdcA ->
+            flags |> adc int
+
+        AddA ->
+            flags |> z80_add int
+
+        SubA ->
+            flags |> z80_sub int
+
+        SbcA ->
+            flags |> sbc int
+
+        AndA ->
+            flags |> z80_and int
+
+        XorA ->
+            flags |> z80_xor int
+
+        OrA ->
+            flags |> z80_or int
+
+        CpA ->
+            flags |> z80_cp int
