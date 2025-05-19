@@ -2,6 +2,7 @@ module Z80Types exposing (..)
 
 import Bitwise exposing (shiftRightBy)
 import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimePcAnd16BitValue, CpuTimePcAndValue, addCpuTimeTime)
+import Dict exposing (Dict)
 import Utils exposing (char, shiftLeftBy8, shiftRightBy8, wordPlusOffset)
 import Z80Env exposing (Z80Env, Z80EnvWithPC, addCpuTimeEnv, c_TIME_LIMIT, mem, mem16, setMem, z80_push)
 import Z80Flags exposing (FlagRegisters)
@@ -48,6 +49,7 @@ type alias Z80 =
     , r : Int
     , interrupts : InterruptRegisters
 
+    --, debugDict : Dict Int Int
     --, time_limit : Int
     }
 

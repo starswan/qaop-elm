@@ -217,7 +217,8 @@ grabWholeThingDecoder tapfileheader tapfile_body =
         x =
             case tapfileheader.data of
                 Program _ ->
-                    debugLog "Program " (tapfile_body.data |> debugProgram) Nothing
+                    --debugLog "Program " (tapfile_body.data |> debugProgram) Nothing
+                    Nothing
 
                 NumberArray _ ->
                     Nothing

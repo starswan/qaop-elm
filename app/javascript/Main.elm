@@ -277,6 +277,13 @@ update message model =
 
                             ( q, cmd ) =
                                 model.qaop |> run
+
+                            --x =
+                            --    if (model.count |> modBy 400) == 100 then
+                            --        debugLog "debugDict" model.qaop.spectrum.cpu.debugDict Nothing
+                            --
+                            --    else
+                            --        Nothing
                         in
                         { qaop = q, cmd = cmd, count = model.count + 1, elapsed = elapsed }
             in

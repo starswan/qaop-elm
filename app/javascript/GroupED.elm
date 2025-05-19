@@ -402,11 +402,8 @@ group_ed rom48k z80_0 =
 
         z80 =
             { old_z80 | pc = new_pc } |> add_cpu_time 4
-
-        ed_func =
-            group_ed_dict |> Dict.get c.value
     in
-    case ed_func of
+    case group_ed_dict |> Dict.get c.value of
         Just f ->
             z80 |> f rom48k
 

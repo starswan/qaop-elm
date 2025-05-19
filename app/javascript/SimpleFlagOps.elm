@@ -1,16 +1,20 @@
 module SimpleFlagOps exposing (..)
 
 import Bitwise exposing (complement)
-import CpuTimeCTime exposing (CpuTimeIncrement(..))
+import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..))
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
 import Utils exposing (BitTest(..), shiftRightBy8)
 import Z80Change exposing (FlagChange(..))
+import Z80Execute exposing (applyFlagDelta)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, adc, c_FP, c_FS, cpl, daa, dec, get_af, get_flags, inc, rot, sbc, scf_ccf, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit, z80_add, z80_cp, z80_or, z80_sub, z80_xor)
+import Z80Rom exposing (Z80ROM)
+import Z80Transform exposing (Z80Transform)
+import Z80Types exposing (Z80)
 
 
-singleByteFlags : Dict Int ( FlagRegisters -> FlagChange, PCIncrement )
-singleByteFlags =
+plainSingleByteFlags : Dict Int ( FlagRegisters -> FlagChange, PCIncrement )
+plainSingleByteFlags =
     Dict.fromList
         [ ( 0x07, ( rlca, IncrementByOne ) )
         , ( 0x0F, ( rrca, IncrementByOne ) )
@@ -45,7 +49,13 @@ singleByteFlags =
         , ( 0xF0, ( ret_p, IncrementByOne ) )
         , ( 0xF5, ( push_af, IncrementByOne ) )
         , ( 0xF8, ( ret_m, IncrementByOne ) )
-        , ( 0xCB07, ( rlc_a, IncrementByTwo ) )
+        ]
+
+
+cbSingleByteFlags : Dict Int ( FlagRegisters -> FlagChange, PCIncrement )
+cbSingleByteFlags =
+    Dict.fromList
+        [ ( 0xCB07, ( rlc_a, IncrementByTwo ) )
         , ( 0xCB0F, ( rrc_a, IncrementByTwo ) )
         , ( 0xCB17, ( rl_a, IncrementByTwo ) )
         , ( 0xCB1F, ( rr_a, IncrementByTwo ) )
@@ -62,6 +72,35 @@ singleByteFlags =
         , ( 0xCB77, ( \z80_flags -> z80_flags |> testBit Bit_6 z80_flags.a |> OnlyFlags, IncrementByTwo ) )
         , ( 0xCB7F, ( \z80_flags -> z80_flags |> testBit Bit_7 z80_flags.a |> OnlyFlags, IncrementByTwo ) )
         ]
+
+
+ixSingleByteFlags : Dict Int ( FlagRegisters -> FlagChange, PCIncrement )
+ixSingleByteFlags =
+    Dict.fromList
+        []
+
+
+iySingleByteFlags : Dict Int ( FlagRegisters -> FlagChange, PCIncrement )
+iySingleByteFlags =
+    Dict.fromList
+        []
+
+
+parseSingleByteWithFlags : Dict Int ( FlagRegisters -> FlagChange, PCIncrement ) -> CpuTimeCTime -> Int -> Z80ROM -> Z80 -> Maybe Z80Transform
+parseSingleByteWithFlags lookupDict instrTime instrCode rom48k z80 =
+    case lookupDict |> Dict.get instrCode of
+        --Just (flagFunc, t) -> Just (FlagDelta t instrTime (flagFunc z80.flags))
+        Just ( flagFunc, t ) ->
+            Just (z80 |> applyFlagDelta t instrTime (flagFunc z80.flags) rom48k)
+
+        --| FlagDelta PCIncrement CpuTimeCTime FlagChange
+        --    FlagDelta pcInc cpuTimeCTime flagRegisters ->
+        --        z80 |> applyFlagDelta pcInc cpuTimeCTime flagRegisters rom48k
+        --case singleByteMainRegs |> Dict.get instrCode of
+        --    Just ( mainRegFunc, pcInc ) ->
+        --        Just (z80 |> applyRegisterDelta pcInc instrTime (mainRegFunc z80.main))
+        Nothing ->
+            Nothing
 
 
 rlca : FlagRegisters -> FlagChange
@@ -219,7 +258,7 @@ and_a z80_flags =
     -- case 0xA7: Fa=~(Ff=Fr=A); Fb=0; break;
     -- and a is correct - I guess the above is a faster implementation
     --z80_flags |> z80_and z80_flags.a |> OnlyFlags
-    OnlyFlags { a = z80_flags.a, ff = z80_flags.a, fr = z80_flags.a, fb = 0, fa = complement z80_flags.a}
+    OnlyFlags { a = z80_flags.a, ff = z80_flags.a, fr = z80_flags.a, fb = 0, fa = complement z80_flags.a }
 
 
 xor_a : FlagRegisters -> FlagChange
@@ -250,80 +289,80 @@ ret_nz : FlagRegisters -> FlagChange
 ret_nz z80_flags =
     -- case 0xC0: time++; if(Fr!=0) MP=PC=pop(); break;
     if z80_flags.fr /= 0 then
-        ReturnWithPop increment1
+        ReturnWithPop
 
     else
-        EmptyFlagChange increment1
+        EmptyFlagChange
 
 
 ret_z : FlagRegisters -> FlagChange
 ret_z z80_flags =
     -- case 0xC8: time++; if(Fr==0) MP=PC=pop(); break;
     if z80_flags.fr == 0 then
-        ReturnWithPop increment1
+        ReturnWithPop
 
     else
-        EmptyFlagChange increment1
+        EmptyFlagChange
 
 
 ret_nc : FlagRegisters -> FlagChange
 ret_nc z80_flags =
     -- case 0xD0: time++; if((Ff&0x100)==0) MP=PC=pop(); break;
     if Bitwise.and z80_flags.ff 0x0100 == 0 then
-        ReturnWithPop increment1
+        ReturnWithPop
 
     else
-        EmptyFlagChange increment1
+        EmptyFlagChange
 
 
 ret_c : FlagRegisters -> FlagChange
 ret_c z80_flags =
     -- case 0xD8: time++; if((Ff&0x100)!=0) MP=PC=pop(); break;
     if Bitwise.and z80_flags.ff 0x0100 /= 0 then
-        ReturnWithPop increment1
+        ReturnWithPop
 
     else
-        EmptyFlagChange increment1
+        EmptyFlagChange
 
 
 ret_po : FlagRegisters -> FlagChange
 ret_po z80_flags =
     -- case 0xE0: time++; if((flags()&FP)==0) MP=PC=pop(); break;
     if Bitwise.and (z80_flags |> get_flags) c_FP == 0 then
-        ReturnWithPop increment1
+        ReturnWithPop
 
     else
-        EmptyFlagChange increment1
+        EmptyFlagChange
 
 
 ret_pe : FlagRegisters -> FlagChange
 ret_pe z80_flags =
     -- case 0xE8: time++; if((flags()&FP)!=0) MP=PC=pop(); break;
     if Bitwise.and (z80_flags |> get_flags) c_FP /= 0 then
-        ReturnWithPop increment1
+        ReturnWithPop
 
     else
-        EmptyFlagChange increment1
+        EmptyFlagChange
 
 
 ret_p : FlagRegisters -> FlagChange
 ret_p z80_flags =
     -- case 0xF0: time++; if((Ff&FS)==0) MP=PC=pop(); break;
     if Bitwise.and z80_flags.ff c_FS == 0 then
-        ReturnWithPop increment1
+        ReturnWithPop
 
     else
-        EmptyFlagChange increment1
+        EmptyFlagChange
 
 
 ret_m : FlagRegisters -> FlagChange
 ret_m z80_flags =
     -- case 0xF8: time++; if((Ff&FS)!=0) MP=PC=pop(); break;
     if Bitwise.and z80_flags.ff c_FS /= 0 then
-        ReturnWithPop increment1
+        ReturnWithPop
 
     else
-        EmptyFlagChange increment1
+        EmptyFlagChange
 
 
 push_af : FlagRegisters -> FlagChange
