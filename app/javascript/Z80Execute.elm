@@ -3,7 +3,7 @@ module Z80Execute exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), addCpuTimeTime, addCpuTimeTimeInc, cpuTimeIncrement4)
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
-import RegisterChange exposing (RegisterChange, RegisterChangeApplied(..), applyRegisterChange)
+import RegisterChange exposing (RegisterChange, RegisterChangeApplied(..), Shifter(..), applyRegisterChange)
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
 import SingleEnvWithMain exposing (SingleEnvMainChange, applySingleEnvMainChange)
 import SingleNoParams exposing (NoParamChange(..), applyNoParamsDelta)
@@ -459,39 +459,41 @@ applyRegisterDelta pc_inc cpu_time z80changeData rom48k z80 =
             in
             { z80 | pc = new_pc, env = env_1, r = z80.r + 1 }
 
-        Shifter0Applied addr cpuTimeIncrement ->
-            z80 |> applyShifter new_pc shifter0 addr cpuTimeIncrement cpu_time rom48k
-
-        Shifter1Applied addr cpuTimeIncrement ->
-            z80 |> applyShifter new_pc shifter1 addr cpuTimeIncrement cpu_time rom48k
-
-        Shifter2Applied addr cpuTimeIncrement ->
-            z80 |> applyShifter new_pc shifter2 addr cpuTimeIncrement cpu_time rom48k
-
-        Shifter3Applied addr cpuTimeIncrement ->
-            z80 |> applyShifter new_pc shifter3 addr cpuTimeIncrement cpu_time rom48k
-
-        Shifter4Applied addr cpuTimeIncrement ->
-            z80 |> applyShifter new_pc shifter4 addr cpuTimeIncrement cpu_time rom48k
-
-        Shifter5Applied addr cpuTimeIncrement ->
-            z80 |> applyShifter new_pc shifter5 addr cpuTimeIncrement cpu_time rom48k
-
-        Shifter6Applied addr cpuTimeIncrement ->
-            z80 |> applyShifter new_pc shifter6 addr cpuTimeIncrement cpu_time rom48k
-
-        Shifter7Applied addr cpuTimeIncrement ->
-            z80 |> applyShifter new_pc shifter7 addr cpuTimeIncrement cpu_time rom48k
+        RegisterChangeShifterApplied shifter addr cpuTimeIncrement ->
+            z80 |> applyShifter new_pc shifter addr cpuTimeIncrement cpu_time rom48k
 
 
-applyShifter : Int -> (Int -> FlagRegisters -> IntWithFlags) -> Int -> CpuTimeIncrement -> CpuTimeCTime -> Z80ROM -> Z80 -> Z80
+applyShifter : Int -> Shifter -> Int -> CpuTimeIncrement -> CpuTimeCTime -> Z80ROM -> Z80 -> Z80
 applyShifter new_pc shifterFunc addr cpuTimeIncrement cpu_time rom48k z80 =
     let
         value =
             mem addr cpu_time rom48k z80.env.ram
 
         result =
-            z80.flags |> shifterFunc value.value
+            case shifterFunc of
+                Shifter0 ->
+                    z80.flags |> shifter0 value.value
+
+                Shifter1 ->
+                    z80.flags |> shifter1 value.value
+
+                Shifter2 ->
+                    z80.flags |> shifter2 value.value
+
+                Shifter3 ->
+                    z80.flags |> shifter3 value.value
+
+                Shifter4 ->
+                    z80.flags |> shifter4 value.value
+
+                Shifter5 ->
+                    z80.flags |> shifter5 value.value
+
+                Shifter6 ->
+                    z80.flags |> shifter6 value.value
+
+                Shifter7 ->
+                    z80.flags |> shifter7 value.value
 
         env =
             z80.env

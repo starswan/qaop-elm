@@ -4,7 +4,7 @@ import Bitwise exposing (complement)
 import CpuTimeCTime exposing (CpuTimeIncrement(..), increment3, increment7)
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
-import RegisterChange exposing (RegisterChange(..))
+import RegisterChange exposing (RegisterChange(..), Shifter(..))
 import Utils exposing (BitTest(..), bitMaskFromBit, shiftRightBy8)
 import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, Z80, get_bc, get_de)
 
@@ -122,28 +122,28 @@ inc_de : MainWithIndexRegisters -> RegisterChange
 inc_de z80_main =
     -- case 0x13: if(++E==256) {D=D+1&0xFF;E=0;} time+=2; break;
     let
-        tmp_e =
+        new_e =
             z80_main.e + 1
     in
-    if tmp_e == 256 then
+    if new_e == 256 then
         ChangeRegisterDE (Bitwise.and (z80_main.d + 1) 0xFF) 0 (CpuTimeIncrement 2)
 
     else
-        ChangeRegisterEWithTime tmp_e (CpuTimeIncrement 2)
+        ChangeRegisterE new_e
 
 
 dec_de : MainWithIndexRegisters -> RegisterChange
 dec_de z80_main =
     -- case 0x1B: if(--E<0) D=D-1&(E=0xFF); time+=2; break;
     let
-        tmp_e =
+        new_e =
             z80_main.e - 1
     in
-    if tmp_e < 0 then
+    if new_e < 0 then
         ChangeRegisterDE (Bitwise.and (z80_main.d - 1) 0xFF) 0xFF (CpuTimeIncrement 2)
 
     else
-        ChangeRegisterEWithTime tmp_e (CpuTimeIncrement 2)
+        ChangeRegisterE new_e
 
 
 inc_hl : MainWithIndexRegisters -> RegisterChange
@@ -574,49 +574,49 @@ ex_de_hl z80_main =
 rlc_indirect_hl : MainWithIndexRegisters -> RegisterChange
 rlc_indirect_hl z80_main =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
-    Shifter0 z80_main.hl increment7
+    RegisterChangeShifter Shifter0 z80_main.hl increment7
 
 
 rrc_indirect_hl : MainWithIndexRegisters -> RegisterChange
 rrc_indirect_hl z80_main =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
-    Shifter1 z80_main.hl increment7
+    RegisterChangeShifter Shifter1 z80_main.hl increment7
 
 
 rl_indirect_hl : MainWithIndexRegisters -> RegisterChange
 rl_indirect_hl z80_main =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
-    Shifter2 z80_main.hl increment7
+    RegisterChangeShifter Shifter2 z80_main.hl increment7
 
 
 rr_indirect_hl : MainWithIndexRegisters -> RegisterChange
 rr_indirect_hl z80_main =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
-    Shifter3 z80_main.hl increment7
+    RegisterChangeShifter Shifter3 z80_main.hl increment7
 
 
 sla_indirect_hl : MainWithIndexRegisters -> RegisterChange
 sla_indirect_hl z80_main =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
-    Shifter4 z80_main.hl increment7
+    RegisterChangeShifter Shifter4 z80_main.hl increment7
 
 
 sra_indirect_hl : MainWithIndexRegisters -> RegisterChange
 sra_indirect_hl z80_main =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
-    Shifter5 z80_main.hl increment7
+    RegisterChangeShifter Shifter5 z80_main.hl increment7
 
 
 sll_indirect_hl : MainWithIndexRegisters -> RegisterChange
 sll_indirect_hl z80_main =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
-    Shifter6 z80_main.hl increment7
+    RegisterChangeShifter Shifter6 z80_main.hl increment7
 
 
 srl_indirect_hl : MainWithIndexRegisters -> RegisterChange
 srl_indirect_hl z80_main =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
-    Shifter7 z80_main.hl increment7
+    RegisterChangeShifter Shifter7 z80_main.hl increment7
 
 
 resetBbit : BitTest -> MainWithIndexRegisters -> RegisterChange
