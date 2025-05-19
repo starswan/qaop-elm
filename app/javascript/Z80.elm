@@ -406,7 +406,7 @@ execute_delta ct rom48k z80 =
                                         Nothing ->
                                             case z80 |> parseTriple16Flags instrCode rom48k paramOffset of
                                                 Just delta16 ->
-                                                    Z80Result delta16
+                                                    Z80DeltaChange delta16
 
                                                 Nothing ->
                                                     case singleByteMainAndFlagRegisters |> Dict.get instrCode of

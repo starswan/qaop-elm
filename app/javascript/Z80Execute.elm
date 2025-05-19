@@ -33,6 +33,7 @@ type DeltaWithChanges
     | MainWithEnvDelta PCIncrement SingleEnvMainChange
     | TripleMainChangeDalta CpuTimeCTime TriplePCIncrement TripleMainChange
     | Triple16ParamDelta CpuTimeCTime TriplePCIncrement TripleByteChange
+    | Triple16FlagsDelta CpuTimeCTime TripleWithFlagsChange
 
 
 type ExecuteResult
@@ -78,6 +79,9 @@ apply_delta z80 rom48k z80delta =
 
         Triple16ParamDelta cpuTimeCTime triplePCIncrement tripleByteChange ->
             z80 |> applyTripleChangeDelta rom48k triplePCIncrement cpuTimeCTime tripleByteChange
+
+        Triple16FlagsDelta cpuTimeCTime tripleWithFlagsChange ->
+            z80 |> applyTripleFlagChange cpuTimeCTime tripleWithFlagsChange
 
 
 applyJumpChangeDelta : CpuTimeCTime -> JumpChange -> Z80 -> Z80
