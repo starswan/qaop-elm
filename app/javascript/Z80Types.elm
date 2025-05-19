@@ -48,8 +48,8 @@ type alias Z80 =
     , alt_flags : FlagRegisters
     , r : Int
     , interrupts : InterruptRegisters
-    , debugDict : Dict Int Int
 
+    --, debugDict : Dict Int Int
     --, time_limit : Int
     }
 

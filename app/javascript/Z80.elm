@@ -55,11 +55,11 @@ constructor =
         interrupts =
             InterruptRegisters 0 0 0 False
     in
-    --Z80 z80env_constructor 0 main main_flags alternate alt_flags 0 interrupts
-    Z80 z80env_constructor 0 main main_flags alternate alt_flags 0 interrupts Dict.empty
+    Z80 z80env_constructor 0 main main_flags alternate alt_flags 0 interrupts
 
 
 
+--Z80 z80env_constructor 0 main main_flags alternate alt_flags 0 interrupts Dict.empty
 --	int a() {return A;}
 --get_a: Z80 -> Int
 --get_a z80 =
@@ -347,7 +347,10 @@ standardFuncs =
     , parseSingleEnv
     , parseSingleByteWithParam
     ]
-        |> List.indexedMap Tuple.pair
+
+
+
+--|> List.indexedMap Tuple.pair
 
 
 ix_Funcs =
@@ -363,7 +366,10 @@ ix_Funcs =
     , parseSimpleSingleByte ixSingleByteMain TwoByteInstruction
     , parseSingleByteMainAndFlags ixSingleMainFlags TwoByteInstruction
     ]
-        |> List.indexedMap Tuple.pair
+
+
+
+--|> List.indexedMap Tuple.pair
 
 
 iy_Funcs =
@@ -379,7 +385,10 @@ iy_Funcs =
     , parseSimpleSingleByte iySingleByteMain TwoByteInstruction
     , parseSingleByteMainAndFlags iySingleMainFlags TwoByteInstruction
     ]
-        |> List.indexedMap Tuple.pair
+
+
+
+--|> List.indexedMap Tuple.pair
 
 
 cb_Funcs =
@@ -395,7 +404,10 @@ cb_Funcs =
     , parseSimpleSingleByte cbSingleByteMainRegs TwoByteInstruction
     , parseSingleByteMainAndFlags cbSingleMainFlags TwoByteInstruction
     ]
-        |> List.indexedMap Tuple.pair
+
+
+
+--|> List.indexedMap Tuple.pair
 
 
 execute_delta : CpuTimeAndValue -> Z80ROM -> Z80 -> ExecuteResult
@@ -438,18 +450,13 @@ execute_delta ct rom48k z80 =
         result =
             ctp.funcs
                 |> findMap
-                    (\( index, f ) ->
-                        case f ctp.instrTime ctp.instrCode rom48k z80 of
-                            Just xz ->
-                                Just ( index, xz )
-
-                            Nothing ->
-                                Nothing
+                    (\f ->
+                        f ctp.instrTime ctp.instrCode rom48k z80
                     )
     in
     case result of
-        Just ( index, delta ) ->
-            Transformer delta (index + ctp.offset)
+        Just delta ->
+            Transformer delta
 
         Nothing ->
             case singleWithNoParam |> Dict.get ctp.instrCode of
@@ -536,19 +543,17 @@ executeSingleInstruction rom48k z80 =
         Z80DeltaChange deltaWithChanges ->
             z80 |> applyDeltaWithChanges deltaWithChanges
 
-        Transformer z80Transform index ->
-            let
-                oldValue =
-                    z80.debugDict |> Dict.get index |> Maybe.withDefault 0
-
-                z80_d =
-                    { z80 | debugDict = z80.debugDict |> Dict.insert index (oldValue + 1) }
-            in
-            z80_d |> executeTransform z80Transform
-
-
-
---z80 |> executeTransform z80Transform
+        --Transformer z80Transform index ->
+        --    let
+        --        oldValue =
+        --            z80.debugDict |> Dict.get index |> Maybe.withDefault 0
+        --
+        --        z80_d =
+        --            { z80 | debugDict = z80.debugDict |> Dict.insert index (oldValue + 1) }
+        --    in
+        --    z80_d |> executeTransform z80Transform
+        Transformer z80Transform ->
+            z80 |> executeTransform z80Transform
 
 
 execute : Z80ROM -> Z80 -> Z80
