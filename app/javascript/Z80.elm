@@ -385,7 +385,7 @@ execute_delta ct rom48k z80 =
                 Nothing ->
                     case z80 |> parseTriple16Param instrCode rom48k paramOffset of
                         Just deltaParam16 ->
-                            Z80Result deltaParam16
+                            Z80DeltaChange deltaParam16
 
                         Nothing ->
                             case z80 |> parseRelativeJump instrCode rom48k instrTime of

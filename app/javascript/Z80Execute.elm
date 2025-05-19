@@ -32,6 +32,7 @@ type DeltaWithChanges
     | SingleEnvDelta CpuTimeCTime SingleByteEnvChange
     | MainWithEnvDelta PCIncrement SingleEnvMainChange
     | TripleMainChangeDalta CpuTimeCTime TriplePCIncrement TripleMainChange
+    | Triple16ParamDelta CpuTimeCTime TriplePCIncrement TripleByteChange
 
 
 type ExecuteResult
@@ -74,6 +75,9 @@ apply_delta z80 rom48k z80delta =
 
         TripleMainChangeDalta cpuTimeCTime triplePCIncrement tripleMainChange ->
             z80 |> applyTripleMainChange cpuTimeCTime triplePCIncrement tripleMainChange
+
+        Triple16ParamDelta cpuTimeCTime triplePCIncrement tripleByteChange ->
+            z80 |> applyTripleChangeDelta rom48k triplePCIncrement cpuTimeCTime tripleByteChange
 
 
 applyJumpChangeDelta : CpuTimeCTime -> JumpChange -> Z80 -> Z80
