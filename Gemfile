@@ -9,7 +9,7 @@ gem "drb"
 gem "mutex_m"
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '~> 7.0', '< 7.1'
+gem 'rails', '~> 7.1', '< 7.2'
 # Use sqlite3 as the database for Active Record
 gem 'sqlite3', '~> 1.4'
 
@@ -54,7 +54,7 @@ group :development, :test do
   gem "guard-rspec"
   # gem "guard-rubocop"
 
-  gem 'rspec-rails'
+  gem 'rspec-rails', "> 5.2"
   gem "puma"
 end
 

@@ -33,3 +33,5 @@ index.html
 
 /app/assets/builds/*
 !/app/assets/builds/.keep
+/db/test.sqlite3-shm
+/db/test.sqlite3-wal
