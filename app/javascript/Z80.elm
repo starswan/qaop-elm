@@ -22,13 +22,14 @@ import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters)
 import SingleNoParams exposing (singleWithNoParam)
 import SingleWith8BitParameter exposing (singleWith8BitParam)
 import TripleByte exposing (tripleByteWith16BitParam)
+import TripleWithFlags exposing (triple16WithFlags)
 import Utils exposing (toHexString)
 import Z80Debug exposing (debugTodo)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..))
 import Z80Env exposing (Z80Env, c_TIME_LIMIT, m1, mem, mem16, z80env_constructor)
 import Z80Execute exposing (DeltaWithChanges(..), ExecuteResult(..), apply_delta)
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
-import Z80Parser exposing (parseDoubleWithRegs, parseRelativeJump, parseTriple16Flags, parseTripleMain)
+import Z80Parser exposing (parseDoubleWithRegs, parseRelativeJump, parseTripleMain)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIY(..), IXIYHL(..), IntWithFlagsTimeAndPC, InterruptRegisters, MainRegisters, MainWithIndexRegisters, Z80, add_cpu_time, inc_pc, z80_halt)
 
@@ -404,9 +405,14 @@ execute_delta ct rom48k z80 =
                                             Z80DeltaChange (MainWithEnvDelta pcInc (f z80.main rom48k z80.env))
 
                                         Nothing ->
-                                            case z80 |> parseTriple16Flags instrCode rom48k paramOffset of
-                                                Just delta16 ->
-                                                    Z80DeltaChange delta16
+                                            case triple16WithFlags |> Dict.get instrCode of
+                                                Just f ->
+                                                    let
+                                                        doubleParam =
+                                                            z80.env |> mem16 (Bitwise.and (z80.pc + paramOffset) 0xFFFF) rom48k
+                                                    in
+                                                    -- duplicate of code in imm16 - add 6 to the cpu_time
+                                                    Z80DeltaChange (Triple16FlagsDelta (doubleParam.time |> addCpuTimeTime 6) (f doubleParam.value16 z80.flags))
 
                                                 Nothing ->
                                                     case singleByteMainAndFlagRegisters |> Dict.get instrCode of
