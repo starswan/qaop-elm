@@ -8,7 +8,7 @@ import Z80Delta exposing (Z80Delta(..))
 import Z80Env exposing (addCpuTimeEnv, mem, setMem)
 import Z80Flags exposing (add16, dec, inc)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIY, IXIYHL(..), Z80, env_mem_hl_ixiy, get_xy, get_xy_ixiy, imm16, set_xy)
+import Z80Types exposing (IXIY, IXIYHL(..), Z80, env_mem_hl_ixiy, get_xy, get_xy_ixiy, imm16, set_xy, set_xy_ixiy)
 
 
 miniDict30 : Dict Int (IXIY -> Z80ROM -> Z80 -> Z80Delta)
@@ -17,13 +17,6 @@ miniDict30 =
         [ ( 0x34, inc_indirect_hl )
         , ( 0x35, dec_indirect_hl )
         , ( 0x36, ld_indirect_hl_n )
-        ]
-
-
-delta_dict_30 : Dict Int (IXIYHL -> Z80ROM -> Z80 -> Z80Delta)
-delta_dict_30 =
-    Dict.fromList
-        [ ( 0x39, add_hl_sp ) -- need single byte with env, main amd flags for this
         ]
 
 
@@ -119,28 +112,6 @@ ld_indirect_hl_n ixiyhl rom48k z80 =
     in
     --{ z80_2 | env = x, pc = new_pc } |> add_cpu_time 3
     EnvWithPc (x |> addCpuTimeEnv 3) new_pc
-
-
-add_hl_sp : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
-add_hl_sp ixiyhl rom48k z80 =
-    --case 0x39: HL=add16(HL,SP); break;
-    --case 0x39: xy=add16(xy,SP); break;
-    let
-        xy =
-            get_xy ixiyhl z80.main
-
-        new_xy =
-            add16 xy z80.env.sp z80.flags
-
-        new_z80 =
-            set_xy new_xy.value ixiyhl z80.main
-    in
-    --{ z80 | main = new_z80, flags = new_xy.flags }  |> add_cpu_time new_xy.time
-    FlagsWithPCMainAndTime new_xy.flags z80.pc new_z80 new_xy.time
-
-
-
--- need triplebytewithenv for this
 
 
 ld_a_indirect_nn : Z80ROM -> Z80 -> Z80Delta
