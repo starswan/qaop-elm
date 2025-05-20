@@ -30,37 +30,6 @@ parseTripleMain instrCode rom48k paramOffset z80 =
             Nothing
 
 
-parseTriple16Flags : Int -> Z80ROM -> Int -> Z80 -> Maybe Z80
-parseTriple16Flags instrCode rom48k paramOffset z80 =
-    case triple16WithFlags |> Dict.get instrCode of
-        Just f ->
-            let
-                doubleParam =
-                    z80.env |> mem16 (Bitwise.and (z80.pc + paramOffset) 0xFFFF) rom48k
-            in
-            -- duplicate of code in imm16 - add 6 to the cpu_time
-            Just (z80 |> applyTripleFlagChange (doubleParam.time |> addCpuTimeTime 6) (f doubleParam.value16 z80.flags))
-
-        Nothing ->
-            Nothing
-
-
-parseTriple16Param : Int -> Z80ROM -> Int -> Z80 -> Maybe Z80
-parseTriple16Param instrCode rom48k paramOffset z80 =
-    case tripleByteWith16BitParam |> Dict.get instrCode of
-        Just ( f, pcInc ) ->
-            let
-                doubleParam =
-                    z80.env |> mem16 (Bitwise.and (z80.pc + paramOffset) 0xFFFF) rom48k
-            in
-            -- duplicate of code in imm16 - add 6 to the cpu_time
-            --Just (TripleChangeDelta pcInc (doubleParam.time |> addCpuTimeTime 6) (f doubleParam.value))
-            Just (z80 |> applyTripleChangeDelta rom48k pcInc (doubleParam.time |> addCpuTimeTime 6) (f doubleParam.value16))
-
-        Nothing ->
-            Nothing
-
-
 parseRelativeJump : Int -> Z80ROM -> CpuTimeCTime -> Z80 -> Maybe DeltaWithChanges
 parseRelativeJump instrCode rom48k instrTime z80 =
     case maybeRelativeJump |> Dict.get instrCode of
