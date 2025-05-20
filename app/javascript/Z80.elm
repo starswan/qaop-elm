@@ -7,7 +7,7 @@ module Z80 exposing (..)
 
 import Array exposing (Array)
 import Bitwise exposing (and, or)
-import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAndValue, addCpuTimeTime)
+import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAndValue, addCpuTimeTime, addDuration)
 import Dict exposing (Dict)
 import Group0x30 exposing (delta_dict_lite_30)
 import Group0xE0 exposing (delta_dict_lite_E0)
@@ -386,13 +386,24 @@ execute_delta ct rom48k z80 =
 
                 Nothing ->
                     case tripleByteWith16BitParam |> Dict.get instrCode of
-                        Just ( f, pcInc ) ->
+                        Just ( f, pcInc, duration ) ->
                             let
+                                env =
+                                    z80.env
+
+                                time =
+                                    env.time
+
+                                time_1 =
+                                    { time | cpu_time = time.cpu_time |> addDuration duration }
+
+                                env_1 =
+                                    { env | time = time_1 }
+
                                 doubleParam =
-                                    z80.env |> mem16 (Bitwise.and (z80.pc + paramOffset) 0xFFFF) rom48k
+                                    env_1 |> mem16 (Bitwise.and (z80.pc + paramOffset) 0xFFFF) rom48k
                             in
-                            -- duplicate of code in imm16 - add 6 to the cpu_time
-                            Triple16ParamDelta (doubleParam.time |> addCpuTimeTime 6) pcInc (f doubleParam.value16)
+                            Triple16ParamDelta doubleParam.time pcInc (f doubleParam.value16)
 
                         Nothing ->
                             case maybeRelativeJump |> Dict.get instrCode of

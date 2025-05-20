@@ -3,9 +3,10 @@ module CpuTimeCTime exposing (..)
 import Bitwise exposing (shiftLeftBy, shiftRightBy)
 
 
-type InstructionDuration
-    = ZeroTStates
-    | FourTStates
+type
+    InstructionDuration
+    --= ZeroTStates
+    = FourTStates
     | FiveTStates
     | SixTStates
     | SevenTStates
@@ -13,6 +14,9 @@ type InstructionDuration
     | TenTStates
     | ElevenTStates
     | FifteenTStates
+    | SixteenTStates
+    | SeventeenTStates
+    | TwentyTStates
 
 
 c_NOCONT =
@@ -305,9 +309,8 @@ addCpuTimeTimeInc value z80env =
 addDuration : InstructionDuration -> Int -> Int
 addDuration duration value =
     case duration of
-        ZeroTStates ->
-            value
-
+        --ZeroTStates ->
+        --    value
         FourTStates ->
             value + 4
 
@@ -331,3 +334,12 @@ addDuration duration value =
 
         FifteenTStates ->
             value + 15
+
+        SixteenTStates ->
+            value + 16
+
+        SeventeenTStates ->
+            value + 17
+
+        TwentyTStates ->
+            value + 20
