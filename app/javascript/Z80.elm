@@ -394,11 +394,8 @@ execute_delta ct rom48k z80 =
                                 time =
                                     env.time
 
-                                time_1 =
-                                    { time | cpu_time = time.cpu_time |> addDuration duration }
-
                                 env_1 =
-                                    { env | time = time_1 }
+                                    { env | time = time |> addDuration duration }
 
                                 doubleParam =
                                     env_1 |> mem16 (Bitwise.and (z80.pc + paramOffset) 0xFFFF) rom48k
@@ -407,13 +404,15 @@ execute_delta ct rom48k z80 =
 
                         Nothing ->
                             case maybeRelativeJump |> Dict.get instrCode of
-                                Just f ->
+                                Just ( f, duration ) ->
                                     let
+                                        newTime =
+                                            instrTime |> addDuration duration
+
                                         param =
-                                            mem (Bitwise.and (z80.pc + 1) 0xFFFF) instrTime rom48k z80.env.ram
+                                            mem (Bitwise.and (z80.pc + 1) 0xFFFF) newTime rom48k z80.env.ram
                                     in
-                                    -- duplicate of code in imm8 - add 3 to the cpu_time
-                                    JumpChangeDelta (param.time |> addCpuTimeTime 3) (f param.value z80.flags)
+                                    JumpChangeDelta param.time (f param.value z80.flags)
 
                                 Nothing ->
                                     case singleEnvMainRegs |> Dict.get instrCode of

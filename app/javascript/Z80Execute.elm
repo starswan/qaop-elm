@@ -93,7 +93,7 @@ applyJumpChangeDelta cpu_time z80changeData z80 =
             in
             { z80
                 | pc = pc
-                , env = { old_env | time = cpu_time |> addCpuTimeTime 8 }
+                , env = { old_env | time = cpu_time |> addCpuTimeTime 5 }
                 , r = z80.r + 1
             }
 
@@ -104,7 +104,7 @@ applyJumpChangeDelta cpu_time z80changeData z80 =
             in
             { z80
                 | pc = pc
-                , env = { old_env | time = cpu_time |> addCpuTimeTime 8 }
+                , env = { old_env | time = cpu_time }
                 , r = z80.r + 1
             }
 
@@ -265,7 +265,7 @@ applyFlagDelta pcInc duration z80_flags rom48k z80 =
                     (z80.pc + 2) |> Bitwise.and 0xFFFF
 
         env_1 =
-            { env | time = { time | cpu_time = time.cpu_time |> addDuration duration } }
+            { env | time = time |> addDuration duration }
     in
     case z80_flags of
         OnlyFlags flagRegisters ->
@@ -358,11 +358,8 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
         env =
             z80.env
 
-        time =
-            env.time
-
         env_1 =
-            { env | time = { time | cpu_time = time.cpu_time |> addDuration duration } }
+            { env | time = env.time |> addDuration duration }
 
         new_pc =
             case pc_inc of

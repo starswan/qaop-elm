@@ -13,6 +13,7 @@ type
     | EightTStates
     | TenTStates
     | ElevenTStates
+    | TwelveTStates
     | FifteenTStates
     | SixteenTStates
     | SeventeenTStates
@@ -306,40 +307,50 @@ addCpuTimeTimeInc value z80env =
             { z80env | cpu_time = z80env.cpu_time + int }
 
 
-addDuration : InstructionDuration -> Int -> Int
-addDuration duration value =
-    case duration of
-        --ZeroTStates ->
-        --    value
-        FourTStates ->
-            value + 4
+addDuration : InstructionDuration -> CpuTimeCTime -> CpuTimeCTime
+addDuration duration time =
+    let
+        value =
+            time.cpu_time
 
-        FiveTStates ->
-            value + 5
+        cpuTime =
+            case duration of
+                --ZeroTStates ->
+                --    value
+                FourTStates ->
+                    value + 4
 
-        SixTStates ->
-            value + 6
+                FiveTStates ->
+                    value + 5
 
-        SevenTStates ->
-            value + 7
+                SixTStates ->
+                    value + 6
 
-        EightTStates ->
-            value + 8
+                SevenTStates ->
+                    value + 7
 
-        TenTStates ->
-            value + 10
+                EightTStates ->
+                    value + 8
 
-        ElevenTStates ->
-            value + 11
+                TenTStates ->
+                    value + 10
 
-        FifteenTStates ->
-            value + 15
+                ElevenTStates ->
+                    value + 11
 
-        SixteenTStates ->
-            value + 16
+                FifteenTStates ->
+                    value + 15
 
-        SeventeenTStates ->
-            value + 17
+                SixteenTStates ->
+                    value + 16
 
-        TwentyTStates ->
-            value + 20
+                SeventeenTStates ->
+                    value + 17
+
+                TwentyTStates ->
+                    value + 20
+
+                TwelveTStates ->
+                    value + 12
+    in
+    { time | cpu_time = cpuTime }
