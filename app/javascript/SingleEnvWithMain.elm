@@ -11,12 +11,20 @@ import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIYHL(..), MainWithIndexRegisters, Z80, set_xy)
 
 
+type EightBitMain
+    = RegisterB
+    | RegisterC
+    | RegisterD
+    | RegisterE
+
+
 type SingleEnvMainChange
     = SingleEnvNewARegister Int CpuTimeCTime
-    | SingleEnvNewBRegister Int CpuTimeCTime
-    | SingleEnvNewCRegister Int CpuTimeCTime
-    | SingleEnvNewDRegister Int CpuTimeCTime
-    | SingleEnvNewERegister Int CpuTimeCTime
+      --| SingleEnvNewBRegister Int CpuTimeCTime
+      --| SingleEnvNewCRegister Int CpuTimeCTime
+      --| SingleEnvNewDRegister Int CpuTimeCTime
+      --| SingleEnvNewERegister Int CpuTimeCTime
+    | SingleEnv8BitMain EightBitMain Int CpuTimeCTime
     | SingleEnvNewHLRegister Int CpuTimeCTime
     | SingleBitTest BitTest CpuTimeAndValue
     | SingleEnvFlagFunc FlagFunc Int CpuTimeCTime
@@ -87,50 +95,28 @@ applySingleEnvMainChange pcInc duration z80changeData z80 =
                 , r = z80.r + 1
             }
 
-        SingleEnvNewBRegister int cpuTimeCTime ->
+        SingleEnv8BitMain eightBit int cpuTimeCTime ->
             let
                 main =
                     z80.main
-            in
-            { z80
-                | pc = new_pc
-                , main = { main | b = int }
-                , env = { env_1 | time = cpuTimeCTime }
-                , r = z80.r + 1
-            }
 
-        SingleEnvNewCRegister int cpuTimeCTime ->
-            let
-                main =
-                    z80.main
-            in
-            { z80
-                | pc = new_pc
-                , main = { main | c = int }
-                , env = { env_1 | time = cpuTimeCTime }
-                , r = z80.r + 1
-            }
+                main_1 =
+                    case eightBit of
+                        RegisterB ->
+                            { main | b = int }
 
-        SingleEnvNewDRegister int cpuTimeCTime ->
-            let
-                main =
-                    z80.main
-            in
-            { z80
-                | pc = new_pc
-                , main = { main | d = int }
-                , env = { env_1 | time = cpuTimeCTime }
-                , r = z80.r + 1
-            }
+                        RegisterC ->
+                            { main | c = int }
 
-        SingleEnvNewERegister int cpuTimeCTime ->
-            let
-                main =
-                    z80.main
+                        RegisterD ->
+                            { main | d = int }
+
+                        RegisterE ->
+                            { main | e = int }
             in
             { z80
                 | pc = new_pc
-                , main = { main | e = int }
+                , main = main_1
                 , env = { env_1 | time = cpuTimeCTime }
                 , r = z80.r + 1
             }
@@ -218,7 +204,7 @@ ld_b_indirect_hl z80_main rom48k z80_env =
             mem z80_main.hl z80_env.time rom48k z80_env.ram
     in
     --{ z80 | pc = value.pc, env = value.env } |> set_b value.value
-    SingleEnvNewBRegister value.value value.time
+    SingleEnv8BitMain RegisterB value.value value.time
 
 
 ld_c_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
@@ -230,7 +216,7 @@ ld_c_indirect_hl z80_main rom48k z80_env =
     in
     --{ z80 | pc = value.pc, env = value.env } |> set_c value.value
     --MainRegsWithPcAndCpuTime { main | c = value.value } value.pc value.time
-    SingleEnvNewCRegister value.value value.time
+    SingleEnv8BitMain RegisterC value.value value.time
 
 
 ld_d_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
@@ -242,7 +228,7 @@ ld_d_indirect_hl z80_main rom48k z80_env =
     in
     --{ z80 | pc = value.pc, env = value.env } |> set_d value.value
     --MainRegsWithPcAndCpuTime { main | d = value.value } value.pc value.time
-    SingleEnvNewDRegister value.value value.time
+    SingleEnv8BitMain RegisterD value.value value.time
 
 
 ld_e_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
@@ -254,7 +240,7 @@ ld_e_indirect_hl z80_main rom48k z80_env =
     in
     --{ z80 | pc = value.pc, env = value.env } |> set_e value.value
     --MainRegsWithPcAndCpuTime { main | e = value.value } value.pc value.time
-    SingleEnvNewERegister value.value value.time
+    SingleEnv8BitMain RegisterE value.value value.time
 
 
 ld_h_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
