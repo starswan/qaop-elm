@@ -376,8 +376,8 @@ execute_delta ct rom48k z80 =
                     ( ct.value, ct.time, 1 )
     in
     case singleByteMainRegs |> Dict.get instrCode of
-        Just ( mainRegFunc, t ) ->
-            RegisterChangeDelta t instrTime (mainRegFunc z80.main)
+        Just ( mainRegFunc, t, duration ) ->
+            RegisterChangeDelta t duration (mainRegFunc z80.main)
 
         Nothing ->
             case singleByteFlags |> Dict.get instrCode of

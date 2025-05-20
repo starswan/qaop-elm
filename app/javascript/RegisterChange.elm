@@ -19,62 +19,57 @@ type Shifter
 
 
 type RegisterChange
-    = ChangeRegisterCWithTime Int CpuTimeIncrement
-    | ChangeRegisterBC Int Int CpuTimeIncrement
+    = ChangeRegisterBC Int Int
     | ChangeRegisterB Int
-    | ChangeRegisterDE Int Int CpuTimeIncrement
+    | ChangeRegisterDE Int Int
     | ChangeRegisterE Int
-    | ChangeRegisterHL Int CpuTimeIncrement
-    | ChangeRegisterIX Int CpuTimeIncrement
-    | ChangeRegisterIY Int CpuTimeIncrement
+    | ChangeRegisterHL Int
+    | ChangeRegisterIX Int
+    | ChangeRegisterIY Int
     | ChangeRegisterD Int
     | ChangeRegisterA Int
     | ChangeRegisterC Int
     | ChangeRegisterH Int
     | ChangeRegisterL Int
     | PushedValue Int
-    | RegChangeNewSP Int CpuTimeIncrement
-    | IncrementIndirect Int CpuTimeIncrement
-    | DecrementIndirect Int CpuTimeIncrement
+    | RegChangeNewSP Int
+    | IncrementIndirect Int
+    | DecrementIndirect Int
     | RegisterChangeJump Int
-    | SetIndirect Int Int CpuTimeIncrement
+    | SetIndirect Int Int
     | ChangeRegisterDEAndHL Int Int
-    | RegisterChangeShifter Shifter Int CpuTimeIncrement
+    | RegisterChangeShifter Shifter Int
 
 
 type RegisterChangeApplied
     = MainRegsApplied MainWithIndexRegisters
-    | MainRegsWithTimeApplied MainWithIndexRegisters CpuTimeIncrement
     | FlagRegsApplied FlagRegisters
     | PushedValueApplied Int
-    | NewSPApplied Int CpuTimeIncrement
-    | IncrementIndirectApplied Int CpuTimeIncrement
-    | DecrementIndirectApplied Int CpuTimeIncrement
+    | NewSPApplied Int
+    | IncrementIndirectApplied Int
+    | DecrementIndirectApplied Int
     | JumpApplied Int
-    | SetIndirectApplied Int Int CpuTimeIncrement
-    | RegisterChangeShifterApplied Shifter Int CpuTimeIncrement
+    | SetIndirectApplied Int Int
+    | RegisterChangeShifterApplied Shifter Int
 
 
 applyRegisterChange : RegisterChange -> FlagRegisters -> MainWithIndexRegisters -> RegisterChangeApplied
 applyRegisterChange change z80_flags main =
     case change of
-        ChangeRegisterCWithTime int time ->
-            MainRegsWithTimeApplied { main | c = int } time
+        ChangeRegisterBC b_value c_value ->
+            MainRegsApplied { main | b = b_value, c = c_value }
 
-        ChangeRegisterBC b_value c_value time ->
-            MainRegsWithTimeApplied { main | b = b_value, c = c_value } time
+        ChangeRegisterDE d_value e_value ->
+            MainRegsApplied { main | d = d_value, e = e_value }
 
-        ChangeRegisterDE d_value e_value time ->
-            MainRegsWithTimeApplied { main | d = d_value, e = e_value } time
+        ChangeRegisterHL int ->
+            MainRegsApplied { main | hl = int }
 
-        ChangeRegisterHL int time ->
-            MainRegsWithTimeApplied { main | hl = int } time
+        ChangeRegisterIX int ->
+            MainRegsApplied { main | ix = int }
 
-        ChangeRegisterIX int cpuTimeIncrement ->
-            MainRegsWithTimeApplied { main | ix = int } cpuTimeIncrement
-
-        ChangeRegisterIY int cpuTimeIncrement ->
-            MainRegsWithTimeApplied { main | iy = int } cpuTimeIncrement
+        ChangeRegisterIY int ->
+            MainRegsApplied { main | iy = int }
 
         ChangeRegisterB int ->
             MainRegsApplied { main | b = int }
@@ -100,23 +95,23 @@ applyRegisterChange change z80_flags main =
         PushedValue int ->
             PushedValueApplied int
 
-        RegChangeNewSP int cpuTimeIncrement ->
-            NewSPApplied int cpuTimeIncrement
+        RegChangeNewSP int ->
+            NewSPApplied int
 
-        IncrementIndirect int cpuTimeIncrement ->
-            IncrementIndirectApplied int cpuTimeIncrement
+        IncrementIndirect int ->
+            IncrementIndirectApplied int
 
-        DecrementIndirect int cpuTimeIncrement ->
-            DecrementIndirectApplied int cpuTimeIncrement
+        DecrementIndirect int ->
+            DecrementIndirectApplied int
 
         RegisterChangeJump int ->
             JumpApplied int
 
-        SetIndirect addr value cpuTimeIncrement ->
-            SetIndirectApplied addr value cpuTimeIncrement
+        SetIndirect addr value ->
+            SetIndirectApplied addr value
 
         ChangeRegisterDEAndHL de hl ->
             MainRegsApplied ({ main | hl = hl } |> set_de_main de)
 
-        RegisterChangeShifter shifter int cpuTimeIncrement ->
-            RegisterChangeShifterApplied shifter int cpuTimeIncrement
+        RegisterChangeShifter shifter int ->
+            RegisterChangeShifterApplied shifter int
