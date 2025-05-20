@@ -416,8 +416,8 @@ execute_delta ct rom48k z80 =
 
                                 Nothing ->
                                     case singleEnvMainRegs |> Dict.get instrCode of
-                                        Just ( f, pcInc ) ->
-                                            MainWithEnvDelta pcInc (f z80.main rom48k z80.env)
+                                        Just ( f, pcInc, duration ) ->
+                                            MainWithEnvDelta pcInc duration (f z80.main rom48k z80.env)
 
                                         Nothing ->
                                             case triple16WithFlags |> Dict.get instrCode of
