@@ -36,11 +36,6 @@ type DeltaWithChanges
     | Triple16FlagsDelta CpuTimeCTime TripleWithFlagsChange
 
 
-type ExecuteResult
-    = Z80DeltaChange DeltaWithChanges
-    | Z80Result Z80
-
-
 apply_delta : Z80 -> Z80ROM -> DeltaWithChanges -> Z80
 apply_delta z80 rom48k z80delta =
     case z80delta of
