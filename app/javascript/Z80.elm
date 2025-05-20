@@ -381,8 +381,8 @@ execute_delta ct rom48k z80 =
 
         Nothing ->
             case singleByteFlags |> Dict.get instrCode of
-                Just ( flagFunc, t ) ->
-                    FlagDelta t instrTime (flagFunc z80.flags)
+                Just ( flagFunc, t, duration ) ->
+                    FlagDelta t duration (flagFunc z80.flags)
 
                 Nothing ->
                     case tripleByteWith16BitParam |> Dict.get instrCode of
