@@ -20,7 +20,7 @@ type SingleEnvMainChange
     | SingleEnvNewHLRegister Int CpuTimeCTime
     | SingleBitTest BitTest CpuTimeAndValue
     | SingleEnvFlagFunc FlagFunc Int CpuTimeCTime
-    | SingleEnvNewHL16BitAdd IXIYHL Int Int CpuTimeCTime
+    | SingleEnvNewHL16BitAdd IXIYHL Int Int
 
 
 singleEnvMainRegs : Dict Int ( MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange, PCIncrement, InstructionDuration )
@@ -83,7 +83,7 @@ applySingleEnvMainChange pcInc duration z80changeData z80 =
             { z80
                 | pc = new_pc
                 , flags = { flags | a = int }
-                , env = env_1
+                , env = { env_1 | time = cpuTimeCTime }
                 , r = z80.r + 1
             }
 
@@ -95,7 +95,7 @@ applySingleEnvMainChange pcInc duration z80changeData z80 =
             { z80
                 | pc = new_pc
                 , main = { main | b = int }
-                , env = env_1
+                , env = { env_1 | time = cpuTimeCTime }
                 , r = z80.r + 1
             }
 
@@ -107,7 +107,7 @@ applySingleEnvMainChange pcInc duration z80changeData z80 =
             { z80
                 | pc = new_pc
                 , main = { main | c = int }
-                , env = env_1
+                , env = { env_1 | time = cpuTimeCTime }
                 , r = z80.r + 1
             }
 
@@ -119,7 +119,7 @@ applySingleEnvMainChange pcInc duration z80changeData z80 =
             { z80
                 | pc = new_pc
                 , main = { main | d = int }
-                , env = env_1
+                , env = { env_1 | time = cpuTimeCTime }
                 , r = z80.r + 1
             }
 
@@ -131,7 +131,7 @@ applySingleEnvMainChange pcInc duration z80changeData z80 =
             { z80
                 | pc = new_pc
                 , main = { main | e = int }
-                , env = env_1
+                , env = { env_1 | time = cpuTimeCTime }
                 , r = z80.r + 1
             }
 
@@ -143,38 +143,32 @@ applySingleEnvMainChange pcInc duration z80changeData z80 =
             { z80
                 | pc = new_pc
                 , main = { main | hl = int }
-                , env = env_1
+                , env = { env_1 | time = cpuTimeCTime }
                 , r = z80.r + 1
             }
 
         SingleBitTest bitTest intwithTime ->
             { z80
                 | pc = new_pc
-
-                --, env = { env | time = intwithTime.time }
-                , env = env_1
+                , env = { env_1 | time = intwithTime.time }
                 , flags = z80.flags |> testBit bitTest intwithTime.value
                 , r = z80.r + 1
             }
 
         SingleEnvFlagFunc flagFunc int cpuTimeCTime ->
             let
-                --env1 =
-                --    { env | time = cpuTimeCTime }
                 flags =
                     z80.flags
             in
             { z80
                 | pc = new_pc
                 , flags = flags |> changeFlags flagFunc int
-                , env = env_1
+                , env = { env_1 | time = cpuTimeCTime }
                 , r = z80.r + 1
             }
 
-        SingleEnvNewHL16BitAdd ixiyhl hl sp cpuTimeCTime ->
+        SingleEnvNewHL16BitAdd ixiyhl hl sp ->
             let
-                --env1 =
-                --    { env | time = cpuTimeCTime }
                 new_xy =
                     add16 hl sp z80.flags
             in
@@ -197,8 +191,6 @@ ld_a_indirect_bc z80_main rom48k z80_env =
         new_a =
             mem v z80_env.time rom48k z80_env.ram
     in
-    --{ z80 | env = new_a.env, flags = new_flags } |> add_cpu_time 3
-    --CpuTimeWithFlags (new_a.time |> addCpuTimeTime 3) new_flags
     SingleEnvNewARegister new_a.value new_a.time
 
 
@@ -226,7 +218,7 @@ ld_b_indirect_hl z80_main rom48k z80_env =
             mem z80_main.hl z80_env.time rom48k z80_env.ram
     in
     --{ z80 | pc = value.pc, env = value.env } |> set_b value.value
-    SingleEnvNewBRegister value.value (value.time |> addCpuTimeTime 3)
+    SingleEnvNewBRegister value.value value.time
 
 
 ld_c_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
@@ -238,7 +230,7 @@ ld_c_indirect_hl z80_main rom48k z80_env =
     in
     --{ z80 | pc = value.pc, env = value.env } |> set_c value.value
     --MainRegsWithPcAndCpuTime { main | c = value.value } value.pc value.time
-    SingleEnvNewCRegister value.value (value.time |> addCpuTimeTime 3)
+    SingleEnvNewCRegister value.value value.time
 
 
 ld_d_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
@@ -250,7 +242,7 @@ ld_d_indirect_hl z80_main rom48k z80_env =
     in
     --{ z80 | pc = value.pc, env = value.env } |> set_d value.value
     --MainRegsWithPcAndCpuTime { main | d = value.value } value.pc value.time
-    SingleEnvNewDRegister value.value (value.time |> addCpuTimeTime 3)
+    SingleEnvNewDRegister value.value value.time
 
 
 ld_e_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
@@ -262,7 +254,7 @@ ld_e_indirect_hl z80_main rom48k z80_env =
     in
     --{ z80 | pc = value.pc, env = value.env } |> set_e value.value
     --MainRegsWithPcAndCpuTime { main | e = value.value } value.pc value.time
-    SingleEnvNewERegister value.value (value.time |> addCpuTimeTime 3)
+    SingleEnvNewERegister value.value value.time
 
 
 ld_h_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
@@ -276,9 +268,7 @@ ld_h_indirect_hl z80_main rom48k z80_env =
         new_hl =
             (z80_main.hl |> Bitwise.and 0xFF) |> Bitwise.or (value.value |> shiftLeftBy8)
     in
-    --{ z80 | pc = value.pc, env = value.env } |> set_h_z80 value.value HL |> add_cpu_time 3
-    --MainRegsWithPcAndCpuTime (main |> set_h value.value HL) value.pc (value.time |> addCpuTimeTime 3)
-    SingleEnvNewHLRegister new_hl (value.time |> addCpuTimeTime 3)
+    SingleEnvNewHLRegister new_hl value.time
 
 
 ld_l_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
@@ -292,8 +282,7 @@ ld_l_indirect_hl z80_main rom48k z80_env =
         new_hl =
             z80_main.hl |> Bitwise.and 0xFF00 |> Bitwise.or value.value
     in
-    --MainRegsWithPcAndCpuTime (main |> set_h value.value HL) value.pc (value.time |> addCpuTimeTime 3)
-    SingleEnvNewHLRegister new_hl (value.time |> addCpuTimeTime 3)
+    SingleEnvNewHLRegister new_hl value.time
 
 
 ld_a_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
@@ -471,16 +460,16 @@ cp_indirect_hl z80_main rom48k z80_env =
 add_hl_sp : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
 add_hl_sp z80_main rom48k z80_env =
     --case 0x39: HL=add16(HL,SP); break;
-    SingleEnvNewHL16BitAdd HL z80_main.hl z80_env.sp z80_env.time
+    SingleEnvNewHL16BitAdd HL z80_main.hl z80_env.sp
 
 
 add_ix_sp : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
 add_ix_sp z80_main rom48k z80_env =
     --case 0x39: xy=add16(xy,SP); break;
-    SingleEnvNewHL16BitAdd IX z80_main.ix z80_env.sp z80_env.time
+    SingleEnvNewHL16BitAdd IX z80_main.ix z80_env.sp
 
 
 add_iy_sp : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
 add_iy_sp z80_main rom48k z80_env =
     --case 0x39: xy=add16(xy,SP); break;
-    SingleEnvNewHL16BitAdd IY z80_main.iy z80_env.sp z80_env.time
+    SingleEnvNewHL16BitAdd IY z80_main.iy z80_env.sp

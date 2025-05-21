@@ -436,8 +436,8 @@ execute_delta ct rom48k z80 =
 
                                                 Nothing ->
                                                     case singleByteMainAndFlagRegisters |> Dict.get instrCode of
-                                                        Just ( f, pcInc ) ->
-                                                            PureDelta pcInc instrTime (f z80.main z80.flags)
+                                                        Just ( f, pcInc, duration ) ->
+                                                            PureDelta pcInc (instrTime |> addDuration duration) (f z80.main z80.flags)
 
                                                         Nothing ->
                                                             case doubleWithRegisters |> Dict.get instrCode of

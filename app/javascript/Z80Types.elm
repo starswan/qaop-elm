@@ -353,27 +353,6 @@ set_xy_ixiy value ixiyhl z80 =
 --      CpuTimePcAndValue (d.time |> add_cpu_time_time 8) (char (z80.pc + 1)) (char (xy + byte d.value))
 
 
-env_mem_hl : IXIYHL -> Z80ROM -> Z80 -> CpuTimePcAnd16BitValue
-env_mem_hl ixiyhl rom48k z80 =
-    case ixiyhl of
-        HL ->
-            CpuTimePcAnd16BitValue z80.env.time z80.pc z80.main.hl
-
-        IX ->
-            let
-                dval =
-                    mem z80.pc z80.env.time rom48k z80.env.ram
-            in
-            CpuTimePcAnd16BitValue (dval.time |> addCpuTimeTime 8) (char (z80.pc + 1)) (z80.main.ix |> wordPlusOffset dval.value)
-
-        IY ->
-            let
-                dval =
-                    mem z80.pc z80.env.time rom48k z80.env.ram
-            in
-            CpuTimePcAnd16BitValue (dval.time |> addCpuTimeTime 8) (char (z80.pc + 1)) (z80.main.iy |> wordPlusOffset dval.value)
-
-
 env_mem_hl_ixiy : IXIY -> Z80ROM -> Z80 -> CpuTimePcAnd16BitValue
 env_mem_hl_ixiy ixiyhl rom48k z80 =
     case ixiyhl of
@@ -382,14 +361,14 @@ env_mem_hl_ixiy ixiyhl rom48k z80 =
                 dval =
                     mem z80.pc z80.env.time rom48k z80.env.ram
             in
-            CpuTimePcAnd16BitValue (dval.time |> addCpuTimeTime 8) (char (z80.pc + 1)) (z80.main.ix |> wordPlusOffset dval.value)
+            CpuTimePcAnd16BitValue dval.time (char (z80.pc + 1)) (z80.main.ix |> wordPlusOffset dval.value)
 
         IXIY_IY ->
             let
                 dval =
                     mem z80.pc z80.env.time rom48k z80.env.ram
             in
-            CpuTimePcAnd16BitValue (dval.time |> addCpuTimeTime 8) (char (z80.pc + 1)) (z80.main.iy |> wordPlusOffset dval.value)
+            CpuTimePcAnd16BitValue dval.time (char (z80.pc + 1)) (z80.main.iy |> wordPlusOffset dval.value)
 
 
 get_bc : MainWithIndexRegisters -> Int

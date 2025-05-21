@@ -339,7 +339,7 @@ applyPureDelta cpuInc cpu_time z80changeData tmp_z80 =
             tmp_z80.env
 
         z80 =
-            { tmp_z80 | env = { env | time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement4 } }
+            { tmp_z80 | env = { env | time = cpu_time } }
 
         new_pc =
             case cpuInc of
