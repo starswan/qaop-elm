@@ -31,7 +31,7 @@ type DeltaWithChanges
     | NoParamsDelta CpuTimeCTime NoParamChange
     | SingleEnvDelta CpuTimeCTime SingleByteEnvChange
     | MainWithEnvDelta PCIncrement InstructionDuration SingleEnvMainChange
-    | TripleMainChangeDalta CpuTimeCTime TriplePCIncrement TripleMainChange
+    | TripleMainChangeDelta CpuTimeCTime TriplePCIncrement TripleMainChange
     | Triple16ParamDelta CpuTimeCTime TriplePCIncrement TripleByteChange
     | Triple16FlagsDelta CpuTimeCTime TripleWithFlagsChange
 
@@ -69,7 +69,7 @@ apply_delta z80 rom48k z80delta =
         MainWithEnvDelta pcInc duration singleEnvMainChange ->
             z80 |> applySingleEnvMainChange pcInc duration singleEnvMainChange
 
-        TripleMainChangeDalta cpuTimeCTime triplePCIncrement tripleMainChange ->
+        TripleMainChangeDelta cpuTimeCTime triplePCIncrement tripleMainChange ->
             z80 |> applyTripleMainChange cpuTimeCTime triplePCIncrement tripleMainChange
 
         Triple16ParamDelta cpuTimeCTime triplePCIncrement tripleByteChange ->
@@ -554,7 +554,7 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
             }
 
         CallImmediate int ->
-            z80 |> z80_call int cpu_time
+            z80 |> z80_call int
 
         NewIXRegister int ->
             let
@@ -626,8 +626,8 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
             }
 
 
-z80_call : Int -> CpuTimeCTime -> Z80 -> Z80
-z80_call addr cpu_time z80 =
+z80_call : Int -> Z80 -> Z80
+z80_call addr z80 =
     let
         new_pc =
             Bitwise.and (z80.pc + 3) 0xFFFF
@@ -635,7 +635,7 @@ z80_call addr cpu_time z80 =
         env_1 =
             z80.env |> z80_push new_pc
     in
-    { z80 | pc = addr, env = { env_1 | time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement4 }, r = z80.r + 1 }
+    { z80 | pc = addr, env = env_1, r = z80.r + 1 }
 
 
 applyTripleFlagChange : CpuTimeCTime -> TripleWithFlagsChange -> Z80 -> Z80
@@ -652,30 +652,27 @@ applyTripleFlagChange cpu_time z80changeData z80 =
             in
             { z80
                 | pc = new_pc
-                , env = { env | time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement4 }
+                , env = { env | time = cpu_time }
                 , r = z80.r + 1
             }
 
         AbsoluteJump int ->
             { z80
                 | pc = int
-                , env = { env | time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement4 }
+                , env = { env | time = cpu_time }
                 , r = z80.r + 1
             }
 
-        TripleSetIndirect addr value cpuTimeIncrement ->
+        TripleSetIndirect addr value ->
             let
                 new_pc =
                     Bitwise.and (z80.pc + 3) 0xFFFF
-
-                env1 =
-                    { env | time = cpu_time } |> setMem addr value |> addCpuTimeEnvInc cpuTimeIncrement4 |> addCpuTimeEnvInc cpuTimeIncrement
             in
             { z80
                 | pc = new_pc
-                , env = env1
+                , env = { env | time = cpu_time } |> setMem addr value
                 , r = z80.r + 1
             }
 
         AbsoluteCall int ->
-            z80 |> z80_call int cpu_time
+            { z80 | env = { env | time = cpu_time |> addDuration SevenTStates } } |> z80_call int

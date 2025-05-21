@@ -14,6 +14,7 @@ type
     | TenTStates
     | ElevenTStates
     | TwelveTStates
+    | ThirteenTStates
     | FifteenTStates
     | SixteenTStates
     | SeventeenTStates
@@ -310,47 +311,47 @@ addCpuTimeTimeInc value z80env =
 addDuration : InstructionDuration -> CpuTimeCTime -> CpuTimeCTime
 addDuration duration time =
     let
-        value =
-            time.cpu_time
-
-        cpuTime =
+        offset =
             case duration of
                 --ZeroTStates ->
                 --    value
                 FourTStates ->
-                    value + 4
+                    4
 
                 FiveTStates ->
-                    value + 5
+                    5
 
                 SixTStates ->
-                    value + 6
+                    6
 
                 SevenTStates ->
-                    value + 7
+                    7
 
                 EightTStates ->
-                    value + 8
+                    8
 
                 TenTStates ->
-                    value + 10
+                    10
 
                 ElevenTStates ->
-                    value + 11
-
-                FifteenTStates ->
-                    value + 15
-
-                SixteenTStates ->
-                    value + 16
-
-                SeventeenTStates ->
-                    value + 17
-
-                TwentyTStates ->
-                    value + 20
+                    11
 
                 TwelveTStates ->
-                    value + 12
+                    12
+
+                ThirteenTStates ->
+                    13
+
+                FifteenTStates ->
+                    15
+
+                SixteenTStates ->
+                    16
+
+                SeventeenTStates ->
+                    17
+
+                TwentyTStates ->
+                    20
     in
-    { time | cpu_time = cpuTime }
+    { time | cpu_time = time.cpu_time + offset }

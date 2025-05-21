@@ -421,13 +421,18 @@ execute_delta ct rom48k z80 =
 
                                         Nothing ->
                                             case triple16WithFlags |> Dict.get instrCode of
-                                                Just f ->
+                                                Just ( f, duration ) ->
                                                     let
+                                                        env =
+                                                            z80.env
+
+                                                        env_1 =
+                                                            { env | time = env.time |> addDuration duration }
+
                                                         doubleParam =
-                                                            z80.env |> mem16 (Bitwise.and (z80.pc + paramOffset) 0xFFFF) rom48k
+                                                            env_1 |> mem16 (Bitwise.and (z80.pc + paramOffset) 0xFFFF) rom48k
                                                     in
-                                                    -- duplicate of code in imm16 - add 6 to the cpu_time
-                                                    Triple16FlagsDelta (doubleParam.time |> addCpuTimeTime 6) (f doubleParam.value16 z80.flags)
+                                                    Triple16FlagsDelta doubleParam.time (f doubleParam.value16 z80.flags)
 
                                                 Nothing ->
                                                     case singleByteMainAndFlagRegisters |> Dict.get instrCode of
@@ -458,7 +463,7 @@ execute_delta ct rom48k z80 =
                                                                             in
                                                                             -- duplicate of code in imm16 - add 6 to the cpu_time
                                                                             --Just (z80 |> applyTripleMainChange (doubleParam.time |> addCpuTimeTime 6) pcInc (f doubleParam.value z80.main))
-                                                                            TripleMainChangeDalta (doubleParam.time |> addCpuTimeTime 6) pcInc (f doubleParam.value16 z80.main)
+                                                                            TripleMainChangeDelta (doubleParam.time |> addCpuTimeTime 6) pcInc (f doubleParam.value16 z80.main)
 
                                                                         Nothing ->
                                                                             case singleByte instrTime instrCode z80 rom48k of
