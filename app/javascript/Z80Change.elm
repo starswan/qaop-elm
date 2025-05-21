@@ -1,6 +1,6 @@
 module Z80Change exposing (..)
 
-import CpuTimeCTime exposing (CpuTimeIncrement)
+import CpuTimeCTime exposing (CpuTimeIncrement, InstructionDuration)
 import Z80Env exposing (addCpuTimeEnvInc, setMem)
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
 import Z80Types exposing (Z80)
@@ -14,13 +14,13 @@ type Z80Change
     | HLRegister Int FlagRegisters
     | IXRegister Int FlagRegisters
     | IYRegister Int FlagRegisters
-    | FlagsWithHLRegister FlagRegisters Int CpuTimeIncrement
-    | FlagsWithIXRegister FlagRegisters Int CpuTimeIncrement
-    | FlagsWithIYRegister FlagRegisters Int CpuTimeIncrement
+    | FlagsWithHLRegister FlagRegisters Int
+    | FlagsWithIXRegister FlagRegisters Int
+    | FlagsWithIYRegister FlagRegisters Int
     | Z80RegisterB Int
     | Z80RegisterC Int
     | Z80ChangeFlags FlagRegisters
-    | Z80ChangeSetIndirect Int Int CpuTimeIncrement
+    | Z80ChangeSetIndirect Int Int
 
 
 type FlagChange
@@ -31,8 +31,8 @@ type FlagChange
     | FlagChangeE Int
     | FlagChangeH Int
     | FlagChangeL Int
-    | ReturnWithPop CpuTimeIncrement
-    | EmptyFlagChange CpuTimeIncrement
+    | ReturnWithPop
+    | EmptyFlagChange
     | FlagChangePush Int
 
 
@@ -81,22 +81,19 @@ applyZ80Change change z80 =
             in
             { z80 | main = { main | ix = int }, flags = flags }
 
-        IYRegister int flags  ->
+        IYRegister int flags ->
             let
                 main =
                     z80.main
             in
             { z80 | main = { main | iy = int }, flags = flags }
 
-        FlagsWithHLRegister flagRegisters int time ->
+        FlagsWithHLRegister flagRegisters int ->
             let
                 main =
                     z80.main
-
-                env =
-                    z80.env |> addCpuTimeEnvInc time
             in
-            { z80 | env = env, flags = flagRegisters, main = { main | hl = int } }
+            { z80 | flags = flagRegisters, main = { main | hl = int } }
 
         Z80RegisterB int ->
             let
@@ -115,29 +112,23 @@ applyZ80Change change z80 =
         Z80ChangeFlags flagRegisters ->
             { z80 | flags = flagRegisters }
 
-        Z80ChangeSetIndirect addr int time ->
+        Z80ChangeSetIndirect addr int ->
             let
                 env =
-                    z80.env |> setMem addr int |> addCpuTimeEnvInc time
+                    z80.env |> setMem addr int
             in
             { z80 | env = env }
 
-        FlagsWithIXRegister flagRegisters int cpuTimeIncrement ->
+        FlagsWithIXRegister flagRegisters int ->
             let
                 main =
                     z80.main
-
-                env =
-                    z80.env |> addCpuTimeEnvInc cpuTimeIncrement
             in
-            { z80 | env = env, flags = flagRegisters, main = { main | ix = int } }
+            { z80 | flags = flagRegisters, main = { main | ix = int } }
 
-        FlagsWithIYRegister flagRegisters int cpuTimeIncrement ->
+        FlagsWithIYRegister flagRegisters int ->
             let
                 main =
                     z80.main
-
-                env =
-                    z80.env |> addCpuTimeEnvInc cpuTimeIncrement
             in
-            { z80 | env = env, flags = flagRegisters, main = { main | iy = int } }
+            { z80 | flags = flagRegisters, main = { main | iy = int } }

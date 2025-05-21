@@ -1,7 +1,7 @@
 module SimpleFlagOps exposing (..)
 
 import Bitwise exposing (complement)
-import CpuTimeCTime exposing (CpuTimeIncrement(..))
+import CpuTimeCTime exposing (CpuTimeIncrement(..), InstructionDuration(..))
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
 import Utils exposing (BitTest(..), shiftRightBy8)
@@ -9,58 +9,60 @@ import Z80Change exposing (FlagChange(..))
 import Z80Flags exposing (FlagRegisters, IntWithFlags, adc, c_FP, c_FS, cpl, daa, dec, get_af, get_flags, inc, rot, sbc, scf_ccf, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit, z80_add, z80_cp, z80_or, z80_sub, z80_xor)
 
 
-singleByteFlags : Dict Int ( FlagRegisters -> FlagChange, PCIncrement )
+singleByteFlags : Dict Int ( FlagRegisters -> FlagChange, PCIncrement, InstructionDuration )
 singleByteFlags =
     Dict.fromList
-        [ ( 0x07, ( rlca, IncrementByOne ) )
-        , ( 0x0F, ( rrca, IncrementByOne ) )
-        , ( 0x17, ( rla, IncrementByOne ) )
-        , ( 0x1F, ( rra, IncrementByOne ) )
-        , ( 0x27, ( z80_daa, IncrementByOne ) )
-        , ( 0x2F, ( z80_cpl, IncrementByOne ) )
-        , ( 0x37, ( scf, IncrementByOne ) )
-        , ( 0x3C, ( inc_a, IncrementByOne ) )
-        , ( 0x3D, ( dec_a, IncrementByOne ) )
-        , ( 0x3F, ( ccf, IncrementByOne ) )
-        , ( 0x47, ( ld_b_a, IncrementByOne ) )
-        , ( 0x4F, ( ld_c_a, IncrementByOne ) )
-        , ( 0x57, ( ld_d_a, IncrementByOne ) )
-        , ( 0x5F, ( ld_e_a, IncrementByOne ) )
-        , ( 0x67, ( ld_h_a, IncrementByOne ) )
-        , ( 0x6F, ( ld_l_a, IncrementByOne ) )
-        , ( 0x87, ( add_a_a, IncrementByOne ) )
-        , ( 0x8F, ( adc_a_a, IncrementByOne ) )
-        , ( 0x97, ( sub_a, IncrementByOne ) )
-        , ( 0x9F, ( sbc_a, IncrementByOne ) )
-        , ( 0xA7, ( and_a, IncrementByOne ) )
-        , ( 0xAF, ( xor_a, IncrementByOne ) )
-        , ( 0xB7, ( or_a, IncrementByOne ) )
-        , ( 0xBF, ( cp_a, IncrementByOne ) )
-        , ( 0xC0, ( ret_nz, IncrementByOne ) )
-        , ( 0xC8, ( ret_z, IncrementByOne ) )
-        , ( 0xD0, ( ret_nc, IncrementByOne ) )
-        , ( 0xD8, ( ret_c, IncrementByOne ) )
-        , ( 0xE0, ( ret_po, IncrementByOne ) )
-        , ( 0xE8, ( ret_pe, IncrementByOne ) )
-        , ( 0xF0, ( ret_p, IncrementByOne ) )
-        , ( 0xF5, ( push_af, IncrementByOne ) )
-        , ( 0xF8, ( ret_m, IncrementByOne ) )
-        , ( 0xCB07, ( rlc_a, IncrementByTwo ) )
-        , ( 0xCB0F, ( rrc_a, IncrementByTwo ) )
-        , ( 0xCB17, ( rl_a, IncrementByTwo ) )
-        , ( 0xCB1F, ( rr_a, IncrementByTwo ) )
-        , ( 0xCB27, ( sla_a, IncrementByTwo ) )
-        , ( 0xCB2F, ( sra_a, IncrementByTwo ) )
-        , ( 0xCB37, ( sll_a, IncrementByTwo ) )
-        , ( 0xCB3F, ( srl_a, IncrementByTwo ) )
-        , ( 0xCB47, ( \z80_flags -> z80_flags |> testBit Bit_0 z80_flags.a |> OnlyFlags, IncrementByTwo ) )
-        , ( 0xCB4F, ( \z80_flags -> z80_flags |> testBit Bit_1 z80_flags.a |> OnlyFlags, IncrementByTwo ) )
-        , ( 0xCB57, ( \z80_flags -> z80_flags |> testBit Bit_2 z80_flags.a |> OnlyFlags, IncrementByTwo ) )
-        , ( 0xCB5F, ( \z80_flags -> z80_flags |> testBit Bit_3 z80_flags.a |> OnlyFlags, IncrementByTwo ) )
-        , ( 0xCB67, ( \z80_flags -> z80_flags |> testBit Bit_4 z80_flags.a |> OnlyFlags, IncrementByTwo ) )
-        , ( 0xCB6F, ( \z80_flags -> z80_flags |> testBit Bit_5 z80_flags.a |> OnlyFlags, IncrementByTwo ) )
-        , ( 0xCB77, ( \z80_flags -> z80_flags |> testBit Bit_6 z80_flags.a |> OnlyFlags, IncrementByTwo ) )
-        , ( 0xCB7F, ( \z80_flags -> z80_flags |> testBit Bit_7 z80_flags.a |> OnlyFlags, IncrementByTwo ) )
+        [ ( 0x07, ( rlca, IncrementByOne, FourTStates ) )
+        , ( 0x0F, ( rrca, IncrementByOne, FourTStates ) )
+        , ( 0x17, ( rla, IncrementByOne, FourTStates ) )
+        , ( 0x1F, ( rra, IncrementByOne, FourTStates ) )
+        , ( 0x27, ( z80_daa, IncrementByOne, FourTStates ) )
+        , ( 0x2F, ( z80_cpl, IncrementByOne, FourTStates ) )
+        , ( 0x37, ( scf, IncrementByOne, FourTStates ) )
+        , ( 0x3C, ( inc_a, IncrementByOne, FourTStates ) )
+        , ( 0x3D, ( dec_a, IncrementByOne, FourTStates ) )
+        , ( 0x3F, ( ccf, IncrementByOne, FourTStates ) )
+        , ( 0x47, ( ld_b_a, IncrementByOne, FourTStates ) )
+        , ( 0x4F, ( ld_c_a, IncrementByOne, FourTStates ) )
+        , ( 0x57, ( ld_d_a, IncrementByOne, FourTStates ) )
+        , ( 0x5F, ( ld_e_a, IncrementByOne, FourTStates ) )
+        , ( 0x67, ( ld_h_a, IncrementByOne, FourTStates ) )
+        , ( 0x6F, ( ld_l_a, IncrementByOne, FourTStates ) )
+        , ( 0x87, ( add_a_a, IncrementByOne, FourTStates ) )
+        , ( 0x8F, ( adc_a_a, IncrementByOne, FourTStates ) )
+        , ( 0x97, ( sub_a, IncrementByOne, FourTStates ) )
+        , ( 0x9F, ( sbc_a, IncrementByOne, FourTStates ) )
+        , ( 0xA7, ( and_a, IncrementByOne, FourTStates ) )
+        , ( 0xAF, ( xor_a, IncrementByOne, FourTStates ) )
+        , ( 0xB7, ( or_a, IncrementByOne, FourTStates ) )
+        , ( 0xBF, ( cp_a, IncrementByOne, FourTStates ) )
+
+        -- When item popped, z80_pop adds another 6 to make 11
+        , ( 0xC0, ( ret_nz, IncrementByOne, FiveTStates ) )
+        , ( 0xC8, ( ret_z, IncrementByOne, FiveTStates ) )
+        , ( 0xD0, ( ret_nc, IncrementByOne, FiveTStates ) )
+        , ( 0xD8, ( ret_c, IncrementByOne, FiveTStates ) )
+        , ( 0xE0, ( ret_po, IncrementByOne, FiveTStates ) )
+        , ( 0xE8, ( ret_pe, IncrementByOne, FiveTStates ) )
+        , ( 0xF0, ( ret_p, IncrementByOne, FiveTStates ) )
+        , ( 0xF5, ( push_af, IncrementByOne, ElevenTStates ) )
+        , ( 0xF8, ( ret_m, IncrementByOne, FiveTStates ) )
+        , ( 0xCB07, ( rlc_a, IncrementByTwo, EightTStates ) )
+        , ( 0xCB0F, ( rrc_a, IncrementByTwo, EightTStates ) )
+        , ( 0xCB17, ( rl_a, IncrementByTwo, EightTStates ) )
+        , ( 0xCB1F, ( rr_a, IncrementByTwo, EightTStates ) )
+        , ( 0xCB27, ( sla_a, IncrementByTwo, EightTStates ) )
+        , ( 0xCB2F, ( sra_a, IncrementByTwo, EightTStates ) )
+        , ( 0xCB37, ( sll_a, IncrementByTwo, EightTStates ) )
+        , ( 0xCB3F, ( srl_a, IncrementByTwo, EightTStates ) )
+        , ( 0xCB47, ( \z80_flags -> z80_flags |> testBit Bit_0 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0xCB4F, ( \z80_flags -> z80_flags |> testBit Bit_1 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0xCB57, ( \z80_flags -> z80_flags |> testBit Bit_2 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0xCB5F, ( \z80_flags -> z80_flags |> testBit Bit_3 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0xCB67, ( \z80_flags -> z80_flags |> testBit Bit_4 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0xCB6F, ( \z80_flags -> z80_flags |> testBit Bit_5 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0xCB77, ( \z80_flags -> z80_flags |> testBit Bit_6 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0xCB7F, ( \z80_flags -> z80_flags |> testBit Bit_7 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
         ]
 
 
@@ -219,7 +221,7 @@ and_a z80_flags =
     -- case 0xA7: Fa=~(Ff=Fr=A); Fb=0; break;
     -- and a is correct - I guess the above is a faster implementation
     --z80_flags |> z80_and z80_flags.a |> OnlyFlags
-    OnlyFlags { a = z80_flags.a, ff = z80_flags.a, fr = z80_flags.a, fb = 0, fa = complement z80_flags.a}
+    OnlyFlags { a = z80_flags.a, ff = z80_flags.a, fr = z80_flags.a, fb = 0, fa = complement z80_flags.a }
 
 
 xor_a : FlagRegisters -> FlagChange
@@ -250,80 +252,80 @@ ret_nz : FlagRegisters -> FlagChange
 ret_nz z80_flags =
     -- case 0xC0: time++; if(Fr!=0) MP=PC=pop(); break;
     if z80_flags.fr /= 0 then
-        ReturnWithPop increment1
+        ReturnWithPop
 
     else
-        EmptyFlagChange increment1
+        EmptyFlagChange
 
 
 ret_z : FlagRegisters -> FlagChange
 ret_z z80_flags =
     -- case 0xC8: time++; if(Fr==0) MP=PC=pop(); break;
     if z80_flags.fr == 0 then
-        ReturnWithPop increment1
+        ReturnWithPop
 
     else
-        EmptyFlagChange increment1
+        EmptyFlagChange
 
 
 ret_nc : FlagRegisters -> FlagChange
 ret_nc z80_flags =
     -- case 0xD0: time++; if((Ff&0x100)==0) MP=PC=pop(); break;
     if Bitwise.and z80_flags.ff 0x0100 == 0 then
-        ReturnWithPop increment1
+        ReturnWithPop
 
     else
-        EmptyFlagChange increment1
+        EmptyFlagChange
 
 
 ret_c : FlagRegisters -> FlagChange
 ret_c z80_flags =
     -- case 0xD8: time++; if((Ff&0x100)!=0) MP=PC=pop(); break;
     if Bitwise.and z80_flags.ff 0x0100 /= 0 then
-        ReturnWithPop increment1
+        ReturnWithPop
 
     else
-        EmptyFlagChange increment1
+        EmptyFlagChange
 
 
 ret_po : FlagRegisters -> FlagChange
 ret_po z80_flags =
     -- case 0xE0: time++; if((flags()&FP)==0) MP=PC=pop(); break;
     if Bitwise.and (z80_flags |> get_flags) c_FP == 0 then
-        ReturnWithPop increment1
+        ReturnWithPop
 
     else
-        EmptyFlagChange increment1
+        EmptyFlagChange
 
 
 ret_pe : FlagRegisters -> FlagChange
 ret_pe z80_flags =
     -- case 0xE8: time++; if((flags()&FP)!=0) MP=PC=pop(); break;
     if Bitwise.and (z80_flags |> get_flags) c_FP /= 0 then
-        ReturnWithPop increment1
+        ReturnWithPop
 
     else
-        EmptyFlagChange increment1
+        EmptyFlagChange
 
 
 ret_p : FlagRegisters -> FlagChange
 ret_p z80_flags =
     -- case 0xF0: time++; if((Ff&FS)==0) MP=PC=pop(); break;
     if Bitwise.and z80_flags.ff c_FS == 0 then
-        ReturnWithPop increment1
+        ReturnWithPop
 
     else
-        EmptyFlagChange increment1
+        EmptyFlagChange
 
 
 ret_m : FlagRegisters -> FlagChange
 ret_m z80_flags =
     -- case 0xF8: time++; if((Ff&FS)!=0) MP=PC=pop(); break;
     if Bitwise.and z80_flags.ff c_FS /= 0 then
-        ReturnWithPop increment1
+        ReturnWithPop
 
     else
-        EmptyFlagChange increment1
+        EmptyFlagChange
 
 
 push_af : FlagRegisters -> FlagChange

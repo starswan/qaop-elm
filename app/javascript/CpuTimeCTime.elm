@@ -3,6 +3,24 @@ module CpuTimeCTime exposing (..)
 import Bitwise exposing (shiftLeftBy, shiftRightBy)
 
 
+type
+    InstructionDuration
+    --= ZeroTStates
+    = FourTStates
+    | FiveTStates
+    | SixTStates
+    | SevenTStates
+    | EightTStates
+    | TenTStates
+    | ElevenTStates
+    | TwelveTStates
+    | ThirteenTStates
+    | FifteenTStates
+    | SixteenTStates
+    | SeventeenTStates
+    | TwentyTStates
+
+
 c_NOCONT =
     99999
 
@@ -69,22 +87,6 @@ type CpuTimeIncrement
 
 increment3 =
     CpuTimeIncrement 3
-
-
-increment7 =
-    CpuTimeIncrement 7
-
-
-cpuTimeIncrement4 =
-    CpuTimeIncrement 4
-
-
-increment2 =
-    CpuTimeIncrement 2
-
-
-increment0 =
-    CpuTimeIncrement 0
 
 
 
@@ -288,3 +290,52 @@ addCpuTimeTimeInc value z80env =
     case value of
         CpuTimeIncrement int ->
             { z80env | cpu_time = z80env.cpu_time + int }
+
+
+addDuration : InstructionDuration -> CpuTimeCTime -> CpuTimeCTime
+addDuration duration time =
+    let
+        offset =
+            case duration of
+                --ZeroTStates ->
+                --    value
+                FourTStates ->
+                    4
+
+                FiveTStates ->
+                    5
+
+                SixTStates ->
+                    6
+
+                SevenTStates ->
+                    7
+
+                EightTStates ->
+                    8
+
+                TenTStates ->
+                    10
+
+                ElevenTStates ->
+                    11
+
+                TwelveTStates ->
+                    12
+
+                ThirteenTStates ->
+                    13
+
+                FifteenTStates ->
+                    15
+
+                SixteenTStates ->
+                    16
+
+                SeventeenTStates ->
+                    17
+
+                TwentyTStates ->
+                    20
+    in
+    { time | cpu_time = time.cpu_time + offset }

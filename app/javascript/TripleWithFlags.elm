@@ -1,7 +1,7 @@
 module TripleWithFlags exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeIncrement, increment3)
+import CpuTimeCTime exposing (CpuTimeIncrement, InstructionDuration(..), increment3)
 import Dict exposing (Dict)
 import Z80Flags exposing (FlagRegisters, c_FP, c_FS, get_flags)
 
@@ -9,25 +9,27 @@ import Z80Flags exposing (FlagRegisters, c_FP, c_FS, get_flags)
 type TripleWithFlagsChange
     = Skip3ByteInstruction
     | AbsoluteJump Int
-    | TripleSetIndirect Int Int CpuTimeIncrement
+    | TripleSetIndirect Int Int
     | AbsoluteCall Int
 
 
-triple16WithFlags : Dict Int (Int -> FlagRegisters -> TripleWithFlagsChange)
+triple16WithFlags : Dict Int ( Int -> FlagRegisters -> TripleWithFlagsChange, InstructionDuration )
 triple16WithFlags =
     Dict.fromList
-        [ ( 0x32, ld_indirect_nn_a )
-        , ( 0xC2, jp_nz )
-        , ( 0xC4, call_nz_nn )
-        , ( 0xCA, jp_z_nn )
-        , ( 0xCC, call_z_nn )
-        , ( 0xD2, jp_nc_nn )
-        , ( 0xD4, call_nc_nn )
-        , ( 0xDA, jp_c_nn )
-        , ( 0xE2, jp_po_nn )
-        , ( 0xEA, jp_pe_nn )
-        , ( 0xF2, jp_p_nn )
-        , ( 0xFA, jp_m_nn )
+        [ ( 0x32, ( ld_indirect_nn_a, ThirteenTStates ) )
+        , ( 0xC2, ( jp_nz, TenTStates ) )
+
+        -- conditional calls get another 7 if the call is made
+        , ( 0xC4, ( call_nz_nn, TenTStates ) )
+        , ( 0xCA, ( jp_z_nn, TenTStates ) )
+        , ( 0xCC, ( call_z_nn, TenTStates ) )
+        , ( 0xD2, ( jp_nc_nn, TenTStates ) )
+        , ( 0xD4, ( call_nc_nn, TenTStates ) )
+        , ( 0xDA, ( jp_c_nn, TenTStates ) )
+        , ( 0xE2, ( jp_po_nn, TenTStates ) )
+        , ( 0xEA, ( jp_pe_nn, TenTStates ) )
+        , ( 0xF2, ( jp_p_nn, TenTStates ) )
+        , ( 0xFA, ( jp_m_nn, TenTStates ) )
         ]
 
 
@@ -118,7 +120,7 @@ jp_m_nn param z80_flags =
 ld_indirect_nn_a : Int -> FlagRegisters -> TripleWithFlagsChange
 ld_indirect_nn_a param z80_flags =
     -- case 0x32: MP=(v=imm16())+1&0xFF|A<<8; env.mem(v,A); time+=3; break;
-    TripleSetIndirect param z80_flags.a increment3
+    TripleSetIndirect param z80_flags.a
 
 
 call_nz_nn : Int -> FlagRegisters -> TripleWithFlagsChange
@@ -140,6 +142,7 @@ call_z_nn param z80_flags =
 
     else
         Skip3ByteInstruction
+
 
 call_nc_nn : Int -> FlagRegisters -> TripleWithFlagsChange
 call_nc_nn param z80_flags =

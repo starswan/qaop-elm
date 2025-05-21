@@ -1,7 +1,7 @@
 module SingleWith8BitParameter exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeIncrement, increment3)
+import CpuTimeCTime exposing (CpuTimeIncrement, InstructionDuration(..), increment3)
 import Dict exposing (Dict)
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..))
 import Utils exposing (byte, shiftLeftBy8)
@@ -9,47 +9,48 @@ import Z80Flags exposing (FlagRegisters, adc, sbc, z80_add, z80_and, z80_cp, z80
 import Z80Types exposing (MainWithIndexRegisters, Z80)
 
 
-singleWith8BitParam : Dict Int ( Int -> Single8BitChange, MediumPCIncrement )
+singleWith8BitParam : Dict Int ( Int -> Single8BitChange, MediumPCIncrement, InstructionDuration )
 singleWith8BitParam =
     Dict.fromList
-        [ ( 0x06, ( ld_b_n, IncreaseByTwo ) )
-        , ( 0x0E, ( ld_c_n, IncreaseByTwo ) )
-        , ( 0x16, ( ld_d_n, IncreaseByTwo ) )
-        , ( 0x1E, ( ld_e_n, IncreaseByTwo ) )
+        [ ( 0x06, ( ld_b_n, IncreaseByTwo, SevenTStates ) )
+        , ( 0x0E, ( ld_c_n, IncreaseByTwo, SevenTStates ) )
+        , ( 0x16, ( ld_d_n, IncreaseByTwo, SevenTStates ) )
+        , ( 0x1E, ( ld_e_n, IncreaseByTwo, SevenTStates ) )
         ]
 
 
-doubleWithRegisters : Dict Int ((MainWithIndexRegisters -> Int -> DoubleWithRegisterChange), MediumPCIncrement)
+doubleWithRegisters : Dict Int ( MainWithIndexRegisters -> Int -> DoubleWithRegisterChange, MediumPCIncrement, InstructionDuration )
 doubleWithRegisters =
     Dict.fromList
-        [ ( 0x10, (djnz, IncreaseByTwo) )
-        , ( 0x36, (ld_indirect_hl_n, IncreaseByTwo) )
-        , ( 0x26, ( ld_h_n, IncreaseByTwo ) )
-        , ( 0xDD26, ( ld_ix_h_n, IncreaseByThree ) )
-        , ( 0xFD26, ( ld_iy_h_n, IncreaseByThree ) )
-        , ( 0x2E, ( ld_l_n, IncreaseByTwo ) )
-        , ( 0xDD2E, ( ld_ix_l_n, IncreaseByThree ) )
-        , ( 0xFD2E, ( ld_iy_l_n, IncreaseByThree ) )
+        [ --  another 5 if jump actually taken
+          ( 0x10, ( djnz, IncreaseByTwo, EightTStates ) )
+        , ( 0x26, ( ld_h_n, IncreaseByTwo, SevenTStates ) )
+        , ( 0xDD26, ( ld_ix_h_n, IncreaseByThree, ElevenTStates ) )
+        , ( 0xFD26, ( ld_iy_h_n, IncreaseByThree, ElevenTStates ) )
+        , ( 0x2E, ( ld_l_n, IncreaseByTwo, SevenTStates ) )
+        , ( 0xDD2E, ( ld_ix_l_n, IncreaseByThree, ElevenTStates ) )
+        , ( 0xFD2E, ( ld_iy_l_n, IncreaseByThree, ElevenTStates ) )
+        , ( 0x36, ( ld_indirect_hl_n, IncreaseByTwo, TenTStates ) )
         ]
 
 
-maybeRelativeJump : Dict Int (Int -> FlagRegisters -> JumpChange)
+maybeRelativeJump : Dict Int ( Int -> FlagRegisters -> JumpChange, InstructionDuration )
 maybeRelativeJump =
     Dict.fromList
-        [ ( 0x18, jr_n )
-        , ( 0x20, jr_nz_d )
-        , ( 0x28, jr_z_d )
-        , ( 0x30, jr_nc_d )
-        , ( 0x38, jr_c_d )
-        , ( 0x3E, ld_a_n )
-        , ( 0xC6, add_a_n )
-        , ( 0xCE, adc_n )
-        , ( 0xD6, sub_n )
-        , ( 0xDE, sbc_a_n )
-        , ( 0xE6, and_n )
-        , ( 0xEE, xor_n )
-        , ( 0xF6, or_n )
-        , ( 0xFE, cp_n )
+        [ ( 0x18, ( jr_n, TwelveTStates ) )
+        , ( 0x20, ( jr_nz_d, SevenTStates ) )
+        , ( 0x28, ( jr_z_d, SevenTStates ) )
+        , ( 0x30, ( jr_nc_d, SevenTStates ) )
+        , ( 0x38, ( jr_c_d, SevenTStates ) )
+        , ( 0x3E, ( ld_a_n, SevenTStates ) )
+        , ( 0xC6, ( add_a_n, SevenTStates ) )
+        , ( 0xCE, ( adc_n, SevenTStates ) )
+        , ( 0xD6, ( sub_n, SevenTStates ) )
+        , ( 0xDE, ( sbc_a_n, SevenTStates ) )
+        , ( 0xE6, ( and_n, SevenTStates ) )
+        , ( 0xEE, ( xor_n, SevenTStates ) )
+        , ( 0xF6, ( or_n, SevenTStates ) )
+        , ( 0xFE, ( cp_n, SevenTStates ) )
         ]
 
 
@@ -89,6 +90,7 @@ applySimple8BitChange change z80_main =
         NewERegister int ->
             { z80_main | e = int }
 
+
 ld_b_n : Int -> Single8BitChange
 ld_b_n param =
     -- case 0x06: B=imm8(); break;
@@ -120,6 +122,7 @@ ld_h_n z80_main param =
     -- case 0x26: HL=HL&0xFF|imm8()<<8; break;
     Bitwise.or (param |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF) |> NewHLRegisterValue
 
+
 ld_ix_h_n : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
 ld_ix_h_n z80_main param =
     -- case 0x26: xy=xy&0xFF|imm8()<<8; break;
@@ -144,7 +147,7 @@ ld_ix_l_n z80_main param =
     Bitwise.or param (Bitwise.and z80_main.ix 0xFF00) |> NewIXRegisterValue
 
 
-ld_iy_l_n : MainWithIndexRegisters ->  Int -> DoubleWithRegisterChange
+ld_iy_l_n : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
 ld_iy_l_n z80_main param =
     -- case 0x2E: xy=xy&0xFF00|imm8(); break;
     Bitwise.or param (Bitwise.and z80_main.iy 0xFF00) |> NewIYRegisterValue
