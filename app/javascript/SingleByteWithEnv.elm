@@ -1,23 +1,23 @@
 module SingleByteWithEnv exposing (..)
 
 import Bitwise exposing (shiftRightBy)
-import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), addCpuTimeTimeInc, cpuTimeIncrement4, increment2)
+import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDuration(..), addCpuTimeTimeInc, cpuTimeIncrement4, increment2)
 import Dict exposing (Dict)
 import Z80Env exposing (Z80Env, c_TIME_LIMIT)
 import Z80Types exposing (Z80)
 
 
 type SingleByteEnvChange
-    = NewSPValue Int CpuTimeIncrement
+    = NewSPValue Int
     | AddToInterrupts Int CpuTimeIncrement
 
 
-singleByteZ80Env : Dict Int (Z80Env -> SingleByteEnvChange)
+singleByteZ80Env : Dict Int ( Z80Env -> SingleByteEnvChange, InstructionDuration )
 singleByteZ80Env =
     Dict.fromList
-        [ ( 0x33, inc_sp )
-        , ( 0x3B, dec_sp )
-        , ( 0x76, execute_0x76_halt )
+        [ ( 0x33, ( inc_sp, SixTStates ) )
+        , ( 0x3B, ( dec_sp, SixTStates ) )
+        , ( 0x76, ( execute_0x76_halt, FourTStates ) )
         ]
 
 
@@ -34,17 +34,17 @@ applyEnvChangeDelta cpu_time z80changeData z80 =
             z80.env
     in
     case z80changeData of
-        NewSPValue int time ->
+        NewSPValue int ->
             { z80
                 | pc = new_pc
-                , env = { env | time = cpu_time |> addCpuTimeTimeInc time |> addCpuTimeTimeInc cpuTimeIncrement4, sp = int }
+                , env = { env | time = cpu_time, sp = int }
                 , r = z80.r + 1
             }
 
         AddToInterrupts int cpuTimeIncrement ->
             { z80
                 | pc = new_pc
-                , env = { env | time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement |> addCpuTimeTimeInc cpuTimeIncrement4 }
+                , env = { env | time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement }
                 , interrupts = { interrupts | halted = True }
                 , r = z80.r + int
             }
@@ -57,7 +57,7 @@ inc_sp z80_env =
     --    new_sp =
     --        Bitwise.and (z80.env.sp + 1) 0xFFFF
     --in
-    NewSPValue (Bitwise.and (z80_env.sp + 1) 0xFFFF) increment2
+    NewSPValue (Bitwise.and (z80_env.sp + 1) 0xFFFF)
 
 
 dec_sp : Z80Env -> SingleByteEnvChange
@@ -67,7 +67,7 @@ dec_sp z80_env =
     --    new_sp =
     --        Bitwise.and (z80.env.sp - 1) 0xFFFF
     --in
-    NewSPValue (Bitwise.and (z80_env.sp - 1) 0xFFFF) increment2
+    NewSPValue (Bitwise.and (z80_env.sp - 1) 0xFFFF)
 
 
 execute_0x76_halt : Z80Env -> SingleByteEnvChange

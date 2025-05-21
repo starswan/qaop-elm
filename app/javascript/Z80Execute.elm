@@ -515,7 +515,7 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
             { z80
                 | main = z80.main |> set_bc_main int
                 , pc = new_pc
-                , env = { env | time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement4 }
+                , env = { env | time = cpu_time }
                 , r = z80.r + 1
             }
 
@@ -523,7 +523,7 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
             { z80
                 | main = z80.main |> set_de_main int
                 , pc = new_pc
-                , env = { env | time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement4 }
+                , env = { env | time = cpu_time }
                 , r = z80.r + 1
             }
 
@@ -535,21 +535,21 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
             { z80
                 | main = { main | hl = int }
                 , pc = new_pc
-                , env = { env | time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement4 }
+                , env = { env | time = cpu_time }
                 , r = z80.r + 1
             }
 
         NewSPRegister int ->
             { z80
                 | pc = new_pc
-                , env = { env | time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement4, sp = int }
+                , env = { env | time = cpu_time, sp = int }
                 , r = z80.r + 1
             }
 
         NewPCRegister int ->
             { z80
                 | pc = int
-                , env = { env | time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement4 }
+                , env = { env | time = cpu_time }
                 , r = z80.r + 1
             }
 
@@ -564,7 +564,7 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
             { z80
                 | main = { main | ix = int }
                 , pc = new_pc
-                , env = { env | time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement4 }
+                , env = { env | time = cpu_time }
                 , r = z80.r + 1
             }
 
@@ -576,7 +576,7 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
             { z80
                 | main = { main | iy = int }
                 , pc = new_pc
-                , env = { env | time = cpu_time |> addCpuTimeTimeInc cpuTimeIncrement4 }
+                , env = { env | time = cpu_time }
                 , r = z80.r + 1
             }
 
@@ -591,7 +591,7 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
             { z80
                 | main = { main | hl = value.value16 }
                 , pc = new_pc
-                , env = { env | time = value.time |> addCpuTimeTimeInc cpuTimeIncrement4 }
+                , env = { env | time = value.time }
                 , r = z80.r + 1
             }
 
@@ -606,7 +606,7 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
             { z80
                 | main = { main | ix = value.value16 }
                 , pc = new_pc
-                , env = { env | time = value.time |> addCpuTimeTimeInc cpuTimeIncrement4 }
+                , env = { env | time = value.time }
                 , r = z80.r + 1
             }
 
@@ -621,7 +621,7 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
             { z80
                 | main = { main | iy = value.value16 }
                 , pc = new_pc
-                , env = { env | time = value.time |> addCpuTimeTimeInc cpuTimeIncrement4 }
+                , env = { env | time = value.time }
                 , r = z80.r + 1
             }
 
