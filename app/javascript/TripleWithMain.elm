@@ -1,7 +1,7 @@
 module TripleWithMain exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeCTime)
+import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import Dict exposing (Dict)
 import PCIncrement exposing (TriplePCIncrement(..))
 import Z80Env exposing (Z80Env, setMem, setMem16)
@@ -12,12 +12,12 @@ type TripleMainChange
     = Store16BitValue Int Int
 
 
-tripleMainRegs : Dict Int ( Int -> MainWithIndexRegisters -> TripleMainChange, TriplePCIncrement )
+tripleMainRegs : Dict Int ( Int -> MainWithIndexRegisters -> TripleMainChange, TriplePCIncrement, InstructionDuration )
 tripleMainRegs =
     Dict.fromList
-        [ ( 0x22, ( ld_nn_indirect_hl, IncrementByThree ) )
-        , ( 0xDD22, ( ld_nn_indirect_ix, IncrementByFour ) )
-        , ( 0xFD22, ( ld_nn_indirect_iy, IncrementByFour ) )
+        [ ( 0x22, ( ld_nn_indirect_hl, IncrementByThree, SixteenTStates ) )
+        , ( 0xDD22, ( ld_nn_indirect_ix, IncrementByFour, TwentyTStates ) )
+        , ( 0xFD22, ( ld_nn_indirect_iy, IncrementByFour, TwentyTStates ) )
         ]
 
 
