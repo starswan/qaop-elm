@@ -1,7 +1,7 @@
 module SingleNoParams exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), addCpuTimeTime)
+import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import Dict exposing (Dict)
 import Z80Env exposing (z80_pop, z80_push)
 import Z80Flags exposing (set_af)

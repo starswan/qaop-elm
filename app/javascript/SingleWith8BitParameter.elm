@@ -9,13 +9,13 @@ import Z80Flags exposing (FlagRegisters, adc, sbc, z80_add, z80_and, z80_cp, z80
 import Z80Types exposing (MainWithIndexRegisters, Z80)
 
 
-singleWith8BitParam : Dict Int ( Int -> Single8BitChange, MediumPCIncrement )
+singleWith8BitParam : Dict Int ( Int -> Single8BitChange, MediumPCIncrement, InstructionDuration )
 singleWith8BitParam =
     Dict.fromList
-        [ ( 0x06, ( ld_b_n, IncreaseByTwo ) )
-        , ( 0x0E, ( ld_c_n, IncreaseByTwo ) )
-        , ( 0x16, ( ld_d_n, IncreaseByTwo ) )
-        , ( 0x1E, ( ld_e_n, IncreaseByTwo ) )
+        [ ( 0x06, ( ld_b_n, IncreaseByTwo, SevenTStates ) )
+        , ( 0x0E, ( ld_c_n, IncreaseByTwo, SevenTStates ) )
+        , ( 0x16, ( ld_d_n, IncreaseByTwo, SevenTStates ) )
+        , ( 0x1E, ( ld_e_n, IncreaseByTwo, SevenTStates ) )
         ]
 
 

@@ -7,7 +7,7 @@ module Z80 exposing (..)
 
 import Array exposing (Array)
 import Bitwise exposing (and, or)
-import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAndValue, addCpuTimeTime, addDuration)
+import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAndValue, addDuration)
 import Dict exposing (Dict)
 import Group0x30 exposing (delta_dict_lite_30)
 import Group0xE0 exposing (delta_dict_lite_E0)
@@ -499,18 +499,20 @@ execute_delta ct rom48k z80 =
 singleByte : CpuTimeCTime -> Int -> Z80 -> Z80ROM -> Maybe DeltaWithChanges
 singleByte ctime instr_code tmp_z80 rom48k =
     case singleWith8BitParam |> Dict.get instr_code of
-        Just ( f, pcInc ) ->
+        Just ( f, pcInc, duration ) ->
             let
+                instrTime =
+                    ctime |> addDuration duration
+
                 param =
                     case pcInc of
                         IncreaseByTwo ->
-                            mem (Bitwise.and (tmp_z80.pc + 1) 0xFFFF) ctime rom48k tmp_z80.env.ram
+                            mem (Bitwise.and (tmp_z80.pc + 1) 0xFFFF) instrTime rom48k tmp_z80.env.ram
 
                         IncreaseByThree ->
-                            mem (Bitwise.and (tmp_z80.pc + 2) 0xFFFF) ctime rom48k tmp_z80.env.ram
+                            mem (Bitwise.and (tmp_z80.pc + 2) 0xFFFF) instrTime rom48k tmp_z80.env.ram
             in
-            -- duplicate of code in imm8 - add 3 to the cpu_time
-            Just (Simple8BitDelta pcInc (param.time |> addCpuTimeTime 3) (f param.value))
+            Just (Simple8BitDelta pcInc param.time (f param.value))
 
         Nothing ->
             Nothing
