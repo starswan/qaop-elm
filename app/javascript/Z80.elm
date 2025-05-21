@@ -444,12 +444,17 @@ execute_delta ct rom48k z80 =
                             x =
                                 func ctp.instrTime ctp.instrCode rom48k z80
                         in
-                        x
+                        case x of
+                            Just y ->
+                                Just ( y, index )
+
+                            Nothing ->
+                                Nothing
                     )
     in
     case result of
-        Just delta ->
-            Transformer delta
+        Just ( delta, index ) ->
+            Transformer delta index
 
         Nothing ->
             case singleWithNoParam |> Dict.get ctp.instrCode of
@@ -536,17 +541,15 @@ executeSingleInstruction rom48k z80 =
         Z80DeltaChange deltaWithChanges ->
             z80 |> applyDeltaWithChanges deltaWithChanges
 
-        --Transformer z80Transform index ->
-        --    let
-        --        oldValue =
-        --            z80.debugDict |> Dict.get index |> Maybe.withDefault 0
-        --
-        --        z80_d =
-        --            { z80 | debugDict = z80.debugDict |> Dict.insert index (oldValue + 1) }
-        --    in
-        --    z80_d |> executeTransform z80Transform
-        Transformer z80Transform ->
-            z80 |> executeTransform z80Transform
+        Transformer z80Transform index ->
+            let
+                oldValue =
+                    z80.debugDict |> Dict.get index |> Maybe.withDefault 0
+
+                z80_d =
+                    { z80 | debugDict = z80.debugDict |> Dict.insert index (oldValue + 1) }
+            in
+            z80_d |> executeTransform z80Transform
 
 
 execute : Z80ROM -> Z80 -> Z80

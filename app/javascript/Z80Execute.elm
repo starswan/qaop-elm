@@ -23,7 +23,7 @@ import Z80Types exposing (IXIYHL(..), MainWithIndexRegisters, Z80)
 type ExecuteResult
     = Z80DeltaChange DeltaWithChangesData
     | NoParamsDeltaChange CpuTimeCTime NoParamChange
-    | Transformer Z80Transform
+    | Transformer Z80Transform Int
 
 
 applyFlagDelta : PCIncrement -> CpuTimeCTime -> FlagChange -> Z80ROM -> Z80 -> Z80Transform
