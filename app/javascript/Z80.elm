@@ -348,10 +348,7 @@ standardFuncs =
     , parseSingleEnv
     , parseSingleByteWithParam
     ]
-
-
-
---|> List.indexedMap Tuple.pair
+        |> List.indexedMap Tuple.pair
 
 
 ix_Funcs =
@@ -367,10 +364,7 @@ ix_Funcs =
     , parseSimpleSingleByte ixSingleByteMain TwoByteInstruction
     , parseSingleByteMainAndFlags ixSingleMainFlags TwoByteInstruction
     ]
-
-
-
---|> List.indexedMap Tuple.pair
+        |> List.indexedMap Tuple.pair
 
 
 iy_Funcs =
@@ -386,10 +380,7 @@ iy_Funcs =
     , parseSimpleSingleByte iySingleByteMain TwoByteInstruction
     , parseSingleByteMainAndFlags iySingleMainFlags TwoByteInstruction
     ]
-
-
-
---|> List.indexedMap Tuple.pair
+        |> List.indexedMap Tuple.pair
 
 
 cb_Funcs =
@@ -405,10 +396,7 @@ cb_Funcs =
     , parseSimpleSingleByte cbSingleByteMainRegs TwoByteInstruction
     , parseSingleByteMainAndFlags cbSingleMainFlags TwoByteInstruction
     ]
-
-
-
---|> List.indexedMap Tuple.pair
+        |> List.indexedMap Tuple.pair
 
 
 execute_delta : CpuTimeAndValue -> Z80ROM -> Z80 -> ExecuteResult
@@ -451,8 +439,8 @@ execute_delta ct rom48k z80 =
         result =
             ctp.funcs
                 |> findMap
-                    (\f ->
-                        f ctp.instrTime ctp.instrCode rom48k z80
+                    (\( index, func ) ->
+                        func ctp.instrTime ctp.instrCode rom48k z80
                     )
     in
     case result of
