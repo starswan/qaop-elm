@@ -440,7 +440,11 @@ execute_delta ct rom48k z80 =
             ctp.funcs
                 |> findMap
                     (\( index, func ) ->
-                        func ctp.instrTime ctp.instrCode rom48k z80
+                        let
+                            x =
+                                func ctp.instrTime ctp.instrCode rom48k z80
+                        in
+                        x
                     )
     in
     case result of
