@@ -474,12 +474,17 @@ execute_delta ct rom48k z80 =
                                                                                     SingleEnvDelta (instrTime |> addDuration duration) (f z80.env)
 
                                                                                 Nothing ->
-                                                                                    case singleByte instrTime instrCode z80 rom48k of
-                                                                                        Just deltaThing ->
-                                                                                            deltaThing
+                                                                                    case singleWithNoParam |> Dict.get instrCode of
+                                                                                        Just ( f, duration ) ->
+                                                                                            NoParamsDelta (instrTime |> addDuration duration) f
 
                                                                                         Nothing ->
-                                                                                            oldDelta ct z80.interrupts z80 rom48k
+                                                                                            case singleByte instrTime instrCode z80 rom48k of
+                                                                                                Just deltaThing ->
+                                                                                                    deltaThing
+
+                                                                                                Nothing ->
+                                                                                                    oldDelta ct z80.interrupts z80 rom48k
 
 
 
@@ -493,27 +498,22 @@ execute_delta ct rom48k z80 =
 
 singleByte : CpuTimeCTime -> Int -> Z80 -> Z80ROM -> Maybe DeltaWithChanges
 singleByte ctime instr_code tmp_z80 rom48k =
-    case singleWithNoParam |> Dict.get instr_code of
-        Just f ->
-            Just (NoParamsDelta ctime f)
+    case singleWith8BitParam |> Dict.get instr_code of
+        Just ( f, pcInc ) ->
+            let
+                param =
+                    case pcInc of
+                        IncreaseByTwo ->
+                            mem (Bitwise.and (tmp_z80.pc + 1) 0xFFFF) ctime rom48k tmp_z80.env.ram
+
+                        IncreaseByThree ->
+                            mem (Bitwise.and (tmp_z80.pc + 2) 0xFFFF) ctime rom48k tmp_z80.env.ram
+            in
+            -- duplicate of code in imm8 - add 3 to the cpu_time
+            Just (Simple8BitDelta pcInc (param.time |> addCpuTimeTime 3) (f param.value))
 
         Nothing ->
-            case singleWith8BitParam |> Dict.get instr_code of
-                Just ( f, pcInc ) ->
-                    let
-                        param =
-                            case pcInc of
-                                IncreaseByTwo ->
-                                    mem (Bitwise.and (tmp_z80.pc + 1) 0xFFFF) ctime rom48k tmp_z80.env.ram
-
-                                IncreaseByThree ->
-                                    mem (Bitwise.and (tmp_z80.pc + 2) 0xFFFF) ctime rom48k tmp_z80.env.ram
-                    in
-                    -- duplicate of code in imm8 - add 3 to the cpu_time
-                    Just (Simple8BitDelta pcInc (param.time |> addCpuTimeTime 3) (f param.value))
-
-                Nothing ->
-                    Nothing
+            Nothing
 
 
 oldDelta : CpuTimeAndValue -> InterruptRegisters -> Z80 -> Z80ROM -> DeltaWithChanges

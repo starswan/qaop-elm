@@ -1,7 +1,7 @@
 module SingleNoParams exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeCTime, addCpuTimeTime)
+import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), addCpuTimeTime)
 import Dict exposing (Dict)
 import Z80Env exposing (z80_pop, z80_push)
 import Z80Flags exposing (set_af)
@@ -30,50 +30,50 @@ type NoParamChange
     | Ret
 
 
-singleWithNoParam : Dict Int NoParamChange
+singleWithNoParam : Dict Int ( NoParamChange, InstructionDuration )
 singleWithNoParam =
     Dict.fromList
-        [ ( 0x00, NoOp )
-        , ( 0x08, ExAfAfDash )
+        [ ( 0x00, ( NoOp, FourTStates ) )
+        , ( 0x08, ( ExAfAfDash, FourTStates ) )
 
         -- case 0x40: break;
-        , ( 0x40, NoOp )
+        , ( 0x40, ( NoOp, FourTStates ) )
 
         -- case 0x49: break;
-        , ( 0x49, NoOp )
+        , ( 0x49, ( NoOp, FourTStates ) )
 
         -- case 0x52: break;
-        , ( 0x52, NoOp )
+        , ( 0x52, ( NoOp, FourTStates ) )
 
         -- case 0x5B: break;
-        , ( 0x5B, NoOp )
+        , ( 0x5B, ( NoOp, FourTStates ) )
 
         -- case 0x64: break;
-        , ( 0x64, NoOp )
+        , ( 0x64, ( NoOp, FourTStates ) )
 
         -- case 0x6D: break;
-        , ( 0x6D, NoOp )
+        , ( 0x6D, ( NoOp, FourTStates ) )
 
         -- case 0x7F: break;
-        , ( 0x7F, NoOp )
-        , ( 0xC1, PopBC )
-        , ( 0xC7, Rst00 )
-        , ( 0xC9, Ret )
-        , ( 0xCF, Rst08 )
-        , ( 0xD1, PopDE )
-        , ( 0xD7, Rst10 )
+        , ( 0x7F, ( NoOp, FourTStates ) )
+        , ( 0xC1, ( PopBC, TenTStates ) )
+        , ( 0xC7, ( Rst00, FourTStates ) )
+        , ( 0xC9, ( Ret, TenTStates ) )
+        , ( 0xCF, ( Rst08, ElevenTStates ) )
+        , ( 0xD1, ( PopDE, TenTStates ) )
+        , ( 0xD7, ( Rst10, ElevenTStates ) )
 
         -- case 0xD9: exx(); break;
-        , ( 0xD9, Exx )
-        , ( 0xDF, Rst18 )
-        , ( 0xE1, PopHL )
-        , ( 0xE7, Rst20 )
-        , ( 0xEF, Rst28 )
-        , ( 0xF1, PopAF )
-        , ( 0xF3, DisableInterrupts )
-        , ( 0xF7, Rst30 )
-        , ( 0xFB, EnableInterrupts )
-        , ( 0xFF, Rst38 )
+        , ( 0xD9, ( Exx, FourTStates ) )
+        , ( 0xDF, ( Rst18, ElevenTStates ) )
+        , ( 0xE1, ( PopHL, TenTStates ) )
+        , ( 0xE7, ( Rst20, ElevenTStates ) )
+        , ( 0xEF, ( Rst28, ElevenTStates ) )
+        , ( 0xF1, ( PopAF, TenTStates ) )
+        , ( 0xF3, ( DisableInterrupts, FourTStates ) )
+        , ( 0xF7, ( Rst30, ElevenTStates ) )
+        , ( 0xFB, ( EnableInterrupts, FourTStates ) )
+        , ( 0xFF, ( Rst38, ElevenTStates ) )
         ]
 
 
@@ -92,7 +92,7 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
         NoOp ->
             { z80
                 | pc = pc
-                , env = { old_env | time = cpu_time |> addCpuTimeTime 4 }
+                , env = { old_env | time = cpu_time }
                 , r = z80.r + 1
             }
 
