@@ -441,7 +441,7 @@ execute_delta ct rom48k z80 =
 
                                                         Nothing ->
                                                             case doubleWithRegisters |> Dict.get instrCode of
-                                                                Just ( f, pcInc ) ->
+                                                                Just ( f, pcInc, duration ) ->
                                                                     let
                                                                         param =
                                                                             case pcInc of
@@ -451,8 +451,7 @@ execute_delta ct rom48k z80 =
                                                                                 IncreaseByThree ->
                                                                                     mem (Bitwise.and (z80.pc + 2) 0xFFFF) instrTime rom48k z80.env.ram
                                                                     in
-                                                                    -- duplicate of code in imm8 - add 3 to the cpu_time
-                                                                    DoubleWithRegistersDelta pcInc (param.time |> addCpuTimeTime 3) (f z80.main param.value)
+                                                                    DoubleWithRegistersDelta pcInc (param.time |> addDuration duration) (f z80.main param.value)
 
                                                                 Nothing ->
                                                                     case tripleMainRegs |> Dict.get instrCode of

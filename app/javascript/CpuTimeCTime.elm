@@ -89,22 +89,6 @@ increment3 =
     CpuTimeIncrement 3
 
 
-increment7 =
-    CpuTimeIncrement 7
-
-
-cpuTimeIncrement4 =
-    CpuTimeIncrement 4
-
-
-increment2 =
-    CpuTimeIncrement 2
-
-
-increment0 =
-    CpuTimeIncrement 0
-
-
 
 --	private final void cont1(int t) {
 --		t += cpu.time;

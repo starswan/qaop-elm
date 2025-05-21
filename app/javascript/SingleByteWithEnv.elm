@@ -1,7 +1,7 @@
 module SingleByteWithEnv exposing (..)
 
 import Bitwise exposing (shiftRightBy)
-import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDuration(..), addCpuTimeTimeInc, cpuTimeIncrement4, increment2)
+import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDuration(..), addCpuTimeTimeInc)
 import Dict exposing (Dict)
 import Z80Env exposing (Z80Env, c_TIME_LIMIT)
 import Z80Types exposing (Z80)

@@ -261,7 +261,7 @@ inc_h z80_main z80_flags =
         new_xy =
             Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 value.value)
     in
-    FlagsWithHLRegister value.flags new_xy increment0
+    FlagsWithHLRegister value.flags new_xy
 
 
 inc_h_ix : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -275,7 +275,7 @@ inc_h_ix z80_main z80_flags =
         new_xy =
             Bitwise.or (Bitwise.and z80_main.ix 0xFF) (shiftLeftBy8 value.value)
     in
-    FlagsWithIXRegister value.flags new_xy increment0
+    FlagsWithIXRegister value.flags new_xy
 
 
 inc_h_iy : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -289,7 +289,7 @@ inc_h_iy z80_main z80_flags =
         new_xy =
             Bitwise.or (Bitwise.and z80_main.iy 0xFF) (shiftLeftBy8 value.value)
     in
-    FlagsWithIYRegister value.flags new_xy increment0
+    FlagsWithIYRegister value.flags new_xy
 
 
 dec_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -303,7 +303,7 @@ dec_h z80_main z80_flags =
         new_xy =
             Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 value.value)
     in
-    FlagsWithHLRegister value.flags new_xy increment0
+    FlagsWithHLRegister value.flags new_xy
 
 
 dec_h_ix : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -317,7 +317,7 @@ dec_h_ix z80_main z80_flags =
         new_xy =
             Bitwise.or (Bitwise.and z80_main.ix 0xFF) (shiftLeftBy8 value.value)
     in
-    FlagsWithIXRegister value.flags new_xy increment0
+    FlagsWithIXRegister value.flags new_xy
 
 
 dec_h_iy : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -331,7 +331,7 @@ dec_h_iy z80_main z80_flags =
         new_xy =
             Bitwise.or (Bitwise.and z80_main.iy 0xFF) (shiftLeftBy8 value.value)
     in
-    FlagsWithIYRegister value.flags new_xy increment0
+    FlagsWithIYRegister value.flags new_xy
 
 
 inc_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -444,7 +444,7 @@ add_hl_hl z80_main z80_flags =
             add16 z80_main.hl z80_main.hl z80_flags
     in
     --{ z80 | main = new_z80, flags = new_xy.flags } |> add_cpu_time new_xy.time
-    FlagsWithHLRegister new_xy.flags new_xy.value new_xy.time
+    FlagsWithHLRegister new_xy.flags new_xy.value
 
 
 add_ix_ix : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -455,7 +455,7 @@ add_ix_ix z80_main z80_flags =
             add16 z80_main.ix z80_main.ix z80_flags
     in
     --{ z80 | main = new_z80, flags = new_xy.flags } |> add_cpu_time new_xy.time
-    FlagsWithIXRegister new_xy.flags new_xy.value new_xy.time
+    FlagsWithIXRegister new_xy.flags new_xy.value
 
 
 add_iy_iy : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -466,7 +466,7 @@ add_iy_iy z80_main z80_flags =
             add16 z80_main.iy z80_main.iy z80_flags
     in
     --{ z80 | main = new_z80, flags = new_xy.flags } |> add_cpu_time new_xy.time
-    FlagsWithIYRegister new_xy.flags new_xy.value new_xy.time
+    FlagsWithIYRegister new_xy.flags new_xy.value
 
 
 add_hl_bc : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -480,7 +480,7 @@ add_hl_bc z80_main z80_flags =
         new_xy =
             add16 xy (get_bc z80_main) z80_flags
     in
-    FlagsWithHLRegister new_xy.flags new_xy.value new_xy.time
+    FlagsWithHLRegister new_xy.flags new_xy.value
 
 
 add_ix_bc : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -494,7 +494,7 @@ add_ix_bc z80_main z80_flags =
         new_xy =
             add16 xy (get_bc z80_main) z80_flags
     in
-    FlagsWithIXRegister new_xy.flags new_xy.value new_xy.time
+    FlagsWithIXRegister new_xy.flags new_xy.value
 
 
 add_iy_bc : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -508,7 +508,7 @@ add_iy_bc z80_main z80_flags =
         new_xy =
             add16 xy (get_bc z80_main) z80_flags
     in
-    FlagsWithIYRegister new_xy.flags new_xy.value new_xy.time
+    FlagsWithIYRegister new_xy.flags new_xy.value
 
 
 add_a_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -862,7 +862,7 @@ add_hl_de z80_main z80_flags =
         new_xy =
             add16 z80_main.hl (get_de z80_main) z80_flags
     in
-    FlagsWithHLRegister new_xy.flags new_xy.value new_xy.time
+    FlagsWithHLRegister new_xy.flags new_xy.value
 
 
 add_ix_de : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -877,7 +877,7 @@ add_ix_de z80_main z80_flags =
             add16 xy (get_de z80_main) z80_flags
     in
     --{ z80 | main = new_z80, flags = new_xy.flags} |> add_cpu_time new_xy.time
-    FlagsWithIXRegister new_xy.flags new_xy.value new_xy.time
+    FlagsWithIXRegister new_xy.flags new_xy.value
 
 
 add_iy_de : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -892,7 +892,7 @@ add_iy_de z80_main z80_flags =
             add16 xy (get_de z80_main) z80_flags
     in
     --{ z80 | main = new_z80, flags = new_xy.flags} |> add_cpu_time new_xy.time
-    FlagsWithIYRegister new_xy.flags new_xy.value new_xy.time
+    FlagsWithIYRegister new_xy.flags new_xy.value
 
 
 ld_indirect_bc_a : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -904,7 +904,7 @@ ld_indirect_bc_a z80_main z80_flags =
     in
     --{ z80 | env = z80.env |> set_mem addr z80.flags.a |> add_cpu_time_env 3 }
     --SetMem8WithTime addr z80.flags.a 3
-    Z80ChangeSetIndirect addr z80_flags.a increment3
+    Z80ChangeSetIndirect addr z80_flags.a
 
 
 ld_indirect_de_a : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -916,7 +916,7 @@ ld_indirect_de_a z80_main z80_flags =
     in
     --z80.env |> set_mem addr z80.flags.a |> add_cpu_time_env 3 |> OnlyEnv
     --SetMem8WithTime addr z80.flags.a 3
-    Z80ChangeSetIndirect addr z80_flags.a increment3
+    Z80ChangeSetIndirect addr z80_flags.a
 
 
 rlc_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -957,7 +957,7 @@ rlc_h z80_main z80_flags =
         new_hl =
             Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
     in
-    FlagsWithHLRegister value.flags new_hl increment0
+    FlagsWithHLRegister value.flags new_hl
 
 
 rlc_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -970,14 +970,14 @@ rlc_l z80_main z80_flags =
         new_hl =
             Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
     in
-    FlagsWithHLRegister value.flags new_hl increment0
+    FlagsWithHLRegister value.flags new_hl
 
 
 ld_indirect_hl_a : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 ld_indirect_hl_a z80_main z80_flags =
     -- case 0x77: env.mem(HL,A); time+=3; break;
     -- case 0x77: env.mem(getd(xy),A); time+=3; break;
-    Z80ChangeSetIndirect z80_main.hl z80_flags.a increment3
+    Z80ChangeSetIndirect z80_main.hl z80_flags.a
 
 
 rrc_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1017,7 +1017,7 @@ rrc_h z80_main z80_flags =
         new_hl =
             Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
     in
-    FlagsWithHLRegister value.flags new_hl increment0
+    FlagsWithHLRegister value.flags new_hl
 
 
 rrc_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1030,7 +1030,7 @@ rrc_l z80_main z80_flags =
         new_hl =
             Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
     in
-    FlagsWithHLRegister value.flags new_hl increment0
+    FlagsWithHLRegister value.flags new_hl
 
 
 rl_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1071,7 +1071,7 @@ rl_h z80_main z80_flags =
         new_hl =
             Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
     in
-    FlagsWithHLRegister value.flags new_hl increment0
+    FlagsWithHLRegister value.flags new_hl
 
 
 rl_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1084,7 +1084,7 @@ rl_l z80_main z80_flags =
         new_hl =
             Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
     in
-    FlagsWithHLRegister value.flags new_hl increment0
+    FlagsWithHLRegister value.flags new_hl
 
 
 rr_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1125,7 +1125,7 @@ rr_h z80_main z80_flags =
         new_hl =
             Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
     in
-    FlagsWithHLRegister value.flags new_hl increment0
+    FlagsWithHLRegister value.flags new_hl
 
 
 rr_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1138,7 +1138,7 @@ rr_l z80_main z80_flags =
         new_hl =
             Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
     in
-    FlagsWithHLRegister value.flags new_hl increment0
+    FlagsWithHLRegister value.flags new_hl
 
 
 sla_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1179,7 +1179,7 @@ sla_h z80_main z80_flags =
         new_hl =
             Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
     in
-    FlagsWithHLRegister value.flags new_hl increment0
+    FlagsWithHLRegister value.flags new_hl
 
 
 sla_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1192,7 +1192,7 @@ sla_l z80_main z80_flags =
         new_hl =
             Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
     in
-    FlagsWithHLRegister value.flags new_hl increment0
+    FlagsWithHLRegister value.flags new_hl
 
 
 sra_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1233,7 +1233,7 @@ sra_h z80_main z80_flags =
         new_hl =
             Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
     in
-    FlagsWithHLRegister value.flags new_hl increment0
+    FlagsWithHLRegister value.flags new_hl
 
 
 sra_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1246,7 +1246,7 @@ sra_l z80_main z80_flags =
         new_hl =
             Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
     in
-    FlagsWithHLRegister value.flags new_hl increment0
+    FlagsWithHLRegister value.flags new_hl
 
 
 sll_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1287,7 +1287,7 @@ sll_h z80_main z80_flags =
         new_hl =
             Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
     in
-    FlagsWithHLRegister value.flags new_hl increment0
+    FlagsWithHLRegister value.flags new_hl
 
 
 sll_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1300,7 +1300,7 @@ sll_l z80_main z80_flags =
         new_hl =
             Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
     in
-    FlagsWithHLRegister value.flags new_hl increment0
+    FlagsWithHLRegister value.flags new_hl
 
 
 srl_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1341,7 +1341,7 @@ srl_h z80_main z80_flags =
         new_hl =
             Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
     in
-    FlagsWithHLRegister value.flags new_hl increment0
+    FlagsWithHLRegister value.flags new_hl
 
 
 srl_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1354,7 +1354,7 @@ srl_l z80_main z80_flags =
         new_hl =
             Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
     in
-    FlagsWithHLRegister value.flags new_hl increment0
+    FlagsWithHLRegister value.flags new_hl
 
 
 bit_1_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change

@@ -19,17 +19,18 @@ singleWith8BitParam =
         ]
 
 
-doubleWithRegisters : Dict Int ( MainWithIndexRegisters -> Int -> DoubleWithRegisterChange, MediumPCIncrement )
+doubleWithRegisters : Dict Int ( MainWithIndexRegisters -> Int -> DoubleWithRegisterChange, MediumPCIncrement, InstructionDuration )
 doubleWithRegisters =
     Dict.fromList
-        [ ( 0x10, ( djnz, IncreaseByTwo ) )
-        , ( 0x36, ( ld_indirect_hl_n, IncreaseByTwo ) )
-        , ( 0x26, ( ld_h_n, IncreaseByTwo ) )
-        , ( 0xDD26, ( ld_ix_h_n, IncreaseByThree ) )
-        , ( 0xFD26, ( ld_iy_h_n, IncreaseByThree ) )
-        , ( 0x2E, ( ld_l_n, IncreaseByTwo ) )
-        , ( 0xDD2E, ( ld_ix_l_n, IncreaseByThree ) )
-        , ( 0xFD2E, ( ld_iy_l_n, IncreaseByThree ) )
+        [ --  another 5 if jump actually taken
+          ( 0x10, ( djnz, IncreaseByTwo, EightTStates ) )
+        , ( 0x26, ( ld_h_n, IncreaseByTwo, SevenTStates ) )
+        , ( 0xDD26, ( ld_ix_h_n, IncreaseByThree, ElevenTStates ) )
+        , ( 0xFD26, ( ld_iy_h_n, IncreaseByThree, ElevenTStates ) )
+        , ( 0x2E, ( ld_l_n, IncreaseByTwo, SevenTStates ) )
+        , ( 0xDD2E, ( ld_ix_l_n, IncreaseByThree, ElevenTStates ) )
+        , ( 0xFD2E, ( ld_iy_l_n, IncreaseByThree, ElevenTStates ) )
+        , ( 0x36, ( ld_indirect_hl_n, IncreaseByTwo, TenTStates ) )
         ]
 
 
