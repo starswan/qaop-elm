@@ -2,7 +2,7 @@ module CBE0Test exposing (..)
 
 import Expect exposing (Expectation)
 import Test exposing (..)
-import Z80 exposing (executeSingleInstruction)
+import Z80 exposing (executeCoreInstruction)
 import Z80Env exposing (mem, setMem)
 import Z80Rom
 
@@ -50,7 +50,7 @@ suite =
                             |> setMem 0xA086 0x00
 
                     new_z80 =
-                        executeSingleInstruction z80rom
+                        executeCoreInstruction z80rom
                             { z80
                                 | env = new_env
                                 , main = { z80main | ix = 0xA080 }

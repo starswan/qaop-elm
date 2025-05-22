@@ -564,8 +564,8 @@ oldDelta c interrupts tmp_z80 rom48k =
             OldDeltaWithChanges (DeltaWithChangesData delta interrupts new_pc new_time)
 
 
-executeSingleInstruction : Z80ROM -> Z80Core -> Z80Core
-executeSingleInstruction rom48k z80 =
+executeCoreInstruction : Z80ROM -> Z80Core -> Z80Core
+executeCoreInstruction rom48k z80 =
     let
         ct =
             z80.env |> m1 z80.pc (Bitwise.or z80.interrupts.ir (Bitwise.and z80.r 0x7F)) rom48k
@@ -581,7 +581,7 @@ execute rom48k z80 =
     else
         let
             execute_f =
-                executeSingleInstruction rom48k
+                executeCoreInstruction rom48k
         in
         Loop.while (\x -> c_TIME_LIMIT > x.env.time.cpu_time) execute_f z80
 

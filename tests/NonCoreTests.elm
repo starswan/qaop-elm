@@ -1,8 +1,8 @@
-module GroupD0Test exposing (..)
+module NonCoreTests exposing (..)
 
 import Expect exposing (Expectation)
 import Test exposing (..)
-import Z80 exposing (executeSingleInstruction)
+import Z80 exposing (executeCoreInstruction)
 import Z80Env exposing (m1, setMem)
 import Z80Rom
 
@@ -50,7 +50,7 @@ suite =
                                 |> setMem (addr + 2) 0x34
 
                         new_z80 =
-                            executeSingleInstruction z80rom
+                            executeCoreInstruction z80rom
                                 { z80
                                     | env = new_env
                                     , flags = { flags | a = 0x39, ff = 0x0100 }
@@ -67,7 +67,7 @@ suite =
                                 |> setMem (addr + 2) 0x34
 
                         new_z80 =
-                            executeSingleInstruction z80rom
+                            executeCoreInstruction z80rom
                                 { z80
                                     | env = new_env
                                     , flags = { flags | a = 0x39, ff = 0x0200 }
@@ -75,59 +75,7 @@ suite =
                     in
                     Expect.equal 0x3405 new_z80.pc
             ]
-        , describe "0xD4 CALL NC"
-            [ test "Dont jump" <|
-                \_ ->
-                    let
-                        new_env =
-                            z80env
-                                |> setMem addr 0xD4
-                                |> setMem (addr + 1) 0x05
-                                |> setMem (addr + 2) 0x34
 
-                        new_z80 =
-                            executeSingleInstruction z80rom
-                                { z80
-                                    | env = new_env
-                                    , flags = { flags | a = 0x39, ff = 0x0100 }
-                                }
-                    in
-                    Expect.equal ( addr + 3, 0xF765 ) ( new_z80.pc, new_z80.env.sp )
-            , test "Jump" <|
-                \_ ->
-                    let
-                        new_env =
-                            z80env
-                                |> setMem addr 0xD4
-                                |> setMem (addr + 1) 0x05
-                                |> setMem (addr + 2) 0x34
-
-                        new_z80 =
-                            executeSingleInstruction z80rom
-                                { z80
-                                    | env = new_env
-                                    , flags = { flags | a = 0x39, ff = 0x0200 }
-                                }
-                    in
-                    Expect.equal ( 0x3405, 0xF763 ) ( new_z80.pc, new_z80.env.sp )
-            ]
-        , test "0xD7 RST 10" <|
-            \_ ->
-                let
-                    new_env =
-                        z80env
-                            |> setMem addr 0xD7
-                            |> setMem 0xFF77 0x16
-                            |> setMem 0xFF78 0x56
-
-                    new_z80 =
-                        executeSingleInstruction z80rom
-                            { z80
-                                | env = { new_env | sp = 0xFF77 }
-                                , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
-                            }
-                in
-                Expect.equal { pc = 0x10, sp = 0xFF75 } { sp = new_z80.env.sp, pc = new_z80.pc }
         --, test "0xD9 EXX" <|
         --    \_ ->
         --        let
@@ -158,7 +106,7 @@ suite =
                             |> setMem 0xFF76 0x56
 
                     new_z80 =
-                        executeSingleInstruction z80rom
+                        executeCoreInstruction z80rom
                             { z80
                                 | env = { new_env | sp = 0xFF77 }
                                 , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }

@@ -2,7 +2,7 @@ module CBA0Test exposing (..)
 
 import Expect exposing (Expectation)
 import Test exposing (..)
-import Z80 exposing (executeSingleInstruction)
+import Z80 exposing (executeCoreInstruction)
 import Z80Env exposing (mem, setMem)
 import Z80Rom
 
@@ -47,7 +47,7 @@ suite =
                             |> setMem (addr + 1) 0xA0
 
                     new_z80 =
-                        executeSingleInstruction z80rom
+                        executeCoreInstruction z80rom
                             { z80
                                 | env = new_env
                                 , main = { z80main | b = 0xFF }
@@ -63,7 +63,7 @@ suite =
                             |> setMem (addr + 1) 0xA8
 
                     new_z80 =
-                        executeSingleInstruction z80rom
+                        executeCoreInstruction z80rom
                             { z80
                                 | env = new_env
                                 , main = { z80main | b = 0xFF }
@@ -82,7 +82,7 @@ suite =
                             |> setMem 0xA07E 0xFF
 
                     new_z80 =
-                        executeSingleInstruction z80rom
+                        executeCoreInstruction z80rom
                             { z80
                                 | env = new_env
                                 , main = { z80main | iy = 0xA080, hl = 0x6545, b = 0xA5 }

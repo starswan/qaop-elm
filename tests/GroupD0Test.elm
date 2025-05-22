@@ -2,7 +2,7 @@ module GroupD0Test exposing (..)
 
 import Expect exposing (Expectation)
 import Test exposing (..)
-import Z80 exposing (executeSingleInstruction)
+import Z80 exposing (executeCoreInstruction)
 import Z80Env exposing (m1, setMem)
 import Z80Rom
 
@@ -50,7 +50,7 @@ suite =
                                 |> setMem 0xFF78 0x56
 
                         new_z80 =
-                            executeSingleInstruction z80rom
+                            executeCoreInstruction z80rom
                                 { z80
                                     | env = { new_env | sp = 0xFF77 }
                                     , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
@@ -69,7 +69,7 @@ suite =
                                 |> setMem (addr + 2) 0x34
 
                         new_z80 =
-                            executeSingleInstruction z80rom
+                            executeCoreInstruction z80rom
                                 { z80
                                     | env = new_env
                                     , flags = { flags | a = 0x39, ff = 0x0100 }
@@ -86,7 +86,7 @@ suite =
                                 |> setMem (addr + 2) 0x34
 
                         new_z80 =
-                            executeSingleInstruction z80rom
+                            executeCoreInstruction z80rom
                                 { z80
                                     | env = new_env
                                     , flags = { flags | a = 0x39, ff = 0x0200 }
@@ -105,7 +105,7 @@ suite =
                                 |> setMem (addr + 2) 0x34
 
                         new_z80 =
-                            executeSingleInstruction z80rom
+                            executeCoreInstruction z80rom
                                 { z80
                                     | env = new_env
                                     , flags = { flags | a = 0x39, ff = 0x0100 }
@@ -122,7 +122,7 @@ suite =
                                 |> setMem (addr + 2) 0x34
 
                         new_z80 =
-                            executeSingleInstruction z80rom
+                            executeCoreInstruction z80rom
                                 { z80
                                     | env = new_env
                                     , flags = { flags | a = 0x39, ff = 0x0200 }
@@ -140,13 +140,14 @@ suite =
                             |> setMem 0xFF78 0x56
 
                     new_z80 =
-                        executeSingleInstruction z80rom
+                        executeCoreInstruction z80rom
                             { z80
                                 | env = { new_env | sp = 0xFF77 }
                                 , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                             }
                 in
                 Expect.equal { pc = 0x10, sp = 0xFF75 } { sp = new_z80.env.sp, pc = new_z80.pc }
+
         --, test "0xD9 EXX" <|
         --    \_ ->
         --        let
@@ -177,7 +178,7 @@ suite =
                             |> setMem 0xFF76 0x56
 
                     new_z80 =
-                        executeSingleInstruction z80rom
+                        executeCoreInstruction z80rom
                             { z80
                                 | env = { new_env | sp = 0xFF77 }
                                 , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
