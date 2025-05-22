@@ -5,13 +5,14 @@ import CpuTimeCTime exposing (addCpuTimeTime)
 import Dict exposing (Dict)
 import GroupED exposing (group_ed)
 import Utils exposing (shiftLeftBy8)
+import Z80Core exposing (Z80Core)
 import Z80Delta exposing (Z80Delta(..))
 import Z80Env exposing (addCpuTimeEnv, out, z80_in, z80_pop)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIY(..), IXIYHL(..), Z80, get_de, get_xy, get_xy_ixiy, imm8, set_de_main)
+import Z80Types exposing (IXIY(..), IXIYHL(..), get_de, get_xy, get_xy_ixiy, imm8, set_de_main)
 
 
-miniDictE0 : Dict Int (IXIY -> Z80ROM -> Z80 -> Z80Delta)
+miniDictE0 : Dict Int (IXIY -> Z80ROM -> Z80Core -> Z80Delta)
 miniDictE0 =
     Dict.fromList
         [ ( 0xE1, pop_hl )
@@ -21,14 +22,14 @@ miniDictE0 =
         ]
 
 
-delta_dict_E0 : Dict Int (IXIYHL -> Z80ROM -> Z80 -> Z80Delta)
+delta_dict_E0 : Dict Int (IXIYHL -> Z80ROM -> Z80Core -> Z80Delta)
 delta_dict_E0 =
     Dict.fromList
         [ ( 0xE3, ex_indirect_sp_hl )
         ]
 
 
-delta_dict_lite_E0 : Dict Int (Z80ROM -> Z80 -> Z80Delta)
+delta_dict_lite_E0 : Dict Int (Z80ROM -> Z80Core -> Z80Delta)
 delta_dict_lite_E0 =
     Dict.fromList
         [ ( 0xD3, execute_0xD3 )
@@ -37,7 +38,7 @@ delta_dict_lite_E0 =
         ]
 
 
-pop_hl : IXIY -> Z80ROM -> Z80 -> Z80Delta
+pop_hl : IXIY -> Z80ROM -> Z80Core -> Z80Delta
 pop_hl ixiyhl rom48k z80 =
     -- case 0xE1: HL=pop(); break;
     -- case 0xE1: xy=pop(); break;
@@ -58,7 +59,7 @@ pop_hl ixiyhl rom48k z80 =
             MainRegsWithSpPcAndTime { main | iy = hl.value16 } hl.sp z80.pc hl.time
 
 
-ex_indirect_sp_hl : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
+ex_indirect_sp_hl : IXIYHL -> Z80ROM -> Z80Core -> Z80Delta
 ex_indirect_sp_hl ixiyhl rom48k z80 =
     -- case 0xE3: v=pop(); push(HL); MP=HL=v; time+=2; break;
     -- case 0xE3: v=pop(); push(xy); MP=xy=v; time+=2; break;
@@ -98,7 +99,7 @@ ex_indirect_sp_hl ixiyhl rom48k z80 =
             PushWithMainSpCpuTime toBePushed { main | hl = hl.value16 } hl.sp hl_time
 
 
-push_hl : IXIY -> Z80ROM -> Z80 -> Z80Delta
+push_hl : IXIY -> Z80ROM -> Z80Core -> Z80Delta
 push_hl ixiyhl _ z80 =
     -- case 0xE5: push(HL); break;
     -- case 0xE5: push(xy); break;
@@ -114,7 +115,7 @@ push_hl ixiyhl _ z80 =
     PushWithPc toBePushed z80.pc
 
 
-jp_hl : IXIY -> Z80ROM -> Z80 -> Z80Delta
+jp_hl : IXIY -> Z80ROM -> Z80Core -> Z80Delta
 jp_hl ixiyhl _ z80 =
     -- case 0xE9: PC=HL; break;
     -- case 0xE9: PC=xy; break;
@@ -131,7 +132,7 @@ jp_hl ixiyhl _ z80 =
     OnlyPc xy
 
 
-ex_de_hl : IXIY -> Z80ROM -> Z80 -> Z80Delta
+ex_de_hl : IXIY -> Z80ROM -> Z80Core -> Z80Delta
 ex_de_hl ixiyhl _ z80 =
     -- case 0xEB: v=HL; HL=D<<8|E; D=v>>>8; E=v&0xFF; break;
     let
@@ -154,7 +155,7 @@ ex_de_hl ixiyhl _ z80 =
             MainRegs { main | iy = de }
 
 
-execute_0xD3 : Z80ROM -> Z80 -> Z80Delta
+execute_0xD3 : Z80ROM -> Z80Core -> Z80Delta
 execute_0xD3 rom48k z80 =
     -- case 0xD3: env.out(v=imm8()|A<<8,A); MP=v+1&0xFF|v&0xFF00; time+=4; break;
     let
@@ -176,7 +177,7 @@ execute_0xD3 rom48k z80 =
     EnvWithPc env value.pc
 
 
-execute_0xDB : Z80ROM -> Z80 -> Z80Delta
+execute_0xDB : Z80ROM -> Z80Core -> Z80Delta
 execute_0xDB rom48k z80 =
     -- case 0xDB: MP=(v=imm8()|A<<8)+1; A=env.in(v); time+=4; break;
     let

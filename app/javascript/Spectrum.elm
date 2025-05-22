@@ -4,18 +4,18 @@ import Array exposing (Array)
 import Bitwise exposing (complement, shiftRightBy)
 import Dict exposing (Dict)
 import Keyboard exposing (KeyEvent, Keyboard, update_keyboard)
-import Loop
 import SingleNoParams exposing (ex_af)
 import Tapfile exposing (Tapfile)
 import Utils exposing (char)
 import Vector8
 import Z80 exposing (execute)
+import Z80Core exposing (Z80, Z80Core, get_ei, interrupt)
 import Z80Debug exposing (debugLog)
 import Z80Env exposing (mem, mem16, reset_cpu_time)
 import Z80Flags exposing (c_FC, c_FZ, get_flags, set_flags)
 import Z80Rom exposing (Z80ROM, make_spectrum_rom)
 import Z80Tape exposing (TapePosition, Z80Tape, newPosition)
-import Z80Types exposing (IXIYHL(..), Z80, get_de, get_ei, interrupt)
+import Z80Types exposing (IXIYHL(..), get_de)
 
 
 type alias Audio =
@@ -95,9 +95,8 @@ new_tape tapfileList spectrum =
 set_rom : Array Int -> Spectrum -> Spectrum
 set_rom romdata spectrum =
     let
-        z80 =
-            spectrum.cpu
-
+        --z80 =
+        --    spectrum.cpu
         rommy =
             make_spectrum_rom romdata
     in
@@ -111,8 +110,11 @@ loadTapfile tapFile spectrum =
         cpu =
             spectrum.cpu
 
+        core =
+            cpu.core
+
         env =
-            cpu.env
+            core.env
 
         --env  = case tapFile.header.start.headerType of
         --    PROGRAM ->
@@ -124,7 +126,7 @@ loadTapfile tapFile spectrum =
         --    Tapfile.CHAR_ARRAY -> cpu.env
         --    Tapfile.CODE -> cpu.env
     in
-    { spectrum | cpu = { cpu | env = env } }
+    { spectrum | cpu = { cpu | core = { core | env = env } } }
 
 
 
@@ -280,14 +282,17 @@ frames keys speccy =
         sz80 =
             speccy.cpu
 
+        core =
+            sz80.core
+
         env =
-            sz80.env |> reset_cpu_time
+            core.env |> reset_cpu_time
 
         cpu1 =
             { sz80
               -- time_limit is a constant
               --| time_limit = c_FRSTART + c_FRTIME
-                | env = { env | keyboard = keys |> update_keyboard }
+                | core = { core | env = { env | keyboard = keys |> update_keyboard } }
             }
 
         loading_z80 =
@@ -1013,24 +1018,24 @@ checkLoad spectrum =
             spectrum.cpu
 
         pc1 =
-            cpu.pc
+            cpu.core.pc
     in
-    if (cpu |> get_ei) || pc1 < 0x056B || pc1 > 0x0604 then
+    if (cpu.core |> get_ei) || pc1 < 0x056B || pc1 > 0x0604 then
         Nothing
 
     else
         let
             sp1 =
-                cpu.env.sp
+                cpu.core.env.sp
 
             ( pc, sp ) =
                 if pc1 >= 0x05E3 then
                     let
                         ( pc2, sp2 ) =
-                            ( cpu.env |> mem16 sp1 spectrum.rom48k |> .value16, char sp1 + 2 )
+                            ( cpu.core.env |> mem16 sp1 spectrum.rom48k |> .value16, char sp1 + 2 )
                     in
                     if pc2 == 0x05E6 then
-                        ( cpu.env |> mem16 sp2 spectrum.rom48k |> .value16, char sp2 + 2 )
+                        ( cpu.core.env |> mem16 sp2 spectrum.rom48k |> .value16, char sp2 + 2 )
 
                     else
                         ( pc2, sp2 )
@@ -1043,14 +1048,17 @@ checkLoad spectrum =
 
         else
             let
+                core =
+                    cpu.core
+
                 env =
-                    cpu.env
+                    core.env
 
                 new_env =
                     { env | sp = sp }
 
                 new_cpu =
-                    { cpu | env = new_env }
+                    { cpu | core = { core | env = new_env } }
             in
             Just (new_cpu |> ex_af)
 
@@ -1185,25 +1193,35 @@ type alias TapeState =
 
 
 doLoad : Z80 -> Z80ROM -> Z80Tape -> ( Z80, Bool, TapePosition )
-doLoad cpu z80rom tape =
+doLoad full_cpu z80rom tape =
     --		if(tape_changed || (keyboard[7]&1)==0) {
     --			cpu.f(0);
     --			return false;
     --		}
+    let
+        cpu =
+            full_cpu.core
+    in
     if (cpu.env.keyboard.keyboard |> Vector8.get Vector8.Index7 |> Bitwise.and 1) == 0 then
         let
             flags =
                 set_flags 0 cpu.flags.a
+
+            core =
+                { cpu | flags = flags }
         in
-        ( { cpu | flags = flags }, False, tape.tapePos )
+        ( { full_cpu | core = core }, False, tape.tapePos )
 
     else
-        doLoad2 cpu z80rom tape
+        doLoad2 full_cpu z80rom tape
 
 
 doLoad2 : Z80 -> Z80ROM -> Z80Tape -> ( Z80, Bool, TapePosition )
-doLoad2 cpu z80rom tape =
+doLoad2 full_cpu z80rom tape =
     let
+        cpu =
+            full_cpu.core
+
         initial : TapeState
         initial =
             { p = tape.tapePos.position
@@ -1367,7 +1385,7 @@ doLoad2 cpu z80rom tape =
                 Nothing ->
                     False
     in
-    ( cpu, bool, tape.tapePos )
+    ( full_cpu, bool, tape.tapePos )
 
 
 

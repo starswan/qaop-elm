@@ -5,10 +5,11 @@ import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, CpuTimeIncrement, I
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
 import Utils exposing (BitTest(..), shiftLeftBy8)
+import Z80Core exposing (Z80Core)
 import Z80Env exposing (Z80Env, mem)
 import Z80Flags exposing (FlagFunc(..), add16, changeFlags, testBit)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIYHL(..), MainWithIndexRegisters, Z80, set_xy)
+import Z80Types exposing (IXIYHL(..), MainWithIndexRegisters, set_xy)
 
 
 type EightBitMain
@@ -65,7 +66,7 @@ singleEnvMainRegs =
         ]
 
 
-applySingleEnvMainChange : PCIncrement -> InstructionDuration -> SingleEnvMainChange -> Z80 -> Z80
+applySingleEnvMainChange : PCIncrement -> InstructionDuration -> SingleEnvMainChange -> Z80Core -> Z80Core
 applySingleEnvMainChange pcInc duration z80changeData z80 =
     let
         env =

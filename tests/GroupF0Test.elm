@@ -2,7 +2,7 @@ module GroupF0Test exposing (..)
 
 import Expect exposing (Expectation)
 import Test exposing (..)
-import Z80 exposing (executeSingleInstruction)
+import Z80 exposing (executeCoreInstruction)
 import Z80Env exposing (m1, setMem)
 import Z80Rom
 
@@ -14,7 +14,7 @@ suite =
             30000
 
         old_z80 =
-            Z80.constructor
+            Z80.constructor.core
 
         z80 =
             { old_z80 | pc = addr }
@@ -41,7 +41,7 @@ suite =
                             |> setMem addr 0xF5
 
                     new_z80 =
-                        executeSingleInstruction z80rom
+                        executeCoreInstruction z80rom
                             { z80
                                 | env = { new_env | sp = 0xFF77 }
                                 , flags = { flags | a = 0x76 }
@@ -64,7 +64,7 @@ suite =
                                 |> setMem addr 0xF9
 
                         new_z80 =
-                            executeSingleInstruction z80rom
+                            executeCoreInstruction z80rom
                                 { z80
                                     | env = { new_env | sp = 0xFF77 }
                                     , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
@@ -80,7 +80,7 @@ suite =
                                 |> setMem (addr + 1) 0xF9
 
                         new_z80 =
-                            executeSingleInstruction z80rom
+                            executeCoreInstruction z80rom
                                 { z80
                                     | env = { new_env | sp = 0xFF77 }
                                     , main = { z80main | ix = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
@@ -96,7 +96,7 @@ suite =
                                 |> setMem (addr + 1) 0xF9
 
                         new_z80 =
-                            executeSingleInstruction z80rom
+                            executeCoreInstruction z80rom
                                 { z80
                                     | env = { new_env | sp = 0xFF77 }
                                     , main = { z80main | iy = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }

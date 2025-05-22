@@ -6,7 +6,7 @@ import Dict exposing (Dict)
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..))
 import Utils exposing (byte, shiftLeftBy8)
 import Z80Flags exposing (FlagRegisters, adc, sbc, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
-import Z80Types exposing (MainWithIndexRegisters, Z80)
+import Z80Types exposing (MainWithIndexRegisters)
 
 
 singleWith8BitParam : Dict Int ( Int -> Single8BitChange, MediumPCIncrement, InstructionDuration )

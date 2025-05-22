@@ -13,11 +13,12 @@ import TripleWithFlags exposing (TripleWithFlagsChange(..))
 import TripleWithMain exposing (TripleMainChange, applyTripleMainChange)
 import Utils exposing (shiftLeftBy8)
 import Z80Change exposing (FlagChange(..), Z80Change, applyZ80Change)
+import Z80Core exposing (Z80Core)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..), applyDeltaWithChanges)
 import Z80Env exposing (Z80Env, addCpuTimeEnvInc, mem, mem16, setMem, z80_pop, z80_push)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, dec, inc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIYHL(..), MainWithIndexRegisters, Z80, set_bc_main, set_de_main)
+import Z80Types exposing (IXIYHL(..), MainWithIndexRegisters, set_bc_main, set_de_main)
 
 
 type DeltaWithChanges
@@ -36,7 +37,7 @@ type DeltaWithChanges
     | Triple16FlagsDelta CpuTimeCTime TripleWithFlagsChange
 
 
-apply_delta : Z80 -> Z80ROM -> DeltaWithChanges -> Z80
+apply_delta : Z80Core -> Z80ROM -> DeltaWithChanges -> Z80Core
 apply_delta z80 rom48k z80delta =
     case z80delta of
         OldDeltaWithChanges deltaWithChangesData ->
@@ -79,7 +80,7 @@ apply_delta z80 rom48k z80delta =
             z80 |> applyTripleFlagChange cpuTimeCTime tripleWithFlagsChange
 
 
-applyJumpChangeDelta : CpuTimeCTime -> JumpChange -> Z80 -> Z80
+applyJumpChangeDelta : CpuTimeCTime -> JumpChange -> Z80Core -> Z80Core
 applyJumpChangeDelta cpu_time z80changeData z80 =
     let
         old_env =
@@ -121,7 +122,7 @@ applyJumpChangeDelta cpu_time z80changeData z80 =
             }
 
 
-applyDoubleWithRegistersDelta : MediumPCIncrement -> CpuTimeCTime -> DoubleWithRegisterChange -> Z80 -> Z80
+applyDoubleWithRegistersDelta : MediumPCIncrement -> CpuTimeCTime -> DoubleWithRegisterChange -> Z80Core -> Z80Core
 applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData z80 =
     let
         old_env =
@@ -225,7 +226,7 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData z80 =
             }
 
 
-applySimple8BitDelta : MediumPCIncrement -> CpuTimeCTime -> Single8BitChange -> Z80 -> Z80
+applySimple8BitDelta : MediumPCIncrement -> CpuTimeCTime -> Single8BitChange -> Z80Core -> Z80Core
 applySimple8BitDelta pcInc cpu_time z80changeData z80 =
     let
         z80_env =
@@ -247,7 +248,7 @@ applySimple8BitDelta pcInc cpu_time z80changeData z80 =
     { z80 | pc = new_pc, r = z80.r + 1, main = main, env = { z80_env | time = cpu_time } }
 
 
-applyFlagDelta : PCIncrement -> InstructionDuration -> FlagChange -> Z80ROM -> Z80 -> Z80
+applyFlagDelta : PCIncrement -> InstructionDuration -> FlagChange -> Z80ROM -> Z80Core -> Z80Core
 applyFlagDelta pcInc duration z80_flags rom48k z80 =
     let
         env =
@@ -332,7 +333,7 @@ applyFlagDelta pcInc duration z80_flags rom48k z80 =
             { z80 | pc = new_pc, r = z80.r + 1, env = env_1 |> z80_push int }
 
 
-applyPureDelta : PCIncrement -> CpuTimeCTime -> Z80Change -> Z80 -> Z80
+applyPureDelta : PCIncrement -> CpuTimeCTime -> Z80Change -> Z80Core -> Z80Core
 applyPureDelta cpuInc cpu_time z80changeData tmp_z80 =
     let
         env =
@@ -352,7 +353,7 @@ applyPureDelta cpuInc cpu_time z80changeData tmp_z80 =
     { z80 | pc = new_pc, r = z80.r + 1 } |> applyZ80Change z80changeData
 
 
-applyRegisterDelta : PCIncrement -> InstructionDuration -> RegisterChange -> Z80ROM -> Z80 -> Z80
+applyRegisterDelta : PCIncrement -> InstructionDuration -> RegisterChange -> Z80ROM -> Z80Core -> Z80Core
 applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
     let
         env =
@@ -452,7 +453,7 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
             z80 |> applyShifter new_pc shifter addr env_1.time rom48k
 
 
-applyShifter : Int -> Shifter -> Int -> CpuTimeCTime -> Z80ROM -> Z80 -> Z80
+applyShifter : Int -> Shifter -> Int -> CpuTimeCTime -> Z80ROM -> Z80Core -> Z80Core
 applyShifter new_pc shifterFunc addr cpu_time rom48k z80 =
     let
         value =
@@ -496,7 +497,7 @@ applyShifter new_pc shifterFunc addr cpu_time rom48k z80 =
     { z80 | pc = new_pc, env = env_2, r = z80.r + 1 }
 
 
-applyTripleChangeDelta : Z80ROM -> TriplePCIncrement -> CpuTimeCTime -> TripleByteChange -> Z80 -> Z80
+applyTripleChangeDelta : Z80ROM -> TriplePCIncrement -> CpuTimeCTime -> TripleByteChange -> Z80Core -> Z80Core
 applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
     let
         new_pc =
@@ -626,7 +627,7 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
             }
 
 
-z80_call : Int -> Z80 -> Z80
+z80_call : Int -> Z80Core -> Z80Core
 z80_call addr z80 =
     let
         new_pc =
@@ -638,7 +639,7 @@ z80_call addr z80 =
     { z80 | pc = addr, env = env_1, r = z80.r + 1 }
 
 
-applyTripleFlagChange : CpuTimeCTime -> TripleWithFlagsChange -> Z80 -> Z80
+applyTripleFlagChange : CpuTimeCTime -> TripleWithFlagsChange -> Z80Core -> Z80Core
 applyTripleFlagChange cpu_time z80changeData z80 =
     let
         env =

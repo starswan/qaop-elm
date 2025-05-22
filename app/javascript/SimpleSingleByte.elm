@@ -6,7 +6,7 @@ import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
 import RegisterChange exposing (RegisterChange(..), Shifter(..))
 import Utils exposing (BitTest(..), bitMaskFromBit, shiftRightBy8)
-import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, Z80, get_bc, get_de)
+import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, get_bc, get_de)
 
 
 singleByteMainRegs : Dict Int ( MainWithIndexRegisters -> RegisterChange, PCIncrement, InstructionDuration )

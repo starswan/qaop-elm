@@ -140,7 +140,7 @@ view : Model -> Html Message
 view model =
     let
         screen =
-            model.qaop.spectrum.cpu.env.ram.screen
+            model.qaop.spectrum.cpu.core.env.ram.screen
 
         -- List (0-255) of List SCR
         screen1 : List (List ScreenColourRun)

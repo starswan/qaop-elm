@@ -3,10 +3,11 @@ module SingleNoParams exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import Dict exposing (Dict)
+import Z80Core exposing (Z80, Z80Core, set_iff)
 import Z80Env exposing (z80_pop, z80_push)
 import Z80Flags exposing (set_af)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (Z80, set_bc_main, set_de_main, set_iff)
+import Z80Types exposing (set_bc_main, set_de_main)
 
 
 type NoParamChange
@@ -17,8 +18,8 @@ type NoParamChange
     | PopDE
     | PopHL
     | PopAF
-    | Exx
-    | ExAfAfDash
+      --| Exx
+      --| ExAfAfDash
     | Rst00
     | Rst08
     | Rst10
@@ -34,8 +35,8 @@ singleWithNoParam : Dict Int ( NoParamChange, InstructionDuration )
 singleWithNoParam =
     Dict.fromList
         [ ( 0x00, ( NoOp, FourTStates ) )
-        , ( 0x08, ( ExAfAfDash, FourTStates ) )
 
+        --, ( 0x08, ( ExAfAfDash, FourTStates ) )
         -- case 0x40: break;
         , ( 0x40, ( NoOp, FourTStates ) )
 
@@ -64,7 +65,7 @@ singleWithNoParam =
         , ( 0xD7, ( Rst10, ElevenTStates ) )
 
         -- case 0xD9: exx(); break;
-        , ( 0xD9, ( Exx, FourTStates ) )
+        --, ( 0xD9, ( Exx, FourTStates ) )
         , ( 0xDF, ( Rst18, ElevenTStates ) )
         , ( 0xE1, ( PopHL, TenTStates ) )
         , ( 0xE7, ( Rst20, ElevenTStates ) )
@@ -77,7 +78,7 @@ singleWithNoParam =
         ]
 
 
-applyNoParamsDelta : CpuTimeCTime -> NoParamChange -> Z80ROM -> Z80 -> Z80
+applyNoParamsDelta : CpuTimeCTime -> NoParamChange -> Z80ROM -> Z80Core -> Z80Core
 applyNoParamsDelta cpu_time z80changeData rom48k z80 =
     let
         --interrupts =
@@ -157,33 +158,31 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
                 , r = z80.r + 1
             }
 
-        ExAfAfDash ->
-            -- case 0x08: ex_af(); break;
-            let
-                new_z80 =
-                    z80 |> ex_af
-            in
-            { new_z80
-                | pc = pc
-                , r = z80.r + 1
-            }
-
-        Exx ->
-            -- case 0xD9: exx(); break;
-            let
-                main =
-                    z80.main
-
-                alt =
-                    z80.alt_main
-            in
-            { z80
-                | pc = pc
-                , r = z80.r + 1
-                , main = { main | b = alt.b, c = alt.c, d = alt.d, e = alt.e, hl = alt.hl }
-                , alt_main = { alt | b = main.b, c = main.c, d = main.d, e = main.e, hl = main.hl }
-            }
-
+        --ExAfAfDash ->
+        --    -- case 0x08: ex_af(); break;
+        --    let
+        --        new_z80 =
+        --            z80 |> ex_af
+        --    in
+        --    { new_z80
+        --        | pc = pc
+        --        , r = z80.r + 1
+        --    }
+        --Exx ->
+        --    -- case 0xD9: exx(); break;
+        --    let
+        --        main =
+        --            z80.main
+        --
+        --        alt =
+        --            z80.alt_main
+        --    in
+        --    { z80
+        --        | pc = pc
+        --        , r = z80.r + 1
+        --        , main = { main | b = alt.b, c = alt.c, d = alt.d, e = alt.e, hl = alt.hl }
+        --        , alt_main = { alt | b = main.b, c = main.c, d = main.d, e = main.e, hl = main.hl }
+        --    }
         PopAF ->
             -- case 0xF1: af(pop()); break;
             let
@@ -267,7 +266,7 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
             }
 
 
-rst : Int -> CpuTimeCTime -> Z80 -> Z80
+rst : Int -> CpuTimeCTime -> Z80Core -> Z80Core
 rst value cpu_time z80 =
     let
         --interrupts =
@@ -288,4 +287,30 @@ rst value cpu_time z80 =
 ex_af : Z80 -> Z80
 ex_af z80 =
     -- called by Spectrum loader
-    { z80 | flags = z80.alt_flags, alt_flags = z80.flags }
+    let
+        core =
+            z80.core
+
+        core_1 =
+            { core | flags = z80.alt_flags }
+    in
+    { z80 | core = core_1, alt_flags = core.flags }
+
+
+exx : Z80 -> Z80
+exx z80 =
+    -- case 0xD9: exx(); break;
+    let
+        core =
+            z80.core
+
+        main =
+            core.main
+
+        alt =
+            z80.alt_main
+
+        new_core =
+            { core | main = { main | b = alt.b, c = alt.c, d = alt.d, e = alt.e, hl = alt.hl } }
+    in
+    { z80 | core = new_core, alt_main = { alt | b = main.b, c = main.c, d = main.d, e = main.e, hl = main.hl } }

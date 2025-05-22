@@ -1,9 +1,8 @@
 module Z80Change exposing (..)
 
-import CpuTimeCTime exposing (CpuTimeIncrement, InstructionDuration)
-import Z80Env exposing (addCpuTimeEnvInc, setMem)
+import Z80Core exposing (Z80Core)
+import Z80Env exposing (setMem)
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
-import Z80Types exposing (Z80)
 
 
 type Z80Change
@@ -36,7 +35,7 @@ type FlagChange
     | FlagChangePush Int
 
 
-applyZ80Change : Z80Change -> Z80 -> Z80
+applyZ80Change : Z80Change -> Z80Core -> Z80Core
 applyZ80Change change z80 =
     case change of
         FlagsWithBRegister intWithFlags ->

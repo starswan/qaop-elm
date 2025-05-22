@@ -10,15 +10,16 @@ import Bitwise exposing (complement, shiftLeftBy, shiftRightBy)
 import CpuTimeCTime exposing (addCpuTimeTime)
 import Dict exposing (Dict)
 import Utils exposing (char, shiftLeftBy8, shiftRightBy8, toHexString2)
+import Z80Core exposing (Z80Core, add_cpu_time, imm16, inc_pc)
 import Z80Debug exposing (debugLog, debugTodo)
 import Z80Delta exposing (Z80Delta(..))
 import Z80Env exposing (addCpuTimeEnv, m1, mem, mem16, setMem, setMem16, z80_in)
 import Z80Flags exposing (FlagRegisters, c_F3, c_F5, c_F53, c_FC, f_szh0n0p, z80_sub)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIYHL(..), InterruptRegisters, Z80, add_cpu_time, get_bc, get_de, imm16, inc_pc, set_bc_main, set_de_main)
+import Z80Types exposing (IXIYHL(..), InterruptRegisters, get_bc, get_de, set_bc_main, set_de_main)
 
 
-group_ed_dict : Dict Int (Z80ROM -> Z80 -> Z80Delta)
+group_ed_dict : Dict Int (Z80ROM -> Z80Core -> Z80Delta)
 group_ed_dict =
     Dict.fromList
         [ ( 0x40, execute_ED40 )
@@ -60,12 +61,12 @@ group_ed_dict =
         ]
 
 
-execute_ED40 : Z80ROM -> Z80 -> Z80Delta
+execute_ED40 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED40 rom48k z80 =
     z80 |> execute_ED40485058606870 0x40
 
 
-execute_ED42 : Z80ROM -> Z80 -> Z80Delta
+execute_ED42 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED42 rom48k z80 =
     -- case 0x42: sbc_hl(B<<8|C); break;
     let
@@ -75,7 +76,7 @@ execute_ED42 rom48k z80 =
     z80 |> sbc_hl bc
 
 
-execute_ED43 : Z80ROM -> Z80 -> Z80Delta
+execute_ED43 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED43 rom48k z80 =
     -- case 0x43: MP=(v=imm16())+1; env.mem16(v,B<<8|C); time+=6; break;
     let
@@ -104,7 +105,7 @@ execute_ED43 rom48k z80 =
 --case 0x7C: v=A; A=0; sub(v); break;
 
 
-execute_ED44_neg : Z80ROM -> Z80 -> Z80Delta
+execute_ED44_neg : Z80ROM -> Z80Core -> Z80Delta
 execute_ED44_neg rom48k z80 =
     let
         v =
@@ -119,19 +120,19 @@ execute_ED44_neg rom48k z80 =
     FlagRegs new_flags
 
 
-execute_ED46 : Z80ROM -> Z80 -> Z80Delta
+execute_ED46 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED46 rom48k z80 =
     z80 |> execute_ED464E565E666E767E 0x46
 
 
-execute_ED47 : Z80ROM -> Z80 -> Z80Delta
+execute_ED47 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED47 rom48k z80 =
     -- case 0x47: i(A); time++; break;
     --z80 |> set_i z80.flags.a |> add_cpu_time 1 |> Whole
     InterruptsWithCpuTime (z80 |> set_i z80.flags.a) (z80.env.time |> addCpuTimeTime 1)
 
 
-execute_ED4B : Z80ROM -> Z80 -> Z80Delta
+execute_ED4B : Z80ROM -> Z80Core -> Z80Delta
 execute_ED4B rom48k z80 =
     -- case 0x4B: MP=(v=imm16())+1; v=env.mem16(v); B=v>>>8; C=v&0xFF; time+=6; break;
     let
@@ -153,18 +154,18 @@ execute_ED4B rom48k z80 =
     MainRegsWithPcAndCpuTime (z80.main |> set_bc_main v2.value16) v1.pc (v2.time |> addCpuTimeTime 6)
 
 
-execute_ED4E : Z80ROM -> Z80 -> Z80Delta
+execute_ED4E : Z80ROM -> Z80Core -> Z80Delta
 execute_ED4E rom48k z80 =
     z80 |> execute_ED464E565E666E767E 0x4E
 
 
-execute_ED52 : Z80ROM -> Z80 -> Z80Delta
+execute_ED52 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED52 rom48k z80 =
     -- case 0x52: sbc_hl(D<<8|E); break;
     z80 |> sbc_hl (Bitwise.or (shiftLeftBy8 z80.main.d) z80.main.e)
 
 
-execute_ED53 : Z80ROM -> Z80 -> Z80Delta
+execute_ED53 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED53 rom48k z80 =
     -- case 0x53: MP=(v=imm16())+1; env.mem16(v,D<<8|E); time+=6; break;
     let
@@ -186,7 +187,7 @@ execute_ED53 rom48k z80 =
     EnvWithPc (env |> addCpuTimeEnv 6) v.pc
 
 
-execute_ED5B : Z80ROM -> Z80 -> Z80Delta
+execute_ED5B : Z80ROM -> Z80Core -> Z80Delta
 execute_ED5B rom48k z80 =
     -- case 0x5B: MP=(v=imm16())+1; v=env.mem16(v); D=v>>>8; E=v&0xFF; time+=6; break;
     let
@@ -204,13 +205,13 @@ execute_ED5B rom48k z80 =
     MainRegsWithPcAndCpuTime (z80.main |> set_de_main v2.value16) v1.pc (v2.time |> addCpuTimeTime 6)
 
 
-execute_ED72 : Z80ROM -> Z80 -> Z80Delta
+execute_ED72 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED72 rom48k z80 =
     -- case 0x72: sbc_hl(SP); break;
     z80 |> sbc_hl z80.env.sp
 
 
-execute_ED73 : Z80ROM -> Z80 -> Z80Delta
+execute_ED73 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED73 rom48k z80 =
     -- case 0x73: MP=(v=imm16())+1; env.mem16(v,SP); time+=6; break;
     let
@@ -230,7 +231,7 @@ execute_ED73 rom48k z80 =
     EnvWithPc (env2 |> addCpuTimeEnv 6) v.pc
 
 
-execute_ED78 : Z80ROM -> Z80 -> Z80Delta
+execute_ED78 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED78 _ z80 =
     --  case 0x78: MP=(v=B<<8|C)+1; f_szh0n0p(A=env.in(v)); time+=4; break;
     let
@@ -252,7 +253,7 @@ execute_ED78 _ z80 =
     CpuTimeWithFlagsAndPc (new_a.time |> addCpuTimeTime 4) new_flags z80.pc
 
 
-execute_ED7B : Z80ROM -> Z80 -> Z80Delta
+execute_ED7B : Z80ROM -> Z80Core -> Z80Delta
 execute_ED7B rom48k z80 =
     -- case 0x7B: MP=(v=imm16())+1; SP=env.mem16(v); time+=6; break;
     let
@@ -271,14 +272,14 @@ execute_ED7B rom48k z80 =
     CpuTimeWithSpAndPc (sp.time |> addCpuTimeTime 6) sp.value16 v.pc
 
 
-execute_EDB0 : Z80ROM -> Z80 -> Z80Delta
+execute_EDB0 : Z80ROM -> Z80Core -> Z80Delta
 execute_EDB0 rom48k z80 =
     --0xB0 -> debug_log "LDIR" ("HL " ++ (z80.main.hl |> toHexString) ++ " BC " ++ (z80 |> get_bc |> toHexString2)) (z80 |> ldir 1 True)
     -- case 0xB0: ldir(1,true); break;
     z80 |> ldir Forwards True rom48k
 
 
-execute_EDB8 : Z80ROM -> Z80 -> Z80Delta
+execute_EDB8 : Z80ROM -> Z80Core -> Z80Delta
 execute_EDB8 rom48k z80 =
     -- case 0xB8: ldir(-1,true); break;
     z80 |> ldir Backwards True rom48k
@@ -295,42 +296,42 @@ execute_EDB8 rom48k z80 =
 -- case 0x7E: IM = c>>3&3; break;
 
 
-execute_ED464E565E666E767E : Int -> Z80 -> Z80Delta
+execute_ED464E565E666E767E : Int -> Z80Core -> Z80Delta
 execute_ED464E565E666E767E value z80 =
     z80 |> set_im_direct (Bitwise.and (shiftRightBy 3 value) 3)
 
 
-execute_ED56 : Z80ROM -> Z80 -> Z80Delta
+execute_ED56 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED56 _ z80 =
     z80 |> execute_ED464E565E666E767E 0x56
 
 
-execute_ED5E : Z80ROM -> Z80 -> Z80Delta
+execute_ED5E : Z80ROM -> Z80Core -> Z80Delta
 execute_ED5E _ z80 =
     z80 |> execute_ED464E565E666E767E 0x5E
 
 
-execute_ED66 : Z80ROM -> Z80 -> Z80Delta
+execute_ED66 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED66 _ z80 =
     z80 |> execute_ED464E565E666E767E 0x66
 
 
-execute_ED6E : Z80ROM -> Z80 -> Z80Delta
+execute_ED6E : Z80ROM -> Z80Core -> Z80Delta
 execute_ED6E _ z80 =
     z80 |> execute_ED464E565E666E767E 0x6E
 
 
-execute_ED76 : Z80ROM -> Z80 -> Z80Delta
+execute_ED76 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED76 _ z80 =
     z80 |> execute_ED464E565E666E767E 0x76
 
 
-execute_ED7E : Z80ROM -> Z80 -> Z80Delta
+execute_ED7E : Z80ROM -> Z80Core -> Z80Delta
 execute_ED7E _ z80 =
     z80 |> execute_ED464E565E666E767E 0x7E
 
 
-execute_ED40485058606870 : Int -> Z80 -> Z80Delta
+execute_ED40485058606870 : Int -> Z80Core -> Z80Delta
 execute_ED40485058606870 value z80 =
     let
         bc =
@@ -346,44 +347,44 @@ execute_ED40485058606870 value z80 =
     Fszh0n0pTimeDeltaSet408Bit 4 (shiftRightBy 3 (value - 0x40)) inval.value
 
 
-execute_ED48 : Z80ROM -> Z80 -> Z80Delta
+execute_ED48 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED48 _ z80 =
     z80 |> execute_ED40485058606870 0x48
 
 
-execute_ED4A : Z80ROM -> Z80 -> Z80Delta
+execute_ED4A : Z80ROM -> Z80Core -> Z80Delta
 execute_ED4A _ z80 =
     -- case 0x4A: adc_hl(B<<8|C); break;
     --0x4A -> z80 |> adc_hl (z80 |> get_bc)
     z80 |> adc_hl (z80.main |> get_bc)
 
 
-execute_ED50 : Z80ROM -> Z80 -> Z80Delta
+execute_ED50 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED50 _ z80 =
     z80 |> execute_ED40485058606870 0x50
 
 
-execute_ED58 : Z80ROM -> Z80 -> Z80Delta
+execute_ED58 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED58 _ z80 =
     z80 |> execute_ED40485058606870 0x58
 
 
-execute_ED60 : Z80ROM -> Z80 -> Z80Delta
+execute_ED60 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED60 _ z80 =
     z80 |> execute_ED40485058606870 0x60
 
 
-execute_ED68 : Z80ROM -> Z80 -> Z80Delta
+execute_ED68 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED68 _ z80 =
     z80 |> execute_ED40485058606870 0x68
 
 
-execute_ED70 : Z80ROM -> Z80 -> Z80Delta
+execute_ED70 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED70 _ z80 =
     z80 |> execute_ED40485058606870 0x70
 
 
-group_ed : Z80ROM -> Z80 -> Z80Delta
+group_ed : Z80ROM -> Z80Core -> Z80Delta
 group_ed rom48k z80_0 =
     let
         --ints =
@@ -485,7 +486,7 @@ group_ed rom48k z80_0 =
 --	}
 
 
-rld : Z80ROM -> Z80 -> Z80Delta
+rld : Z80ROM -> Z80Core -> Z80Delta
 rld rom48k z80 =
     let
         v_lhs_1 =
@@ -539,7 +540,7 @@ rld rom48k z80 =
 --	}
 
 
-sbc_hl : Int -> Z80 -> Z80Delta
+sbc_hl : Int -> Z80Core -> Z80Delta
 sbc_hl b z80 =
     let
         a =
@@ -573,7 +574,7 @@ sbc_hl b z80 =
     FlagsWithPCMainAndCpuTime { flags | ff = ff, fa = fa, fb = fb, fr = fr } z80.pc { main | hl = r } (z80.env.time |> addCpuTimeTime 7)
 
 
-set_im_direct : Int -> Z80 -> Z80Delta
+set_im_direct : Int -> Z80Core -> Z80Delta
 set_im_direct value z80 =
     let
         ints =
@@ -595,7 +596,7 @@ type DirectionForLDIR
     | Backwards
 
 
-ldir : DirectionForLDIR -> Bool -> Z80ROM -> Z80 -> Z80Delta
+ldir : DirectionForLDIR -> Bool -> Z80ROM -> Z80Core -> Z80Delta
 ldir i r rom48k z80 =
     --	private void ldir(int i, boolean r)
     let
@@ -699,7 +700,7 @@ ldir i r rom48k z80 =
 --	void i(int v) {IR = IR&0xFF | v<<8;}
 
 
-set_i : Int -> Z80 -> InterruptRegisters
+set_i : Int -> Z80Core -> InterruptRegisters
 set_i v z80 =
     let
         ir =
@@ -726,7 +727,7 @@ set_i v z80 =
 --	}
 
 
-adc_hl : Int -> Z80 -> Z80Delta
+adc_hl : Int -> Z80Core -> Z80Delta
 adc_hl b z80 =
     let
         a =

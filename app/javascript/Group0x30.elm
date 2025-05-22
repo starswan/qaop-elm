@@ -4,14 +4,15 @@ import Bitwise
 import CpuTimeCTime exposing (addCpuTimeTime)
 import Dict exposing (Dict)
 import Utils exposing (byte, char)
+import Z80Core exposing (Z80Core, env_mem_hl_ixiy, imm16)
 import Z80Delta exposing (Z80Delta(..))
 import Z80Env exposing (addCpuTimeEnv, mem, setMem)
 import Z80Flags exposing (dec, inc)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIY, IXIYHL(..), Z80, env_mem_hl_ixiy, get_xy_ixiy, imm16)
+import Z80Types exposing (IXIY, IXIYHL(..), get_xy_ixiy)
 
 
-miniDict30 : Dict Int (IXIY -> Z80ROM -> Z80 -> Z80Delta)
+miniDict30 : Dict Int (IXIY -> Z80ROM -> Z80Core -> Z80Delta)
 miniDict30 =
     Dict.fromList
         [ ( 0x34, inc_indirect_hl )
@@ -20,14 +21,14 @@ miniDict30 =
         ]
 
 
-delta_dict_lite_30 : Dict Int (Z80ROM -> Z80 -> Z80Delta)
+delta_dict_lite_30 : Dict Int (Z80ROM -> Z80Core -> Z80Delta)
 delta_dict_lite_30 =
     Dict.fromList
         [ ( 0x3A, ld_a_indirect_nn ) -- need triple byte with env for this
         ]
 
 
-inc_indirect_hl : IXIY -> Z80ROM -> Z80 -> Z80Delta
+inc_indirect_hl : IXIY -> Z80ROM -> Z80Core -> Z80Delta
 inc_indirect_hl ixiyhl rom48k z80 =
     -- case 0x34: v=inc(env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     -- case 0x34: {int a; v=inc(env.mem(a=getd(xy))); time+=4; env.mem(a,v); time+=3;} break;
@@ -51,7 +52,7 @@ inc_indirect_hl ixiyhl rom48k z80 =
     EnvWithFlagsAndPc (new_env |> addCpuTimeEnv 3) valueWithFlags.flags cpuTimePcAndValue.pc
 
 
-dec_indirect_hl : IXIY -> Z80ROM -> Z80 -> Z80Delta
+dec_indirect_hl : IXIY -> Z80ROM -> Z80Core -> Z80Delta
 dec_indirect_hl ixiyhl rom48k z80 =
     -- case 0x35: v=dec(env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     -- case 0x35: {int a; v=dec(env.mem(a=getd(xy))); time+=4; env.mem(a,v); time+=3;} break;
@@ -79,7 +80,7 @@ dec_indirect_hl ixiyhl rom48k z80 =
     EnvWithFlagsAndPc env_2 v.flags a.pc
 
 
-ld_indirect_hl_n : IXIY -> Z80ROM -> Z80 -> Z80Delta
+ld_indirect_hl_n : IXIY -> Z80ROM -> Z80Core -> Z80Delta
 ld_indirect_hl_n ixiyhl rom48k z80 =
     -- case 0x36: env.mem(HL,imm8()); time+=3; break;
     -- case 0x36: {int a=(char)(xy+(byte)env.mem(PC)); time+=3;
@@ -114,7 +115,7 @@ ld_indirect_hl_n ixiyhl rom48k z80 =
     EnvWithPc (x |> addCpuTimeEnv 3) new_pc
 
 
-ld_a_indirect_nn : Z80ROM -> Z80 -> Z80Delta
+ld_a_indirect_nn : Z80ROM -> Z80Core -> Z80Delta
 ld_a_indirect_nn rom48k z80 =
     -- case 0x3A: MP=(v=imm16())+1; A=env.mem(v); time+=3; break;
     let
