@@ -81,6 +81,18 @@ hl_deref_with_z80_ixiy ixiyhl rom48k z80 =
     CpuTimePcAndValue new_b.time a.pc new_b.value
 
 
+inc_pcr : Z80 -> Z80
+inc_pcr z80 =
+    let
+        core =
+            z80.core
+
+        pc =
+            Bitwise.and (core.pc + 1) 0xFFFF
+    in
+    { z80 | core = { core | pc = pc, r = core.r + 1 } }
+
+
 inc_pc : Z80Core -> Int
 inc_pc z80 =
     Bitwise.and (z80.pc + 1) 0xFFFF
@@ -195,7 +207,7 @@ set408bit c value ixiyhl z80 =
             { z80 | flags = { z80_flags | a = value } }
 
 
-im0 : Int -> Z80Core -> Z80Core
+im0 : Int -> Z80 -> Z80
 im0 bus z80 =
     if Bitwise.and bus 0x38 == 0xFF then
         let
@@ -208,14 +220,17 @@ im0 bus z80 =
         z80
 
 
-interrupt : Int -> Z80ROM -> Z80Core -> Z80Core
-interrupt bus rom48k z80 =
+interrupt : Int -> Z80ROM -> Z80 -> Z80
+interrupt bus rom48k full_z80 =
     let
+        z80 =
+            full_z80.core
+
         ints =
             z80.interrupts
     in
     if Bitwise.and ints.iff 1 == 0 then
-        z80
+        full_z80
 
     else
         let
@@ -229,8 +244,11 @@ interrupt bus rom48k z80 =
             pushed =
                 z80_1.env |> z80_push z80_1.pc
 
-            new_z80 =
+            new_core =
                 { z80_1 | env = pushed |> addCpuTimeEnv 6 }
+
+            new_z80 =
+                { full_z80 | core = new_core }
         in
         case ints.iM of
             0 ->
@@ -240,7 +258,7 @@ interrupt bus rom48k z80 =
                 new_z80 |> im0 bus
 
             2 ->
-                { new_z80 | pc = 0x38 }
+                new_z80 |> set_pc 0x38
 
             3 ->
                 let
@@ -255,8 +273,11 @@ interrupt bus rom48k z80 =
 
                     env =
                         z80.env
+
+                    core_1 =
+                        { new_core | env = { env | time = env_and_pc.time } |> addCpuTimeEnv 6, pc = env_and_pc.value16 }
                 in
-                { new_z80 | env = { env | time = env_and_pc.time } |> addCpuTimeEnv 6, pc = env_and_pc.value16 }
+                { new_z80 | core = core_1 }
 
             _ ->
                 new_z80
@@ -266,7 +287,7 @@ interrupt bus rom48k z80 =
 --	void pc(int v) {PC = v;}
 
 
-set_pc : Int -> Z80Core -> Z80Core
+set_pc : Int -> Z80 -> Z80
 set_pc pc z80 =
     let
         -- ignore common routines and LDIR/LDDR and friends (jump back 2)
@@ -294,8 +315,11 @@ set_pc pc z80 =
         --          debug_log "set_pc" ("from " ++ (z80.pc |> toHexString) ++
         --                           " to " ++ (pc |> subName) ++
         --                           " (sp " ++ (z80.sp |> toHexString) ++ ")") Nothing
+        core =
+            z80.core
+
         z80_1 =
-            { z80 | pc = Bitwise.and pc 0xFFFF }
+            { z80 | core = { core | pc = Bitwise.and pc 0xFFFF } }
     in
     z80_1
 

@@ -9,7 +9,7 @@ import Tapfile exposing (Tapfile)
 import Utils exposing (char)
 import Vector8
 import Z80 exposing (execute)
-import Z80Core exposing (Z80, Z80Core, get_ei, interrupt)
+import Z80Core exposing (Z80, get_ei, interrupt)
 import Z80Debug exposing (debugLog)
 import Z80Env exposing (mem, mem16, reset_cpu_time)
 import Z80Flags exposing (c_FC, c_FZ, get_flags, set_flags)
@@ -113,6 +113,7 @@ loadTapfile tapFile spectrum =
 
         core =
             cpu.core
+
         env =
             core.env
 
@@ -126,7 +127,7 @@ loadTapfile tapFile spectrum =
         --    Tapfile.CHAR_ARRAY -> cpu.env
         --    Tapfile.CODE -> cpu.env
     in
-    { spectrum | cpu = { cpu | core = { core | env = env } }}
+    { spectrum | cpu = { cpu | core = { core | env = env } } }
 
 
 
@@ -280,16 +281,19 @@ frames keys speccy =
         --tap = 0
         --tend = False
         sz80 =
-            speccy.cpu.core
+            speccy.cpu
+
+        core =
+            sz80.core
 
         env =
-            sz80.env |> reset_cpu_time
+            core.env |> reset_cpu_time
 
         cpu1 =
             { sz80
               -- time_limit is a constant
               --| time_limit = c_FRSTART + c_FRTIME
-                | env = { env | keyboard = keys |> update_keyboard }
+                | core = { core | env = { env | keyboard = keys |> update_keyboard } }
             }
 
         loading_z80 =
@@ -299,19 +303,19 @@ frames keys speccy =
             else
                 Nothing
 
-        ( new_loading, cpu_core, new_pos ) =
+        ( new_loading, cpu, new_pos ) =
             case loading_z80 of
                 Just z80 ->
                     case speccy.tape of
                         Just z80_tape ->
                             let
                                 ( new_z80, z80_load, tape_position ) =
-                                    doLoad z80.core speccy.rom48k z80_tape
+                                    doLoad z80 speccy.rom48k z80_tape
                             in
                             ( z80_load, new_z80, tape_position )
 
                         Nothing ->
-                            ( False, z80.core, newPosition )
+                            ( False, z80, newPosition )
 
                 Nothing ->
                     ( False
@@ -320,14 +324,13 @@ frames keys speccy =
                         |> execute speccy.rom48k
                     , newPosition
                     )
-        cpu = speccy.cpu
     in
     case speccy.tape of
         Just z80_tape ->
-            { speccy | loading = new_loading, cpu = { cpu | core = cpu_core} , tape = Just { z80_tape | tapePos = new_pos } }
+            { speccy | loading = new_loading, cpu = cpu, tape = Just { z80_tape | tapePos = new_pos } }
 
         Nothing ->
-            { speccy | loading = new_loading, cpu = { cpu | core = cpu_core} }
+            { speccy | loading = new_loading, cpu = cpu }
 
 
 
@@ -1012,29 +1015,28 @@ pause m spectrum =
 checkLoad : Spectrum -> Maybe Z80
 checkLoad spectrum =
     let
-        cpu = spectrum.cpu
-        cpu_core =
-            cpu.core
+        cpu =
+            spectrum.cpu
 
         pc1 =
-            cpu_core.pc
+            cpu.core.pc
     in
-    if (cpu_core |> get_ei) || pc1 < 0x056B || pc1 > 0x0604 then
+    if (cpu.core |> get_ei) || pc1 < 0x056B || pc1 > 0x0604 then
         Nothing
 
     else
         let
             sp1 =
-                cpu_core.env.sp
+                cpu.core.env.sp
 
             ( pc, sp ) =
                 if pc1 >= 0x05E3 then
                     let
                         ( pc2, sp2 ) =
-                            ( cpu_core.env |> mem16 sp1 spectrum.rom48k |> .value16, char sp1 + 2 )
+                            ( cpu.core.env |> mem16 sp1 spectrum.rom48k |> .value16, char sp1 + 2 )
                     in
                     if pc2 == 0x05E6 then
-                        ( cpu_core.env |> mem16 sp2 spectrum.rom48k |> .value16, char sp2 + 2 )
+                        ( cpu.core.env |> mem16 sp2 spectrum.rom48k |> .value16, char sp2 + 2 )
 
                     else
                         ( pc2, sp2 )
@@ -1047,16 +1049,17 @@ checkLoad spectrum =
 
         else
             let
+                core =
+                    cpu.core
+
                 env =
-                    cpu_core.env
+                    core.env
 
                 new_env =
                     { env | sp = sp }
 
-                new_cpu_core =
-                    { cpu_core | env = new_env }
-
-                new_cpu = { cpu | core = new_cpu_core }
+                new_cpu =
+                    { cpu | core = { core | env = new_env } }
             in
             Just (new_cpu |> ex_af)
 
@@ -1189,18 +1192,25 @@ type alias TapeState =
 --	}
 
 
-doLoad : Z80Core -> Z80ROM -> Z80Tape -> ( Z80Core, Bool, TapePosition )
-doLoad cpu z80rom tape =
+doLoad : Z80 -> Z80ROM -> Z80Tape -> ( Z80, Bool, TapePosition )
+doLoad full_cpu z80rom tape =
     --		if(tape_changed || (keyboard[7]&1)==0) {
     --			cpu.f(0);
     --			return false;
     --		}
+    let
+        cpu =
+            full_cpu.core
+    in
     if (cpu.env.keyboard.keyboard |> Vector8.get Vector8.Index7 |> Bitwise.and 1) == 0 then
         let
             flags =
                 set_flags 0 cpu.flags.a
+
+            core =
+                { cpu | flags = flags }
         in
-        ( { cpu | flags = flags }, False, tape.tapePos )
+        ( { full_cpu | core = core }, False, tape.tapePos )
 
     else
         let
@@ -1361,7 +1371,7 @@ doLoad cpu z80rom tape =
                     Nothing ->
                         False
         in
-        ( cpu, bool, tape.tapePos )
+        ( full_cpu, bool, tape.tapePos )
 
 
 
