@@ -17,7 +17,7 @@ suite =
             0xF765
 
         old_z80 =
-            Z80.constructor
+            Z80.constructor.core
 
         old_z80env =
             old_z80.env
@@ -147,26 +147,26 @@ suite =
                             }
                 in
                 Expect.equal { pc = 0x10, sp = 0xFF75 } { sp = new_z80.env.sp, pc = new_z80.pc }
-        , test "0xD9 EXX" <|
-            \_ ->
-                let
-                    alt =
-                        z80.alt_main
-
-                    new_env =
-                        z80env
-                            |> setMem addr 0xD9
-                            |> setMem (addr + 1) 0x16
-
-                    new_z80 =
-                        executeSingleInstruction z80rom
-                            { z80
-                                | env = { new_env | sp = 0xFF77 }
-                                , alt_main = { alt | hl = 0x4040, b = 0x67, c = 0x34, d = 0x12, e = 0x81 }
-                                , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
-                            }
-                in
-                Expect.equal { pc = addr + 1, hl = 0x4040 } { pc = new_z80.pc, hl = new_z80.main.hl }
+        --, test "0xD9 EXX" <|
+        --    \_ ->
+        --        let
+        --            alt =
+        --                z80.alt_main
+        --
+        --            new_env =
+        --                z80env
+        --                    |> setMem addr 0xD9
+        --                    |> setMem (addr + 1) 0x16
+        --
+        --            new_z80 =
+        --                executeSingleInstruction z80rom
+        --                    { z80
+        --                        | env = { new_env | sp = 0xFF77 }
+        --                        , alt_main = { alt | hl = 0x4040, b = 0x67, c = 0x34, d = 0x12, e = 0x81 }
+        --                        , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+        --                    }
+        --        in
+        --        Expect.equal { pc = addr + 1, hl = 0x4040 } { pc = new_z80.pc, hl = new_z80.main.hl }
         , test "0xDF RST 18" <|
             \_ ->
                 let

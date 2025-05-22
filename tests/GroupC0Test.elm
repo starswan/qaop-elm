@@ -18,7 +18,7 @@ suite =
             0xF765
 
         old_z80 =
-            Z80.constructor
+            Z80.constructor.core
 
         old_z80env =
             old_z80.env
