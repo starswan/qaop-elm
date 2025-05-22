@@ -2,12 +2,13 @@ module Group0x70 exposing (..)
 
 import CpuTimeCTime
 import Dict exposing (Dict)
+import Z80Core exposing (Z80Core, env_mem_hl_ixiy, hl_deref_with_z80_ixiy)
 import Z80Delta exposing (Z80Delta(..))
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIY, IXIYHL(..), Z80, env_mem_hl_ixiy, get_h, get_h_ixiy, get_l, get_l_ixiy, hl_deref_with_z80_ixiy)
+import Z80Types exposing (IXIY, IXIYHL(..), get_h, get_h_ixiy, get_l, get_l_ixiy)
 
 
-miniDict70 : Dict Int (IXIY -> Z80ROM -> Z80 -> Z80Delta)
+miniDict70 : Dict Int (IXIY -> Z80ROM -> Z80Core -> Z80Delta)
 miniDict70 =
     Dict.fromList
         [ ( 0x70, ld_indirect_hl_b )
@@ -23,7 +24,7 @@ miniDict70 =
         ]
 
 
-execute_0x7077_ixiy : IXIY -> Z80ROM -> Z80 -> Int -> Z80Delta
+execute_0x7077_ixiy : IXIY -> Z80ROM -> Z80Core -> Int -> Z80Delta
 execute_0x7077_ixiy ixiyhl rom48k z80 value =
     -- case 0x70: env.mem(HL,B); time+=3; break;
     -- case 0x70: env.mem(getd(xy),B); time+=3; break;
@@ -42,7 +43,7 @@ execute_0x7077_ixiy ixiyhl rom48k z80 value =
     SetMem8WithCpuTimeIncrementAndPc mem_target.value16 value mem_target.time 3 mem_target.pc
 
 
-ld_indirect_hl_b : IXIY -> Z80ROM -> Z80 -> Z80Delta
+ld_indirect_hl_b : IXIY -> Z80ROM -> Z80Core -> Z80Delta
 ld_indirect_hl_b ixiyhl rom48k z80 =
     -- case 0x70: env.mem(HL,B); time+=3; break;
     -- case 0x70: env.mem(getd(xy),B); time+=3; break;
@@ -57,7 +58,7 @@ ld_indirect_hl_b ixiyhl rom48k z80 =
     execute_0x7077_ixiy ixiyhl rom48k z80 z80.main.b
 
 
-ld_indirect_hl_c : IXIY -> Z80ROM -> Z80 -> Z80Delta
+ld_indirect_hl_c : IXIY -> Z80ROM -> Z80Core -> Z80Delta
 ld_indirect_hl_c ixiyhl rom48k z80 =
     -- case 0x71: env.mem(HL,C); time+=3; break;
     -- case 0x71: env.mem(getd(xy),C); time+=3; break;
@@ -72,7 +73,7 @@ ld_indirect_hl_c ixiyhl rom48k z80 =
     execute_0x7077_ixiy ixiyhl rom48k z80 z80.main.c
 
 
-ld_indirect_hl_d : IXIY -> Z80ROM -> Z80 -> Z80Delta
+ld_indirect_hl_d : IXIY -> Z80ROM -> Z80Core -> Z80Delta
 ld_indirect_hl_d ixiyhl rom48k z80 =
     -- case 0x72: env.mem(HL,D); time+=3; break;
     -- case 0x72: env.mem(getd(xy),D); time+=3; break;
@@ -85,7 +86,7 @@ ld_indirect_hl_d ixiyhl rom48k z80 =
     execute_0x7077_ixiy ixiyhl rom48k z80 z80.main.d
 
 
-ld_indirect_hl_e : IXIY -> Z80ROM -> Z80 -> Z80Delta
+ld_indirect_hl_e : IXIY -> Z80ROM -> Z80Core -> Z80Delta
 ld_indirect_hl_e ixiyhl rom48k z80 =
     -- case 0x73: env.mem(HL,E); time+=3; break;
     -- case 0x73: env.mem(getd(xy),E); time+=3; break;
@@ -98,7 +99,7 @@ ld_indirect_hl_e ixiyhl rom48k z80 =
     execute_0x7077_ixiy ixiyhl rom48k z80 z80.main.e
 
 
-ld_indirect_hl_h : IXIY -> Z80ROM -> Z80 -> Z80Delta
+ld_indirect_hl_h : IXIY -> Z80ROM -> Z80Core -> Z80Delta
 ld_indirect_hl_h ixiyhl rom48k z80 =
     -- case 0x74: env.mem(HL,HL>>>8); time+=3; break;
     -- case 0x74: env.mem(getd(xy),HL>>>8); time+=3; break;
@@ -111,7 +112,7 @@ ld_indirect_hl_h ixiyhl rom48k z80 =
     execute_0x7077_ixiy ixiyhl rom48k z80 (get_h HL z80.main)
 
 
-ld_indirect_hl_l : IXIY -> Z80ROM -> Z80 -> Z80Delta
+ld_indirect_hl_l : IXIY -> Z80ROM -> Z80Core -> Z80Delta
 ld_indirect_hl_l ixiyhl rom48k z80 =
     -- case 0x75: env.mem(HL,HL&0xFF); time+=3; break;
     -- case 0x75: env.mem(getd(xy),HL&0xFF); time+=3; break;
@@ -124,7 +125,7 @@ ld_indirect_hl_l ixiyhl rom48k z80 =
     execute_0x7077_ixiy ixiyhl rom48k z80 (get_l HL z80.main)
 
 
-ld_indirect_hl_a : IXIY -> Z80ROM -> Z80 -> Z80Delta
+ld_indirect_hl_a : IXIY -> Z80ROM -> Z80Core -> Z80Delta
 ld_indirect_hl_a ixiyhl rom48k z80 =
     -- case 0x77: env.mem(HL,A); time+=3; break;
     -- case 0x77: env.mem(getd(xy),A); time+=3; break;
@@ -137,7 +138,7 @@ ld_indirect_hl_a ixiyhl rom48k z80 =
     execute_0x7077_ixiy ixiyhl rom48k z80 z80.flags.a
 
 
-ld_a_h : IXIY -> Z80ROM -> Z80 -> Z80Delta
+ld_a_h : IXIY -> Z80ROM -> Z80Core -> Z80Delta
 ld_a_h ixiyhl rom z80 =
     -- case 0x7C: A=HL>>>8; break;
     -- case 0x7C: A=xy>>>8; break;
@@ -149,7 +150,7 @@ ld_a_h ixiyhl rom z80 =
     FlagRegsWithPc { flags | a = get_h_ixiy ixiyhl z80.main } z80.pc
 
 
-ld_a_l : IXIY -> Z80ROM -> Z80 -> Z80Delta
+ld_a_l : IXIY -> Z80ROM -> Z80Core -> Z80Delta
 ld_a_l ixiyhl rom z80 =
     -- case 0x7D: A=HL&0xFF; break;
     -- case 0x7D: A=xy&0xFF; break;
@@ -161,7 +162,7 @@ ld_a_l ixiyhl rom z80 =
     FlagRegsWithPc { flags | a = get_l_ixiy ixiyhl z80.main } z80.pc
 
 
-ld_a_indirect_hl : IXIY -> Z80ROM -> Z80 -> Z80Delta
+ld_a_indirect_hl : IXIY -> Z80ROM -> Z80Core -> Z80Delta
 ld_a_indirect_hl ixiyhl rom48k z80 =
     -- case 0x7E: A=env.mem(HL); time+=3; break;
     -- case 0x7E: A=env.mem(getd(xy)); time+=3; break;

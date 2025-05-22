@@ -2,12 +2,13 @@ module Group0xC0 exposing (..)
 
 import Dict exposing (Dict)
 import GroupCB exposing (group_cb, group_xy_cb)
+import Z80Core exposing (Z80Core)
 import Z80Delta exposing (Z80Delta(..))
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIY(..), IXIYHL(..), Z80)
+import Z80Types exposing (IXIY(..), IXIYHL(..))
 
 
-delta_dict_C0 : Dict Int (IXIYHL -> Z80ROM -> Z80 -> Z80Delta)
+delta_dict_C0 : Dict Int (IXIYHL -> Z80ROM -> Z80Core -> Z80Delta)
 delta_dict_C0 =
     Dict.fromList
         [ ( 0xCB, execute_0xCB )
@@ -23,7 +24,7 @@ delta_dict_C0 =
 --        ]
 
 
-execute_0xCB : IXIYHL -> Z80ROM -> Z80 -> Z80Delta
+execute_0xCB : IXIYHL -> Z80ROM -> Z80Core -> Z80Delta
 execute_0xCB ixiyhl rom48k z80 =
     case ixiyhl of
         IX ->
