@@ -26,6 +26,8 @@ gem 'jbuilder', '~> 2.7'
 # Use Active Model has_secure_password
 # gem 'bcrypt', '~> 3.1.7'
 
+gem "inline_svg"
+
 # Use Active Storage variant
 # gem 'image_processing', '~> 1.2'
 gem 'nokogiri', '< 1.19'

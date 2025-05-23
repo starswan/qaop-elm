@@ -12,7 +12,7 @@
   </dl>
   <div>
     <%= content_tag :canvas, 'Game', width: 512, height: 384, id: 'applet',
-                    class: 'applet', style: "border:1px solid #000000;",
+                    class: 'applet',
                     data: { load: "#{request.protocol}#{request.host_with_port}/#{@game.tapfile}",
                             rom: "#{request.protocol}#{request.host_with_port}/spectrum.rom" } %>
   </div>
@@ -20,6 +20,5 @@
   <!--<applet name="qaop" archive="/qaop.jar" code="Qaop" width="320" height="256" alt="Oh dear no applet">-->
   <!--  <param name="load" value="/<%#= @game.tapfile %>"/>-->
   <!--</applet>-->
-
-  <%= image_tag "SpectrumKeyboard.png" %>
 </div>
+<%= inline_svg_tag 'keyboard.svg', width: 704 %>
