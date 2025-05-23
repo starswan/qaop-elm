@@ -333,22 +333,28 @@ get_ei z80 =
     Bitwise.and z80.interrupts.iff 1 /= 0
 
 
-z80_halt : Z80Core -> Z80Core
+z80_halt : Z80 -> Z80
 z80_halt z80 =
     let
+        z80_core =
+            z80.core
+
         interrupts =
-            z80.interrupts
+            z80_core.interrupts
 
         --n = shiftRightBy 2 (z80.time_limit - z80.env.time.cpu_time + 3)
         n =
-            shiftRightBy 2 (c_TIME_LIMIT - z80.env.time.cpu_time + 3)
+            shiftRightBy 2 (c_TIME_LIMIT - z80_core.env.time.cpu_time + 3)
 
         z80_1 =
             if n > 0 then
                 -- turns out env.halt(n, r) just returns n...?
-                { z80 | r = z80.r + n } |> add_cpu_time (4 * n)
+                { z80_core | r = z80_core.r + n } |> add_cpu_time (4 * n)
 
             else
-                z80
+                z80_core
+
+        core_2 =
+            { z80_1 | interrupts = { interrupts | halted = True } }
     in
-    { z80_1 | interrupts = { interrupts | halted = True } }
+    { z80 | core = core_2 }

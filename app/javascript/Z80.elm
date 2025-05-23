@@ -664,11 +664,7 @@ execute rom48k z80 =
             z80.core
     in
     if z80_core.interrupts.halted then
-        let
-            core_1 =
-                z80_halt z80_core
-        in
-        { z80 | core = core_1 }
+        z80 |> z80_halt
 
     else
         let
