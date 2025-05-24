@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<jnlp spec="1.0+" codebase="<%= @homepage %>" href="games/<%= @game.id %>.jnlp">
+<jnlp spec="1.0+" codebase="<%= #{request.protocol}#{request.host_with_port} %>" href="games/<%= @game.id %>.jnlp">
     <information>
         <title>Qaop Testing</title>
         <vendor>Starswan Systems Ltd</vendor>
-        <homepage href="<%= @homepage %>" />
+        <homepage href="<%= #{request.protocol}#{request.host_with_port} %>" />
         <description>QAOP JNLP Launcher</description>
     </information>
     <security>

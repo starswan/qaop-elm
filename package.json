@@ -13,9 +13,11 @@
   "devDependencies": {
     "elm-format": "^0.8.7",
     "elm-test": "0.19.1-revision15",
-    "esbuild-plugin-elm": "^0.0.12"
+    "esbuild-plugin-elm": "^0.0.12",
+    "sass": "^1.89.0"
   },
   "scripts": {
-    "build": "node ./esbuild.config.js"
+    "build": "node ./esbuild.config.js",
+    "build:css": "sass ./app/assets/stylesheets/application.scss:./app/assets/builds/application.css --no-source-map --load-path=node_modules --quiet-deps --style compressed"
   }
 }

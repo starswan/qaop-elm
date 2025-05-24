@@ -3,15 +3,18 @@
 source 'http://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-gem "base64"
-gem "bigdecimal"
-gem "drb"
-gem "mutex_m"
+# gem "base64"
+# gem "bigdecimal"
+# gem "drb"
+# gem "mutex_m"
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '~> 7.1', '< 7.2'
 # Use sqlite3 as the database for Active Record
 gem 'sqlite3', '~> 2.6'
+gem "cssbundling-rails"
+gem "jsbundling-rails"
+gem "propshaft"
 
 # mysql in production
 # gem 'mysql2'
@@ -20,11 +23,13 @@ gem "passenger", "~> 5.0"
 # Use Puma as the app server
 # gem 'puma', '~> 4.1'
 # Use SCSS for stylesheets
-gem 'sass-rails', '>= 6'
+# gem 'sass-rails', '>= 6'
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 gem 'jbuilder', '~> 2.7'
 # Use Active Model has_secure_password
 # gem 'bcrypt', '~> 3.1.7'
+
+gem "inline_svg"
 
 # Use Active Storage variant
 # gem 'image_processing', '~> 1.2'
@@ -32,12 +37,12 @@ gem 'nokogiri', '< 1.19'
 
 # Reduces boot times through caching; required in config/boot.rb
 # gem 'bootsnap', '>= 1.4.2', require: false
-gem 'matrix', require: false
+# gem 'matrix', require: false
 
 # gem 'smtp'
 # This is something to do with ruby 3.1...?
 gem 'net-smtp', require: false
-gem 'rexml', require: false
+# gem 'rexml', require: false
 gem 'rubyzip', '< 3'
 
 group :development, :test do
@@ -95,5 +100,3 @@ end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
-
-gem "jsbundling-rails", "~> 1.3"
