@@ -4,15 +4,16 @@ import Bitwise exposing (complement, shiftLeftBy, shiftRightBy)
 import CpuTimeCTime exposing (CpuTimePcAnd16BitValue, CpuTimePcAndValue, addCpuTimeTime)
 import Dict exposing (Dict)
 import Utils exposing (byte, char, shiftRightBy8, toHexString)
+import Z80Core exposing (Z80Core, a_with_z80, add_cpu_time, inc_pc, inc_pc2, set408bit)
 import Z80Debug exposing (debugTodo)
 import Z80Delta exposing (Z80Delta(..))
 import Z80Env exposing (addCpuTimeEnv, m1, mem, setMem)
 import Z80Flags exposing (IntWithFlags, bit, c_F53, shifter)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIY, IXIYHL(..), IntWithFlagsTimeAndPC, Z80, a_with_z80, add_cpu_time, get_ixiy_xy, inc_pc, inc_pc2, set408bit)
+import Z80Types exposing (IXIY, IXIYHL(..), IntWithFlagsTimeAndPC, get_ixiy_xy)
 
 
-group_cb_dict : Dict Int (Z80 -> Z80Delta)
+group_cb_dict : Dict Int (Z80Core -> Z80Delta)
 group_cb_dict =
     Dict.fromList
         [--( 0x00, execute_CB00 )
@@ -74,7 +75,7 @@ group_cb_dict =
 --    EnvWithFlagsAndPc env_1 x.flags x.pc
 
 
-group_cb : Z80ROM -> Z80 -> Z80Delta
+group_cb : Z80ROM -> Z80Core -> Z80Delta
 group_cb rom48k tmp_z80 =
     --	private void group_cb()
     --	{
@@ -190,7 +191,7 @@ group_cb rom48k tmp_z80 =
 --		int o = c>>>3 & 7;
 
 
-group_xy_cb : IXIY -> Z80ROM -> Z80 -> Z80Delta
+group_xy_cb : IXIY -> Z80ROM -> Z80Core -> Z80Delta
 group_xy_cb ixiyhl rom48k z80 =
     let
         xy =
@@ -287,7 +288,7 @@ group_xy_cb ixiyhl rom48k z80 =
 -- this complexity as we're just doing LD A,B or something similar - so stop using it in those cases
 
 
-load408bitHL : Int -> Z80ROM -> Z80 -> CpuTimePcAndValue
+load408bitHL : Int -> Z80ROM -> Z80Core -> CpuTimePcAndValue
 load408bitHL c_value rom48k z80 =
     case Bitwise.and c_value 0x07 of
         0 ->

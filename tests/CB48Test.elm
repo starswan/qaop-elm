@@ -2,7 +2,7 @@ module CB48Test exposing (..)
 
 import Expect exposing (Expectation)
 import Test exposing (..)
-import Z80 exposing (executeSingleInstruction)
+import Z80 exposing (executeCoreInstruction)
 import Z80Env exposing (mem, setMem)
 import Z80Rom
 
@@ -20,7 +20,7 @@ suite =
             0x1234
 
         old_z80 =
-            Z80.constructor
+            Z80.constructor.core
 
         old_z80env =
             old_z80.env
@@ -50,7 +50,7 @@ suite =
                             |> setMem (addr + 1) 0x48
 
                     new_z80 =
-                        executeSingleInstruction z80rom
+                        executeCoreInstruction z80rom
                             { z80
                                 | env = { new_env | sp = 0x8765 }
                                 , main = { z80main | hl = 0x6545, b = 0x00 }
@@ -67,7 +67,7 @@ suite =
                             |> setMem (addr + 1) 0x48
 
                     new_z80 =
-                        executeSingleInstruction z80rom
+                        executeCoreInstruction z80rom
                             { z80
                                 | env = { new_env | sp = 0x8765 }
                                 , main = { z80main | hl = 0x6545, b = 0x02 }
@@ -84,7 +84,7 @@ suite =
                             |> setMem (addr + 1) 0x49
 
                     new_z80 =
-                        executeSingleInstruction z80rom
+                        executeCoreInstruction z80rom
                             { z80
                                 | env = { new_env | sp = 0x8765 }
                                 , main = { z80main | hl = 0x6545, c = 0x00 }
@@ -101,14 +101,14 @@ suite =
                             |> setMem (addr + 1) 0x49
 
                     new_z80 =
-                        executeSingleInstruction z80rom
+                        executeCoreInstruction z80rom
                             { z80
                                 | env = { new_env | sp = 0x8765 }
                                 , main = { z80main | hl = 0x6545, c = 0x02 }
                                 , flags = { flags | a = 0x39 }
                             }
                 in
-                Expect.equal ( addr + 2, True ) ( new_z80.pc, new_z80.flags.fr /= 0)
+                Expect.equal ( addr + 2, True ) ( new_z80.pc, new_z80.flags.fr /= 0 )
         , test "0xCB 0x4A BIT 1,D (unset)" <|
             \_ ->
                 let
@@ -118,7 +118,7 @@ suite =
                             |> setMem (addr + 1) 0x4A
 
                     new_z80 =
-                        executeSingleInstruction z80rom
+                        executeCoreInstruction z80rom
                             { z80
                                 | env = { new_env | sp = 0x8765 }
                                 , main = { z80main | hl = 0x6545, d = 0x00 }
@@ -135,7 +135,7 @@ suite =
                             |> setMem (addr + 1) 0x4A
 
                     new_z80 =
-                        executeSingleInstruction z80rom
+                        executeCoreInstruction z80rom
                             { z80
                                 | env = { new_env | sp = 0x8765 }
                                 , main = { z80main | hl = 0x6545, d = 0x02 }
@@ -152,7 +152,7 @@ suite =
                             |> setMem (addr + 1) 0x4B
 
                     new_z80 =
-                        executeSingleInstruction z80rom
+                        executeCoreInstruction z80rom
                             { z80
                                 | env = { new_env | sp = 0x8765 }
                                 , main = { z80main | hl = 0x6545, e = 0x00 }
@@ -169,7 +169,7 @@ suite =
                             |> setMem (addr + 1) 0x4B
 
                     new_z80 =
-                        executeSingleInstruction z80rom
+                        executeCoreInstruction z80rom
                             { z80
                                 | env = { new_env | sp = 0x8765 }
                                 , main = { z80main | hl = 0x6545, e = 0x02 }
@@ -186,7 +186,7 @@ suite =
                             |> setMem (addr + 1) 0x4C
 
                     new_z80 =
-                        executeSingleInstruction z80rom
+                        executeCoreInstruction z80rom
                             { z80
                                 | env = { new_env | sp = 0x8765 }
                                 , main = { z80main | hl = 0x6445 }
@@ -202,7 +202,7 @@ suite =
                             |> setMem (addr + 1) 0x4C
 
                     new_z80 =
-                        executeSingleInstruction z80rom
+                        executeCoreInstruction z80rom
                             { z80
                                 | env = { new_env | sp = 0x8765 }
                                 , main = { z80main | hl = 0x0245 }
@@ -218,7 +218,7 @@ suite =
                             |> setMem (addr + 1) 0x4D
 
                     new_z80 =
-                        executeSingleInstruction z80rom
+                        executeCoreInstruction z80rom
                             { z80
                                 | env = { new_env | sp = 0x8765 }
                                 , main = { z80main | hl = 0x6444 }
@@ -234,7 +234,7 @@ suite =
                             |> setMem (addr + 1) 0x4D
 
                     new_z80 =
-                        executeSingleInstruction z80rom
+                        executeCoreInstruction z80rom
                             { z80
                                 | env = { new_env | sp = 0x8765 }
                                 , main = { z80main | hl = 0x6502 }
@@ -251,7 +251,7 @@ suite =
                             |> setMem 0x6545 0x50
 
                     new_z80 =
-                        executeSingleInstruction z80rom
+                        executeCoreInstruction z80rom
                             { z80
                                 | env = new_env
                                 , main = { z80main | hl = 0x6545, b = 0xA5 }
@@ -269,14 +269,14 @@ suite =
                             |> setMem 0x6545 0x02
 
                     new_z80 =
-                        executeSingleInstruction z80rom
+                        executeCoreInstruction z80rom
                             { z80
                                 | env = new_env
                                 , main = { z80main | hl = 0x6545, b = 0xA5 }
                                 , flags = { flags | a = 0x39 }
                             }
                 in
-                Expect.equal ( addr + 2, True ) ( new_z80.pc, new_z80.flags.fr /= 0)
+                Expect.equal ( addr + 2, True ) ( new_z80.pc, new_z80.flags.fr /= 0 )
         , test "0xDD 0xCB 0x05 0x4E BIT 1, (IX + d) unset" <|
             \_ ->
                 let
@@ -289,7 +289,7 @@ suite =
                             |> setMem 0x6545 0x50
 
                     new_z80 =
-                        executeSingleInstruction z80rom
+                        executeCoreInstruction z80rom
                             { z80
                                 | env = { new_env | sp = 0x8765 }
                                 , main = { z80main | ix = 0x6540, b = 0xA5 }
@@ -312,7 +312,7 @@ suite =
                             |> setMem 0x6545 0x02
 
                     new_z80 =
-                        executeSingleInstruction z80rom
+                        executeCoreInstruction z80rom
                             { z80
                                 | env = { new_env | sp = 0x8765 }
                                 , main = { z80main | ix = 0x6540, b = 0xA5 }
@@ -322,7 +322,7 @@ suite =
                     mem_value =
                         mem 0x6545 new_z80.env.time z80rom new_z80.env.ram
                 in
-                Expect.equal ( addr + 4, True ) ( new_z80.pc, new_z80.flags.fr /= 0)
+                Expect.equal ( addr + 4, True ) ( new_z80.pc, new_z80.flags.fr /= 0 )
         , test "0xCB 0x4F BIT 1,A (unset)" <|
             \_ ->
                 let
@@ -332,7 +332,7 @@ suite =
                             |> setMem (addr + 1) 0x4F
 
                     new_z80 =
-                        executeSingleInstruction z80rom
+                        executeCoreInstruction z80rom
                             { z80
                                 | env = { new_env | sp = 0x8765 }
                                 , main = { z80main | hl = 0x6545, d = 0x50 }
@@ -349,12 +349,12 @@ suite =
                             |> setMem (addr + 1) 0x4F
 
                     new_z80 =
-                        executeSingleInstruction z80rom
+                        executeCoreInstruction z80rom
                             { z80
                                 | env = { new_env | sp = 0x8765 }
                                 , main = { z80main | hl = 0x6545, d = 0x51 }
                                 , flags = { flags | a = 0x02 }
                             }
                 in
-                Expect.equal ( addr + 2, True ) ( new_z80.pc, new_z80.flags.fr /= 0)
+                Expect.equal ( addr + 2, True ) ( new_z80.pc, new_z80.flags.fr /= 0 )
         ]

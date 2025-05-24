@@ -1,10 +1,9 @@
 module RegisterChange exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeIncrement)
 import Utils exposing (shiftLeftBy8)
 import Z80Flags exposing (FlagRegisters)
-import Z80Types exposing (MainWithIndexRegisters, Z80, set_de_main)
+import Z80Types exposing (MainWithIndexRegisters, set_de_main)
 
 
 type Shifter

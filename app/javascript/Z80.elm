@@ -19,19 +19,20 @@ import SimpleSingleByte exposing (singleByteMainRegs)
 import SingleByteWithEnv exposing (singleByteZ80Env)
 import SingleEnvWithMain exposing (singleEnvMainRegs)
 import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters)
-import SingleNoParams exposing (singleWithNoParam)
+import SingleNoParams exposing (ex_af, exx, singleWithNoParam)
 import SingleWith8BitParameter exposing (doubleWithRegisters, maybeRelativeJump, singleWith8BitParam)
 import TripleByte exposing (tripleByteWith16BitParam)
 import TripleWithFlags exposing (triple16WithFlags)
 import TripleWithMain exposing (tripleMainRegs)
 import Utils exposing (toHexString)
+import Z80Core exposing (Z80, Z80Core, add_cpu_time, inc_pc, inc_pcr, z80_halt)
 import Z80Debug exposing (debugTodo)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..))
 import Z80Env exposing (Z80Env, c_TIME_LIMIT, m1, mem, mem16, z80env_constructor)
 import Z80Execute exposing (DeltaWithChanges(..), apply_delta)
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIY(..), IXIYHL(..), IntWithFlagsTimeAndPC, InterruptRegisters, MainRegisters, MainWithIndexRegisters, Z80, add_cpu_time, inc_pc, z80_halt)
+import Z80Types exposing (IXIY(..), IXIYHL(..), IntWithFlagsTimeAndPC, InterruptRegisters, MainRegisters, MainWithIndexRegisters)
 
 
 constructor : Z80
@@ -52,8 +53,8 @@ constructor =
         interrupts =
             InterruptRegisters 0 0 0 False
     in
-    --Z80 z80env_constructor 0 main main_flags alternate alt_flags interrupts (c_FRSTART + c_FRTIME)
-    Z80 z80env_constructor 0 main main_flags alternate alt_flags 0 interrupts
+    --Z80 z80env_constructor 0 main main_flags alternate alt_flags 0 interrupts
+    Z80 (Z80Core z80env_constructor 0 main main_flags 0 interrupts) alternate alt_flags
 
 
 
@@ -205,7 +206,7 @@ constructor =
 --      HL -> "HL"
 
 
-execute_ltC0 : Int -> Z80ROM -> Z80 -> Maybe Z80Delta
+execute_ltC0 : Int -> Z80ROM -> Z80Core -> Maybe Z80Delta
 execute_ltC0 c rom48k z80 =
     case lt40_array |> Array.get c |> Maybe.withDefault Nothing of
         Just f ->
@@ -220,7 +221,7 @@ execute_ltC0 c rom48k z80 =
                     Nothing
 
 
-execute_ltC0_xy : Int -> IXIY -> Z80ROM -> Z80 -> Maybe Z80Delta
+execute_ltC0_xy : Int -> IXIY -> Z80ROM -> Z80Core -> Maybe Z80Delta
 execute_ltC0_xy c ixoriy rom48k z80 =
     case xYDict |> Dict.get c of
         Just xyFunc ->
@@ -264,7 +265,7 @@ execute_ltC0_xy c ixoriy rom48k z80 =
 --                        Nothing -> Nothing
 
 
-lt40_array_lite : Array (Maybe (Z80ROM -> Z80 -> Z80Delta))
+lt40_array_lite : Array (Maybe (Z80ROM -> Z80Core -> Z80Delta))
 lt40_array_lite =
     let
         --z80_funcs = []
@@ -275,7 +276,7 @@ lt40_array_lite =
     delta_funcs |> Array.fromList
 
 
-lt40_delta_dict_lite : Dict Int (Z80ROM -> Z80 -> Z80Delta)
+lt40_delta_dict_lite : Dict Int (Z80ROM -> Z80Core -> Z80Delta)
 lt40_delta_dict_lite =
     Dict.fromList
         [ ( 0xDD, \z80 -> group_xy IXIY_IX z80 )
@@ -343,7 +344,7 @@ lt40_delta_dict_lite =
 --]
 
 
-execute_delta : CpuTimeAndValue -> Z80ROM -> Z80 -> DeltaWithChanges
+execute_delta : CpuTimeAndValue -> Z80ROM -> Z80Core -> DeltaWithChanges
 execute_delta ct rom48k z80 =
     --int v, c = env.m1(PC, IR|R++&0x7F);
     --PC = (char)(PC+1); time += 4;
@@ -496,7 +497,7 @@ execute_delta ct rom48k z80 =
 -- case 0xF3: IFF=0; break;
 
 
-singleByte : CpuTimeCTime -> Int -> Z80 -> Z80ROM -> Maybe DeltaWithChanges
+singleByte : CpuTimeCTime -> Int -> Z80Core -> Z80ROM -> Maybe DeltaWithChanges
 singleByte ctime instr_code tmp_z80 rom48k =
     case singleWith8BitParam |> Dict.get instr_code of
         Just ( f, pcInc, duration ) ->
@@ -518,7 +519,7 @@ singleByte ctime instr_code tmp_z80 rom48k =
             Nothing
 
 
-oldDelta : CpuTimeAndValue -> InterruptRegisters -> Z80 -> Z80ROM -> DeltaWithChanges
+oldDelta : CpuTimeAndValue -> InterruptRegisters -> Z80Core -> Z80ROM -> DeltaWithChanges
 oldDelta c interrupts tmp_z80 rom48k =
     let
         env =
@@ -563,26 +564,114 @@ oldDelta c interrupts tmp_z80 rom48k =
             OldDeltaWithChanges (DeltaWithChangesData delta interrupts new_pc new_time)
 
 
-executeSingleInstruction : Z80ROM -> Z80 -> Z80
-executeSingleInstruction rom48k z80 =
+fetchInstruction : Z80ROM -> Z80Core -> CpuTimeAndValue
+fetchInstruction rom48k z80 =
+    z80.env |> m1 z80.pc (Bitwise.or z80.interrupts.ir (Bitwise.and z80.r 0x7F)) rom48k
+
+
+executeCoreInstruction : Z80ROM -> Z80Core -> Z80Core
+executeCoreInstruction rom48k z80 =
     let
         ct =
-            z80.env |> m1 z80.pc (Bitwise.or z80.interrupts.ir (Bitwise.and z80.r 0x7F)) rom48k
+            fetchInstruction rom48k z80
     in
     z80 |> execute_delta ct rom48k |> apply_delta z80 rom48k
 
 
+executeCoreDumy : Z80ROM -> Z80Core -> Z80Core
+executeCoreDumy rom48k z80 =
+    let
+        execute_f =
+            executeCoreInstruction rom48k
+    in
+    Loop.while (\x -> c_TIME_LIMIT > x.env.time.cpu_time) execute_f z80
+
+
+
+-- 0x08 is EX AF,AF' and 0xD9 is EXX
+
+
+nonCoreCodes =
+    [ 0x08, 0xD9 ]
+
+
+stillLooping : Z80Core -> Bool
+stillLooping z80core =
+    c_TIME_LIMIT > z80core.env.time.cpu_time
+
+
+coreLooping : ( Z80Core, CpuTimeAndValue ) -> Bool
+coreLooping ( z80core, timeAndValue ) =
+    (z80core |> stillLooping) && (nonCoreCodes |> List.member timeAndValue.value |> not)
+
+
+executeCore : Z80ROM -> Z80 -> Z80
+executeCore rom48k z80 =
+    let
+        z80_core =
+            z80.core
+
+        execute_f =
+            \( core, ct ) ->
+                let
+                    core_1 =
+                        core |> execute_delta ct rom48k |> apply_delta core rom48k
+                in
+                ( core_1, fetchInstruction rom48k core_1 )
+
+        ( core_2, ct1 ) =
+            --Loop.while (\( x, n ) -> c_TIME_LIMIT > x.env.time.cpu_time && (nonCoreCodes |> List.member n.value |> not)) execute_f ( z80_core, ct1 )
+            Loop.while coreLooping execute_f ( z80_core, fetchInstruction rom48k z80_core )
+
+        z80_1 =
+            { z80 | core = core_2 }
+
+        ( z80_2, ct2 ) =
+            if ct1.value == 0x08 then
+                let
+                    x =
+                        z80_1 |> ex_af |> inc_pcr
+                in
+                ( x, fetchInstruction rom48k x.core )
+
+            else
+                ( z80_1, ct1 )
+
+        --( z80_3, ct3 ) =
+        --    if ct2.value == 0xD9 then
+        --        let
+        --            x =
+        --                z80_2 |> exx |> inc_pcr
+        --        in
+        --        ( x, fetchInstruction rom48k x.core )
+        --
+        --    else
+        --        ( z80_2, ct2 )
+        z80_3 =
+            if ct2.value == 0xD9 then
+                z80_2 |> exx |> inc_pcr
+
+            else
+                z80_2
+    in
+    z80_3
+
+
 execute : Z80ROM -> Z80 -> Z80
 execute rom48k z80 =
-    if z80.interrupts.halted then
-        z80_halt z80
+    let
+        z80_core =
+            z80.core
+    in
+    if z80_core.interrupts.halted then
+        z80 |> z80_halt
 
     else
         let
             execute_f =
-                executeSingleInstruction rom48k
+                executeCore rom48k
         in
-        Loop.while (\x -> c_TIME_LIMIT > x.env.time.cpu_time) execute_f z80
+        Loop.while (\x -> stillLooping x.core) execute_f z80
 
 
 
@@ -617,7 +706,7 @@ execute rom48k z80 =
 --// -------------- >8 xy
 
 
-group_xy : IXIY -> Z80ROM -> Z80 -> Z80Delta
+group_xy : IXIY -> Z80ROM -> Z80Core -> Z80Delta
 group_xy ixiy rom48k old_z80 =
     let
         c =
