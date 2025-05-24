@@ -16,7 +16,7 @@
                     data: { load: "#{request.protocol}#{request.host_with_port}/#{@game.tapfile}",
                             rom: "#{request.protocol}#{request.host_with_port}/spectrum.rom" } %>
   </div>
-  <%= inline_svg_tag 'keyboard.svg', width: "100%" %>
+  <%= inline_svg_tag 'keyboard.svg', preserveAspectRatio: "xMinYMin" %>
   <!--<canvas id="myCanvas" width="200" height="100"></canvas>-->
   <!--<applet name="qaop" archive="/qaop.jar" code="Qaop" width="320" height="256" alt="Oh dear no applet">-->
   <!--  <param name="load" value="/<%#= @game.tapfile %>"/>-->
