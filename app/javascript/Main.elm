@@ -21,7 +21,6 @@ import Json.Decode as Decode exposing (Decoder)
 import Keyboard exposing (ctrlKeyDownEvent, ctrlKeyUpEvent, keyDownEvent, keyUpEvent)
 import Loader exposing (LoadAction(..), trimActionList)
 import MessageHandler exposing (array_decoder, bytesToTap)
-import Params exposing (StringPair, valid_params)
 import Qaop exposing (Qaop, pause)
 import Spectrum exposing (Spectrum, frames, loadTapfile, new_tape, set_rom)
 import SpectrumColour exposing (spectrumColour)
@@ -90,11 +89,19 @@ type Message
     | LoadTape
 
 
-init : String -> ( Model, Cmd Message )
+type alias Flags =
+    { rom : String
+    , tape : String
+    }
+
+
+init : Flags -> ( Model, Cmd Message )
 init data =
     let
         params =
-            valid_params data
+            [ ( "rom", data.rom )
+            , ( "tape", data.tape )
+            ]
 
         ( newQaop, cmd ) =
             Qaop.new params |> run
@@ -486,7 +493,7 @@ run qaop =
 --        Nothing -> ( { qaop | spectrum = qaop.spectrum |> frames qaop.keys }, Cmd.none )
 
 
-main : Program String Model Message
+main : Program Flags Model Message
 main =
     Browser.element
         { init = init

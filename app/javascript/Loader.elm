@@ -1,29 +1,38 @@
 --
 -- $Id$
 --
+
+
 module Loader exposing (..)
 
-import Params exposing (StringPair)
-type LoadAction = LoadROM String | LoadTAP String
+
+type LoadAction
+    = LoadROM String
+    | LoadTAP String
+
 
 type alias Loader =
-    {
-        actions: List LoadAction
+    { actions : List LoadAction
     }
 
-trimActionList: Maybe(List LoadAction) -> List LoadAction
+
+trimActionList : Maybe (List LoadAction) -> List LoadAction
 trimActionList tail =
     case tail of
         Just a ->
             a
+
         Nothing ->
             []
 
-paramHandler: StringPair -> Maybe(LoadAction)
-paramHandler item =
-    if item.first == "rom" then
-       Just (LoadROM item.second)
-    else if item.first == "tape" then
-       Just (LoadTAP item.second)
+
+paramHandler : ( String, String ) -> Maybe LoadAction
+paramHandler ( first, second ) =
+    if first == "rom" then
+        Just (LoadROM second)
+
+    else if first == "tape" then
+        Just (LoadTAP second)
+
     else
-       Nothing
+        Nothing
