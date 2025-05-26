@@ -12,6 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // const flags = 'rom=' + rom;
   Elm.Main.init({
     node: target,
-    flags: flags
+    flags: {rom: rom, tape: load}
   })
 });

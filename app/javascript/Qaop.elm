@@ -1,30 +1,42 @@
 --
 -- $Id$
 --
+
+
 module Qaop exposing (..)
+
 import Keyboard exposing (ControlKey(..), KeyEvent(..))
 import Loader exposing (LoadAction(..), Loader, paramHandler)
-import Params exposing (StringPair)
 import Spectrum exposing (Spectrum)
 import Utils exposing (compact)
 
+
 type alias Qaop =
-    {
-        spectrum: Spectrum,
-        loader: Loader,
-        state: Int,
-        keys: List KeyEvent
+    { spectrum : Spectrum
+    , loader : Loader
+    , state : Int
+    , keys : List KeyEvent
     }
 
-new: List StringPair -> Qaop
+
+new : List ( String, String ) -> Qaop
 new params =
     let
-        paramlist = List.map paramHandler params
-        compacted_params = compact paramlist
-        loader = Loader compacted_params
-        spectrum = Spectrum.constructor
+        paramlist =
+            List.map paramHandler params
+
+        compacted_params =
+            compact paramlist
+
+        loader =
+            Loader compacted_params
+
+        spectrum =
+            Spectrum.constructor
     in
-        Qaop spectrum loader 0 []
+    Qaop spectrum loader 0 []
+
+
 
 --
 --	/* javascript interface */
@@ -69,13 +81,25 @@ new params =
 --		}
 --		return v;
 --	}
-pause: Bool -> Qaop -> Qaop
+
+
+pause : Bool -> Qaop -> Qaop
 pause v qaop =
-   let
-      pauser = if v then 0x44 else 0x40
-      speccy = qaop.spectrum |> Spectrum.pause pauser
-   in
-      { qaop | spectrum = speccy }
+    let
+        pauser =
+            if v then
+                0x44
+
+            else
+                0x40
+
+        speccy =
+            qaop.spectrum |> Spectrum.pause pauser
+    in
+    { qaop | spectrum = speccy }
+
+
+
 --
 --	public void mask(String name)
 --	{
@@ -468,6 +492,9 @@ pause v qaop =
 --	protected int dl_length, dl_loaded;
 --	protected String dl_text, dl_msg;
 --}
+
+
+
 --
 --class Loader extends Thread {
 --	Qaop qaop;
