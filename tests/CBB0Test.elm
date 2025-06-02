@@ -38,26 +38,20 @@ suite =
             Z80Rom.constructor
     in
     describe "Bit instructions (CB)"
-        [ test "0xFD 0xCB nn 0xBE RES 7, (IY + n) -ve" <|
+        [ test "0xCB B0 RES 6,B" <|
             \_ ->
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xFD
-                            |> setMem (addr + 1) 0xCB
-                            |> setMem (addr + 2) 0xFE
-                            |> setMem (addr + 3) 0xBE
-                            |> setMem 0xA07E 0xFF
+                            |> setMem addr 0xCB
+                            |> setMem (addr + 1) 0xB0
 
                     new_z80 =
                         executeCoreInstruction z80rom
                             { z80
                                 | env = new_env
-                                , main = { z80main | iy = 0xA080, hl = 0x6545, b = 0xA5 }
+                                , main = { z80main | b = 0xFF }
                             }
-
-                    mem_value =
-                        mem 0xA07E new_z80.env.time z80rom new_z80.env.ram
                 in
-                Expect.equal ( addr + 4, 0x7F ) ( new_z80.pc, mem_value.value )
+                Expect.equal ( addr + 2, 0xBF ) ( new_z80.pc, new_z80.main.b )
         ]

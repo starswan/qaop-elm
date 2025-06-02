@@ -1,14 +1,16 @@
 module Z80Delta exposing (..)
 
-import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimeIncrement, addCpuTimeTime)
-import Z80Core exposing (Z80, Z80Core, add_cpu_time, set408bit)
+import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimeIncrement, InstructionDuration, addCpuTimeTime)
+import Utils exposing (toHexString)
+import Z80Core exposing (Z80, Z80Core, add_cpu_time, set408bitHL)
+import Z80Debug exposing (debugTodo)
 import Z80Env exposing (Z80Env, addCpuTimeEnv, setMem, setMem16, z80_push)
 import Z80Flags exposing (FlagRegisters, f_szh0n0p)
 import Z80Types exposing (IXIYHL(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
 
 
 type Z80Delta
-    = Whole Z80Core
+    = WholeCore Z80Core
     | MainRegsWithPcAndCpuTime MainWithIndexRegisters Int CpuTimeCTime
       --| FlagsWithPCMainAndTime FlagRegisters Int MainWithIndexRegisters CpuTimeIncrement
     | FlagsWithMainAndTime FlagRegisters MainWithIndexRegisters Int
@@ -42,6 +44,8 @@ type Z80Delta
     | SetMem8WithCpuTimeIncrementAndPc Int Int CpuTimeCTime Int Int
     | PcTimeSet408Bit Int CpuTimeCTime Int Int
     | Fszh0n0pTimeDeltaSet408Bit Int Int Int
+    | FlagsWithPcEnvAndCpuTime FlagRegisters Int Z80Env Int
+    | UnknownIntValue String Int
 
 
 type alias DeltaWithChangesData =
@@ -59,7 +63,7 @@ applyDeltaWithChanges z80delta z80 =
             z80.env
     in
     case z80delta.delta of
-        Whole just_z80 ->
+        WholeCore just_z80 ->
             just_z80
 
         MainRegsWithPcAndCpuTime mainRegisters pc cpu_time ->
@@ -148,14 +152,23 @@ applyDeltaWithChanges z80delta z80 =
             { z80 | pc = pc, env = { z80_env | time = cpuTimeCTime } |> setMem addr value |> addCpuTimeEnv time, interrupts = z80delta.interrupts }
 
         PcTimeSet408Bit pc cpuTimeCTime caseval result ->
-            { z80 | pc = pc, env = { z80_env | time = cpuTimeCTime } } |> set408bit caseval result HL
+            let
+                ( main, flags, env ) =
+                    set408bitHL caseval result ( z80.main, z80.flags, { z80_env | time = cpuTimeCTime } )
+            in
+            --{ z80 | pc = pc, env = { z80_env | time = cpuTimeCTime } } |> set408bitHL caseval result
+            { z80 | pc = pc, env = env, flags = flags, main = main }
 
         Fszh0n0pTimeDeltaSet408Bit timeDelta caseval result ->
             let
-                z80_1 =
-                    z80 |> set408bit caseval result HL
+                ( main, flags, env ) =
+                    set408bitHL caseval result ( z80.main, z80.flags, z80_env )
+
+                --z80_1 =
+                --    z80 |> set408bitHL caseval result
             in
-            { z80_1 | flags = z80_1.flags |> f_szh0n0p result } |> add_cpu_time timeDelta
+            --{ z80_1 | flags = z80_1.flags |> f_szh0n0p result } |> add_cpu_time timeDelta
+            { z80 | flags = flags |> f_szh0n0p result, env = env, main = main } |> add_cpu_time timeDelta
 
         PushWithMainSpCpuTimeAndPc value mainWithIndexRegisters sp time pc ->
             let
@@ -170,3 +183,9 @@ applyDeltaWithChanges z80delta z80 =
                     z80.env
             in
             { z80 | main = mainWithIndexRegisters, pc = z80delta.pc, env = { env | time = time, sp = sp } |> z80_push value, interrupts = z80delta.interrupts }
+
+        FlagsWithPcEnvAndCpuTime flagRegisters pc z80Env int ->
+            { z80 | flags = flagRegisters, pc = pc, env = z80Env |> addCpuTimeEnv int, interrupts = z80delta.interrupts }
+
+        UnknownIntValue string int ->
+            debugTodo string (int |> toHexString) z80

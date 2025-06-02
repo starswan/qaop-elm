@@ -25,9 +25,7 @@ import SingleWith8BitParameter exposing (doubleWithRegisters, maybeRelativeJump,
 import TripleByte exposing (tripleByteWith16BitParam, tripleByteWith16BitParamDD, tripleByteWith16BitParamFD)
 import TripleWithFlags exposing (triple16WithFlags)
 import TripleWithMain exposing (tripleMainRegs)
-import Utils exposing (toHexString)
 import Z80Core exposing (Z80, Z80Core, add_cpu_time, inc_pc, inc_pcr, z80_halt)
-import Z80Debug exposing (debugTodo)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..))
 import Z80Env exposing (Z80Env, c_TIME_LIMIT, m1, mem, mem16, z80env_constructor)
 import Z80Execute exposing (DeltaWithChanges(..), apply_delta)
@@ -657,7 +655,9 @@ oldDelta c interrupts tmp_z80 rom48k =
             --_ ->
             let
                 delta =
-                    debugTodo "execute" (c.value |> toHexString) z80 |> Whole
+                    UnknownIntValue "execute" c.value
+
+                --debugTodo "execute" (c.value |> toHexString) z80 |> Whole
             in
             OldDeltaWithChanges (DeltaWithChangesData delta interrupts new_pc new_time)
 
@@ -676,20 +676,18 @@ executeCoreInstruction rom48k z80 =
     z80 |> execute_delta ct rom48k |> apply_delta z80 rom48k
 
 
-executeCoreDumy : Z80ROM -> Z80Core -> Z80Core
-executeCoreDumy rom48k z80 =
-    let
-        execute_f =
-            executeCoreInstruction rom48k
-    in
-    Loop.while (\x -> c_TIME_LIMIT > x.env.time.cpu_time) execute_f z80
 
-
-
--- 0x08 is EX AF,AF' and 0xD9 is EXX
+--executeCoreDumy : Z80ROM -> Z80Core -> Z80Core
+--executeCoreDumy rom48k z80 =
+--    let
+--        execute_f =
+--            executeCoreInstruction rom48k
+--    in
+--    Loop.while (\x -> c_TIME_LIMIT > x.env.time.cpu_time) execute_f z80
 
 
 nonCoreCodes =
+    -- 0x08 is EX AF,AF' and 0xD9 is EXX
     [ 0x08, 0xD9 ]
 
 
@@ -831,10 +829,8 @@ group_xy ixiy rom48k old_z80 =
             z_z80
 
         Nothing ->
-            --case c.value of
-            --0xCB -> group_xy_cb ixiy z80 |> Whole
-            --_ -> debug_todo "group_xy" (c.value |> toHexString) z80 |> Whole
-            debugTodo "group_xy" (c.value |> toHexString) z80 |> Whole
+            --debugTodo "group_xy" (c.value |> toHexString) z80 |> Whole
+            UnknownIntValue "group_xy" c.value
 
 
 

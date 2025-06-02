@@ -3,9 +3,8 @@ module GroupCB exposing (..)
 import Bitwise exposing (complement, shiftLeftBy, shiftRightBy)
 import CpuTimeCTime exposing (CpuTimePcAnd16BitValue, CpuTimePcAndValue, addCpuTimeTime)
 import Dict exposing (Dict)
-import Utils exposing (byte, char, shiftRightBy8, toHexString)
-import Z80Core exposing (Z80Core, a_with_z80, add_cpu_time, inc_pc, inc_pc2, set408bit)
-import Z80Debug exposing (debugTodo)
+import Utils exposing (byte, char, shiftRightBy8)
+import Z80Core exposing (Z80Core, a_with_z80, add_cpu_time, inc_pc, inc_pc2, set408bitHL)
 import Z80Delta exposing (Z80Delta(..))
 import Z80Env exposing (addCpuTimeEnv, m1, mem, setMem)
 import Z80Flags exposing (IntWithFlags, bit, c_F53, shifter)
@@ -173,7 +172,7 @@ group_cb rom48k tmp_z80 =
                 PcTimeSet408Bit raw.pc raw.time caseval result
 
             else
-                debugTodo "group_cb" (caseval |> toHexString) z80 |> Whole
+                UnknownIntValue "group_cb" caseval
 
 
 
@@ -277,10 +276,16 @@ group_xy_cb ixiyhl rom48k z80 =
             Bitwise.and c.value 0x07
     in
     if (caseval /= 6) && (cAndC0 /= 0x40) then
-        z80_4 |> set408bit caseval v2.value HL |> Whole
+        let
+            ( main, flags, env ) =
+                set408bitHL caseval v2.value ( z80.main, z80.flags, z80.env )
+
+            --z80_4 |> set408bitHL caseval v2.value |> WholeCore
+        in
+        { z80_4 | main = main, flags = flags, env = env } |> WholeCore
 
     else
-        z80_4 |> Whole
+        z80_4 |> WholeCore
 
 
 

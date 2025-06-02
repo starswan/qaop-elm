@@ -1,4 +1,4 @@
-module CB80Test exposing (..)
+module CBB8Test exposing (..)
 
 import Expect exposing (Expectation)
 import Test exposing (..)
@@ -38,36 +38,26 @@ suite =
             Z80Rom.constructor
     in
     describe "Bit instructions (CB)"
-        [ test "0xCB 80 RES 0,B" <|
+        [ test "0xFD 0xCB nn 0xBE RES 7, (IY + n) -ve" <|
             \_ ->
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xCB
-                            |> setMem (addr + 1) 0x80
+                            |> setMem addr 0xFD
+                            |> setMem (addr + 1) 0xCB
+                            |> setMem (addr + 2) 0xFE
+                            |> setMem (addr + 3) 0xBE
+                            |> setMem 0xA07E 0xFF
 
                     new_z80 =
                         executeCoreInstruction z80rom
                             { z80
                                 | env = new_env
-                                , main = { z80main | b = 0xFF }
+                                , main = { z80main | iy = 0xA080, hl = 0x6545, b = 0xA5 }
                             }
-                in
-                Expect.equal ( addr + 2, 0xFE ) ( new_z80.pc, new_z80.main.b )
-        , test "0xCB 81 RES 0,C" <|
-            \_ ->
-                let
-                    new_env =
-                        z80env
-                            |> setMem addr 0xCB
-                            |> setMem (addr + 1) 0x81
 
-                    new_z80 =
-                        executeCoreInstruction z80rom
-                            { z80
-                                | env = new_env
-                                , main = { z80main | c = 0xFF }
-                            }
+                    mem_value =
+                        mem 0xA07E new_z80.env.time z80rom new_z80.env.ram
                 in
-                Expect.equal ( addr + 2, 0xFE ) ( new_z80.pc, new_z80.main.c )
+                Expect.equal ( addr + 4, 0x7F ) ( new_z80.pc, mem_value.value )
         ]

@@ -2,11 +2,11 @@ module Z80Core exposing (..)
 
 import Bitwise exposing (shiftRightBy)
 import CpuTimeCTime exposing (CpuTimePcAnd16BitValue, CpuTimePcAndValue, addCpuTimeTime)
-import Utils exposing (char, wordPlusOffset)
+import Utils exposing (char, shiftLeftBy8, wordPlusOffset)
 import Z80Env exposing (Z80Env, addCpuTimeEnv, c_TIME_LIMIT, mem, mem16, setMem, z80_push)
 import Z80Flags exposing (FlagRegisters)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIY(..), IXIYHL, InterruptRegisters, MainRegisters, MainWithIndexRegisters, set_h, set_l)
+import Z80Types exposing (IXIY(..), IXIYHL(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters, get_xy, set_h, set_l, set_xy)
 
 
 type alias Z80Core =
@@ -151,60 +151,32 @@ set_iff value z80 =
 --    z80.flags |> get_af
 
 
-set408bit : Int -> Int -> IXIYHL -> Z80Core -> Z80Core
-set408bit c value ixiyhl z80 =
+set408bitHL : Int -> Int -> ( MainWithIndexRegisters, FlagRegisters, Z80Env ) -> ( MainWithIndexRegisters, FlagRegisters, Z80Env )
+set408bitHL c value ( z80_main, z80_flags, z80_env ) =
     case Bitwise.and c 0x07 of
         0 ->
-            let
-                z80_main =
-                    z80.main
-            in
-            { z80 | main = { z80_main | b = value } }
+            ( { z80_main | b = value }, z80_flags, z80_env )
 
         1 ->
-            let
-                z80_main =
-                    z80.main
-            in
-            { z80 | main = { z80_main | c = value } }
+            ( { z80_main | c = value }, z80_flags, z80_env )
 
         2 ->
-            let
-                z80_main =
-                    z80.main
-            in
-            { z80 | main = { z80_main | d = value } }
+            ( { z80_main | d = value }, z80_flags, z80_env )
 
         3 ->
-            let
-                z80_main =
-                    z80.main
-            in
-            { z80 | main = { z80_main | e = value } }
+            ( { z80_main | e = value }, z80_flags, z80_env )
 
         4 ->
-            let
-                main =
-                    z80.main |> set_h value ixiyhl
-            in
-            { z80 | main = main }
+            ( { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 value) }, z80_flags, z80_env )
 
         5 ->
-            let
-                main =
-                    z80.main |> set_l value ixiyhl
-            in
-            { z80 | main = main }
+            ( { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) value }, z80_flags, z80_env )
 
         6 ->
-            { z80 | env = setMem z80.main.hl value z80.env }
+            ( z80_main, z80_flags, setMem z80_main.hl value z80_env )
 
         _ ->
-            let
-                z80_flags =
-                    z80.flags
-            in
-            { z80 | flags = { z80_flags | a = value } }
+            ( z80_main, { z80_flags | a = value }, z80_env )
 
 
 im0 : Int -> Z80 -> Z80

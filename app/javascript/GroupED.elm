@@ -431,7 +431,8 @@ group_ed rom48k z80_0 =
             --      flags_1 = { flags | a = 0 } |> z80_sub flags.a
             --   in
             --      z80 |> set_flag_regs flags_1
-            debugTodo "group_ed" (c.value |> toHexString2) z80 |> Whole
+            --debugTodo "group_ed" (c.value |> toHexString2) z80 |> WholeCore
+            UnknownIntValue "group_ed" c.value
 
 
 
@@ -513,16 +514,16 @@ rld rom48k z80 =
         new_flags =
             { flags | a = new_a } |> f_szh0n0p new_a
 
-        z80_1 =
-            { z80 | flags = new_flags }
-
+        --z80_1 =
+        --    { z80 | flags = new_flags }
         env_0 =
             z80.env
 
         env_1 =
-            { env_0 | time = v_lhs_1.time } |> setMem z80_1.main.hl (Bitwise.and v 0xFF)
+            { env_0 | time = v_lhs_1.time } |> setMem z80.main.hl (Bitwise.and v 0xFF)
     in
-    { z80_1 | env = env_1 } |> add_cpu_time 10 |> Whole
+    --{ z80_1 | env = env_1 } |> add_cpu_time 10 |> Whole
+    FlagsWithPcEnvAndCpuTime new_flags z80.pc env_1 10
 
 
 
@@ -611,8 +612,11 @@ ldir i r rom48k z80 =
         v1 =
             mem z80.main.hl z80.env.time rom48k z80.env.ram
 
-        env_0 =
+        z80_env =
             z80.env
+
+        env_0 =
+            { z80_env | time = v1.time }
 
         new_hl =
             case i of
@@ -623,18 +627,17 @@ ldir i r rom48k z80 =
                     a1 - 1 |> Bitwise.and 0xFFFF
 
         z80_1 =
-            --{ z80 | env = { env_0 | time = v1.time }, main = { main | hl = char (a1 + i) } } |> add_cpu_time 3
-            { z80 | env = { env_0 | time = v1.time }, main = { main | hl = new_hl } } |> add_cpu_time 3
+            { z80 | env = env_0, main = { main | hl = new_hl } } |> add_cpu_time 3
 
         a2 =
-            z80_1.main |> get_de
+            main |> get_de
 
         --env_1 = case a2 |> fromInt of
         --  ROMAddress int -> z80_1.env
         --  RAMAddress ramAddress ->
         --    z80_1.env |> setMem a2 v1.value
         env_1 =
-            z80_1.env |> setMem a2 v1.value
+            env_0 |> setMem a2 v1.value
 
         new_de =
             case i of
@@ -693,7 +696,7 @@ ldir i r rom48k z80 =
         env_2 =
             z80_2.env |> addCpuTimeEnv time
     in
-    { z80_2 | main = z80_2.main |> set_bc_main a, pc = pc, env = env_2, flags = { flags | fr = fr, ff = ff, fa = v, fb = v } } |> Whole
+    { z80_2 | main = z80_2.main |> set_bc_main a, pc = pc, env = env_2, flags = { flags | fr = fr, ff = ff, fa = v, fb = v } } |> WholeCore
 
 
 
