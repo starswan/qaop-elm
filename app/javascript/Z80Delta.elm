@@ -1,13 +1,14 @@
 module Z80Delta exposing (..)
 
 import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimeIncrement, addCpuTimeTime)
+import Z80Core exposing (Z80, Z80Core, add_cpu_time, set408bit)
 import Z80Env exposing (Z80Env, addCpuTimeEnv, setMem, setMem16, z80_push)
 import Z80Flags exposing (FlagRegisters, f_szh0n0p)
-import Z80Types exposing (IXIYHL(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters, Z80, add_cpu_time, set408bit)
+import Z80Types exposing (IXIYHL(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
 
 
 type Z80Delta
-    = Whole Z80
+    = Whole Z80Core
     | MainRegsWithPcAndCpuTime MainWithIndexRegisters Int CpuTimeCTime
       --| FlagsWithPCMainAndTime FlagRegisters Int MainWithIndexRegisters CpuTimeIncrement
     | FlagsWithMainAndTime FlagRegisters MainWithIndexRegisters Int
@@ -51,7 +52,7 @@ type alias DeltaWithChangesData =
     }
 
 
-applyDeltaWithChanges : DeltaWithChangesData -> Z80 -> Z80
+applyDeltaWithChanges : DeltaWithChangesData -> Z80Core -> Z80Core
 applyDeltaWithChanges z80delta z80 =
     let
         z80_env =

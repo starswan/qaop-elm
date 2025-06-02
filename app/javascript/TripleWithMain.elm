@@ -4,8 +4,9 @@ import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import Dict exposing (Dict)
 import PCIncrement exposing (TriplePCIncrement(..))
-import Z80Env exposing (Z80Env, setMem, setMem16)
-import Z80Types exposing (MainWithIndexRegisters, Z80)
+import Z80Core exposing (Z80Core)
+import Z80Env exposing (Z80Env, setMem16)
+import Z80Types exposing (MainWithIndexRegisters)
 
 
 type TripleMainChange
@@ -21,7 +22,7 @@ tripleMainRegs =
         ]
 
 
-applyTripleMainChange : CpuTimeCTime -> TriplePCIncrement -> TripleMainChange -> Z80 -> Z80
+applyTripleMainChange : CpuTimeCTime -> TriplePCIncrement -> TripleMainChange -> Z80Core -> Z80Core
 applyTripleMainChange time pcInc z80changeData z80 =
     let
         env =

@@ -13,19 +13,20 @@ import Group0xA0 exposing (miniDictA0)
 import Group0xB0 exposing (miniDictB0)
 import Group0xC0 exposing (delta_dict_C0)
 import Group0xE0 exposing (delta_dict_E0, miniDictE0)
+import Z80Core exposing (Z80Core)
 import Z80Delta exposing (Z80Delta(..))
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIY(..), IXIYHL, Z80)
+import Z80Types exposing (IXIY(..), IXIYHL)
 
 
-miniDictF0 : Dict Int (IXIY -> Z80ROM -> Z80 -> Z80Delta)
+miniDictF0 : Dict Int (IXIY -> Z80ROM -> Z80Core -> Z80Delta)
 miniDictF0 =
     Dict.fromList
         [ ( 0xF9, ld_sp_hl )
         ]
 
 
-ld_sp_hl : IXIY -> Z80ROM -> Z80 -> Z80Delta
+ld_sp_hl : IXIY -> Z80ROM -> Z80Core -> Z80Delta
 ld_sp_hl ixiyhl rom48k z80 =
     -- case 0xF9: SP=xy; time+=2; break;
     let
@@ -41,7 +42,7 @@ ld_sp_hl ixiyhl rom48k z80 =
     SpAndCpuTimeWithPc v 2 z80.pc
 
 
-lt40_delta_dict : Dict Int (IXIYHL -> Z80ROM -> Z80 -> Z80Delta)
+lt40_delta_dict : Dict Int (IXIYHL -> Z80ROM -> Z80Core -> Z80Delta)
 lt40_delta_dict =
     delta_dict_E0
         |> Dict.union delta_dict_C0
@@ -51,7 +52,7 @@ list0255 =
     List.range 0 255
 
 
-lt40_array : Array (Maybe (IXIYHL -> Z80ROM -> Z80 -> Z80Delta))
+lt40_array : Array (Maybe (IXIYHL -> Z80ROM -> Z80Core -> Z80Delta))
 lt40_array =
     let
         delta_funcs =
@@ -60,7 +61,7 @@ lt40_array =
     delta_funcs |> Array.fromList
 
 
-xYDict : Dict Int (IXIY -> Z80ROM -> Z80 -> Z80Delta)
+xYDict : Dict Int (IXIY -> Z80ROM -> Z80Core -> Z80Delta)
 xYDict =
     miniDict40
         |> Dict.union miniDict50
