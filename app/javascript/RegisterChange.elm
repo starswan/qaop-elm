@@ -39,6 +39,7 @@ type RegisterChange
     | ChangeRegisterDEAndHL Int Int
     | RegisterChangeShifter Shifter Int
     | IndirectBitReset BitTest Int
+    | IndirectBitSet BitTest Int
 
 
 type RegisterChangeApplied
@@ -52,6 +53,7 @@ type RegisterChangeApplied
     | SetIndirectApplied Int Int
     | RegisterChangeShifterApplied Shifter Int
     | IndirectBitResetApplied BitTest Int
+    | IndirectBitSetApplied BitTest Int
 
 
 applyRegisterChange : RegisterChange -> FlagRegisters -> MainWithIndexRegisters -> RegisterChangeApplied
@@ -119,3 +121,6 @@ applyRegisterChange change z80_flags main =
 
         IndirectBitReset bitTest int ->
             IndirectBitResetApplied bitTest int
+
+        IndirectBitSet bitTest int ->
+            IndirectBitSetApplied bitTest int

@@ -72,111 +72,6 @@ group_cb_dict =
 --            { env | time = x.time } |> setMem z80.main.hl x.value
 --    in
 --    EnvWithFlagsAndPc env_1 x.flags x.pc
-
-
-group_cb : Z80ROM -> Z80Core -> Z80Delta
-group_cb rom48k tmp_z80 =
-    --	private void group_cb()
-    --	{
-    --		int v, c = env.m1(PC, IR|R++&0x7F);
-    --		PC = (char)(PC+1); time += 4;
-    --		int o = c>>>3 & 7;
-    --		switch(c & 0xC7) {
-    let
-        new_r =
-            Bitwise.and (tmp_z80.r + 1) 0x7F
-
-        ir_or_r =
-            Bitwise.or tmp_z80.interrupts.ir new_r
-
-        c =
-            tmp_z80.env |> m1 tmp_z80.pc (Bitwise.or tmp_z80.interrupts.ir ir_or_r) rom48k
-
-        env =
-            tmp_z80.env
-
-        old_z80 =
-            { tmp_z80 | env = { env | time = c.time } }
-
-        new_pc =
-            old_z80 |> inc_pc
-
-        z80 =
-            { old_z80 | pc = new_pc } |> add_cpu_time 4
-
-        o =
-            Bitwise.and (c.value |> shiftRightBy 3) 7
-
-        caseval =
-            Bitwise.and c.value 0xC7
-
-        --y = debug_log "group_cb caseval" (caseval |> toHexString2) Nothing
-        -- The original plan with this is not clever enough - there are
-        -- 3 middle bits (0-7) that are captured by the 'o' value.
-        -- Tests required for CB xx for all values of xx
-        cb_func =
-            group_cb_dict |> Dict.get c.value
-    in
-    case cb_func of
-        Just f ->
-            z80 |> f
-
-        Nothing ->
-            --if caseval >= 0x80 && caseval <= 0x87 then
-            --if caseval >= 0x81 && caseval <= 0x87 then
-            --    -- case 0x80: B=B&~(1<<o); break;
-            --    -- case 0x81: C=C&~(1<<o); break;
-            --    -- case 0x82: D=D&~(1<<o); break;
-            --    -- case 0x83: E=E&~(1<<o); break;
-            --    -- case 0x84: HL&=~(0x100<<o); break;
-            --    -- case 0x85: HL&=~(1<<o); break;
-            --    -- case 0x86: v=env.mem(HL)&~(1<<o); time+=4; env.mem(HL,v); time+=3; break;
-            --    -- case 0x87: A=A&~(1<<o); break;
-            --    let
-            --        raw =
-            --            z80 |> load408bitHL caseval rom48k
-            --
-            --        result =
-            --            Bitwise.and raw.value (1 |> shiftLeftBy o |> complement)
-            --
-            --        --env_1 =
-            --        --    z80.env
-            --        --x =
-            --        --    { z80 | pc = raw.pc, env = { env_1 | time = raw.time } } |> set408bit caseval result HL
-            --    in
-            --    --Whole x
-            --    PcTimeSet408Bit raw.pc raw.time caseval result
-            --
-            --else if caseval >= 0xC0 && caseval <= 0xC7 then
-            if caseval >= 0xC0 && caseval <= 0xC7 then
-                -- case 0xC0: B=B|1<<o; break;
-                -- case 0xC1: C=C|1<<o; break;
-                -- case 0xC2: D=D|1<<o; break;
-                -- case 0xC3: E=E|1<<o; break;
-                -- case 0xC4: HL|=0x100<<o; break;
-                -- case 0xC5: HL|=1<<o; break;
-                -- case 0xC6: v=env.mem(HL)|1<<o; time+=4; env.mem(HL,v); time+=3; break;
-                -- case 0xC7: A=A|1<<o; break;
-                let
-                    raw =
-                        z80 |> load408bitHL caseval rom48k
-
-                    result =
-                        Bitwise.or raw.value (1 |> shiftLeftBy o)
-
-                    --env_1 =
-                    --    z80.env
-                    --x =
-                    --    { z80 | pc = raw.pc, env = { env_1 | time = raw.time } } |> set408bit caseval result HL
-                in
-                --Whole x
-                PcTimeSet408Bit raw.pc raw.time caseval result
-
-            else
-                UnknownIntValue "group_cb" caseval
-
-
-
 --
 --	private void group_xy_cb(int xy)
 --	{
@@ -290,37 +185,37 @@ group_xy_cb ixiyhl rom48k z80 =
 
 
 
--- There appear to be many situations where we already know that we don't need all
--- this complexity as we're just doing LD A,B or something similar - so stop using it in those cases
-
-
-load408bitHL : Int -> Z80ROM -> Z80Core -> CpuTimePcAndValue
-load408bitHL c_value rom48k z80 =
-    case Bitwise.and c_value 0x07 of
-        0 ->
-            CpuTimePcAndValue z80.env.time z80.pc z80.main.b
-
-        1 ->
-            CpuTimePcAndValue z80.env.time z80.pc z80.main.c
-
-        2 ->
-            CpuTimePcAndValue z80.env.time z80.pc z80.main.d
-
-        3 ->
-            CpuTimePcAndValue z80.env.time z80.pc z80.main.e
-
-        4 ->
-            CpuTimePcAndValue z80.env.time z80.pc (shiftRightBy8 z80.main.hl)
-
-        5 ->
-            CpuTimePcAndValue z80.env.time z80.pc (Bitwise.and z80.main.hl 0xFF)
-
-        6 ->
-            let
-                new_b =
-                    mem z80.main.hl z80.env.time rom48k z80.env.ram
-            in
-            CpuTimePcAndValue new_b.time z80.pc new_b.value
-
-        _ ->
-            a_with_z80 z80
+---- There appear to be many situations where we already know that we don't need all
+---- this complexity as we're just doing LD A,B or something similar - so stop using it in those cases
+--
+--
+--load408bitHL : Int -> Z80ROM -> Z80Core -> CpuTimePcAndValue
+--load408bitHL c_value rom48k z80 =
+--    case Bitwise.and c_value 0x07 of
+--        0 ->
+--            CpuTimePcAndValue z80.env.time z80.pc z80.main.b
+--
+--        1 ->
+--            CpuTimePcAndValue z80.env.time z80.pc z80.main.c
+--
+--        2 ->
+--            CpuTimePcAndValue z80.env.time z80.pc z80.main.d
+--
+--        3 ->
+--            CpuTimePcAndValue z80.env.time z80.pc z80.main.e
+--
+--        4 ->
+--            CpuTimePcAndValue z80.env.time z80.pc (shiftRightBy8 z80.main.hl)
+--
+--        5 ->
+--            CpuTimePcAndValue z80.env.time z80.pc (Bitwise.and z80.main.hl 0xFF)
+--
+--        6 ->
+--            let
+--                new_b =
+--                    mem z80.main.hl z80.env.time rom48k z80.env.ram
+--            in
+--            CpuTimePcAndValue new_b.time z80.pc new_b.value
+--
+--        _ ->
+--            a_with_z80 z80

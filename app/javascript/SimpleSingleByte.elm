@@ -152,6 +152,78 @@ singleByteMainRegs =
         , ( 0xCBBC, ( resetHbit Bit_7, IncrementByTwo, EightTStates ) )
         , ( 0xCBBD, ( resetLbit Bit_7, IncrementByTwo, EightTStates ) )
         , ( 0xCBBE, ( resetHLbit Bit_7, IncrementByTwo, EightTStates ) )
+
+        -- set bit0
+        , ( 0xCBC0, ( setBbit Bit_0, IncrementByTwo, EightTStates ) )
+        , ( 0xCBC1, ( setCbit Bit_0, IncrementByTwo, EightTStates ) )
+        , ( 0xCBC2, ( setDbit Bit_0, IncrementByTwo, EightTStates ) )
+        , ( 0xCBC3, ( setEbit Bit_0, IncrementByTwo, EightTStates ) )
+        , ( 0xCBC4, ( setHbit Bit_0, IncrementByTwo, EightTStates ) )
+        , ( 0xCBC5, ( setLbit Bit_0, IncrementByTwo, EightTStates ) )
+        , ( 0xCBC6, ( setHLbit Bit_0, IncrementByTwo, EightTStates ) )
+
+        -- set bit1
+        , ( 0xCBC8, ( setBbit Bit_1, IncrementByTwo, EightTStates ) )
+        , ( 0xCBC9, ( setCbit Bit_1, IncrementByTwo, EightTStates ) )
+        , ( 0xCBCA, ( setDbit Bit_1, IncrementByTwo, EightTStates ) )
+        , ( 0xCBCB, ( setEbit Bit_1, IncrementByTwo, EightTStates ) )
+        , ( 0xCBCC, ( setHbit Bit_1, IncrementByTwo, EightTStates ) )
+        , ( 0xCBCD, ( setLbit Bit_1, IncrementByTwo, EightTStates ) )
+        , ( 0xCBCE, ( setHLbit Bit_1, IncrementByTwo, EightTStates ) )
+
+        -- set bit2
+        , ( 0xCBD0, ( setBbit Bit_2, IncrementByTwo, EightTStates ) )
+        , ( 0xCBD1, ( setCbit Bit_2, IncrementByTwo, EightTStates ) )
+        , ( 0xCBD2, ( setDbit Bit_2, IncrementByTwo, EightTStates ) )
+        , ( 0xCBD3, ( setEbit Bit_2, IncrementByTwo, EightTStates ) )
+        , ( 0xCBD4, ( setHbit Bit_2, IncrementByTwo, EightTStates ) )
+        , ( 0xCBD5, ( setLbit Bit_2, IncrementByTwo, EightTStates ) )
+        , ( 0xCBD6, ( setHLbit Bit_2, IncrementByTwo, EightTStates ) )
+
+        -- set bDt3
+        , ( 0xCBD8, ( setBbit Bit_3, IncrementByTwo, EightTStates ) )
+        , ( 0xCBD9, ( setCbit Bit_3, IncrementByTwo, EightTStates ) )
+        , ( 0xCBDA, ( setDbit Bit_3, IncrementByTwo, EightTStates ) )
+        , ( 0xCBDB, ( setEbit Bit_3, IncrementByTwo, EightTStates ) )
+        , ( 0xCBDC, ( setHbit Bit_3, IncrementByTwo, EightTStates ) )
+        , ( 0xCBDD, ( setLbit Bit_3, IncrementByTwo, EightTStates ) )
+        , ( 0xCBDE, ( setHLbit Bit_3, IncrementByTwo, EightTStates ) )
+
+        -- set bit4
+        , ( 0xCBE0, ( setBbit Bit_4, IncrementByTwo, EightTStates ) )
+        , ( 0xCBE1, ( setCbit Bit_4, IncrementByTwo, EightTStates ) )
+        , ( 0xCBE2, ( setDbit Bit_4, IncrementByTwo, EightTStates ) )
+        , ( 0xCBE3, ( setEbit Bit_4, IncrementByTwo, EightTStates ) )
+        , ( 0xCBE4, ( setHbit Bit_4, IncrementByTwo, EightTStates ) )
+        , ( 0xCBE5, ( setLbit Bit_4, IncrementByTwo, EightTStates ) )
+        , ( 0xCBE6, ( setHLbit Bit_4, IncrementByTwo, EightTStates ) )
+
+        -- set bEt5
+        , ( 0xCBE8, ( setBbit Bit_5, IncrementByTwo, EightTStates ) )
+        , ( 0xCBE9, ( setCbit Bit_5, IncrementByTwo, EightTStates ) )
+        , ( 0xCBEA, ( setDbit Bit_5, IncrementByTwo, EightTStates ) )
+        , ( 0xCBEB, ( setEbit Bit_5, IncrementByTwo, EightTStates ) )
+        , ( 0xCBEC, ( setHbit Bit_5, IncrementByTwo, EightTStates ) )
+        , ( 0xCBED, ( setLbit Bit_5, IncrementByTwo, EightTStates ) )
+        , ( 0xCBEE, ( setHLbit Bit_5, IncrementByTwo, EightTStates ) )
+
+        -- set bit6
+        , ( 0xCBF0, ( setBbit Bit_6, IncrementByTwo, EightTStates ) )
+        , ( 0xCBF1, ( setCbit Bit_6, IncrementByTwo, EightTStates ) )
+        , ( 0xCBF2, ( setDbit Bit_6, IncrementByTwo, EightTStates ) )
+        , ( 0xCBF3, ( setEbit Bit_6, IncrementByTwo, EightTStates ) )
+        , ( 0xCBF4, ( setHbit Bit_6, IncrementByTwo, EightTStates ) )
+        , ( 0xCBF5, ( setLbit Bit_6, IncrementByTwo, EightTStates ) )
+        , ( 0xCBF6, ( setHLbit Bit_6, IncrementByTwo, EightTStates ) )
+
+        -- set bFt7
+        , ( 0xCBF8, ( setBbit Bit_7, IncrementByTwo, EightTStates ) )
+        , ( 0xCBF9, ( setCbit Bit_7, IncrementByTwo, EightTStates ) )
+        , ( 0xCBFA, ( setDbit Bit_7, IncrementByTwo, EightTStates ) )
+        , ( 0xCBFB, ( setEbit Bit_7, IncrementByTwo, EightTStates ) )
+        , ( 0xCBFC, ( setHbit Bit_7, IncrementByTwo, EightTStates ) )
+        , ( 0xCBFD, ( setLbit Bit_7, IncrementByTwo, EightTStates ) )
+        , ( 0xCBFE, ( setHLbit Bit_7, IncrementByTwo, EightTStates ) )
         ]
 
 
@@ -723,3 +795,46 @@ resetHLbit : BitTest -> MainWithIndexRegisters -> RegisterChange
 resetHLbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
     IndirectBitReset bitMask z80_main.hl
+
+
+setBbit : BitTest -> MainWithIndexRegisters -> RegisterChange
+setBbit bitMask z80_main =
+    --Bitwise.and raw.value (1 |> shiftLeftBy o |> complement)
+    -- case 0x80: B=B&~(1<<o); break;
+    ChangeRegisterB (bitMask |> bitMaskFromBit |> Bitwise.or z80_main.b)
+
+
+setCbit : BitTest -> MainWithIndexRegisters -> RegisterChange
+setCbit bitMask z80_main =
+    -- case 0x81: C=C&~(1<<o); break;
+    ChangeRegisterC (bitMask |> bitMaskFromBit |> Bitwise.or z80_main.c)
+
+
+setDbit : BitTest -> MainWithIndexRegisters -> RegisterChange
+setDbit bitMask z80_main =
+    -- case 0x81: C=C&~(1<<o); break;
+    ChangeRegisterD (bitMask |> bitMaskFromBit |> Bitwise.or z80_main.d)
+
+
+setEbit : BitTest -> MainWithIndexRegisters -> RegisterChange
+setEbit bitMask z80_main =
+    -- case 0x81: C=C&~(1<<o); break;
+    ChangeRegisterE (bitMask |> bitMaskFromBit |> Bitwise.or z80_main.e)
+
+
+setHbit : BitTest -> MainWithIndexRegisters -> RegisterChange
+setHbit bitMask z80_main =
+    -- case 0x81: C=C&~(1<<o); break;
+    ChangeRegisterH (bitMask |> bitMaskFromBit |> Bitwise.or (z80_main.hl |> shiftRightBy8))
+
+
+setLbit : BitTest -> MainWithIndexRegisters -> RegisterChange
+setLbit bitMask z80_main =
+    -- case 0x81: C=C&~(1<<o); break;
+    ChangeRegisterL (bitMask |> bitMaskFromBit |> Bitwise.or (z80_main.hl |> Bitwise.and 0xFF))
+
+
+setHLbit : BitTest -> MainWithIndexRegisters -> RegisterChange
+setHLbit bitMask z80_main =
+    -- case 0x81: C=C&~(1<<o); break;
+    IndirectBitSet bitMask z80_main.hl

@@ -4,7 +4,7 @@ import Bitwise exposing (complement)
 import CpuTimeCTime exposing (CpuTimeIncrement(..), InstructionDuration(..))
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
-import Utils exposing (BitTest(..), inverseBitMaskFromBit, shiftRightBy8)
+import Utils exposing (BitTest(..), bitMaskFromBit, inverseBitMaskFromBit, shiftRightBy8)
 import Z80Change exposing (FlagChange(..))
 import Z80Flags exposing (FlagRegisters, IntWithFlags, adc, c_FP, c_FS, cpl, daa, dec, get_af, get_flags, inc, rot, sbc, scf_ccf, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit, z80_add, z80_cp, z80_or, z80_sub, z80_xor)
 
@@ -77,6 +77,14 @@ singleByteFlagsCB =
         , ( 0xCBAF, ( \z80_flags -> z80_flags |> resetBit Bit_5 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
         , ( 0xCBB7, ( \z80_flags -> z80_flags |> resetBit Bit_6 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
         , ( 0xCBBF, ( \z80_flags -> z80_flags |> resetBit Bit_7 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0xCBC7, ( \z80_flags -> z80_flags |> setBit Bit_0 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0xCBCF, ( \z80_flags -> z80_flags |> setBit Bit_1 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0xCBD7, ( \z80_flags -> z80_flags |> setBit Bit_2 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0xCBDF, ( \z80_flags -> z80_flags |> setBit Bit_3 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0xCBE7, ( \z80_flags -> z80_flags |> setBit Bit_4 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0xCBEF, ( \z80_flags -> z80_flags |> setBit Bit_5 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0xCBF7, ( \z80_flags -> z80_flags |> setBit Bit_6 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0xCBFF, ( \z80_flags -> z80_flags |> setBit Bit_7 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
         ]
 
 
@@ -406,5 +414,14 @@ resetBit testType v flagRegs =
     let
         new_a =
             testType |> inverseBitMaskFromBit |> Bitwise.and flagRegs.a
+    in
+    { flagRegs | a = new_a }
+
+
+setBit : BitTest -> Int -> FlagRegisters -> FlagRegisters
+setBit testType v flagRegs =
+    let
+        new_a =
+            testType |> bitMaskFromBit |> Bitwise.or flagRegs.a
     in
     { flagRegs | a = new_a }
