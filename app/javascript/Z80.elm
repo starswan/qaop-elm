@@ -352,7 +352,15 @@ type alias CodeTypeOffset =
     , mainDict : Dict Int ( MainWithIndexRegisters -> RegisterChange, InstructionDuration )
     , dictKey : Int
     , pcIncrement : PCIncrement
+    , executionType : ExecutionType
     }
+
+
+type ExecutionType
+    = Ordinary
+    | IndexIX CpuTimeAndValue
+    | IndexIY CpuTimeAndValue
+    | BitManipCB CpuTimeAndValue
 
 
 execute_delta : CpuTimeAndValue -> Z80ROM -> Z80Core -> DeltaWithChanges
@@ -361,7 +369,7 @@ execute_delta ct rom48k z80 =
     --PC = (char)(PC+1); time += 4;
     --switch(c) {
     let
-        cTo =
+        executionType =
             case ct.value of
                 0xCB ->
                     let
@@ -372,7 +380,8 @@ execute_delta ct rom48k z80 =
                             Bitwise.or 0xCB00 param.value
                     in
                     --( Bitwise.or 0xCB00 param.value, param.time, 1 )
-                    { instrCode = instrCode, instrTime = param.time, paramOffset = 1, mainDict = singleByteMainRegsCB, dictKey = param.value, pcIncrement = IncrementByTwo }
+                    --{ instrCode = instrCode, instrTime = param.time, paramOffset = 1, mainDict = singleByteMainRegsCB, dictKey = param.value, pcIncrement = IncrementByTwo }
+                    BitManipCB param
 
                 0xDD ->
                     let
@@ -383,7 +392,8 @@ execute_delta ct rom48k z80 =
                             Bitwise.or 0xDD00 param.value
                     in
                     --( Bitwise.or 0xDD00 param.value, param.time, 2 )
-                    { instrCode = instrCode, instrTime = param.time, paramOffset = 2, mainDict = singleByteMainRegsDD, dictKey = param.value, pcIncrement = IncrementByTwo }
+                    --{ instrCode = instrCode, instrTime = param.time, paramOffset = 2, mainDict = singleByteMainRegsDD, dictKey = param.value, pcIncrement = IncrementByTwo }
+                    IndexIX param
 
                 0xFD ->
                     let
@@ -394,13 +404,42 @@ execute_delta ct rom48k z80 =
                             Bitwise.or 0xFD00 param.value
                     in
                     --( Bitwise.or 0xFD00 param.value, param.time, 2 )
-                    { instrCode = instrCode, instrTime = param.time, paramOffset = 2, mainDict = singleByteMainRegsFD, dictKey = param.value, pcIncrement = IncrementByTwo }
+                    --{ instrCode = instrCode, instrTime = param.time, paramOffset = 2, mainDict = singleByteMainRegsFD, dictKey = param.value, pcIncrement = IncrementByTwo }
+                    IndexIY param
 
                 _ ->
                     --( ct.value, ct.time, 1 )
-                    { instrCode = ct.value, instrTime = ct.time, paramOffset = 1, mainDict = singleByteMainRegs, dictKey = ct.value, pcIncrement = IncrementByOne }
+                    --{ instrCode = ct.value, instrTime = ct.time, paramOffset = 1, mainDict = singleByteMainRegs, dictKey = ct.value, pcIncrement = IncrementByOne }
+                    Ordinary
     in
-    runDelta cTo ct rom48k z80
+    case executionType of
+        Ordinary ->
+            let
+                cTo =
+                    { executionType = executionType, instrCode = ct.value, instrTime = ct.time, paramOffset = 1, mainDict = singleByteMainRegs, dictKey = ct.value, pcIncrement = IncrementByOne }
+            in
+            runDelta cTo ct rom48k z80
+
+        IndexIX param ->
+            let
+                cTo =
+                    { executionType = executionType, instrCode = Bitwise.or 0xDD00 param.value, instrTime = param.time, paramOffset = 2, mainDict = singleByteMainRegsDD, dictKey = param.value, pcIncrement = IncrementByTwo }
+            in
+            runDelta cTo ct rom48k z80
+
+        IndexIY param ->
+            let
+                cTo =
+                    { executionType = executionType, instrCode = Bitwise.or 0xFD00 param.value, instrTime = param.time, paramOffset = 2, mainDict = singleByteMainRegsFD, dictKey = param.value, pcIncrement = IncrementByTwo }
+            in
+            runDelta cTo ct rom48k z80
+
+        BitManipCB param ->
+            let
+                cTo =
+                    { executionType = executionType, instrCode = Bitwise.or 0xCB00 param.value, instrTime = param.time, paramOffset = 1, mainDict = singleByteMainRegsCB, dictKey = param.value, pcIncrement = IncrementByTwo }
+            in
+            runDelta cTo ct rom48k z80
 
 
 runDelta : CodeTypeOffset -> CpuTimeAndValue -> Z80ROM -> Z80Core -> DeltaWithChanges
@@ -410,7 +449,11 @@ runDelta cTo ct rom48k z80 =
             RegisterChangeDelta cTo.pcIncrement duration (mainRegFunc z80.main)
 
         Nothing ->
-            case singleByteFlags |> Dict.get cTo.instrCode of
+            let
+                flags =
+                    singleByteFlags |> Dict.get cTo.instrCode
+            in
+            case flags of
                 Just ( flagFunc, t, duration ) ->
                     FlagDelta t duration (flagFunc z80.flags)
 
