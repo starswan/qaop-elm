@@ -15,14 +15,14 @@ import Group0xF0 exposing (list0255, lt40_array, xYDict)
 import Loop
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..))
 import RegisterChange exposing (RegisterChange)
-import SimpleFlagOps exposing (singleByteFlags)
+import SimpleFlagOps exposing (singleByteFlags, singleByteFlagsCB)
 import SimpleSingleByte exposing (singleByteMainRegs, singleByteMainRegsCB, singleByteMainRegsDD, singleByteMainRegsFD)
 import SingleByteWithEnv exposing (singleByteZ80Env)
 import SingleEnvWithMain exposing (singleEnvMainRegs)
 import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters)
 import SingleNoParams exposing (ex_af, exx, singleWithNoParam)
 import SingleWith8BitParameter exposing (doubleWithRegisters, maybeRelativeJump, singleWith8BitParam)
-import TripleByte exposing (tripleByteWith16BitParam)
+import TripleByte exposing (tripleByteWith16BitParam, tripleByteWith16BitParamDD, tripleByteWith16BitParamFD)
 import TripleWithFlags exposing (triple16WithFlags)
 import TripleWithMain exposing (tripleMainRegs)
 import Utils exposing (toHexString)
@@ -451,14 +451,40 @@ runDelta cTo ct rom48k z80 =
         Nothing ->
             let
                 flags =
-                    singleByteFlags |> Dict.get cTo.instrCode
+                    case cTo.executionType of
+                        Ordinary ->
+                            singleByteFlags |> Dict.get ct.value
+
+                        IndexIX cpuTimeAndValue ->
+                            Nothing
+
+                        IndexIY cpuTimeAndValue ->
+                            Nothing
+
+                        BitManipCB cpuTimeAndValue ->
+                            singleByteFlagsCB |> Dict.get cTo.dictKey
             in
             case flags of
-                Just ( flagFunc, t, duration ) ->
-                    FlagDelta t duration (flagFunc z80.flags)
+                Just ( flagFunc, pcIncrement, duration ) ->
+                    FlagDelta pcIncrement duration (flagFunc z80.flags)
 
                 Nothing ->
-                    case tripleByteWith16BitParam |> Dict.get cTo.instrCode of
+                    let
+                        triple16 =
+                            case cTo.executionType of
+                                Ordinary ->
+                                    tripleByteWith16BitParam |> Dict.get ct.value
+
+                                IndexIX cpuTimeAndValue ->
+                                    tripleByteWith16BitParamDD |> Dict.get cTo.dictKey
+
+                                IndexIY cpuTimeAndValue ->
+                                    tripleByteWith16BitParamFD |> Dict.get cTo.dictKey
+
+                                BitManipCB cpuTimeAndValue ->
+                                    Nothing
+                    in
+                    case triple16 of
                         Just ( f, pcInc, duration ) ->
                             let
                                 env =

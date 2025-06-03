@@ -25,14 +25,26 @@ tripleByteWith16BitParam =
         [ ( 0x01, ( ld_bc_nn, IncrementByThree, TenTStates ) )
         , ( 0x11, ( ld_de_nn, IncrementByThree, TenTStates ) )
         , ( 0x21, ( ld_hl_nn, IncrementByThree, TenTStates ) )
-        , ( 0xDD21, ( ld_ix_nn, IncrementByFour, TwentyTStates ) )
-        , ( 0xFD21, ( ld_iy_nn, IncrementByFour, TwentyTStates ) )
         , ( 0x2A, ( ld_hl_indirect_nn, IncrementByThree, SixteenTStates ) )
-        , ( 0xDD2A, ( ld_ix_indirect_nn, IncrementByFour, TwentyTStates ) )
-        , ( 0xFD2A, ( ld_iy_indirect_nn, IncrementByFour, TwentyTStates ) )
         , ( 0x31, ( ld_sp_nn, IncrementByThree, TenTStates ) )
         , ( 0xC3, ( jp_nn, IncrementByThree, TenTStates ) )
         , ( 0xCD, ( call_0xCD, IncrementByThree, SeventeenTStates ) )
+        ]
+
+
+tripleByteWith16BitParamDD : Dict Int ( Int -> TripleByteChange, TriplePCIncrement, InstructionDuration )
+tripleByteWith16BitParamDD =
+    Dict.fromList
+        [ ( 0x21, ( ld_ix_nn, IncrementByFour, TwentyTStates ) )
+        , ( 0x2A, ( ld_ix_indirect_nn, IncrementByFour, TwentyTStates ) )
+        ]
+
+
+tripleByteWith16BitParamFD : Dict Int ( Int -> TripleByteChange, TriplePCIncrement, InstructionDuration )
+tripleByteWith16BitParamFD =
+    Dict.fromList
+        [ ( 0x21, ( ld_iy_nn, IncrementByFour, TwentyTStates ) )
+        , ( 0x2A, ( ld_iy_indirect_nn, IncrementByFour, TwentyTStates ) )
         ]
 
 

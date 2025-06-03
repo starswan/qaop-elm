@@ -47,22 +47,28 @@ singleByteFlags =
         , ( 0xF0, ( ret_p, IncrementByOne, FiveTStates ) )
         , ( 0xF5, ( push_af, IncrementByOne, ElevenTStates ) )
         , ( 0xF8, ( ret_m, IncrementByOne, FiveTStates ) )
-        , ( 0xCB07, ( rlc_a, IncrementByTwo, EightTStates ) )
-        , ( 0xCB0F, ( rrc_a, IncrementByTwo, EightTStates ) )
-        , ( 0xCB17, ( rl_a, IncrementByTwo, EightTStates ) )
-        , ( 0xCB1F, ( rr_a, IncrementByTwo, EightTStates ) )
-        , ( 0xCB27, ( sla_a, IncrementByTwo, EightTStates ) )
-        , ( 0xCB2F, ( sra_a, IncrementByTwo, EightTStates ) )
-        , ( 0xCB37, ( sll_a, IncrementByTwo, EightTStates ) )
-        , ( 0xCB3F, ( srl_a, IncrementByTwo, EightTStates ) )
-        , ( 0xCB47, ( \z80_flags -> z80_flags |> testBit Bit_0 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
-        , ( 0xCB4F, ( \z80_flags -> z80_flags |> testBit Bit_1 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
-        , ( 0xCB57, ( \z80_flags -> z80_flags |> testBit Bit_2 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
-        , ( 0xCB5F, ( \z80_flags -> z80_flags |> testBit Bit_3 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
-        , ( 0xCB67, ( \z80_flags -> z80_flags |> testBit Bit_4 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
-        , ( 0xCB6F, ( \z80_flags -> z80_flags |> testBit Bit_5 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
-        , ( 0xCB77, ( \z80_flags -> z80_flags |> testBit Bit_6 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
-        , ( 0xCB7F, ( \z80_flags -> z80_flags |> testBit Bit_7 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        ]
+
+
+singleByteFlagsCB : Dict Int ( FlagRegisters -> FlagChange, PCIncrement, InstructionDuration )
+singleByteFlagsCB =
+    Dict.fromList
+        [ ( 0x07, ( rlc_a, IncrementByTwo, EightTStates ) )
+        , ( 0x0F, ( rrc_a, IncrementByTwo, EightTStates ) )
+        , ( 0x17, ( rl_a, IncrementByTwo, EightTStates ) )
+        , ( 0x1F, ( rr_a, IncrementByTwo, EightTStates ) )
+        , ( 0x27, ( sla_a, IncrementByTwo, EightTStates ) )
+        , ( 0x2F, ( sra_a, IncrementByTwo, EightTStates ) )
+        , ( 0x37, ( sll_a, IncrementByTwo, EightTStates ) )
+        , ( 0x3F, ( srl_a, IncrementByTwo, EightTStates ) )
+        , ( 0x47, ( \z80_flags -> z80_flags |> testBit Bit_0 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0x4F, ( \z80_flags -> z80_flags |> testBit Bit_1 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0x57, ( \z80_flags -> z80_flags |> testBit Bit_2 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0x5F, ( \z80_flags -> z80_flags |> testBit Bit_3 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0x67, ( \z80_flags -> z80_flags |> testBit Bit_4 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0x6F, ( \z80_flags -> z80_flags |> testBit Bit_5 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0x77, ( \z80_flags -> z80_flags |> testBit Bit_6 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0x7F, ( \z80_flags -> z80_flags |> testBit Bit_7 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
         ]
 
 
