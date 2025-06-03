@@ -367,45 +367,31 @@ execute_delta ct rom48k z80 =
     --PC = (char)(PC+1); time += 4;
     --switch(c) {
     let
-        executionType =
+        ( executionType, maybeReg, mainPcIncrement ) =
             case ct.value of
                 0xCB ->
                     let
                         param =
                             mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k z80.env.ram
                     in
-                    BitManipCB param
+                    ( BitManipCB param, singleByteMainRegsCB |> Dict.get param.value, IncrementByTwo )
 
                 0xDD ->
                     let
                         param =
                             mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k z80.env.ram
                     in
-                    IndexIX param
+                    ( IndexIX param, singleByteMainRegsDD |> Dict.get param.value, IncrementByTwo )
 
                 0xFD ->
                     let
                         param =
                             mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k z80.env.ram
                     in
-                    IndexIY param
+                    ( IndexIY param, singleByteMainRegsFD |> Dict.get param.value, IncrementByTwo )
 
                 _ ->
-                    Ordinary
-
-        ( maybeReg, mainPcIncrement ) =
-            case executionType of
-                Ordinary ->
-                    ( singleByteMainRegs |> Dict.get ct.value, IncrementByOne )
-
-                IndexIX param ->
-                    ( singleByteMainRegsDD |> Dict.get param.value, IncrementByTwo )
-
-                IndexIY param ->
-                    ( singleByteMainRegsFD |> Dict.get param.value, IncrementByTwo )
-
-                BitManipCB param ->
-                    ( singleByteMainRegsCB |> Dict.get param.value, IncrementByTwo )
+                    ( Ordinary, singleByteMainRegs |> Dict.get ct.value, IncrementByOne )
     in
     case maybeReg of
         Just ( mainRegFunc, duration ) ->
