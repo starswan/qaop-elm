@@ -8,8 +8,8 @@ import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIY(..), IXIYHL(..))
 
 
-mini_dict_C0 : Dict Int (IXIY -> Z80ROM -> Z80Core -> Z80Delta)
-mini_dict_C0 =
+miniDictC0 : Dict Int (IXIY -> Z80ROM -> Z80Core -> Z80Delta)
+miniDictC0 =
     Dict.fromList
         [ ( 0xCB, execute_0xCB )
         ]

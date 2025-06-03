@@ -2,76 +2,16 @@ module GroupCB exposing (..)
 
 import Bitwise exposing (complement, shiftLeftBy, shiftRightBy)
 import CpuTimeCTime exposing (CpuTimePcAnd16BitValue, CpuTimePcAndValue, addCpuTimeTime)
-import Dict exposing (Dict)
-import Utils exposing (byte, char, shiftRightBy8)
-import Z80Core exposing (Z80Core, a_with_z80, add_cpu_time, inc_pc, inc_pc2, set408bitHL)
+import Utils exposing (byte, char)
+import Z80Core exposing (Z80Core, inc_pc2, set408bitHL)
 import Z80Delta exposing (Z80Delta(..))
-import Z80Env exposing (addCpuTimeEnv, m1, mem, setMem)
+import Z80Env exposing (addCpuTimeEnv, mem, setMem)
 import Z80Flags exposing (IntWithFlags, bit, c_F53, shifter)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIY, IXIYHL(..), IntWithFlagsTimeAndPC, get_ixiy_xy)
 
 
-group_cb_dict : Dict Int (Z80Core -> Z80Delta)
-group_cb_dict =
-    Dict.fromList
-        [--( 0x00, execute_CB00 )
-         --, ( 0x01, execute_CB01 )
-         --, ( 0x02, execute_CB02 )
-         --, ( 0x03, execute_CB03 )
-         --, ( 0x04, execute_CB04 )
-         --, ( 0x05, execute_CB05 )
-         --, ( 0x06, execute_CB06 )
-         --, ( 0x07, execute_CB07 )
-        ]
 
-
-
--- case 0x00: B=shifter(o,B); break;
--- case 0x01: C=shifter(o,C); break;
--- case 0x02: D=shifter(o,D); break;
--- case 0x03: E=shifter(o,E); break;
--- case 0x04: HL=HL&0xFF|shifter(o,HL>>>8)<<8; break;
--- case 0x05: HL=HL&0xFF00|shifter(o,HL&0xFF); break;
--- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
--- case 0x07: A=shifter(o,A); break;
---       let
---         raw = z80 |> load408bit caseval HL
---         --z = debug_log "group_cb raw" (raw.value |> toHexString2) Nothing
---         value = shifter o raw.value z80.flags
---         --w = debug_log "group_cb value" (value.value |> toHexString2) Nothing
---         env_1 = z80.env
---         x = { z80 | pc = raw.pc, env = { env_1 | time = raw.time } } |> set_flag_regs value.flags |> set408bit caseval value.value HL
---       in
---         Whole x
---execute_CB0007 : CpuTimePcAndValue -> Z80 -> IntWithFlagsTimeAndPC
---execute_CB0007 raw z80 =
---    let
---        --o = Bitwise.and (c_value |> shiftRightBy 3) 7
---        --caseval = Bitwise.and c_value 0xC7
---        --z = debug_log "group_cb raw" (raw.value |> toHexString2) Nothing
---        value =
---            shifter0 raw.value z80.flags
---
---        --w = debug_log "group_cb value" (value.value |> toHexString2) Nothing
---        --env_1 = z80.env
---        --x = { z80 | pc = raw.pc, env = { env_1 | time = raw.time } } |> set_flag_regs value.flags |> set408bit caseval value.value HL
---    in
---    --Whole x
---    IntWithFlagsTimeAndPC value.value value.flags raw.time raw.pc
---execute_CB06 : Z80ROM -> Z80 -> Z80Delta
---execute_CB06 rom48k z80 =
---    let
---        x =
---            z80 |> execute_CB0007 (z80 |> hl_deref_with_z80 HL rom48k)
---
---        env =
---            z80.env
---
---        env_1 =
---            { env | time = x.time } |> setMem z80.main.hl x.value
---    in
---    EnvWithFlagsAndPc env_1 x.flags x.pc
 --
 --	private void group_xy_cb(int xy)
 --	{
