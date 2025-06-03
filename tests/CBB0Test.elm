@@ -54,4 +54,20 @@ suite =
                             }
                 in
                 Expect.equal ( addr + 2, 0xBF ) ( new_z80.pc, new_z80.main.b )
+        , test "0xCB B1 RES 6,C" <|
+            \_ ->
+                let
+                    new_env =
+                        z80env
+                            |> setMem addr 0xCB
+                            |> setMem (addr + 1) 0xB1
+
+                    new_z80 =
+                        executeCoreInstruction z80rom
+                            { z80
+                                | env = new_env
+                                , main = { z80main | c = 0xFF }
+                            }
+                in
+                Expect.equal ( addr + 2, 0xBF ) ( new_z80.pc, new_z80.main.c )
         ]

@@ -11,7 +11,7 @@ import SingleWith8BitParameter exposing (DoubleWithRegisterChange(..), JumpChang
 import TripleByte exposing (TripleByteChange(..))
 import TripleWithFlags exposing (TripleWithFlagsChange(..))
 import TripleWithMain exposing (TripleMainChange, applyTripleMainChange)
-import Utils exposing (shiftLeftBy8)
+import Utils exposing (inverseBitMaskFromBit, shiftLeftBy8)
 import Z80Change exposing (FlagChange(..), Z80Change, applyZ80Change)
 import Z80Core exposing (Z80Core)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..), applyDeltaWithChanges)
@@ -451,6 +451,22 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
 
         RegisterChangeShifterApplied shifter addr ->
             z80 |> applyShifter new_pc shifter addr env_1.time rom48k
+
+        IndirectBitResetApplied bitMask addr ->
+            let
+                value =
+                    mem addr env_1.time rom48k z80.env.ram
+
+                env_2 =
+                    { env_1 | time = value.time }
+
+                new_value =
+                    bitMask |> inverseBitMaskFromBit |> Bitwise.and value.value
+
+                env_3 =
+                    env_2 |> setMem addr new_value
+            in
+            { z80 | pc = new_pc, env = env_3, r = z80.r + 1 }
 
 
 applyShifter : Int -> Shifter -> Int -> CpuTimeCTime -> Z80ROM -> Z80Core -> Z80Core

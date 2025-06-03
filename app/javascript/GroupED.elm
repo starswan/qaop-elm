@@ -598,7 +598,7 @@ type DirectionForLDIR
 
 
 ldir : DirectionForLDIR -> Bool -> Z80ROM -> Z80Core -> Z80Delta
-ldir i r rom48k z80 =
+ldir incOrDec repeat rom48k z80 =
     --	private void ldir(int i, boolean r)
     let
         --v = env.mem(a = HL); HL = (char)(a+i); time += 3;
@@ -619,7 +619,7 @@ ldir i r rom48k z80 =
             { z80_env | time = v1.time }
 
         new_hl =
-            case i of
+            case incOrDec of
                 Forwards ->
                     a1 + 1 |> Bitwise.and 0xFFFF
 
@@ -640,7 +640,7 @@ ldir i r rom48k z80 =
             env_0 |> setMem a2 v1.value
 
         new_de =
-            case i of
+            case incOrDec of
                 Forwards ->
                     a2 + 1 |> char
 
@@ -681,7 +681,7 @@ ldir i r rom48k z80 =
 
         ( v, pc, time ) =
             if a /= 0 then
-                if r then
+                if repeat then
                     ( 0x80, Bitwise.and (z80_2.pc - 2) 0xFFFF, 5 )
 
                 else

@@ -1,7 +1,7 @@
 module RegisterChange exposing (..)
 
 import Bitwise
-import Utils exposing (shiftLeftBy8)
+import Utils exposing (BitTest, shiftLeftBy8)
 import Z80Flags exposing (FlagRegisters)
 import Z80Types exposing (MainWithIndexRegisters, set_de_main)
 
@@ -38,6 +38,7 @@ type RegisterChange
     | SetIndirect Int Int
     | ChangeRegisterDEAndHL Int Int
     | RegisterChangeShifter Shifter Int
+    | IndirectBitReset BitTest Int
 
 
 type RegisterChangeApplied
@@ -50,6 +51,7 @@ type RegisterChangeApplied
     | JumpApplied Int
     | SetIndirectApplied Int Int
     | RegisterChangeShifterApplied Shifter Int
+    | IndirectBitResetApplied BitTest Int
 
 
 applyRegisterChange : RegisterChange -> FlagRegisters -> MainWithIndexRegisters -> RegisterChangeApplied
@@ -114,3 +116,6 @@ applyRegisterChange change z80_flags main =
 
         RegisterChangeShifter shifter int ->
             RegisterChangeShifterApplied shifter int
+
+        IndirectBitReset bitTest int ->
+            IndirectBitResetApplied bitTest int

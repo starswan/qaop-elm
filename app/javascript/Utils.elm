@@ -193,6 +193,34 @@ bitMaskFromBit testType =
             0x80
 
 
+inverseBitMaskFromBit : BitTest -> Int
+inverseBitMaskFromBit testType =
+    case testType of
+        Bit_0 ->
+            0xFE
+
+        Bit_1 ->
+            0xFD
+
+        Bit_2 ->
+            0xFB
+
+        Bit_3 ->
+            0xF7
+
+        Bit_4 ->
+            0xEF
+
+        Bit_5 ->
+            0xDF
+
+        Bit_6 ->
+            0xBF
+
+        Bit_7 ->
+            0x7F
+
+
 wordPlusOffset : Int -> Int -> Int
 wordPlusOffset z80byte z80word =
     let

@@ -5,108 +5,153 @@ import CpuTimeCTime exposing (CpuTimeIncrement(..), InstructionDuration(..))
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
 import RegisterChange exposing (RegisterChange(..), Shifter(..))
-import Utils exposing (BitTest(..), bitMaskFromBit, shiftRightBy8)
+import Utils exposing (BitTest(..), bitMaskFromBit, inverseBitMaskFromBit, shiftLeftBy8, shiftRightBy8)
 import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, get_bc, get_de)
 
 
 singleByteMainRegs : Dict Int ( MainWithIndexRegisters -> RegisterChange, InstructionDuration )
 singleByteMainRegs =
     Dict.fromList
-        [ ( 0x03, ( inc_bc, SixTStates ) )
-        , ( 0x0B, ( dec_bc, SixTStates ) )
-        , ( 0x13, ( inc_de, SixTStates ) )
-        , ( 0x1B, ( dec_de, SixTStates ) )
-        , ( 0x23, ( inc_hl, SixTStates ) )
-        , ( 0x2B, ( dec_hl, SixTStates ) )
-        , ( 0x34, ( inc_indirect_hl, ElevenTStates ) )
-        , ( 0x35, ( dec_indirect_hl, ElevenTStates ) )
-        , ( 0x41, ( ld_b_c, FourTStates ) )
-        , ( 0x42, ( ld_b_d, FourTStates ) )
-        , ( 0x43, ( ld_b_e, FourTStates ) )
-        , ( 0x44, ( ld_b_h, FourTStates ) )
-        , ( 0x45, ( ld_b_l, FourTStates ) )
-        , ( 0x48, ( ld_c_b, FourTStates ) )
-        , ( 0x4A, ( ld_c_d, FourTStates ) )
-        , ( 0x4B, ( ld_c_e, FourTStates ) )
-        , ( 0x4C, ( ld_c_h, FourTStates ) )
-        , ( 0x4D, ( ld_c_l, FourTStates ) )
-        , ( 0x50, ( ld_d_b, FourTStates ) )
-        , ( 0x51, ( ld_d_c, FourTStates ) )
-        , ( 0x53, ( ld_d_e, FourTStates ) )
-        , ( 0x54, ( ld_d_h, FourTStates ) )
-        , ( 0x55, ( ld_d_l, FourTStates ) )
-        , ( 0x58, ( ld_e_b, FourTStates ) )
-        , ( 0x59, ( ld_e_c, FourTStates ) )
-        , ( 0x5A, ( ld_e_d, FourTStates ) )
-        , ( 0x5C, ( ld_e_h, FourTStates ) )
-        , ( 0x5D, ( ld_e_l, FourTStates ) )
-        , ( 0x60, ( ld_h_b, FourTStates ) )
-        , ( 0x61, ( ld_h_c, FourTStates ) )
-        , ( 0x62, ( ld_h_d, FourTStates ) )
-        , ( 0x63, ( ld_h_e, FourTStates ) )
-        , ( 0x65, ( ld_h_l, FourTStates ) )
-        , ( 0x68, ( ld_l_b, FourTStates ) )
-        , ( 0x69, ( ld_l_c, FourTStates ) )
-        , ( 0x6A, ( ld_l_d, FourTStates ) )
-        , ( 0x6B, ( ld_l_e, FourTStates ) )
-        , ( 0x6C, ( ld_l_h, FourTStates ) )
-        , ( 0x70, ( ld_indirect_hl_b, SevenTStates ) )
-        , ( 0x71, ( ld_indirect_hl_c, SevenTStates ) )
-        , ( 0x72, ( ld_indirect_hl_d, SevenTStates ) )
-        , ( 0x73, ( ld_indirect_hl_e, SevenTStates ) )
-        , ( 0x74, ( ld_indirect_hl_h, SevenTStates ) )
-        , ( 0x75, ( ld_indirect_hl_l, SevenTStates ) )
-        , ( 0x78, ( ld_a_b, FourTStates ) )
-        , ( 0x79, ( ld_a_c, FourTStates ) )
-        , ( 0x7A, ( ld_a_d, FourTStates ) )
-        , ( 0x7B, ( ld_a_e, FourTStates ) )
-        , ( 0x7C, ( ld_a_h, FourTStates ) )
-        , ( 0x7D, ( ld_a_l, FourTStates ) )
-        , ( 0xC5, ( push_bc, ElevenTStates ) )
-        , ( 0xD5, ( push_de, ElevenTStates ) )
-        , ( 0xE5, ( push_hl, ElevenTStates ) )
-        , ( 0xE9, ( jp_hl, FourTStates ) )
-        , ( 0xEB, ( ex_de_hl, FourTStates ) )
-        , ( 0xF9, ( ld_sp_hl, SixTStates ) )
-        ]
+        [ ( 0x03, ( inc_bc, IncrementByOne, SixTStates ) )
+        , ( 0x0B, ( dec_bc, IncrementByOne, SixTStates ) )
+        , ( 0x13, ( inc_de, IncrementByOne, SixTStates ) )
+        , ( 0x1B, ( dec_de, IncrementByOne, SixTStates ) )
+        , ( 0x23, ( inc_hl, IncrementByOne, SixTStates ) )
+        , ( 0xDD23, ( inc_ix, IncrementByTwo, TenTStates ) )
+        , ( 0xFD23, ( inc_iy, IncrementByTwo, TenTStates ) )
+        , ( 0x2B, ( dec_hl, IncrementByOne, SixTStates ) )
+        , ( 0xDD2B, ( dec_ix, IncrementByTwo, TenTStates ) )
+        , ( 0xFD2B, ( dec_iy, IncrementByTwo, TenTStates ) )
+        , ( 0x34, ( inc_indirect_hl, IncrementByOne, ElevenTStates ) )
+        , ( 0x35, ( dec_indirect_hl, IncrementByOne, ElevenTStates ) )
+        , ( 0x41, ( ld_b_c, IncrementByOne, FourTStates ) )
+        , ( 0x42, ( ld_b_d, IncrementByOne, FourTStates ) )
+        , ( 0x43, ( ld_b_e, IncrementByOne, FourTStates ) )
+        , ( 0x44, ( ld_b_h, IncrementByOne, FourTStates ) )
+        , ( 0x45, ( ld_b_l, IncrementByOne, FourTStates ) )
+        , ( 0x48, ( ld_c_b, IncrementByOne, FourTStates ) )
+        , ( 0x4A, ( ld_c_d, IncrementByOne, FourTStates ) )
+        , ( 0x4B, ( ld_c_e, IncrementByOne, FourTStates ) )
+        , ( 0x4C, ( ld_c_h, IncrementByOne, FourTStates ) )
+        , ( 0x4D, ( ld_c_l, IncrementByOne, FourTStates ) )
+        , ( 0x50, ( ld_d_b, IncrementByOne, FourTStates ) )
+        , ( 0x51, ( ld_d_c, IncrementByOne, FourTStates ) )
+        , ( 0x53, ( ld_d_e, IncrementByOne, FourTStates ) )
+        , ( 0x54, ( ld_d_h, IncrementByOne, FourTStates ) )
+        , ( 0x55, ( ld_d_l, IncrementByOne, FourTStates ) )
+        , ( 0x58, ( ld_e_b, IncrementByOne, FourTStates ) )
+        , ( 0x59, ( ld_e_c, IncrementByOne, FourTStates ) )
+        , ( 0x5A, ( ld_e_d, IncrementByOne, FourTStates ) )
+        , ( 0x5C, ( ld_e_h, IncrementByOne, FourTStates ) )
+        , ( 0x5D, ( ld_e_l, IncrementByOne, FourTStates ) )
+        , ( 0x60, ( ld_h_b, IncrementByOne, FourTStates ) )
+        , ( 0x61, ( ld_h_c, IncrementByOne, FourTStates ) )
+        , ( 0x62, ( ld_h_d, IncrementByOne, FourTStates ) )
+        , ( 0x63, ( ld_h_e, IncrementByOne, FourTStates ) )
+        , ( 0x65, ( ld_h_l, IncrementByOne, FourTStates ) )
+        , ( 0x68, ( ld_l_b, IncrementByOne, FourTStates ) )
+        , ( 0x69, ( ld_l_c, IncrementByOne, FourTStates ) )
+        , ( 0x6A, ( ld_l_d, IncrementByOne, FourTStates ) )
+        , ( 0x6B, ( ld_l_e, IncrementByOne, FourTStates ) )
+        , ( 0x6C, ( ld_l_h, IncrementByOne, FourTStates ) )
+        , ( 0x70, ( ld_indirect_hl_b, IncrementByOne, SevenTStates ) )
+        , ( 0x71, ( ld_indirect_hl_c, IncrementByOne, SevenTStates ) )
+        , ( 0x72, ( ld_indirect_hl_d, IncrementByOne, SevenTStates ) )
+        , ( 0x73, ( ld_indirect_hl_e, IncrementByOne, SevenTStates ) )
+        , ( 0x74, ( ld_indirect_hl_h, IncrementByOne, SevenTStates ) )
+        , ( 0x75, ( ld_indirect_hl_l, IncrementByOne, SevenTStates ) )
+        , ( 0x78, ( ld_a_b, IncrementByOne, FourTStates ) )
+        , ( 0x79, ( ld_a_c, IncrementByOne, FourTStates ) )
+        , ( 0x7A, ( ld_a_d, IncrementByOne, FourTStates ) )
+        , ( 0x7B, ( ld_a_e, IncrementByOne, FourTStates ) )
+        , ( 0x7C, ( ld_a_h, IncrementByOne, FourTStates ) )
+        , ( 0x7D, ( ld_a_l, IncrementByOne, FourTStates ) )
+        , ( 0xC5, ( push_bc, IncrementByOne, ElevenTStates ) )
+        , ( 0xD5, ( push_de, IncrementByOne, ElevenTStates ) )
+        , ( 0xE5, ( push_hl, IncrementByOne, ElevenTStates ) )
+        , ( 0xE9, ( jp_hl, IncrementByOne, FourTStates ) )
+        , ( 0xEB, ( ex_de_hl, IncrementByOne, FourTStates ) )
+        , ( 0xF9, ( ld_sp_hl, IncrementByOne, SixTStates ) )
+        , ( 0xCB06, ( rlc_indirect_hl, IncrementByTwo, FifteenTStates ) )
+        , ( 0xCB0E, ( rrc_indirect_hl, IncrementByTwo, FifteenTStates ) )
+        , ( 0xCB16, ( rl_indirect_hl, IncrementByTwo, FifteenTStates ) )
+        , ( 0xCB1E, ( rr_indirect_hl, IncrementByTwo, FifteenTStates ) )
+        , ( 0xCB26, ( sla_indirect_hl, IncrementByTwo, FifteenTStates ) )
+        , ( 0xCB2E, ( sra_indirect_hl, IncrementByTwo, FifteenTStates ) )
+        , ( 0xCB36, ( sll_indirect_hl, IncrementByTwo, FifteenTStates ) )
+        , ( 0xCB3E, ( srl_indirect_hl, IncrementByTwo, FifteenTStates ) )
 
+        -- reset bit0
+        , ( 0xCB80, ( resetBbit Bit_0, IncrementByTwo, EightTStates ) )
+        , ( 0xCB81, ( resetCbit Bit_0, IncrementByTwo, EightTStates ) )
+        , ( 0xCB82, ( resetDbit Bit_0, IncrementByTwo, EightTStates ) )
+        , ( 0xCB83, ( resetEbit Bit_0, IncrementByTwo, EightTStates ) )
+        , ( 0xCB84, ( resetHbit Bit_0, IncrementByTwo, EightTStates ) )
+        , ( 0xCB85, ( resetLbit Bit_0, IncrementByTwo, EightTStates ) )
+        , ( 0xCB86, ( resetHLbit Bit_0, IncrementByTwo, EightTStates ) )
 
-singleByteMainRegsCB : Dict Int ( MainWithIndexRegisters -> RegisterChange, InstructionDuration )
-singleByteMainRegsCB =
-    Dict.fromList
-        [ ( 0x06, ( rlc_indirect_hl, FifteenTStates ) )
-        , ( 0x0E, ( rrc_indirect_hl, FifteenTStates ) )
-        , ( 0x16, ( rl_indirect_hl, FifteenTStates ) )
-        , ( 0x1E, ( rr_indirect_hl, FifteenTStates ) )
-        , ( 0x26, ( sla_indirect_hl, FifteenTStates ) )
-        , ( 0x2E, ( sra_indirect_hl, FifteenTStates ) )
-        , ( 0x36, ( sll_indirect_hl, FifteenTStates ) )
-        , ( 0x3E, ( srl_indirect_hl, FifteenTStates ) )
-        , ( 0x80, ( resetBbit Bit_0, EightTStates ) )
-        , ( 0x81, ( resetCbit Bit_0, EightTStates ) )
-        , ( 0x88, ( resetBbit Bit_1, EightTStates ) )
-        , ( 0x90, ( resetBbit Bit_2, EightTStates ) )
-        , ( 0x98, ( resetBbit Bit_3, EightTStates ) )
-        , ( 0xA0, ( resetBbit Bit_4, EightTStates ) )
-        , ( 0xA8, ( resetBbit Bit_5, EightTStates ) )
-        , ( 0xB0, ( resetBbit Bit_6, EightTStates ) )
-        , ( 0xB8, ( resetBbit Bit_7, EightTStates ) )
-        ]
+        -- reset bit1
+        , ( 0xCB88, ( resetBbit Bit_1, IncrementByTwo, EightTStates ) )
+        , ( 0xCB89, ( resetCbit Bit_1, IncrementByTwo, EightTStates ) )
+        , ( 0xCB8A, ( resetDbit Bit_1, IncrementByTwo, EightTStates ) )
+        , ( 0xCB8B, ( resetEbit Bit_1, IncrementByTwo, EightTStates ) )
+        , ( 0xCB8C, ( resetHbit Bit_1, IncrementByTwo, EightTStates ) )
+        , ( 0xCB8D, ( resetLbit Bit_1, IncrementByTwo, EightTStates ) )
+        , ( 0xCB8E, ( resetHLbit Bit_1, IncrementByTwo, EightTStates ) )
 
+        -- reset bit2
+        , ( 0xCB90, ( resetBbit Bit_2, IncrementByTwo, EightTStates ) )
+        , ( 0xCB91, ( resetCbit Bit_2, IncrementByTwo, EightTStates ) )
+        , ( 0xCB92, ( resetDbit Bit_2, IncrementByTwo, EightTStates ) )
+        , ( 0xCB93, ( resetEbit Bit_2, IncrementByTwo, EightTStates ) )
+        , ( 0xCB94, ( resetHbit Bit_2, IncrementByTwo, EightTStates ) )
+        , ( 0xCB95, ( resetLbit Bit_2, IncrementByTwo, EightTStates ) )
+        , ( 0xCB96, ( resetHLbit Bit_2, IncrementByTwo, EightTStates ) )
 
-singleByteMainRegsFD : Dict Int ( MainWithIndexRegisters -> RegisterChange, InstructionDuration )
-singleByteMainRegsFD =
-    Dict.fromList
-        [ ( 0x23, ( inc_iy, TenTStates ) )
-        , ( 0x2B, ( dec_iy, TenTStates ) )
-        ]
+        -- reset bit3
+        , ( 0xCB98, ( resetBbit Bit_3, IncrementByTwo, EightTStates ) )
+        , ( 0xCB99, ( resetCbit Bit_3, IncrementByTwo, EightTStates ) )
+        , ( 0xCB9A, ( resetDbit Bit_3, IncrementByTwo, EightTStates ) )
+        , ( 0xCB9B, ( resetEbit Bit_3, IncrementByTwo, EightTStates ) )
+        , ( 0xCB9C, ( resetHbit Bit_3, IncrementByTwo, EightTStates ) )
+        , ( 0xCB9D, ( resetLbit Bit_3, IncrementByTwo, EightTStates ) )
+        , ( 0xCB9E, ( resetHLbit Bit_3, IncrementByTwo, EightTStates ) )
 
+        -- reset bit4
+        , ( 0xCBA0, ( resetBbit Bit_4, IncrementByTwo, EightTStates ) )
+        , ( 0xCBA1, ( resetCbit Bit_4, IncrementByTwo, EightTStates ) )
+        , ( 0xCBA2, ( resetDbit Bit_4, IncrementByTwo, EightTStates ) )
+        , ( 0xCBA3, ( resetEbit Bit_4, IncrementByTwo, EightTStates ) )
+        , ( 0xCBA4, ( resetHbit Bit_4, IncrementByTwo, EightTStates ) )
+        , ( 0xCBA5, ( resetLbit Bit_4, IncrementByTwo, EightTStates ) )
+        , ( 0xCBA6, ( resetHLbit Bit_4, IncrementByTwo, EightTStates ) )
 
-singleByteMainRegsDD : Dict Int ( MainWithIndexRegisters -> RegisterChange, InstructionDuration )
-singleByteMainRegsDD =
-    Dict.fromList
-        [ ( 0x23, ( inc_ix, TenTStates ) )
-        , ( 0x2B, ( dec_ix, TenTStates ) )
+        -- reset bit5
+        , ( 0xCBA8, ( resetBbit Bit_5, IncrementByTwo, EightTStates ) )
+        , ( 0xCBA9, ( resetCbit Bit_5, IncrementByTwo, EightTStates ) )
+        , ( 0xCBAA, ( resetDbit Bit_5, IncrementByTwo, EightTStates ) )
+        , ( 0xCBAB, ( resetEbit Bit_5, IncrementByTwo, EightTStates ) )
+        , ( 0xCBAC, ( resetHbit Bit_5, IncrementByTwo, EightTStates ) )
+        , ( 0xCBAD, ( resetLbit Bit_5, IncrementByTwo, EightTStates ) )
+        , ( 0xCBAE, ( resetHLbit Bit_5, IncrementByTwo, EightTStates ) )
+
+        -- reset bit6
+        , ( 0xCBB0, ( resetBbit Bit_6, IncrementByTwo, EightTStates ) )
+        , ( 0xCBB1, ( resetCbit Bit_6, IncrementByTwo, EightTStates ) )
+        , ( 0xCBB2, ( resetDbit Bit_6, IncrementByTwo, EightTStates ) )
+        , ( 0xCBB3, ( resetEbit Bit_6, IncrementByTwo, EightTStates ) )
+        , ( 0xCBB4, ( resetHbit Bit_6, IncrementByTwo, EightTStates ) )
+        , ( 0xCBB5, ( resetLbit Bit_6, IncrementByTwo, EightTStates ) )
+        , ( 0xCBB6, ( resetHLbit Bit_6, IncrementByTwo, EightTStates ) )
+
+        -- reset bit7
+        , ( 0xCBB8, ( resetBbit Bit_7, IncrementByTwo, EightTStates ) )
+        , ( 0xCBB9, ( resetCbit Bit_7, IncrementByTwo, EightTStates ) )
+        , ( 0xCBBA, ( resetDbit Bit_7, IncrementByTwo, EightTStates ) )
+        , ( 0xCBBB, ( resetEbit Bit_7, IncrementByTwo, EightTStates ) )
+        , ( 0xCBBC, ( resetHbit Bit_7, IncrementByTwo, EightTStates ) )
+        , ( 0xCBBD, ( resetLbit Bit_7, IncrementByTwo, EightTStates ) )
+        , ( 0xCBBE, ( resetHLbit Bit_7, IncrementByTwo, EightTStates ) )
         ]
 
 
@@ -641,10 +686,40 @@ resetBbit : BitTest -> MainWithIndexRegisters -> RegisterChange
 resetBbit bitMask z80_main =
     --Bitwise.and raw.value (1 |> shiftLeftBy o |> complement)
     -- case 0x80: B=B&~(1<<o); break;
-    ChangeRegisterB (bitMask |> bitMaskFromBit |> complement |> Bitwise.and z80_main.b)
+    ChangeRegisterB (bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.b)
 
 
 resetCbit : BitTest -> MainWithIndexRegisters -> RegisterChange
 resetCbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
-    ChangeRegisterC (bitMask |> bitMaskFromBit |> complement |> Bitwise.and z80_main.c)
+    ChangeRegisterC (bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.c)
+
+
+resetDbit : BitTest -> MainWithIndexRegisters -> RegisterChange
+resetDbit bitMask z80_main =
+    -- case 0x81: C=C&~(1<<o); break;
+    ChangeRegisterD (bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.d)
+
+
+resetEbit : BitTest -> MainWithIndexRegisters -> RegisterChange
+resetEbit bitMask z80_main =
+    -- case 0x81: C=C&~(1<<o); break;
+    ChangeRegisterE (bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.e)
+
+
+resetHbit : BitTest -> MainWithIndexRegisters -> RegisterChange
+resetHbit bitMask z80_main =
+    -- case 0x81: C=C&~(1<<o); break;
+    ChangeRegisterH (bitMask |> inverseBitMaskFromBit |> Bitwise.and (z80_main.hl |> shiftRightBy8))
+
+
+resetLbit : BitTest -> MainWithIndexRegisters -> RegisterChange
+resetLbit bitMask z80_main =
+    -- case 0x81: C=C&~(1<<o); break;
+    ChangeRegisterL (bitMask |> inverseBitMaskFromBit |> Bitwise.and (z80_main.hl |> Bitwise.and 0xFF))
+
+
+resetHLbit : BitTest -> MainWithIndexRegisters -> RegisterChange
+resetHLbit bitMask z80_main =
+    -- case 0x81: C=C&~(1<<o); break;
+    IndirectBitReset bitMask z80_main.hl

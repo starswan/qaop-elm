@@ -123,31 +123,32 @@ group_cb rom48k tmp_z80 =
 
         Nothing ->
             --if caseval >= 0x80 && caseval <= 0x87 then
-            if caseval >= 0x81 && caseval <= 0x87 then
-                -- case 0x80: B=B&~(1<<o); break;
-                -- case 0x81: C=C&~(1<<o); break;
-                -- case 0x82: D=D&~(1<<o); break;
-                -- case 0x83: E=E&~(1<<o); break;
-                -- case 0x84: HL&=~(0x100<<o); break;
-                -- case 0x85: HL&=~(1<<o); break;
-                -- case 0x86: v=env.mem(HL)&~(1<<o); time+=4; env.mem(HL,v); time+=3; break;
-                -- case 0x87: A=A&~(1<<o); break;
-                let
-                    raw =
-                        z80 |> load408bitHL caseval rom48k
-
-                    result =
-                        Bitwise.and raw.value (1 |> shiftLeftBy o |> complement)
-
-                    --env_1 =
-                    --    z80.env
-                    --x =
-                    --    { z80 | pc = raw.pc, env = { env_1 | time = raw.time } } |> set408bit caseval result HL
-                in
-                --Whole x
-                PcTimeSet408Bit raw.pc raw.time caseval result
-
-            else if caseval >= 0xC0 && caseval <= 0xC7 then
+            --if caseval >= 0x81 && caseval <= 0x87 then
+            --    -- case 0x80: B=B&~(1<<o); break;
+            --    -- case 0x81: C=C&~(1<<o); break;
+            --    -- case 0x82: D=D&~(1<<o); break;
+            --    -- case 0x83: E=E&~(1<<o); break;
+            --    -- case 0x84: HL&=~(0x100<<o); break;
+            --    -- case 0x85: HL&=~(1<<o); break;
+            --    -- case 0x86: v=env.mem(HL)&~(1<<o); time+=4; env.mem(HL,v); time+=3; break;
+            --    -- case 0x87: A=A&~(1<<o); break;
+            --    let
+            --        raw =
+            --            z80 |> load408bitHL caseval rom48k
+            --
+            --        result =
+            --            Bitwise.and raw.value (1 |> shiftLeftBy o |> complement)
+            --
+            --        --env_1 =
+            --        --    z80.env
+            --        --x =
+            --        --    { z80 | pc = raw.pc, env = { env_1 | time = raw.time } } |> set408bit caseval result HL
+            --    in
+            --    --Whole x
+            --    PcTimeSet408Bit raw.pc raw.time caseval result
+            --
+            --else if caseval >= 0xC0 && caseval <= 0xC7 then
+            if caseval >= 0xC0 && caseval <= 0xC7 then
                 -- case 0xC0: B=B|1<<o; break;
                 -- case 0xC1: C=C|1<<o; break;
                 -- case 0xC2: D=D|1<<o; break;
