@@ -7,13 +7,14 @@ module Z80 exposing (..)
 
 import Array exposing (Array)
 import Bitwise exposing (and, or)
-import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAndValue, addDuration)
+import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAndValue, InstructionDuration, addDuration)
 import Dict exposing (Dict)
 import Group0x30 exposing (delta_dict_lite_30)
 import Group0xE0 exposing (delta_dict_lite_E0)
 import Group0xF0 exposing (list0255, lt40_array, xYDict)
 import Loop
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..))
+import RegisterChange exposing (RegisterChange)
 import SimpleFlagOps exposing (singleByteFlags)
 import SimpleSingleByte exposing (singleByteMainRegs, singleByteMainRegsCB, singleByteMainRegsDD, singleByteMainRegsFD)
 import SingleByteWithEnv exposing (singleByteZ80Env)
@@ -344,6 +345,16 @@ lt40_delta_dict_lite =
 --]
 
 
+type alias CodeTypeOffset =
+    { instrCode : Int
+    , instrTime : CpuTimeCTime
+    , paramOffset : Int
+    , mainDict : Dict Int ( MainWithIndexRegisters -> RegisterChange, InstructionDuration )
+    , dictKey : Int
+    , pcIncrement : PCIncrement
+    }
+
+
 execute_delta : CpuTimeAndValue -> Z80ROM -> Z80Core -> DeltaWithChanges
 execute_delta ct rom48k z80 =
     --int v, c = env.m1(PC, IR|R++&0x7F);
@@ -361,7 +372,7 @@ execute_delta ct rom48k z80 =
                             Bitwise.or 0xCB00 param.value
                     in
                     --( Bitwise.or 0xCB00 param.value, param.time, 1 )
-                    { instrCode = instrCode, instrTime = param.time, paramOffset = 1, mainFunc = singleByteMainRegsCB |> Dict.get param.value, pcIncrement = IncrementByTwo }
+                    { instrCode = instrCode, instrTime = param.time, paramOffset = 1, mainDict = singleByteMainRegsCB, dictKey = param.value, pcIncrement = IncrementByTwo }
 
                 0xDD ->
                     let
@@ -372,7 +383,7 @@ execute_delta ct rom48k z80 =
                             Bitwise.or 0xDD00 param.value
                     in
                     --( Bitwise.or 0xDD00 param.value, param.time, 2 )
-                    { instrCode = instrCode, instrTime = param.time, paramOffset = 2, mainFunc = singleByteMainRegsDD |> Dict.get param.value, pcIncrement = IncrementByTwo }
+                    { instrCode = instrCode, instrTime = param.time, paramOffset = 2, mainDict = singleByteMainRegsDD, dictKey = param.value, pcIncrement = IncrementByTwo }
 
                 0xFD ->
                     let
@@ -383,13 +394,18 @@ execute_delta ct rom48k z80 =
                             Bitwise.or 0xFD00 param.value
                     in
                     --( Bitwise.or 0xFD00 param.value, param.time, 2 )
-                    { instrCode = instrCode, instrTime = param.time, paramOffset = 2, mainFunc = singleByteMainRegsFD |> Dict.get param.value, pcIncrement = IncrementByTwo }
+                    { instrCode = instrCode, instrTime = param.time, paramOffset = 2, mainDict = singleByteMainRegsFD, dictKey = param.value, pcIncrement = IncrementByTwo }
 
                 _ ->
                     --( ct.value, ct.time, 1 )
-                    { instrCode = ct.value, instrTime = ct.time, paramOffset = 1, mainFunc = singleByteMainRegs |> Dict.get ct.value, pcIncrement = IncrementByOne }
+                    { instrCode = ct.value, instrTime = ct.time, paramOffset = 1, mainDict = singleByteMainRegs, dictKey = ct.value, pcIncrement = IncrementByOne }
     in
-    case cTo.mainFunc of
+    runDelta cTo ct rom48k z80
+
+
+runDelta : CodeTypeOffset -> CpuTimeAndValue -> Z80ROM -> Z80Core -> DeltaWithChanges
+runDelta cTo ct rom48k z80 =
+    case cTo.mainDict |> Dict.get cTo.dictKey of
         Just ( mainRegFunc, duration ) ->
             RegisterChangeDelta cTo.pcIncrement duration (mainRegFunc z80.main)
 
