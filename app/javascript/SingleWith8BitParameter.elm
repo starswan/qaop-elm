@@ -25,12 +25,24 @@ doubleWithRegisters =
         [ --  another 5 if jump actually taken
           ( 0x10, ( djnz, IncreaseByTwo, EightTStates ) )
         , ( 0x26, ( ld_h_n, IncreaseByTwo, SevenTStates ) )
-        , ( 0xDD26, ( ld_ix_h_n, IncreaseByThree, ElevenTStates ) )
-        , ( 0xFD26, ( ld_iy_h_n, IncreaseByThree, ElevenTStates ) )
         , ( 0x2E, ( ld_l_n, IncreaseByTwo, SevenTStates ) )
-        , ( 0xDD2E, ( ld_ix_l_n, IncreaseByThree, ElevenTStates ) )
-        , ( 0xFD2E, ( ld_iy_l_n, IncreaseByThree, ElevenTStates ) )
         , ( 0x36, ( ld_indirect_hl_n, IncreaseByTwo, TenTStates ) )
+        ]
+
+
+doubleWithRegistersIX : Dict Int ( MainWithIndexRegisters -> Int -> DoubleWithRegisterChange, MediumPCIncrement, InstructionDuration )
+doubleWithRegistersIX =
+    Dict.fromList
+        [ ( 0x26, ( ld_ix_h_n, IncreaseByThree, ElevenTStates ) )
+        , ( 0x2E, ( ld_ix_l_n, IncreaseByThree, ElevenTStates ) )
+        ]
+
+
+doubleWithRegistersIY : Dict Int ( MainWithIndexRegisters -> Int -> DoubleWithRegisterChange, MediumPCIncrement, InstructionDuration )
+doubleWithRegistersIY =
+    Dict.fromList
+        [ ( 0x26, ( ld_iy_h_n, IncreaseByThree, ElevenTStates ) )
+        , ( 0x2E, ( ld_iy_l_n, IncreaseByThree, ElevenTStates ) )
         ]
 
 

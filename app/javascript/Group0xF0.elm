@@ -11,7 +11,7 @@ import Group0x80 exposing (miniDict80)
 import Group0x90 exposing (miniDict90)
 import Group0xA0 exposing (miniDictA0)
 import Group0xB0 exposing (miniDictB0)
-import Group0xC0 exposing (delta_dict_C0)
+import Group0xC0 exposing (miniDictC0)
 import Group0xE0 exposing (delta_dict_E0, miniDictE0)
 import Z80Core exposing (Z80Core)
 import Z80Delta exposing (Z80Delta(..))
@@ -45,7 +45,6 @@ ld_sp_hl ixiyhl rom48k z80 =
 lt40_delta_dict : Dict Int (IXIYHL -> Z80ROM -> Z80Core -> Z80Delta)
 lt40_delta_dict =
     delta_dict_E0
-        |> Dict.union delta_dict_C0
 
 
 list0255 =
@@ -74,3 +73,4 @@ xYDict =
         |> Dict.union miniDictE0
         |> Dict.union miniDictF0
         |> Dict.union miniDict30
+        |> Dict.union miniDictC0

@@ -1,4 +1,4 @@
-module CB90Test exposing (..)
+module CBB8Test exposing (..)
 
 import Expect exposing (Expectation)
 import Test exposing (..)
@@ -38,20 +38,26 @@ suite =
             Z80Rom.constructor
     in
     describe "Bit instructions (CB)"
-        [ test "0xCB 90 RES 2,B" <|
+        [ test "0xFD 0xCB nn 0xBE RES 7, (IY + n) -ve" <|
             \_ ->
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xCB
-                            |> setMem (addr + 1) 0x90
+                            |> setMem addr 0xFD
+                            |> setMem (addr + 1) 0xCB
+                            |> setMem (addr + 2) 0xFE
+                            |> setMem (addr + 3) 0xBE
+                            |> setMem 0xA07E 0xFF
 
                     new_z80 =
                         executeCoreInstruction z80rom
                             { z80
                                 | env = new_env
-                                , main = { z80main | b = 0xFF }
+                                , main = { z80main | iy = 0xA080, hl = 0x6545, b = 0xA5 }
                             }
+
+                    mem_value =
+                        mem 0xA07E new_z80.env.time z80rom new_z80.env.ram
                 in
-                Expect.equal ( addr + 2, 0xFB ) ( new_z80.pc, new_z80.main.b )
+                Expect.equal ( addr + 4, 0x7F ) ( new_z80.pc, mem_value.value )
         ]

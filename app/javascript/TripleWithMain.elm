@@ -17,8 +17,20 @@ tripleMainRegs : Dict Int ( Int -> MainWithIndexRegisters -> TripleMainChange, T
 tripleMainRegs =
     Dict.fromList
         [ ( 0x22, ( ld_nn_indirect_hl, IncrementByThree, SixteenTStates ) )
-        , ( 0xDD22, ( ld_nn_indirect_ix, IncrementByFour, TwentyTStates ) )
-        , ( 0xFD22, ( ld_nn_indirect_iy, IncrementByFour, TwentyTStates ) )
+        ]
+
+
+tripleMainRegsIX : Dict Int ( Int -> MainWithIndexRegisters -> TripleMainChange, TriplePCIncrement, InstructionDuration )
+tripleMainRegsIX =
+    Dict.fromList
+        [ ( 0x22, ( ld_nn_indirect_ix, IncrementByFour, TwentyTStates ) )
+        ]
+
+
+tripleMainRegsIY : Dict Int ( Int -> MainWithIndexRegisters -> TripleMainChange, TriplePCIncrement, InstructionDuration )
+tripleMainRegsIY =
+    Dict.fromList
+        [ ( 0x22, ( ld_nn_indirect_iy, IncrementByFour, TwentyTStates ) )
         ]
 
 

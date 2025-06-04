@@ -2,178 +2,13 @@ module GroupCB exposing (..)
 
 import Bitwise exposing (complement, shiftLeftBy, shiftRightBy)
 import CpuTimeCTime exposing (CpuTimePcAnd16BitValue, CpuTimePcAndValue, addCpuTimeTime)
-import Dict exposing (Dict)
-import Utils exposing (byte, char, shiftRightBy8, toHexString)
-import Z80Core exposing (Z80Core, a_with_z80, add_cpu_time, inc_pc, inc_pc2, set408bit)
-import Z80Debug exposing (debugTodo)
+import Utils exposing (byte, char)
+import Z80Core exposing (Z80Core, inc_pc2, set408bitHL)
 import Z80Delta exposing (Z80Delta(..))
-import Z80Env exposing (addCpuTimeEnv, m1, mem, setMem)
+import Z80Env exposing (addCpuTimeEnv, mem, setMem)
 import Z80Flags exposing (IntWithFlags, bit, c_F53, shifter)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIY, IXIYHL(..), IntWithFlagsTimeAndPC, get_ixiy_xy)
-
-
-group_cb_dict : Dict Int (Z80Core -> Z80Delta)
-group_cb_dict =
-    Dict.fromList
-        [--( 0x00, execute_CB00 )
-         --, ( 0x01, execute_CB01 )
-         --, ( 0x02, execute_CB02 )
-         --, ( 0x03, execute_CB03 )
-         --, ( 0x04, execute_CB04 )
-         --, ( 0x05, execute_CB05 )
-         --, ( 0x06, execute_CB06 )
-         --, ( 0x07, execute_CB07 )
-        ]
-
-
-
--- case 0x00: B=shifter(o,B); break;
--- case 0x01: C=shifter(o,C); break;
--- case 0x02: D=shifter(o,D); break;
--- case 0x03: E=shifter(o,E); break;
--- case 0x04: HL=HL&0xFF|shifter(o,HL>>>8)<<8; break;
--- case 0x05: HL=HL&0xFF00|shifter(o,HL&0xFF); break;
--- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
--- case 0x07: A=shifter(o,A); break;
---       let
---         raw = z80 |> load408bit caseval HL
---         --z = debug_log "group_cb raw" (raw.value |> toHexString2) Nothing
---         value = shifter o raw.value z80.flags
---         --w = debug_log "group_cb value" (value.value |> toHexString2) Nothing
---         env_1 = z80.env
---         x = { z80 | pc = raw.pc, env = { env_1 | time = raw.time } } |> set_flag_regs value.flags |> set408bit caseval value.value HL
---       in
---         Whole x
---execute_CB0007 : CpuTimePcAndValue -> Z80 -> IntWithFlagsTimeAndPC
---execute_CB0007 raw z80 =
---    let
---        --o = Bitwise.and (c_value |> shiftRightBy 3) 7
---        --caseval = Bitwise.and c_value 0xC7
---        --z = debug_log "group_cb raw" (raw.value |> toHexString2) Nothing
---        value =
---            shifter0 raw.value z80.flags
---
---        --w = debug_log "group_cb value" (value.value |> toHexString2) Nothing
---        --env_1 = z80.env
---        --x = { z80 | pc = raw.pc, env = { env_1 | time = raw.time } } |> set_flag_regs value.flags |> set408bit caseval value.value HL
---    in
---    --Whole x
---    IntWithFlagsTimeAndPC value.value value.flags raw.time raw.pc
---execute_CB06 : Z80ROM -> Z80 -> Z80Delta
---execute_CB06 rom48k z80 =
---    let
---        x =
---            z80 |> execute_CB0007 (z80 |> hl_deref_with_z80 HL rom48k)
---
---        env =
---            z80.env
---
---        env_1 =
---            { env | time = x.time } |> setMem z80.main.hl x.value
---    in
---    EnvWithFlagsAndPc env_1 x.flags x.pc
-
-
-group_cb : Z80ROM -> Z80Core -> Z80Delta
-group_cb rom48k tmp_z80 =
-    --	private void group_cb()
-    --	{
-    --		int v, c = env.m1(PC, IR|R++&0x7F);
-    --		PC = (char)(PC+1); time += 4;
-    --		int o = c>>>3 & 7;
-    --		switch(c & 0xC7) {
-    let
-        new_r =
-            Bitwise.and (tmp_z80.r + 1) 0x7F
-
-        ir_or_r =
-            Bitwise.or tmp_z80.interrupts.ir new_r
-
-        c =
-            tmp_z80.env |> m1 tmp_z80.pc (Bitwise.or tmp_z80.interrupts.ir ir_or_r) rom48k
-
-        env =
-            tmp_z80.env
-
-        old_z80 =
-            { tmp_z80 | env = { env | time = c.time } }
-
-        new_pc =
-            old_z80 |> inc_pc
-
-        z80 =
-            { old_z80 | pc = new_pc } |> add_cpu_time 4
-
-        o =
-            Bitwise.and (c.value |> shiftRightBy 3) 7
-
-        caseval =
-            Bitwise.and c.value 0xC7
-
-        --y = debug_log "group_cb caseval" (caseval |> toHexString2) Nothing
-        -- The original plan with this is not clever enough - there are
-        -- 3 middle bits (0-7) that are captured by the 'o' value.
-        -- Tests required for CB xx for all values of xx
-        cb_func =
-            group_cb_dict |> Dict.get c.value
-    in
-    case cb_func of
-        Just f ->
-            z80 |> f
-
-        Nothing ->
-            --if caseval >= 0x80 && caseval <= 0x87 then
-            if caseval >= 0x81 && caseval <= 0x87 then
-                -- case 0x80: B=B&~(1<<o); break;
-                -- case 0x81: C=C&~(1<<o); break;
-                -- case 0x82: D=D&~(1<<o); break;
-                -- case 0x83: E=E&~(1<<o); break;
-                -- case 0x84: HL&=~(0x100<<o); break;
-                -- case 0x85: HL&=~(1<<o); break;
-                -- case 0x86: v=env.mem(HL)&~(1<<o); time+=4; env.mem(HL,v); time+=3; break;
-                -- case 0x87: A=A&~(1<<o); break;
-                let
-                    raw =
-                        z80 |> load408bitHL caseval rom48k
-
-                    result =
-                        Bitwise.and raw.value (1 |> shiftLeftBy o |> complement)
-
-                    --env_1 =
-                    --    z80.env
-                    --x =
-                    --    { z80 | pc = raw.pc, env = { env_1 | time = raw.time } } |> set408bit caseval result HL
-                in
-                --Whole x
-                PcTimeSet408Bit raw.pc raw.time caseval result
-
-            else if caseval >= 0xC0 && caseval <= 0xC7 then
-                -- case 0xC0: B=B|1<<o; break;
-                -- case 0xC1: C=C|1<<o; break;
-                -- case 0xC2: D=D|1<<o; break;
-                -- case 0xC3: E=E|1<<o; break;
-                -- case 0xC4: HL|=0x100<<o; break;
-                -- case 0xC5: HL|=1<<o; break;
-                -- case 0xC6: v=env.mem(HL)|1<<o; time+=4; env.mem(HL,v); time+=3; break;
-                -- case 0xC7: A=A|1<<o; break;
-                let
-                    raw =
-                        z80 |> load408bitHL caseval rom48k
-
-                    result =
-                        Bitwise.or raw.value (1 |> shiftLeftBy o)
-
-                    --env_1 =
-                    --    z80.env
-                    --x =
-                    --    { z80 | pc = raw.pc, env = { env_1 | time = raw.time } } |> set408bit caseval result HL
-                in
-                --Whole x
-                PcTimeSet408Bit raw.pc raw.time caseval result
-
-            else
-                debugTodo "group_cb" (caseval |> toHexString) z80 |> Whole
 
 
 
@@ -277,44 +112,50 @@ group_xy_cb ixiyhl rom48k z80 =
             Bitwise.and c.value 0x07
     in
     if (caseval /= 6) && (cAndC0 /= 0x40) then
-        z80_4 |> set408bit caseval v2.value HL |> Whole
+        let
+            ( main, flags, env ) =
+                set408bitHL caseval v2.value ( z80.main, z80.flags, z80.env )
+
+            --z80_4 |> set408bitHL caseval v2.value |> WholeCore
+        in
+        { z80_4 | main = main, flags = flags, env = env } |> WholeCore
 
     else
-        z80_4 |> Whole
+        z80_4 |> WholeCore
 
 
 
--- There appear to be many situations where we already know that we don't need all
--- this complexity as we're just doing LD A,B or something similar - so stop using it in those cases
-
-
-load408bitHL : Int -> Z80ROM -> Z80Core -> CpuTimePcAndValue
-load408bitHL c_value rom48k z80 =
-    case Bitwise.and c_value 0x07 of
-        0 ->
-            CpuTimePcAndValue z80.env.time z80.pc z80.main.b
-
-        1 ->
-            CpuTimePcAndValue z80.env.time z80.pc z80.main.c
-
-        2 ->
-            CpuTimePcAndValue z80.env.time z80.pc z80.main.d
-
-        3 ->
-            CpuTimePcAndValue z80.env.time z80.pc z80.main.e
-
-        4 ->
-            CpuTimePcAndValue z80.env.time z80.pc (shiftRightBy8 z80.main.hl)
-
-        5 ->
-            CpuTimePcAndValue z80.env.time z80.pc (Bitwise.and z80.main.hl 0xFF)
-
-        6 ->
-            let
-                new_b =
-                    mem z80.main.hl z80.env.time rom48k z80.env.ram
-            in
-            CpuTimePcAndValue new_b.time z80.pc new_b.value
-
-        _ ->
-            a_with_z80 z80
+---- There appear to be many situations where we already know that we don't need all
+---- this complexity as we're just doing LD A,B or something similar - so stop using it in those cases
+--
+--
+--load408bitHL : Int -> Z80ROM -> Z80Core -> CpuTimePcAndValue
+--load408bitHL c_value rom48k z80 =
+--    case Bitwise.and c_value 0x07 of
+--        0 ->
+--            CpuTimePcAndValue z80.env.time z80.pc z80.main.b
+--
+--        1 ->
+--            CpuTimePcAndValue z80.env.time z80.pc z80.main.c
+--
+--        2 ->
+--            CpuTimePcAndValue z80.env.time z80.pc z80.main.d
+--
+--        3 ->
+--            CpuTimePcAndValue z80.env.time z80.pc z80.main.e
+--
+--        4 ->
+--            CpuTimePcAndValue z80.env.time z80.pc (shiftRightBy8 z80.main.hl)
+--
+--        5 ->
+--            CpuTimePcAndValue z80.env.time z80.pc (Bitwise.and z80.main.hl 0xFF)
+--
+--        6 ->
+--            let
+--                new_b =
+--                    mem z80.main.hl z80.env.time rom48k z80.env.ram
+--            in
+--            CpuTimePcAndValue new_b.time z80.pc new_b.value
+--
+--        _ ->
+--            a_with_z80 z80
