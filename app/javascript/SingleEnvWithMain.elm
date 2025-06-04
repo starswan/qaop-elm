@@ -70,20 +70,6 @@ singleEnvMainRegsIY =
         ]
 
 
-singleEnvMainRegsCB : Dict Int ( MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange, PCIncrement, InstructionDuration )
-singleEnvMainRegsCB =
-    Dict.fromList
-        [ ( 0x46, ( bit_0_indirect_hl, IncrementByTwo, TwelveTStates ) )
-        , ( 0x4E, ( bit_1_indirect_hl, IncrementByTwo, TwelveTStates ) )
-        , ( 0x56, ( bit_2_indirect_hl, IncrementByTwo, TwelveTStates ) )
-        , ( 0x5E, ( bit_3_indirect_hl, IncrementByTwo, TwelveTStates ) )
-        , ( 0x66, ( bit_4_indirect_hl, IncrementByTwo, TwelveTStates ) )
-        , ( 0x6E, ( bit_5_indirect_hl, IncrementByTwo, TwelveTStates ) )
-        , ( 0x76, ( bit_6_indirect_hl, IncrementByTwo, TwelveTStates ) )
-        , ( 0x7E, ( bit_7_indirect_hl, IncrementByTwo, TwelveTStates ) )
-        ]
-
-
 applySingleEnvMainChange : PCIncrement -> InstructionDuration -> SingleEnvMainChange -> Z80Core -> Z80Core
 applySingleEnvMainChange pcInc duration z80changeData z80 =
     let
@@ -300,86 +286,6 @@ ld_a_indirect_hl z80_main rom48k z80_env =
     in
     --{ z80 | pc = value.pc, env = { env_1 | time = value.time } } |> set_a value.value
     SingleEnvNewARegister value.value value.time
-
-
-bit_0_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
-bit_0_indirect_hl z80_main rom48k z80_env =
-    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
-    let
-        value =
-            mem z80_main.hl z80_env.time rom48k z80_env.ram
-    in
-    SingleBitTest Bit_0 value
-
-
-bit_1_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
-bit_1_indirect_hl z80_main rom48k z80_env =
-    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
-    let
-        value =
-            mem z80_main.hl z80_env.time rom48k z80_env.ram
-    in
-    SingleBitTest Bit_1 value
-
-
-bit_2_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
-bit_2_indirect_hl z80_main rom48k z80_env =
-    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
-    let
-        value =
-            mem z80_main.hl z80_env.time rom48k z80_env.ram
-    in
-    SingleBitTest Bit_2 value
-
-
-bit_3_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
-bit_3_indirect_hl z80_main rom48k z80_env =
-    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
-    let
-        value =
-            mem z80_main.hl z80_env.time rom48k z80_env.ram
-    in
-    SingleBitTest Bit_3 value
-
-
-bit_4_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
-bit_4_indirect_hl z80_main rom48k z80_env =
-    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
-    let
-        value =
-            mem z80_main.hl z80_env.time rom48k z80_env.ram
-    in
-    SingleBitTest Bit_4 value
-
-
-bit_5_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
-bit_5_indirect_hl z80_main rom48k z80_env =
-    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
-    let
-        value =
-            mem z80_main.hl z80_env.time rom48k z80_env.ram
-    in
-    SingleBitTest Bit_5 value
-
-
-bit_6_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
-bit_6_indirect_hl z80_main rom48k z80_env =
-    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
-    let
-        value =
-            mem z80_main.hl z80_env.time rom48k z80_env.ram
-    in
-    SingleBitTest Bit_6 value
-
-
-bit_7_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
-bit_7_indirect_hl z80_main rom48k z80_env =
-    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
-    let
-        value =
-            mem z80_main.hl z80_env.time rom48k z80_env.ram
-    in
-    SingleBitTest Bit_7 value
 
 
 add_a_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange

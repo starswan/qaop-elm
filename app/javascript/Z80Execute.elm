@@ -11,9 +11,10 @@ import SingleWith8BitParameter exposing (DoubleWithRegisterChange(..), JumpChang
 import TripleByte exposing (TripleByteChange(..))
 import TripleWithFlags exposing (TripleWithFlagsChange(..))
 import TripleWithMain exposing (TripleMainChange, applyTripleMainChange)
-import Utils exposing (bitMaskFromBit, inverseBitMaskFromBit, shiftLeftBy8)
+import Utils exposing (bitMaskFromBit, inverseBitMaskFromBit, shiftLeftBy8, toHexString)
 import Z80Change exposing (FlagChange(..), Z80Change, applyZ80Change)
 import Z80Core exposing (Z80Core)
+import Z80Debug exposing (debugTodo)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..), applyDeltaWithChanges)
 import Z80Env exposing (Z80Env, addCpuTimeEnvInc, mem, mem16, setMem, z80_pop, z80_push)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, dec, inc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
@@ -35,6 +36,7 @@ type DeltaWithChanges
     | TripleMainChangeDelta CpuTimeCTime TriplePCIncrement TripleMainChange
     | Triple16ParamDelta CpuTimeCTime TriplePCIncrement TripleByteChange
     | Triple16FlagsDelta CpuTimeCTime TripleWithFlagsChange
+    | UnknownInstruction String Int
 
 
 apply_delta : Z80Core -> Z80ROM -> DeltaWithChanges -> Z80Core
@@ -78,6 +80,9 @@ apply_delta z80 rom48k z80delta =
 
         Triple16FlagsDelta cpuTimeCTime tripleWithFlagsChange ->
             z80 |> applyTripleFlagChange cpuTimeCTime tripleWithFlagsChange
+
+        UnknownInstruction string int ->
+            debugTodo string (int |> toHexString) z80
 
 
 applyJumpChangeDelta : CpuTimeCTime -> JumpChange -> Z80Core -> Z80Core
