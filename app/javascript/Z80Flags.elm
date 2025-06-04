@@ -461,13 +461,16 @@ bit : Int -> Int -> FlagRegisters -> FlagRegisters
 bit n v flagRegs =
     -- used by group_xy_cb only
     let
-        fr =
+        m =
             Bitwise.and v (shiftLeftBy n 1)
 
+        -- This one is correct - see https://introcs.cs.princeton.edu/java/11precedence/
+        -- Bitwise and(&) has higher precedence than Bitwise or(|)
         ff =
-            Bitwise.or (Bitwise.and flagRegs.ff (complement 0xFF)) (Bitwise.or (Bitwise.and v c_F53) fr)
+            --Bitwise.or (Bitwise.and flagRegs.ff (complement 0xFF)) (Bitwise.or (Bitwise.and v c_F53) m)
+            flagRegs.ff |> Bitwise.and (complement 0xFF) |> Bitwise.or (v |> Bitwise.and c_F53) |> Bitwise.or m
     in
-    { flagRegs | ff = ff, fr = fr, fa = complement fr, fb = 0 }
+    { flagRegs | ff = ff, fr = m, fa = complement m, fb = 0 }
 
 
 testBit : BitTest -> Int -> FlagRegisters -> FlagRegisters
@@ -483,10 +486,11 @@ testBit testType v flagRegs =
         m =
             testType |> bitMaskFromBit |> Bitwise.and v
 
+        -- This one is correct - see https://introcs.cs.princeton.edu/java/11precedence/
+        -- Bitwise and(&) has higher precedence than Bitwise or(|)
         ff =
-            Bitwise.or (Bitwise.and flagRegs.ff (complement 0xFF)) (Bitwise.or (Bitwise.and v c_F53) m)
-
-        --flagRegs.ff |> Bitwise.and (0xFF |> Bitwise.or (Bitwise.and v c_F53) |> Bitwise.or m |>  complement)
+            --Bitwise.or (Bitwise.and flagRegs.ff (complement 0xFF)) (Bitwise.or (Bitwise.and v c_F53) m)
+            flagRegs.ff |> Bitwise.and (complement 0xFF) |> Bitwise.or (v |> Bitwise.and c_F53) |> Bitwise.or m
     in
     { flagRegs | ff = ff, fr = m, fa = complement m, fb = 0 }
 

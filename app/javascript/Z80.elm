@@ -12,13 +12,14 @@ import Dict exposing (Dict)
 import Group0x30 exposing (delta_dict_lite_30)
 import Group0xE0 exposing (delta_dict_lite_E0)
 import Group0xF0 exposing (list0255, lt40_array, xYDict)
+import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainRegsCB, singleEnvMainRegsCB)
 import Loop
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..))
 import SimpleFlagOps exposing (singleByteFlags, singleByteFlagsCB)
-import SimpleSingleByte exposing (singleByteMainRegs, singleByteMainRegsCB, singleByteMainRegsDD, singleByteMainRegsFD)
+import SimpleSingleByte exposing (singleByteMainRegs, singleByteMainRegsDD, singleByteMainRegsFD)
 import SingleByteWithEnv exposing (singleByteZ80Env)
-import SingleEnvWithMain exposing (singleEnvMainRegs, singleEnvMainRegsCB, singleEnvMainRegsIX, singleEnvMainRegsIY)
-import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters, singleByteMainAndFlagRegistersCB, singleByteMainAndFlagRegistersIX, singleByteMainAndFlagRegistersIY)
+import SingleEnvWithMain exposing (singleEnvMainRegs, singleEnvMainRegsIX, singleEnvMainRegsIY)
+import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters, singleByteMainAndFlagRegistersIX, singleByteMainAndFlagRegistersIY)
 import SingleNoParams exposing (ex_af, exx, singleWithNoParam)
 import SingleWith8BitParameter exposing (doubleWithRegisters, doubleWithRegistersIX, doubleWithRegistersIY, maybeRelativeJump, singleWith8BitParam)
 import TripleByte exposing (tripleByteWith16BitParam, tripleByteWith16BitParamDD, tripleByteWith16BitParamFD)
@@ -342,18 +343,6 @@ lt40_delta_dict_lite =
 --]
 
 
-type alias CodeTypeOffset =
-    { --instrTime : CpuTimeCTime
-      paramOffset : Int
-
-    --,instrCode : Int
-    --, mainDict : Dict Int ( MainWithIndexRegisters -> RegisterChange, InstructionDuration )
-    --, dictKey : Int
-    --, pcIncrement : PCIncrement
-    , executionType : ExecutionType
-    }
-
-
 type ExecutionType
     = Ordinary Int CpuTimeCTime
     | IndexIX CpuTimeAndValue
@@ -663,7 +652,7 @@ runDelta executionType rom48k z80 =
                                     PureDelta pcInc (instrTime |> addDuration duration) (f z80.main z80.flags)
 
                                 Nothing ->
-                                    oldDelta param.value instrTime z80.interrupts z80 rom48k
+                                    UnknownInstruction "execute CB" param.value
 
 
 
