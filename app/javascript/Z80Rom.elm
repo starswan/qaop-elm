@@ -1,6 +1,8 @@
 module Z80Rom exposing (..)
 
 import Array exposing (Array)
+import Bytes exposing (Bytes)
+import Bytes.Decode exposing (Decoder, Step(..), andThen, loop, map, succeed, unsignedInt8)
 import Dict exposing (Dict)
 import Utils exposing (listToDict, toHexString)
 import Z80Debug exposing (debugTodo)
@@ -37,17 +39,43 @@ getROMValue addr z80rom =
                     debugTodo "getROMValue" (String.fromInt addr) -1
 
 
-make_spectrum_rom : Array Int -> Z80ROM
-make_spectrum_rom romdata =
-    let
-        romDict =
-            listToDict (Array.toList romdata)
-    in
-    Z80ROM romDict
+
+--make_spectrum_rom : Array Int -> Z80ROM
+--make_spectrum_rom romdata =
+--    let
+--        romDict =
+--            listToDict (Array.toList romdata)
+--    in
+--    Z80ROM romDict
 
 
+parseRomFile : Bytes -> Maybe Z80ROM
+parseRomFile bytes =
+    Bytes.Decode.decode romDecoder bytes
 
--- elm reserves First caps for types, so have to tweak names for constants
+
+romDecoder : Decoder Z80ROM
+romDecoder =
+    array_decoder 16384 unsignedInt8 |> andThen grabRomDecoder
+
+
+grabRomDecoder : Array Int -> Decoder Z80ROM
+grabRomDecoder romData =
+    succeed (Z80ROM (romData |> Array.toList |> listToDict))
+
+
+array_decoder : Int -> Decoder Int -> Decoder (Array Int)
+array_decoder size decoder =
+    loop ( size, Array.empty ) (arrayStep decoder)
+
+
+arrayStep : Decoder Int -> ( Int, Array Int ) -> Decoder (Step ( Int, Array Int ) (Array Int))
+arrayStep decoder ( n, xs ) =
+    if n <= 0 then
+        succeed (Done xs)
+
+    else
+        map (\x -> Loop ( n - 1, Array.push x xs )) decoder
 
 
 c_COMMON_NAMES =

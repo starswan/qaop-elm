@@ -1,6 +1,5 @@
 module Spectrum exposing (..)
 
-import Array exposing (Array)
 import Bitwise exposing (complement, shiftRightBy)
 import Dict exposing (Dict)
 import Keyboard exposing (KeyEvent, Keyboard, update_keyboard)
@@ -13,7 +12,7 @@ import Z80Core exposing (Z80, Z80Core, get_ei, interrupt)
 import Z80Debug exposing (debugLog)
 import Z80Env exposing (mem, mem16, reset_cpu_time)
 import Z80Flags exposing (c_FC, c_FZ, get_flags, set_flags)
-import Z80Rom exposing (Z80ROM, make_spectrum_rom)
+import Z80Rom exposing (Z80ROM)
 import Z80Tape exposing (TapePosition, Z80Tape, newPosition)
 import Z80Types exposing (IXIYHL(..), get_de)
 
@@ -90,18 +89,9 @@ new_tape tapfileList spectrum =
 --    z80 = spectrum.cpu
 -- in
 --    { spectrum | cpu = { z80 | env = z80.env |> Z80Env.set_tape tape_string } }
-
-
-set_rom : Array Int -> Spectrum -> Spectrum
-set_rom romdata spectrum =
-    let
-        --z80 =
-        --    spectrum.cpu
-        rommy =
-            make_spectrum_rom romdata
-    in
-    --{ spectrum | cpu = { z80 | env = z80.env |> Z80Env.set_rom romdata } }
-    { spectrum | rom48k = rommy }
+--set_rom : Z80ROM -> Spectrum -> Spectrum
+--set_rom romdata spectrum =
+--    { spectrum | rom48k = romdata }
 
 
 loadTapfile : Tapfile -> Spectrum -> Spectrum

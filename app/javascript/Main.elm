@@ -5,24 +5,20 @@
 
 module Main exposing (..)
 
-import Array exposing (Array)
 import Bitwise exposing (complement)
 import Browser
-import Bytes exposing (Bytes)
-import Bytes.Decode exposing (unsignedInt8)
 import Delay
 import Dict
 import Html exposing (Attribute, Html, button, div, h2, span, text)
 import Html.Attributes exposing (disabled, id, style, tabindex)
 import Html.Events exposing (onClick, preventDefaultOn)
 import Http exposing (Metadata)
-import Http.Detailed
 import Json.Decode as Decode exposing (Decoder)
 import Keyboard exposing (ctrlKeyDownEvent, ctrlKeyUpEvent, keyDownEvent, keyUpEvent)
 import Loader exposing (LoadAction(..), trimActionList)
-import MessageHandler exposing (array_decoder, bytesToTap)
+import MessageHandler exposing (bytesToRom, bytesToTap)
 import Qaop exposing (Qaop, pause)
-import Spectrum exposing (Spectrum, frames, loadTapfile, new_tape, set_rom)
+import Spectrum exposing (Spectrum, frames, loadTapfile, new_tape)
 import SpectrumColour exposing (spectrumColour)
 import Svg exposing (Svg, line, rect, svg)
 import Svg.Attributes exposing (fill, height, rx, stroke, viewBox, width, x1, x2, y1, y2)
@@ -30,6 +26,7 @@ import Tapfile exposing (Tapfile)
 import Time exposing (posixToMillis)
 import Utils exposing (speed_in_hz, time_display)
 import Z80Debug exposing (debugLog)
+import Z80Rom exposing (Z80ROM)
 import Z80Screen exposing (ScreenColourRun, screenLines)
 
 
@@ -76,7 +73,7 @@ type alias Model =
 
 type Message
     = GotTAP (Result Http.Error (List Tapfile))
-    | GotRom (Result (Http.Detailed.Error Bytes) ( Metadata, Array Int ))
+    | GotRom (Result Http.Error (Maybe Z80ROM))
     | Tick Time.Posix
     | Pause
     | CharacterKey Char
@@ -406,15 +403,26 @@ actionToCmd action =
                 url
                 Http.get
                 { url = url
-                , expect = Http.Detailed.expectBytes GotRom (array_decoder 16384 unsignedInt8)
+
+                --, expect = Http.Detailed.expectBytes GotRom (array_decoder 16384 unsignedInt8)
+                , expect = Http.expectBytesResponse GotRom bytesToRom
                 }
 
 
-gotRom : Qaop -> Result (Http.Detailed.Error Bytes) ( Http.Metadata, Array Int ) -> ( Qaop, Cmd Message )
+gotRom : Qaop -> Result Http.Error (Maybe Z80ROM) -> ( Qaop, Cmd Message )
 gotRom qaop result =
     case result of
-        Ok ( _, value ) ->
-            { qaop | spectrum = qaop.spectrum |> set_rom value } |> run
+        Ok value ->
+            case value of
+                Just a ->
+                    let
+                        speccy =
+                            qaop.spectrum
+                    in
+                    { qaop | spectrum = { speccy | rom48k = a } } |> run
+
+                Nothing ->
+                    ( qaop, Cmd.none )
 
         Err _ ->
             ( qaop, Cmd.none )
