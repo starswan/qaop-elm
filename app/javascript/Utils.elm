@@ -5,6 +5,7 @@
 
 module Utils exposing (..)
 
+import Array exposing (Array)
 import Bitwise exposing (shiftLeftBy, shiftRightBy)
 import Dict exposing (Dict)
 import Hex
@@ -43,6 +44,16 @@ listToDict intlist =
             List.indexedMap Tuple.pair intlist
     in
     Dict.fromList x
+
+
+
+--arrayToDict : Array Int -> Dict Int Int
+--arrayToDict intlist =
+--    let
+--        x =
+--            Array.indexedMap Tuple.pair intlist
+--    in
+--    Dict.fromArray x
 
 
 digitToString : Int -> Int -> String

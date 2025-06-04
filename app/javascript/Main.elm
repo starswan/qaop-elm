@@ -18,7 +18,7 @@ import Keyboard exposing (ctrlKeyDownEvent, ctrlKeyUpEvent, keyDownEvent, keyUpE
 import Loader exposing (LoadAction(..), trimActionList)
 import MessageHandler exposing (bytesToRom, bytesToTap)
 import Qaop exposing (Qaop, pause)
-import Spectrum exposing (Spectrum, frames, loadTapfile, new_tape, set_rom)
+import Spectrum exposing (Spectrum, frames, loadTapfile, new_tape)
 import SpectrumColour exposing (spectrumColour)
 import Svg exposing (Svg, line, rect, svg)
 import Svg.Attributes exposing (fill, height, rx, stroke, viewBox, width, x1, x2, y1, y2)
@@ -415,7 +415,11 @@ gotRom qaop result =
         Ok value ->
             case value of
                 Just a ->
-                    { qaop | spectrum = qaop.spectrum |> set_rom a } |> run
+                    let
+                        speccy =
+                            qaop.spectrum
+                    in
+                    { qaop | spectrum = { speccy | rom48k = a } } |> run
 
                 Nothing ->
                     ( qaop, Cmd.none )

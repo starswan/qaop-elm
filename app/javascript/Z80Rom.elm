@@ -4,14 +4,12 @@ import Array exposing (Array)
 import Bytes exposing (Bytes)
 import Bytes.Decode exposing (Decoder, Step(..), andThen, loop, map, succeed, unsignedInt8)
 import Dict exposing (Dict)
-import Utils exposing (toHexString)
+import Utils exposing (listToDict, toHexString)
 import Z80Debug exposing (debugTodo)
 
 
-type
-    Z80ROM
-    --= Z80ROM (Dict Int Int)
-    = Z80ROM (Array Int)
+type Z80ROM
+    = Z80ROM (Dict Int Int)
 
 
 constructor : Z80ROM
@@ -20,49 +18,20 @@ constructor =
         rom48k =
             List.range 0 16384
 
-        --rom_list =
-        --    List.indexedMap Tuple.pair rom48k
-        --rom_dict =
-        --    Dict.fromList rom_list
+        rom_list =
+            List.indexedMap Tuple.pair rom48k
+
+        rom_dict =
+            Dict.fromList rom_list
     in
-    --Z80ROM rom_dict
-    Z80ROM (rom48k |> Array.fromList)
-
-
-parseRomFile : Bytes -> Maybe Z80ROM
-parseRomFile bytes =
-    Bytes.Decode.decode romDecoder bytes
-
-
-romDecoder : Decoder Z80ROM
-romDecoder =
-    array_decoder 16384 unsignedInt8 |> andThen grabRomDecoder
-
-
-grabRomDecoder : Array Int -> Decoder Z80ROM
-grabRomDecoder romData =
-    succeed (Z80ROM romData)
-
-
-array_decoder : Int -> Decoder Int -> Decoder (Array Int)
-array_decoder size decoder =
-    loop ( size, Array.empty ) (arrayStep decoder)
-
-
-arrayStep : Decoder Int -> ( Int, Array Int ) -> Decoder (Step ( Int, Array Int ) (Array Int))
-arrayStep decoder ( n, xs ) =
-    if n <= 0 then
-        succeed (Done xs)
-
-    else
-        map (\x -> Loop ( n - 1, Array.push x xs )) decoder
+    Z80ROM rom_dict
 
 
 getROMValue : Int -> Z80ROM -> Int
 getROMValue addr z80rom =
     case z80rom of
         Z80ROM z80dict ->
-            case Array.get addr z80dict of
+            case Dict.get addr z80dict of
                 Just a ->
                     a
 
@@ -78,7 +47,35 @@ getROMValue addr z80rom =
 --            listToDict (Array.toList romdata)
 --    in
 --    Z80ROM romDict
--- elm reserves First caps for types, so have to tweak names for constants
+
+
+parseRomFile : Bytes -> Maybe Z80ROM
+parseRomFile bytes =
+    Bytes.Decode.decode romDecoder bytes
+
+
+romDecoder : Decoder Z80ROM
+romDecoder =
+    array_decoder 16384 unsignedInt8 |> andThen grabRomDecoder
+
+
+grabRomDecoder : Array Int -> Decoder Z80ROM
+grabRomDecoder romData =
+    succeed (Z80ROM (romData |> Array.toList |> listToDict))
+
+
+array_decoder : Int -> Decoder Int -> Decoder (Array Int)
+array_decoder size decoder =
+    loop ( size, Array.empty ) (arrayStep decoder)
+
+
+arrayStep : Decoder Int -> ( Int, Array Int ) -> Decoder (Step ( Int, Array Int ) (Array Int))
+arrayStep decoder ( n, xs ) =
+    if n <= 0 then
+        succeed (Done xs)
+
+    else
+        map (\x -> Loop ( n - 1, Array.push x xs )) decoder
 
 
 c_COMMON_NAMES =
