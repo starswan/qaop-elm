@@ -11,7 +11,7 @@ import Keyboard exposing (Keyboard, z80_keyboard_input)
 import Utils exposing (shiftLeftBy8, shiftRightBy8, toHexString2)
 import Z80Debug exposing (debugLog)
 import Z80Ram exposing (Z80Ram, getRamValue)
-import Z80Rom exposing (Z80ROM, getROMValue)
+import Z80Rom exposing (Z80ROM, get16BitROMValue, getROMValue)
 
 
 c_FRSTART =
@@ -236,13 +236,17 @@ mem16 addr rom48k z80env =
     if and addr1 0x3FFF /= 0 then
         if addr1 < 0 then
             let
-                low =
-                    getROMValue addr rom48k
+                value =
+                    rom48k |> get16BitROMValue addr
 
-                high =
-                    getROMValue (addr1 + 0x4000) rom48k
+                --low =
+                --    getROMValue addr rom48k
+                --
+                --high =
+                --    getROMValue (addr1 + 0x4000) rom48k
             in
-            CpuTimeAnd16BitValue { z80env_time | ctime = c_NOCONT } (Bitwise.or low (shiftLeftBy8 high))
+            --CpuTimeAnd16BitValue { z80env_time | ctime = c_NOCONT } (Bitwise.or low (shiftLeftBy8 high))
+            CpuTimeAnd16BitValue { z80env_time | ctime = c_NOCONT } value
 
         else
             let

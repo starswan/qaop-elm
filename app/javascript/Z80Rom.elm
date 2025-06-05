@@ -1,11 +1,17 @@
 module Z80Rom exposing (..)
 
 import Array exposing (Array)
+import Bitwise
 import Bytes exposing (Bytes)
 import Bytes.Decode exposing (Decoder, Step(..), andThen, loop, map, succeed, unsignedInt8)
 import Dict exposing (Dict)
-import Utils exposing (listToDict, toHexString)
+import SpectrumDecoders exposing (spectrumUnsigned16Bit)
+import Utils exposing (listToDict, shiftLeftBy8, shiftRightBy1, shiftRightBy8, toHexString)
 import Z80Debug exposing (debugTodo)
+
+
+c_ROMDATASIZE =
+    8192
 
 
 type Z80ROM
@@ -16,7 +22,7 @@ constructor : Z80ROM
 constructor =
     let
         rom48k =
-            List.range 0 16384
+            List.range 0 c_ROMDATASIZE
 
         rom_list =
             List.indexedMap Tuple.pair rom48k
@@ -28,25 +34,60 @@ constructor =
 
 
 getROMValue : Int -> Z80ROM -> Int
-getROMValue addr z80rom =
+getROMValue z80_addr z80rom =
+    let
+        addr =
+            z80_addr |> shiftRightBy1
+    in
     case z80rom of
         Z80ROM z80dict ->
             case Dict.get addr z80dict of
                 Just a ->
-                    a
+                    if (z80_addr |> Bitwise.and 0x01) == 0 then
+                        a |> Bitwise.and 0xFF
+
+                    else
+                        a |> shiftRightBy8
 
                 Nothing ->
                     debugTodo "getROMValue" (String.fromInt addr) -1
 
 
+get16BitROMValue : Int -> Z80ROM -> Int
+get16BitROMValue z80_addr rom48k =
+    let
+        addr =
+            z80_addr |> shiftRightBy1
+    in
+    case rom48k of
+        Z80ROM z80dict ->
+            if (z80_addr |> Bitwise.and 0x01) == 0 then
+                case Dict.get addr z80dict of
+                    Just a ->
+                        a
 
---make_spectrum_rom : Array Int -> Z80ROM
---make_spectrum_rom romdata =
---    let
---        romDict =
---            listToDict (Array.toList romdata)
---    in
---    Z80ROM romDict
+                    Nothing ->
+                        debugTodo "get16BitROMValue" (String.fromInt addr) -1
+
+            else
+                let
+                    low =
+                        case Dict.get addr z80dict of
+                            Just a ->
+                                a |> shiftRightBy8
+
+                            Nothing ->
+                                debugTodo "getROMValue" (String.fromInt addr) -1
+
+                    high =
+                        case Dict.get (addr + 1) z80dict of
+                            Just a ->
+                                a |> Bitwise.and 0xFF
+
+                            Nothing ->
+                                debugTodo "getROMValue" (String.fromInt addr) -1
+                in
+                Bitwise.or low (shiftLeftBy8 high)
 
 
 parseRomFile : Bytes -> Maybe Z80ROM
@@ -56,12 +97,13 @@ parseRomFile bytes =
 
 romDecoder : Decoder Z80ROM
 romDecoder =
-    array_decoder 16384 unsignedInt8 |> andThen grabRomDecoder
+    array_decoder c_ROMDATASIZE spectrumUnsigned16Bit |> andThen grabRomDecoder
 
 
 grabRomDecoder : Array Int -> Decoder Z80ROM
 grabRomDecoder romData =
-    succeed (Z80ROM (romData |> Array.toList |> listToDict))
+    --succeed (Z80ROM (romData |> Array.toList |> listToDict))
+    succeed (Z80ROM (romData |> Array.toList |> List.indexedMap Tuple.pair |> Dict.fromList))
 
 
 array_decoder : Int -> Decoder Int -> Decoder (Array Int)

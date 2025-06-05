@@ -2,6 +2,7 @@ module Tapfile exposing (..)
 
 import Bytes exposing (Bytes, Endianness(..), width)
 import Bytes.Decode exposing (Decoder, Step(..), andThen, fail, loop, map, map2, map3, map4, map5, string, succeed, unsignedInt16, unsignedInt8)
+import SpectrumDecoders exposing (spectrumUnsigned16Bit)
 import Utils exposing (toPlainHexString2)
 import Z80Debug exposing (debugLog)
 
@@ -75,10 +76,6 @@ type alias Tapfile =
     , data : TapfileData
     , block : TapfileBlock
     }
-
-
-spectrumUnsigned16Bit =
-    unsignedInt16 LE
 
 
 tapfileListDecoder : Int -> Decoder Tapfile -> Decoder (List Tapfile)
