@@ -1,9 +1,7 @@
 module MessageHandler exposing (..)
 
-import Array exposing (Array)
-import Bytes exposing (Bytes)
-import Dict exposing (Dict)
-import Http exposing (Error(..), Response)
+import Bytes exposing (Bytes, Endianness(..))
+import Http exposing (Error, Expect, Metadata, Response)
 import Tapfile exposing (Tapfile, parseTapFile)
 import Z80Rom exposing (Z80ROM, parseRomFile)
 
