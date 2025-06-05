@@ -2,8 +2,8 @@ module Z80Rom exposing (..)
 
 import Array exposing (Array)
 import Bitwise exposing (shiftRightBy)
-import Bytes exposing (Bytes)
-import Bytes.Decode exposing (Decoder, Step(..), unsignedInt8)
+import Bytes exposing (Bytes, Endianness(..))
+import Bytes.Decode exposing (Decoder, Step(..), unsignedInt16, unsignedInt8)
 import Bytes.Decode.Extra as BDE
 import Dict exposing (Dict)
 import Http exposing (Error(..))
@@ -32,13 +32,21 @@ getROMValue addr z80rom =
             addr |> shiftRightBy 10
 
         addr2 =
-            addr |> Bitwise.and 0x03FF
+            addr |> Bitwise.and 0x03FE |> shiftRightBy 1
+
+        addr3 : Bool
+        addr3 =
+            (addr |> Bitwise.and 0x01) /= 0
     in
     case Array.get addr1 z80rom.rom48k of
         Just array ->
             case array |> Array.get addr2 of
                 Just a ->
-                    a
+                    if addr3 then
+                        a |> shiftRightBy 8
+
+                    else
+                        a |> Bitwise.and 0xFF
 
                 Nothing ->
                     debugTodo "getROMValue" (String.fromInt addr1 ++ String.fromInt addr2) -1
@@ -47,12 +55,16 @@ getROMValue addr z80rom =
             debugTodo "getROMValue" (String.fromInt addr) -1
 
 
+valueDecoder =
+    unsignedInt16 LE
+
+
 parseRomFile : Bytes -> Result Error Z80ROM
 parseRomFile bytes =
     let
         array : Maybe (List (List Int))
         array =
-            Bytes.Decode.decode (BDE.list 16 (BDE.list 1024 unsignedInt8)) bytes
+            Bytes.Decode.decode (BDE.list 16 (BDE.list 512 valueDecoder)) bytes
     in
     case array of
         Just listint ->
