@@ -11,6 +11,24 @@ import Dict exposing (Dict)
 import Keyboard exposing (Keyboard, z80_keyboard_input)
 import Utils exposing (shiftRightBy8, toHexString)
 import Z80Debug exposing (debugLog)
+import Z80Ram exposing (Z80Ram, getRamValue)
+import Z80Rom exposing (Z80ROM, get16BitROMValue, getROMValue)
+
+
+c_FRSTART =
+    -14335
+
+
+c_FRTIME =
+    69888
+
+
+c_TIME_LIMIT =
+    c_FRSTART + c_FRTIME
+
+
+
+-- changing this to an array results in a recursion error in the browser :-(
 
 
 type alias Z80Env =
@@ -28,8 +46,195 @@ type alias Z80EnvWithTime =
 
 
 z80env_constructor =
-    Z80Env Dict.empty 0 7 False
+    Z80Env Z80Ram.constructor Keyboard.constructor (CpuTimeCTime c_FRSTART 0) 0
 
+
+
+--set_rom : Array Int -> Z80Env -> Z80Env
+--set_rom romdata z80env =
+--    let
+--        rommy =
+--            make_spectrum_rom romdata
+--    in
+--    { z80env | rom48k = rommy }
+--public final int m1(int addr, int ir) {
+--	int n = cpu.time - ctime;
+--	if(n>0) cont(n);
+--
+--	addr -= 0x4000;
+--	if((addr&0xC000) == 0)
+--		cont1(0);
+--	ctime = NOCONT;
+--	if((ir&0xC000) == 0x4000)
+--		ctime = cpu.time + 4;
+--	if(addr >= 0)
+--		return ram[addr];
+--	n = rom[addr+=0x4000];
+--	if(if1rom!=null && (addr&0xE8F7)==0) {
+--		if(addr==0x0008 || addr==0x1708) {
+--			if(rom==rom48k) rom = if1rom;
+--		} else if(addr==0x0700) {
+--			if(rom==if1rom) rom = rom48k;
+--		}
+--	}
+--	return n;
+--}
+
+
+m1 : Int -> Int -> Z80ROM -> Z80Env -> CpuTimeAndValue
+m1 addr ir rom48k z80env =
+    let
+        n =
+            z80env.time.cpu_time - z80env.time.ctime
+
+        z80env_time =
+            if n > 0 then
+                z80env.time |> cont n
+
+            else
+                z80env.time
+
+        ramAddr =
+            addr - 0x4000
+
+        z80env_1_time =
+            if Bitwise.and ramAddr 0xC000 == 0 then
+                z80env_time |> cont1 0
+
+            else
+                z80env_time
+
+        ctime =
+            if Bitwise.and ir 0xC000 == 0x4000 then
+                z80env_1_time.cpu_time + 4
+
+            else
+                c_NOCONT
+
+        value =
+            if ramAddr >= 0 then
+                z80env.ram |> getRamValue ramAddr
+
+            else
+                -- not implementing IF1 switching for now
+                rom48k |> getROMValue addr
+    in
+    CpuTimeAndValue { z80env_1_time | ctime = ctime } value
+
+
+
+--public final int mem(int addr) {
+--	int n = cpu.time - ctime;
+--	if(n>0) cont(n);
+--	ctime = NOCONT;
+--
+--	addr -= 0x4000;
+--	if(addr>=0) {
+--		if(addr<0x4000) {
+--			cont1(0);
+--			ctime = cpu.time + 3;
+--		}
+--		return ram[addr];
+--	}
+--	return rom[addr+0x4000];
+--}
+
+
+mem : Int -> CpuTimeCTime -> Z80ROM -> Z80Ram -> CpuTimeAndValue
+mem base_addr time rom48k ram =
+    let
+        n =
+            time.cpu_time - time.ctime
+
+        z80env_time =
+            if n > 0 then
+                time |> cont n
+
+            else
+                time
+
+        addr =
+            base_addr - 0x4000
+
+        ( new_time, ctime, value ) =
+            if addr >= 0 then
+                if addr < 0x4000 then
+                    let
+                        new_z80 =
+                            z80env_time |> cont1 0
+                    in
+                    ( new_z80, new_z80.cpu_time + 3, ram |> getRamValue addr )
+
+                else
+                    ( z80env_time, c_NOCONT, ram |> getRamValue addr )
+
+            else
+                ( z80env_time, c_NOCONT, rom48k |> getROMValue base_addr )
+    in
+    CpuTimeAndValue { new_time | ctime = ctime } value
+
+
+
+--	public final int mem16(int addr) {
+--		int n = cpu.time - ctime;
+--		if(n>0) cont(n);
+--		ctime = NOCONT;
+--
+--		int addr1 = addr-0x3FFF;
+--		if((addr1&0x3FFF)!=0) {
+--			if(addr1<0)
+--				return rom[addr] | rom[addr1+0x4000]<<8;
+--			if(addr1<0x4000) {
+--				cont1(0); cont1(3);
+--				ctime = cpu.time + 6;
+--			}
+--			return ram[addr-0x4000] | ram[addr1]<<8;
+--		}
+--		switch(addr1>>>14) {
+--		case 0:
+--			cont1(3);
+--			ctime = cpu.time + 6;
+--			return rom[addr] | ram[0]<<8;
+--		case 1:
+--			cont1(0);
+--		case 2:
+--			return ram[addr-0x4000] | ram[addr1]<<8;
+--		default:
+--			return ram[0xBFFF] | rom[0]<<8;
+--		}
+--	}
+
+
+mem16 : Int -> Z80ROM -> Z80Env -> CpuTimeAnd16BitValue
+mem16 addr rom48k z80env =
+    let
+        n =
+            z80env.time.cpu_time - z80env.time.ctime
+
+        z80env_time =
+            if n > 0 then
+                z80env.time |> cont n
+
+            else
+                z80env.time
+
+        addr1 =
+            addr - 0x3FFF
+    in
+    if and addr1 0x3FFF /= 0 then
+        if addr1 < 0 then
+            let
+                value =
+                    rom48k |> get16BitROMValue addr
+
+                --low =
+                --    getROMValue addr rom48k
+                --
+                --high =
+                --    getROMValue (addr1 + 0x4000) rom48k
+            in
+            --CpuTimeAnd16BitValue { z80env_time | ctime = c_NOCONT } (Bitwise.or low (shiftLeftBy8 high))
+            CpuTimeAnd16BitValue { z80env_time | ctime = c_NOCONT } value
 
 setRam : Int -> Int -> Z80Env -> Z80Env
 setRam addr value z80env =
