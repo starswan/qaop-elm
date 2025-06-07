@@ -1,33 +1,33 @@
 module TripleWithMain exposing (..)
 
-import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import Dict exposing (Dict)
 import PCIncrement exposing (TriplePCIncrement(..))
 import Z80Core exposing (Z80Core)
 import Z80Env exposing (Z80Env, setMem16)
 import Z80Types exposing (MainWithIndexRegisters)
+import Z80Word exposing (Z80Word, incrementBy3, incrementBy4)
 
 
 type TripleMainChange
-    = Store16BitValue Int Int
+    = Store16BitValue Z80Word Z80Word
 
 
-tripleMainRegs : Dict Int ( Int -> MainWithIndexRegisters -> TripleMainChange, TriplePCIncrement, InstructionDuration )
+tripleMainRegs : Dict Int ( Z80Word -> MainWithIndexRegisters -> TripleMainChange, TriplePCIncrement, InstructionDuration )
 tripleMainRegs =
     Dict.fromList
         [ ( 0x22, ( ld_nn_indirect_hl, IncrementByThree, SixteenTStates ) )
         ]
 
 
-tripleMainRegsIX : Dict Int ( Int -> MainWithIndexRegisters -> TripleMainChange, TriplePCIncrement, InstructionDuration )
+tripleMainRegsIX : Dict Int ( Z80Word -> MainWithIndexRegisters -> TripleMainChange, TriplePCIncrement, InstructionDuration )
 tripleMainRegsIX =
     Dict.fromList
         [ ( 0x22, ( ld_nn_indirect_ix, IncrementByFour, TwentyTStates ) )
         ]
 
 
-tripleMainRegsIY : Dict Int ( Int -> MainWithIndexRegisters -> TripleMainChange, TriplePCIncrement, InstructionDuration )
+tripleMainRegsIY : Dict Int ( Z80Word -> MainWithIndexRegisters -> TripleMainChange, TriplePCIncrement, InstructionDuration )
 tripleMainRegsIY =
     Dict.fromList
         [ ( 0x22, ( ld_nn_indirect_iy, IncrementByFour, TwentyTStates ) )
@@ -43,10 +43,12 @@ applyTripleMainChange time pcInc z80changeData z80 =
         new_pc =
             case pcInc of
                 IncrementByThree ->
-                    Bitwise.and (z80.pc + 3) 0xFFFF
+                    --Bitwise.and (z80.pc + 3) 0xFFFF
+                    z80.pc |> incrementBy3
 
                 IncrementByFour ->
-                    Bitwise.and (z80.pc + 4) 0xFFFF
+                    --Bitwise.and (z80.pc + 4) 0xFFFF
+                    z80.pc |> incrementBy4
     in
     case z80changeData of
         Store16BitValue address value ->
@@ -61,19 +63,19 @@ applyTripleMainChange time pcInc z80changeData z80 =
             }
 
 
-ld_nn_indirect_hl : Int -> MainWithIndexRegisters -> TripleMainChange
+ld_nn_indirect_hl : Z80Word -> MainWithIndexRegisters -> TripleMainChange
 ld_nn_indirect_hl param16 z80_main =
     -- case 0x22: MP=(v=imm16())+1; env.mem16(v,HL); time+=6; break;
     Store16BitValue param16 z80_main.hl
 
 
-ld_nn_indirect_ix : Int -> MainWithIndexRegisters -> TripleMainChange
+ld_nn_indirect_ix : Z80Word -> MainWithIndexRegisters -> TripleMainChange
 ld_nn_indirect_ix param16 z80_main =
     -- case 0x22: MP=(v=imm16())+1; env.mem16(v,xy); time+=6; break;
     Store16BitValue param16 z80_main.ix
 
 
-ld_nn_indirect_iy : Int -> MainWithIndexRegisters -> TripleMainChange
+ld_nn_indirect_iy : Z80Word -> MainWithIndexRegisters -> TripleMainChange
 ld_nn_indirect_iy param16 z80_main =
     -- case 0x22: MP=(v=imm16())+1; env.mem16(v,xy); time+=6; break;
     Store16BitValue param16 z80_main.iy

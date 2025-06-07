@@ -1,35 +1,37 @@
 module Z80Change exposing (..)
 
+import Z80Byte exposing (Z80Byte)
 import Z80Core exposing (Z80Core)
 import Z80Env exposing (setMem)
-import Z80Flags exposing (FlagRegisters, IntWithFlags)
+import Z80Flags exposing (FlagRegisters, IntWithFlags, Z80ByteWithFlags)
+import Z80Word exposing (Z80Word)
 
 
 type Z80Change
-    = FlagsWithBRegister IntWithFlags
-    | FlagsWithCRegister IntWithFlags
-    | FlagsWithDRegister IntWithFlags
-    | FlagsWithERegister FlagRegisters Int
-    | FlagsWithHLRegister FlagRegisters Int
-    | FlagsWithIXRegister FlagRegisters Int
-    | FlagsWithIYRegister FlagRegisters Int
-    | Z80RegisterB Int
-    | Z80RegisterC Int
+    = FlagsWithBRegister Z80ByteWithFlags
+    | FlagsWithCRegister Z80ByteWithFlags
+    | FlagsWithDRegister Z80ByteWithFlags
+    | FlagsWithERegister FlagRegisters Z80Byte
+    | FlagsWithHLRegister FlagRegisters Z80Word
+    | FlagsWithIXRegister FlagRegisters Z80Word
+    | FlagsWithIYRegister FlagRegisters Z80Word
+    | Z80RegisterB Z80Byte
+    | Z80RegisterC Z80Byte
     | Z80ChangeFlags FlagRegisters
-    | Z80ChangeSetIndirect Int Int
+    | Z80ChangeSetIndirect Z80Word Z80Byte
 
 
 type FlagChange
     = OnlyFlags FlagRegisters
-    | FlagChangeB Int
-    | FlagChangeC Int
-    | FlagChangeD Int
-    | FlagChangeE Int
-    | FlagChangeH Int
-    | FlagChangeL Int
+    | FlagChangeB Z80Byte
+    | FlagChangeC Z80Byte
+    | FlagChangeD Z80Byte
+    | FlagChangeE Z80Byte
+    | FlagChangeH Z80Byte
+    | FlagChangeL Z80Byte
     | ReturnWithPop
     | EmptyFlagChange
-    | FlagChangePush Int
+    | FlagChangePush Z80Word
 
 
 applyZ80Change : Z80Change -> Z80Core -> Z80Core

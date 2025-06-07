@@ -1,15 +1,16 @@
 module SingleEnvWithMain exposing (..)
 
-import Bitwise
-import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, CpuTimeIncrement, InstructionDuration(..), addDuration)
+import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeAndZ80Byte, CpuTimeCTime, CpuTimeIncrement, InstructionDuration(..), addDuration)
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
-import Utils exposing (BitTest(..), shiftLeftBy8)
+import Utils exposing (BitTest(..))
+import Z80Byte exposing (Z80Byte)
 import Z80Core exposing (Z80Core)
 import Z80Env exposing (Z80Env, mem)
 import Z80Flags exposing (FlagFunc(..), add16, changeFlags, testBit)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIYHL(..), MainWithIndexRegisters, set_xy)
+import Z80Word exposing (Z80Word, incrementBy1, incrementBy2)
 
 
 type EightBitMain
@@ -20,16 +21,12 @@ type EightBitMain
 
 
 type SingleEnvMainChange
-    = SingleEnvNewARegister Int CpuTimeCTime
-      --| SingleEnvNewBRegister Int CpuTimeCTime
-      --| SingleEnvNewCRegister Int CpuTimeCTime
-      --| SingleEnvNewDRegister Int CpuTimeCTime
-      --| SingleEnvNewERegister Int CpuTimeCTime
-    | SingleEnv8BitMain EightBitMain Int CpuTimeCTime
-    | SingleEnvNewHLRegister Int CpuTimeCTime
+    = SingleEnvNewARegister Z80Byte CpuTimeCTime
+    | SingleEnv8BitMain EightBitMain Z80Byte CpuTimeCTime
+    | SingleEnvNewHLRegister Z80Word CpuTimeCTime
     | SingleBitTest BitTest CpuTimeAndValue
-    | SingleEnvFlagFunc FlagFunc Int CpuTimeCTime
-    | SingleEnvNewHL16BitAdd IXIYHL Int Int
+    | SingleEnvFlagFunc FlagFunc Z80Byte CpuTimeCTime
+    | SingleEnvNewHL16BitAdd IXIYHL Z80Word Z80Word
 
 
 singleEnvMainRegs : Dict Int ( MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange, PCIncrement, InstructionDuration )
@@ -82,10 +79,10 @@ applySingleEnvMainChange pcInc duration z80changeData z80 =
         new_pc =
             case pcInc of
                 IncrementByOne ->
-                    Bitwise.and (z80.pc + 1) 0xFFFF
+                    z80.pc |> incrementBy1
 
                 IncrementByTwo ->
-                    Bitwise.and (z80.pc + 2) 0xFFFF
+                    z80.pc |> incrementBy2
     in
     case z80changeData of
         SingleEnvNewARegister int cpuTimeCTime ->
@@ -176,8 +173,10 @@ ld_a_indirect_bc : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainCh
 ld_a_indirect_bc z80_main rom48k z80_env =
     -- case 0x0A: MP=(v=B<<8|C)+1; A=env.mem(v); time+=3; break;
     let
+        --v =
+        --    Bitwise.or (shiftLeftBy8 z80_main.b) z80_main.c
         v =
-            Bitwise.or (shiftLeftBy8 z80_main.b) z80_main.c
+            Z80Word z80_main.c z80_main.b
 
         new_a =
             mem v z80_env.time rom48k z80_env.ram
@@ -189,8 +188,10 @@ ld_a_indirect_de : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainCh
 ld_a_indirect_de z80_main rom48k z80_env =
     -- case 0x1A: MP=(v=D<<8|E)+1; A=env.mem(v); time+=3; break;
     let
+        --addr =
+        --    Bitwise.or (shiftLeftBy8 z80_main.d) z80_main.e
         addr =
-            Bitwise.or (shiftLeftBy8 z80_main.d) z80_main.e
+            Z80Word z80_main.e z80_main.d
 
         new_a =
             mem addr z80_env.time rom48k z80_env.ram
@@ -253,11 +254,15 @@ ld_h_indirect_hl z80_main rom48k z80_env =
     -- case 0x66: HL=HL&0xFF|env.mem(HL)<<8; time+=3; break;
     -- case 0x66: HL=HL&0xFF|env.mem(getd(xy))<<8; time+=3; break;
     let
+        hl =
+            z80_main.hl
+
         value =
-            mem z80_main.hl z80_env.time rom48k z80_env.ram
+            mem hl z80_env.time rom48k z80_env.ram
 
         new_hl =
-            (z80_main.hl |> Bitwise.and 0xFF) |> Bitwise.or (value.value |> shiftLeftBy8)
+            --(z80_main.hl |> Bitwise.and 0xFF) |> Bitwise.or (value.value |> shiftLeftBy8)
+            { hl | high = value.value }
     in
     SingleEnvNewHLRegister new_hl value.time
 
@@ -267,11 +272,15 @@ ld_l_indirect_hl z80_main rom48k z80_env =
     -- case 0x6E: HL=HL&0xFF00|env.mem(HL); time+=3; break;
     -- case 0x6E: HL=HL&0xFF00|env.mem(getd(xy)); time+=3; break;
     let
+        hl =
+            z80_main.hl
+
         value =
-            mem z80_main.hl z80_env.time rom48k z80_env.ram
+            mem hl z80_env.time rom48k z80_env.ram
 
         new_hl =
-            z80_main.hl |> Bitwise.and 0xFF00 |> Bitwise.or value.value
+            --z80_main.hl |> Bitwise.and 0xFF00 |> Bitwise.or value.value
+            { hl | low = value.value }
     in
     SingleEnvNewHLRegister new_hl value.time
 

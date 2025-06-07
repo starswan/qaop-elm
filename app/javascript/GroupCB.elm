@@ -7,6 +7,7 @@ import PCIncrement exposing (PCIncrement(..))
 import RegisterChange exposing (RegisterChange(..), Shifter(..))
 import SingleEnvWithMain exposing (SingleEnvMainChange(..))
 import Utils exposing (BitTest(..), bitMaskFromBit, byte, char, inverseBitMaskFromBit, shiftLeftBy8, shiftRightBy8)
+import Z80Byte exposing (intToZ80, resetBit, setBit, z80ToInt)
 import Z80Change exposing (Z80Change(..))
 import Z80Core exposing (Z80Core, inc_pc2, set408bitHL)
 import Z80Delta exposing (Z80Delta(..))
@@ -14,6 +15,7 @@ import Z80Env exposing (Z80Env, addCpuTimeEnv, mem, setMem)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, bit, c_F53, shifter, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIY, IXIYHL(..), IntWithFlagsTimeAndPC, MainWithIndexRegisters, get_ixiy_xy)
+import Z80Word exposing (incrementBy1, wordPlusOffset, z80wordToInt)
 
 
 
@@ -41,13 +43,18 @@ group_xy_cb ixiyhl rom48k z80 =
             mem z80.pc z80.env.time rom48k z80.env.ram
 
         addr =
-            char (xy + byte offset.value)
+            --char (xy + byte offset.value)
+            xy |> wordPlusOffset offset.value
 
         env_1 =
             z80.env
 
         c =
-            mem (char (z80.pc + 1)) (offset.time |> addCpuTimeTime 3) rom48k z80.env.ram
+            --mem (char (z80.pc + 1)) (offset.time |> addCpuTimeTime 3) rom48k z80.env.ram
+            mem (z80.pc |> incrementBy1) (offset.time |> addCpuTimeTime 3) rom48k z80.env.ram
+
+        c_value =
+            c.value |> z80ToInt
 
         new_pc =
             z80 |> inc_pc2
@@ -59,10 +66,10 @@ group_xy_cb ixiyhl rom48k z80 =
             { z80 | pc = new_pc, env = { env_1 | time = v1.time |> addCpuTimeTime 4 } }
 
         o =
-            Bitwise.and (shiftRightBy 3 c.value) 7
+            Bitwise.and (shiftRightBy 3 c_value) 7
 
         cAndC0 =
-            Bitwise.and c.value 0xC0
+            Bitwise.and c_value 0xC0
 
         --		switch(c&0xC0) {
         --			case 0x00: v = shifter(o, v); break;
@@ -70,6 +77,9 @@ group_xy_cb ixiyhl rom48k z80 =
         --			case 0x80: v &= ~(1<<o); break;
         --			case 0xC0: v |= 1<<o; break;
         --		}
+        addr_int =
+            addr |> z80wordToInt
+
         v2 =
             case cAndC0 of
                 0x00 ->
@@ -77,16 +87,27 @@ group_xy_cb ixiyhl rom48k z80 =
 
                 0x40 ->
                     let
+                        v1_value =
+                            v1.value |> z80ToInt
+
                         flags =
-                            bit o v1.value z80_3.flags
+                            bit o v1_value z80_3.flags
                     in
-                    IntWithFlags v1.value { flags | ff = Bitwise.or (Bitwise.and flags.ff (complement c_F53)) (shiftRightBy (Bitwise.and 8 c_F53) addr) }
+                    Z80Flags.Z80ByteWithFlags v1.value { flags | ff = Bitwise.or (Bitwise.and flags.ff (complement c_F53)) (shiftRightBy (Bitwise.and 8 c_F53) addr_int) }
 
                 0x80 ->
-                    IntWithFlags (Bitwise.and v1.value (complement (shiftLeftBy o 1))) z80_3.flags
+                    let
+                        v1_value =
+                            v1.value |> z80ToInt
+                    in
+                    Z80Flags.Z80ByteWithFlags (Bitwise.and v1_value (complement (shiftLeftBy o 1)) |> intToZ80) z80_3.flags
 
                 _ ->
-                    IntWithFlags (Bitwise.or v1.value (shiftLeftBy o 1)) z80_3.flags
+                    let
+                        v1_value =
+                            v1.value |> z80ToInt
+                    in
+                    Z80Flags.Z80ByteWithFlags (Bitwise.or v1_value (shiftLeftBy o 1) |> intToZ80) z80_3.flags
 
         new_env =
             if cAndC0 == 0x40 then
@@ -114,7 +135,7 @@ group_xy_cb ixiyhl rom48k z80 =
         --			case 7: A = v; break;
         --		}
         caseval =
-            Bitwise.and c.value 0x07
+            Bitwise.and c_value 0x07
     in
     if (caseval /= 6) && (cAndC0 /= 0x40) then
         let
@@ -433,37 +454,43 @@ resetBbit : BitTest -> MainWithIndexRegisters -> RegisterChange
 resetBbit bitMask z80_main =
     --Bitwise.and raw.value (1 |> shiftLeftBy o |> complement)
     -- case 0x80: B=B&~(1<<o); break;
-    ChangeRegisterB (bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.b)
+    --ChangeRegisterB (bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.b)
+    ChangeRegisterB (z80_main.b |> resetBit bitMask)
 
 
 resetCbit : BitTest -> MainWithIndexRegisters -> RegisterChange
 resetCbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
-    ChangeRegisterC (bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.c)
+    --ChangeRegisterC (bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.c)
+    ChangeRegisterC (z80_main.c |> resetBit bitMask)
 
 
 resetDbit : BitTest -> MainWithIndexRegisters -> RegisterChange
 resetDbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
-    ChangeRegisterD (bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.d)
+    --ChangeRegisterD (bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.d)
+    ChangeRegisterD (z80_main.d |> resetBit bitMask)
 
 
 resetEbit : BitTest -> MainWithIndexRegisters -> RegisterChange
 resetEbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
-    ChangeRegisterE (bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.e)
+    --ChangeRegisterE (bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.e)
+    ChangeRegisterE (z80_main.e |> resetBit bitMask)
 
 
 resetHbit : BitTest -> MainWithIndexRegisters -> RegisterChange
 resetHbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
-    ChangeRegisterH (bitMask |> inverseBitMaskFromBit |> Bitwise.and (z80_main.hl |> shiftRightBy8))
+    --ChangeRegisterH (bitMask |> inverseBitMaskFromBit |> Bitwise.and (z80_main.hl |> shiftRightBy8))
+    ChangeRegisterH (z80_main.hl.high |> resetBit bitMask)
 
 
 resetLbit : BitTest -> MainWithIndexRegisters -> RegisterChange
 resetLbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
-    ChangeRegisterL (bitMask |> inverseBitMaskFromBit |> Bitwise.and (z80_main.hl |> Bitwise.and 0xFF))
+    --ChangeRegisterL (bitMask |> inverseBitMaskFromBit |> Bitwise.and (z80_main.hl |> Bitwise.and 0xFF))
+    ChangeRegisterL (z80_main.hl.low |> resetBit bitMask)
 
 
 resetHLbit : BitTest -> MainWithIndexRegisters -> RegisterChange
@@ -476,37 +503,43 @@ setBbit : BitTest -> MainWithIndexRegisters -> RegisterChange
 setBbit bitMask z80_main =
     --Bitwise.and raw.value (1 |> shiftLeftBy o |> complement)
     -- case 0x80: B=B&~(1<<o); break;
-    ChangeRegisterB (bitMask |> bitMaskFromBit |> Bitwise.or z80_main.b)
+    --ChangeRegisterB (bitMask |> bitMaskFromBit |> Bitwise.or z80_main.b)
+    ChangeRegisterB (z80_main.b |> setBit bitMask)
 
 
 setCbit : BitTest -> MainWithIndexRegisters -> RegisterChange
 setCbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
-    ChangeRegisterC (bitMask |> bitMaskFromBit |> Bitwise.or z80_main.c)
+    --ChangeRegisterC (bitMask |> bitMaskFromBit |> Bitwise.or z80_main.c)
+    ChangeRegisterC (z80_main.c |> setBit bitMask)
 
 
 setDbit : BitTest -> MainWithIndexRegisters -> RegisterChange
 setDbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
-    ChangeRegisterD (bitMask |> bitMaskFromBit |> Bitwise.or z80_main.d)
+    --ChangeRegisterD (bitMask |> bitMaskFromBit |> Bitwise.or z80_main.d)
+    ChangeRegisterD (z80_main.d |> setBit bitMask)
 
 
 setEbit : BitTest -> MainWithIndexRegisters -> RegisterChange
 setEbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
-    ChangeRegisterE (bitMask |> bitMaskFromBit |> Bitwise.or z80_main.e)
+    --ChangeRegisterE (bitMask |> bitMaskFromBit |> Bitwise.or z80_main.e)
+    ChangeRegisterE (z80_main.e |> setBit bitMask)
 
 
 setHbit : BitTest -> MainWithIndexRegisters -> RegisterChange
 setHbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
-    ChangeRegisterH (bitMask |> bitMaskFromBit |> Bitwise.or (z80_main.hl |> shiftRightBy8))
+    --ChangeRegisterH (bitMask |> bitMaskFromBit |> Bitwise.or (z80_main.hl |> shiftRightBy8))
+    ChangeRegisterH (z80_main.hl.high |> setBit bitMask)
 
 
 setLbit : BitTest -> MainWithIndexRegisters -> RegisterChange
 setLbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
-    ChangeRegisterL (bitMask |> bitMaskFromBit |> Bitwise.or (z80_main.hl |> Bitwise.and 0xFF))
+    --ChangeRegisterL (bitMask |> bitMaskFromBit |> Bitwise.or (z80_main.hl |> Bitwise.and 0xFF))
+    ChangeRegisterL (z80_main.hl.low |> setBit bitMask)
 
 
 setHLbit : BitTest -> MainWithIndexRegisters -> RegisterChange
@@ -570,8 +603,12 @@ singleByteMainAndFlagRegistersCB =
         , ( 0x41, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.c |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
         , ( 0x42, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.d |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
         , ( 0x43, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.e |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x44, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x45, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
+
+        --, ( 0x44, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
+        , ( 0x44, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.hl.high |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
+
+        --, ( 0x45, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
+        , ( 0x45, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.hl.low |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
         , ( 0x48, ( bit_1_b, IncrementByTwo, EightTStates ) )
         , ( 0x49, ( bit_1_c, IncrementByTwo, EightTStates ) )
         , ( 0x4A, ( bit_1_d, IncrementByTwo, EightTStates ) )
@@ -588,32 +625,51 @@ singleByteMainAndFlagRegistersCB =
         , ( 0x59, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.c |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
         , ( 0x5A, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.d |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
         , ( 0x5B, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.e |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x5C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x5D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
+
+        --, ( 0x5C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
+        , ( 0x5C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.hl.high |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
+
+        --, ( 0x5D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
+        , ( 0x5D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.hl.low |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
         , ( 0x60, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.b |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
         , ( 0x61, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.c |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
         , ( 0x62, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.d |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
         , ( 0x63, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.e |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x64, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x65, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
+
+        --, ( 0x64, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
+        , ( 0x64, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.hl.high |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
+
+        --, ( 0x65, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
+        , ( 0x65, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.hl.low |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
         , ( 0x68, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.b |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
         , ( 0x69, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.c |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
         , ( 0x6A, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.d |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
         , ( 0x6B, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.e |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x6C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x6D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
+
+        --, ( 0x6C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
+        , ( 0x6C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.hl.high |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
+
+        --, ( 0x6D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
+        , ( 0x6D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.hl.low |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
         , ( 0x70, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.b |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
         , ( 0x71, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.c |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
         , ( 0x72, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.d |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
         , ( 0x73, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.e |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x74, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x75, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
+
+        --, ( 0x74, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
+        , ( 0x74, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.hl.high |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
+
+        --, ( 0x75, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
+        , ( 0x75, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.hl.low |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
         , ( 0x78, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.b |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
         , ( 0x79, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.c |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
         , ( 0x7A, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.d |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
         , ( 0x7B, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.e |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x7C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x7D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
+
+        --, ( 0x7C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
+        --, ( 0x7D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
+        , ( 0x7C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.hl.high |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
+        , ( 0x7D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.hl.low |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
         ]
 
 
@@ -649,11 +705,16 @@ rlc_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rlc_h z80_main z80_flags =
     --case 0x04: HL=HL&0xFF|shifter(o,HL>>>8)<<8; break
     let
+        hl =
+            z80_main.hl
+
         value =
-            shifter0 (z80_main.hl |> shiftRightBy8) z80_flags
+            --    shifter0 (z80_main.hl |> shiftRightBy8) z80_flags
+            shifter0 hl.high z80_flags
 
         new_hl =
-            Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
+            --Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
+            { hl | high = value.value }
     in
     FlagsWithHLRegister value.flags new_hl
 
@@ -662,11 +723,16 @@ rlc_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rlc_l z80_main z80_flags =
     -- case 0x05: HL=HL&0xFF00|shifter(o,HL&0xFF); break;
     let
+        hl =
+            z80_main.hl
+
         value =
-            shifter0 (Bitwise.and z80_main.hl 0xFF) z80_flags
+            --shifter0 (Bitwise.and z80_main.hl 0xFF) z80_flags
+            shifter0 hl.low z80_flags
 
         new_hl =
-            Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
+            --Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
+            { hl | low = value.value }
     in
     FlagsWithHLRegister value.flags new_hl
 
@@ -702,11 +768,16 @@ rrc_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rrc_h z80_main z80_flags =
     --case 0x04: HL=HL&0xFF|shifter(o,HL>>>8)<<8; break
     let
+        hl =
+            z80_main.hl
+
         value =
-            shifter1 (z80_main.hl |> shiftRightBy8) z80_flags
+            --shifter1 (z80_main.hl |> shiftRightBy8) z80_flags
+            shifter1 hl.high z80_flags
 
         new_hl =
-            Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
+            --Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
+            { hl | high = value.value }
     in
     FlagsWithHLRegister value.flags new_hl
 
@@ -715,11 +786,16 @@ rrc_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rrc_l z80_main z80_flags =
     -- case 0x05: HL=HL&0xFF00|shifter(o,HL&0xFF); break;
     let
+        hl =
+            z80_main.hl
+
         value =
-            shifter1 (Bitwise.and z80_main.hl 0xFF) z80_flags
+            --shifter1 (Bitwise.and z80_main.hl 0xFF) z80_flags
+            shifter1 hl.low z80_flags
 
         new_hl =
-            Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
+            --Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
+            { hl | low = value.value }
     in
     FlagsWithHLRegister value.flags new_hl
 
@@ -756,11 +832,16 @@ rl_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rl_h z80_main z80_flags =
     --case 0x04: HL=HL&0xFF|shifter(o,HL>>>8)<<8; break
     let
+        hl =
+            z80_main.hl
+
         value =
-            shifter2 (z80_main.hl |> shiftRightBy8) z80_flags
+            --shifter2 (z80_main.hl |> shiftRightBy8) z80_flags
+            shifter2 hl.high z80_flags
 
         new_hl =
-            Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
+            --Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
+            { hl | high = value.value }
     in
     FlagsWithHLRegister value.flags new_hl
 
@@ -769,11 +850,16 @@ rl_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rl_l z80_main z80_flags =
     -- case 0x05: HL=HL&0xFF00|shifter(o,HL&0xFF); break;
     let
+        hl =
+            z80_main.hl
+
         value =
-            shifter2 (Bitwise.and z80_main.hl 0xFF) z80_flags
+            --shifter2 (Bitwise.and z80_main.hl 0xFF) z80_flags
+            shifter2 hl.low z80_flags
 
         new_hl =
-            Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
+            --Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
+            { hl | low = value.value }
     in
     FlagsWithHLRegister value.flags new_hl
 
@@ -810,11 +896,16 @@ rr_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rr_h z80_main z80_flags =
     --case 0x04: HL=HL&0xFF|shifter(o,HL>>>8)<<8; break
     let
+        hl =
+            z80_main.hl
+
         value =
-            shifter3 (z80_main.hl |> shiftRightBy8) z80_flags
+            --shifter3 (z80_main.hl |> shiftRightBy8) z80_flags
+            shifter3 hl.high z80_flags
 
         new_hl =
-            Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
+            --Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
+            { hl | high = value.value }
     in
     FlagsWithHLRegister value.flags new_hl
 
@@ -823,11 +914,16 @@ rr_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rr_l z80_main z80_flags =
     -- case 0x05: HL=HL&0xFF00|shifter(o,HL&0xFF); break;
     let
+        hl =
+            z80_main.hl
+
         value =
-            shifter3 (Bitwise.and z80_main.hl 0xFF) z80_flags
+            --shifter3 (Bitwise.and z80_main.hl 0xFF) z80_flags
+            shifter3 hl.low z80_flags
 
         new_hl =
-            Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
+            --Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
+            { hl | low = value.value }
     in
     FlagsWithHLRegister value.flags new_hl
 

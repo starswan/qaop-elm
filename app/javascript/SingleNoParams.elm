@@ -1,6 +1,5 @@
 module SingleNoParams exposing (..)
 
-import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import Dict exposing (Dict)
 import Z80Core exposing (Z80, Z80Core, set_iff)
@@ -8,6 +7,18 @@ import Z80Env exposing (z80_pop, z80_push)
 import Z80Flags exposing (set_af)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (set_bc_main, set_de_main)
+import Z80Word exposing (incrementBy1, toZ80Word)
+
+
+type Rst
+    = Rst00
+    | Rst08
+    | Rst10
+    | Rst18
+    | Rst20
+    | Rst28
+    | Rst30
+    | Rst38
 
 
 type NoParamChange
@@ -18,16 +29,7 @@ type NoParamChange
     | PopDE
     | PopHL
     | PopAF
-      --| Exx
-      --| ExAfAfDash
-    | Rst00
-    | Rst08
-    | Rst10
-    | Rst18
-    | Rst20
-    | Rst28
-    | Rst30
-    | Rst38
+    | Restart Rst
     | Ret
 
 
@@ -58,23 +60,23 @@ singleWithNoParam =
         -- case 0x7F: break;
         , ( 0x7F, ( NoOp, FourTStates ) )
         , ( 0xC1, ( PopBC, TenTStates ) )
-        , ( 0xC7, ( Rst00, FourTStates ) )
+        , ( 0xC7, ( Restart Rst00, FourTStates ) )
         , ( 0xC9, ( Ret, TenTStates ) )
-        , ( 0xCF, ( Rst08, ElevenTStates ) )
+        , ( 0xCF, ( Restart Rst08, ElevenTStates ) )
         , ( 0xD1, ( PopDE, TenTStates ) )
-        , ( 0xD7, ( Rst10, ElevenTStates ) )
+        , ( 0xD7, ( Restart Rst10, ElevenTStates ) )
 
         -- case 0xD9: exx(); break;
         --, ( 0xD9, ( Exx, FourTStates ) )
-        , ( 0xDF, ( Rst18, ElevenTStates ) )
+        , ( 0xDF, ( Restart Rst18, ElevenTStates ) )
         , ( 0xE1, ( PopHL, TenTStates ) )
-        , ( 0xE7, ( Rst20, ElevenTStates ) )
-        , ( 0xEF, ( Rst28, ElevenTStates ) )
+        , ( 0xE7, ( Restart Rst20, ElevenTStates ) )
+        , ( 0xEF, ( Restart Rst28, ElevenTStates ) )
         , ( 0xF1, ( PopAF, TenTStates ) )
         , ( 0xF3, ( DisableInterrupts, FourTStates ) )
-        , ( 0xF7, ( Rst30, ElevenTStates ) )
+        , ( 0xF7, ( Restart Rst30, ElevenTStates ) )
         , ( 0xFB, ( EnableInterrupts, FourTStates ) )
-        , ( 0xFF, ( Rst38, ElevenTStates ) )
+        , ( 0xFF, ( Restart Rst38, ElevenTStates ) )
         ]
 
 
@@ -87,7 +89,8 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
             z80.env
 
         pc =
-            Bitwise.and (z80.pc + 1) 0xFFFF
+            --Bitwise.and (z80.pc + 1) 0xFFFF
+            z80.pc |> incrementBy1
     in
     case z80changeData of
         NoOp ->
@@ -215,38 +218,37 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
                 , r = z80.r + 1
             }
 
-        Rst00 ->
+        Restart restart ->
             --case 0xC7:push(PC); PC=c-199; break;
-            z80 |> rst 0xC7 cpu_time
+            z80 |> rst restart cpu_time
 
-        Rst08 ->
-            --case 0xCF:push(PC); PC=c-199; break;
-            z80 |> rst 0xCF cpu_time
-
-        Rst10 ->
-            --case 0xD7:push(PC); PC=c-199; break;
-            z80 |> rst 0xD7 cpu_time
-
-        Rst18 ->
-            --case 0xDF:push(PC); PC=c-199; break;
-            z80 |> rst 0xDF cpu_time
-
-        Rst20 ->
-            --case 0xE7:push(PC); PC=c-199; break;
-            z80 |> rst 0xE7 cpu_time
-
-        Rst28 ->
-            --case 0xEF:push(PC); PC=c-199; break;
-            z80 |> rst 0xEF cpu_time
-
-        Rst30 ->
-            --case 0xF7:push(PC); PC=c-199; break;
-            z80 |> rst 0xF7 cpu_time
-
-        Rst38 ->
-            --case 0xFF:push(PC); PC=c-199; break;
-            z80 |> rst 0xFF cpu_time
-
+        --Rst08 ->
+        --    --case 0xCF:push(PC); PC=c-199; break;
+        --    z80 |> rst 0xCF cpu_time
+        --
+        --Rst10 ->
+        --    --case 0xD7:push(PC); PC=c-199; break;
+        --    z80 |> rst 0xD7 cpu_time
+        --
+        --Rst18 ->
+        --    --case 0xDF:push(PC); PC=c-199; break;
+        --    z80 |> rst 0xDF cpu_time
+        --
+        --Rst20 ->
+        --    --case 0xE7:push(PC); PC=c-199; break;
+        --    z80 |> rst 0xE7 cpu_time
+        --
+        --Rst28 ->
+        --    --case 0xEF:push(PC); PC=c-199; break;
+        --    z80 |> rst 0xEF cpu_time
+        --
+        --Rst30 ->
+        --    --case 0xF7:push(PC); PC=c-199; break;
+        --    z80 |> rst 0xF7 cpu_time
+        --
+        --Rst38 ->
+        --    --case 0xFF:push(PC); PC=c-199; break;
+        --    z80 |> rst 0xFF cpu_time
         Ret ->
             --ret : Z80ROM -> Z80 -> Z80Delta
             --ret rom48k z80 =
@@ -266,8 +268,8 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
             }
 
 
-rst : Int -> CpuTimeCTime -> Z80Core -> Z80Core
-rst value cpu_time z80 =
+rst : Rst -> CpuTimeCTime -> Z80Core -> Z80Core
+rst rstvalue cpu_time z80 =
     let
         --interrupts =
         --    z80.interrupts
@@ -275,10 +277,37 @@ rst value cpu_time z80 =
             z80.env
 
         pc =
-            Bitwise.and (z80.pc + 1) 0xFFFF
+            --Bitwise.and (z80.pc + 1) 0xFFFF
+            z80.pc |> incrementBy1
+
+        value =
+            case rstvalue of
+                Rst00 ->
+                    0xC7
+
+                Rst08 ->
+                    0xCF
+
+                Rst10 ->
+                    0xD7
+
+                Rst18 ->
+                    0xDF
+
+                Rst20 ->
+                    0xE7
+
+                Rst28 ->
+                    0xEF
+
+                Rst30 ->
+                    0xF7
+
+                Rst38 ->
+                    0xFF
     in
     { z80
-        | pc = value - 199
+        | pc = (value - 199) |> toZ80Word
         , env = { old_env | time = cpu_time } |> z80_push pc
         , r = z80.r + 1
     }

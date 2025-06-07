@@ -5,12 +5,9 @@
 
 module Utils exposing (..)
 
-import Array exposing (Array)
 import Bitwise exposing (shiftLeftBy, shiftRightBy)
 import Dict exposing (Dict)
 import Hex
-import Process
-import Task
 
 
 compact list =
@@ -112,12 +109,10 @@ toPlainHexString2 value =
 --           -- takes the result of the above task and
 --           -- returns it to our update function
 --           Task.perform identity
-
-
-delay : Float -> msg -> Cmd msg
-delay time msg =
-    Process.sleep time
-        |> Task.perform (\_ -> msg)
+--delay : Float -> msg -> Cmd msg
+--delay time msg =
+--    Process.sleep time
+--        |> Task.perform (\_ -> msg)
 
 
 c_DECIMAL_PLACES =
@@ -232,11 +227,14 @@ inverseBitMaskFromBit testType =
             0x7F
 
 
-wordPlusOffset : Int -> Int -> Int
-wordPlusOffset z80byte z80word =
-    let
-        newvalue =
-            z80word + byte z80byte |> char
-    in
-    --Z80Word loval hival
-    newvalue
+
+--wordPlusOffset : Z80Byte -> Z80Word -> Z80Word
+--wordPlusOffset in_z80byte in_z80word =
+--    let
+--        z80byte = in_z80byte |> z80ToInt
+--        z80word = in_z80word |> z80wordToInt
+--        newvalue =
+--            z80word + byte z80byte |> char
+--    in
+--    --Z80Word loval hival
+--    newvalue |> toZ80Word
