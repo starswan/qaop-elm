@@ -7,6 +7,7 @@ import PCIncrement exposing (PCIncrement(..))
 import RegisterChange exposing (RegisterChange(..), Shifter(..))
 import Utils exposing (BitTest(..), bitMaskFromBit, inverseBitMaskFromBit, shiftRightBy8)
 import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, get_bc, get_de)
+import Z80Word exposing (Z80Word)
 
 
 singleByteMainRegs : Dict Int ( MainWithIndexRegisters -> RegisterChange, InstructionDuration )
@@ -220,23 +221,23 @@ ld_b_e z80_main =
     ChangeRegisterB z80_main.e
 
 
-ld_b_h : Int -> RegisterChange
+ld_b_h : Z80Word -> RegisterChange
 ld_b_h hl =
     -- case 0x44: B=HL>>>8; break;
     -- case 0x44: B=xy>>>8; break;
     --z80 |> set_b (get_h ixiyhl z80.main)
-    ChangeRegisterB (shiftRightBy8 hl)
+    ChangeRegisterB hl.high
 
 
 ld_c_ixh : MainWithIndexRegisters -> RegisterChange
 ld_c_ixh z80_main =
     -- case 0x4C: C=xy>>>8; break;
-    ChangeRegisterC (shiftRightBy8 z80_main.ix)
+    ChangeRegisterC z80_main.ix.high
 
 
 ld_c_iyh : MainWithIndexRegisters -> RegisterChange
 ld_c_iyh z80_main =
-    ChangeRegisterC (shiftRightBy8 z80_main.iy)
+    ChangeRegisterC z80_main.iy.high
 
 
 ld_b_l : MainWithIndexRegisters -> RegisterChange
@@ -244,31 +245,31 @@ ld_b_l z80_main =
     -- case 0x45: B=HL&0xFF; break;
     -- case 0x45: B=xy&0xFF; break;
     --  z80 |> set_b (get_l ixiyhl z80.main)
-    ChangeRegisterB (Bitwise.and z80_main.hl 0xFF)
+    ChangeRegisterB z80_main.hl.low
 
 
 ld_b_ixl : MainWithIndexRegisters -> RegisterChange
 ld_b_ixl z80_main =
     -- case 0x45: B=xy&0xFF; break;
-    ChangeRegisterB (Bitwise.and z80_main.ix 0xFF)
+    ChangeRegisterB z80_main.ix.low
 
 
 ld_b_iyl : MainWithIndexRegisters -> RegisterChange
 ld_b_iyl z80_main =
     -- case 0x45: B=xy&0xFF; break;
-    ChangeRegisterB (Bitwise.and z80_main.iy 0xFF)
+    ChangeRegisterB z80_main.iy.low
 
 
 ld_c_ixl : MainWithIndexRegisters -> RegisterChange
 ld_c_ixl z80_main =
     -- case 0x4D: C=xy&0xFF; break;
-    ChangeRegisterC (Bitwise.and z80_main.ix 0xFF)
+    ChangeRegisterC z80_main.ix.low
 
 
 ld_c_iyl : MainWithIndexRegisters -> RegisterChange
 ld_c_iyl z80_main =
     -- case 0x4D: C=xy&0xFF; break;
-    ChangeRegisterC (Bitwise.and z80_main.iy 0xFF)
+    ChangeRegisterC z80_main.iy.low
 
 
 ld_c_b : MainWithIndexRegisters -> RegisterChange
@@ -413,7 +414,8 @@ ld_h_l z80_main =
     -- case 0x65: HL=HL&0xFF|(HL&0xFF)<<8; break;
     -- case 0x65: xy=xy&0xFF|(xy&0xFF)<<8; break;
     --z80 |> set_h_z80 (get_l ixiyhl z80.main) ixiyhl
-    ChangeRegisterH (Bitwise.and z80_main.hl 0xFF)
+    --ChangeRegisterH (Bitwise.and z80_main.hl 0xFF)
+    ChangeRegisterH z80_main.hl.low
 
 
 ld_l_b : MainWithIndexRegisters -> RegisterChange

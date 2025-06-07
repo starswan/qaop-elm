@@ -38,7 +38,7 @@ type RegisterChange
     | RegisterChangeJump Z80Word
     | SetIndirect Z80Word Z80Byte
     | ChangeRegisterDEAndHL Z80Word Z80Word
-    | RegisterChangeShifter Shifter Z80Byte
+    | RegisterChangeShifter Shifter Z80Word
     | IndirectBitReset BitTest Z80Word
     | IndirectBitSet BitTest Z80Word
 
@@ -52,7 +52,7 @@ type RegisterChangeApplied
     | DecrementIndirectApplied Z80Word
     | JumpApplied Z80Word
     | SetIndirectApplied Z80Word Z80Byte
-    | RegisterChangeShifterApplied Shifter Z80Byte
+    | RegisterChangeShifterApplied Shifter Z80Word
     | IndirectBitResetApplied BitTest Z80Word
     | IndirectBitSetApplied BitTest Z80Word
 

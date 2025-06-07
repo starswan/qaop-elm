@@ -80,7 +80,7 @@ type Single8BitChange
 
 
 type DoubleWithRegisterChange
-    = RelativeJumpWithTimeOffset Single8BitChange (Maybe Int) Int
+    = RelativeJumpWithTimeOffset Single8BitChange (Maybe Z80Byte) Int
     | DoubleRegChangeStoreIndirect Z80Word Z80Byte CpuTimeIncrement
     | NewHLRegisterValue Z80Word
     | NewIXRegisterValue Z80Word
@@ -90,7 +90,7 @@ type DoubleWithRegisterChange
 
 
 type JumpChange
-    = ActualJump Int
+    = ActualJump Z80Byte
     | NoJump
     | FlagJump FlagRegisters
 
@@ -224,8 +224,9 @@ djnz z80_main param =
     --PC=(char)v;} break;
     let
         d =
-            byte (param |> z80ToInt)
+            param
 
+        --byte (param |> z80ToInt)
         b =
             Bitwise.and ((z80_main.b |> z80ToInt) - 1) 0xFF
 
@@ -251,14 +252,14 @@ jr_n param _ =
     -- case 0x18: MP=PC=(char)(PC+1+(byte)env.mem(PC)); time+=8; break;
     -- This is just an inlined jr() call
     --z80 |> set_pc dest |> add_cpu_time 8
-    ActualJump (byte (param |> z80ToInt))
+    ActualJump param
 
 
 jr_nz_d : Z80Byte -> FlagRegisters -> JumpChange
 jr_nz_d param z80_flags =
     -- case 0x20: if(Fr!=0) jr(); else imm8(); break;
     if z80_flags.fr /= 0 then
-        ActualJump (byte (param |> z80ToInt))
+        ActualJump param
 
     else
         NoJump
@@ -268,7 +269,7 @@ jr_z_d : Z80Byte -> FlagRegisters -> JumpChange
 jr_z_d param z80_flags =
     -- case 0x28: if(Fr==0) jr(); else imm8(); break;
     if z80_flags.fr == 0 then
-        ActualJump (byte (param |> z80ToInt))
+        ActualJump param
 
     else
         NoJump
@@ -278,7 +279,7 @@ jr_nc_d : Z80Byte -> FlagRegisters -> JumpChange
 jr_nc_d param z80_flags =
     -- case 0x30: if((Ff&0x100)==0) jr(); else imm8(); break;
     if Bitwise.and z80_flags.ff 0x0100 == 0 then
-        ActualJump (byte (param |> z80ToInt))
+        ActualJump param
 
     else
         NoJump
@@ -288,7 +289,7 @@ jr_c_d : Z80Byte -> FlagRegisters -> JumpChange
 jr_c_d param z80_flags =
     -- case 0x38: if((Ff&0x100)!=0) jr(); else imm8(); break;
     if Bitwise.and z80_flags.ff 0x0100 /= 0 then
-        ActualJump (byte (param |> z80ToInt))
+        ActualJump param
 
     else
         NoJump

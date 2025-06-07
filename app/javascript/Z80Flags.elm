@@ -566,7 +566,7 @@ rot a flagRegs =
     { flagRegs | ff = ff, fb = fb, fa = fa, a = Bitwise.and a 0xFF |> intToZ80 }
 
 
-shifter : Int -> Z80Byte -> FlagRegisters -> IntWithFlags
+shifter : Int -> Z80Byte -> FlagRegisters -> Z80ByteWithFlags
 shifter o v_in flagRegs =
     case Bitwise.and o 7 of
         0 ->
@@ -594,41 +594,41 @@ shifter o v_in flagRegs =
             flagRegs |> shifter7 v_in
 
 
-shifter_v : Int -> FlagRegisters -> IntWithFlags
+shifter_v : Int -> FlagRegisters -> Z80ByteWithFlags
 shifter_v v flagRegs =
     let
         fr =
             Bitwise.and 0xFF v
     in
-    IntWithFlags fr { flagRegs | ff = v, fr = fr, fb = 0, fa = Bitwise.or 0x0100 fr }
+    Z80ByteWithFlags (fr |> intToZ80) { flagRegs | ff = v, fr = fr, fb = 0, fa = Bitwise.or 0x0100 fr }
 
 
-shifter0 : Z80Byte -> FlagRegisters -> IntWithFlags
+shifter0 : Z80Byte -> FlagRegisters -> Z80ByteWithFlags
 shifter0 v_in flagRegs =
     flagRegs |> shifter_v (shiftRightBy 7 ((v_in |> z80ToInt) * 0x0101))
 
 
-shifter1 : Z80Byte -> FlagRegisters -> IntWithFlags
+shifter1 : Z80Byte -> FlagRegisters -> Z80ByteWithFlags
 shifter1 v_in flagRegs =
     flagRegs |> shifter_v (shiftRightBy 24 ((v_in |> z80ToInt) * 0x80800000))
 
 
-shifter2 : Z80Byte -> FlagRegisters -> IntWithFlags
+shifter2 : Z80Byte -> FlagRegisters -> Z80ByteWithFlags
 shifter2 v_in flagRegs =
     flagRegs |> shifter_v (Bitwise.or (shiftLeftBy1 (v_in |> z80ToInt)) (Bitwise.and (shiftRightBy8 flagRegs.ff) 1))
 
 
-shifter3 : Z80Byte -> FlagRegisters -> IntWithFlags
+shifter3 : Z80Byte -> FlagRegisters -> Z80ByteWithFlags
 shifter3 v_in flagRegs =
     flagRegs |> shifter_v (shiftRightBy1 (Bitwise.or ((v_in |> z80ToInt) * 0x0201) (Bitwise.and flagRegs.ff 0x0100)))
 
 
-shifter4 : Z80Byte -> FlagRegisters -> IntWithFlags
+shifter4 : Z80Byte -> FlagRegisters -> Z80ByteWithFlags
 shifter4 v_in flagRegs =
     flagRegs |> shifter_v (shiftLeftBy1 (v_in |> z80ToInt))
 
 
-shifter5 : Z80Byte -> FlagRegisters -> IntWithFlags
+shifter5 : Z80Byte -> FlagRegisters -> Z80ByteWithFlags
 shifter5 v_byte flagRegs =
     let
         v_in =
@@ -637,12 +637,12 @@ shifter5 v_byte flagRegs =
     flagRegs |> shifter_v (Bitwise.or (Bitwise.or (shiftRightBy1 v_in) (Bitwise.and v_in 0x80)) (shiftLeftBy8 v_in))
 
 
-shifter6 : Z80Byte -> FlagRegisters -> IntWithFlags
+shifter6 : Z80Byte -> FlagRegisters -> Z80ByteWithFlags
 shifter6 v_in flagRegs =
     flagRegs |> shifter_v (Bitwise.or (shiftLeftBy1 (v_in |> z80ToInt)) 1)
 
 
-shifter7 : Z80Byte -> FlagRegisters -> IntWithFlags
+shifter7 : Z80Byte -> FlagRegisters -> Z80ByteWithFlags
 shifter7 v_in flagRegs =
     flagRegs |> shifter_v (shiftRightBy1 ((v_in |> z80ToInt) * 0x0201))
 

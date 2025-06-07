@@ -5,7 +5,7 @@ import CpuTimeCTime exposing (CpuTimeIncrement(..), InstructionDuration(..))
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
 import Utils exposing (BitTest(..), shiftRightBy8)
-import Z80Byte exposing (Z80Byte, intToZ80, resetBit, setBit, z80ToInt)
+import Z80Byte exposing (Z80Byte, resetBit, setBit, z80ToInt)
 import Z80Change exposing (FlagChange(..))
 import Z80Flags exposing (FlagRegisters, IntWithFlags, Z80ByteWithFlags, adc, c_FP, c_FS, cpl, daa, dec, get_af, get_flags, inc, rot, sbc, scf_ccf, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit, z80_add, z80_cp, z80_or, z80_sub, z80_xor)
 
@@ -353,7 +353,7 @@ push_af z80_flags =
     FlagChangePush (z80_flags |> get_af)
 
 
-applyFlagShifter : (Z80Byte -> FlagRegisters -> IntWithFlags) -> FlagRegisters -> FlagChange
+applyFlagShifter : (Z80Byte -> FlagRegisters -> Z80ByteWithFlags) -> FlagRegisters -> FlagChange
 applyFlagShifter shifter z80_flags =
     --case 0x07: A=shifter(o,A); break;
     let
@@ -363,7 +363,7 @@ applyFlagShifter shifter z80_flags =
         new_flags =
             value.flags
     in
-    OnlyFlags { new_flags | a = value.value |> intToZ80 }
+    OnlyFlags { new_flags | a = value.value }
 
 
 rlc_a : FlagRegisters -> FlagChange
