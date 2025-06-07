@@ -264,7 +264,7 @@ inc_l z80_main z80_flags =
         new_xy =
             Bitwise.or h l.value
     in
-    HLRegister new_xy l.flags
+    FlagsWithHLRegister l.flags new_xy
 
 
 inc_ix_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -281,7 +281,7 @@ inc_ix_l z80_main z80_flags =
         new_xy =
             Bitwise.or h l.value
     in
-    IXRegister new_xy l.flags
+    FlagsWithIXRegister l.flags new_xy
 
 
 inc_iy_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -298,7 +298,7 @@ inc_iy_l z80_main z80_flags =
         new_xy =
             Bitwise.or h l.value
     in
-    IYRegister new_xy l.flags
+    FlagsWithIYRegister l.flags new_xy
 
 
 dec_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -315,7 +315,7 @@ dec_l z80_main z80_flags =
         new_xy =
             Bitwise.or h l.value
     in
-    HLRegister new_xy l.flags
+    FlagsWithHLRegister l.flags new_xy
 
 
 dec_ix_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -332,7 +332,7 @@ dec_ix_l z80_main z80_flags =
         new_xy =
             Bitwise.or h l.value
     in
-    IXRegister new_xy l.flags
+    FlagsWithIXRegister l.flags new_xy
 
 
 dec_iy_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -349,7 +349,7 @@ dec_iy_l z80_main z80_flags =
         new_xy =
             Bitwise.or h l.value
     in
-    IYRegister new_xy l.flags
+    FlagsWithIYRegister l.flags new_xy
 
 
 add_hl_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
