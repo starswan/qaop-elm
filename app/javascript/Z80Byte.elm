@@ -2,7 +2,7 @@ module Z80Byte exposing (..)
 
 import Bitwise
 import Dict
-import Utils exposing (shiftLeftBy8)
+import Utils exposing (BitTest(..), bitMaskFromBit, inverseBitMaskFromBit, shiftLeftBy8)
 
 
 type Nybble
@@ -289,3 +289,39 @@ getBits543 z80byte =
 --top8Bits : Z80Byte -> Int
 --top8Bits z80byte =
 --    z80byte.high |> nybbleToInt
+
+
+resetBit : BitTest -> Z80Byte -> Z80Byte
+resetBit testType z80byte =
+    testType |> inverseBitMaskFromBit |> Bitwise.and (z80byte |> z80ToInt) |> intToZ80
+
+
+
+--case bitTest of
+--    Bit_0 -> z80byte
+--
+--
+--    Bit_1 -> z80byte
+--
+--
+--    Bit_2 -> z80byte
+--
+--
+--    Bit_3 -> z80byte
+--
+--
+--    Bit_4 -> z80byte
+--
+--
+--    Bit_5 -> z80byte
+--
+--
+--    Bit_6 -> z80byte
+--
+--
+--    Bit_7 -> z80byte
+
+
+setBit : BitTest -> Z80Byte -> Z80Byte
+setBit testType z80byte =
+    testType |> bitMaskFromBit |> Bitwise.or (z80byte |> z80ToInt) |> intToZ80

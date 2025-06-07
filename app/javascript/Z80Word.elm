@@ -67,6 +67,16 @@ incrementBy2 z80word =
     ((z80word |> z80wordToInt) + 2) |> Bitwise.and 0xFFFF |> toZ80Word
 
 
+incrementBy3 : Z80Word -> Z80Word
+incrementBy3 z80word =
+    ((z80word |> z80wordToInt) + 3) |> Bitwise.and 0xFFFF |> toZ80Word
+
+
+incrementBy4 : Z80Word -> Z80Word
+incrementBy4 z80word =
+    ((z80word |> z80wordToInt) + 4) |> Bitwise.and 0xFFFF |> toZ80Word
+
+
 decrementBy1 : Z80Word -> Z80Word
 decrementBy1 z80word =
     ((z80word |> z80wordToInt) - 1) |> Bitwise.and 0xFFFF |> toZ80Word

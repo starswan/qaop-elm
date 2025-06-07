@@ -1,9 +1,10 @@
 module RegisterChange exposing (..)
 
-import Bitwise
-import Utils exposing (BitTest, shiftLeftBy8)
+import Utils exposing (BitTest)
+import Z80Byte exposing (Z80Byte)
 import Z80Flags exposing (FlagRegisters)
 import Z80Types exposing (MainWithIndexRegisters, set_de_main)
+import Z80Word exposing (Z80Word)
 
 
 type Shifter
@@ -18,42 +19,42 @@ type Shifter
 
 
 type RegisterChange
-    = ChangeRegisterBC Int Int
-    | ChangeRegisterB Int
-    | ChangeRegisterDE Int Int
-    | ChangeRegisterE Int
-    | ChangeRegisterHL Int
-    | ChangeRegisterIX Int
-    | ChangeRegisterIY Int
-    | ChangeRegisterD Int
-    | ChangeRegisterA Int
-    | ChangeRegisterC Int
-    | ChangeRegisterH Int
-    | ChangeRegisterL Int
-    | PushedValue Int
-    | RegChangeNewSP Int
-    | IncrementIndirect Int
-    | DecrementIndirect Int
-    | RegisterChangeJump Int
-    | SetIndirect Int Int
-    | ChangeRegisterDEAndHL Int Int
-    | RegisterChangeShifter Shifter Int
-    | IndirectBitReset BitTest Int
-    | IndirectBitSet BitTest Int
+    = ChangeRegisterBC Z80Byte Z80Byte
+    | ChangeRegisterB Z80Byte
+    | ChangeRegisterDE Z80Byte Z80Byte
+    | ChangeRegisterE Z80Byte
+    | ChangeRegisterHL Z80Word
+    | ChangeRegisterIX Z80Word
+    | ChangeRegisterIY Z80Word
+    | ChangeRegisterD Z80Byte
+    | ChangeRegisterA Z80Byte
+    | ChangeRegisterC Z80Byte
+    | ChangeRegisterH Z80Byte
+    | ChangeRegisterL Z80Byte
+    | PushedValue Z80Word
+    | RegChangeNewSP Z80Word
+    | IncrementIndirect Z80Word
+    | DecrementIndirect Z80Word
+    | RegisterChangeJump Z80Word
+    | SetIndirect Z80Word Z80Byte
+    | ChangeRegisterDEAndHL Z80Word Z80Word
+    | RegisterChangeShifter Shifter Z80Byte
+    | IndirectBitReset BitTest Z80Word
+    | IndirectBitSet BitTest Z80Word
 
 
 type RegisterChangeApplied
     = MainRegsApplied MainWithIndexRegisters
     | FlagRegsApplied FlagRegisters
-    | PushedValueApplied Int
-    | NewSPApplied Int
-    | IncrementIndirectApplied Int
-    | DecrementIndirectApplied Int
-    | JumpApplied Int
-    | SetIndirectApplied Int Int
-    | RegisterChangeShifterApplied Shifter Int
-    | IndirectBitResetApplied BitTest Int
-    | IndirectBitSetApplied BitTest Int
+    | PushedValueApplied Z80Word
+    | NewSPApplied Z80Word
+    | IncrementIndirectApplied Z80Word
+    | DecrementIndirectApplied Z80Word
+    | JumpApplied Z80Word
+    | SetIndirectApplied Z80Word Z80Byte
+    | RegisterChangeShifterApplied Shifter Z80Byte
+    | IndirectBitResetApplied BitTest Z80Word
+    | IndirectBitSetApplied BitTest Z80Word
 
 
 applyRegisterChange : RegisterChange -> FlagRegisters -> MainWithIndexRegisters -> RegisterChangeApplied
@@ -90,10 +91,20 @@ applyRegisterChange change z80_flags main =
             MainRegsApplied { main | c = int }
 
         ChangeRegisterH int ->
-            MainRegsApplied { main | hl = Bitwise.or (Bitwise.and main.hl 0xFF) (shiftLeftBy8 int) }
+            --MainRegsApplied { main | hl = Bitwise.or (Bitwise.and main.hl 0xFF) (shiftLeftBy8 int) }
+            let
+                xl =
+                    main.hl
+            in
+            MainRegsApplied { main | hl = { xl | high = int } }
 
         ChangeRegisterL int ->
-            MainRegsApplied { main | hl = Bitwise.or (Bitwise.and main.hl 0xFF00) int }
+            --MainRegsApplied { main | hl = Bitwise.or (Bitwise.and main.hl 0xFF00) int }
+            let
+                xl =
+                    main.hl
+            in
+            MainRegsApplied { main | hl = { xl | low = int } }
 
         PushedValue int ->
             PushedValueApplied int

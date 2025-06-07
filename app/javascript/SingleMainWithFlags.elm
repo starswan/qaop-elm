@@ -1,12 +1,10 @@
 module SingleMainWithFlags exposing (..)
 
-import Bitwise
 import CpuTimeCTime exposing (CpuTimeIncrement(..), InstructionDuration(..))
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
-import Utils exposing (BitTest(..), shiftLeftBy8)
 import Z80Change exposing (Z80Change(..))
-import Z80Flags exposing (FlagRegisters, IntWithFlags, adc, add16, dec, inc, sbc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
+import Z80Flags exposing (FlagRegisters, IntWithFlags, adc, add16, dec, inc, sbc, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
 import Z80Types exposing (MainWithIndexRegisters, get_bc, get_de)
 import Z80Word exposing (lower8Bits, top8Bits)
 
@@ -299,7 +297,7 @@ inc_l z80_main z80_flags =
         new_xy =
             { hl | low = value.value }
     in
-    FlagsWithHLRegister l.flags new_xy
+    FlagsWithHLRegister value.flags new_xy
 
 
 inc_ix_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -324,7 +322,7 @@ inc_ix_l z80_main z80_flags =
         new_xy =
             { hl | low = value.value }
     in
-    FlagsWithIXRegister l.flags new_xy
+    FlagsWithIXRegister value.flags new_xy
 
 
 inc_iy_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -349,7 +347,7 @@ inc_iy_l z80_main z80_flags =
         new_xy =
             { hl | low = value.value }
     in
-    FlagsWithIYRegister l.flags new_xy
+    FlagsWithIYRegister value.flags new_xy
 
 
 dec_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -374,7 +372,7 @@ dec_l z80_main z80_flags =
         new_xy =
             { hl | low = value.value }
     in
-    FlagsWithHLRegister l.flags new_xy
+    FlagsWithHLRegister value.flags new_xy
 
 
 dec_ix_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -382,16 +380,24 @@ dec_ix_l z80_main z80_flags =
     -- case 0x2D: HL=HL&0xFF00|dec(HL&0xFF); break;
     -- case 0x2D: xy=xy&0xFF00|dec(xy&0xFF); break;
     let
-        h =
-            top8BitsWithoutShift z80_main.ix
+        --h =
+        --    top8BitsWithoutShift z80_main.ix
+        --
+        --l =
+        --    dec (lower8Bits z80_main.ix) z80_flags
+        --
+        --new_xy =
+        --    Bitwise.or h l.value |> fromInt
+        hl =
+            z80_main.ix
 
-        l =
-            dec (lower8Bits z80_main.ix) z80_flags
+        value =
+            inc (lower8Bits hl) z80_flags
 
         new_xy =
-            Bitwise.or h l.value |> fromInt
+            { hl | low = value.value }
     in
-    FlagsWithIXRegister l.flags new_xy
+    FlagsWithIXRegister value.flags new_xy
 
 
 dec_iy_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -399,16 +405,24 @@ dec_iy_l z80_main z80_flags =
     -- case 0x2D: HL=HL&0xFF00|dec(HL&0xFF); break;
     -- case 0x2D: xy=xy&0xFF00|dec(xy&0xFF); break;
     let
-        h =
-            top8BitsWithoutShift z80_main.iy
+        --h =
+        --    top8BitsWithoutShift z80_main.iy
+        --
+        --l =
+        --    dec (lower8Bits z80_main.iy) z80_flags
+        --
+        --new_xy =
+        --    Bitwise.or h l.value |> fromInt
+        hl =
+            z80_main.iy
 
-        l =
-            dec (lower8Bits z80_main.iy) z80_flags
+        value =
+            inc (lower8Bits hl) z80_flags
 
         new_xy =
-            Bitwise.or h l.value |> fromInt
+            { hl | low = value.value }
     in
-    FlagsWithIYRegister l.flags new_xy
+    FlagsWithIYRegister value.flags new_xy
 
 
 add_hl_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -416,7 +430,7 @@ add_hl_hl z80_main z80_flags =
     -- case 0x29: HL=add16(HL,HL); break;
     let
         hl_value =
-            z80_main.hl |> toInt
+            z80_main.hl
 
         new_xy =
             add16 z80_main.hl hl_value z80_flags
@@ -430,7 +444,7 @@ add_ix_ix z80_main z80_flags =
     -- case 0x29: xy=add16(xy,xy); break;
     let
         new_xy =
-            add16 z80_main.ix (z80_main.ix |> toInt) z80_flags
+            add16 z80_main.ix z80_main.ix z80_flags
     in
     --{ z80 | main = new_z80, flags = new_xy.flags } |> add_cpu_time new_xy.time
     FlagsWithIXRegister new_xy.flags new_xy.value
@@ -441,7 +455,7 @@ add_iy_iy z80_main z80_flags =
     -- case 0x29: xy=add16(xy,xy); break;
     let
         new_xy =
-            add16 z80_main.iy (z80_main.iy |> toInt) z80_flags
+            add16 z80_main.iy z80_main.iy z80_flags
     in
     --{ z80 | main = new_z80, flags = new_xy.flags } |> add_cpu_time new_xy.time
     FlagsWithIYRegister new_xy.flags new_xy.value
@@ -887,12 +901,14 @@ ld_indirect_bc_a : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 ld_indirect_bc_a z80_main z80_flags =
     -- case 0x02: MP=(v=B<<8|C)+1&0xFF|A<<8; env.mem(v,A); time+=3; break;
     let
+        --addr =
+        --    shiftLeftBy8 z80_main.b + z80_main.c
         addr =
-            shiftLeftBy8 z80_main.b + z80_main.c
+            { high = z80_main.b, low = z80_main.c }
     in
     --{ z80 | env = z80.env |> set_mem addr z80.flags.a |> add_cpu_time_env 3 }
     --SetMem8WithTime addr z80.flags.a 3
-    Z80ChangeSetIndirect (addr |> fromInt) z80_flags.a
+    Z80ChangeSetIndirect addr z80_flags.a
 
 
 ld_indirect_de_a : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -900,7 +916,8 @@ ld_indirect_de_a z80_main z80_flags =
     -- case 0x12: MP=(v=D<<8|E)+1&0xFF|A<<8; env.mem(v,A); time+=3; break;
     let
         addr =
-            shiftLeftBy8 z80_main.d + z80_main.e
+            --shiftLeftBy8 z80_main.d + z80_main.e
+            { high = z80_main.d, low = z80_main.e }
     in
     --z80.env |> set_mem addr z80.flags.a |> add_cpu_time_env 3 |> OnlyEnv
     --SetMem8WithTime addr z80.flags.a 3

@@ -4,9 +4,10 @@ import Bitwise exposing (complement)
 import CpuTimeCTime exposing (CpuTimeIncrement(..), InstructionDuration(..))
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
-import Utils exposing (BitTest(..), bitMaskFromBit, inverseBitMaskFromBit, shiftRightBy8)
+import Utils exposing (BitTest(..), shiftRightBy8)
+import Z80Byte exposing (Z80Byte, intToZ80, resetBit, setBit, z80ToInt)
 import Z80Change exposing (FlagChange(..))
-import Z80Flags exposing (FlagRegisters, IntWithFlags, adc, c_FP, c_FS, cpl, daa, dec, get_af, get_flags, inc, rot, sbc, scf_ccf, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit, z80_add, z80_cp, z80_or, z80_sub, z80_xor)
+import Z80Flags exposing (FlagRegisters, IntWithFlags, Z80ByteWithFlags, adc, c_FP, c_FS, cpl, daa, dec, get_af, get_flags, inc, rot, sbc, scf_ccf, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit, z80_add, z80_cp, z80_or, z80_sub, z80_xor)
 
 
 singleByteFlags : Dict Int ( FlagRegisters -> FlagChange, PCIncrement, InstructionDuration )
@@ -69,22 +70,22 @@ singleByteFlagsCB =
         , ( 0x6F, ( \z80_flags -> z80_flags |> testBit Bit_5 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
         , ( 0x77, ( \z80_flags -> z80_flags |> testBit Bit_6 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
         , ( 0x7F, ( \z80_flags -> z80_flags |> testBit Bit_7 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x87, ( \z80_flags -> z80_flags |> resetBit Bit_0 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x8F, ( \z80_flags -> z80_flags |> resetBit Bit_1 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x97, ( \z80_flags -> z80_flags |> resetBit Bit_2 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x9F, ( \z80_flags -> z80_flags |> resetBit Bit_3 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
-        , ( 0xA7, ( \z80_flags -> z80_flags |> resetBit Bit_4 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
-        , ( 0xAF, ( \z80_flags -> z80_flags |> resetBit Bit_5 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
-        , ( 0xB7, ( \z80_flags -> z80_flags |> resetBit Bit_6 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
-        , ( 0xBF, ( \z80_flags -> z80_flags |> resetBit Bit_7 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
-        , ( 0xC7, ( \z80_flags -> z80_flags |> setBit Bit_0 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
-        , ( 0xCF, ( \z80_flags -> z80_flags |> setBit Bit_1 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
-        , ( 0xD7, ( \z80_flags -> z80_flags |> setBit Bit_2 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
-        , ( 0xDF, ( \z80_flags -> z80_flags |> setBit Bit_3 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
-        , ( 0xE7, ( \z80_flags -> z80_flags |> setBit Bit_4 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
-        , ( 0xEF, ( \z80_flags -> z80_flags |> setBit Bit_5 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
-        , ( 0xF7, ( \z80_flags -> z80_flags |> setBit Bit_6 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
-        , ( 0xFF, ( \z80_flags -> z80_flags |> setBit Bit_7 z80_flags.a |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0x87, ( \z80_flags -> z80_flags |> resetFlagBit Bit_0 |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0x8F, ( \z80_flags -> z80_flags |> resetFlagBit Bit_1 |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0x97, ( \z80_flags -> z80_flags |> resetFlagBit Bit_2 |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0x9F, ( \z80_flags -> z80_flags |> resetFlagBit Bit_3 |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0xA7, ( \z80_flags -> z80_flags |> resetFlagBit Bit_4 |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0xAF, ( \z80_flags -> z80_flags |> resetFlagBit Bit_5 |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0xB7, ( \z80_flags -> z80_flags |> resetFlagBit Bit_6 |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0xBF, ( \z80_flags -> z80_flags |> resetFlagBit Bit_7 |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0xC7, ( \z80_flags -> z80_flags |> setFlagBit Bit_0 |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0xCF, ( \z80_flags -> z80_flags |> setFlagBit Bit_1 |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0xD7, ( \z80_flags -> z80_flags |> setFlagBit Bit_2 |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0xDF, ( \z80_flags -> z80_flags |> setFlagBit Bit_3 |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0xE7, ( \z80_flags -> z80_flags |> setFlagBit Bit_4 |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0xEF, ( \z80_flags -> z80_flags |> setFlagBit Bit_5 |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0xF7, ( \z80_flags -> z80_flags |> setFlagBit Bit_6 |> OnlyFlags, IncrementByTwo, EightTStates ) )
+        , ( 0xFF, ( \z80_flags -> z80_flags |> setFlagBit Bit_7 |> OnlyFlags, IncrementByTwo, EightTStates ) )
         ]
 
 
@@ -92,14 +93,14 @@ rlca : FlagRegisters -> FlagChange
 rlca z80_flags =
     -- case 0x07: rot(A*0x101>>>7); break;
     --{ z80 | flags = z80.flags |> rot (Bitwise.shiftRightBy 7 (z80.flags.a * 0x101)) }
-    z80_flags |> rot (Bitwise.shiftRightBy 7 (z80_flags.a * 0x0101)) |> OnlyFlags
+    z80_flags |> rot (Bitwise.shiftRightBy 7 ((z80_flags.a |> z80ToInt) * 0x0101)) |> OnlyFlags
 
 
 rrca : FlagRegisters -> FlagChange
 rrca z80_flags =
     -- case 0x0F: rot(A*0x80800000>>24); break;
     --{ z80 | flags = z80.flags |> rot (Bitwise.shiftRightBy 24 (z80.flags.a * 0x80800000)) }
-    z80_flags |> rot (Bitwise.shiftRightBy 24 (z80_flags.a * 0x80800000)) |> OnlyFlags
+    z80_flags |> rot (Bitwise.shiftRightBy 24 ((z80_flags.a |> z80ToInt) * 0x80800000)) |> OnlyFlags
 
 
 rla : FlagRegisters -> FlagChange
@@ -107,7 +108,7 @@ rla z80_flags =
     -- case 0x17: rot(A<<1|Ff>>>8&1); break;
     -- { z80 | flags = z80.flags |> rot (Bitwise.or (Bitwise.shiftLeftBy 1 z80.flags.a)
     --                                                                           (Bitwise.and (shiftRightBy8 z80.flags.ff) 1)) }
-    z80_flags |> rot (Bitwise.or (Bitwise.shiftLeftBy 1 z80_flags.a) (Bitwise.and (shiftRightBy8 z80_flags.ff) 1)) |> OnlyFlags
+    z80_flags |> rot (Bitwise.or (Bitwise.shiftLeftBy 1 (z80_flags.a |> z80ToInt)) (Bitwise.and (shiftRightBy8 z80_flags.ff) 1)) |> OnlyFlags
 
 
 rra : FlagRegisters -> FlagChange
@@ -115,7 +116,7 @@ rra z80_flags =
     -- case 0x1F: rot((A*0x201|Ff&0x100)>>>1); break;
     --{ z80 | flags = z80.flags |> rot (Bitwise.shiftRightBy 1 (Bitwise.or (z80.flags.a * 0x201)
     --                                                                           (Bitwise.and z80.flags.ff 0x100))) }
-    z80_flags |> rot (Bitwise.shiftRightBy 1 (Bitwise.or (z80_flags.a * 0x0201) (Bitwise.and z80_flags.ff 0x0100))) |> OnlyFlags
+    z80_flags |> rot (Bitwise.shiftRightBy 1 (Bitwise.or ((z80_flags.a |> z80ToInt) * 0x0201) (Bitwise.and z80_flags.ff 0x0100))) |> OnlyFlags
 
 
 scf : FlagRegisters -> FlagChange
@@ -243,7 +244,7 @@ and_a z80_flags =
     -- case 0xA7: Fa=~(Ff=Fr=A); Fb=0; break;
     -- and a is correct - I guess the above is a faster implementation
     --z80_flags |> z80_and z80_flags.a |> OnlyFlags
-    OnlyFlags { a = z80_flags.a, ff = z80_flags.a, fr = z80_flags.a, fb = 0, fa = complement z80_flags.a }
+    OnlyFlags { a = z80_flags.a, ff = z80_flags.a |> z80ToInt, fr = z80_flags.a |> z80ToInt, fb = 0, fa = z80_flags.a |> z80ToInt |> complement }
 
 
 xor_a : FlagRegisters -> FlagChange
@@ -264,10 +265,6 @@ cp_a z80_flags =
     -- case 0xBF: cp(A); break;
     --z80 |> set_flag_regs (cp z80.flags.a z80.flags)
     z80_flags |> z80_cp z80_flags.a |> OnlyFlags
-
-
-increment1 =
-    CpuTimeIncrement 1
 
 
 ret_nz : FlagRegisters -> FlagChange
@@ -313,7 +310,7 @@ ret_c z80_flags =
 ret_po : FlagRegisters -> FlagChange
 ret_po z80_flags =
     -- case 0xE0: time++; if((flags()&FP)==0) MP=PC=pop(); break;
-    if Bitwise.and (z80_flags |> get_flags) c_FP == 0 then
+    if Bitwise.and (z80_flags |> get_flags |> z80ToInt) c_FP == 0 then
         ReturnWithPop
 
     else
@@ -323,7 +320,7 @@ ret_po z80_flags =
 ret_pe : FlagRegisters -> FlagChange
 ret_pe z80_flags =
     -- case 0xE8: time++; if((flags()&FP)!=0) MP=PC=pop(); break;
-    if Bitwise.and (z80_flags |> get_flags) c_FP /= 0 then
+    if Bitwise.and (z80_flags |> get_flags |> z80ToInt) c_FP /= 0 then
         ReturnWithPop
 
     else
@@ -356,7 +353,7 @@ push_af z80_flags =
     FlagChangePush (z80_flags |> get_af)
 
 
-applyFlagShifter : (Int -> FlagRegisters -> IntWithFlags) -> FlagRegisters -> FlagChange
+applyFlagShifter : (Z80Byte -> FlagRegisters -> IntWithFlags) -> FlagRegisters -> FlagChange
 applyFlagShifter shifter z80_flags =
     --case 0x07: A=shifter(o,A); break;
     let
@@ -366,7 +363,7 @@ applyFlagShifter shifter z80_flags =
         new_flags =
             value.flags
     in
-    OnlyFlags { new_flags | a = value.value }
+    OnlyFlags { new_flags | a = value.value |> intToZ80 }
 
 
 rlc_a : FlagRegisters -> FlagChange
@@ -409,19 +406,21 @@ srl_a z80_flags =
     applyFlagShifter shifter7 z80_flags
 
 
-resetBit : BitTest -> Int -> FlagRegisters -> FlagRegisters
-resetBit testType v flagRegs =
+resetFlagBit : BitTest -> FlagRegisters -> FlagRegisters
+resetFlagBit testType flagRegs =
     let
         new_a =
-            testType |> inverseBitMaskFromBit |> Bitwise.and flagRegs.a
+            --testType |> inverseBitMaskFromBit |> Bitwise.and flagRegs.a
+            resetBit testType flagRegs.a
     in
     { flagRegs | a = new_a }
 
 
-setBit : BitTest -> Int -> FlagRegisters -> FlagRegisters
-setBit testType v flagRegs =
+setFlagBit : BitTest -> FlagRegisters -> FlagRegisters
+setFlagBit testType flagRegs =
     let
         new_a =
-            testType |> bitMaskFromBit |> Bitwise.or flagRegs.a
+            --testType |> bitMaskFromBit |> Bitwise.or flagRegs.a
+            setBit testType flagRegs.a
     in
     { flagRegs | a = new_a }

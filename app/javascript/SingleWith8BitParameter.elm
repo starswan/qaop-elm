@@ -8,7 +8,7 @@ import Utils exposing (byte)
 import Z80Byte exposing (Z80Byte, intToZ80, z80ToInt)
 import Z80Flags exposing (FlagRegisters, adc, sbc, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
 import Z80Types exposing (MainWithIndexRegisters)
-import Z80Word exposing (Z80Word, lower8Bits, top8Bits)
+import Z80Word exposing (Z80Word, lower8Bits, top8Bits, wordPlusOffset)
 
 
 singleWith8BitParam : Dict Int ( Z80Byte -> Single8BitChange, MediumPCIncrement, InstructionDuration )
@@ -173,42 +173,46 @@ ld_iy_l_n z80_main param =
     Z80Word param (top8Bits z80_main.iy) |> NewIYRegisterValue
 
 
-ld_b_indirect_ix : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
+ld_b_indirect_ix : MainWithIndexRegisters -> Z80Byte -> DoubleWithRegisterChange
 ld_b_indirect_ix z80_main param =
     -- case 0x46: B=env.mem(getd(xy)); time+=3; break;
     let
         address =
-            z80_main.ix + byte param
+            --z80_main.ix + byte param
+            z80_main.ix |> wordPlusOffset param
     in
     NewBRegisterIndirect address
 
 
-ld_b_indirect_iy : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
+ld_b_indirect_iy : MainWithIndexRegisters -> Z80Byte -> DoubleWithRegisterChange
 ld_b_indirect_iy z80_main param =
     -- case 0x46: B=env.mem(getd(xy)); time+=3; break;
     let
         address =
-            z80_main.iy + byte param
+            --z80_main.iy + byte param
+            z80_main.iy |> wordPlusOffset param
     in
     NewBRegisterIndirect address
 
 
-ld_c_indirect_ix : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
+ld_c_indirect_ix : MainWithIndexRegisters -> Z80Byte -> DoubleWithRegisterChange
 ld_c_indirect_ix z80_main param =
     -- case 0x46: B=env.mem(getd(xy)); time+=3; break;
     let
         address =
-            z80_main.ix + byte param
+            --z80_main.ix + byte param
+            z80_main.ix |> wordPlusOffset param
     in
     NewCRegisterIndirect address
 
 
-ld_c_indirect_iy : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
+ld_c_indirect_iy : MainWithIndexRegisters -> Z80Byte -> DoubleWithRegisterChange
 ld_c_indirect_iy z80_main param =
     -- case 0x46: B=env.mem(getd(xy)); time+=3; break;
     let
         address =
-            z80_main.iy + byte param
+            --z80_main.iy + byte param
+            z80_main.iy |> wordPlusOffset param
     in
     NewCRegisterIndirect address
 

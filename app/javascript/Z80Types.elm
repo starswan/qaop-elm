@@ -14,7 +14,7 @@ type alias MainRegisters =
     , c : Z80Byte
     , d : Z80Byte
     , e : Z80Byte
-    , hl : Int
+    , hl : Z80Word
     }
 
 

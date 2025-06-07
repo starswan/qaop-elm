@@ -5,10 +5,11 @@ import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDur
 import Dict exposing (Dict)
 import Z80Core exposing (Z80Core)
 import Z80Env exposing (Z80Env, c_TIME_LIMIT)
+import Z80Word exposing (Z80Word, decrementBy1, incrementBy1)
 
 
 type SingleByteEnvChange
-    = NewSPValue Int
+    = NewSPValue Z80Word
     | AddToInterrupts Int CpuTimeIncrement
 
 
@@ -28,7 +29,8 @@ applyEnvChangeDelta cpu_time z80changeData z80 =
             z80.interrupts
 
         new_pc =
-            Bitwise.and (z80.pc + 1) 0xFFFF
+            --Bitwise.and (z80.pc + 1) 0xFFFF
+            z80.pc |> incrementBy1
 
         env =
             z80.env
@@ -57,7 +59,8 @@ inc_sp z80_env =
     --    new_sp =
     --        Bitwise.and (z80.env.sp + 1) 0xFFFF
     --in
-    NewSPValue (Bitwise.and (z80_env.sp + 1) 0xFFFF)
+    --NewSPValue (Bitwise.and (z80_env.sp + 1) 0xFFFF)
+    NewSPValue (z80_env.sp |> incrementBy1)
 
 
 dec_sp : Z80Env -> SingleByteEnvChange
@@ -67,7 +70,8 @@ dec_sp z80_env =
     --    new_sp =
     --        Bitwise.and (z80.env.sp - 1) 0xFFFF
     --in
-    NewSPValue (Bitwise.and (z80_env.sp - 1) 0xFFFF)
+    --NewSPValue (Bitwise.and (z80_env.sp - 1) 0xFFFF)
+    NewSPValue (z80_env.sp |> decrementBy1)
 
 
 execute_0x76_halt : Z80Env -> SingleByteEnvChange

@@ -23,15 +23,15 @@ type Z80Change
 
 type FlagChange
     = OnlyFlags FlagRegisters
-    | FlagChangeB Int
-    | FlagChangeC Int
-    | FlagChangeD Int
-    | FlagChangeE Int
-    | FlagChangeH Int
-    | FlagChangeL Int
+    | FlagChangeB Z80Byte
+    | FlagChangeC Z80Byte
+    | FlagChangeD Z80Byte
+    | FlagChangeE Z80Byte
+    | FlagChangeH Z80Byte
+    | FlagChangeL Z80Byte
     | ReturnWithPop
     | EmptyFlagChange
-    | FlagChangePush Int
+    | FlagChangePush Z80Word
 
 
 applyZ80Change : Z80Change -> Z80Core -> Z80Core
