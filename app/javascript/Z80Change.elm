@@ -10,9 +10,6 @@ type Z80Change
     | FlagsWithCRegister IntWithFlags
     | FlagsWithDRegister IntWithFlags
     | FlagsWithERegister FlagRegisters Int
-    | HLRegister Int FlagRegisters
-    | IXRegister Int FlagRegisters
-    | IYRegister Int FlagRegisters
     | FlagsWithHLRegister FlagRegisters Int
     | FlagsWithIXRegister FlagRegisters Int
     | FlagsWithIYRegister FlagRegisters Int
@@ -65,27 +62,6 @@ applyZ80Change change z80 =
                     z80.main
             in
             { z80 | flags = flagRegisters, main = { main | e = int } }
-
-        HLRegister int flags ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | main = { main | hl = int }, flags = flags }
-
-        IXRegister int flags ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | main = { main | ix = int }, flags = flags }
-
-        IYRegister int flags ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | main = { main | iy = int }, flags = flags }
 
         FlagsWithHLRegister flagRegisters int ->
             let
