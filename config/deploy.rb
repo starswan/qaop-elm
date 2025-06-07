@@ -56,7 +56,7 @@ namespace :deploy do
 
   desc "Copy Undebug module"
   task :undebug, roles: :app do
-    run "cd #{release_path}/app/javascript && cp Undebug.elm Z80Debug.elm"
+    run "cd #{release_path}/app/javascript && cp ../helpers/Undebug.elm Z80Debug.elm"
   end
 end
 

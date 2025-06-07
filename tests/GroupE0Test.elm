@@ -1,6 +1,6 @@
 module GroupE0Test exposing (..)
 
-import Expect exposing (Expectation)
+import Expect
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
 import Z80Env exposing (m1, mem16, setMem)

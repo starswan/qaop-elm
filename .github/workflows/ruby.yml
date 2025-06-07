@@ -43,6 +43,9 @@ jobs:
       # Run elm tests for correctness before speed tests
       - name: Run Elm tests
         run: yarn run elm-test
+#        run this when elm-review has no errors
+#      - name: Run Elm review
+#        run: yarn run elm-review
       # Run ruby tests in headless mode
       - name: Ruby tests
         run: xvfb-run -a bundle exec rake spec
