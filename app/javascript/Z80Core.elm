@@ -55,11 +55,6 @@ imm16 rom48k z80 =
     CpuTimePcAnd16BitValue env pc v.value16
 
 
-a_with_z80 : Z80Core -> CpuTimePcAndValue
-a_with_z80 z80 =
-    CpuTimePcAndValue z80.env.time z80.pc z80.flags.a
-
-
 add_cpu_time : Int -> Z80Core -> Z80Core
 add_cpu_time value z80 =
     let
