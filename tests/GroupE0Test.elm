@@ -176,4 +176,40 @@ suite =
                 in
                 Expect.equal { pc = addr + 1, hl = 0x6000, d = 0x50, e = 0x51 }
                     { pc = new_z80.pc, hl = new_z80.main.hl, d = new_z80.main.d, e = new_z80.main.e }
+        , test "0xDD 0xEB (EX DE, HL)" <|
+            \_ ->
+                let
+                    new_env =
+                        z80env
+                            |> setMem addr 0xDD
+                            |> setMem (addr + 1) 0xEB
+
+                    new_z80 =
+                        executeCoreInstruction z80rom
+                            { z80
+                                | env = { new_env | sp = 0xFF77 }
+                                , main = { z80main | hl = 0x5051, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                                , flags = { flags | a = 0x60 }
+                            }
+                in
+                Expect.equal { pc = addr + 2, hl = 0x6000, d = 0x50, e = 0x51 }
+                    { pc = new_z80.pc, hl = new_z80.main.hl, d = new_z80.main.d, e = new_z80.main.e }
+        , test "0xFD 0xEB (EX DE, HL)" <|
+            \_ ->
+                let
+                    new_env =
+                        z80env
+                            |> setMem addr 0xFD
+                            |> setMem (addr + 1) 0xEB
+
+                    new_z80 =
+                        executeCoreInstruction z80rom
+                            { z80
+                                | env = { new_env | sp = 0xFF77 }
+                                , main = { z80main | hl = 0x5051, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
+                                , flags = { flags | a = 0x60 }
+                            }
+                in
+                Expect.equal { pc = addr + 2, hl = 0x6000, d = 0x50, e = 0x51 }
+                    { pc = new_z80.pc, hl = new_z80.main.hl, d = new_z80.main.d, e = new_z80.main.e }
         ]

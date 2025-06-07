@@ -76,6 +76,11 @@ singleByteMainRegsFD =
     Dict.fromList
         [ ( 0x23, ( inc_iy, TenTStates ) )
         , ( 0x2B, ( dec_iy, TenTStates ) )
+        , ( 0x44, ( ld_b_iyh, EightTStates ) )
+        , ( 0x45, ( ld_b_iyl, EightTStates ) )
+        , ( 0x4C, ( ld_c_iyh, EightTStates ) )
+        , ( 0x4D, ( ld_c_iyl, EightTStates ) )
+        , ( 0xEB, ( ex_de_hl, FourTStates ) )
         ]
 
 
@@ -84,6 +89,11 @@ singleByteMainRegsDD =
     Dict.fromList
         [ ( 0x23, ( inc_ix, TenTStates ) )
         , ( 0x2B, ( dec_ix, TenTStates ) )
+        , ( 0x44, ( ld_b_ixh, EightTStates ) )
+        , ( 0x45, ( ld_b_ixl, EightTStates ) )
+        , ( 0x4C, ( ld_c_ixh, EightTStates ) )
+        , ( 0x4D, ( ld_c_ixl, EightTStates ) )
+        , ( 0xEB, ( ex_de_hl, FourTStates ) )
         ]
 
 
@@ -218,12 +228,63 @@ ld_b_h z80_main =
     ChangeRegisterB (shiftRightBy8 z80_main.hl)
 
 
+ld_b_ixh : MainWithIndexRegisters -> RegisterChange
+ld_b_ixh z80_main =
+    -- case 0x44: B=HL>>>8; break;
+    -- case 0x44: B=xy>>>8; break;
+    --z80 |> set_b (get_h ixiyhl z80.main)
+    ChangeRegisterB (shiftRightBy8 z80_main.ix)
+
+
+ld_b_iyh : MainWithIndexRegisters -> RegisterChange
+ld_b_iyh z80_main =
+    -- case 0x44: B=HL>>>8; break;
+    -- case 0x44: B=xy>>>8; break;
+    --z80 |> set_b (get_h ixiyhl z80.main)
+    ChangeRegisterB (shiftRightBy8 z80_main.iy)
+
+
+ld_c_ixh : MainWithIndexRegisters -> RegisterChange
+ld_c_ixh z80_main =
+    -- case 0x4C: C=xy>>>8; break;
+    ChangeRegisterC (shiftRightBy8 z80_main.ix)
+
+
+ld_c_iyh : MainWithIndexRegisters -> RegisterChange
+ld_c_iyh z80_main =
+    ChangeRegisterC (shiftRightBy8 z80_main.iy)
+
+
 ld_b_l : MainWithIndexRegisters -> RegisterChange
 ld_b_l z80_main =
     -- case 0x45: B=HL&0xFF; break;
     -- case 0x45: B=xy&0xFF; break;
     --  z80 |> set_b (get_l ixiyhl z80.main)
     ChangeRegisterB (Bitwise.and z80_main.hl 0xFF)
+
+
+ld_b_ixl : MainWithIndexRegisters -> RegisterChange
+ld_b_ixl z80_main =
+    -- case 0x45: B=xy&0xFF; break;
+    ChangeRegisterB (Bitwise.and z80_main.ix 0xFF)
+
+
+ld_b_iyl : MainWithIndexRegisters -> RegisterChange
+ld_b_iyl z80_main =
+    -- case 0x45: B=xy&0xFF; break;
+    ChangeRegisterB (Bitwise.and z80_main.iy 0xFF)
+
+
+ld_c_ixl : MainWithIndexRegisters -> RegisterChange
+ld_c_ixl z80_main =
+    -- case 0x4D: C=xy&0xFF; break;
+    ChangeRegisterC (Bitwise.and z80_main.ix 0xFF)
+
+
+ld_c_iyl : MainWithIndexRegisters -> RegisterChange
+ld_c_iyl z80_main =
+    -- case 0x4D: C=xy&0xFF; break;
+    ChangeRegisterC (Bitwise.and z80_main.iy 0xFF)
 
 
 ld_c_b : MainWithIndexRegisters -> RegisterChange

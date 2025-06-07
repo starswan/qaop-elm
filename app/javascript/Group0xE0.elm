@@ -18,7 +18,8 @@ miniDictE0 =
         [ ( 0xE1, pop_hl )
         , ( 0xE5, push_hl )
         , ( 0xE9, jp_hl )
-        , ( 0xEB, ex_de_hl )
+
+        --, ( 0xEB, ex_de_hl )
         ]
 
 
@@ -132,27 +133,28 @@ jp_hl ixiyhl _ z80 =
     OnlyPc xy
 
 
-ex_de_hl : IXIY -> Z80ROM -> Z80Core -> Z80Delta
-ex_de_hl ixiyhl _ z80 =
-    -- case 0xEB: v=HL; HL=D<<8|E; D=v>>>8; E=v&0xFF; break;
-    let
-        v =
-            z80.main |> get_xy_ixiy ixiyhl
 
-        de =
-            z80.main |> get_de
-
-        --x = debug_log "EX DE,HL" ("DE " ++ (v |> toHexString) ++ " HL " ++ (de |> toHexString)) Nothing
-        main =
-            z80.main |> set_de_main v
-    in
-    --z80 |> set_de v |> set_hl de
-    case ixiyhl of
-        IXIY_IX ->
-            MainRegs { main | ix = de }
-
-        IXIY_IY ->
-            MainRegs { main | iy = de }
+--ex_de_hl : IXIY -> Z80ROM -> Z80Core -> Z80Delta
+--ex_de_hl ixiyhl _ z80 =
+--    -- case 0xEB: v=HL; HL=D<<8|E; D=v>>>8; E=v&0xFF; break;
+--    let
+--        v =
+--            z80.main |> get_xy_ixiy ixiyhl
+--
+--        de =
+--            z80.main |> get_de
+--
+--        --x = debug_log "EX DE,HL" ("DE " ++ (v |> toHexString) ++ " HL " ++ (de |> toHexString)) Nothing
+--        main =
+--            z80.main |> set_de_main v
+--    in
+--    --z80 |> set_de v |> set_hl de
+--    case ixiyhl of
+--        IXIY_IX ->
+--            MainRegs { main | ix = de }
+--
+--        IXIY_IY ->
+--            MainRegs { main | iy = de }
 
 
 execute_0xD3 : Z80ROM -> Z80Core -> Z80Delta

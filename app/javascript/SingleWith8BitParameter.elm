@@ -35,6 +35,8 @@ doubleWithRegistersIX =
     Dict.fromList
         [ ( 0x26, ( ld_ix_h_n, IncreaseByThree, ElevenTStates ) )
         , ( 0x2E, ( ld_ix_l_n, IncreaseByThree, ElevenTStates ) )
+        , ( 0x46, ( ld_b_indirect_ix, IncreaseByThree, SevenTStates ) )
+        , ( 0x4E, ( ld_c_indirect_ix, IncreaseByThree, SevenTStates ) )
         ]
 
 
@@ -43,6 +45,8 @@ doubleWithRegistersIY =
     Dict.fromList
         [ ( 0x26, ( ld_iy_h_n, IncreaseByThree, ElevenTStates ) )
         , ( 0x2E, ( ld_iy_l_n, IncreaseByThree, ElevenTStates ) )
+        , ( 0x46, ( ld_b_indirect_iy, IncreaseByThree, SevenTStates ) )
+        , ( 0x4E, ( ld_c_indirect_iy, IncreaseByThree, SevenTStates ) )
         ]
 
 
@@ -79,6 +83,8 @@ type DoubleWithRegisterChange
     | NewHLRegisterValue Int
     | NewIXRegisterValue Int
     | NewIYRegisterValue Int
+    | NewBRegisterIndirect Int
+    | NewCRegisterIndirect Int
 
 
 type JumpChange
@@ -163,6 +169,46 @@ ld_iy_l_n : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
 ld_iy_l_n z80_main param =
     -- case 0x2E: xy=xy&0xFF00|imm8(); break;
     Bitwise.or param (Bitwise.and z80_main.iy 0xFF00) |> NewIYRegisterValue
+
+
+ld_b_indirect_ix : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
+ld_b_indirect_ix z80_main param =
+    -- case 0x46: B=env.mem(getd(xy)); time+=3; break;
+    let
+        address =
+            z80_main.ix + byte param
+    in
+    NewBRegisterIndirect address
+
+
+ld_b_indirect_iy : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
+ld_b_indirect_iy z80_main param =
+    -- case 0x46: B=env.mem(getd(xy)); time+=3; break;
+    let
+        address =
+            z80_main.iy + byte param
+    in
+    NewBRegisterIndirect address
+
+
+ld_c_indirect_ix : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
+ld_c_indirect_ix z80_main param =
+    -- case 0x46: B=env.mem(getd(xy)); time+=3; break;
+    let
+        address =
+            z80_main.ix + byte param
+    in
+    NewCRegisterIndirect address
+
+
+ld_c_indirect_iy : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
+ld_c_indirect_iy z80_main param =
+    -- case 0x46: B=env.mem(getd(xy)); time+=3; break;
+    let
+        address =
+            z80_main.iy + byte param
+    in
+    NewCRegisterIndirect address
 
 
 djnz : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange

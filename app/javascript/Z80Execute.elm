@@ -58,7 +58,7 @@ apply_delta z80 rom48k z80delta =
             z80 |> applySimple8BitDelta pcInc cpuTimeCTime single8BitChange
 
         DoubleWithRegistersDelta pcInc cpuTimeCTime doubleWithRegisterChange ->
-            z80 |> applyDoubleWithRegistersDelta pcInc cpuTimeCTime doubleWithRegisterChange
+            z80 |> applyDoubleWithRegistersDelta pcInc cpuTimeCTime doubleWithRegisterChange rom48k
 
         JumpChangeDelta cpuTimeCTime jumpChange ->
             z80 |> applyJumpChangeDelta cpuTimeCTime jumpChange
@@ -127,8 +127,8 @@ applyJumpChangeDelta cpu_time z80changeData z80 =
             }
 
 
-applyDoubleWithRegistersDelta : MediumPCIncrement -> CpuTimeCTime -> DoubleWithRegisterChange -> Z80Core -> Z80Core
-applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData z80 =
+applyDoubleWithRegistersDelta : MediumPCIncrement -> CpuTimeCTime -> DoubleWithRegisterChange -> Z80ROM -> Z80Core -> Z80Core
+applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
     let
         old_env =
             z80.env
@@ -227,6 +227,48 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData z80 =
                 | pc = pc
                 , env = env_1
                 , main = { main | iy = int }
+                , r = z80.r + 1
+            }
+
+        NewBRegisterIndirect addr ->
+            let
+                pc =
+                    Bitwise.and new_pc 0xFFFF
+
+                env_1 =
+                    { old_env | time = cpu_time }
+
+                main =
+                    z80.main
+
+                new_b =
+                    mem addr env_1.time rom48k env_1.ram
+            in
+            { z80
+                | pc = pc
+                , env = { env_1 | time = new_b.time }
+                , main = { main | b = new_b.value }
+                , r = z80.r + 1
+            }
+
+        NewCRegisterIndirect addr ->
+            let
+                pc =
+                    Bitwise.and new_pc 0xFFFF
+
+                env_1 =
+                    { old_env | time = cpu_time }
+
+                main =
+                    z80.main
+
+                new_b =
+                    mem addr env_1.time rom48k env_1.ram
+            in
+            { z80
+                | pc = pc
+                , env = { env_1 | time = new_b.time }
+                , main = { main | c = new_b.value }
                 , r = z80.r + 1
             }
 
