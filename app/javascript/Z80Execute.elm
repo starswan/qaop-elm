@@ -20,7 +20,7 @@ import Z80Env exposing (Z80Env, addCpuTimeEnvInc, mem, mem16, setMem, z80_pop, z
 import Z80Flags exposing (FlagRegisters, IntWithFlags, dec, inc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIYHL(..), MainWithIndexRegisters, set_bc_main, set_de_main)
-import Z80Word exposing (Z80Word, incrementBy1, incrementBy2, incrementBy3, incrementBy4, jumpBy)
+import Z80Word exposing (Z80Word, incrementBy1, incrementBy2, incrementBy3, incrementBy4, wordPlusOffset)
 
 
 type DeltaWithChanges
@@ -96,7 +96,7 @@ applyJumpChangeDelta cpu_time z80changeData z80 =
         ActualJump jump ->
             let
                 pc =
-                    z80.pc |> incrementBy2 |> jumpBy jump
+                    z80.pc |> incrementBy2 |> wordPlusOffset jump
 
                 --Bitwise.and (z80.pc + 2 + jump) 0xFFFF
             in
@@ -156,7 +156,7 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                     case maybeInt of
                         Just jump ->
                             --Bitwise.and (new_pc + jump) 0xFFFF
-                            new_pc |> jumpBy jump
+                            new_pc |> wordPlusOffset jump
 
                         Nothing ->
                             --Bitwise.and new_pc 0xFFFF

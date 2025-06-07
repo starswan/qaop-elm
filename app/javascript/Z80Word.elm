@@ -67,9 +67,10 @@ incrementBy2 z80word =
     ((z80word |> z80wordToInt) + 2) |> Bitwise.and 0xFFFF |> toZ80Word
 
 
-jumpBy : Z80Byte -> Z80Word -> Z80Word
-jumpBy offset z80word =
-    ((z80word |> z80wordToInt) + (offset |> z80ToInt |> byte)) |> Bitwise.and 0xFFFF |> toZ80Word
+
+--jumpBy : Z80Byte -> Z80Word -> Z80Word
+--jumpBy offset z80word =
+--    ((z80word |> z80wordToInt) + (offset |> z80ToInt |> byte)) |> Bitwise.and 0xFFFF |> toZ80Word
 
 
 incrementBy3 : Z80Word -> Z80Word
