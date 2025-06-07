@@ -266,10 +266,6 @@ cp_a z80_flags =
     z80_flags |> z80_cp z80_flags.a |> OnlyFlags
 
 
-increment1 =
-    CpuTimeIncrement 1
-
-
 ret_nz : FlagRegisters -> FlagChange
 ret_nz z80_flags =
     -- case 0xC0: time++; if(Fr!=0) MP=PC=pop(); break;
