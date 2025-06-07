@@ -1,7 +1,7 @@
 module GroupC0Test exposing (..)
 
 import Bitwise exposing (shiftRightBy)
-import Expect exposing (Expectation)
+import Expect
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
 import Z80Env exposing (m1, setMem)

@@ -1,9 +1,11 @@
 module Z80Test exposing (..)
 
-import Expect exposing (Expectation)
+--import Expect exposing (Expectation)
+
+import Expect
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
-import Z80Env exposing (mem, setMem)
+import Z80Env exposing (setMem)
 import Z80Rom
 
 
