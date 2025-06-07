@@ -325,3 +325,13 @@ resetBit testType z80byte =
 setBit : BitTest -> Z80Byte -> Z80Byte
 setBit testType z80byte =
     testType |> bitMaskFromBit |> Bitwise.or (z80byte |> z80ToInt) |> intToZ80
+
+
+addOne : Z80Byte -> Z80Byte
+addOne z80byte =
+    z80byte |> z80ToInt |> (\x -> x + 1) |> intToZ80
+
+
+subOne : Z80Byte -> Z80Byte
+subOne z80byte =
+    z80byte |> z80ToInt |> (\x -> x - 1) |> intToZ80
