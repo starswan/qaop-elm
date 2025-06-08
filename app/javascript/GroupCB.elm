@@ -960,11 +960,16 @@ sla_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sla_h z80_main z80_flags =
     --case 0x04: HL=HL&0xFF|shifter(o,HL>>>8)<<8; break
     let
+        hl =
+            z80_main.hl
+
         value =
-            shifter4 (z80_main.hl |> shiftRightBy8) z80_flags
+            --shifter4 (z80_main.hl |> shiftRightBy8) z80_flags
+            shifter4 hl.high z80_flags
 
         new_hl =
-            Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
+            --Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
+            { hl | high = value.value }
     in
     FlagsWithHLRegister value.flags new_hl
 
