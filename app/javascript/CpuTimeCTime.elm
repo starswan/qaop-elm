@@ -19,6 +19,7 @@ type
     | SixteenTStates
     | SeventeenTStates
     | TwentyTStates
+    | TwentyThreeTStates
 
 
 c_NOCONT =
@@ -333,5 +334,8 @@ addDuration duration time =
 
                 TwentyTStates ->
                     20
+
+                TwentyThreeTStates ->
+                    23
     in
     { time | cpu_time = time.cpu_time + offset }

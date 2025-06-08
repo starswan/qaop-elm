@@ -35,6 +35,8 @@ doubleWithRegistersIX =
     Dict.fromList
         [ ( 0x26, ( ld_ix_h_n, IncreaseByThree, ElevenTStates ) )
         , ( 0x2E, ( ld_ix_l_n, IncreaseByThree, ElevenTStates ) )
+        , ( 0x34, ( inc_indirect_ix, IncreaseByThree, TwentyThreeTStates ) )
+        , ( 0x35, ( dec_indirect_ix, IncreaseByThree, TwentyThreeTStates ) )
         , ( 0x46, ( ld_b_indirect_ix, IncreaseByThree, SevenTStates ) )
         , ( 0x4E, ( ld_c_indirect_ix, IncreaseByThree, SevenTStates ) )
         ]
@@ -45,6 +47,8 @@ doubleWithRegistersIY =
     Dict.fromList
         [ ( 0x26, ( ld_iy_h_n, IncreaseByThree, ElevenTStates ) )
         , ( 0x2E, ( ld_iy_l_n, IncreaseByThree, ElevenTStates ) )
+        , ( 0x34, ( inc_indirect_iy, IncreaseByThree, TwentyThreeTStates ) )
+        , ( 0x35, ( dec_indirect_iy, IncreaseByThree, TwentyThreeTStates ) )
         , ( 0x46, ( ld_b_indirect_iy, IncreaseByThree, SevenTStates ) )
         , ( 0x4E, ( ld_c_indirect_iy, IncreaseByThree, SevenTStates ) )
         ]
@@ -85,6 +89,8 @@ type DoubleWithRegisterChange
     | NewIYRegisterValue Int
     | NewBRegisterIndirect Int
     | NewCRegisterIndirect Int
+    | IndexedIndirectIncrement Int Int
+    | IndexedIndirectDecrement Int Int
 
 
 type JumpChange
@@ -418,3 +424,30 @@ ld_a_n param z80_flags =
     --{ new_z80 | flags = { z80_flags | a = v.value } }
     --CpuTimeWithFlagsAndPc v.time { z80_flags | a = v.value } v.pc
     FlagJump { z80_flags | a = param }
+
+
+inc_indirect_ix : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
+inc_indirect_ix z80_main param =
+    -- case 0x34: v=inc(env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
+    -- case 0x34: {int a; v=inc(env.mem(a=getd(xy))); time+=4; env.mem(a,v); time+=3;} break;
+    IndexedIndirectIncrement z80_main.ix param
+
+
+inc_indirect_iy : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
+inc_indirect_iy z80_main param =
+    -- case 0x34: {int a; v=inc(env.mem(a=getd(xy))); time+=4; env.mem(a,v); time+=3;} break;
+    IndexedIndirectIncrement z80_main.iy param
+
+
+dec_indirect_ix : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
+dec_indirect_ix z80_main param =
+    -- case 0x35: v=dec(env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
+    -- case 0x35: {int a; v=dec(env.mem(a=getd(xy))); time+=4; env.mem(a,v); time+=3;} break;
+    IndexedIndirectDecrement z80_main.ix param
+
+
+dec_indirect_iy : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
+dec_indirect_iy z80_main param =
+    -- case 0x35: v=dec(env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
+    -- case 0x35: {int a; v=dec(env.mem(a=getd(xy))); time+=4; env.mem(a,v); time+=3;} break;
+    IndexedIndirectDecrement z80_main.iy param
