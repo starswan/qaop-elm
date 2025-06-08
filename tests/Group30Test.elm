@@ -150,14 +150,14 @@ suite =
                             z80env
                                 |> setMem addr 0xDD
                                 |> setMem (addr + 1) 0x34
-                                |> setMem (addr + 2) 0xFF
+                                |> setMem (addr + 2) 0x01
                                 |> setMem 0x6544 0x78
 
                         new_z80 =
                             executeCoreInstruction z80rom
                                 { z80
                                     | env = { new_env | sp = 0x8765 }
-                                    , main = { z80main | ix = 0x6545, hl = 0x2545 }
+                                    , main = { z80main | ix = 0x6543, hl = 0x2545 }
                                     , flags = { flags | a = 0x39 }
                                 }
 
