@@ -477,16 +477,15 @@ run qaop =
 
             qaop_1 =
                 { qaop | loader = { loader | actions = List.tail loader.actions |> trimActionList } }
-
-            ( q2, cmd ) =
-                case nextAction of
-                    Just action ->
-                        ( qaop_1, actionToCmd action )
-
-                    Nothing ->
-                        ( { qaop_1 | state = Bitwise.and qaop.state (complement 2), spectrum = qaop_1.spectrum |> Spectrum.pause 0x08 }, Cmd.none )
         in
-        ( q2, cmd )
+        case nextAction of
+            Just action ->
+                ( qaop_1, actionToCmd action )
+
+            Nothing ->
+                ( { qaop_1 | state = Bitwise.and qaop.state (complement 2), spectrum = qaop_1.spectrum |> Spectrum.pause 0x08 }, Cmd.none )
+        --in
+        --( q2, cmd )
 
     else
         ( { qaop | spectrum = qaop.spectrum |> frames qaop.keys }, Cmd.none )

@@ -6,7 +6,7 @@
 module Z80Env exposing (..)
 
 import Bitwise exposing (and, or, shiftRightBy)
-import CpuTimeCTime exposing (CpuTimeAnd16BitValue, CpuTimeAndValue, CpuTimeCTime, CpuTimeIncrement, CpuTimePcAndValue, CpuTimeSpAnd16BitValue, CpuTimeSpAndValue, addCpuTimeTime, addCpuTimeTimeInc, c_NOCONT, cont, cont1, cont_port)
+import CpuTimeCTime exposing (CpuTimeAnd16BitValue, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAndValue, CpuTimeSpAnd16BitValue, CpuTimeSpAndValue, addCpuTimeTime, c_NOCONT, cont, cont1, cont_port)
 import Keyboard exposing (Keyboard, z80_keyboard_input)
 import Utils exposing (shiftLeftBy8, shiftRightBy8, toHexString2)
 import Z80Debug exposing (debugLog)
@@ -519,11 +519,6 @@ z80_in portnum env_in =
 addCpuTimeEnv : Int -> Z80Env -> Z80Env
 addCpuTimeEnv value z80env =
     { z80env | time = z80env.time |> addCpuTimeTime value }
-
-
-addCpuTimeEnvInc : CpuTimeIncrement -> Z80Env -> Z80Env
-addCpuTimeEnvInc value z80env =
-    { z80env | time = z80env.time |> addCpuTimeTimeInc value }
 
 
 reset_cpu_time : Z80Env -> Z80Env

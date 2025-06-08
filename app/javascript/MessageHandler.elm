@@ -1,8 +1,6 @@
 module MessageHandler exposing (..)
 
-import Array exposing (Array)
 import Bytes exposing (Bytes, Endianness(..))
-import Bytes.Decode exposing (Decoder, Step(..), loop, map, succeed)
 import Http exposing (Error, Expect, Metadata, Response)
 import Tapfile exposing (Tapfile, parseTapFile)
 import Z80Rom exposing (Z80ROM, parseRomFile)
