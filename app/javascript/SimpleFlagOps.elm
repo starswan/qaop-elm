@@ -5,7 +5,7 @@ import CpuTimeCTime exposing (CpuTimeIncrement(..), InstructionDuration(..))
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
 import Utils exposing (BitTest(..), shiftRightBy8)
-import Z80Byte exposing (Z80Byte, resetBit, setBit, z80ToInt)
+import Z80Byte exposing (Z80Byte, resetBit, setBit)
 import Z80Change exposing (FlagChange(..))
 import Z80Flags exposing (FlagRegisters, IntWithFlags, Z80ByteWithFlags, adc, c_FP, c_FS, cpl, daa, dec, get_af, get_flags, inc, rot, sbc, scf_ccf, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit, z80_add, z80_cp, z80_or, z80_sub, z80_xor)
 
@@ -93,14 +93,14 @@ rlca : FlagRegisters -> FlagChange
 rlca z80_flags =
     -- case 0x07: rot(A*0x101>>>7); break;
     --{ z80 | flags = z80.flags |> rot (Bitwise.shiftRightBy 7 (z80.flags.a * 0x101)) }
-    z80_flags |> rot (Bitwise.shiftRightBy 7 ((z80_flags.a |> z80ToInt) * 0x0101)) |> OnlyFlags
+    z80_flags |> rot (Bitwise.shiftRightBy 7 ((z80_flags.a |> Z80Byte.toInt) * 0x0101)) |> OnlyFlags
 
 
 rrca : FlagRegisters -> FlagChange
 rrca z80_flags =
     -- case 0x0F: rot(A*0x80800000>>24); break;
     --{ z80 | flags = z80.flags |> rot (Bitwise.shiftRightBy 24 (z80.flags.a * 0x80800000)) }
-    z80_flags |> rot (Bitwise.shiftRightBy 24 ((z80_flags.a |> z80ToInt) * 0x80800000)) |> OnlyFlags
+    z80_flags |> rot (Bitwise.shiftRightBy 24 ((z80_flags.a |> Z80Byte.toInt) * 0x80800000)) |> OnlyFlags
 
 
 rla : FlagRegisters -> FlagChange
@@ -108,7 +108,7 @@ rla z80_flags =
     -- case 0x17: rot(A<<1|Ff>>>8&1); break;
     -- { z80 | flags = z80.flags |> rot (Bitwise.or (Bitwise.shiftLeftBy 1 z80.flags.a)
     --                                                                           (Bitwise.and (shiftRightBy8 z80.flags.ff) 1)) }
-    z80_flags |> rot (Bitwise.or (Bitwise.shiftLeftBy 1 (z80_flags.a |> z80ToInt)) (Bitwise.and (shiftRightBy8 z80_flags.ff) 1)) |> OnlyFlags
+    z80_flags |> rot (Bitwise.or (Bitwise.shiftLeftBy 1 (z80_flags.a |> Z80Byte.toInt)) (Bitwise.and (shiftRightBy8 z80_flags.ff) 1)) |> OnlyFlags
 
 
 rra : FlagRegisters -> FlagChange
@@ -116,7 +116,7 @@ rra z80_flags =
     -- case 0x1F: rot((A*0x201|Ff&0x100)>>>1); break;
     --{ z80 | flags = z80.flags |> rot (Bitwise.shiftRightBy 1 (Bitwise.or (z80.flags.a * 0x201)
     --                                                                           (Bitwise.and z80.flags.ff 0x100))) }
-    z80_flags |> rot (Bitwise.shiftRightBy 1 (Bitwise.or ((z80_flags.a |> z80ToInt) * 0x0201) (Bitwise.and z80_flags.ff 0x0100))) |> OnlyFlags
+    z80_flags |> rot (Bitwise.shiftRightBy 1 (Bitwise.or ((z80_flags.a |> Z80Byte.toInt) * 0x0201) (Bitwise.and z80_flags.ff 0x0100))) |> OnlyFlags
 
 
 scf : FlagRegisters -> FlagChange
@@ -244,7 +244,7 @@ and_a z80_flags =
     -- case 0xA7: Fa=~(Ff=Fr=A); Fb=0; break;
     -- and a is correct - I guess the above is a faster implementation
     --z80_flags |> z80_and z80_flags.a |> OnlyFlags
-    OnlyFlags { a = z80_flags.a, ff = z80_flags.a |> z80ToInt, fr = z80_flags.a |> z80ToInt, fb = 0, fa = z80_flags.a |> z80ToInt |> complement }
+    OnlyFlags { a = z80_flags.a, ff = z80_flags.a |>  fr = z80_flags.a |>  fb = 0, fa = z80_flags.a |> Z80Byte.toInt |> complement }
 
 
 xor_a : FlagRegisters -> FlagChange
@@ -310,7 +310,7 @@ ret_c z80_flags =
 ret_po : FlagRegisters -> FlagChange
 ret_po z80_flags =
     -- case 0xE0: time++; if((flags()&FP)==0) MP=PC=pop(); break;
-    if Bitwise.and (z80_flags |> get_flags |> z80ToInt) c_FP == 0 then
+    if Bitwise.and (z80_flags |> get_flags |> Z80Byte.toInt) c_FP == 0 then
         ReturnWithPop
 
     else
@@ -320,7 +320,7 @@ ret_po z80_flags =
 ret_pe : FlagRegisters -> FlagChange
 ret_pe z80_flags =
     -- case 0xE8: time++; if((flags()&FP)!=0) MP=PC=pop(); break;
-    if Bitwise.and (z80_flags |> get_flags |> z80ToInt) c_FP /= 0 then
+    if Bitwise.and (z80_flags |> get_flags |> Z80Byte.toInt) c_FP /= 0 then
         ReturnWithPop
 
     else

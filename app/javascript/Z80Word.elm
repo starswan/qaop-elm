@@ -2,7 +2,7 @@ module Z80Word exposing (..)
 
 import Bitwise
 import Utils exposing (byte, char)
-import Z80Byte exposing (Z80Byte, intToZ80, z80ToInt, zeroByte)
+import Z80Byte exposing (Z80Byte, zeroByte)
 
 
 type alias Z80Word =
@@ -34,7 +34,7 @@ wordPlusOffset : Z80Byte -> Z80Word -> Z80Word
 wordPlusOffset z80byte z80word =
     let
         newvalue =
-            (z80word |> z80wordToInt) + byte (z80byte |> z80ToInt) |> char
+            (z80word |> z80wordToInt) + byte (z80byte |> Z80Byte.toInt) |> char
     in
     --Z80Word loval hival
     newvalue |> toZ80Word
@@ -42,17 +42,17 @@ wordPlusOffset z80byte z80word =
 
 z80wordToInt : Z80Word -> Int
 z80wordToInt z80word =
-    256 * (z80word.high |> z80ToInt) + (z80word.low |> z80ToInt)
+    256 * (z80word.high |> Z80Byte.toInt) + (z80word.low |> Z80Byte.toInt)
 
 
 toZ80Word : Int -> Z80Word
 toZ80Word newvalue =
     let
         loval =
-            newvalue |> remainderBy 256 |> intToZ80
+            newvalue |> remainderBy 256 |> Z80Byte.fromInt
 
         hival =
-            newvalue // 256 |> intToZ80
+            newvalue // 256 |> Z80Byte.fromInt
     in
     Z80Word loval hival
 
@@ -70,7 +70,7 @@ incrementBy2 z80word =
 
 --jumpBy : Z80Byte -> Z80Word -> Z80Word
 --jumpBy offset z80word =
---    ((z80word |> z80wordToInt) + (offset |> z80ToInt |> byte)) |> Bitwise.and 0xFFFF |> toZ80Word
+--    ((z80word |> z80wordToInt) + (offset |> Z80Byte.toInt |> byte)) |> Bitwise.and 0xFFFF |> toZ80Word
 
 
 incrementBy3 : Z80Word -> Z80Word

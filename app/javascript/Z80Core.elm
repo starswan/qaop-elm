@@ -2,7 +2,7 @@ module Z80Core exposing (..)
 
 import Bitwise exposing (shiftRightBy)
 import CpuTimeCTime exposing (CpuTimePcAnd16BitValue, CpuTimePcAndValue, addCpuTimeTime)
-import Z80Byte exposing (Z80Byte, z80ToInt)
+import Z80Byte exposing (Z80Byte)
 import Z80Env exposing (Z80Env, addCpuTimeEnv, c_TIME_LIMIT, mem, mem16, setMem, z80_push)
 import Z80Flags exposing (FlagRegisters)
 import Z80Rom exposing (Z80ROM)
@@ -189,7 +189,7 @@ im0 : Z80Byte -> Z80 -> Z80
 im0 in_bus z80 =
     let
         bus =
-            in_bus |> z80ToInt
+            in_bus |> Z80Byte.toInt
     in
     if Bitwise.and bus 0x38 == 0xFF then
         let

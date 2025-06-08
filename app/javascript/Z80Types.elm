@@ -274,13 +274,13 @@ set_xy_ixiy value ixiyhl z80 =
 
 get_bc : MainWithIndexRegisters -> Z80Word
 get_bc z80_main =
-    --z80_main.b |> z80ToInt |> shiftLeftBy8 |> Bitwise.or (z80_main.c |> z80ToInt)
+    --z80_main.b |> Z80Byte.toInt |> shiftLeftBy8 |> Bitwise.or (z80_main.c |> Z80Byte.toInt)
     Z80Word z80_main.c z80_main.b
 
 
 get_de : MainWithIndexRegisters -> Z80Word
 get_de z80_main =
-    --z80_main.d |> z80ToInt |> shiftLeftBy8 |> Bitwise.or (z80_main.e |> z80ToInt)
+    --z80_main.d |> Z80Byte.toInt |> shiftLeftBy8 |> Bitwise.or (z80_main.e |> Z80Byte.toInt)
     Z80Word z80_main.e z80_main.d
 
 

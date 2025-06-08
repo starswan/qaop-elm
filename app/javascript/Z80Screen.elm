@@ -6,7 +6,7 @@ import Maybe
 import ScreenStorage exposing (RawScreenData, Z80Screen, rawScreenData)
 import SpectrumColour exposing (SpectrumColour, spectrumColour)
 import Vector32 exposing (Vector32)
-import Z80Byte exposing (Z80Byte, getBit6, getBit7, getBits210, getBits543, z80ToInt)
+import Z80Byte exposing (Z80Byte, getBit6, getBit7, getBits210, getBits543)
 
 
 type alias ScreenData =
@@ -146,7 +146,7 @@ runCounts0to255 =
 
 intToRcList : Z80Byte -> List RunCount
 intToRcList index =
-    runCounts0to255 |> Array.get (index |> z80ToInt) |> Maybe.withDefault []
+    runCounts0to255 |> Array.get (index |> Z80Byte.toInt) |> Maybe.withDefault []
 
 
 foldRunCounts : RunCount -> List RunCount -> List RunCount

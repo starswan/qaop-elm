@@ -4,8 +4,8 @@ import Array exposing (Array)
 import Bytes exposing (Bytes)
 import Bytes.Decode exposing (Decoder, Step(..), andThen, loop, map, succeed, unsignedInt8)
 import Dict exposing (Dict)
-import Utils exposing (listToDict, toHexString)
-import Z80Byte exposing (Z80Byte, intToZ80, zeroByte)
+import Utils exposing (toHexString)
+import Z80Byte exposing (Z80Byte, zeroByte)
 import Z80Debug exposing (debugTodo)
 
 
@@ -17,7 +17,7 @@ constructor : Z80ROM
 constructor =
     let
         rom48k =
-            List.range 0 16384 |> List.map (\j -> j |> intToZ80)
+            List.range 0 16384 |> List.map (\j -> j |> Z80Byte.fromInt)
 
         rom_list =
             List.indexedMap (\a b -> ( a, zeroByte )) rom48k
@@ -52,7 +52,7 @@ romDecoder =
 
 grabRomDecoder : Array Int -> Decoder Z80ROM
 grabRomDecoder romData =
-    succeed (Z80ROM (romData |> Array.toList |> List.map (\int -> int |> intToZ80) |> List.indexedMap Tuple.pair |> Dict.fromList))
+    succeed (Z80ROM (romData |> Array.toList |> List.map (\int -> int |> Z80Byte.fromInt) |> List.indexedMap Tuple.pair |> Dict.fromList))
 
 
 array_decoder : Int -> Decoder Int -> Decoder (Array Int)

@@ -7,7 +7,7 @@ import PCIncrement exposing (PCIncrement(..))
 import RegisterChange exposing (RegisterChange(..), Shifter(..))
 import SingleEnvWithMain exposing (SingleEnvMainChange(..))
 import Utils exposing (BitTest(..), bitMaskFromBit, byte, char, inverseBitMaskFromBit, shiftLeftBy8, shiftRightBy8)
-import Z80Byte exposing (intToZ80, resetBit, setBit, z80ToInt)
+import Z80Byte exposing (Z80Byte.fromInt, resetBit, setBit)
 import Z80Change exposing (Z80Change(..))
 import Z80Core exposing (Z80Core, inc_pc2, set408bitHL)
 import Z80Delta exposing (Z80Delta(..))
@@ -54,7 +54,7 @@ group_xy_cb ixiyhl rom48k z80 =
             mem (z80.pc |> incrementBy1) (offset.time |> addCpuTimeTime 3) rom48k z80.env.ram
 
         c_value =
-            c.value |> z80ToInt
+            c.value |> Z80Byte.toInt
 
         new_pc =
             z80 |> inc_pc2
@@ -88,7 +88,7 @@ group_xy_cb ixiyhl rom48k z80 =
                 0x40 ->
                     let
                         v1_value =
-                            v1.value |> z80ToInt
+                            v1.value |> Z80Byte.toInt
 
                         flags =
                             bit o v1_value z80_3.flags
@@ -98,16 +98,16 @@ group_xy_cb ixiyhl rom48k z80 =
                 0x80 ->
                     let
                         v1_value =
-                            v1.value |> z80ToInt
+                            v1.value |> Z80Byte.toInt
                     in
-                    Z80Flags.Z80ByteWithFlags (Bitwise.and v1_value (complement (shiftLeftBy o 1)) |> intToZ80) z80_3.flags
+                    Z80Flags.Z80ByteWithFlags (Bitwise.and v1_value (complement (shiftLeftBy o 1)) |> Z80Byte.fromInt) z80_3.flags
 
                 _ ->
                     let
                         v1_value =
-                            v1.value |> z80ToInt
+                            v1.value |> Z80Byte.toInt
                     in
-                    Z80Flags.Z80ByteWithFlags (Bitwise.or v1_value (shiftLeftBy o 1) |> intToZ80) z80_3.flags
+                    Z80Flags.Z80ByteWithFlags (Bitwise.or v1_value (shiftLeftBy o 1) |> Z80Byte.fromInt) z80_3.flags
 
         new_env =
             if cAndC0 == 0x40 then

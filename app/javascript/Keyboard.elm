@@ -6,7 +6,7 @@ import Dict
 import String exposing (fromChar)
 import Vector5 exposing (Vector5)
 import Vector8 exposing (Vector8)
-import Z80Byte exposing (Z80Byte, intToZ80)
+import Z80Byte exposing (Z80Byte, ffByte)
 import Z80Debug exposing (debugLog, debugTodo)
 import Z80Word exposing (Z80Word, z80wordToInt)
 
@@ -153,7 +153,7 @@ z80_keyboard_input in_portnum keyboard =
             val =
                 keyboard.kempston |> List.foldl (\kemp total -> Bitwise.or (kempstonMapping kemp) total) 0
         in
-        debugLog "kempston" val val |> intToZ80
+        debugLog "kempston" val val |> Z80Byte.fromInt
 
     else if Bitwise.and portnum 0x01 == 0 then
         let
@@ -176,10 +176,10 @@ z80_keyboard_input in_portnum keyboard =
             --    else
             --      Nothing
         in
-        List.foldl (\num total -> Bitwise.and num total) 0xFF list3 |> intToZ80
+        List.foldl (\num total -> Bitwise.and num total) 0xFF list3 |> Z80Byte.fromInt
 
     else
-        0xFF |> intToZ80
+        ffByte
 
 
 

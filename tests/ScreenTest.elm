@@ -2,7 +2,7 @@ module ScreenTest exposing (..)
 
 import Expect exposing (Expectation)
 import Test exposing (..)
-import Z80Byte exposing (intToZ80)
+import Z80Byte exposing (Z80Byte.fromInt)
 import Z80Screen exposing (foldBoolRunCounts, foldUp)
 
 
@@ -14,16 +14,16 @@ suite =
                 \_ ->
                     let
                         a =
-                            [ { colour = 0x70 |> intToZ80, data = 0x76 |> intToZ80 } ]
+                            [ { colour = 0x70 |> Z80Byte.fromInt, data = 0x76 |> Z80Byte.fromInt } ]
                     in
-                    Expect.equal [ { colour = 0x70 |> intToZ80, data = [ 0x76 |> intToZ80 ] } ] (a |> List.foldr foldUp [])
+                    Expect.equal [ { colour = 0x70 |> Z80Byte.fromInt, data = [ 0x76 |> Z80Byte.fromInt ] } ] (a |> List.foldr foldUp [])
             , test "with dups" <|
                 \_ ->
                     let
                         a =
-                            [ { colour = 0x70 |> intToZ80, data = 0x76 |> intToZ80 }, { colour = 0x70 |> intToZ80, data = 0x71 |> intToZ80 }, { colour = 0x45 |> intToZ80, data = 0x87 |> intToZ80 } ]
+                            [ { colour = 0x70 |> Z80Byte.fromInt, data = 0x76 |> Z80Byte.fromInt }, { colour = 0x70 |> Z80Byte.fromInt, data = 0x71 |> Z80Byte.fromInt }, { colour = 0x45 |> Z80Byte.fromInt, data = 0x87 |> Z80Byte.fromInt } ]
                     in
-                    Expect.equal [ { colour = 0x70 |> intToZ80, data = [ 0x76 |> intToZ80, 0x71 |> intToZ80 ] }, { colour = 0x45 |> intToZ80, data = [ 0x87 |> intToZ80 ] } ] (a |> List.foldr foldUp [])
+                    Expect.equal [ { colour = 0x70 |> Z80Byte.fromInt, data = [ 0x76 |> Z80Byte.fromInt, 0x71 |> Z80Byte.fromInt ] }, { colour = 0x45 |> Z80Byte.fromInt, data = [ 0x87 |> Z80Byte.fromInt ] } ] (a |> List.foldr foldUp [])
             ]
         , describe "rawToLines"
             [ test "foldBoolRunCounts" <|

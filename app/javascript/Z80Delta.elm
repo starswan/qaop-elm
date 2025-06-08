@@ -2,7 +2,7 @@ module Z80Delta exposing (..)
 
 import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimeIncrement, InstructionDuration, addCpuTimeTime)
 import Utils exposing (toHexString)
-import Z80Byte exposing (Z80Byte, z80ToInt)
+import Z80Byte exposing (Z80Byte)
 import Z80Core exposing (Z80, Z80Core, add_cpu_time, set408bitHL)
 import Z80Debug exposing (debugTodo)
 import Z80Env exposing (Z80Env, addCpuTimeEnv, setMem, setMem16, z80_push)
@@ -188,4 +188,4 @@ applyDeltaWithChanges z80delta z80 =
             { z80 | flags = flagRegisters, pc = pc, env = z80Env |> addCpuTimeEnv int, interrupts = z80delta.interrupts }
 
         UnknownIntValue string int ->
-            debugTodo string (int |> z80ToInt |> toHexString) z80
+            debugTodo string (int |> Z80Byte.toInt |> toHexString) z80

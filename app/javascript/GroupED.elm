@@ -10,7 +10,7 @@ import Bitwise exposing (complement, shiftLeftBy, shiftRightBy)
 import CpuTimeCTime exposing (addCpuTimeTime)
 import Dict exposing (Dict)
 import Utils exposing (char, shiftLeftBy8, shiftRightBy8)
-import Z80Byte exposing (Nybble(..), Z80Byte, getHighNybble, getLowNybble, z80ToInt, zeroByte)
+import Z80Byte exposing (Nybble(..), Z80Byte, getHighNybble, getLowNybble, zeroByte)
 import Z80Core exposing (Z80Core, add_cpu_time, imm16, inc_pc)
 import Z80Debug exposing (debugLog)
 import Z80Delta exposing (Z80Delta(..))
@@ -410,7 +410,7 @@ group_ed rom48k z80_0 =
             { old_z80 | pc = new_pc } |> add_cpu_time 4
 
         ed_func =
-            group_ed_dict |> Dict.get (c.value |> z80ToInt)
+            group_ed_dict |> Dict.get (c.value |> Z80Byte.toInt)
     in
     case ed_func of
         Just f ->
@@ -682,7 +682,7 @@ ldir incOrDec repeat rom48k z80 =
                 z80_2.flags.fr
 
         v2 =
-            (v1.value |> z80ToInt) + (z80_2.flags.a |> z80ToInt)
+            (v1.value |> Z80Byte.toInt) + (z80_2.flags.a |> Z80Byte.toInt)
 
         ff =
             Bitwise.or (Bitwise.or (Bitwise.and z80_2.flags.ff (complement c_F53)) (Bitwise.and v2 c_F3)) (Bitwise.and (shiftLeftBy 4 v2) c_F5)

@@ -5,7 +5,7 @@ import CpuTimeCTime exposing (CpuTimeIncrement, InstructionDuration(..), increme
 import Dict exposing (Dict)
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..))
 import Utils exposing (byte)
-import Z80Byte exposing (Z80Byte, intToZ80, z80ToInt)
+import Z80Byte exposing (Z80Byte)
 import Z80Flags exposing (FlagRegisters, adc, sbc, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
 import Z80Types exposing (MainWithIndexRegisters)
 import Z80Word exposing (Z80Word, lower8Bits, top8Bits, wordPlusOffset)
@@ -226,9 +226,9 @@ djnz z80_main param =
         d =
             param
 
-        --byte (param |> z80ToInt)
+        --byte (param |> Z80Byte.toInt)
         b =
-            Bitwise.and ((z80_main.b |> z80ToInt) - 1) 0xFF
+            Bitwise.and ((z80_main.b |> Z80Byte.toInt) - 1) 0xFF
 
         ( time, jump ) =
             if b /= 0 then
@@ -237,7 +237,7 @@ djnz z80_main param =
             else
                 ( 4, Nothing )
     in
-    RelativeJumpWithTimeOffset (NewBRegister (b |> intToZ80)) jump time
+    RelativeJumpWithTimeOffset (NewBRegister (b |> Z80Byte.fromInt)) jump time
 
 
 ld_indirect_hl_n : MainWithIndexRegisters -> Z80Byte -> DoubleWithRegisterChange

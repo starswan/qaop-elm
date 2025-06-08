@@ -112,8 +112,8 @@ intToNybble nybble =
             Zero
 
 
-z80ToInt : Z80Byte -> Int
-z80ToInt z80byte =
+toInt : Z80Byte -> Int
+toInt z80byte =
     case z80byte of
         Z80Byte high low ->
             let
@@ -126,8 +126,8 @@ z80ToInt z80byte =
             (highVal |> shiftLeftBy8) |> Bitwise.or lowVal
 
 
-intToZ80 : Int -> Z80Byte
-intToZ80 int =
+fromInt : Int -> Z80Byte
+fromInt int =
     let
         low =
             (int |> Bitwise.and 0xFF) |> intToNybble
@@ -293,7 +293,7 @@ getBits543 z80byte =
 
 resetBit : BitTest -> Z80Byte -> Z80Byte
 resetBit testType z80byte =
-    testType |> inverseBitMaskFromBit |> Bitwise.and (z80byte |> z80ToInt) |> intToZ80
+    testType |> inverseBitMaskFromBit |> Bitwise.and (z80byte |> Z80Byte.toInt) |> Z80Byte.fromInt
 
 
 
@@ -324,14 +324,14 @@ resetBit testType z80byte =
 
 setBit : BitTest -> Z80Byte -> Z80Byte
 setBit testType z80byte =
-    testType |> bitMaskFromBit |> Bitwise.or (z80byte |> z80ToInt) |> intToZ80
+    testType |> bitMaskFromBit |> Bitwise.or (z80byte |> Z80Byte.toInt) |> Z80Byte.fromInt
 
 
 addOne : Z80Byte -> Z80Byte
 addOne z80byte =
-    z80byte |> z80ToInt |> (\x -> x + 1) |> intToZ80
+    z80byte |> Z80Byte.toInt |> (\x -> x + 1) |> Z80Byte.fromInt
 
 
 subOne : Z80Byte -> Z80Byte
 subOne z80byte =
-    z80byte |> z80ToInt |> (\x -> x - 1) |> intToZ80
+    z80byte |> Z80Byte.toInt |> (\x -> x - 1) |> Z80Byte.fromInt

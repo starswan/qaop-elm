@@ -9,7 +9,7 @@ import Bitwise exposing (and, shiftRightBy)
 import CpuTimeCTime exposing (CpuTimeAnd16BitValue, CpuTimeAndValue, CpuTimeAndWord, CpuTimeAndZ80Byte, CpuTimeCTime, CpuTimeIncrement, CpuTimePcAndValue, CpuTimeSpAnd16BitValue, CpuTimeSpAndValue, addCpuTimeTime, addCpuTimeTimeInc, c_NOCONT, cont, cont1, cont_port)
 import Keyboard exposing (Keyboard, z80_keyboard_input)
 import Utils exposing (toHexString2)
-import Z80Byte exposing (Z80Byte, ffByte, z80ToInt)
+import Z80Byte exposing (Z80Byte, ffByte)
 import Z80Debug exposing (debugLog)
 import Z80Ram exposing (Z80Ram, getRamValue)
 import Z80Rom exposing (Z80ROM, getROMValue)
@@ -525,7 +525,7 @@ z80_in portnum env_in =
 
         x =
             if value /= ffByte then
-                debugLog "keyboard value" ((portnum |> z80wordToInt |> toHexString2) ++ " " ++ (value |> z80ToInt |> toHexString2)) value
+                debugLog "keyboard value" ((portnum |> z80wordToInt |> toHexString2) ++ " " ++ (value |> Z80Byte.toInt |> toHexString2)) value
 
             else
                 value

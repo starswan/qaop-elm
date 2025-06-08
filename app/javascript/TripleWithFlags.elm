@@ -3,7 +3,7 @@ module TripleWithFlags exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeIncrement, InstructionDuration(..))
 import Dict exposing (Dict)
-import Z80Byte exposing (Z80Byte, z80ToInt)
+import Z80Byte exposing (Z80Byte)
 import Z80Flags exposing (FlagRegisters, c_FP, c_FS, get_flags)
 import Z80Word exposing (Z80Word)
 
@@ -82,7 +82,7 @@ jp_c_nn param z80_flags =
 jp_po_nn : Z80Word -> FlagRegisters -> TripleWithFlagsChange
 jp_po_nn param z80_flags =
     -- case 0xE2: jp((flags()&FP)==0); break;
-    if Bitwise.and (z80_flags |> get_flags |> z80ToInt) c_FP == 0 then
+    if Bitwise.and (z80_flags |> get_flags |> Z80Byte.toInt) c_FP == 0 then
         AbsoluteJump param
 
     else
@@ -92,7 +92,7 @@ jp_po_nn param z80_flags =
 jp_pe_nn : Z80Word -> FlagRegisters -> TripleWithFlagsChange
 jp_pe_nn param z80_flags =
     -- case 0xEA: jp((flags()&FP)!=0); break;
-    if Bitwise.and (z80_flags |> get_flags |> z80ToInt) c_FP /= 0 then
+    if Bitwise.and (z80_flags |> get_flags |> Z80Byte.toInt) c_FP /= 0 then
         AbsoluteJump param
 
     else
