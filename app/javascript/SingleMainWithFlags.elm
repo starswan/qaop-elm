@@ -1,7 +1,7 @@
 module SingleMainWithFlags exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeIncrement(..), InstructionDuration(..))
+import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
 import Utils exposing (BitTest(..), shiftLeftBy8, shiftRightBy8)
