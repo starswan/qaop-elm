@@ -1,7 +1,7 @@
 module TripleWithFlags exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeIncrement, InstructionDuration(..), increment3)
+import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
 import Z80Flags exposing (FlagRegisters, c_FP, c_FS, get_flags)
 

@@ -1,7 +1,7 @@
 module SingleWith8BitParameter exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeIncrement, InstructionDuration(..), increment3)
+import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..))
 import Utils exposing (byte, shiftLeftBy8)
@@ -79,7 +79,7 @@ type Single8BitChange
 
 type DoubleWithRegisterChange
     = RelativeJumpWithTimeOffset Single8BitChange (Maybe Int) Int
-    | DoubleRegChangeStoreIndirect Int Int CpuTimeIncrement
+    | DoubleRegChangeStoreIndirect Int Int
     | NewHLRegisterValue Int
     | NewIXRegisterValue Int
     | NewIYRegisterValue Int
@@ -237,7 +237,7 @@ ld_indirect_hl_n : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
 ld_indirect_hl_n z80_main param =
     -- case 0x36: env.mem(HL,imm8()); time+=3; break;
     -- case 0x36: {int a=(char)(xy+(byte)env.mem(PC)); time+=3;
-    DoubleRegChangeStoreIndirect z80_main.hl param increment3
+    DoubleRegChangeStoreIndirect z80_main.hl param
 
 
 jr_n : Int -> FlagRegisters -> JumpChange

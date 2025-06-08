@@ -85,10 +85,6 @@ type CpuTimeIncrement
     = CpuTimeIncrement Int
 
 
-increment3 =
-    CpuTimeIncrement 3
-
-
 
 --	private final void cont1(int t) {
 --		t += cpu.time;

@@ -16,7 +16,7 @@ import Z80Change exposing (FlagChange(..), Z80Change, applyZ80Change)
 import Z80Core exposing (Z80Core)
 import Z80Debug exposing (debugTodo)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..), applyDeltaWithChanges)
-import Z80Env exposing (Z80Env, addCpuTimeEnvInc, mem, mem16, setMem, z80_pop, z80_push)
+import Z80Env exposing (Z80Env, mem, mem16, setMem, z80_pop, z80_push)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, dec, inc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIYHL(..), MainWithIndexRegisters, set_bc_main, set_de_main)
@@ -162,7 +162,7 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 , r = z80.r + 1
             }
 
-        DoubleRegChangeStoreIndirect addr value cpuTimeIncrement ->
+        DoubleRegChangeStoreIndirect addr value ->
             let
                 pc =
                     Bitwise.and new_pc 0xFFFF
@@ -172,7 +172,7 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
             in
             { z80
                 | pc = pc
-                , env = env_1 |> addCpuTimeEnvInc cpuTimeIncrement
+                , env = env_1
                 , r = z80.r + 1
             }
 
