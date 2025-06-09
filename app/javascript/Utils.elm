@@ -232,9 +232,9 @@ inverseBitMaskFromBit testType =
 --wordPlusOffset in_z80byte in_z80word =
 --    let
 --        z80byte = in_z80byte |> Z80Byte.toInt
---        z80word = in_z80word |> z80wordToInt
+--        z80word = in_z80word |> Z80Word.toInt
 --        newvalue =
 --            z80word + byte z80byte |> char
 --    in
 --    --Z80Word loval hival
---    newvalue |> toZ80Word
+--    newvalue |> Z80Word.fromInt

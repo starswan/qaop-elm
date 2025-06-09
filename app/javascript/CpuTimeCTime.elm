@@ -2,7 +2,7 @@ module CpuTimeCTime exposing (..)
 
 import Bitwise exposing (shiftLeftBy, shiftRightBy)
 import Z80Byte exposing (Z80Byte)
-import Z80Word exposing (Z80Word, z80wordToInt)
+import Z80Word exposing (Z80Word)
 
 
 type
@@ -272,7 +272,7 @@ cont_port : Z80Word -> CpuTimeCTime -> CpuTimeCTime
 cont_port in_portn z80env =
     let
         portn =
-            in_portn |> z80wordToInt
+            in_portn |> Z80Word.toInt
 
         n =
             z80env.cpu_time - z80env.ctime

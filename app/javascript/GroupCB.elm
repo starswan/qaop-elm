@@ -6,8 +6,8 @@ import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
 import RegisterChange exposing (RegisterChange(..), Shifter(..))
 import SingleEnvWithMain exposing (SingleEnvMainChange(..))
-import Utils exposing (BitTest(..), bitMaskFromBit, byte, char, inverseBitMaskFromBit, shiftLeftBy8, shiftRightBy8)
-import Z80Byte exposing (Z80Byte.fromInt, resetBit, setBit)
+import Utils exposing (BitTest(..), shiftLeftBy8, shiftRightBy8)
+import Z80Byte exposing (resetBit, setBit)
 import Z80Change exposing (Z80Change(..))
 import Z80Core exposing (Z80Core, inc_pc2, set408bitHL)
 import Z80Delta exposing (Z80Delta(..))
@@ -15,7 +15,7 @@ import Z80Env exposing (Z80Env, addCpuTimeEnv, mem, setMem)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, bit, c_F53, shifter, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIY, IXIYHL(..), IntWithFlagsTimeAndPC, MainWithIndexRegisters, get_ixiy_xy)
-import Z80Word exposing (incrementBy1, wordPlusOffset, z80wordToInt)
+import Z80Word exposing (incrementBy1, wordPlusOffset)
 
 
 
@@ -78,7 +78,7 @@ group_xy_cb ixiyhl rom48k z80 =
         --			case 0xC0: v |= 1<<o; break;
         --		}
         addr_int =
-            addr |> z80wordToInt
+            addr |> Z80Word.toInt
 
         v2 =
             case cAndC0 of

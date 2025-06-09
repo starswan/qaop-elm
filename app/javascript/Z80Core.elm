@@ -7,7 +7,7 @@ import Z80Env exposing (Z80Env, addCpuTimeEnv, c_TIME_LIMIT, mem, mem16, setMem,
 import Z80Flags exposing (FlagRegisters)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIY(..), IXIYHL(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
-import Z80Word exposing (Z80Word, incrementBy1, incrementBy2, toZ80Word, wordPlusOffset)
+import Z80Word exposing (Z80Word, incrementBy1, incrementBy2, wordPlusOffset)
 
 
 type alias Z80Core =
@@ -194,7 +194,7 @@ im0 in_bus z80 =
     if Bitwise.and bus 0x38 == 0xFF then
         let
             new_pc =
-                bus - 199 |> toZ80Word
+                bus - 199 |> Z80Word.fromInt
         in
         z80 |> set_pc new_pc
 
@@ -240,7 +240,7 @@ interrupt bus rom48k full_z80 =
                 new_z80 |> im0 bus
 
             2 ->
-                new_z80 |> set_pc (0x38 |> toZ80Word)
+                new_z80 |> set_pc (0x38 |> Z80Word.fromInt)
 
             3 ->
                 let

@@ -7,7 +7,7 @@ import Z80Env exposing (z80_pop, z80_push)
 import Z80Flags exposing (set_af)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (set_bc_main, set_de_main)
-import Z80Word exposing (incrementBy1, toZ80Word)
+import Z80Word exposing (incrementBy1)
 
 
 type Rst
@@ -307,7 +307,7 @@ rst rstvalue cpu_time z80 =
                     0xFF
     in
     { z80
-        | pc = (value - 199) |> toZ80Word
+        | pc = (value - 199) |> Z80Word.fromInt
         , env = { old_env | time = cpu_time } |> z80_push pc
         , r = z80.r + 1
     }

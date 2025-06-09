@@ -18,7 +18,7 @@ import Z80Env exposing (addCpuTimeEnv, m1, mem, mem16, setMem, setMem16, z80_in)
 import Z80Flags exposing (FlagRegisters, c_F3, c_F5, c_F53, c_FC, f_szh0n0p, z80_sub)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIYHL(..), InterruptRegisters, get_bc, get_de, set_bc_main, set_de_main)
-import Z80Word exposing (Z80Word, decrementBy1, decrementBy2, incrementBy1, toZ80Word, z80wordToInt, zeroWord)
+import Z80Word exposing (Z80Word, decrementBy1, decrementBy2, incrementBy1, zeroWord)
 
 
 group_ed_dict : Dict Int (Z80ROM -> Z80Core -> Z80Delta)
@@ -395,7 +395,7 @@ group_ed rom48k z80_0 =
         --ints =
         --    z80_0.interrupts
         c =
-            z80.env |> m1 z80_0.pc (Bitwise.or (z80_0.interrupts.ir |> z80wordToInt) (Bitwise.and z80_0.r 0x7F)) rom48k
+            z80.env |> m1 z80_0.pc (Bitwise.or (z80_0.interrupts.ir |> Z80Word.toInt) (Bitwise.and z80_0.r 0x7F)) rom48k
 
         new_r =
             z80_0.r + 1
@@ -556,10 +556,10 @@ sbc_hl : Z80Word -> Z80Core -> Z80Delta
 sbc_hl b_in z80 =
     let
         a =
-            z80.main.hl |> z80wordToInt
+            z80.main.hl |> Z80Word.toInt
 
         b =
-            b_in |> z80wordToInt
+            b_in |> Z80Word.toInt
 
         r1 =
             a - b - Bitwise.and (shiftRightBy8 z80.flags.ff) c_FC
@@ -577,7 +577,7 @@ sbc_hl b_in z80 =
             char r1
 
         r2 =
-            r |> toZ80Word
+            r |> Z80Word.fromInt
 
         fr =
             Bitwise.or (shiftRightBy8 r) (shiftLeftBy8 r)
@@ -759,10 +759,10 @@ adc_hl : Z80Word -> Z80Core -> Z80Delta
 adc_hl in_b z80 =
     let
         b =
-            in_b |> z80wordToInt
+            in_b |> Z80Word.toInt
 
         a =
-            z80.main.hl |> z80wordToInt
+            z80.main.hl |> Z80Word.toInt
 
         r1 =
             a + b + Bitwise.and (shiftRightBy8 z80.flags.ff) c_FC
@@ -789,4 +789,4 @@ adc_hl in_b z80 =
             z80.flags
     in
     --{ z80 | main = { main | hl = r }, flags = { flags | ff = ff, fa = fa, fb = fb, fr = fr} } |> add_cpu_time 7
-    FlagsWithMainAndTime { flags | ff = ff, fa = fa, fb = fb, fr = fr } { main | hl = r |> toZ80Word } 7
+    FlagsWithMainAndTime { flags | ff = ff, fa = fa, fb = fb, fr = fr } { main | hl = r |> Z80Word.fromInt } 7

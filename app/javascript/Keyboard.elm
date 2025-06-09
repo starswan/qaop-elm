@@ -8,7 +8,7 @@ import Vector5 exposing (Vector5)
 import Vector8 exposing (Vector8)
 import Z80Byte exposing (Z80Byte, ffByte)
 import Z80Debug exposing (debugLog, debugTodo)
-import Z80Word exposing (Z80Word, z80wordToInt)
+import Z80Word exposing (Z80Word)
 
 
 type Kempston
@@ -146,7 +146,7 @@ z80_keyboard_input : Z80Word -> Keyboard -> Z80Byte
 z80_keyboard_input in_portnum keyboard =
     let
         portnum =
-            in_portnum |> z80wordToInt
+            in_portnum |> Z80Word.toInt
     in
     if Bitwise.and portnum 0xE0 == 0 then
         let

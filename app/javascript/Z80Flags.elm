@@ -3,7 +3,7 @@ module Z80Flags exposing (..)
 import Bitwise exposing (complement, shiftLeftBy, shiftRightBy)
 import Utils exposing (BitTest, bitMaskFromBit, shiftLeftBy1, shiftLeftBy8, shiftRightBy1, shiftRightBy8)
 import Z80Byte exposing (Z80Byte)
-import Z80Word exposing (Z80Word, toZ80Word, z80wordToInt)
+import Z80Word exposing (Z80Word)
 
 
 type alias FlagRegisters =
@@ -461,7 +461,7 @@ cpl flagRegs =
         fa =
             Bitwise.or (Bitwise.and flagRegs.fa (complement c_FH)) (Bitwise.and (complement flagRegs.fr) c_FH)
     in
-    { flagRegs | a = new_a |> Z80Byte.fromInt, ff = ff, fb = fb, fa = fa }
+    { flagRegs | a = new_a |> ff = ff, fb = fb, fa = fa }
 
 
 inc : Z80Byte -> FlagRegisters -> Z80ByteWithFlags
@@ -664,10 +664,10 @@ add16 : Z80Word -> Z80Word -> FlagRegisters -> WordWithFlags
 add16 in_a in_b main_flags =
     let
         a =
-            in_a |> z80wordToInt
+            in_a |> Z80Word.toInt
 
         b =
-            in_b |> z80wordToInt
+            in_b |> Z80Word.toInt
 
         r =
             a + b
@@ -694,7 +694,7 @@ add16 in_a in_b main_flags =
             { main_flags | ff = ff, fa = fa, fb = fb }
     in
     --IntWithFlags (Bitwise.and r 0xFFFF) new_flags
-    WordWithFlags (r |> toZ80Word) new_flags
+    WordWithFlags (r |> Z80Word.fromInt) new_flags
 
 
 
@@ -783,7 +783,7 @@ daa flagRegs =
         ff =
             Bitwise.or fr (Bitwise.and d 0x0100)
     in
-    { flagRegs | fr = fr, a = a |> Z80Byte.fromInt, fb = fb, fa = fa, ff = ff }
+    { flagRegs | fr = fr, a = a |> fb = fb, fa = fa, ff = ff }
 
 
 

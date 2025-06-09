@@ -13,7 +13,7 @@ import Z80Byte exposing (Z80Byte, ffByte)
 import Z80Debug exposing (debugLog)
 import Z80Ram exposing (Z80Ram, getRamValue)
 import Z80Rom exposing (Z80ROM, getROMValue)
-import Z80Word exposing (Z80Word, decrementBy1, decrementBy2, incrementBy1, incrementBy2, lower8Bits, toZ80Word, top8Bits, z80wordToInt)
+import Z80Word exposing (Z80Word, decrementBy1, decrementBy2, incrementBy1, incrementBy2, lower8Bits, top8Bits)
 
 
 c_FRSTART =
@@ -60,7 +60,7 @@ type alias ValueWithTime =
 
 
 z80env_constructor =
-    Z80Env Z80Ram.constructor Keyboard.constructor (CpuTimeCTime c_FRSTART 0) (0 |> toZ80Word)
+    Z80Env Z80Ram.constructor Keyboard.constructor (CpuTimeCTime c_FRSTART 0) (0 |> Z80Word.fromInt)
 
 
 
@@ -99,7 +99,7 @@ m1 : Z80Word -> Int -> Z80ROM -> Z80Env -> CpuTimeAndZ80Byte
 m1 in_addr ir rom48k z80env =
     let
         addr =
-            in_addr |> z80wordToInt
+            in_addr |> Z80Word.toInt
 
         n =
             z80env.time.cpu_time - z80env.time.ctime
@@ -161,7 +161,7 @@ mem : Z80Word -> CpuTimeCTime -> Z80ROM -> Z80Ram -> CpuTimeAndZ80Byte
 mem wordAddr time rom48k ram =
     let
         base_addr =
-            wordAddr |> z80wordToInt
+            wordAddr |> Z80Word.toInt
 
         n =
             time.cpu_time - time.ctime
@@ -229,7 +229,7 @@ mem16 : Z80Word -> Z80ROM -> Z80Env -> CpuTimeAnd16BitValue
 mem16 wordaddr rom48k z80env =
     let
         addr =
-            wordaddr |> z80wordToInt
+            wordaddr |> Z80Word.toInt
 
         n =
             z80env.time.cpu_time - z80env.time.ctime
@@ -361,7 +361,7 @@ setMem : Z80Word -> Z80Byte -> Z80Env -> Z80Env
 setMem wordaddr value z80env =
     let
         z80_addr =
-            wordaddr |> z80wordToInt
+            wordaddr |> Z80Word.toInt
 
         n =
             z80env.time.cpu_time - z80env.time.ctime
@@ -431,7 +431,7 @@ setMem16 : Z80Word -> Z80Word -> Z80Env -> Z80Env
 setMem16 z80_addr value z80env =
     let
         addr =
-            z80_addr |> z80wordToInt
+            z80_addr |> Z80Word.toInt
 
         addr1 =
             addr - 0x3FFF
@@ -525,7 +525,7 @@ z80_in portnum env_in =
 
         x =
             if value /= ffByte then
-                debugLog "keyboard value" ((portnum |> z80wordToInt |> toHexString2) ++ " " ++ (value |> Z80Byte.toInt |> toHexString2)) value
+                debugLog "keyboard value" ((portnum |> Z80Word.toInt |> toHexString2) ++ " " ++ (value |> Z80Byte.toInt |> toHexString2)) value
 
             else
                 value

@@ -34,19 +34,19 @@ wordPlusOffset : Z80Byte -> Z80Word -> Z80Word
 wordPlusOffset z80byte z80word =
     let
         newvalue =
-            (z80word |> z80wordToInt) + byte (z80byte |> Z80Byte.toInt) |> char
+            (z80word |> toInt) + byte (z80byte |> Z80Byte.toInt) |> char
     in
     --Z80Word loval hival
-    newvalue |> toZ80Word
+    newvalue |> fromInt
 
 
-z80wordToInt : Z80Word -> Int
-z80wordToInt z80word =
+toInt : Z80Word -> Int
+toInt z80word =
     256 * (z80word.high |> Z80Byte.toInt) + (z80word.low |> Z80Byte.toInt)
 
 
-toZ80Word : Int -> Z80Word
-toZ80Word newvalue =
+fromInt : Int -> Z80Word
+fromInt newvalue =
     let
         loval =
             newvalue |> remainderBy 256 |> Z80Byte.fromInt
@@ -59,35 +59,35 @@ toZ80Word newvalue =
 
 incrementBy1 : Z80Word -> Z80Word
 incrementBy1 z80word =
-    ((z80word |> z80wordToInt) + 1) |> Bitwise.and 0xFFFF |> toZ80Word
+    ((z80word |> toInt) + 1) |> Bitwise.and 0xFFFF |> fromInt
 
 
 incrementBy2 : Z80Word -> Z80Word
 incrementBy2 z80word =
-    ((z80word |> z80wordToInt) + 2) |> Bitwise.and 0xFFFF |> toZ80Word
+    ((z80word |> toInt) + 2) |> Bitwise.and 0xFFFF |> fromInt
 
 
 
 --jumpBy : Z80Byte -> Z80Word -> Z80Word
 --jumpBy offset z80word =
---    ((z80word |> z80wordToInt) + (offset |> Z80Byte.toInt |> byte)) |> Bitwise.and 0xFFFF |> toZ80Word
+--    ((z80word |> Z80Word.toInt) + (offset |> Z80Byte.toInt |> byte)) |> Bitwise.and 0xFFFF |> Z80Word.fromInt
 
 
 incrementBy3 : Z80Word -> Z80Word
 incrementBy3 z80word =
-    ((z80word |> z80wordToInt) + 3) |> Bitwise.and 0xFFFF |> toZ80Word
+    ((z80word |> toInt) + 3) |> Bitwise.and 0xFFFF |> fromInt
 
 
 incrementBy4 : Z80Word -> Z80Word
 incrementBy4 z80word =
-    ((z80word |> z80wordToInt) + 4) |> Bitwise.and 0xFFFF |> toZ80Word
+    ((z80word |> toInt) + 4) |> Bitwise.and 0xFFFF |> fromInt
 
 
 decrementBy1 : Z80Word -> Z80Word
 decrementBy1 z80word =
-    ((z80word |> z80wordToInt) - 1) |> Bitwise.and 0xFFFF |> toZ80Word
+    ((z80word |> toInt) - 1) |> Bitwise.and 0xFFFF |> fromInt
 
 
 decrementBy2 : Z80Word -> Z80Word
 decrementBy2 z80word =
-    ((z80word |> z80wordToInt) - 2) |> Bitwise.and 0xFFFF |> toZ80Word
+    ((z80word |> toInt) - 2) |> Bitwise.and 0xFFFF |> fromInt

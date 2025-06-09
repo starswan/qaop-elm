@@ -14,16 +14,16 @@ suite =
                 \_ ->
                     let
                         a =
-                            [ { colour = 0x70 |> Z80Byte.fromInt, data = 0x76 |> Z80Byte.fromInt } ]
+                            [ { colour = 0x70 |> data = 0x76 |> Z80Byte.fromInt } ]
                     in
-                    Expect.equal [ { colour = 0x70 |> Z80Byte.fromInt, data = [ 0x76 |> Z80Byte.fromInt ] } ] (a |> List.foldr foldUp [])
+                    Expect.equal [ { colour = 0x70 |> data = [ 0x76 |> Z80Byte.fromInt ] } ] (a |> List.foldr foldUp [])
             , test "with dups" <|
                 \_ ->
                     let
                         a =
-                            [ { colour = 0x70 |> Z80Byte.fromInt, data = 0x76 |> Z80Byte.fromInt }, { colour = 0x70 |> Z80Byte.fromInt, data = 0x71 |> Z80Byte.fromInt }, { colour = 0x45 |> Z80Byte.fromInt, data = 0x87 |> Z80Byte.fromInt } ]
+                            [ { colour = 0x70 |> data = 0x76 |> Z80Byte.fromInt }, { colour = 0x70 |> data = 0x71 |> Z80Byte.fromInt }, { colour = 0x45 |> data = 0x87 |> Z80Byte.fromInt } ]
                     in
-                    Expect.equal [ { colour = 0x70 |> Z80Byte.fromInt, data = [ 0x76 |> Z80Byte.fromInt, 0x71 |> Z80Byte.fromInt ] }, { colour = 0x45 |> Z80Byte.fromInt, data = [ 0x87 |> Z80Byte.fromInt ] } ] (a |> List.foldr foldUp [])
+                    Expect.equal [ { colour = 0x70 |> data = [ 0x76 |> 0x71 |> Z80Byte.fromInt ] }, { colour = 0x45 |> data = [ 0x87 |> Z80Byte.fromInt ] } ] (a |> List.foldr foldUp [])
             ]
         , describe "rawToLines"
             [ test "foldBoolRunCounts" <|
