@@ -141,35 +141,35 @@ fromInt int =
 getLowNybble : Z80Byte -> Nybble
 getLowNybble z80byte =
     case z80byte of
-        Z80Byte high low ->
+        Z80Byte _ low ->
             low
 
 
 getHighNybble : Z80Byte -> Nybble
 getHighNybble z80byte =
     case z80byte of
-        Z80Byte high low ->
+        Z80Byte high _ ->
             high
 
 
 getBit6 : Z80Byte -> Bool
 getBit6 z80byte =
     case z80byte of
-        Z80Byte high low ->
+        Z80Byte high _ ->
             [ Four, Five, Six, Seven, Fifteen, Fourteen, Thirteen, Twelve ] |> List.member high
 
 
 getBit7 : Z80Byte -> Bool
 getBit7 z80byte =
     case z80byte of
-        Z80Byte high low ->
+        Z80Byte high _ ->
             [ Eight, Nine, Ten, Eleven, Fifteen, Fourteen, Thirteen, Twelve ] |> List.member high
 
 
 getBits210 : Z80Byte -> Int
 getBits210 z80byte =
     case z80byte of
-        Z80Byte high low ->
+        Z80Byte _ low ->
             case low of
                 Zero ->
                     0
@@ -293,7 +293,7 @@ getBits543 z80byte =
 
 resetBit : BitTest -> Z80Byte -> Z80Byte
 resetBit testType z80byte =
-    testType |> inverseBitMaskFromBit |> Bitwise.and (z80byte |> Z80Byte.toInt) |> Z80Byte.fromInt
+    testType |> inverseBitMaskFromBit |> Bitwise.and (z80byte |> toInt) |> fromInt
 
 
 
@@ -324,14 +324,14 @@ resetBit testType z80byte =
 
 setBit : BitTest -> Z80Byte -> Z80Byte
 setBit testType z80byte =
-    testType |> bitMaskFromBit |> Bitwise.or (z80byte |> Z80Byte.toInt) |> Z80Byte.fromInt
+    testType |> bitMaskFromBit |> Bitwise.or (z80byte |> toInt) |> fromInt
 
 
 addOne : Z80Byte -> Z80Byte
 addOne z80byte =
-    z80byte |> Z80Byte.toInt |> (\x -> x + 1) |> Z80Byte.fromInt
+    z80byte |> toInt |> (\x -> x + 1) |> fromInt
 
 
 subOne : Z80Byte -> Z80Byte
 subOne z80byte =
-    z80byte |> Z80Byte.toInt |> (\x -> x - 1) |> Z80Byte.fromInt
+    z80byte |> toInt |> (\x -> x - 1) |> fromInt

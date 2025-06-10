@@ -461,7 +461,7 @@ cpl flagRegs =
         fa =
             Bitwise.or (Bitwise.and flagRegs.fa (complement c_FH)) (Bitwise.and (complement flagRegs.fr) c_FH)
     in
-    { flagRegs | a = new_a |> ff = ff, fb = fb, fa = fa }
+    { flagRegs | a = new_a |> Z80Byte.fromInt, ff = ff, fb = fb, fa = fa }
 
 
 inc : Z80Byte -> FlagRegisters -> Z80ByteWithFlags
@@ -783,7 +783,7 @@ daa flagRegs =
         ff =
             Bitwise.or fr (Bitwise.and d 0x0100)
     in
-    { flagRegs | fr = fr, a = a |> fb = fb, fa = fa, ff = ff }
+    { flagRegs | fr = fr, a = a |> Z80Byte.fromInt, fb = fb, fa = fa, ff = ff }
 
 
 
