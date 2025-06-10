@@ -8,9 +8,8 @@ module Main exposing (..)
 import Bitwise exposing (complement)
 import Browser
 import Delay
-import Dict
 import Html exposing (Attribute, Html, button, div, h2, span, text)
-import Html.Attributes exposing (disabled, id, style, tabindex)
+import Html.Attributes exposing (id, style, tabindex)
 import Html.Events exposing (onClick, preventDefaultOn)
 import Http exposing (Metadata)
 import Json.Decode as Decode exposing (Decoder)
@@ -18,7 +17,7 @@ import Keyboard exposing (ctrlKeyDownEvent, ctrlKeyUpEvent, keyDownEvent, keyUpE
 import Loader exposing (LoadAction(..), trimActionList)
 import MessageHandler exposing (bytesToRom, bytesToTap)
 import Qaop exposing (Qaop, pause)
-import Spectrum exposing (Spectrum, frames, loadTapfile, new_tape)
+import Spectrum exposing (Spectrum, frames, new_tape)
 import SpectrumColour exposing (spectrumColour)
 import Svg exposing (Svg, line, rect, svg)
 import Svg.Attributes exposing (fill, height, rx, stroke, viewBox, width, x1, x2, y1, y2)
@@ -83,7 +82,6 @@ type Message
     | KeyRepeat
     | CharacterKeyUp Char
     | ControlKeyUp String
-    | LoadTape
 
 
 type alias Flags =
@@ -194,7 +192,15 @@ view model =
                         "Pause"
                     )
                 ]
-            , button [ onClick LoadTape, disabled load_disabled ] [ text "Load Tape" ]
+            , div []
+                [ text
+                    (if model.qaop.spectrum.loading then
+                        "Loading"
+
+                     else
+                        "Running"
+                    )
+                ]
             ]
         , div
             [ tabindex 0
@@ -223,30 +229,6 @@ alwaysPreventDefault msg =
 update : Message -> Model -> ( Model, Cmd Message )
 update message model =
     case message of
-        LoadTape ->
-            let
-                ( first, rest ) =
-                    case model.qaop.spectrum.tape of
-                        Just a_tape ->
-                            ( a_tape.tapfiles |> Dict.get 0, a_tape.tapfiles |> Dict.remove 0 )
-
-                        Nothing ->
-                            ( Nothing, Dict.empty )
-
-                -- here we push the tapfile into Qoap and execute appropriately
-                speccy =
-                    case first of
-                        Just tapfile ->
-                            model.qaop.spectrum |> loadTapfile tapfile
-
-                        Nothing ->
-                            model.qaop.spectrum
-
-                qaop =
-                    debugLog "load_tape" "into model" model.qaop
-            in
-            ( { model | qaop = { qaop | spectrum = speccy } }, Cmd.none )
-
         GotRom result ->
             let
                 ( qaop, cmd ) =

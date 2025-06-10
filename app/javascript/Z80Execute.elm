@@ -11,7 +11,7 @@ import SingleWith8BitParameter exposing (DoubleWithRegisterChange(..), JumpChang
 import TripleByte exposing (TripleByteChange(..))
 import TripleWithFlags exposing (TripleWithFlagsChange(..))
 import TripleWithMain exposing (TripleMainChange, applyTripleMainChange)
-import Utils exposing (bitMaskFromBit, byte, inverseBitMaskFromBit, shiftLeftBy8, toHexString)
+import Utils exposing (bitMaskFromBit, byte, inverseBitMaskFromBit, shiftLeftBy8, toHexString2)
 import Z80Change exposing (FlagChange(..), Z80Change, applyZ80Change)
 import Z80Core exposing (Z80Core)
 import Z80Debug exposing (debugTodo)
@@ -83,7 +83,7 @@ apply_delta z80 rom48k z80delta =
             z80 |> applyTripleFlagChange cpuTimeCTime tripleWithFlagsChange
 
         UnknownInstruction string int ->
-            debugTodo string (int |> toHexString) z80
+            debugTodo string (int |> toHexString2) z80
 
 
 applyJumpChangeDelta : CpuTimeCTime -> JumpChange -> Z80Core -> Z80Core
