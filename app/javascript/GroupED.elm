@@ -762,3 +762,34 @@ adc_hl b z80 =
     in
     --{ z80 | main = { main | hl = r }, flags = { flags | ff = ff, fa = fa, fb = fb, fr = fr} } |> add_cpu_time 7
     FlagsWithMainAndTime { flags | ff = ff, fa = fa, fb = fb, fr = fr } { main | hl = r } 7
+
+
+
+--	private void cpir(int i, boolean r)
+--	{
+--		int a,b,v;
+--
+--		v = A-(b = env.mem(a=HL)) & 0xFF;
+--		MP += i;
+--		HL = (char)(a+i);
+--		time += 8;
+--
+--		Fr = v & 0x7F | v>>>7;
+--		Fb = ~(b | 0x80);
+--		Fa = A & 0x7F;
+--
+--		bc(a = (char)(bc() - 1));
+--		if(a!=0) {
+--			Fa |= 0x80;
+--			Fb |= 0x80;
+--			if(r && v!=0) {
+--				MP = (PC = (char)(PC-2)) + 1;
+--				time += 5;
+--			}
+--		}
+--
+--		Ff = Ff&~0xFF | v&~F53;
+--		if(((v ^ b ^ A)&FH) != 0) v--;
+--		Ff |= v<<4&0x20 | v&8;
+--	}
+--

@@ -10,8 +10,8 @@ type alias TapePosition =
     }
 
 
-newPosition : TapePosition
-newPosition =
+zeroPosition : TapePosition
+zeroPosition =
     TapePosition 0 0
 
 

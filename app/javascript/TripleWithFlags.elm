@@ -26,6 +26,7 @@ triple16WithFlags =
         , ( 0xD2, ( jp_nc_nn, TenTStates ) )
         , ( 0xD4, ( call_nc_nn, TenTStates ) )
         , ( 0xDA, ( jp_c_nn, TenTStates ) )
+        , ( 0xDC, ( call_c_nn, TenTStates ) )
         , ( 0xE2, ( jp_po_nn, TenTStates ) )
         , ( 0xEA, ( jp_pe_nn, TenTStates ) )
         , ( 0xF2, ( jp_p_nn, TenTStates ) )
@@ -148,6 +149,17 @@ call_nc_nn : Int -> FlagRegisters -> TripleWithFlagsChange
 call_nc_nn param z80_flags =
     -- case 0xD4: call((Ff&0x100)==0); break;
     if Bitwise.and z80_flags.ff 0x0100 == 0 then
+        AbsoluteCall param
+
+    else
+        Skip3ByteInstruction
+
+
+call_c_nn : Int -> FlagRegisters -> TripleWithFlagsChange
+call_c_nn param z80_flags =
+    ---- case 0xDC: call((Ff&0x100)!=0); break;
+    --0xDC -> z80 |> call (Bitwise.and z80.flags.ff 0x100 /= 0)
+    if Bitwise.and z80_flags.ff 0x0100 /= 0 then
         AbsoluteCall param
 
     else

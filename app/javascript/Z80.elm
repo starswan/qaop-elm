@@ -25,12 +25,14 @@ import SingleWith8BitParameter exposing (doubleWithRegisters, doubleWithRegister
 import TripleByte exposing (tripleByteWith16BitParam, tripleByteWith16BitParamDD, tripleByteWith16BitParamFD)
 import TripleWithFlags exposing (triple16WithFlags)
 import TripleWithMain exposing (tripleMainRegs, tripleMainRegsIX, tripleMainRegsIY)
+import Utils exposing (toHexString)
 import Z80Core exposing (Z80, Z80Core, add_cpu_time, inc_pc, inc_pcr, z80_halt)
+import Z80Debug exposing (debugLog)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..))
 import Z80Env exposing (Z80Env, c_TIME_LIMIT, m1, mem, mem16, z80env_constructor)
 import Z80Execute exposing (DeltaWithChanges(..), apply_delta)
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
-import Z80Rom exposing (Z80ROM)
+import Z80Rom exposing (Z80ROM, romRoutineNames)
 import Z80Types exposing (IXIY(..), IXIYHL(..), IntWithFlagsTimeAndPC, InterruptRegisters, MainRegisters, MainWithIndexRegisters)
 
 
@@ -132,34 +134,6 @@ constructor =
 --		time++;
 --	}
 --
---
---	private void cpir(int i, boolean r)
---	{
---		int a,b,v;
---
---		v = A-(b = env.mem(a=HL)) & 0xFF;
---		MP += i;
---		HL = (char)(a+i);
---		time += 8;
---
---		Fr = v & 0x7F | v>>>7;
---		Fb = ~(b | 0x80);
---		Fa = A & 0x7F;
---
---		bc(a = (char)(bc() - 1));
---		if(a!=0) {
---			Fa |= 0x80;
---			Fb |= 0x80;
---			if(r && v!=0) {
---				MP = (PC = (char)(PC-2)) + 1;
---				time += 5;
---			}
---		}
---
---		Ff = Ff&~0xFF | v&~F53;
---		if(((v ^ b ^ A)&FH) != 0) v--;
---		Ff |= v<<4&0x20 | v&8;
---	}
 --
 --	private void inir_otir(int op) // op: 101rd01o
 --	{
@@ -735,6 +709,15 @@ oldDelta c_value c_time interrupts tmp_z80 rom48k =
 
 fetchInstruction : Z80ROM -> Z80Core -> CpuTimeAndValue
 fetchInstruction rom48k z80 =
+    let
+        log =
+            case romRoutineNames |> Dict.get z80.pc of
+                Just name ->
+                    debugLog "fetch PC " name Nothing
+
+                Nothing ->
+                    Nothing
+    in
     z80.env |> m1 z80.pc (Bitwise.or z80.interrupts.ir (Bitwise.and z80.r 0x7F)) rom48k
 
 

@@ -506,14 +506,14 @@ z80_in portnum env_in =
         value =
             env_in.keyboard |> z80_keyboard_input portnum
 
-        x =
-            if value /= 0xFF then
-                debugLog "keyboard value" ((portnum |> toHexString2) ++ " " ++ toHexString2 value) value
-
-            else
-                value
+        --x =
+        --    if value /= 0xFF then
+        --        debugLog "keyboard value" ((portnum |> toHexString2) ++ " " ++ toHexString2 value) value
+        --
+        --    else
+        --        value
     in
-    CpuTimeAndValue env x
+    CpuTimeAndValue env value
 
 
 addCpuTimeEnv : Int -> Z80Env -> Z80Env

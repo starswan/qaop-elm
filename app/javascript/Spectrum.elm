@@ -4,16 +4,16 @@ import Bitwise exposing (complement, shiftRightBy)
 import Dict exposing (Dict)
 import Keyboard exposing (KeyEvent, Keyboard, update_keyboard)
 import SingleNoParams exposing (ex_af)
-import Tapfile exposing (Tapfile)
-import Utils exposing (char)
+import Tapfile exposing (Tapfile, tapfileDataToList)
+import Utils exposing (char, shiftLeftBy8, shiftRightBy8, toHexString, toHexString2)
 import Vector8
 import Z80 exposing (execute)
 import Z80Core exposing (Z80, Z80Core, get_ei, interrupt)
 import Z80Debug exposing (debugLog)
-import Z80Env exposing (mem, mem16, reset_cpu_time)
+import Z80Env exposing (Z80Env, mem, mem16, reset_cpu_time, setMem, z80_pop)
 import Z80Flags exposing (c_FC, c_FZ, get_flags, set_flags)
 import Z80Rom exposing (Z80ROM)
-import Z80Tape exposing (TapePosition, Z80Tape, newPosition)
+import Z80Tape exposing (TapePosition, Z80Tape)
 import Z80Types exposing (IXIYHL(..), get_de)
 
 
@@ -72,9 +72,11 @@ new_border_refresh =
 new_tape : List Tapfile -> Spectrum -> Spectrum
 new_tape tapfileList spectrum =
     let
-        --x = debug_log "new_tape list" (tapfile_list |> List.length) Nothing
+        x =
+            debugLog "new_tape list" (tapfileList |> List.length) Nothing
+
         tapedict =
-            tapfileList |> List.indexedMap (\index tap -> ( index, tap )) |> Dict.fromList |> Z80Tape Z80Tape.newPosition
+            tapfileList |> List.indexedMap (\index tap -> ( index, tap )) |> Dict.fromList |> Z80Tape Z80Tape.zeroPosition
     in
     --  w/o this change, the code crashes with a recursion error
     --{ spectrum | tape = Just (Z80Tape False tape_string 0 0 True True) }
@@ -85,41 +87,29 @@ new_tape tapfileList spectrum =
 
 
 
--- let
---    z80 = spectrum.cpu
--- in
---    { spectrum | cpu = { z80 | env = z80.env |> Z80Env.set_tape tape_string } }
---set_rom : Z80ROM -> Spectrum -> Spectrum
---set_rom romdata spectrum =
---    { spectrum | rom48k = romdata }
-
-
-loadTapfile : Tapfile -> Spectrum -> Spectrum
-loadTapfile tapFile spectrum =
-    let
-        cpu =
-            spectrum.cpu
-
-        core =
-            cpu.core
-
-        env =
-            core.env
-
-        --env  = case tapFile.header.start.headerType of
-        --    PROGRAM ->
-        --        let
-        --            y = tapFile.block.data
-        --        in
-        --        cpu.env
-        --    NUMBER_ARRAY -> cpu.env
-        --    Tapfile.CHAR_ARRAY -> cpu.env
-        --    Tapfile.CODE -> cpu.env
-    in
-    { spectrum | cpu = { cpu | core = { core | env = env } } }
-
-
-
+--loadTapfile : Tapfile -> Spectrum -> Spectrum
+--loadTapfile tapFile spectrum =
+--    let
+--        cpu =
+--            spectrum.cpu
+--
+--        core =
+--            cpu.core
+--
+--        env =
+--            core.env
+--
+--        --env  = case tapFile.header.start.headerType of
+--        --    PROGRAM ->
+--        --        let
+--        --            y = tapFile.block.data
+--        --        in
+--        --        cpu.env
+--        --    NUMBER_ARRAY -> cpu.env
+--        --    Tapfile.CHAR_ARRAY -> cpu.env
+--        --    Tapfile.CODE -> cpu.env
+--    in
+--    { spectrum | cpu = { cpu | core = { core | env = env } } }
 --c_Mh = 6 -- margin
 --c_Mv = 5
 --c_W = 256 + 8*c_Mh*2 -- 352
@@ -286,8 +276,13 @@ frames keys speccy =
             }
 
         loading_z80 =
-            if speccy.loading then
-                speccy |> checkLoad
+            if speccy.paused |> not then
+                case speccy.tape of
+                    Just _ ->
+                        speccy |> checkLoad
+
+                    Nothing ->
+                        Nothing
 
             else
                 Nothing
@@ -304,14 +299,14 @@ frames keys speccy =
                             ( z80_load, new_z80, tape_position )
 
                         Nothing ->
-                            ( False, z80, newPosition )
+                            ( False, z80, Z80Tape.zeroPosition )
 
                 Nothing ->
                     ( False
                     , cpu1
                         |> interrupt 0xFF speccy.rom48k
                         |> execute speccy.rom48k
-                    , newPosition
+                    , Z80Tape.zeroPosition
                     )
     in
     case speccy.tape of
@@ -1091,9 +1086,9 @@ type alias TapeState =
     , a : Int
     , f : Int
     , rf : Int
-    , data : Dict Int Int
+    , z80_env : Z80Env
     , break : Bool
-    , tapeBlk : Int
+    , continue : Bool
     }
 
 
@@ -1212,41 +1207,73 @@ doLoad2 full_cpu z80rom tape =
         cpu =
             full_cpu.core
 
-        initial : TapeState
-        initial =
-            { p = tape.tapePos.position
-            , ix = cpu.main.ix
-            , de = cpu.main |> get_de
-            , h = cpu.main.hl |> shiftRightBy 8
-            , l = cpu.main.hl |> Bitwise.and 0xFF
-            , a = cpu.flags.a
-            , f = cpu.flags |> get_flags
-            , rf = -1
-            , data = Dict.empty
-            , break = False
-            , tapeBlk = 0
-            }
+        main =
+            cpu.main
 
+        flags =
+            cpu.flags
+
+        p : TapePosition
         p =
             tape.tapePos
 
-        bool =
+        startState : TapeState
+        startState =
+            { p = p.position
+            , ix = main.ix
+            , de = main |> get_de
+
+            --, h = main.hl |> shiftRightBy 8
+            , h = 0
+            , l = main.hl |> Bitwise.and 0xFF
+            , a = flags.a
+            , f = flags |> get_flags
+            , rf = -1
+            , z80_env = cpu.env
+            , break = False
+            , continue = False
+            }
+
+        --headerLoading =
+        --    initial.de == 17
+        headerLoading =
+            startState.a == 0x00
+
+        toLog =
+            "ix = "
+                ++ (startState.ix |> toHexString)
+                ++ " de "
+                ++ (startState.de |> toHexString)
+                ++ " a "
+                ++ (startState.a |> toHexString2)
+                ++ " f "
+                ++ (startState.f |> toHexString2)
+                ++ " p "
+                ++ (p.tapfileNumber |> String.fromInt)
+
+        xxy =
+            debugLog "input" toLog Nothing
+
+        maybeData : Maybe TapeState
+        maybeData =
             case tape.tapfiles |> Dict.get p.tapfileNumber of
                 Just aTapfile ->
                     let
+                        tapeData =
+                            if headerLoading then
+                                aTapfile.data |> tapfileDataToList
+
+                            else
+                                --List.append (aTapfile.block.blockFlagByte :: aTapfile.block.data) [ aTapfile.block.checksum ]
+                                List.append aTapfile.block.data [ aTapfile.block.checksum ]
+
+                        --aTapfile.block.blockFlagByte :: aTapfile.block.data
                         tapeBlk =
                             aTapfile.block.dataLength
 
-                        startState =
-                            { initial | tapeBlk = tapeBlk }
-
-                        --loadFunc =
-                        --    loadOne aTapfile
-                        --tape_data =
-                        --    Loop.while (\x -> not x.break) loadFunc startState
                         new_data =
                             --		for(;;) {
-                            aTapfile.block.data
+                            tapeData
                                 |> List.foldl
                                     (\item state ->
                                         let
@@ -1261,7 +1288,7 @@ doLoad2 full_cpu z80rom tape =
                                             --	}
                                             ( break1, rf1 ) =
                                                 if not state.break && state.p == tapeBlk then
-                                                    ( True, c_FZ )
+                                                    ( debugLog "end" (state.p |> toHexString) True, c_FZ )
 
                                                 else
                                                     ( state.break, state.rf )
@@ -1269,10 +1296,29 @@ doLoad2 full_cpu z80rom tape =
                                             --	l = tape[p++]&0xFF;
                                             l =
                                                 if not break1 then
+                                                    let
+                                                        x =
+                                                            if state.ix - startState.ix < 16 || state.de < 16 then
+                                                                if headerLoading then
+                                                                    debugLog "header" ("ix = " ++ (state.ix |> toHexString) ++ " de " ++ (state.de |> toHexString) ++ " item " ++ (item |> toHexString2)) Nothing
+
+                                                                else
+                                                                    debugLog "body" ("ix = " ++ (state.ix |> toHexString) ++ " de " ++ (state.de |> toHexString) ++ " item " ++ (item |> toHexString2)) Nothing
+
+                                                            else
+                                                                Nothing
+                                                    in
                                                     Bitwise.and item 0xFF
 
                                                 else
                                                     state.l
+
+                                            new_p =
+                                                if not break1 then
+                                                    state.p + 1
+
+                                                else
+                                                    state.p
 
                                             --	h ^= l;
                                             h =
@@ -1289,10 +1335,14 @@ doLoad2 full_cpu z80rom tape =
                                             --			rf = cpu.FC;
                                             --		break;
                                             --	}
-                                            ( a, rf2, break ) =
+                                            ( a, rf2, break2 ) =
                                                 if not break1 && state.de == 0 then
-                                                    if h < 1 then
-                                                        ( h, c_FC, True )
+                                                    let
+                                                        debug =
+                                                            debugLog "de zero" ((h |> toHexString2) ++ " " ++ (item |> toHexString2)) Nothing
+                                                    in
+                                                    if h == 0x00 || h == 0xFF then
+                                                        ( 0, c_FC, True )
 
                                                     else
                                                         ( h, 0, True )
@@ -1309,20 +1359,24 @@ doLoad2 full_cpu z80rom tape =
                                             --			f |= cpu.FZ;
                                             --			continue;
                                             --		}
-                                            a_rf_f_break_1 =
-                                                if not break && Bitwise.and state.f c_FZ == 0 then
-                                                    let
-                                                        new_a =
-                                                            Bitwise.xor a l
-                                                    in
-                                                    if new_a /= 0 then
-                                                        { data = state.data, a = new_a, rf = 0, break = True, f = state.f, continue = False }
-
-                                                    else
-                                                        { data = state.data, a = new_a, rf = rf2, break = break, f = Bitwise.or state.f c_FZ, continue = True }
-
-                                                else
-                                                    { data = state.data, a = a, rf = rf2, break = break, f = state.f, continue = False }
+                                            a_rf_f_break_3 =
+                                                --if not break2 && Bitwise.and state.f c_FZ == 0 then
+                                                --    let
+                                                --        new_a =
+                                                --            Bitwise.xor a l
+                                                --    in
+                                                --    if new_a /= 0 then
+                                                --        let
+                                                --            fff =
+                                                --                debugLog "new a non zero" "" Nothing
+                                                --        in
+                                                --        { z80_env = state.z80_env, a = new_a, rf = 0, break = True, f = state.f, continue = False }
+                                                --
+                                                --    else
+                                                --        { z80_env = state.z80_env, a = new_a, rf = rf2, break = break2, f = Bitwise.or state.f c_FZ, continue = True }
+                                                --
+                                                --else
+                                                { z80_env = state.z80_env, a = a, rf = rf2, break = break2, f = state.f, continue = False }
 
                                             --		if((f&cpu.FC)!=0)
                                             --			mem(ix, l);
@@ -1334,9 +1388,9 @@ doLoad2 full_cpu z80rom tape =
                                             --			}
                                             --		}
                                             data_a_rf_break =
-                                                if not a_rf_f_break_1.break && not a_rf_f_break_1.continue then
-                                                    if Bitwise.and a_rf_f_break_1.f c_FC /= 0 then
-                                                        { a_rf_f_break_1 | data = a_rf_f_break_1.data |> Dict.insert state.ix l }
+                                                if not a_rf_f_break_3.break && not a_rf_f_break_3.continue then
+                                                    if Bitwise.and a_rf_f_break_3.f c_FC /= 0 then
+                                                        { a_rf_f_break_3 | z80_env = state.z80_env |> setMem state.ix l }
 
                                                     else
                                                         let
@@ -1344,38 +1398,109 @@ doLoad2 full_cpu z80rom tape =
                                                                 Bitwise.xor (mem state.ix cpu.env.time z80rom cpu.env.ram |> .value) l
                                                         in
                                                         if new_a /= 0 then
-                                                            { a_rf_f_break_1 | a = new_a, rf = 0, break = True }
+                                                            { a_rf_f_break_3 | a = new_a, rf = 0, break = True }
 
                                                         else
-                                                            { a_rf_f_break_1 | a = new_a }
+                                                            { a_rf_f_break_3 | a = new_a }
 
                                                 else
-                                                    a_rf_f_break_1
+                                                    a_rf_f_break_3
 
                                             --			ix = (char)(ix+1);
                                             --			de--;
                                             --		}
                                         in
                                         { state
-                                            | ix = char (state.ix + 1)
-                                            , de = state.de - 1
-                                            , data = data_a_rf_break.data
+                                            | ix =
+                                                if state.break || state.continue then
+                                                    state.ix
+
+                                                else
+                                                    char (state.ix + 1)
+                                            , de =
+                                                if state.break || state.continue then
+                                                    state.de
+
+                                                else
+                                                    state.de - 1
+                                            , z80_env = data_a_rf_break.z80_env
                                             , h = h
                                             , l = l
+                                            , p = new_p
                                             , a = data_a_rf_break.a
                                             , f = data_a_rf_break.f
                                             , break = data_a_rf_break.break
+                                            , continue = False
                                             , rf = data_a_rf_break.rf
                                         }
                                     )
                                     startState
                     in
-                    True
+                    Just new_data
 
                 Nothing ->
-                    False
+                    Nothing
     in
-    ( full_cpu, bool, tape.tapePos )
+    case maybeData of
+        Just tapeData ->
+            let
+                x =
+                    debugLog "returning ix" (tapeData.ix |> toHexString) Nothing
+
+                cpu_main =
+                    { main
+                        | ix = tapeData.ix
+                        , d = tapeData.de |> shiftRightBy8
+                        , e = tapeData.de |> Bitwise.and 0xFF
+                        , hl = tapeData.h |> shiftLeftBy8 |> Bitwise.or tapeData.l
+                    }
+
+                z80_env =
+                    tapeData.z80_env
+
+                core_1 =
+                    if tapeData.rf >= 0 then
+                        let
+                            popped =
+                                tapeData.z80_env |> z80_pop z80rom
+
+                            logged =
+                                "rf " ++ (tapeData.rf |> toHexString2) ++ " pc " ++ (popped.value16 |> toHexString2) ++ " a " ++ (tapeData.a |> toHexString2)
+
+                            y =
+                                if headerLoading then
+                                    debugLog "header pop" logged Nothing
+
+                                else
+                                    debugLog "body pop" logged Nothing
+                        in
+                        { cpu | flags = set_flags tapeData.rf tapeData.a, pc = popped.value16, env = { z80_env | sp = popped.sp } }
+
+                    else
+                        { cpu | env = z80_env, flags = set_flags tapeData.f tapeData.a }
+
+                new_core =
+                    { core_1 | main = cpu_main }
+
+                new_position =
+                    if headerLoading then
+                        { p | position = tapeData.p }
+
+                    else
+                        { p | position = tapeData.p, tapfileNumber = p.tapfileNumber + 1 }
+            in
+            ( { full_cpu | core = new_core }, tapeData.de <= 0, new_position )
+
+        Nothing ->
+            -- set FZ to indicate complete end of tape
+            let
+                core =
+                    full_cpu.core
+
+                new_flags =
+                    set_flags c_FZ full_cpu.core.flags.a
+            in
+            ( { full_cpu | core = { core | flags = new_flags } }, False, p )
 
 
 
