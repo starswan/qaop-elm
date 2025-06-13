@@ -6,7 +6,7 @@ import Z80Core exposing (Z80, Z80Core, add_cpu_time, set408bitHL)
 import Z80Debug exposing (debugTodo)
 import Z80Env exposing (Z80Env, addCpuTimeEnv, setMem, setMem16, z80_push)
 import Z80Flags exposing (FlagRegisters, f_szh0n0p)
-import Z80Types exposing (IXIYHL(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
+import Z80Types exposing (IXIYHL(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters, set_bc_main)
 
 
 type Z80Delta
@@ -46,6 +46,7 @@ type Z80Delta
     | Fszh0n0pTimeDeltaSet408Bit Int Int Int
     | FlagsWithPcEnvAndCpuTime FlagRegisters Int Z80Env Int
     | UnknownIntValue String Int
+    | HLBCWithFlagsAndPc Int Int FlagRegisters Int
 
 
 type alias DeltaWithChangesData =
@@ -65,6 +66,13 @@ applyDeltaWithChanges z80delta z80 =
     case z80delta.delta of
         WholeCore just_z80 ->
             just_z80
+
+        HLBCWithFlagsAndPc hl bc flags pc ->
+            let
+                main =
+                    z80.main |> set_bc_main bc
+            in
+            { z80 | pc = pc, flags = flags, main = { main | hl = hl }, env = { z80_env | time = z80delta.time } }
 
         MainRegsWithPcAndCpuTime mainRegisters pc cpu_time ->
             { z80 | pc = pc, env = { z80_env | time = cpu_time }, main = mainRegisters, interrupts = z80delta.interrupts }
