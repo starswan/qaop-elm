@@ -57,7 +57,7 @@ type alias ValueWithTime =
 
 
 z80env_constructor =
-    Z80Env Z80Ram.constructor Keyboard.constructor (CpuTimeCTime c_FRSTART (ContUntil 0)) 0
+    Z80Env Z80Ram.constructor Keyboard.constructor (CpuTimeCTime c_FRSTART NoCont) 0
 
 
 
