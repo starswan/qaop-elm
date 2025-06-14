@@ -246,6 +246,10 @@ screenLines z80_screen =
             z80_screen
                 |> rawScreenData
 
+        pairFunc : ScreenAttr -> RunCount -> ScreenColourRun
+        pairFunc =
+            pairToColour globalFlash
+
         new : List (Vector32 (List ScreenColourRun))
         new =
             raw
@@ -255,10 +259,20 @@ screenLines z80_screen =
                             vecRcList : Vector32 (List ScreenColourRun)
                             vecRcList =
                                 vector
-                                    --|> Vector32.map (rawScreenDataToScreenColourRunList z80_screen.flash)
                                     |> Vector32.map
                                         (\rawScreenData ->
-                                            []
+                                            let
+                                                rcList : List RunCount
+                                                rcList =
+                                                    runCounts0to255
+                                                        |> Array.get rawScreenData.data
+                                                        |> Maybe.withDefault (debugTodo "rcList" (rawScreenData.data |> String.fromInt) [])
+
+                                                colourRuns : List ScreenColourRun
+                                                colourRuns =
+                                                    rcList |> List.map (\runCount -> pairFunc rawScreenData.colour runCount)
+                                            in
+                                            colourRuns
                                         )
                         in
                         vecRcList
