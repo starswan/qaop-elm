@@ -270,8 +270,6 @@ frames keys speccy =
 
         cpu1 =
             { sz80
-              -- time_limit is a constant
-              --| time_limit = c_FRSTART + c_FRTIME
                 | core = { core | env = { env | keyboard = keys |> update_keyboard } }
             }
 
