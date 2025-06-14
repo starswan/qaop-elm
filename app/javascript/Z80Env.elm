@@ -6,7 +6,7 @@
 module Z80Env exposing (..)
 
 import Bitwise exposing (and, or, shiftRightBy)
-import CpuTimeCTime exposing (CpuTimeAnd16BitValue, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAndValue, CpuTimeSpAnd16BitValue, CpuTimeSpAndValue, addCpuTimeTime, c_NOCONT, cont, cont1, cont_port)
+import CpuTimeCTime exposing (CTime(..), CpuTimeAnd16BitValue, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAndValue, CpuTimeSpAnd16BitValue, CpuTimeSpAndValue, addCpuTimeTime, c_NOCONT, cont, cont1, cont_port)
 import Keyboard exposing (Keyboard, z80_keyboard_input)
 import Utils exposing (shiftLeftBy8, shiftRightBy8, toHexString2)
 import Z80Debug exposing (debugLog)
