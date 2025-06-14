@@ -200,13 +200,61 @@ foldUp raw list =
             [ ScreenData raw.colour [ raw.data ] ]
 
 
+
+--screenLines : Z80Screen -> List (List ScreenColourRun)
+--screenLines z80_screen =
+--    let
+--        foldDrawn =
+--            toDrawn z80_screen.flash
+--    in
+--    z80_screen
+--        |> rawScreenData
+--        |> List.map (\x -> x |> Vector32.foldr foldUp [])
+--        |> List.map (\x -> x |> List.foldr foldDrawn [])
+-- return the screen index (0-191) as well as the list of screen colours
+
+
+rawScreenDataToScreenColourRunList : Bool -> RawScreenData -> List ScreenColourRun
+rawScreenDataToScreenColourRunList globalFlash rawScreenData =
+    let
+        pairFunc : ScreenAttr -> RunCount -> ScreenColourRun
+        pairFunc =
+            pairToColour globalFlash
+
+        rcList : List RunCount
+        rcList =
+            runCounts0to255
+                |> Array.get rawScreenData.data
+                |> Maybe.withDefault (debugTodo "rcList" (rawScreenData.data |> String.fromInt) [])
+
+        colourRuns : List ScreenColourRun
+        colourRuns =
+            rcList |> List.map (\runCount -> pairFunc rawScreenData.colour runCount)
+    in
+    colourRuns
+
+
 screenLines : Z80Screen -> List (List ScreenColourRun)
 screenLines z80_screen =
     let
-        foldDrawn =
-            toDrawn z80_screen.flash
+        -- list of Vector32 (colour, data)
+        raw : List (Vector32 RawScreenData)
+        raw =
+            z80_screen
+                |> rawScreenData
+
+        new : List (Vector32 (List ScreenColourRun))
+        new =
+            raw
+                |> List.map
+                    (\vector ->
+                        let
+                            vecRcList : Vector32 (List ScreenColourRun)
+                            vecRcList =
+                                vector
+                                    |> Vector32.map (rawScreenDataToScreenColourRunList z80_screen.flash)
+                        in
+                        vecRcList
+                    )
     in
-    z80_screen
-        |> rawScreenData
-        |> List.map (\x -> x |> Vector32.foldr foldUp [])
-        |> List.map (\x -> x |> List.foldr foldDrawn [])
+    []
