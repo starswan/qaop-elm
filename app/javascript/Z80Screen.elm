@@ -1,16 +1,17 @@
 module Z80Screen exposing (..)
 
 import Array exposing (Array)
-import Bitwise exposing (shiftRightBy)
 import Byte exposing (Byte, getBit)
 import Maybe
+import ScreenAttr exposing (ScreenAttr)
 import ScreenStorage exposing (RawScreenData, Z80Screen, rawScreenData)
 import SpectrumColour exposing (SpectrumColour, spectrumColour)
 import Vector32 exposing (Vector32)
+import Z80Debug exposing (debugTodo)
 
 
 type alias ScreenData =
-    { colour : Int
+    { colour : ScreenAttr
     , data : List Int
     }
 
@@ -69,6 +70,7 @@ foldBoolRunCounts item list =
 
 
 
+-- Array lookup 0-255 list runcount
 -- need to work out how to filter out lines of background colour
 -- This isn't quite right - the colour is the attribute value
 --single_line |> List.filter (\item -> item.colour /= z80env.border)
@@ -81,28 +83,22 @@ type alias ScreenColourRun =
     }
 
 
-intToColour : Bool -> Int -> Bool -> SpectrumColour
-intToColour globalFlash raw_colour bitValue =
+intToColour : Bool -> ScreenAttr -> Bool -> SpectrumColour
+intToColour globalFlash attr bitValue =
     let
-        colour_byte =
-            Byte.fromInt raw_colour
-
-        bright =
-            --(raw_colour |> Bitwise.and 0x40) /= 0
-            colour_byte |> getBit 6
-
-        --
-        flash =
-            --(raw_colour |> Bitwise.and 0x80) /= 0
-            colour_byte |> getBit 7
-
+        --colour_byte =
+        --    Byte.fromInt raw_colour
+        --bright =
+        --    colour_byte |> getBit 6
+        --flash =
+        --    colour_byte |> getBit 7
         --(flash, bright) = case raw_colour |> Bitwise.and 0xC0 of
         --    0 -> (False, False)
         --    1 -> (False, True)
         --    2 -> (True, False)
         --    _ -> (True, True)
         value =
-            if flash && globalFlash then
+            if attr.flash && globalFlash then
                 not bitValue
 
             else
@@ -111,16 +107,16 @@ intToColour globalFlash raw_colour bitValue =
         colour =
             if value then
                 -- ink
-                Bitwise.and raw_colour 0x07
+                attr.ink
 
             else
                 --paper
-                Bitwise.and raw_colour 0x38 |> shiftRightBy 3
+                attr.paper
     in
-    spectrumColour colour bright
+    spectrumColour colour attr.bright
 
 
-pairToColour : Bool -> Int -> RunCount -> ScreenColourRun
+pairToColour : Bool -> ScreenAttr -> RunCount -> ScreenColourRun
 pairToColour globalFlash raw_colour runcount =
     let
         colour =
@@ -131,21 +127,31 @@ pairToColour globalFlash raw_colour runcount =
 
 runCounts0to255 : Array (List RunCount)
 runCounts0to255 =
-    -- lookup of data byte to [rc1, rc2, rc3]
     ints0to255
-        |> List.map
-            (\value ->
-                value
-                    |> intToBools
-                    |> List.foldl foldBoolRunCounts []
-                    |> List.reverse
-            )
+        |> List.map Byte.fromInt
+        |> List.map bitsToLines
+        |> List.map (\bits -> bits |> List.foldl foldBoolRunCounts [] |> List.reverse)
         |> Array.fromList
+
+
+
+--runCounts0to255 : Array (List RunCount)
+--runCounts0to255 =
+--    -- lookup of data byte to [rc1, rc2, rc3]
+--    ints0to255
+--        |> List.map
+--            (\value ->
+--                value
+--                    |> intToBools
+--                    |> List.foldl foldBoolRunCounts []
+--                    |> List.reverse
+--            )
+--        |> Array.fromList
 
 
 intToRcList : Int -> List RunCount
 intToRcList index =
-    runCounts0to255 |> Array.get index |> Maybe.withDefault []
+    runCounts0to255 |> Array.get index |> Maybe.withDefault (debugTodo "intToRcList" (index |> String.fromInt) [])
 
 
 foldRunCounts : RunCount -> List RunCount -> List RunCount

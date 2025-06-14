@@ -1,18 +1,17 @@
 module SpectrumColour exposing (..)
 
-import Dict
-import Maybe exposing (withDefault)
+import PlainColour exposing (PlainColour(..))
 
 
 type SpectrumColourValue
-    = Black
-    | Blue
-    | Red
-    | Magenta
-    | Green
-    | Cyan
-    | Yellow
-    | White
+    = DullBlack
+    | DullBlue
+    | DullRed
+    | DullMagenta
+    | DullGreen
+    | DullCyan
+    | DullYellow
+    | DullWhite
     | BrightBlue
     | BrightRed
     | BrightMagenta
@@ -60,68 +59,90 @@ c_WHITE =
     "#FFFFFF"
 
 
-c_UNBRIGHT =
+c_DULL =
     "D7"
 
 
-spectrumColours =
-    Dict.fromList
-        [ ( 0, { value = Black, colour = c_BLACK } )
-        , ( 1, { value = Blue, colour = c_UNBRIGHT_BLUE } )
-        , ( 2, { value = Red, colour = c_UNBRIGHT_RED } )
-        , ( 3, { value = Magenta, colour = c_UNBRIGHT_MAGENTA } )
-        , ( 4, { value = Green, colour = c_UNBRIGHT_GREEN } )
-        , ( 5, { value = Cyan, colour = c_UNBRIGHT_CYAN } )
-        , ( 6, { value = Yellow, colour = c_UNBRIGHT_YELLOW } )
-        , ( 7, { value = White, colour = c_UNBRIGHT_WHITE } )
-        ]
-
-
-spectrumBrightColours =
-    Dict.fromList
-        [ ( 0, { value = Black, colour = c_BLACK } )
-        , ( 1, { value = BrightBlue, colour = c_BLUE } )
-        , ( 2, { value = BrightRed, colour = c_RED } )
-        , ( 3, { value = BrightMagenta, colour = c_MAGENTA } )
-        , ( 4, { value = BrightGreen, colour = c_GREEN } )
-        , ( 5, { value = BrightCyan, colour = c_CYAN } )
-        , ( 6, { value = BrightYellow, colour = c_YELLOW } )
-        , ( 7, { value = BrightWhite, colour = c_WHITE } )
-        ]
-
-
-spectrumColour : Int -> Bool -> SpectrumColour
+spectrumColour : PlainColour -> Bool -> SpectrumColour
 spectrumColour value bright =
     if bright then
-        Dict.get value spectrumBrightColours |> withDefault { value = White, colour = c_UNBRIGHT_WHITE }
+        --Dict.get value spectrumBrightColours |> withDefault { value = DullWhite, colour = c_DULL_WHITE }
+        case value of
+            Black ->
+                { value = DullBlack, colour = c_BLACK }
+
+            Blue ->
+                { value = BrightBlue, colour = c_BLUE }
+
+            Red ->
+                { value = BrightRed, colour = c_RED }
+
+            Magenta ->
+                { value = BrightMagenta, colour = c_MAGENTA }
+
+            Green ->
+                { value = BrightGreen, colour = c_GREEN }
+
+            Cyan ->
+                { value = BrightCyan, colour = c_CYAN }
+
+            Yellow ->
+                { value = BrightYellow, colour = c_YELLOW }
+
+            White ->
+                { value = BrightWhite, colour = c_WHITE }
 
     else
-        Dict.get value spectrumColours |> withDefault { value = White, colour = c_UNBRIGHT_WHITE }
+        --Dict.get value spectrumColours |> withDefault { value = DullWhite, colour = c_DULL_WHITE }
+        case value of
+            Black ->
+                { value = DullBlack, colour = c_BLACK }
+
+            Blue ->
+                { value = DullBlue, colour = c_DULL_BLUE }
+
+            Red ->
+                { value = DullRed, colour = c_DULL_RED }
+
+            Magenta ->
+                { value = DullMagenta, colour = c_DULL_MAGENTA }
+
+            Green ->
+                { value = DullGreen, colour = c_DULL_GREEN }
+
+            Cyan ->
+                { value = DullCyan, colour = c_DULL_CYAN }
+
+            Yellow ->
+                { value = DullYellow, colour = c_DULL_YELLOW }
+
+            White ->
+                { value = DullWhite, colour = c_DULL_WHITE }
 
 
-c_UNBRIGHT_BLUE =
-    c_BLUE |> String.replace "FF" c_UNBRIGHT
+c_DULL_BLUE =
+    c_BLUE |> String.replace "FF" c_DULL
 
 
-c_UNBRIGHT_RED =
-    c_RED |> String.replace "FF" c_UNBRIGHT
+c_DULL_RED =
+    c_RED |> String.replace "FF" c_DULL
 
 
-c_UNBRIGHT_MAGENTA =
-    c_MAGENTA |> String.replace "FF" c_UNBRIGHT
+c_DULL_MAGENTA =
+    c_MAGENTA |> String.replace "FF" c_DULL
 
 
-c_UNBRIGHT_GREEN =
-    c_GREEN |> String.replace "FF" c_UNBRIGHT
+c_DULL_GREEN =
+    c_GREEN |> String.replace "FF" c_DULL
 
 
-c_UNBRIGHT_CYAN =
-    c_CYAN |> String.replace "FF" c_UNBRIGHT
+c_DULL_CYAN =
+    c_CYAN |> String.replace "FF" c_DULL
 
 
-c_UNBRIGHT_YELLOW =
-    c_YELLOW |> String.replace "FF" c_UNBRIGHT
+c_DULL_YELLOW =
+    c_YELLOW |> String.replace "FF" c_DULL
 
 
-c_UNBRIGHT_WHITE =
-    c_WHITE |> String.replace "FF" c_UNBRIGHT
+c_DULL_WHITE =
+    c_WHITE |> String.replace "FF" c_DULL
