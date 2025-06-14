@@ -237,6 +237,9 @@ rawScreenDataToScreenColourRunList globalFlash rawScreenData =
 screenLines : Z80Screen -> List (List ScreenColourRun)
 screenLines z80_screen =
     let
+        globalFlash =
+            z80_screen.flash
+
         -- list of Vector32 (colour, data)
         raw : List (Vector32 RawScreenData)
         raw =
@@ -252,7 +255,11 @@ screenLines z80_screen =
                             vecRcList : Vector32 (List ScreenColourRun)
                             vecRcList =
                                 vector
-                                    |> Vector32.map (rawScreenDataToScreenColourRunList z80_screen.flash)
+                                    --|> Vector32.map (rawScreenDataToScreenColourRunList z80_screen.flash)
+                                    |> Vector32.map
+                                        (\rawScreenData ->
+                                            []
+                                        )
                         in
                         vecRcList
                     )
