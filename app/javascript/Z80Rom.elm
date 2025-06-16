@@ -84,8 +84,7 @@ romRoutineNames =
 
         -- This is jumped to from ERROR-1
         --, ( 0x53, "ERROR-2" )
-        , ( 0x0E9B, "CL-ADDR" )
-
+        --, ( 0x0E9B, "CL-ADDR" )
         -- way too busy to log accesses
         --, ( 0x10, "PRINT-A-1" )
         --, ( 0x4D, "0x004D" )
@@ -146,37 +145,43 @@ romRoutineNames =
         --, ( 0x19B8, "NEXT-ONE" )
         --, ( 0x167F, "PTR-DONE" )
         --, ( 0x0EE7, "PRB-BYTES" )
-        , ( 0x1F54, "BREAK-KEY" )
+        --, ( 0x2D1B, "NUMERIC" )
+        --, ( 0x1F54, "BREAK-KEY" )
         , ( 0x08F9, "ME-OLD-VP" )
         , ( 0x0AFC, "PO-ST-PR" )
         , ( 0x0B1D, "PO-F-PR" )
         , ( 0x03D4, "BE-IX+0" )
-        , ( 0x03D6, "BE-H&L-LP" )
+
+        --, ( 0x03D6, "BE-H&L-LP" )
         , ( 0x03F2, "BE-AGAIN" )
         , ( 0x0EDF, "CLEAR-PRB" )
         , ( 0x046C, "REPORT-B" )
         , ( 0x12A2, "MAIN-EXEC" )
         , ( 0x16B0, "SET-MIN" )
-        , ( 0x2D1B, "NUMERIC" )
         , ( 0x11EF, "RAM-DONE" )
         , ( 0x0F0C, "COPY-L-2" )
         , ( 0x03B5, "BEEPER" )
-        , ( 0x1F05, "TEST-ROOM" )
+
+        --, ( 0x1F05, "TEST-ROOM" )
         , ( 0x110D, "KEY-NEXT" )
-        , ( 0x1664, "POINTERS" )
+
+        --, ( 0x1664, "POINTERS" )
         , ( 0x12AC, "MAIN-2" )
         , ( 0x187D, "OUT-LINE2" )
-        , ( 0x1937, "OUT-CHAR" )
+
+        --, ( 0x1937, "OUT-CHAR" )
         , ( 0x0F2C, "EDITOR" )
         , ( 0x12A9, "MAIN-1" )
         , ( 0x0EDF, "CLEAR-PRB" )
         , ( 0x111D, "ED-COPY" )
-        , ( 0x0D4D, "TEMPS" )
-        , ( 0x0C55, "PO-SCR" )
+
+        --, ( 0x0D4D, "TEMPS" )
+        --, ( 0x0C55, "PO-SCR" )
         , ( 0x0BD3, "PR-ALL-6" )
         , ( 0x1195, "SET-DE" )
         , ( 0x0D6B, "CLS" )
-        , ( 0x16C5, "SET-STK" )
+
+        --, ( 0x16C5, "SET-STK" )
         , ( 0x11CB, "START/NEW" )
         , ( 0x0767, "LD-LOOK-H" )
         , ( 0x0802, "LD-BLOCK" )

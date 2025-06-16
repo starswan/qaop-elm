@@ -29,10 +29,12 @@ group_ed_dict =
         , ( 0x46, execute_ED46 )
         , ( 0x47, execute_ED47 )
         , ( 0x48, execute_ED48 )
-        , ( 0x4A, execute_ED4A )
+        , ( 0x4A, adc_hl_bc )
         , ( 0x4B, execute_ED4B )
         , ( 0x4E, execute_ED4E )
         , ( 0x50, execute_ED50 )
+        , ( 0x5A, adc_hl_de )
+        , ( 0x6A, adc_hl_hl )
         , -- case 0x4F: r(A); time++; break;
           -- case 0x57: ld_a_ir(IR>>>8); break;
           -- case 0x5F: ld_a_ir(r()); break;
@@ -366,11 +368,25 @@ execute_ED48 _ z80 =
     z80 |> execute_ED40485058606870 0x48
 
 
-execute_ED4A : Z80ROM -> Z80Core -> Z80Delta
-execute_ED4A _ z80 =
+adc_hl_bc : Z80ROM -> Z80Core -> Z80Delta
+adc_hl_bc _ z80 =
     -- case 0x4A: adc_hl(B<<8|C); break;
     --0x4A -> z80 |> adc_hl (z80 |> get_bc)
     z80 |> adc_hl (z80.main |> get_bc)
+
+
+adc_hl_de : Z80ROM -> Z80Core -> Z80Delta
+adc_hl_de _ z80 =
+    ---- case 0x5A: adc_hl(D<<8|E); break;
+    --0x5A -> z80 |> adc_hl (z80 |> get_de)
+    z80 |> adc_hl (z80.main |> get_de)
+
+
+adc_hl_hl : Z80ROM -> Z80Core -> Z80Delta
+adc_hl_hl _ z80 =
+    ---- case 0x6A: adc_hl(HL); break;
+    --0x6A -> z80 |> adc_hl z80.main.hl
+    z80 |> adc_hl (z80.main |> get_de)
 
 
 execute_ED50 : Z80ROM -> Z80Core -> Z80Delta
