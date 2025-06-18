@@ -31,8 +31,7 @@ c_TIME_LIMIT =
 
 
 type alias Z80Env =
-    { --rom48k : Z80ROM
-      ram : Dict Int Int
+    { ram : Dict Int Int
     , time : CpuTimeCTime
     , sp : Int
     }
