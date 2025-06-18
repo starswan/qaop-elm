@@ -522,7 +522,7 @@ rld : Z80ROM -> Z80Core -> Z80Delta
 rld rom48k z80 =
     let
         v_lhs_1 =
-            mem z80.main.hl z80.env.time rom48k z80.env.ram
+            z80.env |> mem z80.main.hl z80.env.time rom48k
 
         v_rhs =
             Bitwise.and z80.flags.a 0x0F
@@ -641,7 +641,7 @@ ldir incOrDec repeat rom48k z80 =
             z80.main.hl
 
         v1 =
-            mem z80.main.hl z80.env.time rom48k z80.env.ram
+            z80.env |> mem z80.main.hl z80.env.time rom48k
 
         z80_env =
             z80.env
@@ -810,7 +810,7 @@ cpir incOrDec repeat rom48k z80_core =
             z80_core.main.hl
 
         b =
-            mem old_a z80_core.env.time rom48k z80_core.env.ram
+            z80_core.env |> mem old_a z80_core.env.time rom48k
 
         v =
             z80_flags.a - b.value |> Bitwise.and 0xFF

@@ -334,21 +334,21 @@ execute_delta ct rom48k z80 =
                 0xCB ->
                     let
                         param =
-                            mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k z80.env.ram
+                            z80.env |> mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k
                     in
                     ( BitManipCB param, singleByteMainRegsCB |> Dict.get param.value, IncrementByTwo )
 
                 0xDD ->
                     let
                         param =
-                            mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k z80.env.ram
+                            z80.env |> mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k
                     in
                     ( IndexIX param, singleByteMainRegsDD |> Dict.get param.value, IncrementByTwo )
 
                 0xFD ->
                     let
                         param =
-                            mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k z80.env.ram
+                            z80.env |> mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k
                     in
                     ( IndexIY param, singleByteMainRegsFD |> Dict.get param.value, IncrementByTwo )
 
@@ -398,7 +398,7 @@ runDelta executionType rom48k z80 =
                                             instrTime |> addDuration duration
 
                                         param =
-                                            mem (Bitwise.and (z80.pc + 1) 0xFFFF) newTime rom48k z80.env.ram
+                                            z80.env |> mem (Bitwise.and (z80.pc + 1) 0xFFFF) newTime rom48k
                                     in
                                     JumpChangeDelta param.time (f param.value z80.flags)
 
@@ -437,10 +437,10 @@ runDelta executionType rom48k z80 =
                                                                         param =
                                                                             case pcInc of
                                                                                 IncreaseByTwo ->
-                                                                                    mem (Bitwise.and (z80.pc + 1) 0xFFFF) time rom48k z80.env.ram
+                                                                                    z80.env |> mem (Bitwise.and (z80.pc + 1) 0xFFFF) time rom48k
 
                                                                                 IncreaseByThree ->
-                                                                                    mem (Bitwise.and (z80.pc + 2) 0xFFFF) time rom48k z80.env.ram
+                                                                                    z80.env |> mem (Bitwise.and (z80.pc + 2) 0xFFFF) time rom48k
                                                                     in
                                                                     DoubleWithRegistersDelta pcInc param.time (f z80.main param.value)
 
@@ -516,10 +516,10 @@ runDelta executionType rom48k z80 =
                                                 doublePparam =
                                                     case pcInc of
                                                         IncreaseByTwo ->
-                                                            mem (Bitwise.and (z80.pc + 1) 0xFFFF) time rom48k z80.env.ram
+                                                            z80.env |> mem (Bitwise.and (z80.pc + 1) 0xFFFF) time rom48k
 
                                                         IncreaseByThree ->
-                                                            mem (Bitwise.and (z80.pc + 2) 0xFFFF) time rom48k z80.env.ram
+                                                            z80.env |> mem (Bitwise.and (z80.pc + 2) 0xFFFF) time rom48k
                                             in
                                             DoubleWithRegistersDelta pcInc doublePparam.time (f z80.main doublePparam.value)
 
@@ -580,10 +580,10 @@ runDelta executionType rom48k z80 =
                                                 doublerparam =
                                                     case pcInc of
                                                         IncreaseByTwo ->
-                                                            mem (Bitwise.and (z80.pc + 1) 0xFFFF) time rom48k z80.env.ram
+                                                            z80.env |> mem (Bitwise.and (z80.pc + 1) 0xFFFF) time rom48k
 
                                                         IncreaseByThree ->
-                                                            mem (Bitwise.and (z80.pc + 2) 0xFFFF) time rom48k z80.env.ram
+                                                            z80.env |> mem (Bitwise.and (z80.pc + 2) 0xFFFF) time rom48k
                                             in
                                             DoubleWithRegistersDelta pcInc doublerparam.time (f z80.main doublerparam.value)
 
@@ -648,10 +648,10 @@ singleByte ctime instrCode tmp_z80 rom48k =
                 param =
                     case pcInc of
                         IncreaseByTwo ->
-                            mem (Bitwise.and (tmp_z80.pc + 1) 0xFFFF) instrTime rom48k tmp_z80.env.ram
+                            tmp_z80.env |> mem (Bitwise.and (tmp_z80.pc + 1) 0xFFFF) instrTime rom48k
 
                         IncreaseByThree ->
-                            mem (Bitwise.and (tmp_z80.pc + 2) 0xFFFF) instrTime rom48k tmp_z80.env.ram
+                            tmp_z80.env |> mem (Bitwise.and (tmp_z80.pc + 2) 0xFFFF) instrTime rom48k
             in
             Just (Simple8BitDelta pcInc param.time (f param.value))
 
