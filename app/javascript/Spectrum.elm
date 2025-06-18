@@ -12,6 +12,7 @@ import Z80Core exposing (Z80, Z80Core, get_ei, interrupt)
 import Z80Debug exposing (debugLog)
 import Z80Env exposing (Z80Env, mem, mem16, reset_cpu_time, setMem, z80_pop)
 import Z80Flags exposing (c_FC, c_FZ, get_flags, set_flags)
+import Z80Ram exposing (setRamValue)
 import Z80Rom exposing (Z80ROM)
 import Z80Tape exposing (TapePosition, Z80Tape)
 import Z80Types exposing (IXIYHL(..), get_de)
@@ -283,7 +284,7 @@ frames keys speccy =
             }
 
         loading_z80 =
-            if speccy.paused |> not then
+            if not speccy.paused then
                 case speccy.tape of
                     Just _ ->
                         speccy |> checkLoad
@@ -294,7 +295,7 @@ frames keys speccy =
             else
                 Nothing
 
-        ( new_loading, cpu, maybePosition ) =
+        loadz80posrom =
             case loading_z80 of
                 Just z80 ->
                     case speccy.tape of
@@ -302,34 +303,72 @@ frames keys speccy =
                             let
                                 ( new_z80, z80_load, tape_position ) =
                                     doLoad z80 speccy.rom48k z80_tape
+
+                                core_2 =
+                                    new_z80.core
+
+                                env_2 =
+                                    core_2.env
+
+                                newRam =
+                                    env_2.ram |> Dict.foldl (\key value z80ram -> z80ram |> setRamValue key value) rom.z80ram
+
+                                rom_2 =
+                                    { new_rom | z80ram = newRam }
                             in
-                            ( z80_load, new_z80, Just tape_position )
+                            { load = z80_load, z80 = new_z80, pos = Just tape_position, rom = rom_2 }
 
                         Nothing ->
-                            ( False, z80, Nothing )
+                            { load = False, z80 = z80, pos = Nothing, rom = new_rom }
 
                 Nothing ->
-                    ( False
-                    , cpu1
-                        |> interrupt 0xFF speccy.rom48k
-                        |> execute speccy.rom48k
-                    , Nothing
-                    )
+                    let
+                        new_z80 =
+                            cpu1
+                                |> interrupt 0xFF rom
+                                |> execute rom
+
+                        core_2 =
+                            new_z80.core
+
+                        env_2 =
+                            core_2.env
+
+                        newRam =
+                            env_2.ram |> Dict.foldl (\key value z80ram -> z80ram |> setRamValue key value) rom.z80ram
+
+                        rom_2 =
+                            { new_rom | z80ram = newRam }
+
+                        new_core =
+                            { core_2 | env = { env_2 | ram = Dict.empty } }
+                    in
+                    { load = False
+                    , z80 = { new_z80 | core = new_core }
+                    , pos = Nothing
+                    , rom = rom_2
+                    }
     in
     case speccy.tape of
         Just z80_tape ->
-            case maybePosition of
-                Just newPosition ->
-                    { speccy | rom48k = new_rom, loading = new_loading, cpu = cpu, tape = Just { z80_tape | tapePos = newPosition } }
-
-                Nothing ->
-                    { speccy | rom48k = new_rom, loading = new_loading, cpu = cpu, tape = Just z80_tape }
+            { speccy | rom48k = loadz80posrom.rom, loading = loadz80posrom.load, cpu = loadz80posrom.z80, tape = Just { z80_tape | tapePos = loadz80posrom.pos } }
 
         Nothing ->
-            { speccy | rom48k = new_rom, loading = new_loading, cpu = cpu }
+            { speccy | rom48k = loadz80posrom.rom, loading = loadz80posrom.load, cpu = loadz80posrom.z80 }
 
 
 
+--case speccy.tape of
+--    Just z80_tape ->
+--        case maybePosition of
+--            Just newPosition ->
+--                { speccy | rom48k = new_rom, loading = new_loading, cpu = cpu, tape = Just { z80_tape | tapePos = newPosition } }
+--
+--            Nothing ->
+--                { speccy | rom48k = new_rom, loading = new_loading, cpu = cpu, tape = Just z80_tape }
+--
+--    Nothing ->
+--        { speccy | rom48k = new_rom, loading = new_loading, cpu = cpu }
 --x = if spectrum.paused then
 --       1
 --   else
@@ -1405,7 +1444,7 @@ doLoad2 full_cpu z80rom tape =
                                                     else
                                                         let
                                                             new_a =
-                                                                Bitwise.xor (mem state.ix cpu.env.time z80rom cpu.env.ram |> .value) l
+                                                                Bitwise.xor (mem state.ix cpu.env.time z80rom cpu.env |> .value) l
                                                         in
                                                         if new_a /= 0 then
                                                             { a_rf_f_break_3 | a = new_a, rf = Just 0, break = True }

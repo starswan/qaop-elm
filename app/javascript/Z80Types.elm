@@ -5,7 +5,6 @@ import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimePcAnd16BitValue
 import Utils exposing (shiftLeftBy8, shiftRightBy8)
 import Z80Env exposing (Z80Env, Z80EnvWithPC, mem)
 import Z80Flags exposing (FlagRegisters)
-import Z80Ram exposing (Z80Ram)
 import Z80Rom exposing (Z80ROM)
 
 
@@ -85,7 +84,7 @@ type IXIY
 --	}
 
 
-imm8 : Int -> CpuTimeCTime -> Z80ROM -> Z80Ram -> CpuTimePcAndValue
+imm8 : Int -> CpuTimeCTime -> Z80ROM -> Z80Env -> CpuTimePcAndValue
 imm8 pc time rom48k ram =
     let
         v =

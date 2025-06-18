@@ -157,10 +157,10 @@ suite =
                                 }
 
                         lo_value =
-                            new_z80.env.ram |> mem 0x5577 new_env.time z80rom
+                            new_z80.env |> mem 0x5577 new_env.time z80rom
 
                         high_value =
-                            new_z80.env.ram |> mem 0x5578 new_env.time z80rom
+                            new_z80.env |> mem 0x5578 new_env.time z80rom
                     in
                     ( new_z80.pc, lo_value.value, high_value.value ) |> Expect.equal ( addr + 3, 0x8F, 0x4D )
             , test "0xDD 22 LD (nn), IX" <|

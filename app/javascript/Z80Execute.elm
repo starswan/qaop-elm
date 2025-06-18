@@ -16,9 +16,8 @@ import Z80Change exposing (FlagChange(..), Z80Change, applyZ80Change)
 import Z80Core exposing (Z80Core)
 import Z80Debug exposing (debugTodo)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..), applyDeltaWithChanges)
-import Z80Env exposing (Z80Env, mem, mem16, setMem, z80_pop, z80_push)
+import Z80Env exposing (Z80Env, getRamValue, mem, mem16, setMem, setRam, z80_pop, z80_push)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, dec, inc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
-import Z80Ram exposing (getRamValue, setRamValue)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIYHL(..), MainWithIndexRegisters, set_bc_main, set_de_main)
 
@@ -243,7 +242,7 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                     z80.main
 
                 new_b =
-                    mem addr env_1.time rom48k env_1.ram
+                    env_1 |> mem addr env_1.time rom48k
             in
             { z80
                 | pc = pc
@@ -264,7 +263,7 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                     z80.main
 
                 new_b =
-                    mem addr env_1.time rom48k env_1.ram
+                    env_1 |> mem addr env_1.time rom48k
             in
             { z80
                 | pc = pc
@@ -284,13 +283,14 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
             if ramAddr >= 0 then
                 let
                     value =
-                        old_env.ram |> getRamValue ramAddr
+                        old_env |> getRamValue ramAddr rom48k
 
                     valueWithFlags =
                         z80.flags |> inc value
 
                     env_1 =
-                        { old_env | ram = old_env.ram |> setRamValue ramAddr valueWithFlags.value }
+                        --{ old_env | ram = old_env.ram |> setRamValue ramAddr valueWithFlags.value }
+                        old_env |> setRam ramAddr valueWithFlags.value
                 in
                 { z80
                     | pc = pc
@@ -316,13 +316,14 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
             if ramAddr >= 0 then
                 let
                     value =
-                        old_env.ram |> getRamValue ramAddr
+                        old_env |> getRamValue ramAddr rom48k
 
                     valueWithFlags =
                         z80.flags |> dec value
 
                     env_1 =
-                        { old_env | ram = old_env.ram |> setRamValue ramAddr valueWithFlags.value }
+                        --{ old_env | ram = old_env.ram |> setRamValue ramAddr valueWithFlags.value }
+                        old_env |> setRam ramAddr valueWithFlags.value
                 in
                 { z80
                     | pc = pc
@@ -524,7 +525,7 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
             -- This should be a primitive operation on Z80Env to increment a stored value
             let
                 value =
-                    mem addr env_1.time rom48k z80.env.ram
+                    z80.env |> mem addr env_1.time rom48k
 
                 env_2 =
                     { env | time = value.time }
@@ -541,7 +542,7 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
             -- This should be a primitive operation on Z80Env to decrement a stored value
             let
                 value =
-                    mem addr env_1.time rom48k z80.env.ram
+                    z80.env |> mem addr env_1.time rom48k
 
                 env_2 =
                     { env_1 | time = value.time }
@@ -567,7 +568,7 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
         IndirectBitResetApplied bitMask addr ->
             let
                 value =
-                    mem addr env_1.time rom48k z80.env.ram
+                    z80.env |> mem addr env_1.time rom48k
 
                 env_2 =
                     { env_1 | time = value.time }
@@ -583,7 +584,7 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
         IndirectBitSetApplied bitMask addr ->
             let
                 value =
-                    mem addr env_1.time rom48k z80.env.ram
+                    z80.env |> mem addr env_1.time rom48k
 
                 env_2 =
                     { env_1 | time = value.time }
@@ -608,7 +609,7 @@ applyShifter : Int -> Shifter -> Int -> CpuTimeCTime -> Z80ROM -> Z80Core -> Z80
 applyShifter new_pc shifterFunc addr cpu_time rom48k z80 =
     let
         value =
-            mem addr cpu_time rom48k z80.env.ram
+            z80.env |> mem addr cpu_time rom48k
 
         result =
             case shifterFunc of

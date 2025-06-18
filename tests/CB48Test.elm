@@ -3,7 +3,7 @@ module CB48Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
-import Z80Env exposing (mem, setMem)
+import Z80Env exposing (setMem)
 import Z80Rom
 
 
@@ -296,8 +296,8 @@ suite =
                                 , flags = { flags | a = 0x39 }
                             }
 
-                    mem_value =
-                        mem 0x6545 new_z80.env.time z80rom new_z80.env.ram
+                    --mem_value =
+                    --    mem 0x6545 new_z80.env.time z80rom new_z80.env.ram
                 in
                 Expect.equal ( addr + 4, 0x00 ) ( new_z80.pc, new_z80.flags.fr )
         , test "0xDD 0xCB 0x05 0x4E BIT 1, (IX + d) set" <|
@@ -319,8 +319,8 @@ suite =
                                 , flags = { flags | a = 0x39 }
                             }
 
-                    mem_value =
-                        mem 0x6545 new_z80.env.time z80rom new_z80.env.ram
+                    --mem_value =
+                    --    mem 0x6545 new_z80.env.time z80rom new_z80.env.ram
                 in
                 Expect.equal ( addr + 4, True ) ( new_z80.pc, new_z80.flags.fr /= 0 )
         , test "0xCB 0x4F BIT 1,A (unset)" <|
