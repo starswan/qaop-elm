@@ -9,7 +9,7 @@ import Z80Core exposing (Z80Core)
 import Z80Delta exposing (Z80Delta(..))
 import Z80Env exposing (addCpuTimeEnv, out, z80_in, z80_pop)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIY(..), IXIYHL(..), get_de, get_xy, get_xy_ixiy, imm8, set_de_main)
+import Z80Types exposing (IXIY(..), IXIYHL(..), get_xy, get_xy_ixiy, imm8)
 
 
 miniDictE0 : Dict Int (IXIY -> Z80ROM -> Z80Core -> Z80Delta)
@@ -170,7 +170,7 @@ execute_0xDB rom48k z80 =
             Bitwise.or imm8val.value (shiftLeftBy8 z80_1.flags.a)
 
         a =
-            z80_1.env |> z80_in v
+            z80_1.env |> z80_in v rom48k.keyboard
 
         flags =
             z80_1.flags

@@ -9,6 +9,7 @@ module GroupED exposing (..)
 import Bitwise exposing (complement, shiftLeftBy, shiftRightBy)
 import CpuTimeCTime exposing (addCpuTimeTime)
 import Dict exposing (Dict)
+import Keyboard exposing (Keyboard)
 import Utils exposing (char, shiftLeftBy8, shiftRightBy8)
 import Z80Core exposing (Z80Core, add_cpu_time, imm16, inc_pc)
 import Z80Debug exposing (debugLog)
@@ -67,7 +68,7 @@ group_ed_dict =
 
 execute_ED40 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED40 rom48k z80 =
-    z80 |> execute_ED40485058606870 0x40
+    z80 |> execute_ED40485058606870 0x40 rom48k.keyboard
 
 
 execute_ED42 : Z80ROM -> Z80Core -> Z80Delta
@@ -242,14 +243,14 @@ execute_ED73 rom48k z80 =
 
 
 execute_ED78 : Z80ROM -> Z80Core -> Z80Delta
-execute_ED78 _ z80 =
+execute_ED78 rom48k z80 =
     --  case 0x78: MP=(v=B<<8|C)+1; f_szh0n0p(A=env.in(v)); time+=4; break;
     let
         v =
             z80.main |> get_bc
 
         new_a =
-            z80.env |> z80_in v
+            z80.env |> z80_in v rom48k.keyboard
 
         flags =
             z80.flags
@@ -347,14 +348,14 @@ execute_ED7E _ z80 =
     z80 |> execute_ED464E565E666E767E 0x7E
 
 
-execute_ED40485058606870 : Int -> Z80Core -> Z80Delta
-execute_ED40485058606870 value z80 =
+execute_ED40485058606870 : Int -> Keyboard -> Z80Core -> Z80Delta
+execute_ED40485058606870 value keyboard z80 =
     let
         bc =
             z80.main |> get_bc
 
         inval =
-            z80.env |> z80_in bc
+            z80.env |> z80_in bc keyboard
 
         --z80_1 =
         --    z80 |> set408bit (shiftRightBy 3 (value - 0x40)) inval.value HL
@@ -364,8 +365,8 @@ execute_ED40485058606870 value z80 =
 
 
 execute_ED48 : Z80ROM -> Z80Core -> Z80Delta
-execute_ED48 _ z80 =
-    z80 |> execute_ED40485058606870 0x48
+execute_ED48 rom48k z80 =
+    z80 |> execute_ED40485058606870 0x48 rom48k.keyboard
 
 
 adc_hl_bc : Z80ROM -> Z80Core -> Z80Delta
@@ -390,28 +391,28 @@ adc_hl_hl _ z80 =
 
 
 execute_ED50 : Z80ROM -> Z80Core -> Z80Delta
-execute_ED50 _ z80 =
-    z80 |> execute_ED40485058606870 0x50
+execute_ED50 rom48k z80 =
+    z80 |> execute_ED40485058606870 0x50 rom48k.keyboard
 
 
 execute_ED58 : Z80ROM -> Z80Core -> Z80Delta
-execute_ED58 _ z80 =
-    z80 |> execute_ED40485058606870 0x58
+execute_ED58 rom48k z80 =
+    z80 |> execute_ED40485058606870 0x58 rom48k.keyboard
 
 
 execute_ED60 : Z80ROM -> Z80Core -> Z80Delta
-execute_ED60 _ z80 =
-    z80 |> execute_ED40485058606870 0x60
+execute_ED60 rom48k z80 =
+    z80 |> execute_ED40485058606870 0x60 rom48k.keyboard
 
 
 execute_ED68 : Z80ROM -> Z80Core -> Z80Delta
-execute_ED68 _ z80 =
-    z80 |> execute_ED40485058606870 0x68
+execute_ED68 rom48k z80 =
+    z80 |> execute_ED40485058606870 0x68 rom48k.keyboard
 
 
 execute_ED70 : Z80ROM -> Z80Core -> Z80Delta
-execute_ED70 _ z80 =
-    z80 |> execute_ED40485058606870 0x70
+execute_ED70 rom48k z80 =
+    z80 |> execute_ED40485058606870 0x70 rom48k.keyboard
 
 
 group_ed : Z80ROM -> Z80Core -> Z80Delta

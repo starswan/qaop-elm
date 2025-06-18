@@ -268,11 +268,18 @@ frames keys speccy =
         env =
             core.env |> reset_cpu_time
 
+        rom =
+            speccy.rom48k
+
+        new_rom =
+            { rom | keyboard = keys |> update_keyboard }
+
         cpu1 =
             { sz80
               -- time_limit is a constant
               --| time_limit = c_FRSTART + c_FRTIME
-                | core = { core | env = { env | keyboard = keys |> update_keyboard } }
+              --  | core = { core | env = { env | keyboard = keys |> update_keyboard } }
+                | core = { core | env = env }
             }
 
         loading_z80 =
@@ -311,10 +318,10 @@ frames keys speccy =
     in
     case speccy.tape of
         Just z80_tape ->
-            { speccy | loading = new_loading, cpu = cpu, tape = Just { z80_tape | tapePos = new_pos } }
+            { speccy | rom48k = new_rom, loading = new_loading, cpu = cpu, tape = Just { z80_tape | tapePos = new_pos } }
 
         Nothing ->
-            { speccy | loading = new_loading, cpu = cpu }
+            { speccy | rom48k = new_rom, loading = new_loading, cpu = cpu }
 
 
 
@@ -1187,7 +1194,7 @@ doLoad full_cpu z80rom tape =
         cpu =
             full_cpu.core
     in
-    if (cpu.env.keyboard.keyboard |> Vector8.get Vector8.Index7 |> Bitwise.and 1) == 0 then
+    if (z80rom.keyboard.keyboard |> Vector8.get Vector8.Index7 |> Bitwise.and 1) == 0 then
         let
             flags =
                 set_flags 0 cpu.flags.a
