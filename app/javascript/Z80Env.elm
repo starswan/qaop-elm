@@ -8,8 +8,7 @@ module Z80Env exposing (..)
 import Bitwise exposing (and, or, shiftRightBy)
 import CpuTimeCTime exposing (CpuTimeAnd16BitValue, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAndValue, CpuTimeSpAnd16BitValue, CpuTimeSpAndValue, addCpuTimeTime, c_NOCONT, cont, cont1, cont_port)
 import Keyboard exposing (Keyboard, z80_keyboard_input)
-import Utils exposing (shiftLeftBy8, shiftRightBy8, toHexString2)
-import Z80Debug exposing (debugLog)
+import Utils exposing (shiftLeftBy8, shiftRightBy8)
 import Z80Ram exposing (Z80Ram, getRamValue)
 import Z80Rom exposing (Z80ROM, getROMValue)
 
@@ -33,7 +32,6 @@ c_TIME_LIMIT =
 type alias Z80Env =
     { --rom48k : Z80ROM
       ram : Z80Ram
-    , keyboard : Keyboard
     , time : CpuTimeCTime
     , sp : Int
     }
@@ -58,7 +56,7 @@ type alias ValueWithTime =
 
 
 z80env_constructor =
-    Z80Env Z80Ram.constructor Keyboard.constructor (CpuTimeCTime c_FRSTART 0) 0
+    Z80Env Z80Ram.constructor (CpuTimeCTime c_FRSTART 0) 0
 
 
 
@@ -496,15 +494,15 @@ out portnum _ env_in =
     env
 
 
-z80_in : Int -> Z80Env -> CpuTimeAndValue
-z80_in portnum env_in =
+z80_in : Int -> Keyboard -> Z80Env -> CpuTimeAndValue
+z80_in portnum keyboard env_in =
     let
         env =
             env_in.time |> cont_port portnum
 
         --x = debug_log "z80_in" (portnum |> toHexString) Nothing
         value =
-            env_in.keyboard |> z80_keyboard_input portnum
+            keyboard |> z80_keyboard_input portnum
 
         --x =
         --    if value /= 0xFF then
