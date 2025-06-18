@@ -347,15 +347,18 @@ setRam addr value z80env =
 setMem : Int -> Int -> Z80Env -> Z80Env
 setMem z80_addr value z80env =
     let
+        time_input =
+            z80env.time
+
         n =
-            z80env.time.cpu_time - z80env.time.ctime
+            time_input.cpu_time - time_input.ctime
 
         z80env_time =
             if n > 0 then
-                z80env.time |> cont n
+                time_input |> cont n
 
             else
-                CpuTimeCTime z80env.time.cpu_time c_NOCONT
+                { time_input | ctime = c_NOCONT }
 
         addr =
             z80_addr - 0x4000
@@ -385,7 +388,7 @@ setMem z80_addr value z80env =
             else
                 ( z80env |> setRam addr value, c_NOCONT )
     in
-    { new_env | time = CpuTimeCTime z80env_time.cpu_time ctime }
+    { new_env | time = { z80env_time | ctime = ctime } }
 
 
 
@@ -419,18 +422,21 @@ setMem16 addr value z80env =
     in
     if Bitwise.and addr1 0x3FFF /= 0 then
         let
+            time_input =
+                z80env.time
+
             n =
-                z80env.time.cpu_time - z80env.time.ctime
+                time_input.cpu_time - time_input.ctime
 
             z80env_time =
                 if n > 0 then
-                    cont n z80env.time
+                    cont n time_input
 
                 else
-                    z80env.time
+                    time_input
 
             env_1 =
-                { z80env | time = CpuTimeCTime z80env_time.cpu_time c_NOCONT }
+                { z80env | time = { time_input | ctime = c_NOCONT } }
         in
         if addr1 < 0 then
             env_1
@@ -521,7 +527,7 @@ addCpuTimeEnv value z80env =
 
 reset_cpu_time : Z80Env -> Z80Env
 reset_cpu_time z80env =
-    { z80env | time = CpuTimeCTime c_FRSTART z80env.time.ctime }
+    { z80env | time = CpuTimeCTime c_FRSTART 0 }
 
 
 

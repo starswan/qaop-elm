@@ -25,7 +25,6 @@ import SingleWith8BitParameter exposing (doubleWithRegisters, doubleWithRegister
 import TripleByte exposing (tripleByteWith16BitParam, tripleByteWith16BitParamDD, tripleByteWith16BitParamFD)
 import TripleWithFlags exposing (triple16WithFlags)
 import TripleWithMain exposing (tripleMainRegs, tripleMainRegsIX, tripleMainRegsIY)
-import Utils exposing (toHexString)
 import Z80Core exposing (Z80, Z80Core, add_cpu_time, inc_pc, inc_pcr, z80_halt)
 import Z80Debug exposing (debugLog)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..))
