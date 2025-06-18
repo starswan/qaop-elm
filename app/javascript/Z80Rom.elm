@@ -7,11 +7,13 @@ import Dict exposing (Dict)
 import Keyboard exposing (Keyboard)
 import Utils exposing (listToDict, toHexString)
 import Z80Debug exposing (debugTodo)
+import Z80Ram exposing (Z80Ram)
 
 
 type alias Z80ROM =
     { rom48k : Dict Int Int
     , keyboard : Keyboard
+    , z80ram : Z80Ram
     }
 
 
@@ -27,7 +29,7 @@ constructor =
         rom_dict =
             Dict.fromList rom_list
     in
-    Z80ROM rom_dict Keyboard.constructor
+    Z80ROM rom_dict Keyboard.constructor Z80Ram.constructor
 
 
 getROMValue : Int -> Z80ROM -> Int
@@ -64,7 +66,7 @@ romDecoder =
 
 grabRomDecoder : Array Int -> Decoder Z80ROM
 grabRomDecoder romData =
-    succeed (Z80ROM (romData |> Array.toList |> listToDict) Keyboard.constructor)
+    succeed (Z80ROM (romData |> Array.toList |> listToDict) Keyboard.constructor Z80Ram.constructor)
 
 
 array_decoder : Int -> Decoder Int -> Decoder (Array Int)

@@ -6,6 +6,7 @@ import Dict exposing (Dict)
 import PCIncrement exposing (TriplePCIncrement(..))
 import Z80Core exposing (Z80Core)
 import Z80Env exposing (Z80Env, setMem16)
+import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (MainWithIndexRegisters)
 
 

@@ -136,7 +136,7 @@ execute_0xD3 rom48k z80 =
     -- case 0xD3: env.out(v=imm8()|A<<8,A); MP=v+1&0xFF|v&0xFF00; time+=4; break;
     let
         value =
-            imm8 z80.pc z80.env.time rom48k z80.env.ram
+            z80.env |> imm8 z80.pc z80.env.time rom48k
 
         env_1 =
             z80.env
@@ -158,7 +158,7 @@ execute_0xDB rom48k z80 =
     -- case 0xDB: MP=(v=imm8()|A<<8)+1; A=env.in(v); time+=4; break;
     let
         imm8val =
-            imm8 z80.pc z80.env.time rom48k z80.env.ram
+            z80.env |> imm8 z80.pc z80.env.time rom48k
 
         env_1 =
             z80.env

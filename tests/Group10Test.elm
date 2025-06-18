@@ -89,7 +89,7 @@ suite =
                                 }
 
                         mem_value =
-                            mem 0x6545 new_z80.env.time z80rom new_z80.env.ram
+                            new_z80.env |> mem 0x6545 new_z80.env.time z80rom
                     in
                     Expect.equal ( addr + 1, 0x38 ) ( new_z80.pc, mem_value.value )
             ]
