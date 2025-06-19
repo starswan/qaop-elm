@@ -785,25 +785,12 @@ executeCore rom48k z80 =
 
             else
                 ( z80_1, ct1 )
-
-        --( z80_3, ct3 ) =
-        --    if ct2.value == 0xD9 then
-        --        let
-        --            x =
-        --                z80_2 |> exx |> inc_pcr
-        --        in
-        --        ( x, fetchInstruction rom48k x.core )
-        --
-        --    else
-        --        ( z80_2, ct2 )
-        z80_3 =
-            if ct2.value == 0xD9 then
-                z80_2 |> exx |> inc_pcr
-
-            else
-                z80_2
     in
-    z80_3
+    if ct2.value == 0xD9 then
+        z80_2 |> exx |> inc_pcr
+
+    else
+        z80_2
 
 
 execute : Z80ROM -> Z80 -> Z80
