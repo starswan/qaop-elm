@@ -304,8 +304,20 @@ frames keys speccy =
                             let
                                 ( new_z80, z80_load, tape_position ) =
                                     doLoad z80 speccy.rom48k z80_tape
+
+                                core_2 =
+                                    new_z80.core
+
+                                env_2 =
+                                    core_2.env
+
+                                newRam =
+                                    env_2.ram |> Dict.foldl (\key value z80ram -> z80ram |> setRamValue key value) rom.z80ram
+
+                                rom_2 =
+                                    { new_rom | z80ram = newRam }
                             in
-                            { load = z80_load, z80 = new_z80, pos = tape_position, rom = new_rom }
+                            { load = z80_load, z80 = new_z80, pos = tape_position, rom = rom_2 }
 
                         Nothing ->
                             { load = False, z80 = z80, pos = Z80Tape.zeroPosition, rom = new_rom }
