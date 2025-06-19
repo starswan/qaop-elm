@@ -4,26 +4,26 @@ import Dict
 
 
 type Nybble
-    = NybbleZero
-    | NybbleOne
-    | NybbleTwo
-    | NybbleThree
-    | NybbleFour
-    | NybbleFive
-    | NybbleSix
-    | NybbleSeven
-    | NybbleEight
-    | NybbleNine
-    | NybbleTen
-    | NybbleEleven
-    | NybbleTwelve
-    | NybbleThirteen
-    | NybbleFourteen
-    | NybbleFifteen
+    = Hex0
+    | Hex1
+    | Hex2
+    | Hex3
+    | Hex4
+    | Hex5
+    | Hex6
+    | Hex7
+    | Hex8
+    | Hex9
+    | HexA
+    | HexB
+    | HexC
+    | HexD
+    | HexE
+    | HexF
 
 
 nybbles =
-    [ NybbleZero, NybbleOne, NybbleTwo, NybbleThree, NybbleFour, NybbleFive, NybbleSix, NybbleSeven, NybbleEight, NybbleNine, NybbleTen, NybbleEleven, NybbleTwelve, NybbleThirteen, NybbleFourteen, NybbleFifteen ]
+    [ Hex0, Hex1, Hex2, Hex3, Hex4, Hex5, Hex6, Hex7, Hex8, Hex9, HexA, HexB, HexC, HexD, HexE, HexF ]
 
 
 nybblesDict =
@@ -37,56 +37,56 @@ fromInt nybble =
             a
 
         Nothing ->
-            NybbleZero
+            Hex0
 
 
 toInt : Nybble -> Int
 toInt nybble =
     case nybble of
-        NybbleZero ->
+        Hex0 ->
             0
 
-        NybbleOne ->
+        Hex1 ->
             1
 
-        NybbleTwo ->
+        Hex2 ->
             2
 
-        NybbleThree ->
+        Hex3 ->
             3
 
-        NybbleFour ->
+        Hex4 ->
             4
 
-        NybbleFive ->
+        Hex5 ->
             5
 
-        NybbleSix ->
+        Hex6 ->
             6
 
-        NybbleSeven ->
+        Hex7 ->
             7
 
-        NybbleEight ->
+        Hex8 ->
             8
 
-        NybbleNine ->
+        Hex9 ->
             9
 
-        NybbleTen ->
-            10
+        HexA ->
+            0x0A
 
-        NybbleEleven ->
-            11
+        HexB ->
+            0x0B
 
-        NybbleTwelve ->
-            12
+        HexC ->
+            0x0C
 
-        NybbleThirteen ->
-            13
+        HexD ->
+            0x0D
 
-        NybbleFourteen ->
-            14
+        HexE ->
+            0x0E
 
-        NybbleFifteen ->
-            15
+        HexF ->
+            0x0F
