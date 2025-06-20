@@ -12,15 +12,15 @@ type
 
 
 zeroByte =
-    Z80Byte NybbleZero NybbleZero
+    Z80Byte Hex0 Hex0
 
 
 ffByte =
-    Z80Byte NybbleFifteen NybbleFifteen
+    Z80Byte HexF HexF
 
 
 hexThirtyEightByte =
-    Z80Byte NybbleThree NybbleEight
+    Z80Byte Hex3 Hex8
 
 
 toInt : Z80Byte -> Int
@@ -67,14 +67,14 @@ getBit6 : Z80Byte -> Bool
 getBit6 z80byte =
     case z80byte of
         Z80Byte high _ ->
-            [ NybbleFour, NybbleFive, NybbleSix, NybbleSeven, NybbleFifteen, NybbleFourteen, NybbleThirteen, NybbleTwelve ] |> List.member high
+            [ Hex4, Hex5, Hex6, Hex7, HexF, HexE, HexD, HexC ] |> List.member high
 
 
 getBit7 : Z80Byte -> Bool
 getBit7 z80byte =
     case z80byte of
         Z80Byte high _ ->
-            [ NybbleEight, NybbleNine, NybbleTen, NybbleEleven, NybbleFifteen, NybbleFourteen, NybbleThirteen, NybbleTwelve ] |> List.member high
+            [ Hex8, Hex9, HexA, HexB, HexF, HexE, HexD, HexC ] |> List.member high
 
 
 getBits210 : Z80Byte -> Int
@@ -82,52 +82,52 @@ getBits210 z80byte =
     case z80byte of
         Z80Byte _ low ->
             case low of
-                NybbleZero ->
+                Hex0 ->
                     0
 
-                NybbleOne ->
+                Hex1 ->
                     1
 
-                NybbleTwo ->
+                Hex2 ->
                     2
 
-                NybbleThree ->
+                Hex3 ->
                     3
 
-                NybbleFour ->
+                Hex4 ->
                     4
 
-                NybbleFive ->
+                Hex5 ->
                     5
 
-                NybbleSix ->
+                Hex6 ->
                     6
 
-                NybbleSeven ->
+                Hex7 ->
                     7
 
-                NybbleEight ->
+                Hex8 ->
                     0
 
-                NybbleNine ->
+                Hex9 ->
                     1
 
-                NybbleTen ->
+                HexA ->
                     2
 
-                NybbleEleven ->
+                HexB ->
                     3
 
-                NybbleTwelve ->
+                HexC ->
                     4
 
-                NybbleThirteen ->
+                HexD ->
                     5
 
-                NybbleFourteen ->
+                HexE ->
                     6
 
-                NybbleFifteen ->
+                HexF ->
                     7
 
 
@@ -137,56 +137,56 @@ getBits543 z80byte =
         Z80Byte high low ->
             let
                 bit3 =
-                    [ NybbleEight, NybbleNine, NybbleTen, NybbleEleven, NybbleTwelve, NybbleThirteen, NybbleFourteen, NybbleFifteen ] |> List.member low
+                    [ Hex8, Hex9, HexA, HexB, HexC, HexD, HexE, HexF ] |> List.member low
 
                 bits45 =
                     case high of
-                        NybbleZero ->
+                        Hex0 ->
                             0
 
-                        NybbleOne ->
+                        Hex1 ->
                             2
 
-                        NybbleTwo ->
+                        Hex2 ->
                             4
 
-                        NybbleThree ->
+                        Hex3 ->
                             6
 
-                        NybbleFour ->
+                        Hex4 ->
                             0
 
-                        NybbleFive ->
+                        Hex5 ->
                             2
 
-                        NybbleSix ->
+                        Hex6 ->
                             4
 
-                        NybbleSeven ->
+                        Hex7 ->
                             6
 
-                        NybbleEight ->
+                        Hex8 ->
                             0
 
-                        NybbleNine ->
+                        Hex9 ->
                             2
 
-                        NybbleTen ->
+                        HexA ->
                             4
 
-                        NybbleEleven ->
+                        HexB ->
                             6
 
-                        NybbleTwelve ->
+                        HexC ->
                             0
 
-                        NybbleThirteen ->
+                        HexD ->
                             2
 
-                        NybbleFourteen ->
+                        HexE ->
                             4
 
-                        NybbleFifteen ->
+                        HexF ->
                             6
             in
             if bit3 then

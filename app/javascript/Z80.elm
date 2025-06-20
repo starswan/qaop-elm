@@ -15,6 +15,7 @@ import Group0xF0 exposing (list0255, lt40_array, xYDict)
 import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainRegsCB, singleEnvMainRegsCB)
 import Loop
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..))
+import Set
 import SimpleFlagOps exposing (singleByteFlags, singleByteFlagsCB)
 import SimpleSingleByte exposing (singleByteMainRegs, singleByteMainRegsDD, singleByteMainRegsFD)
 import SingleByteWithEnv exposing (singleByteZ80Env)
@@ -739,9 +740,17 @@ executeCoreInstruction rom48k z80 =
 --    Loop.while (\x -> c_TIME_LIMIT > x.env.time.cpu_time) execute_f z80
 
 
-nonCoreCodes =
+nonCoreFuncs : Dict Int (Z80 -> Z80)
+nonCoreFuncs =
     -- 0x08 is EX AF,AF' and 0xD9 is EXX
-    [ 0x08, 0xD9 ]
+    Dict.fromList
+        [ ( 0x08, ex_af )
+        , ( 0xD9, exx )
+        ]
+
+
+nonCoreOpCodes =
+    nonCoreFuncs |> Dict.keys |> Set.fromList
 
 
 stillLooping : Z80Core -> Bool
@@ -751,7 +760,7 @@ stillLooping z80core =
 
 coreLooping : ( Z80Core, CpuTimeAndValue ) -> Bool
 coreLooping ( z80core, timeAndValue ) =
-    (z80core |> stillLooping) && (nonCoreCodes |> List.member timeAndValue.value |> not)
+    (z80core |> stillLooping) && (nonCoreOpCodes |> Set.member timeAndValue.value |> not)
 
 
 executeCore : Z80ROM -> Z80 -> Z80
@@ -774,36 +783,13 @@ executeCore rom48k z80 =
 
         z80_1 =
             { z80 | core = core_2 }
-
-        ( z80_2, ct2 ) =
-            if ct1.value == 0x08 then
-                let
-                    x =
-                        z80_1 |> ex_af |> inc_pcr
-                in
-                ( x, fetchInstruction rom48k x.core )
-
-            else
-                ( z80_1, ct1 )
-
-        --( z80_3, ct3 ) =
-        --    if ct2.value == 0xD9 then
-        --        let
-        --            x =
-        --                z80_2 |> exx |> inc_pcr
-        --        in
-        --        ( x, fetchInstruction rom48k x.core )
-        --
-        --    else
-        --        ( z80_2, ct2 )
-        z80_3 =
-            if ct2.value == 0xD9 then
-                z80_2 |> exx |> inc_pcr
-
-            else
-                z80_2
     in
-    z80_3
+    case nonCoreFuncs |> Dict.get ct1.value of
+        Just f ->
+            z80_1 |> f |> inc_pcr
+
+        Nothing ->
+            z80_1
 
 
 execute : Z80ROM -> Z80 -> Z80
