@@ -294,7 +294,7 @@ frames keys speccy =
             else
                 Nothing
 
-        ( new_loading, cpu, new_pos ) =
+        ( new_loading, cpu, maybePosition ) =
             case loading_z80 of
                 Just z80 ->
                     case speccy.tape of
@@ -303,22 +303,27 @@ frames keys speccy =
                                 ( new_z80, z80_load, tape_position ) =
                                     doLoad z80 speccy.rom48k z80_tape
                             in
-                            ( z80_load, new_z80, tape_position )
+                            ( z80_load, new_z80, Just tape_position )
 
                         Nothing ->
-                            ( False, z80, Z80Tape.zeroPosition )
+                            ( False, z80, Nothing )
 
                 Nothing ->
                     ( False
                     , cpu1
                         |> interrupt 0xFF speccy.rom48k
                         |> execute speccy.rom48k
-                    , Z80Tape.zeroPosition
+                    , Nothing
                     )
     in
     case speccy.tape of
         Just z80_tape ->
-            { speccy | rom48k = new_rom, loading = new_loading, cpu = cpu, tape = Just { z80_tape | tapePos = new_pos } }
+            case maybePosition of
+                Just newPosition ->
+                    { speccy | rom48k = new_rom, loading = new_loading, cpu = cpu, tape = Just { z80_tape | tapePos = newPosition } }
+
+                Nothing ->
+                    { speccy | rom48k = new_rom, loading = new_loading, cpu = cpu, tape = Just z80_tape }
 
         Nothing ->
             { speccy | rom48k = new_rom, loading = new_loading, cpu = cpu }
@@ -1092,7 +1097,7 @@ type alias TapeState =
     , l : Int
     , a : Int
     , f : Int
-    , rf : Int
+    , rf : Maybe Int
     , z80_env : Z80Env
     , break : Bool
     , continue : Bool
@@ -1235,7 +1240,7 @@ doLoad2 full_cpu z80rom tape =
             , l = main.hl |> Bitwise.and 0xFF
             , a = flags.a
             , f = flags |> get_flags
-            , rf = -1
+            , rf = Nothing
             , z80_env = cpu.env
             , break = False
             , continue = False
@@ -1275,9 +1280,8 @@ doLoad2 full_cpu z80rom tape =
                                 List.append aTapfile.block.data [ aTapfile.block.checksum ]
 
                         --aTapfile.block.blockFlagByte :: aTapfile.block.data
-                        tapeBlk =
-                            aTapfile.block.dataLength
-
+                        --tapeBlk =
+                        --    0x11 + aTapfile.block.dataLength
                         new_data =
                             --		for(;;) {
                             tapeData
@@ -1294,18 +1298,17 @@ doLoad2 full_cpu z80rom tape =
                                             --		break;
                                             --	}
                                             ( break1, rf1 ) =
-                                                if not state.break && state.p == tapeBlk then
-                                                    ( debugLog "end" (state.p |> toHexString) True, c_FZ )
-
-                                                else
-                                                    ( state.break, state.rf )
+                                                --if not state.break && state.p == tapeBlk then
+                                                --    ( debugLog "end of block p= " ((state.p |> toHexString) ++ " de= " ++ (state.de |> toHexString)) True, Just c_FZ )
+                                                --else
+                                                ( state.break, state.rf )
 
                                             --	l = tape[p++]&0xFF;
                                             l =
                                                 if not break1 then
                                                     let
                                                         x =
-                                                            if state.ix - startState.ix < 16 || state.de < 16 then
+                                                            if state.ix - startState.ix < 16 || state.de < 0x0110 then
                                                                 if headerLoading then
                                                                     debugLog "header" ("ix = " ++ (state.ix |> toHexString) ++ " de " ++ (state.de |> toHexString) ++ " item " ++ (item |> toHexString2)) Nothing
 
@@ -1349,10 +1352,10 @@ doLoad2 full_cpu z80rom tape =
                                                             debugLog "de zero" ((h |> toHexString2) ++ " " ++ (item |> toHexString2)) Nothing
                                                     in
                                                     if h == 0x00 || h == 0xFF then
-                                                        ( 0, c_FC, True )
+                                                        ( 0, Just c_FC, True )
 
                                                     else
-                                                        ( h, 0, True )
+                                                        ( h, Just 0, True )
 
                                                 else
                                                     ( state.a, rf1, break1 )
@@ -1405,7 +1408,7 @@ doLoad2 full_cpu z80rom tape =
                                                                 Bitwise.xor (mem state.ix cpu.env.time z80rom cpu.env.ram |> .value) l
                                                         in
                                                         if new_a /= 0 then
-                                                            { a_rf_f_break_3 | a = new_a, rf = 0, break = True }
+                                                            { a_rf_f_break_3 | a = new_a, rf = Just 0, break = True }
 
                                                         else
                                                             { a_rf_f_break_3 | a = new_a }
@@ -1466,25 +1469,26 @@ doLoad2 full_cpu z80rom tape =
                     tapeData.z80_env
 
                 core_1 =
-                    if tapeData.rf >= 0 then
-                        let
-                            popped =
-                                tapeData.z80_env |> z80_pop z80rom
+                    case tapeData.rf of
+                        Just rf ->
+                            let
+                                popped =
+                                    tapeData.z80_env |> z80_pop z80rom
 
-                            logged =
-                                "rf " ++ (tapeData.rf |> toHexString2) ++ " pc " ++ (popped.value16 |> toHexString2) ++ " a " ++ (tapeData.a |> toHexString2)
+                                logged =
+                                    "rf " ++ (rf |> toHexString2) ++ " pc " ++ (popped.value16 |> toHexString2) ++ " a " ++ (tapeData.a |> toHexString2)
 
-                            y =
-                                if headerLoading then
-                                    debugLog "header pop" logged Nothing
+                                y =
+                                    if headerLoading then
+                                        debugLog "header pop" logged Nothing
 
-                                else
-                                    debugLog "body pop" logged Nothing
-                        in
-                        { cpu | flags = set_flags tapeData.rf tapeData.a, pc = popped.value16, env = { z80_env | sp = popped.sp } }
+                                    else
+                                        debugLog "body pop" logged Nothing
+                            in
+                            { cpu | flags = set_flags rf tapeData.a, pc = popped.value16, env = { z80_env | sp = popped.sp } }
 
-                    else
-                        { cpu | env = z80_env, flags = set_flags tapeData.f tapeData.a }
+                        Nothing ->
+                            { cpu | env = z80_env, flags = set_flags tapeData.f tapeData.a }
 
                 new_core =
                     { core_1 | main = cpu_main }

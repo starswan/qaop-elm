@@ -194,6 +194,8 @@ romRoutineNames =
         , ( 0x0554, "SA/LD-END" )
         , ( 0x0552, "REPORT-D" )
         , ( 0x0806, "REPORT-R" )
+        , ( 0x0767, "LD-LOOK-H" )
+        , ( 0x07CB, "VR-CONTRL" )
         ]
 
 
