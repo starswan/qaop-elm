@@ -25,8 +25,8 @@ RSpec.describe "Spectrum Emulator" do
   #   end
   # end
 
-  context "with z80_full_test" do
-    let(:z80_game) { build(:game, :z80_test_full) }
+  context "with documented Z80 test" do
+    let(:z80_game) { build(:game, :z80_test) }
     let(:version) { "1.2a" }
     let(:z80_test_url) { "https://github.com/raxoft/z80test/releases/download/v#{version}/z80test-#{version}.zip" }
     let(:faraday) {
@@ -47,19 +47,46 @@ RSpec.describe "Spectrum Emulator" do
       click_on z80_game.name
     end
 
+    # So far executed 88 of the tests, most of them fail.
+    # Test 89 crashes on ED 08
+    # Test 0 checksum fails - prog loaded to 0x8000...
+    # Including DAA, CPL, NEG,
+    # ADD A,N, ADC A,N, SUB A,N, SBC A,N, AND N
+    # Passes XOR N and OR N (18, 19)
+    # Fails CP N (20), ALO A, A(21) fails
+    # fails RLCA (29) RRCA (30) RLA (31) RRA (32)
+    #
+    # RLD RRD pass (33, 34) RLC A and RRC A (35, 36) pass
+    # RL A and RR A pass (37, 38) SLA A and SRA A (39, 40) pass
+    # SLIA SRL A (41, 42) pass
+    #
+    # RLC [R, (HL)] 43 fails
+    #
+    # SRO (XY) (51) passes
+    # INC A (53) and DEC A (54) fail INC X DEC X (57, 58) fail
+    # INC RR, DEC RR (63, 64) fail
+    # ADC HL, RR (68) fail
+    # SBC HL, RR (69) pass
+    # BIT N,A (70) fails
+    # RES N, A (00) up to RES N, (XY), R fail
+    # LDI (85), LDD (86) LDIR (87), LDDR (88) pass
+
     it "loads the emulator", :js do
       # check that Elm is running
       expect(page).to have_content 'Refresh Interval'
 
-      sleep 10
-      # x = find("#spectrum")
+      sleep 8
       # This is very slow, but calling send_keys
       # with a string on an array
       # is too quick
       # data = "20eThis is a comment"
-      # data.each_char do |k|
-      #   x.send_keys k
-      # end
+      # Load tape
+      x = find("#spectrum")
+      data = 'j""'
+      data.each_char do |k|
+        x.send_keys k
+      end
+      x.send_keys [:enter]
       # # x.send_keys data
       # # x.send_keys data.split("")
       # x.send_keys [:enter]
@@ -67,6 +94,7 @@ RSpec.describe "Spectrum Emulator" do
       speed = measure_speed_in_hz
       expect(speed).to be > expected_hz
       puts "Speed #{speed} Hz"
+      sleep 1950
     end
   end
 
