@@ -70,6 +70,28 @@ singleByteMainRegs =
         ]
 
 
+commonDDFDOps : Dict Int ( MainWithIndexRegisters -> RegisterChange, InstructionDuration )
+commonDDFDOps =
+    Dict.fromList
+        [ ( 0x5A, ( ld_e_d, EightTStates ) )
+        , ( 0x78, ( ld_a_b, EightTStates ) )
+        , ( 0x79, ( ld_a_c, EightTStates ) )
+        , ( 0x7A, ( ld_a_d, EightTStates ) )
+        , ( 0x7B, ( ld_a_e, EightTStates ) )
+        , ( 0x40, ( \z80_main -> RegChangeNoOp, EightTStates ) )
+        , ( 0x49, ( \z80_main -> RegChangeNoOp, EightTStates ) )
+        , ( 0x5B, ( \z80_main -> RegChangeNoOp, EightTStates ) )
+
+        -- FD 6D is LD IYL, IYL
+        , ( 0x64, ( \z80_main -> RegChangeNoOp, EightTStates ) )
+        , ( 0x6D, ( \z80_main -> RegChangeNoOp, EightTStates ) )
+
+        -- DD 7F and FD 7F are both No-ops
+        , ( 0x7F, ( \z80_main -> RegChangeNoOp, EightTStates ) )
+        , ( 0xEB, ( ex_de_hl, FourTStates ) )
+        ]
+
+
 singleByteMainRegsFD : Dict Int ( MainWithIndexRegisters -> RegisterChange, InstructionDuration )
 singleByteMainRegsFD =
     Dict.fromList
@@ -79,8 +101,8 @@ singleByteMainRegsFD =
         , ( 0x45, ( ld_b_iyl, EightTStates ) )
         , ( 0x4C, ( ld_c_iyh, EightTStates ) )
         , ( 0x4D, ( ld_c_iyl, EightTStates ) )
-        , ( 0xEB, ( ex_de_hl, FourTStates ) )
         ]
+        |> Dict.union commonDDFDOps
 
 
 singleByteMainRegsDD : Dict Int ( MainWithIndexRegisters -> RegisterChange, InstructionDuration )
@@ -92,8 +114,8 @@ singleByteMainRegsDD =
         , ( 0x45, ( ld_b_ixl, EightTStates ) )
         , ( 0x4C, ( ld_c_ixh, EightTStates ) )
         , ( 0x4D, ( ld_c_ixl, EightTStates ) )
-        , ( 0xEB, ( ex_de_hl, FourTStates ) )
         ]
+        |> Dict.union commonDDFDOps
 
 
 inc_bc : MainWithIndexRegisters -> RegisterChange

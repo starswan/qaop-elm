@@ -50,6 +50,26 @@ singleByteFlags =
         ]
 
 
+singleByteFlagsDD : Dict Int ( FlagRegisters -> FlagChange, PCIncrement, InstructionDuration )
+singleByteFlagsDD =
+    Dict.fromList
+        [ ( 0x47, ( ld_b_a, IncrementByTwo, EightTStates ) )
+        , ( 0x4F, ( ld_c_a, IncrementByTwo, EightTStates ) )
+        , ( 0x57, ( ld_d_a, IncrementByTwo, EightTStates ) )
+        , ( 0x5F, ( ld_e_a, IncrementByTwo, EightTStates ) )
+        ]
+
+
+singleByteFlagsFD : Dict Int ( FlagRegisters -> FlagChange, PCIncrement, InstructionDuration )
+singleByteFlagsFD =
+    Dict.fromList
+        [ ( 0x47, ( ld_b_a, IncrementByTwo, EightTStates ) )
+        , ( 0x4F, ( ld_c_a, IncrementByTwo, EightTStates ) )
+        , ( 0x57, ( ld_d_a, IncrementByTwo, EightTStates ) )
+        , ( 0x5F, ( ld_e_a, IncrementByTwo, EightTStates ) )
+        ]
+
+
 singleByteFlagsCB : Dict Int ( FlagRegisters -> FlagChange, PCIncrement, InstructionDuration )
 singleByteFlagsCB =
     Dict.fromList
