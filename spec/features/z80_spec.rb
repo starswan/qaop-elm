@@ -47,12 +47,7 @@ RSpec.describe "Spectrum Emulator" do
       click_on z80_game.name
     end
 
-    # So far executed 104 of the tests, most of them fail.
-    # 105 crashes ED 79
-    #
-    # group_ed 0x79
-    # at _Debug_crash (Main.elm:498:10)
-    # at Main.elm:254:3
+    # So far executed 122 of the tests, most of them fail.
     # Test 0 checksum fails - prog loaded to 0x8000...
     # Including DAA, CPL, NEG,
     # ADD A,N, ADC A,N, SUB A,N, SBC A,N, AND N
@@ -74,6 +69,7 @@ RSpec.describe "Spectrum Emulator" do
     # BIT N,A (70) fails
     # RES N, A (00) up to RES N, (XY), R fail
     # LDI (85), LDD (86) LDIR (87), LDDR (88) pass
+    # JR N (115) fails
 
     it "loads the emulator", :js do
       # check that Elm is running
@@ -95,10 +91,15 @@ RSpec.describe "Spectrum Emulator" do
       # # x.send_keys data.split("")
       # x.send_keys [:enter]
 
+      1.upto(300).each do |i|
+        sleep 30
+        x.send_keys 'y'
+      end
+
       speed = measure_speed_in_hz
       expect(speed).to be > expected_hz
       puts "Speed #{speed} Hz"
-      sleep 1950
+      # sleep 1950
     end
   end
 

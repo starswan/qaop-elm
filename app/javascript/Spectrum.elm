@@ -1308,7 +1308,7 @@ doLoad2 full_cpu z80rom tape =
                                                 if not break1 then
                                                     let
                                                         x =
-                                                            if state.ix - startState.ix < 16 || state.de < 0x10 then
+                                                            if state.ix - startState.ix < 0x08 || state.de < 0x08 then
                                                                 if headerLoading then
                                                                     debugLog "header" ("ix = " ++ (state.ix |> toHexString) ++ " de " ++ (state.de |> toHexString) ++ " item " ++ (item |> toHexString2)) Nothing
 

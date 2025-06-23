@@ -123,6 +123,37 @@ group_ed_dict =
 
         -- case 0x79: MP=(v=B<<8|C)+1; env.out(v,A); time+=4; break;
         , ( 0x79, \rom48k z80 -> NoOp )
+
+        -- case 0xA2:
+        -- case 0xA3:
+        -- case 0xAA:
+        -- case 0xAB:
+        -- case 0xB2:
+        -- case 0xB3:
+        -- case 0xBA:
+        -- case 0xBB: inir_otir(c); break;
+        -- TODO: implement outi etc
+        , ( 0xA3, \rom48k z80 -> NoOp )
+        , ( 0xAB, \rom48k z80 -> NoOp )
+        , ( 0xB3, \rom48k z80 -> NoOp )
+        , ( 0xBB, \rom48k z80 -> NoOp )
+
+        -- RETN - end of NMI. NMIs aren't enabled on the Spectrum?
+        , ( 0x45, \rom48k z80 -> NoOp )
+
+        -- RETI (return from maskable interupt, unused on the Spectrum I'm pretty sure)
+        , ( 0x4D, \rom48k z80 -> NoOp )
+
+        -- case 0x7D: IFF|=IFF>>1; MP=PC=pop(); break;
+        -- TODO: Implement ED 7D (all these are the same)
+        , ( 0x45, \rom48k z80 -> NoOp )
+        , ( 0x4D, \rom48k z80 -> NoOp )
+        , ( 0x55, \rom48k z80 -> NoOp )
+        , ( 0x5D, \rom48k z80 -> NoOp )
+        , ( 0x65, \rom48k z80 -> NoOp )
+        , ( 0x6D, \rom48k z80 -> NoOp )
+        , ( 0x75, \rom48k z80 -> NoOp )
+        , ( 0x7D, \rom48k z80 -> NoOp )
         ]
 
 
