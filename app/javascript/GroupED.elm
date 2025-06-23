@@ -99,6 +99,30 @@ group_ed_dict =
         , ( 0x34, \rom48k z80 -> NoOp )
         , ( 0x38, \rom48k z80 -> NoOp )
         , ( 0x39, \rom48k z80 -> NoOp )
+
+        -- case 0x41: env.out(B<<8|C,B); time+=4; break;
+        , ( 0x41, \rom48k z80 -> NoOp )
+
+        -- case 0x49: env.out(B<<8|C,C); time+=4; break;
+        , ( 0x49, \rom48k z80 -> NoOp )
+
+        -- case 0x51: env.out(B<<8|C,D); time+=4; break;
+        , ( 0x51, \rom48k z80 -> NoOp )
+
+        -- case 0x59: env.out(B<<8|C,E); time+=4; break;
+        , ( 0x59, \rom48k z80 -> NoOp )
+
+        -- case 0x61: env.out(B<<8|C,HL>>>8); time+=4; break;
+        , ( 0x61, \rom48k z80 -> NoOp )
+
+        -- case 0x69: env.out(B<<8|C,HL&0xFF); time+=4; break;
+        , ( 0x69, \rom48k z80 -> NoOp )
+
+        -- case 0x71: env.out(B<<8|C,0); time+=4; break;
+        , ( 0x71, \rom48k z80 -> NoOp )
+
+        -- case 0x79: MP=(v=B<<8|C)+1; env.out(v,A); time+=4; break;
+        , ( 0x79, \rom48k z80 -> NoOp )
         ]
 
 
