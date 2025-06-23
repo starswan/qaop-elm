@@ -81,8 +81,24 @@ group_ed_dict =
         , ( 0xB9, ed_cpdr )
 
         -- ED08/ED09 no-op in Java version of Qaop
+        , ( 0x00, \rom48k z80 -> NoOp )
+        , ( 0x01, \rom48k z80 -> NoOp )
+        , ( 0x04, \rom48k z80 -> NoOp )
         , ( 0x08, \rom48k z80 -> NoOp )
         , ( 0x09, \rom48k z80 -> NoOp )
+        , ( 0x10, \rom48k z80 -> NoOp )
+        , ( 0x11, \rom48k z80 -> NoOp )
+        , ( 0x14, \rom48k z80 -> NoOp )
+        , ( 0x18, \rom48k z80 -> NoOp )
+        , ( 0x19, \rom48k z80 -> NoOp )
+        , ( 0x20, \rom48k z80 -> NoOp )
+        , ( 0x21, \rom48k z80 -> NoOp )
+        , ( 0x24, \rom48k z80 -> NoOp )
+        , ( 0x28, \rom48k z80 -> NoOp )
+        , ( 0x29, \rom48k z80 -> NoOp )
+        , ( 0x34, \rom48k z80 -> NoOp )
+        , ( 0x38, \rom48k z80 -> NoOp )
+        , ( 0x39, \rom48k z80 -> NoOp )
         ]
 
 

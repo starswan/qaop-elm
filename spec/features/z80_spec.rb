@@ -47,8 +47,12 @@ RSpec.describe "Spectrum Emulator" do
       click_on z80_game.name
     end
 
-    # So far executed 88 of the tests, most of them fail.
-    # Test 89 crashes on ED 08
+    # So far executed 104 of the tests, most of them fail.
+    # 105 crashes ED 79
+    #
+    # group_ed 0x79
+    # at _Debug_crash (Main.elm:498:10)
+    # at Main.elm:254:3
     # Test 0 checksum fails - prog loaded to 0x8000...
     # Including DAA, CPL, NEG,
     # ADD A,N, ADC A,N, SUB A,N, SBC A,N, AND N
