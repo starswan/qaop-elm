@@ -25,7 +25,7 @@ jobs:
         ruby-version: ['3.4']
 
     env:
-      HZ: 18.517
+      HZ: 18.479
     steps:
       - uses: actions/checkout@v4
       - name: Set up Ruby
