@@ -47,7 +47,11 @@ RSpec.describe "Spectrum Emulator" do
       click_on z80_game.name
     end
 
-    # So far executed 155 of the tests, most of them fail.
+    # So far executed 158 of the tests, most of them fail.
+    # Test 159 IM N seems to hang after setting IM back to 2
+    # Disabled some of the IM routines, and now completes with
+    # 142 of 160 tests failed and then crashes with
+    # C Nonsense in BASIC 20:1
     # Test 0 checksum fails - prog loaded to 0x8000...
     # Including DAA, CPL, NEG,
     # ADD A,N, ADC A,N, SUB A,N, SBC A,N, AND N
@@ -75,7 +79,7 @@ RSpec.describe "Spectrum Emulator" do
       # check that Elm is running
       expect(page).to have_content 'Refresh Interval'
 
-      sleep 8
+      sleep 6
       # This is very slow, but calling send_keys
       # with a string on an array
       # is too quick
@@ -93,13 +97,12 @@ RSpec.describe "Spectrum Emulator" do
 
       # 1.upto(300).each do |i|
       #   sleep 30
-      #   x.send_keys 'y'
+      #   spectrum.send_keys 'y'
       # end
 
       speed = measure_speed_in_hz spectrum
       expect(speed).to be > expected_hz
       puts "Speed #{speed} Hz"
-      # sleep 1950
     end
   end
 
@@ -117,7 +120,7 @@ RSpec.describe "Spectrum Emulator" do
       low = times.min
       high = times.max
       # response to 'scroll?' question if required
-      spectrum.send_keys 'y'
+      # spectrum.send_keys 'y'
     end
     high
   end
