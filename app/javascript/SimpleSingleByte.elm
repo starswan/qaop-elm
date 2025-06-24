@@ -73,14 +73,26 @@ singleByteMainRegs =
 commonDDFDOps : Dict Int ( MainWithIndexRegisters -> RegisterChange, InstructionDuration )
 commonDDFDOps =
     Dict.fromList
-        [ ( 0x5A, ( ld_e_d, EightTStates ) )
+        [ ( 0x40, ( \z80_main -> RegChangeNoOp, EightTStates ) )
+        , ( 0x41, ( ld_b_c, EightTStates ) )
+        , ( 0x42, ( ld_b_d, EightTStates ) )
+        , ( 0x43, ( ld_b_e, EightTStates ) )
+        , ( 0x48, ( ld_c_b, EightTStates ) )
+        , ( 0x49, ( \z80_main -> RegChangeNoOp, EightTStates ) )
+        , ( 0x4A, ( ld_c_d, EightTStates ) )
+        , ( 0x4B, ( ld_c_e, EightTStates ) )
+        , ( 0x50, ( ld_d_b, EightTStates ) )
+        , ( 0x51, ( ld_d_c, EightTStates ) )
+        , ( 0x52, ( \z80_main -> RegChangeNoOp, EightTStates ) )
+        , ( 0x53, ( ld_d_e, EightTStates ) )
+        , ( 0x58, ( ld_e_b, EightTStates ) )
+        , ( 0x59, ( ld_e_c, EightTStates ) )
+        , ( 0x5A, ( ld_e_d, EightTStates ) )
+        , ( 0x5B, ( \z80_main -> RegChangeNoOp, EightTStates ) )
         , ( 0x78, ( ld_a_b, EightTStates ) )
         , ( 0x79, ( ld_a_c, EightTStates ) )
         , ( 0x7A, ( ld_a_d, EightTStates ) )
         , ( 0x7B, ( ld_a_e, EightTStates ) )
-        , ( 0x40, ( \z80_main -> RegChangeNoOp, EightTStates ) )
-        , ( 0x49, ( \z80_main -> RegChangeNoOp, EightTStates ) )
-        , ( 0x5B, ( \z80_main -> RegChangeNoOp, EightTStates ) )
 
         -- FD 6D is LD IYL, IYL
         , ( 0x64, ( \z80_main -> RegChangeNoOp, EightTStates ) )
@@ -101,6 +113,10 @@ singleByteMainRegsFD =
         , ( 0x45, ( ld_b_iyl, EightTStates ) )
         , ( 0x4C, ( ld_c_iyh, EightTStates ) )
         , ( 0x4D, ( ld_c_iyl, EightTStates ) )
+        , ( 0x68, ( ld_iyl_b, EightTStates ) )
+        , ( 0x69, ( ld_iyl_c, EightTStates ) )
+        , ( 0x6A, ( ld_iyl_d, EightTStates ) )
+        , ( 0x6B, ( ld_iyl_e, EightTStates ) )
         ]
         |> Dict.union commonDDFDOps
 
@@ -114,6 +130,10 @@ singleByteMainRegsDD =
         , ( 0x45, ( ld_b_ixl, EightTStates ) )
         , ( 0x4C, ( ld_c_ixh, EightTStates ) )
         , ( 0x4D, ( ld_c_ixl, EightTStates ) )
+        , ( 0x68, ( ld_ixl_b, EightTStates ) )
+        , ( 0x69, ( ld_ixl_c, EightTStates ) )
+        , ( 0x6A, ( ld_ixl_d, EightTStates ) )
+        , ( 0x6B, ( ld_ixl_e, EightTStates ) )
         ]
         |> Dict.union commonDDFDOps
 
@@ -443,6 +463,70 @@ ld_l_b z80_main =
     -- case 0x68: xy=xy&0xFF00|B; break;
     --z80 |> set_l_z80 z80.main.b ixiyhl
     ChangeRegisterL z80_main.b
+
+
+ld_ixl_b : MainWithIndexRegisters -> RegisterChange
+ld_ixl_b z80_main =
+    -- case 0x68: HL=HL&0xFF00|B; break;
+    -- case 0x68: xy=xy&0xFF00|B; break;
+    --z80 |> set_l_z80 z80.main.b ixiyhl
+    ChangeRegisterIXL z80_main.b
+
+
+ld_iyl_b : MainWithIndexRegisters -> RegisterChange
+ld_iyl_b z80_main =
+    -- case 0x68: HL=HL&0xFF00|B; break;
+    -- case 0x68: xy=xy&0xFF00|B; break;
+    --z80 |> set_l_z80 z80.main.b ixiyhl
+    ChangeRegisterIYL z80_main.b
+
+
+ld_ixl_c : MainWithIndexRegisters -> RegisterChange
+ld_ixl_c z80_main =
+    -- case 0x68: HL=HL&0xFF00|B; break;
+    -- case 0x68: xy=xy&0xFF00|B; break;
+    --z80 |> set_l_z80 z80.main.b ixiyhl
+    ChangeRegisterIXL z80_main.c
+
+
+ld_iyl_c : MainWithIndexRegisters -> RegisterChange
+ld_iyl_c z80_main =
+    -- case 0x68: HL=HL&0xFF00|B; break;
+    -- case 0x68: xy=xy&0xFF00|B; break;
+    --z80 |> set_l_z80 z80.main.b ixiyhl
+    ChangeRegisterIYL z80_main.c
+
+
+ld_ixl_d : MainWithIndexRegisters -> RegisterChange
+ld_ixl_d z80_main =
+    -- case 0x68: HL=HL&0xFF00|B; break;
+    -- case 0x68: xy=xy&0xFF00|B; break;
+    --z80 |> set_l_z80 z80.main.b ixiyhl
+    ChangeRegisterIXL z80_main.d
+
+
+ld_iyl_d : MainWithIndexRegisters -> RegisterChange
+ld_iyl_d z80_main =
+    -- case 0x68: HL=HL&0xFF00|B; break;
+    -- case 0x68: xy=xy&0xFF00|B; break;
+    --z80 |> set_l_z80 z80.main.b ixiyhl
+    ChangeRegisterIYL z80_main.d
+
+
+ld_ixl_e : MainWithIndexRegisters -> RegisterChange
+ld_ixl_e z80_main =
+    -- case 0x68: HL=HL&0xFF00|B; break;
+    -- case 0x68: xy=xy&0xFF00|B; break;
+    --z80 |> set_l_z80 z80.main.b ixiyhl
+    ChangeRegisterIXL z80_main.e
+
+
+ld_iyl_e : MainWithIndexRegisters -> RegisterChange
+ld_iyl_e z80_main =
+    -- case 0x68: HL=HL&0xFF00|B; break;
+    -- case 0x68: xy=xy&0xFF00|B; break;
+    --z80 |> set_l_z80 z80.main.b ixiyhl
+    ChangeRegisterIYL z80_main.e
 
 
 ld_l_c : MainWithIndexRegisters -> RegisterChange

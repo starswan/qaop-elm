@@ -47,7 +47,7 @@ RSpec.describe "Spectrum Emulator" do
       click_on z80_game.name
     end
 
-    # So far executed 133 of the tests, most of them fail.
+    # So far executed 155 of the tests, most of them fail.
     # Test 0 checksum fails - prog loaded to 0x8000...
     # Including DAA, CPL, NEG,
     # ADD A,N, ADC A,N, SUB A,N, SBC A,N, AND N

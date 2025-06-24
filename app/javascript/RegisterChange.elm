@@ -30,6 +30,8 @@ type RegisterChange
     | ChangeRegisterC Int
     | ChangeRegisterH Int
     | ChangeRegisterL Int
+    | ChangeRegisterIXL Int
+    | ChangeRegisterIYL Int
     | PushedValue Int
     | RegChangeNewSP Int
     | IncrementIndirect Int
@@ -96,6 +98,12 @@ applyRegisterChange change z80_flags main =
 
         ChangeRegisterL int ->
             MainRegsApplied { main | hl = Bitwise.or (Bitwise.and main.hl 0xFF00) int }
+
+        ChangeRegisterIXL int ->
+            MainRegsApplied { main | ix = Bitwise.or (Bitwise.and main.ix 0xFF00) int }
+
+        ChangeRegisterIYL int ->
+            MainRegsApplied { main | iy = Bitwise.or (Bitwise.and main.iy 0xFF00) int }
 
         PushedValue int ->
             PushedValueApplied int

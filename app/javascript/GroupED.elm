@@ -54,9 +54,11 @@ group_ed_dict =
         , ( 0x78, execute_ED78 )
         , ( 0x52, execute_ED52 )
         , ( 0x53, execute_ED53 )
+        , ( 0x63, execute_ED63 )
         , ( 0x7B, execute_ED7B )
         , ( 0x73, execute_ED73 )
         , ( 0x5B, execute_ED5B )
+        , ( 0x6B, execute_ED6B )
         , ( 0x72, execute_ED72 )
         , ( 0x56, execute_ED56 )
         , ( 0x5E, execute_ED5E )
@@ -295,6 +297,28 @@ execute_ED53 rom48k z80 =
     EnvWithPc (env |> addCpuTimeEnv 6) v.pc
 
 
+execute_ED63 : Z80ROM -> Z80Core -> Z80Delta
+execute_ED63 rom48k z80 =
+    -- case 0x53: MP=(v=imm16())+1; env.mem16(v,D<<8|E); time+=6; break;
+    let
+        v =
+            z80 |> imm16 rom48k
+
+        z80_1 =
+            { z80 | pc = v.pc }
+
+        env =
+            z80_1.env |> setMem16 v.value16 z80.main.hl
+
+        --env = case (v.value |> fromInt) of
+        --  Z80Address.ROMAddress int -> z80_1.env
+        --  Z80Address.RAMAddress ramAddress ->
+        --    z80_1.env |> setMem16 ramAddress (Bitwise.or (shiftLeftBy8 z80.main.d) z80.main.e)
+    in
+    --{ z80_1 | env = env } |> add_cpu_time 6 |> Whole
+    EnvWithPc (env |> addCpuTimeEnv 6) v.pc
+
+
 execute_ED5B : Z80ROM -> Z80Core -> Z80Delta
 execute_ED5B rom48k z80 =
     -- case 0x5B: MP=(v=imm16())+1; v=env.mem16(v); D=v>>>8; E=v&0xFF; time+=6; break;
@@ -311,6 +335,24 @@ execute_ED5B rom48k z80 =
     in
     --{ z80_1 | env = { env | time = v2.time } } |> set_de v2.value |> add_cpu_time 6 |> Whole
     MainRegsWithPcAndCpuTime (z80.main |> set_de_main v2.value16) v1.pc (v2.time |> addCpuTimeTime 6)
+
+
+execute_ED6B : Z80ROM -> Z80Core -> Z80Delta
+execute_ED6B rom48k z80 =
+    -- case 0x5B: MP=(v=imm16())+1; v=env.mem16(v); D=v>>>8; E=v&0xFF; time+=6; break;
+    let
+        v1 =
+            z80 |> imm16 rom48k
+
+        --z80_1 = { z80 | pc = v1.pc }
+        env =
+            z80.env
+
+        v2 =
+            { env | time = v1.time } |> mem16 v1.value16 rom48k
+    in
+    --{ z80_1 | env = { env | time = v2.time } } |> set_de v2.value |> add_cpu_time 6 |> Whole
+    MainRegsWithPcAndCpuTime (z80.main |> set_bc_main v2.value16) v1.pc (v2.time |> addCpuTimeTime 6)
 
 
 execute_ED72 : Z80ROM -> Z80Core -> Z80Delta
