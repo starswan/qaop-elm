@@ -26,34 +26,45 @@ group_ed_dict =
         [ ( 0x40, execute_ED40 )
         , ( 0x42, execute_ED42 )
         , ( 0x43, execute_ED43 )
-        , ( 0x44, execute_ED44_neg )
+        , ( 0x44, ed_neg )
+        , ( 0x4C, ed_neg )
+        , ( 0x54, ed_neg )
+        , ( 0x5C, ed_neg )
+        , ( 0x64, ed_neg )
+        , ( 0x6C, ed_neg )
+        , ( 0x74, ed_neg )
+        , ( 0x7C, ed_neg )
         , ( 0x46, execute_ED46 )
         , ( 0x47, execute_ED47 )
         , ( 0x48, execute_ED48 )
         , ( 0x4A, adc_hl_bc )
         , ( 0x4B, execute_ED4B )
         , ( 0x4E, execute_ED4E )
+        , ( 0x4F, ld_r_a )
         , ( 0x50, execute_ED50 )
         , ( 0x5A, adc_hl_de )
         , ( 0x6A, adc_hl_hl )
-        , -- case 0x4F: r(A); time++; break;
-          -- case 0x57: ld_a_ir(IR>>>8); break;
-          -- case 0x5F: ld_a_ir(r()); break;
-          -- case 0x67: rrd(); break;
-          -- case 0x6F: rld(); break;
-          ( 0x6F, rld )
+        , ( 0x7A, adc_hl_sp )
+
+        -- case 0x4F: r(A); time++; break;
+        -- case 0x57: ld_a_ir(IR>>>8); break;
+        -- case 0x5F: ld_a_ir(r()); break;
+        -- case 0x67: rrd(); break;
+        -- case 0x6F: rld(); break;
         , ( 0x78, execute_ED78 )
         , ( 0x52, execute_ED52 )
         , ( 0x53, execute_ED53 )
-        , ( 0xB8, execute_EDB8 )
-        , ( 0xB0, execute_EDB0 )
+        , ( 0x63, execute_ED63 )
         , ( 0x7B, execute_ED7B )
         , ( 0x73, execute_ED73 )
         , ( 0x5B, execute_ED5B )
+        , ( 0x6B, execute_ED6B )
         , ( 0x72, execute_ED72 )
         , ( 0x56, execute_ED56 )
         , ( 0x5E, execute_ED5E )
         , ( 0x66, execute_ED66 )
+        , ( 0x67, rrd )
+        , ( 0x6F, rld )
         , ( 0x6E, execute_ED6E )
         , ( 0x76, execute_ED76 )
         , ( 0x7E, execute_ED7E )
@@ -61,8 +72,90 @@ group_ed_dict =
         , ( 0x60, execute_ED60 )
         , ( 0x68, execute_ED68 )
         , ( 0x70, execute_ED70 )
-        , ( 0xB9, execute_EDB9 )
         , ( 0x62, execute_ED62 )
+        , ( 0xA0, ed_ldi )
+        , ( 0xA1, ed_cpi )
+        , ( 0xA8, ed_ldd )
+        , ( 0xA9, ed_cpd )
+        , ( 0xB0, ed_ldir )
+        , ( 0xB1, ed_cpir )
+        , ( 0xB8, ed_lddr )
+        , ( 0xB9, ed_cpdr )
+
+        -- ED08/ED09 no-op in Java version of Qaop
+        , ( 0x00, \rom48k z80 -> NoOp )
+        , ( 0x01, \rom48k z80 -> NoOp )
+        , ( 0x04, \rom48k z80 -> NoOp )
+        , ( 0x08, \rom48k z80 -> NoOp )
+        , ( 0x09, \rom48k z80 -> NoOp )
+        , ( 0x10, \rom48k z80 -> NoOp )
+        , ( 0x11, \rom48k z80 -> NoOp )
+        , ( 0x14, \rom48k z80 -> NoOp )
+        , ( 0x18, \rom48k z80 -> NoOp )
+        , ( 0x19, \rom48k z80 -> NoOp )
+        , ( 0x20, \rom48k z80 -> NoOp )
+        , ( 0x21, \rom48k z80 -> NoOp )
+        , ( 0x24, \rom48k z80 -> NoOp )
+        , ( 0x28, \rom48k z80 -> NoOp )
+        , ( 0x29, \rom48k z80 -> NoOp )
+        , ( 0x34, \rom48k z80 -> NoOp )
+        , ( 0x38, \rom48k z80 -> NoOp )
+        , ( 0x39, \rom48k z80 -> NoOp )
+
+        -- case 0x41: env.out(B<<8|C,B); time+=4; break;
+        , ( 0x41, \rom48k z80 -> NoOp )
+
+        -- case 0x49: env.out(B<<8|C,C); time+=4; break;
+        , ( 0x49, \rom48k z80 -> NoOp )
+
+        -- case 0x51: env.out(B<<8|C,D); time+=4; break;
+        , ( 0x51, \rom48k z80 -> NoOp )
+
+        -- case 0x59: env.out(B<<8|C,E); time+=4; break;
+        , ( 0x59, \rom48k z80 -> NoOp )
+
+        -- case 0x61: env.out(B<<8|C,HL>>>8); time+=4; break;
+        , ( 0x61, \rom48k z80 -> NoOp )
+
+        -- case 0x69: env.out(B<<8|C,HL&0xFF); time+=4; break;
+        , ( 0x69, \rom48k z80 -> NoOp )
+
+        -- case 0x71: env.out(B<<8|C,0); time+=4; break;
+        , ( 0x71, \rom48k z80 -> NoOp )
+
+        -- case 0x79: MP=(v=B<<8|C)+1; env.out(v,A); time+=4; break;
+        , ( 0x79, \rom48k z80 -> NoOp )
+
+        -- case 0xA2:
+        -- case 0xA3:
+        -- case 0xAA:
+        -- case 0xAB:
+        -- case 0xB2:
+        -- case 0xB3:
+        -- case 0xBA:
+        -- case 0xBB: inir_otir(c); break;
+        -- TODO: implement outi etc
+        , ( 0xA3, \rom48k z80 -> NoOp )
+        , ( 0xAB, \rom48k z80 -> NoOp )
+        , ( 0xB3, \rom48k z80 -> NoOp )
+        , ( 0xBB, \rom48k z80 -> NoOp )
+
+        -- RETN - end of NMI. NMIs aren't enabled on the Spectrum?
+        , ( 0x45, \rom48k z80 -> NoOp )
+
+        -- RETI (return from maskable interupt, unused on the Spectrum I'm pretty sure)
+        , ( 0x4D, \rom48k z80 -> NoOp )
+
+        -- case 0x7D: IFF|=IFF>>1; MP=PC=pop(); break;
+        -- TODO: Implement ED 7D (all these are the same)
+        , ( 0x45, \rom48k z80 -> NoOp )
+        , ( 0x4D, \rom48k z80 -> NoOp )
+        , ( 0x55, \rom48k z80 -> NoOp )
+        , ( 0x5D, \rom48k z80 -> NoOp )
+        , ( 0x65, \rom48k z80 -> NoOp )
+        , ( 0x6D, \rom48k z80 -> NoOp )
+        , ( 0x75, \rom48k z80 -> NoOp )
+        , ( 0x7D, \rom48k z80 -> NoOp )
         ]
 
 
@@ -116,8 +209,8 @@ execute_ED43 rom48k z80 =
 --case 0x7C: v=A; A=0; sub(v); break;
 
 
-execute_ED44_neg : Z80ROM -> Z80Core -> Z80Delta
-execute_ED44_neg rom48k z80 =
+ed_neg : Z80ROM -> Z80Core -> Z80Delta
+ed_neg rom48k z80 =
     let
         v =
             z80.flags.a
@@ -170,6 +263,12 @@ execute_ED4E rom48k z80 =
     z80 |> execute_ED464E565E666E767E 0x4E
 
 
+ld_r_a : Z80ROM -> Z80Core -> Z80Delta
+ld_r_a rom48k z80 =
+    -- case 0x4F: r(A); time++; break;
+    NewRValue z80.flags.a
+
+
 execute_ED52 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED52 rom48k z80 =
     -- case 0x52: sbc_hl(D<<8|E); break;
@@ -198,6 +297,28 @@ execute_ED53 rom48k z80 =
     EnvWithPc (env |> addCpuTimeEnv 6) v.pc
 
 
+execute_ED63 : Z80ROM -> Z80Core -> Z80Delta
+execute_ED63 rom48k z80 =
+    -- case 0x53: MP=(v=imm16())+1; env.mem16(v,D<<8|E); time+=6; break;
+    let
+        v =
+            z80 |> imm16 rom48k
+
+        z80_1 =
+            { z80 | pc = v.pc }
+
+        env =
+            z80_1.env |> setMem16 v.value16 z80.main.hl
+
+        --env = case (v.value |> fromInt) of
+        --  Z80Address.ROMAddress int -> z80_1.env
+        --  Z80Address.RAMAddress ramAddress ->
+        --    z80_1.env |> setMem16 ramAddress (Bitwise.or (shiftLeftBy8 z80.main.d) z80.main.e)
+    in
+    --{ z80_1 | env = env } |> add_cpu_time 6 |> Whole
+    EnvWithPc (env |> addCpuTimeEnv 6) v.pc
+
+
 execute_ED5B : Z80ROM -> Z80Core -> Z80Delta
 execute_ED5B rom48k z80 =
     -- case 0x5B: MP=(v=imm16())+1; v=env.mem16(v); D=v>>>8; E=v&0xFF; time+=6; break;
@@ -214,6 +335,24 @@ execute_ED5B rom48k z80 =
     in
     --{ z80_1 | env = { env | time = v2.time } } |> set_de v2.value |> add_cpu_time 6 |> Whole
     MainRegsWithPcAndCpuTime (z80.main |> set_de_main v2.value16) v1.pc (v2.time |> addCpuTimeTime 6)
+
+
+execute_ED6B : Z80ROM -> Z80Core -> Z80Delta
+execute_ED6B rom48k z80 =
+    -- case 0x5B: MP=(v=imm16())+1; v=env.mem16(v); D=v>>>8; E=v&0xFF; time+=6; break;
+    let
+        v1 =
+            z80 |> imm16 rom48k
+
+        --z80_1 = { z80 | pc = v1.pc }
+        env =
+            z80.env
+
+        v2 =
+            { env | time = v1.time } |> mem16 v1.value16 rom48k
+    in
+    --{ z80_1 | env = { env | time = v2.time } } |> set_de v2.value |> add_cpu_time 6 |> Whole
+    MainRegsWithPcAndCpuTime (z80.main |> set_bc_main v2.value16) v1.pc (v2.time |> addCpuTimeTime 6)
 
 
 execute_ED72 : Z80ROM -> Z80Core -> Z80Delta
@@ -283,21 +422,21 @@ execute_ED7B rom48k z80 =
     CpuTimeWithSpAndPc (sp.time |> addCpuTimeTime 6) sp.value16 v.pc
 
 
-execute_EDB0 : Z80ROM -> Z80Core -> Z80Delta
-execute_EDB0 rom48k z80 =
+ed_ldir : Z80ROM -> Z80Core -> Z80Delta
+ed_ldir rom48k z80 =
     --0xB0 -> debug_log "LDIR" ("HL " ++ (z80.main.hl |> toHexString) ++ " BC " ++ (z80 |> get_bc |> toHexString2)) (z80 |> ldir 1 True)
     -- case 0xB0: ldir(1,true); break;
     z80 |> ldir Forwards True rom48k
 
 
-execute_EDB8 : Z80ROM -> Z80Core -> Z80Delta
-execute_EDB8 rom48k z80 =
+ed_lddr : Z80ROM -> Z80Core -> Z80Delta
+ed_lddr rom48k z80 =
     -- case 0xB8: ldir(-1,true); break;
     z80 |> ldir Backwards True rom48k
 
 
-execute_EDB9 : Z80ROM -> Z80Core -> Z80Delta
-execute_EDB9 rom48k z80 =
+ed_cpdr : Z80ROM -> Z80Core -> Z80Delta
+ed_cpdr rom48k z80 =
     -- case 0xB9: cpir(-1,true); break;
     z80 |> cpir Backwards True rom48k
 
@@ -387,7 +526,13 @@ adc_hl_hl : Z80ROM -> Z80Core -> Z80Delta
 adc_hl_hl _ z80 =
     ---- case 0x6A: adc_hl(HL); break;
     --0x6A -> z80 |> adc_hl z80.main.hl
-    z80 |> adc_hl (z80.main |> get_de)
+    z80 |> adc_hl z80.main.hl
+
+
+adc_hl_sp : Z80ROM -> Z80Core -> Z80Delta
+adc_hl_sp _ z80 =
+    -- case 0x7A: adc_hl(SP); break;
+    z80 |> adc_hl z80.env.sp
 
 
 execute_ED50 : Z80ROM -> Z80Core -> Z80Delta
@@ -507,57 +652,6 @@ group_ed rom48k z80_0 =
 --		}
 --	}
 --
---	private void rld()
---	{
---		int v = env.mem(HL)<<4 | A&0x0F;
---		time += 7;
---		f_szh0n0p(A = A&0xF0 | v>>>8);
---		env.mem(HL, v & 0xFF);
---		MP = HL+1;
---		time += 3;
---	}
-
-
-rld : Z80ROM -> Z80Core -> Z80Delta
-rld rom48k z80 =
-    let
-        v_lhs_1 =
-            mem z80.main.hl z80.env.time rom48k z80.env.ram
-
-        v_rhs =
-            Bitwise.and z80.flags.a 0x0F
-
-        v_lhs =
-            v_lhs_1.value |> shiftLeftBy 4
-
-        v =
-            Bitwise.or v_lhs v_rhs
-
-        a1 =
-            Bitwise.and z80.flags.a 0xF0
-
-        new_a =
-            Bitwise.or a1 (shiftRightBy8 v)
-
-        flags =
-            z80.flags
-
-        new_flags =
-            { flags | a = new_a } |> f_szh0n0p new_a
-
-        --z80_1 =
-        --    { z80 | flags = new_flags }
-        env_0 =
-            z80.env
-
-        env_1 =
-            { env_0 | time = v_lhs_1.time } |> setMem z80.main.hl (Bitwise.and v 0xFF)
-    in
-    --{ z80_1 | env = env_1 } |> add_cpu_time 10 |> Whole
-    FlagsWithPcEnvAndCpuTime new_flags z80.pc env_1 10
-
-
-
 --
 --	private void sbc_hl(int b)
 --	{
@@ -886,3 +980,132 @@ cpir incOrDec repeat rom48k z80_core =
         --	}
     in
     HLBCWithFlagsAndPc hl bc { z80_flags | ff = ff, fa = fb, fb = fb, fr = fr } new_pc
+
+
+
+--	private void rld()
+--	{
+--		int v = env.mem(HL)<<4 | A&0x0F;
+--		time += 7;
+--		f_szh0n0p(A = A&0xF0 | v>>>8);
+--		env.mem(HL, v & 0xFF);
+--		MP = HL+1;
+--		time += 3;
+--	}
+
+
+rld : Z80ROM -> Z80Core -> Z80Delta
+rld rom48k z80 =
+    let
+        v_lhs_1 =
+            mem z80.main.hl z80.env.time rom48k z80.env.ram
+
+        v_rhs =
+            Bitwise.and z80.flags.a 0x0F
+
+        v_lhs =
+            v_lhs_1.value |> shiftLeftBy 4
+
+        v =
+            Bitwise.or v_lhs v_rhs
+
+        a1 =
+            Bitwise.and z80.flags.a 0xF0
+
+        new_a =
+            Bitwise.or a1 (shiftRightBy8 v)
+
+        flags =
+            z80.flags
+
+        new_flags =
+            { flags | a = new_a } |> f_szh0n0p new_a
+
+        --z80_1 =
+        --    { z80 | flags = new_flags }
+        env_0 =
+            z80.env
+
+        env_1 =
+            { env_0 | time = v_lhs_1.time } |> setMem z80.main.hl (Bitwise.and v 0xFF)
+    in
+    --{ z80_1 | env = env_1 } |> add_cpu_time 10 |> Whole
+    FlagsWithPcEnvAndCpuTime new_flags z80.pc env_1 10
+
+
+
+--private void rrd()
+--{
+--	int v = env.mem(HL) | A<<8;
+--	time += 7;
+--	f_szh0n0p(A = A&0xF0 | v&0x0F);
+--	env.mem(HL, v>>>4 & 0xFF);
+--	MP = HL+1;
+--	time += 3;
+--}
+
+
+rrd : Z80ROM -> Z80Core -> Z80Delta
+rrd rom48k z80 =
+    let
+        v_lhs =
+            mem z80.main.hl z80.env.time rom48k z80.env.ram
+
+        v_rhs =
+            z80.flags.a |> shiftLeftBy8
+
+        v =
+            Bitwise.or v_lhs.value v_rhs
+
+        a1 =
+            Bitwise.and z80.flags.a 0xF0
+
+        new_a =
+            Bitwise.or a1 (v |> Bitwise.and 0x0F)
+
+        flags =
+            z80.flags
+
+        new_flags =
+            { flags | a = new_a } |> f_szh0n0p new_a
+
+        --z80_1 =
+        --    { z80 | flags = new_flags }
+        env_0 =
+            z80.env
+
+        env_1 =
+            { env_0 | time = v_lhs.time } |> setMem z80.main.hl (Bitwise.and (v |> shiftRightBy 4) 0xFF)
+    in
+    --{ z80_1 | env = env_1 } |> add_cpu_time 10 |> Whole
+    FlagsWithPcEnvAndCpuTime new_flags z80.pc env_1 10
+
+
+ed_ldi : Z80ROM -> Z80Core -> Z80Delta
+ed_ldi rom48k z80 =
+    -- case 0xA0: ldir(1,false); break;
+    z80 |> ldir Forwards False rom48k
+
+
+ed_cpi : Z80ROM -> Z80Core -> Z80Delta
+ed_cpi rom48k z80 =
+    -- case 0xA1: cpir(1,false); break;
+    z80 |> cpir Forwards False rom48k
+
+
+ed_ldd : Z80ROM -> Z80Core -> Z80Delta
+ed_ldd rom48k z80 =
+    -- case 0xA8: ldir(-1,false); break;
+    z80 |> ldir Backwards False rom48k
+
+
+ed_cpd : Z80ROM -> Z80Core -> Z80Delta
+ed_cpd rom48k z80 =
+    -- case 0xA9: cpir(-1,false); break;
+    z80 |> cpir Backwards False rom48k
+
+
+ed_cpir : Z80ROM -> Z80Core -> Z80Delta
+ed_cpir rom48k z80 =
+    -- case 0xB1: cpir(1,true); break;
+    z80 |> cpir Forwards True rom48k

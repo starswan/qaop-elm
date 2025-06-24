@@ -47,6 +47,8 @@ type Z80Delta
     | FlagsWithPcEnvAndCpuTime FlagRegisters Int Z80Env Int
     | UnknownIntValue String Int
     | HLBCWithFlagsAndPc Int Int FlagRegisters Int
+    | NewRValue Int
+    | NoOp
 
 
 type alias DeltaWithChangesData =
@@ -195,3 +197,9 @@ applyDeltaWithChanges z80delta z80 =
 
         UnknownIntValue string int ->
             debugTodo string (int |> toHexString2) z80
+
+        NewRValue int ->
+            { z80 | pc = z80delta.pc, env = { z80_env | time = z80delta.time }, interrupts = z80delta.interrupts, r = int }
+
+        NoOp ->
+            { z80 | pc = z80delta.pc, env = { z80_env | time = z80delta.time }, interrupts = z80delta.interrupts }
