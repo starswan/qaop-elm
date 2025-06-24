@@ -81,29 +81,29 @@ RSpec.describe "Spectrum Emulator" do
       # is too quick
       # data = "20eThis is a comment"
       # Load tape
-      x = find("#spectrum")
+      spectrum = find("#spectrum")
       data = 'j""'
       data.each_char do |k|
-        x.send_keys k
+        spectrum.send_keys k
       end
-      x.send_keys [:enter]
+      spectrum.send_keys [:enter]
       # # x.send_keys data
       # # x.send_keys data.split("")
       # x.send_keys [:enter]
 
-      1.upto(300).each do |i|
-        sleep 30
-        x.send_keys 'y'
-      end
+      # 1.upto(300).each do |i|
+      #   sleep 30
+      #   x.send_keys 'y'
+      # end
 
-      speed = measure_speed_in_hz
+      speed = measure_speed_in_hz spectrum
       expect(speed).to be > expected_hz
       puts "Speed #{speed} Hz"
       # sleep 1950
     end
   end
 
-  def measure_speed_in_hz
+  def measure_speed_in_hz spectrum
     # Test emulation speed in Hz
     low = 0
     high = page.find("#hz").text.to_f
@@ -116,6 +116,8 @@ RSpec.describe "Spectrum Emulator" do
       # p "Speed Times #{times.sort}"
       low = times.min
       high = times.max
+      # response to 'scroll?' question if required
+      spectrum.send_keys 'y'
     end
     high
   end
