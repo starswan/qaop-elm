@@ -30,6 +30,8 @@ type RegisterChange
     | ChangeRegisterC Int
     | ChangeRegisterH Int
     | ChangeRegisterL Int
+    | ChangeRegisterIXL Int
+    | ChangeRegisterIYL Int
     | PushedValue Int
     | RegChangeNewSP Int
     | IncrementIndirect Int
@@ -40,6 +42,7 @@ type RegisterChange
     | RegisterChangeShifter Shifter Int
     | IndirectBitReset BitTest Int
     | IndirectBitSet BitTest Int
+    | RegChangeNoOp
 
 
 type RegisterChangeApplied
@@ -54,6 +57,7 @@ type RegisterChangeApplied
     | RegisterChangeShifterApplied Shifter Int
     | IndirectBitResetApplied BitTest Int
     | IndirectBitSetApplied BitTest Int
+    | RegChangeAppliedNoOp
 
 
 applyRegisterChange : RegisterChange -> FlagRegisters -> MainWithIndexRegisters -> RegisterChangeApplied
@@ -95,6 +99,12 @@ applyRegisterChange change z80_flags main =
         ChangeRegisterL int ->
             MainRegsApplied { main | hl = Bitwise.or (Bitwise.and main.hl 0xFF00) int }
 
+        ChangeRegisterIXL int ->
+            MainRegsApplied { main | ix = Bitwise.or (Bitwise.and main.ix 0xFF00) int }
+
+        ChangeRegisterIYL int ->
+            MainRegsApplied { main | iy = Bitwise.or (Bitwise.and main.iy 0xFF00) int }
+
         PushedValue int ->
             PushedValueApplied int
 
@@ -124,3 +134,6 @@ applyRegisterChange change z80_flags main =
 
         IndirectBitSet bitTest int ->
             IndirectBitSetApplied bitTest int
+
+        RegChangeNoOp ->
+            RegChangeAppliedNoOp

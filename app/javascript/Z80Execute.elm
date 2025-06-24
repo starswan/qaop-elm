@@ -596,6 +596,13 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
             in
             { z80 | pc = new_pc, env = env_3, r = z80.r + 1 }
 
+        RegChangeAppliedNoOp ->
+            { z80
+                | pc = new_pc
+                , env = env_1
+                , r = z80.r + 1
+            }
+
 
 applyShifter : Int -> Shifter -> Int -> CpuTimeCTime -> Z80ROM -> Z80Core -> Z80Core
 applyShifter new_pc shifterFunc addr cpu_time rom48k z80 =

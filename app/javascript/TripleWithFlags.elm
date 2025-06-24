@@ -28,9 +28,13 @@ triple16WithFlags =
         , ( 0xDA, ( jp_c_nn, TenTStates ) )
         , ( 0xDC, ( call_c_nn, TenTStates ) )
         , ( 0xE2, ( jp_po_nn, TenTStates ) )
+        , ( 0xE4, ( call_po_nn, TenTStates ) )
         , ( 0xEA, ( jp_pe_nn, TenTStates ) )
+        , ( 0xEC, ( call_pe_nn, TenTStates ) )
         , ( 0xF2, ( jp_p_nn, TenTStates ) )
+        , ( 0xF4, ( call_p_nn, TenTStates ) )
         , ( 0xFA, ( jp_m_nn, TenTStates ) )
+        , ( 0xFC, ( call_m_nn, TenTStates ) )
         ]
 
 
@@ -88,11 +92,31 @@ jp_po_nn param z80_flags =
         Skip3ByteInstruction
 
 
+call_po_nn : Int -> FlagRegisters -> TripleWithFlagsChange
+call_po_nn param z80_flags =
+    -- case 0xE4: call((flags()&FP)==0); break;
+    if Bitwise.and (z80_flags |> get_flags) c_FP == 0 then
+        AbsoluteCall param
+
+    else
+        Skip3ByteInstruction
+
+
 jp_pe_nn : Int -> FlagRegisters -> TripleWithFlagsChange
 jp_pe_nn param z80_flags =
     -- case 0xEA: jp((flags()&FP)!=0); break;
     if Bitwise.and (z80_flags |> get_flags) c_FP /= 0 then
         AbsoluteJump param
+
+    else
+        Skip3ByteInstruction
+
+
+call_pe_nn : Int -> FlagRegisters -> TripleWithFlagsChange
+call_pe_nn param z80_flags =
+    -- case 0xEC: call((flags()&FP)!=0); break;
+    if Bitwise.and (z80_flags |> get_flags) c_FP /= 0 then
+        AbsoluteCall param
 
     else
         Skip3ByteInstruction
@@ -108,11 +132,31 @@ jp_p_nn param z80_flags =
         Skip3ByteInstruction
 
 
+call_p_nn : Int -> FlagRegisters -> TripleWithFlagsChange
+call_p_nn param z80_flags =
+    -- case 0xF4: call((Ff&FS)==0); break;
+    if Bitwise.and z80_flags.ff c_FS == 0 then
+        AbsoluteCall param
+
+    else
+        Skip3ByteInstruction
+
+
 jp_m_nn : Int -> FlagRegisters -> TripleWithFlagsChange
 jp_m_nn param z80_flags =
     -- case 0xFA: jp((Ff&FS)!=0); break;
     if Bitwise.and z80_flags.ff c_FS /= 0 then
         AbsoluteJump param
+
+    else
+        Skip3ByteInstruction
+
+
+call_m_nn : Int -> FlagRegisters -> TripleWithFlagsChange
+call_m_nn param z80_flags =
+    -- case 0xFC: call((Ff&FS)!=0); break;
+    if Bitwise.and z80_flags.ff c_FS /= 0 then
+        AbsoluteCall param
 
     else
         Skip3ByteInstruction

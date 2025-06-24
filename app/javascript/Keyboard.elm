@@ -597,7 +597,8 @@ keyDownEvent character keys =
         newkeys =
             event :: keys
     in
-    debugLog ("key down " ++ (character |> fromChar) ++ " newkeys ") newkeys newkeys
+    --debugLog ("key down " ++ (character |> fromChar) ++ " newkeys ") newkeys newkeys
+    newkeys
 
 
 keyUpEvent : Char -> List KeyEvent -> List KeyEvent
@@ -609,7 +610,8 @@ keyUpEvent character keys =
         newkeys =
             keys |> List.filter (\item -> keyNotEqual item upperchar)
     in
-    debugLog ("key up " ++ (character |> fromChar) ++ " newkeys ") newkeys newkeys
+    --debugLog ("key up " ++ (character |> fromChar) ++ " newkeys ") newkeys newkeys
+    newkeys
 
 
 ctrlKeyNotEqual : KeyEvent -> ControlKey -> Bool
