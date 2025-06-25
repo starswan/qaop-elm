@@ -6,7 +6,7 @@ import Utils exposing (char, shiftLeftBy8, wordPlusOffset)
 import Z80Env exposing (Z80Env, addCpuTimeEnv, c_TIME_LIMIT, mem, mem16, setMem, z80_push)
 import Z80Flags exposing (FlagRegisters)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIY(..), IXIYHL(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters, get_xy, set_h, set_l, set_xy)
+import Z80Types exposing (IXIY(..), IXIYHL(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
 
 
 type alias Z80Core =
