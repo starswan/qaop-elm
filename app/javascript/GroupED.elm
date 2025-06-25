@@ -10,7 +10,7 @@ import Bitwise exposing (complement, shiftLeftBy, shiftRightBy)
 import CpuTimeCTime exposing (addCpuTimeTime)
 import Dict exposing (Dict)
 import Keyboard exposing (Keyboard)
-import Utils exposing (char, shiftLeftBy8, shiftRightBy8)
+import Utils exposing (char, shiftLeftBy8, shiftRightBy8, toHexString2)
 import Z80Core exposing (Z80Core, add_cpu_time, imm16, inc_pc)
 import Z80Debug exposing (debugLog)
 import Z80Delta exposing (Z80Delta(..))
@@ -48,7 +48,11 @@ group_ed_dict =
 
         -- case 0x4F: r(A); time++; break;
         -- case 0x57: ld_a_ir(IR>>>8); break;
+        , ( 0x57, ld_a_i )
+
         -- case 0x5F: ld_a_ir(r()); break;
+        , ( 0x5F, ld_a_r )
+
         -- case 0x67: rrd(); break;
         -- case 0x6F: rld(); break;
         , ( 0x78, execute_ED78 )
@@ -226,7 +230,7 @@ ed_neg rom48k z80 =
 
 execute_ED46 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED46 rom48k z80 =
-    z80 |> execute_ED464E565E666E767E 0x46
+    z80 |> set_im_value 0x46
 
 
 execute_ED47 : Z80ROM -> Z80Core -> Z80Delta
@@ -260,7 +264,7 @@ execute_ED4B rom48k z80 =
 
 execute_ED4E : Z80ROM -> Z80Core -> Z80Delta
 execute_ED4E rom48k z80 =
-    z80 |> execute_ED464E565E666E767E 0x4E
+    z80 |> set_im_value 0x4E
 
 
 ld_r_a : Z80ROM -> Z80Core -> Z80Delta
@@ -381,6 +385,18 @@ execute_ED73 rom48k z80 =
     EnvWithPc (env2 |> addCpuTimeEnv 6) v.pc
 
 
+ld_a_i : Z80ROM -> Z80Core -> Z80Delta
+ld_a_i rom48k z80 =
+    -- case 0x57: ld_a_ir(IR>>>8); break;
+    NewAValue (z80.interrupts.ir |> shiftRightBy8)
+
+
+ld_a_r : Z80ROM -> Z80Core -> Z80Delta
+ld_a_r rom48k z80 =
+    -- case 0x5F: ld_a_ir(r()); break;
+    NewAValue z80.r
+
+
 execute_ED78 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED78 rom48k z80 =
     --  case 0x78: MP=(v=B<<8|C)+1; f_szh0n0p(A=env.in(v)); time+=4; break;
@@ -452,39 +468,54 @@ ed_cpdr rom48k z80 =
 -- case 0x7E: IM = c>>3&3; break;
 
 
-execute_ED464E565E666E767E : Int -> Z80Core -> Z80Delta
-execute_ED464E565E666E767E value z80 =
-    z80 |> set_im_direct (Bitwise.and (shiftRightBy 3 value) 3)
+set_im_value : Int -> Z80Core -> Z80Delta
+set_im_value value z80 =
+    let
+        ed_value =
+            debugLog "set im ED" (value |> toHexString2) value
+
+        new_im =
+            ed_value |> shiftRightBy 3 |> Bitwise.and 0x03
+    in
+    z80 |> set_im_direct new_im
+
+
+
+--z80 |> WholeCore
 
 
 execute_ED56 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED56 _ z80 =
-    z80 |> execute_ED464E565E666E767E 0x56
+    z80 |> set_im_value 0x56
 
 
 execute_ED5E : Z80ROM -> Z80Core -> Z80Delta
 execute_ED5E _ z80 =
-    z80 |> execute_ED464E565E666E767E 0x5E
+    --z80 |> set_im_value 0x5E
+    z80 |> WholeCore
 
 
 execute_ED66 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED66 _ z80 =
-    z80 |> execute_ED464E565E666E767E 0x66
+    --z80 |> set_im_value 0x66
+    z80 |> WholeCore
 
 
 execute_ED6E : Z80ROM -> Z80Core -> Z80Delta
 execute_ED6E _ z80 =
-    z80 |> execute_ED464E565E666E767E 0x6E
+    --z80 |> set_im_value 0x6E
+    z80 |> WholeCore
 
 
 execute_ED76 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED76 _ z80 =
-    z80 |> execute_ED464E565E666E767E 0x76
+    --z80 |> set_im_value 0x76
+    z80 |> WholeCore
 
 
 execute_ED7E : Z80ROM -> Z80Core -> Z80Delta
 execute_ED7E _ z80 =
-    z80 |> execute_ED464E565E666E767E 0x7E
+    z80 |> set_im_value 0x7E
 
 
 execute_ED40485058606870 : Int -> Keyboard -> Z80Core -> Z80Delta
@@ -702,10 +733,6 @@ sbc_hl b z80 =
 
 set_im_direct : Int -> Z80Core -> Z80Delta
 set_im_direct value z80 =
-    let
-        ints =
-            debugLog "set_im" value z80.interrupts
-    in
     --{ z80 | interrupts = { ints | iM = value } } |> Whole
     SetImValue value
 

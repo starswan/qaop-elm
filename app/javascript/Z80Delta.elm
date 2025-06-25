@@ -3,7 +3,7 @@ module Z80Delta exposing (..)
 import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimeIncrement, InstructionDuration, addCpuTimeTime)
 import Utils exposing (toHexString2)
 import Z80Core exposing (Z80, Z80Core, add_cpu_time, set408bitHL)
-import Z80Debug exposing (debugTodo)
+import Z80Debug exposing (debugLog, debugTodo)
 import Z80Env exposing (Z80Env, addCpuTimeEnv, setMem, setMem16, z80_push)
 import Z80Flags exposing (FlagRegisters, f_szh0n0p)
 import Z80Types exposing (IXIYHL(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters, set_bc_main)
@@ -48,6 +48,7 @@ type Z80Delta
     | UnknownIntValue String Int
     | HLBCWithFlagsAndPc Int Int FlagRegisters Int
     | NewRValue Int
+    | NewAValue Int
     | NoOp
 
 
@@ -125,7 +126,12 @@ applyDeltaWithChanges z80delta z80 =
         SetImValue imvalue ->
             let
                 interruptRegisters =
-                    z80.interrupts
+                    debugLog "set_im" imvalue z80.interrupts
+
+                --    not sure setting IM to other than 2 really works
+                -- 0 and 1 are IM0, 2 is IM1, 3 is IM2...?
+                --imvalue =
+                --    2
             in
             { z80 | pc = z80delta.pc, env = { z80_env | time = z80delta.time }, interrupts = { interruptRegisters | iM = imvalue } }
 
@@ -203,3 +209,10 @@ applyDeltaWithChanges z80delta z80 =
 
         NoOp ->
             { z80 | pc = z80delta.pc, env = { z80_env | time = z80delta.time }, interrupts = z80delta.interrupts }
+
+        NewAValue int ->
+            let
+                flags =
+                    z80.flags
+            in
+            { z80 | pc = z80delta.pc, flags = { flags | a = int }, env = { z80_env | time = z80delta.time }, interrupts = z80delta.interrupts }
