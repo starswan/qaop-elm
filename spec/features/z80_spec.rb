@@ -95,10 +95,13 @@ RSpec.describe "Spectrum Emulator" do
       # # x.send_keys data.split("")
       # x.send_keys [:enter]
 
-      # 1.upto(300).each do |i|
-      #   sleep 30
-      #   spectrum.send_keys 'y'
-      # end
+      if ENV.key? "TEST_LOOP"
+        1.upto(60).each do |i|
+          sleep 30
+          spectrum.send_keys 'y'
+          puts "Loop #{i}"
+        end
+      end
 
       speed = measure_speed_in_hz spectrum
       expect(speed).to be > expected_hz
@@ -120,7 +123,7 @@ RSpec.describe "Spectrum Emulator" do
       low = times.min
       high = times.max
       # response to 'scroll?' question if required
-      # spectrum.send_keys 'y'
+      spectrum.send_keys 'y'
     end
     high
   end
