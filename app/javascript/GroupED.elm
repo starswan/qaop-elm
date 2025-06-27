@@ -321,26 +321,6 @@ execute_ED63 rom48k z80 =
     in
     --{ z80_1 | env = env } |> add_cpu_time 6 |> Whole
     EnvWithPc (env |> addCpuTimeEnv 6) v.pc
-execute_ED63 : Z80ROM -> Z80Core -> Z80Delta
-execute_ED63 rom48k z80 =
-    -- case 0x53: MP=(v=imm16())+1; env.mem16(v,D<<8|E); time+=6; break;
-    let
-        v =
-            z80 |> imm16 rom48k
-
-        z80_1 =
-            { z80 | pc = v.pc }
-
-        env =
-            z80_1.env |> setMem16 v.value16 z80.main.hl
-
-        --env = case (v.value |> fromInt) of
-        --  Z80Address.ROMAddress int -> z80_1.env
-        --  Z80Address.RAMAddress ramAddress ->
-        --    z80_1.env |> setMem16 ramAddress (Bitwise.or (shiftLeftBy8 z80.main.d) z80.main.e)
-    in
-    --{ z80_1 | env = env } |> add_cpu_time 6 |> Whole
-    EnvWithPc (env |> addCpuTimeEnv 6) v.pc
 
 
 execute_ED5B : Z80ROM -> Z80Core -> Z80Delta

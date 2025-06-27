@@ -351,7 +351,12 @@ frames keys speccy =
     in
     case speccy.tape of
         Just z80_tape ->
-            { speccy | rom48k = loadz80posrom.rom, loading = loadz80posrom.load, cpu = loadz80posrom.z80, tape = Just { z80_tape | tapePos = loadz80posrom.pos } }
+            case loadz80posrom.pos of
+                Just newPosition ->
+                    { speccy | rom48k = loadz80posrom.rom, loading = loadz80posrom.load, cpu = loadz80posrom.z80, tape = Just { z80_tape | tapePos = newPosition } }
+
+                Nothing ->
+                    { speccy | rom48k = loadz80posrom.rom, loading = loadz80posrom.load, cpu = loadz80posrom.z80, tape = Just z80_tape }
 
         Nothing ->
             { speccy | rom48k = loadz80posrom.rom, loading = loadz80posrom.load, cpu = loadz80posrom.z80 }
