@@ -4,9 +4,9 @@ require "rails_helper"
 require "zip"
 
 RSpec.describe "Spectrum Emulator" do
-  before do
-    z80_game.save!
-  end
+  # before do
+  #   z80_game.save!
+  # end
 
   let(:expected_hz) { (ENV['HZ'] || "11.21").to_f }
 
@@ -26,7 +26,6 @@ RSpec.describe "Spectrum Emulator" do
   # end
 
   context "with documented Z80 test" do
-    let(:z80_game) { build(:game, :z80_test) }
     let(:version) { "1.2a" }
     let(:z80_test_url) { "https://github.com/raxoft/z80test/releases/download/v#{version}/z80test-#{version}.zip" }
     let(:faraday) {
@@ -37,14 +36,19 @@ RSpec.describe "Spectrum Emulator" do
       end
     }
     let(:z80full_directory) { Rails.root.join("public", "z80test") }
+    let(:z80_game) { Game.find_by!(name: ENV.fetch("Z80TEST", "Doc")) }
 
     before do
+      create(:game, :z80_test_doc)
+      create(:game, :z80_test_full)
+      create(:game, :z80_test_flags)
+      create(:game, :z80_full_flags)
+
       unless File.exist? z80full_directory
         load_tapfile z80_test_url, z80full_directory
       end
 
       visit '/'
-      click_on z80_game.name
     end
 
     # So far executed 158 of the tests, most of them fail.
@@ -76,10 +80,11 @@ RSpec.describe "Spectrum Emulator" do
     # JR N (115) fails
 
     it "loads the emulator", :js do
+      click_on z80_game.name
       # check that Elm is running
       expect(page).to have_content 'Refresh Interval'
 
-      sleep 6
+      sleep 20
       # This is very slow, but calling send_keys
       # with a string on an array
       # is too quick
@@ -95,8 +100,8 @@ RSpec.describe "Spectrum Emulator" do
       # # x.send_keys data.split("")
       # x.send_keys [:enter]
 
-      if ENV.key? "TEST_LOOP"
-        1.upto(60).each do |i|
+      if ENV.key? "Z80TEST"
+        1.upto(50).each do |i|
           sleep 30
           spectrum.send_keys 'y'
           puts "Loop #{i}"
