@@ -73,7 +73,7 @@ suite =
                             }
 
                     mem_value =
-                        mem 0xA086 new_z80.env.time z80rom new_z80.env.ram
+                        new_z80.env |> mem 0xA086 new_z80.env.time z80rom
                 in
                 Expect.equal ( addr + 4, 0x10 ) ( new_z80.pc, mem_value.value )
         , test "0xCB E8 SET 5,B" <|

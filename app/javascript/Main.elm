@@ -135,7 +135,7 @@ view : Model -> Html Message
 view model =
     let
         screen =
-            model.qaop.spectrum.cpu.core.env.ram.screen
+            model.qaop.spectrum.rom48k.z80ram.screen
 
         -- List (0-255) of List SCR
         screen1 : List (List ScreenColourRun)
@@ -163,14 +163,13 @@ view model =
         screen_data_list =
             background :: screen_data |> List.concat
 
-        load_disabled =
-            case model.qaop.spectrum.tape of
-                Just _ ->
-                    False
-
-                Nothing ->
-                    True
-
+        --load_disabled =
+        --    case model.qaop.spectrum.tape of
+        --        Just _ ->
+        --            False
+        --
+        --        Nothing ->
+        --            True
         speed =
             speed_in_hz model.elapsed_millis model.count
 

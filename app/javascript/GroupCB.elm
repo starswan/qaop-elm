@@ -38,7 +38,7 @@ group_xy_cb ixiyhl rom48k z80 =
             get_ixiy_xy ixiyhl z80.main
 
         offset =
-            mem z80.pc z80.env.time rom48k z80.env.ram
+            z80.env |> mem z80.pc z80.env.time rom48k
 
         addr =
             char (xy + byte offset.value)
@@ -47,13 +47,13 @@ group_xy_cb ixiyhl rom48k z80 =
             z80.env
 
         c =
-            mem (char (z80.pc + 1)) (offset.time |> addCpuTimeTime 3) rom48k z80.env.ram
+            z80.env |> mem (char (z80.pc + 1)) (offset.time |> addCpuTimeTime 3) rom48k
 
         new_pc =
             z80 |> inc_pc2
 
         v1 =
-            mem addr (c.time |> addCpuTimeTime 5) rom48k z80.env.ram
+            z80.env |> mem addr (c.time |> addCpuTimeTime 5) rom48k
 
         z80_3 =
             { z80 | pc = new_pc, env = { env_1 | time = v1.time |> addCpuTimeTime 4 } }
@@ -148,7 +148,7 @@ bit_0_indirect_hl z80_main rom48k z80_env =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
     let
         value =
-            mem z80_main.hl z80_env.time rom48k z80_env.ram
+            z80_env |> mem z80_main.hl z80_env.time rom48k
     in
     SingleBitTest Bit_0 value
 
@@ -158,7 +158,7 @@ bit_1_indirect_hl z80_main rom48k z80_env =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
     let
         value =
-            mem z80_main.hl z80_env.time rom48k z80_env.ram
+            z80_env |> mem z80_main.hl z80_env.time rom48k
     in
     SingleBitTest Bit_1 value
 
@@ -168,7 +168,7 @@ bit_2_indirect_hl z80_main rom48k z80_env =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
     let
         value =
-            mem z80_main.hl z80_env.time rom48k z80_env.ram
+            z80_env |> mem z80_main.hl z80_env.time rom48k
     in
     SingleBitTest Bit_2 value
 
@@ -178,7 +178,7 @@ bit_3_indirect_hl z80_main rom48k z80_env =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
     let
         value =
-            mem z80_main.hl z80_env.time rom48k z80_env.ram
+            z80_env |> mem z80_main.hl z80_env.time rom48k
     in
     SingleBitTest Bit_3 value
 
@@ -188,7 +188,7 @@ bit_4_indirect_hl z80_main rom48k z80_env =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
     let
         value =
-            mem z80_main.hl z80_env.time rom48k z80_env.ram
+            z80_env |> mem z80_main.hl z80_env.time rom48k
     in
     SingleBitTest Bit_4 value
 
@@ -198,7 +198,7 @@ bit_5_indirect_hl z80_main rom48k z80_env =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
     let
         value =
-            mem z80_main.hl z80_env.time rom48k z80_env.ram
+            z80_env |> mem z80_main.hl z80_env.time rom48k
     in
     SingleBitTest Bit_5 value
 
@@ -208,7 +208,7 @@ bit_6_indirect_hl z80_main rom48k z80_env =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
     let
         value =
-            mem z80_main.hl z80_env.time rom48k z80_env.ram
+            z80_env |> mem z80_main.hl z80_env.time rom48k
     in
     SingleBitTest Bit_6 value
 
@@ -218,7 +218,7 @@ bit_7_indirect_hl z80_main rom48k z80_env =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
     let
         value =
-            mem z80_main.hl z80_env.time rom48k z80_env.ram
+            z80_env |> mem z80_main.hl z80_env.time rom48k
     in
     SingleBitTest Bit_7 value
 

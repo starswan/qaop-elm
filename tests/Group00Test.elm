@@ -67,7 +67,7 @@ suite =
                         z80inc |> Z80.executeCoreInstruction z80rom
 
                     mem_value =
-                        mem 0x4534 z80_after_01.env.time z80rom z80_after_01.env.ram
+                        z80_after_01.env |> mem 0x4534 z80_after_01.env.time z80rom
                 in
                 Expect.equal ( addr + 1, 0x27 ) ( z80_after_01.pc, mem_value.value )
         , test "0x03 INC BC" <|

@@ -71,7 +71,7 @@ hl_deref_with_z80_ixiy ixiyhl rom48k z80 =
             z80 |> env_mem_hl_ixiy ixiyhl rom48k
 
         new_b =
-            mem a.value16 z80.env.time rom48k z80.env.ram
+            mem a.value16 z80.env.time rom48k z80.env
     in
     CpuTimePcAndValue new_b.time a.pc new_b.value
 
@@ -113,14 +113,14 @@ env_mem_hl_ixiy ixiyhl rom48k z80 =
         IXIY_IX ->
             let
                 dval =
-                    mem z80.pc z80.env.time rom48k z80.env.ram
+                    mem z80.pc z80.env.time rom48k z80.env
             in
             CpuTimePcAnd16BitValue dval.time (char (z80.pc + 1)) (z80.main.ix |> wordPlusOffset dval.value)
 
         IXIY_IY ->
             let
                 dval =
-                    mem z80.pc z80.env.time rom48k z80.env.ram
+                    mem z80.pc z80.env.time rom48k z80.env
             in
             CpuTimePcAnd16BitValue dval.time (char (z80.pc + 1)) (z80.main.iy |> wordPlusOffset dval.value)
 
@@ -168,7 +168,7 @@ set408bitHL c value ( z80_main, z80_flags, z80_env ) =
             ( { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) value }, z80_flags, z80_env )
 
         6 ->
-            ( z80_main, z80_flags, setMem z80_main.hl value z80_env )
+            ( z80_main, z80_flags, z80_env |> setMem z80_main.hl value )
 
         _ ->
             ( z80_main, { z80_flags | a = value }, z80_env )

@@ -4,10 +4,9 @@ import Bitwise
 import CpuTimeCTime exposing (addCpuTimeTime)
 import Dict exposing (Dict)
 import Utils exposing (byte, char)
-import Z80Core exposing (Z80Core, env_mem_hl_ixiy, imm16)
+import Z80Core exposing (Z80Core, imm16)
 import Z80Delta exposing (Z80Delta(..))
 import Z80Env exposing (addCpuTimeEnv, mem, setMem)
-import Z80Flags exposing (dec, inc)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIY, IXIYHL(..), get_xy_ixiy)
 
@@ -39,7 +38,7 @@ ld_indirect_hl_n ixiyhl rom48k z80 =
             get_xy_ixiy ixiyhl z80.main
 
         mempc =
-            mem z80.pc z80.env.time rom48k z80.env.ram
+            z80.env |> mem z80.pc z80.env.time rom48k
 
         env_1 =
             z80.env
@@ -48,13 +47,13 @@ ld_indirect_hl_n ixiyhl rom48k z80 =
             char (xy + byte mempc.value)
 
         v =
-            mem (char (z80.pc + 1)) (mempc.time |> addCpuTimeTime 3) rom48k env_1.ram
+            env_1 |> mem (char (z80.pc + 1)) (mempc.time |> addCpuTimeTime 3) rom48k
 
         z80_2 =
             { env_1 | time = v.time |> addCpuTimeTime 5 }
 
         x =
-            setMem a v.value z80_2
+            z80_2 |> setMem a v.value
 
         new_pc =
             Bitwise.and (z80.pc + 2) 0xFFFF
@@ -74,6 +73,6 @@ ld_a_indirect_nn rom48k z80 =
             z80 |> imm16 rom48k
 
         mem_value =
-            mem v.value16 z80.env.time rom48k z80.env.ram
+            z80.env |> mem v.value16 z80.env.time rom48k
     in
     CpuTimeWithFlagsAndPc (mem_value.time |> addCpuTimeTime 3) { z80_flags | a = mem_value.value } v.pc

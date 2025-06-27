@@ -107,11 +107,11 @@ suite =
                             z80_1 |> executeCoreInstruction z80rom |> executeCoreInstruction z80rom |> executeCoreInstruction z80rom |> executeCoreInstruction z80rom
 
                         mem_vals =
-                            [ (mem 0x6000 new_z80.env.time z80rom new_z80.env.ram).value
-                            , (mem 0x6001 new_z80.env.time z80rom new_z80.env.ram).value
-                            , (mem 0x6002 new_z80.env.time z80rom new_z80.env.ram).value
-                            , (mem 0x6003 new_z80.env.time z80rom new_z80.env.ram).value
-                            , (mem 0x6004 new_z80.env.time z80rom new_z80.env.ram).value
+                            [ (mem 0x6000 new_z80.env.time z80rom new_z80.env).value
+                            , (mem 0x6001 new_z80.env.time z80rom new_z80.env).value
+                            , (mem 0x6002 new_z80.env.time z80rom new_z80.env).value
+                            , (mem 0x6003 new_z80.env.time z80rom new_z80.env).value
+                            , (mem 0x6004 new_z80.env.time z80rom new_z80.env).value
                             ]
                     in
                     Expect.equal { pc = addr + 2, b = 0x00, c = 0x00, d = 0x60, e = 0x05, hl = 0x5055, mem = [ 0xA0, 0xA5, 0xAA, 0xBA, 0xB5 ] }
