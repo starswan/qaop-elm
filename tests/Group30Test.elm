@@ -3,8 +3,10 @@ module Group30Test exposing (..)
 import Bitwise
 import Expect exposing (Expectation)
 import Test exposing (..)
+import Utils exposing (toHexString2)
 import Z80 exposing (executeCoreInstruction)
 import Z80Env exposing (mem, setMem)
+import Z80Flags exposing (c_FC, c_FZ, getFlags, setFlags)
 import Z80Rom
 
 
@@ -294,8 +296,8 @@ suite =
                     in
                     Expect.equal ( addr + 4, 0xA5 ) ( new_z80.pc, mem_value.value )
             ]
-        , describe "Flags"
-            [ test "0x37 SCF" <|
+        , describe "0x37 SCF"
+            [ test "zero" <|
                 \_ ->
                     let
                         new_env =
@@ -305,12 +307,41 @@ suite =
                         new_z80 =
                             executeCoreInstruction z80rom
                                 { z80
-                                    | env = { new_env | sp = 0x8765 }
-                                    , main = { z80main | hl = 0x6545 }
-                                    , flags = { flags | ff = 0x39 }
+                                    | env = new_env
+                                    , flags = setFlags 0 z80.flags
                                 }
                     in
-                    Expect.equal ( addr + 1, 0x0100 ) ( new_z80.pc, Bitwise.and new_z80.flags.ff 0x0100 )
+                    Expect.equal ( addr + 1, c_FC ) ( new_z80.pc, new_z80.flags |> getFlags )
+            , test "with Z" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0x37
+
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , flags = setFlags c_FZ z80.flags
+                                }
+                    in
+                    Expect.equal ( addr + 1, Bitwise.or c_FC c_FZ ) ( new_z80.pc, new_z80.flags |> getFlags )
+            , test "with all" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0x37
+
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , flags = setFlags 0xFE z80.flags
+                                }
+                    in
+                    Expect.equal ( addr + 1, 0xC5 ) ( new_z80.pc, new_z80.flags |> getFlags )
             ]
         , describe "0x38 JR C, n"
             [ test "Dont jump" <|
@@ -472,20 +503,36 @@ suite =
                     in
                     Expect.equal ( addr + 2, 0x78 ) ( z80_after_01.pc, z80_after_01.flags.a )
             ]
-        , test "0x3F CCF" <|
-            \_ ->
-                let
-                    new_env =
-                        z80env
-                            |> setMem addr 0x3F
+        , describe "0x3F CCF"
+            [ test "one" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0x3F
 
-                    new_z80 =
-                        executeCoreInstruction z80rom
-                            { z80
-                                | env = { new_env | sp = 0x8765 }
-                                , main = { z80main | hl = 0x6545 }
-                                , flags = { flags | ff = 0x0100 }
-                            }
-                in
-                Expect.equal ( addr + 1, 0 ) ( new_z80.pc, Bitwise.and new_z80.flags.ff 0x0100 )
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , flags = setFlags c_FC z80.flags
+                                }
+                    in
+                    Expect.equal ( addr + 1, 0x10 ) ( new_z80.pc, new_z80.flags |> getFlags )
+            , test "all" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0x3F
+
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , flags = setFlags 0xFF z80.flags
+                                }
+                    in
+                    Expect.equal ( addr + 1, 0xD4 ) ( new_z80.pc, new_z80.flags |> getFlags )
+            ]
         ]

@@ -3,7 +3,7 @@ module TripleWithFlags exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
-import Z80Flags exposing (FlagRegisters, c_FP, c_FS, get_flags)
+import Z80Flags exposing (FlagRegisters, c_FP, c_FS, getFlags)
 
 
 type TripleWithFlagsChange
@@ -85,7 +85,7 @@ jp_c_nn param z80_flags =
 jp_po_nn : Int -> FlagRegisters -> TripleWithFlagsChange
 jp_po_nn param z80_flags =
     -- case 0xE2: jp((flags()&FP)==0); break;
-    if Bitwise.and (z80_flags |> get_flags) c_FP == 0 then
+    if Bitwise.and (z80_flags |> getFlags) c_FP == 0 then
         AbsoluteJump param
 
     else
@@ -95,7 +95,7 @@ jp_po_nn param z80_flags =
 call_po_nn : Int -> FlagRegisters -> TripleWithFlagsChange
 call_po_nn param z80_flags =
     -- case 0xE4: call((flags()&FP)==0); break;
-    if Bitwise.and (z80_flags |> get_flags) c_FP == 0 then
+    if Bitwise.and (z80_flags |> getFlags) c_FP == 0 then
         AbsoluteCall param
 
     else
@@ -105,7 +105,7 @@ call_po_nn param z80_flags =
 jp_pe_nn : Int -> FlagRegisters -> TripleWithFlagsChange
 jp_pe_nn param z80_flags =
     -- case 0xEA: jp((flags()&FP)!=0); break;
-    if Bitwise.and (z80_flags |> get_flags) c_FP /= 0 then
+    if Bitwise.and (z80_flags |> getFlags) c_FP /= 0 then
         AbsoluteJump param
 
     else
@@ -115,7 +115,7 @@ jp_pe_nn param z80_flags =
 call_pe_nn : Int -> FlagRegisters -> TripleWithFlagsChange
 call_pe_nn param z80_flags =
     -- case 0xEC: call((flags()&FP)!=0); break;
-    if Bitwise.and (z80_flags |> get_flags) c_FP /= 0 then
+    if Bitwise.and (z80_flags |> getFlags) c_FP /= 0 then
         AbsoluteCall param
 
     else

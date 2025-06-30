@@ -34,12 +34,12 @@ group_ed_dict =
         , ( 0x6C, ed_neg )
         , ( 0x74, ed_neg )
         , ( 0x7C, ed_neg )
-        , ( 0x46, execute_ED46 )
+        , ( 0x46, setImED46 )
         , ( 0x47, execute_ED47 )
         , ( 0x48, execute_ED48 )
         , ( 0x4A, adc_hl_bc )
         , ( 0x4B, execute_ED4B )
-        , ( 0x4E, execute_ED4E )
+        , ( 0x4E, setImED4E )
         , ( 0x4F, ld_r_a )
         , ( 0x50, execute_ED50 )
         , ( 0x5A, adc_hl_de )
@@ -64,14 +64,14 @@ group_ed_dict =
         , ( 0x5B, execute_ED5B )
         , ( 0x6B, execute_ED6B )
         , ( 0x72, execute_ED72 )
-        , ( 0x56, execute_ED56 )
-        , ( 0x5E, execute_ED5E )
-        , ( 0x66, execute_ED66 )
+        , ( 0x56, setIm0x56 )
+        , ( 0x5E, setIm0x5E )
+        , ( 0x66, setImED66 )
         , ( 0x67, rrd )
         , ( 0x6F, rld )
-        , ( 0x6E, execute_ED6E )
-        , ( 0x76, execute_ED76 )
-        , ( 0x7E, execute_ED7E )
+        , ( 0x6E, setImED6E )
+        , ( 0x76, setImED76 )
+        , ( 0x7E, setImED7E )
         , ( 0x58, execute_ED58 )
         , ( 0x60, execute_ED60 )
         , ( 0x68, execute_ED68 )
@@ -228,9 +228,16 @@ ed_neg rom48k z80 =
     FlagRegs new_flags
 
 
-execute_ED46 : Z80ROM -> Z80Core -> Z80Delta
-execute_ED46 rom48k z80 =
-    z80 |> set_im_value 0x46
+setImED46 : Z80ROM -> Z80Core -> Z80Delta
+setImED46 rom48k z80 =
+    --z80 |> set_im_value 0x46
+    z80 |> WholeCore
+
+
+setImED4E : Z80ROM -> Z80Core -> Z80Delta
+setImED4E rom48k z80 =
+    --z80 |> set_im_value 0x4E
+    z80 |> WholeCore
 
 
 execute_ED47 : Z80ROM -> Z80Core -> Z80Delta
@@ -260,11 +267,6 @@ execute_ED4B rom48k z80 =
     in
     --{ z80_1 | env = { env | time = v2.time } } |> set_bc v2.value |> add_cpu_time 6 |> Whole
     MainRegsWithPcAndCpuTime (z80.main |> set_bc_main v2.value16) v1.pc (v2.time |> addCpuTimeTime 6)
-
-
-execute_ED4E : Z80ROM -> Z80Core -> Z80Delta
-execute_ED4E rom48k z80 =
-    z80 |> set_im_value 0x4E
 
 
 ld_r_a : Z80ROM -> Z80Core -> Z80Delta
@@ -484,37 +486,37 @@ set_im_value value z80 =
 --z80 |> WholeCore
 
 
-execute_ED56 : Z80ROM -> Z80Core -> Z80Delta
-execute_ED56 _ z80 =
+setIm0x56 : Z80ROM -> Z80Core -> Z80Delta
+setIm0x56 _ z80 =
     z80 |> set_im_value 0x56
 
 
-execute_ED5E : Z80ROM -> Z80Core -> Z80Delta
-execute_ED5E _ z80 =
+setIm0x5E : Z80ROM -> Z80Core -> Z80Delta
+setIm0x5E _ z80 =
     --z80 |> set_im_value 0x5E
     z80 |> WholeCore
 
 
-execute_ED66 : Z80ROM -> Z80Core -> Z80Delta
-execute_ED66 _ z80 =
+setImED66 : Z80ROM -> Z80Core -> Z80Delta
+setImED66 _ z80 =
     --z80 |> set_im_value 0x66
     z80 |> WholeCore
 
 
-execute_ED6E : Z80ROM -> Z80Core -> Z80Delta
-execute_ED6E _ z80 =
+setImED6E : Z80ROM -> Z80Core -> Z80Delta
+setImED6E _ z80 =
     --z80 |> set_im_value 0x6E
     z80 |> WholeCore
 
 
-execute_ED76 : Z80ROM -> Z80Core -> Z80Delta
-execute_ED76 _ z80 =
+setImED76 : Z80ROM -> Z80Core -> Z80Delta
+setImED76 _ z80 =
     --z80 |> set_im_value 0x76
     z80 |> WholeCore
 
 
-execute_ED7E : Z80ROM -> Z80Core -> Z80Delta
-execute_ED7E _ z80 =
+setImED7E : Z80ROM -> Z80Core -> Z80Delta
+setImED7E _ z80 =
     z80 |> set_im_value 0x7E
 
 
