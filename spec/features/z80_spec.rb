@@ -4,10 +4,6 @@ require "rails_helper"
 require "zip"
 
 RSpec.describe "Spectrum Emulator" do
-  # before do
-  #   z80_game.save!
-  # end
-
   let(:expected_hz) { (ENV['HZ'] || "11.21").to_f }
 
   # disable for now, as we don't want to run the test twice really
@@ -36,7 +32,7 @@ RSpec.describe "Spectrum Emulator" do
       end
     }
     let(:z80full_directory) { Rails.root.join("public", "z80test") }
-    let(:z80_game) { Game.find_by!(name: ENV.fetch("Z80TEST", "Doc")) }
+    let(:z80_game) { Game.find_by!(name: ENV.fetch("Z80_TEST", build_stubbed(:game, :z80_test_doc).name)) }
 
     before do
       create(:game, :z80_test_doc)
@@ -51,12 +47,10 @@ RSpec.describe "Spectrum Emulator" do
       visit '/'
     end
 
-    # So far executed 158 of the tests, most of them fail.
-    # Test 159 IM N seems to hang after setting IM back to 2
     # Disabled some of the IM routines, and now completes with
     # 142 of 160 tests failed and then crashes with
     # C Nonsense in BASIC 20:1
-    # Test 0 checksum fails - prog loaded to 0x8000...
+    # Test 0 checksum fails
     # Including DAA, CPL, NEG,
     # ADD A,N, ADC A,N, SUB A,N, SBC A,N, AND N
     # Passes XOR N and OR N (18, 19)
@@ -100,7 +94,7 @@ RSpec.describe "Spectrum Emulator" do
       # # x.send_keys data.split("")
       # x.send_keys [:enter]
 
-      if ENV.key? "Z80TEST"
+      if ENV.key? "Z80_TEST"
         1.upto(50).each do |i|
           sleep 30
           spectrum.send_keys 'y'
