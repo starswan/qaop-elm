@@ -9,7 +9,7 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 # gem "mutex_m"
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '~> 7.1', '< 7.2'
+gem 'rails', '~> 8.0'
 # Use sqlite3 as the database for Active Record
 gem 'sqlite3', '~> 2.7'
 gem "cssbundling-rails"
