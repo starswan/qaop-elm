@@ -11,7 +11,7 @@ import Z80 exposing (execute)
 import Z80Core exposing (Z80, Z80Core, get_ei, interrupt)
 import Z80Debug exposing (debugLog)
 import Z80Env exposing (Z80Env, mem, mem16, reset_cpu_time, setMem, z80_pop)
-import Z80Flags exposing (c_FC, c_FZ, get_flags, set_flags)
+import Z80Flags exposing (c_FC, c_FZ, getFlags, setFlags)
 import Z80Ram exposing (setRamValue)
 import Z80Rom exposing (Z80ROM)
 import Z80Tape exposing (TapePosition, Z80Tape)
@@ -1246,7 +1246,7 @@ doLoad full_cpu z80rom tape =
     if (z80rom.keyboard.keyboard |> Vector8.get Vector8.Index7 |> Bitwise.and 1) == 0 then
         let
             flags =
-                set_flags 0 cpu.flags.a
+                setFlags 0 cpu.flags
 
             core =
                 { cpu | flags = flags }
@@ -1283,7 +1283,7 @@ doLoad2 full_cpu z80rom tape =
             , h = 0
             , l = main.hl |> Bitwise.and 0xFF
             , a = flags.a
-            , f = flags |> get_flags
+            , f = flags |> getFlags
             , rf = Nothing
             , z80_env = cpu.env
             , break = False
@@ -1529,10 +1529,10 @@ doLoad2 full_cpu z80rom tape =
                                     else
                                         debugLog "body pop" logged Nothing
                             in
-                            { cpu | flags = set_flags rf tapeData.a, pc = popped.value16, env = { z80_env | sp = popped.sp } }
+                            { cpu | flags = { flags | a = tapeData.a } |> setFlags rf, pc = popped.value16, env = { z80_env | sp = popped.sp } }
 
                         Nothing ->
-                            { cpu | env = z80_env, flags = set_flags tapeData.f tapeData.a }
+                            { cpu | env = z80_env, flags = { flags | a = tapeData.a } |> setFlags tapeData.f }
 
                 new_core =
                     { core_1 | main = cpu_main }
@@ -1553,7 +1553,7 @@ doLoad2 full_cpu z80rom tape =
                     full_cpu.core
 
                 new_flags =
-                    set_flags c_FZ full_cpu.core.flags.a
+                    setFlags c_FZ full_cpu.core.flags
             in
             ( { full_cpu | core = { core | flags = new_flags } }, False, p )
 

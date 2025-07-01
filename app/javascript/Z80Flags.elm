@@ -108,57 +108,51 @@ c_F53 =
 --}
 
 
-get_flags : FlagRegisters -> Int
-get_flags the_flags =
+getFlags : FlagRegisters -> Int
+getFlags flags =
     let
-        f1 =
-            the_flags.ff
-
-        a1 =
-            the_flags.fa
-
-        b1 =
-            the_flags.fb
-
-        r =
-            the_flags.fr
+        ini =
+            { f = flags.ff, a = flags.fa, b = flags.fb, r = flags.fr }
 
         lhs_f =
-            Bitwise.and f1 (Bitwise.or c_FS c_F53)
+            Bitwise.and ini.f (Bitwise.or c_FS c_F53)
 
         rhs_f =
-            Bitwise.and (shiftRightBy8 f1) c_FC
+            Bitwise.and (shiftRightBy8 ini.f) c_FC
 
-        f2 =
+        old_f =
             Bitwise.or lhs_f rhs_f
 
         u =
-            shiftRightBy8 b1
+            shiftRightBy8 ini.b
 
-        f3 =
-            if r == 0 then
-                Bitwise.or f2 c_FZ
+        new_f =
+            if ini.r == 0 then
+                Bitwise.or old_f c_FZ
 
             else
-                f2
+                old_f
 
         ra =
-            Bitwise.xor r a1
+            Bitwise.xor ini.r ini.a
 
-        f4 =
-            Bitwise.or f3 (Bitwise.and u c_FN)
+        new_new_f =
+            new_f |> Bitwise.or (Bitwise.and u c_FN)
 
-        f5 =
-            Bitwise.or f4 (Bitwise.and (Bitwise.xor (Bitwise.xor ra b1) u) c_FN)
+        ra_b_u =
+            ra |> Bitwise.xor ini.b |> Bitwise.xor u
+
+        really_new_f =
+            new_new_f |> Bitwise.or (Bitwise.and ra_b_u c_FH)
 
         ( a, b ) =
-            if Bitwise.and a1 0xFFFFFF00 == 0 then
-                ( Bitwise.and ra (Bitwise.xor b1 r), 5 )
+            if Bitwise.and ini.a (complement 0xFF) == 0 then
+                ( Bitwise.and ra (Bitwise.xor ini.b ini.r), 5 )
 
             else
-                ( 0x9669 * c_FP, Bitwise.and (Bitwise.xor r (shiftRightBy 4 r)) 0x0F )
+                ( 0x9669 * c_FP, Bitwise.xor ini.r (ini.r |> shiftRightBy 4) |> Bitwise.and 0x0F )
     in
-    Bitwise.or f5 (Bitwise.and (shiftRightBy b a) c_FP)
+    really_new_f |> Bitwise.or (a |> shiftRightBy b |> Bitwise.and c_FP)
 
 
 
@@ -169,22 +163,29 @@ get_flags the_flags =
 --	}
 
 
-set_flags : Int -> Int -> FlagRegisters
-set_flags tmp_f a =
+setFlags : Int -> FlagRegisters -> FlagRegisters
+setFlags f_in flags =
     let
+        -- Bitwise not is higher precedence than bitwise and
         fr =
-            Bitwise.and (Bitwise.complement tmp_f) c_FZ
+            f_in |> Bitwise.complement |> Bitwise.and c_FZ
 
         ff =
-            Bitwise.or tmp_f (shiftLeftBy8 tmp_f)
+            Bitwise.or f_in (shiftLeftBy8 f_in)
+
+        fb_lhs =
+            ff |> Bitwise.and (Bitwise.complement 0x80)
+
+        fb_rhs =
+            ff |> Bitwise.and c_FP |> shiftLeftBy 5
 
         fb =
-            Bitwise.or (Bitwise.and ff (Bitwise.complement 0x80)) (shiftLeftBy (Bitwise.and ff c_FP) 5)
+            Bitwise.or fb_lhs fb_rhs
 
         fa =
             Bitwise.and 0xFF fb
     in
-    { a = a, ff = ff, fr = fr, fa = fa, fb = fb }
+    { flags | ff = ff, fr = fr, fa = fa, fb = fb }
 
 
 
@@ -737,13 +738,16 @@ set_af v =
 
         flagRegs =
             Bitwise.and v 0xFF
+
+        blankFlags =
+            { a = a, fr = 0, ff = 0, fa = 0, fb = 0 }
     in
-    set_flags flagRegs a
+    blankFlags |> setFlags flagRegs
 
 
 get_af : FlagRegisters -> Int
 get_af z80_flags =
-    Bitwise.or (shiftLeftBy8 z80_flags.a) (get_flags z80_flags)
+    Bitwise.or (shiftLeftBy8 z80_flags.a) (getFlags z80_flags)
 
 
 f_szh0n0p : Int -> FlagRegisters -> FlagRegisters

@@ -32,7 +32,14 @@ RSpec.describe "Spectrum Emulator" do
       end
     }
     let(:z80full_directory) { Rails.root.join("public", "z80test") }
-    let(:z80_game) { Game.find_by!(name: ENV.fetch("Z80_TEST", build_stubbed(:game, :z80_test_doc).name)) }
+    let(:z80_game) { Game.find_by!(name: ENV.fetch("Z80_TEST", build_stubbed(:game, :z80_test_flags).name)) }
+
+    let(:times) { {
+      build_stubbed(:game, :z80_test_flags).name => 8,
+      build_stubbed(:game, :z80_test_doc).name => 15,
+      build_stubbed(:game, :z80_full_flags).name => 15,
+      build_stubbed(:game, :z80_test_full).name => 18,
+    }}
 
     before do
       create(:game, :z80_test_doc)
@@ -47,38 +54,51 @@ RSpec.describe "Spectrum Emulator" do
       visit '/'
     end
 
-    # Disabled some of the IM routines, and now completes with
-    # 142 of 160 tests failed and then crashes with
-    # C Nonsense in BASIC 20:1
-    # Test 0 checksum fails
-    # Including DAA, CPL, NEG,
-    # ADD A,N, ADC A,N, SUB A,N, SBC A,N, AND N
-    # Passes XOR N and OR N (18, 19)
-    # Fails CP N (20), ALO A, A(21) fails
-    # fails RLCA (29) RRCA (30) RLA (31) RRA (32)
+    # Disabled some of the IM routines, and now completes.
+    # 160 tests.
+    # DocFlags failures: 36 of 160 tests failed.
+    # 29 RLCA, 30 RRCA, 31 RLA, 32 RRA
+    # 43 RLC R,(HL) 44 RRC R,(HL) 45 RL R,(HL) 46 RR R,(HL)
+    # 47 SLA R,(HL) 48 SRA R,(HL) 49 SLIA R,(HL) 50 SRL R,(HL)
+    # 52 SRO (XY), R
+    # 73 BIT N,(XY), 74 BIT N,(XY)-
+    # 89 LDIR-> NOP'. 90 LDDR ->NOP',
+    # 91 CPI, 92 CPD, 93 CPIR, 94 CPDR
+    # 96 -> 103 IN FE:FF -> BF
+    # 107 OUTI, 108 OUTD, 109 OTIR, 110 OTDR
+    # 156 LD A,I 157 LD A, R
     #
-    # RLD RRD pass (33, 34) RLC A and RRC A (35, 36) pass
-    # RL A and RR A pass (37, 38) SLA A and SRA A (39, 40) pass
-    # SLIA SRL A (41, 42) pass
+    # Doc Failures:
+    # 11 NEG, 12 NEG'
+    # 29 RLCA, 30 RRCA, 31 RLA, 32 RRA
+    # 43 RLC R,(HL) 44 RRC R,(HL) 45 RL R,(HL) 46 RR R,(HL)
+    # 47 SLA R,(HL) 48 SRA R,(HL) 49 SLIA R,(HL) 50 SRL [R,(HL)]
+    # 52 SRO (XY) ,R
+    # 68 ADC HL,RR
+    # 73 BIT N,(XY), 74 BIT N,(XY)-
+    # 79 SET N, (XY), R
+    # 84 RES N, (XY), R
+    # 89 LDIR-> NOP'. 90 LDDR ->NOP',
+    # 91 CPI, 92 CPD, 93 CPIR, 94 CPDR
+    # 96 -> 103 IN FE:FF -> BF
+    # 105 OUT (C), R
+    # 107 OUTI, 108 OUTD, 109 OTIR, 110 OTDR
+    # 122 RETN 123 RETI 124 RETI/RETN
+    # 148 LD RR,(NN)
+    # 149-159 untested due to test finishing too early
     #
-    # RLC [R, (HL)] 43 fails
-    #
-    # SRO (XY) (51) passes
-    # INC A (53) and DEC A (54) fail INC X DEC X (57, 58) fail
-    # INC RR, DEC RR (63, 64) fail
-    # ADC HL, RR (68) fail
-    # SBC HL, RR (69) pass
-    # BIT N,A (70) fails
-    # RES N, A (00) up to RES N, (XY), R fail
-    # LDI (85), LDD (86) LDIR (87), LDDR (88) pass
-    # JR N (115) fails
 
     it "loads the emulator", :js do
       click_on z80_game.name
       # check that Elm is running
       expect(page).to have_content 'Refresh Interval'
 
-      sleep 20
+      cpu_count = find("#cyclecount")
+      while cpu_count.text.to_i < 80
+        sleep 0.5
+      end
+
+      # sleep 20
       # This is very slow, but calling send_keys
       # with a string on an array
       # is too quick
@@ -90,19 +110,15 @@ RSpec.describe "Spectrum Emulator" do
         spectrum.send_keys k
       end
       spectrum.send_keys [:enter]
-      # # x.send_keys data
-      # # x.send_keys data.split("")
-      # x.send_keys [:enter]
 
+      speed = measure_speed_in_hz spectrum
       if ENV.key? "Z80_TEST"
-        1.upto(50).each do |i|
-          sleep 30
+        while cpu_count.text.to_i < times.fetch(z80_game.name) * 1000
+          sleep 10
           spectrum.send_keys 'y'
-          puts "Loop #{i}"
         end
       end
 
-      speed = measure_speed_in_hz spectrum
       expect(speed).to be > expected_hz
       puts "Speed #{speed} Hz"
     end
@@ -118,7 +134,6 @@ RSpec.describe "Spectrum Emulator" do
         sleep 0.4
         page.find("#hz").text.to_f
       end
-      # p "Speed Times #{times.sort}"
       low = times.min
       high = times.max
       # response to 'scroll?' question if required
