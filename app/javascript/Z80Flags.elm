@@ -490,7 +490,6 @@ testBit testType v flagRegs =
         -- This one is correct - see https://introcs.cs.princeton.edu/java/11precedence/
         -- Bitwise and(&) has higher precedence than Bitwise or(|)
         ff =
-            --Bitwise.or (Bitwise.and flagRegs.ff (complement 0xFF)) (Bitwise.or (Bitwise.and v c_F53) m)
             flagRegs.ff |> Bitwise.and (complement 0xFF) |> Bitwise.or (v |> Bitwise.and c_F53) |> Bitwise.or m
     in
     { flagRegs | ff = ff, fr = m, fa = complement m, fb = 0 }
@@ -506,43 +505,21 @@ rot a flagRegs =
     --}
     let
         ff =
-            Bitwise.or (Bitwise.and flagRegs.ff 0x07) (Bitwise.and a 0x0128)
+            Bitwise.or (Bitwise.and flagRegs.ff 0xD7) (Bitwise.and a 0x0128)
 
         fb =
             Bitwise.and flagRegs.fb 0x80
 
+        fa_lhs =
+            Bitwise.and flagRegs.fa (Bitwise.complement c_FH)
+
+        fa_rhs =
+            Bitwise.and flagRegs.fr c_FH
+
         fa =
-            Bitwise.or (Bitwise.and flagRegs.fa (Bitwise.complement c_FH)) (Bitwise.and flagRegs.fr c_FH)
+            Bitwise.or fa_lhs fa_rhs
     in
     { flagRegs | ff = ff, fb = fb, fa = fa, a = Bitwise.and a 0xFF }
-
-
-shifter : Int -> Int -> FlagRegisters -> IntWithFlags
-shifter o v_in flagRegs =
-    case Bitwise.and o 7 of
-        0 ->
-            flagRegs |> shifter0 v_in
-
-        1 ->
-            flagRegs |> shifter1 v_in
-
-        2 ->
-            flagRegs |> shifter2 v_in
-
-        3 ->
-            flagRegs |> shifter3 v_in
-
-        4 ->
-            flagRegs |> shifter4 v_in
-
-        5 ->
-            flagRegs |> shifter5 v_in
-
-        6 ->
-            flagRegs |> shifter6 v_in
-
-        _ ->
-            flagRegs |> shifter7 v_in
 
 
 shifter_v : Int -> FlagRegisters -> IntWithFlags
@@ -556,7 +533,11 @@ shifter_v v flagRegs =
 
 shifter0 : Int -> FlagRegisters -> IntWithFlags
 shifter0 v_in flagRegs =
-    flagRegs |> shifter_v (shiftRightBy 7 (v_in * 0x0101))
+    let
+        v =
+            v_in + (v_in |> shiftLeftBy8)
+    in
+    flagRegs |> shifter_v (v |> shiftRightBy 7)
 
 
 shifter1 : Int -> FlagRegisters -> IntWithFlags

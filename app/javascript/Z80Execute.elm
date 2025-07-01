@@ -646,7 +646,7 @@ applyShifter new_pc shifterFunc addr cpu_time rom48k z80 =
         env_2 =
             env_1 |> setMem addr result.value
     in
-    { z80 | pc = new_pc, env = env_2, r = z80.r + 1 }
+    { z80 | pc = new_pc, flags = result.flags, env = env_2, r = z80.r + 1 }
 
 
 applyTripleChangeDelta : Z80ROM -> TriplePCIncrement -> CpuTimeCTime -> TripleByteChange -> Z80Core -> Z80Core

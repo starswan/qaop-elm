@@ -4,6 +4,7 @@ import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
 import Z80Env exposing (mem, setMem)
+import Z80Flags exposing (getFlags)
 import Z80Rom
 
 
@@ -115,16 +116,15 @@ suite =
                         executeCoreInstruction z80rom { z80 | env = new_env }
                 in
                 Expect.equal ( addr + 2, 0x78 ) ( z80_after_01.pc, z80_after_01.main.b )
-        , describe "RLCA"
-            [ test "0x07" <|
+        , describe "RLCA 0x07"
+            [ test "with carry" <|
                 \_ ->
                     let
                         new_env =
                             z80env
                                 |> setMem addr 0x07
-                                |> setMem (addr + 1) 0x78
 
-                        z80_after_01 =
+                        newZ80 =
                             executeCoreInstruction z80rom
                                 { z80
                                     | env = new_env
@@ -132,7 +132,23 @@ suite =
                                 }
                     in
                     -- This is RLCA - bit 7 goes into bit 0 and carry flag
-                    Expect.equal ( addr + 1, 0x0F ) ( z80_after_01.pc, z80_after_01.flags.a )
+                    Expect.equal ( addr + 1, 0x0F, 0x49 ) ( newZ80.pc, newZ80.flags.a, newZ80.flags |> getFlags )
+            , test "without carry" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0x07
+
+                        newZ80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , flags = { flags | a = 0x47 }
+                                }
+                    in
+                    -- This is RLCA - bit 7 goes into bit 0 and carry flag
+                    Expect.equal ( addr + 1, 0x8E, 0x48 ) ( newZ80.pc, newZ80.flags.a, newZ80.flags |> getFlags )
             ]
 
         --, describe "EX AF,AF'"

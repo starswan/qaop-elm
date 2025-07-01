@@ -16,7 +16,7 @@ FactoryBot.define do
     end
 
     trait :z80_test_doc do
-      name { 'Doc' }
+      name { 'Regs' }
       tapfile { 'z80test/z80doc.tap' }
     end
 
@@ -26,7 +26,7 @@ FactoryBot.define do
     end
 
     trait :z80_test_flags do
-      name { 'DocFlags' }
+      name { 'Flags' }
       tapfile { 'z80test/z80docflags.tap' }
     end
 
