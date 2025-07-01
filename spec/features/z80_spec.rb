@@ -41,7 +41,7 @@ RSpec.describe "Spectrum Emulator" do
 
     let(:times) { {
       flags.name => 8000,
-      regs.name => 15000,
+      regs.name => 13400,
       full_flags.name => 15000,
       full.name => 18000,
     }}
@@ -67,7 +67,7 @@ RSpec.describe "Spectrum Emulator" do
     # 107 OUTI, 108 OUTD, 109 OTIR, 110 OTDR
     # 156 LD A,I 157 LD A, R
     #
-    # Regs Failures:
+    # Regs Failures: 45 of 160 tests failed.
     # 11 NEG, 12 NEG'
     # 43 RLC R,(HL) 44 RRC R,(HL) 45 RL R,(HL) 46 RR R,(HL)
     # 47 SLA R,(HL) 48 SRA R,(HL) 49 SLIA R,(HL) 50 SRL [R,(HL)]
@@ -83,8 +83,9 @@ RSpec.describe "Spectrum Emulator" do
     # 107 OUTI, 108 OUTD, 109 OTIR, 110 OTDR
     # 122 RETN 123 RETI 124 RETI/RETN
     # 148 LD RR,(NN)
-    # 149-159 untested due to test finishing too early
-    #
+    # 154 LD I,A 155 LD R, A
+    # 156 LD A,I 157 LD A, R
+    # 159 IM N
 
     it "loads the emulator", :js do
       click_on z80_game.name
