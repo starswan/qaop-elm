@@ -6,7 +6,7 @@
 require "capistrano/ext/multistage"
 set :stages, %w(alice arthur dell)
 set :default_stage, "arthur"
-set :linked_dirs, %w{node_modules}
+set :linked_dirs, fetch(:linked_dirs, []).push('games')
 
 # main details
 set :application, "retroelm"
@@ -52,6 +52,9 @@ namespace :deploy do
     fetch(:linked_files, []).each do |f|
       run "ln -nfs #{shared_path}/#{f} #{release_path}/#{f}"
     end
+    fetch(:linked_dirs, []).each do |f|
+      run "ln -nfs #{shared_path}/#{f} #{release_path}/public/#{f}"
+    end
   end
 
   desc "Copy Undebug module"
@@ -72,7 +75,8 @@ namespace :bundler do
 
   desc "Install for production"
   task :install, roles: :app do
-    run "cd #{release_path} && bundle install --without development test"
+    run "cd #{release_path} && bundle config set without 'development test'"
+    run "cd #{release_path} && bundle install"
   end
 end
 
