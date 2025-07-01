@@ -40,10 +40,10 @@ RSpec.describe "Spectrum Emulator" do
     let(:z80_game) { Game.find_by!(name: ENV.fetch("Z80_TEST", flags.name)) }
 
     let(:times) { {
-      flags.name => 8,
-      regs.name => 15,
-      full_flags.name => 15,
-      full.name => 18,
+      flags.name => 8000,
+      regs.name => 15000,
+      full_flags.name => 15000,
+      full.name => 18000,
     }}
 
     before do
@@ -111,7 +111,7 @@ RSpec.describe "Spectrum Emulator" do
 
       speed = measure_speed_in_hz spectrum
       if ENV.key? "Z80_TEST"
-        while cpu_count.text.to_i < times.fetch(z80_game.name) * 1000
+        while cpu_count.text.to_i < times.fetch(z80_game.name)
           sleep 10
           spectrum.send_keys 'y'
         end
