@@ -40,8 +40,8 @@ RSpec.describe "Spectrum Emulator" do
     let(:z80_game) { Game.find_by!(name: ENV.fetch("Z80_TEST", flags.name)) }
 
     let(:times) { {
-      flags.name => 8000,
-      regs.name => 13400,
+      flags.name => 7800,
+      regs.name => 13200,
       full_flags.name => 15000,
       full.name => 18000,
     }}
@@ -55,10 +55,7 @@ RSpec.describe "Spectrum Emulator" do
     end
 
     # Disabled some of the IM routines, and now completes.
-    # 160 tests.
-    # Flags failures: 36 of 160 tests failed.
-    # 43 RLC R,(HL) 44 RRC R,(HL) 45 RL R,(HL) 46 RR R,(HL)
-    # 47 SLA R,(HL) 48 SRA R,(HL) 49 SLIA R,(HL) 50 SRL R,(HL)
+    # Flags: 024 of 160 tests failed.
     # 52 SRO (XY), R
     # 73 BIT N,(XY), 74 BIT N,(XY)-
     # 89 LDIR-> NOP'. 90 LDDR ->NOP',
@@ -67,10 +64,8 @@ RSpec.describe "Spectrum Emulator" do
     # 107 OUTI, 108 OUTD, 109 OTIR, 110 OTDR
     # 156 LD A,I 157 LD A, R
     #
-    # Regs Failures: 45 of 160 tests failed.
+    # Regs: 037 of 160 tests failed.
     # 11 NEG, 12 NEG'
-    # 43 RLC R,(HL) 44 RRC R,(HL) 45 RL R,(HL) 46 RR R,(HL)
-    # 47 SLA R,(HL) 48 SRA R,(HL) 49 SLIA R,(HL) 50 SRL [R,(HL)]
     # 52 SRO (XY) ,R
     # 68 ADC HL,RR
     # 73 BIT N,(XY), 74 BIT N,(XY)-
@@ -82,7 +77,7 @@ RSpec.describe "Spectrum Emulator" do
     # 105 OUT (C), R
     # 107 OUTI, 108 OUTD, 109 OTIR, 110 OTDR
     # 122 RETN 123 RETI 124 RETI/RETN
-    # 148 LD RR,(NN)
+    # 148 LD RR, (NN)
     # 154 LD I,A 155 LD R, A
     # 156 LD A,I 157 LD A, R
     # 159 IM N

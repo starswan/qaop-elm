@@ -4,6 +4,7 @@ import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
 import Z80Env exposing (mem, setMem)
+import Z80Flags exposing (getFlags)
 import Z80Rom
 
 
@@ -20,7 +21,7 @@ suite =
             0xF765
 
         hl =
-            0x1234
+            0xE234
 
         old_z80 =
             Z80.constructor.core
@@ -32,33 +33,51 @@ suite =
             old_z80.main
 
         z80 =
-            { old_z80 | pc = addr, env = { old_z80env | sp = sp }, main = { z80main | hl = hl } }
+            { old_z80 | pc = addr, env = { old_z80env | sp = sp } |> setMem addr 0xCB, main = { z80main | hl = hl } }
 
         flags =
             z80.flags
 
         z80env =
-            z80.env |> setMem addr 0xCB
+            z80.env
 
         z80rom =
             Z80Rom.constructor
     in
     describe "Bit instructions (CB)"
-        [ test "0xCB 0x00 RLC B" <|
-            \_ ->
-                let
-                    new_env =
-                        z80env
-                            |> setMem addr_plus_1 0x00
+        [ describe "0xCB 0x00 RLC B"
+            [ test "0x50" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr_plus_1 0x00
 
-                    new_z80 =
-                        executeCoreInstruction z80rom
-                            { z80
-                                | env = new_env
-                                , main = { z80main | b = 0x50 }
-                            }
-                in
-                Expect.equal ( addr + 2, 0xA0 ) ( new_z80.pc, new_z80.main.b )
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | b = 0x50 }
+                                }
+                    in
+                    Expect.equal ( addr + 2, 0xA0, 0xA4 ) ( new_z80.pc, new_z80.main.b, new_z80.flags |> getFlags )
+            , test "0x80" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr_plus_1 0x00
+
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | b = 0x80 }
+                                }
+                    in
+                    -- bit zero and the C flag get the bit that falls off the end
+                    Expect.equal ( addr + 2, 0x01, 0x01 ) ( new_z80.pc, new_z80.main.b, new_z80.flags |> getFlags )
+            ]
         , test "0xCB 0x00 RLC B with B = FE" <|
             \_ ->
                 let
@@ -152,26 +171,44 @@ suite =
                             }
                 in
                 Expect.equal ( addr + 2, 0x50A0 ) ( new_z80.pc, new_z80.main.hl )
-        , test "0xCB 0x06 RLC (HL)" <|
-            \_ ->
-                let
-                    new_env =
-                        z80env
-                            |> setMem addr_plus_1 0x06
-                            |> setMem 0x6545 0x31
+        , describe "0xCB 0x06 RLC (HL)"
+            [ test "0x31" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr_plus_1 0x06
+                                |> setMem hl 0x31
 
-                    new_z80 =
-                        executeCoreInstruction z80rom
-                            { z80
-                                | env = new_env
-                                , main = { z80main | hl = 0x6545, b = 0xA5 }
-                                , flags = { flags | a = 0x39 }
-                            }
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                }
 
-                    mem_value =
-                        new_z80.env |> mem 0x6545 new_z80.env.time z80rom
-                in
-                Expect.equal ( addr + 2, 0x62 ) ( new_z80.pc, mem_value.value )
+                        mem_value =
+                            new_z80.env |> mem hl new_z80.env.time z80rom
+                    in
+                    Expect.equal ( addr + 2, 0x62, 0x20 ) ( new_z80.pc, mem_value.value, new_z80.flags |> getFlags )
+            , test "0x80" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr_plus_1 0x06
+                                |> setMem hl 0x80
+
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                }
+
+                        mem_value =
+                            new_z80.env |> mem hl new_z80.env.time z80rom
+                    in
+                    Expect.equal ( addr + 2, 0x01, 0x01 ) ( new_z80.pc, mem_value.value, new_z80.flags |> getFlags )
+            ]
         , test "0xDD 0xCB 0x06 0x45 RLC (IX + d)" <|
             \_ ->
                 let

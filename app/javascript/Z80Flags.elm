@@ -490,7 +490,6 @@ testBit testType v flagRegs =
         -- This one is correct - see https://introcs.cs.princeton.edu/java/11precedence/
         -- Bitwise and(&) has higher precedence than Bitwise or(|)
         ff =
-            --Bitwise.or (Bitwise.and flagRegs.ff (complement 0xFF)) (Bitwise.or (Bitwise.and v c_F53) m)
             flagRegs.ff |> Bitwise.and (complement 0xFF) |> Bitwise.or (v |> Bitwise.and c_F53) |> Bitwise.or m
     in
     { flagRegs | ff = ff, fr = m, fa = complement m, fb = 0 }
@@ -534,7 +533,11 @@ shifter_v v flagRegs =
 
 shifter0 : Int -> FlagRegisters -> IntWithFlags
 shifter0 v_in flagRegs =
-    flagRegs |> shifter_v (shiftRightBy 7 (v_in * 0x0101))
+    let
+        v =
+            v_in + (v_in |> shiftLeftBy8)
+    in
+    flagRegs |> shifter_v (v |> shiftRightBy 7)
 
 
 shifter1 : Int -> FlagRegisters -> IntWithFlags

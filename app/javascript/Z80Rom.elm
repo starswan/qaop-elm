@@ -155,10 +155,10 @@ romRoutineNames =
         , ( 0x08F9, "ME-OLD-VP" )
         , ( 0x0AFC, "PO-ST-PR" )
         , ( 0x0B1D, "PO-F-PR" )
-        , ( 0x03D4, "BE-IX+0" )
 
+        --, ( 0x03D4, "BE-IX+0" )
         --, ( 0x03D6, "BE-H&L-LP" )
-        , ( 0x03F2, "BE-AGAIN" )
+        --, ( 0x03F2, "BE-AGAIN" )
         , ( 0x0EDF, "CLEAR-PRB" )
         , ( 0x046C, "REPORT-B" )
         , ( 0x12A2, "MAIN-EXEC" )
@@ -172,8 +172,8 @@ romRoutineNames =
 
         --, ( 0x1664, "POINTERS" )
         , ( 0x12AC, "MAIN-2" )
-        , ( 0x187D, "OUT-LINE2" )
 
+        --, ( 0x187D, "OUT-LINE2" )
         --, ( 0x1937, "OUT-CHAR" )
         , ( 0x0F2C, "EDITOR" )
         , ( 0x12A9, "MAIN-1" )
@@ -183,9 +183,9 @@ romRoutineNames =
         --, ( 0x0D4D, "TEMPS" )
         --, ( 0x0C55, "PO-SCR" )
         , ( 0x0BD3, "PR-ALL-6" )
-        , ( 0x1195, "SET-DE" )
-        , ( 0x0D6B, "CLS" )
 
+        --, ( 0x1195, "SET-DE" )
+        --, ( 0x0D6B, "CLS" )
         --, ( 0x16C5, "SET-STK" )
         , ( 0x11CB, "START/NEW" )
         , ( 0x0767, "LD-LOOK-H" )

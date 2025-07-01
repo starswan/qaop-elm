@@ -139,6 +139,7 @@ applySingleEnvMainChange pcInc duration z80changeData z80 =
             }
 
         SingleBitTest bitTest intwithTime ->
+            -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
             { z80
                 | pc = new_pc
                 , env = { env_1 | time = intwithTime.time }
