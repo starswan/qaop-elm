@@ -31,22 +31,22 @@ RSpec.describe "Spectrum Emulator" do
         f.adapter Faraday.default_adapter
       end
     }
+    let!(:flags) { create(:game, :z80_test_flags) }
+    let!(:regs) { create(:game, :z80_test_doc) }
+    let!(:full_flags) { create(:game, :z80_full_flags) }
+    let!(:full) { create(:game, :z80_test_full) }
+
     let(:z80full_directory) { Rails.root.join("public", "z80test") }
-    let(:z80_game) { Game.find_by!(name: ENV.fetch("Z80_TEST", build_stubbed(:game, :z80_test_flags).name)) }
+    let(:z80_game) { Game.find_by!(name: ENV.fetch("Z80_TEST", flags.name)) }
 
     let(:times) { {
-      build_stubbed(:game, :z80_test_flags).name => 8,
-      build_stubbed(:game, :z80_test_doc).name => 15,
-      build_stubbed(:game, :z80_full_flags).name => 15,
-      build_stubbed(:game, :z80_test_full).name => 18,
+      flags.name => 8,
+      regs.name => 15,
+      full_flags.name => 15,
+      full.name => 18,
     }}
 
     before do
-      create(:game, :z80_test_doc)
-      create(:game, :z80_test_full)
-      create(:game, :z80_test_flags)
-      create(:game, :z80_full_flags)
-
       unless File.exist? z80full_directory
         load_tapfile z80_test_url, z80full_directory
       end
@@ -56,8 +56,7 @@ RSpec.describe "Spectrum Emulator" do
 
     # Disabled some of the IM routines, and now completes.
     # 160 tests.
-    # DocFlags failures: 36 of 160 tests failed.
-    # 29 RLCA, 30 RRCA, 31 RLA, 32 RRA
+    # Flags failures: 36 of 160 tests failed.
     # 43 RLC R,(HL) 44 RRC R,(HL) 45 RL R,(HL) 46 RR R,(HL)
     # 47 SLA R,(HL) 48 SRA R,(HL) 49 SLIA R,(HL) 50 SRL R,(HL)
     # 52 SRO (XY), R
@@ -68,9 +67,8 @@ RSpec.describe "Spectrum Emulator" do
     # 107 OUTI, 108 OUTD, 109 OTIR, 110 OTDR
     # 156 LD A,I 157 LD A, R
     #
-    # Doc Failures:
+    # Regs Failures:
     # 11 NEG, 12 NEG'
-    # 29 RLCA, 30 RRCA, 31 RLA, 32 RRA
     # 43 RLC R,(HL) 44 RRC R,(HL) 45 RL R,(HL) 46 RR R,(HL)
     # 47 SLA R,(HL) 48 SRA R,(HL) 49 SLIA R,(HL) 50 SRL [R,(HL)]
     # 52 SRO (XY) ,R

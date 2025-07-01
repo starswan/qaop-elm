@@ -11,7 +11,7 @@ import Z80Change exposing (Z80Change(..))
 import Z80Core exposing (Z80Core, inc_pc2, set408bitHL)
 import Z80Delta exposing (Z80Delta(..))
 import Z80Env exposing (Z80Env, addCpuTimeEnv, mem, setMem)
-import Z80Flags exposing (FlagRegisters, IntWithFlags, bit, c_F53, shifter, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit)
+import Z80Flags exposing (FlagRegisters, IntWithFlags, bit, c_F53, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIY, IXIYHL(..), IntWithFlagsTimeAndPC, MainWithIndexRegisters, get_ixiy_xy)
 
@@ -73,7 +73,37 @@ group_xy_cb ixiyhl rom48k z80 =
         v2 =
             case cAndC0 of
                 0x00 ->
-                    shifter o v1.value z80_3.flags
+                    let
+                        flagRegs =
+                            z80_3.flags
+
+                        v_in =
+                            v1.value
+                    in
+                    case Bitwise.and o 7 of
+                        0 ->
+                            flagRegs |> shifter0 v_in
+
+                        1 ->
+                            flagRegs |> shifter1 v_in
+
+                        2 ->
+                            flagRegs |> shifter2 v_in
+
+                        3 ->
+                            flagRegs |> shifter3 v_in
+
+                        4 ->
+                            flagRegs |> shifter4 v_in
+
+                        5 ->
+                            flagRegs |> shifter5 v_in
+
+                        6 ->
+                            flagRegs |> shifter6 v_in
+
+                        _ ->
+                            flagRegs |> shifter7 v_in
 
                 0x40 ->
                     let

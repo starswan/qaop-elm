@@ -506,43 +506,21 @@ rot a flagRegs =
     --}
     let
         ff =
-            Bitwise.or (Bitwise.and flagRegs.ff 0x07) (Bitwise.and a 0x0128)
+            Bitwise.or (Bitwise.and flagRegs.ff 0xD7) (Bitwise.and a 0x0128)
 
         fb =
             Bitwise.and flagRegs.fb 0x80
 
+        fa_lhs =
+            Bitwise.and flagRegs.fa (Bitwise.complement c_FH)
+
+        fa_rhs =
+            Bitwise.and flagRegs.fr c_FH
+
         fa =
-            Bitwise.or (Bitwise.and flagRegs.fa (Bitwise.complement c_FH)) (Bitwise.and flagRegs.fr c_FH)
+            Bitwise.or fa_lhs fa_rhs
     in
     { flagRegs | ff = ff, fb = fb, fa = fa, a = Bitwise.and a 0xFF }
-
-
-shifter : Int -> Int -> FlagRegisters -> IntWithFlags
-shifter o v_in flagRegs =
-    case Bitwise.and o 7 of
-        0 ->
-            flagRegs |> shifter0 v_in
-
-        1 ->
-            flagRegs |> shifter1 v_in
-
-        2 ->
-            flagRegs |> shifter2 v_in
-
-        3 ->
-            flagRegs |> shifter3 v_in
-
-        4 ->
-            flagRegs |> shifter4 v_in
-
-        5 ->
-            flagRegs |> shifter5 v_in
-
-        6 ->
-            flagRegs |> shifter6 v_in
-
-        _ ->
-            flagRegs |> shifter7 v_in
 
 
 shifter_v : Int -> FlagRegisters -> IntWithFlags

@@ -4,7 +4,7 @@ import Bitwise exposing (complement)
 import CpuTimeCTime exposing (CpuTimeIncrement(..), InstructionDuration(..))
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
-import Utils exposing (BitTest(..), bitMaskFromBit, inverseBitMaskFromBit, shiftRightBy8)
+import Utils exposing (BitTest(..), bitMaskFromBit, inverseBitMaskFromBit, shiftLeftBy8, shiftRightBy8)
 import Z80Change exposing (FlagChange(..))
 import Z80Flags exposing (FlagRegisters, IntWithFlags, adc, c_FP, c_FS, cpl, daa, dec, getFlags, get_af, inc, rot, sbc, scf_ccf, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit, z80_add, z80_cp, z80_or, z80_sub, z80_xor)
 
@@ -111,8 +111,11 @@ singleByteFlagsCB =
 rlca : FlagRegisters -> FlagChange
 rlca z80_flags =
     -- case 0x07: rot(A*0x101>>>7); break;
-    --{ z80 | flags = z80.flags |> rot (Bitwise.shiftRightBy 7 (z80.flags.a * 0x101)) }
-    z80_flags |> rot (z80_flags.a * 0x0101 |> Bitwise.shiftRightBy 7) |> OnlyFlags
+    let
+        a101 =
+            z80_flags.a + (z80_flags.a |> shiftLeftBy8)
+    in
+    z80_flags |> rot (a101 |> Bitwise.shiftRightBy 7) |> OnlyFlags
 
 
 rrca : FlagRegisters -> FlagChange
