@@ -17,6 +17,12 @@ suite =
         addr_plus_1 =
             addr + 1
 
+        addr_plus_2 =
+            addr + 2
+
+        addr_minus_1 =
+            addr - 1
+
         sp =
             0xF765
 
@@ -77,23 +83,43 @@ suite =
                     in
                     -- bit zero and the C flag get the bit that falls off the end
                     Expect.equal ( addr + 2, 0x01, 0x01 ) ( new_z80.pc, new_z80.main.b, new_z80.flags |> getFlags )
-            ]
-        , test "0xCB 0x00 RLC B with B = FE" <|
-            \_ ->
-                let
-                    new_env =
-                        z80env
-                            |> setMem addr_plus_1 0x00
+            , test "0xFE" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr_plus_1 0x00
 
-                    new_z80 =
-                        executeCoreInstruction z80rom
-                            { z80
-                                | env = new_env
-                                , main = { z80main | b = 0xFE }
-                                , flags = { flags | ff = 0 }
-                            }
-                in
-                Expect.equal ( addr + 2, 0xFD, 0x01FD ) ( new_z80.pc, new_z80.main.b, new_z80.flags.ff )
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | b = 0xFE }
+                                }
+                    in
+                    Expect.equal ( addr + 2, 0xFD, 0xA9 ) ( new_z80.pc, new_z80.main.b, new_z80.flags |> getFlags )
+
+            --        undocumented (and looks wrong)
+            --, test "DD CB 00 00" <|
+            --    \_ ->
+            --        let
+            --            new_env =
+            --                z80env
+            --                    |> setMem addr_minus_1 0xDD
+            --                    |> setMem addr_plus_1 0x45
+            --                    |> setMem addr_plus_2 0x00
+            --                    |> setMem 0x6545 0x80
+            --
+            --            new_z80 =
+            --                executeCoreInstruction z80rom
+            --                    { z80
+            --                        | env = new_env
+            --                        , main = { z80main | ix = 0x6500, b = 0xA5 }
+            --                        , pc = addr_minus_1
+            --                    }
+            --        in
+            --        Expect.equal ( addr + 3, 0x01, 0x40 ) ( new_z80.pc, new_z80.main.b, new_z80.flags |> getFlags )
+            ]
         , test "0xCB 0x01 RLC C" <|
             \_ ->
                 let
@@ -208,53 +234,73 @@ suite =
                             new_z80.env |> mem hl new_z80.env.time z80rom
                     in
                     Expect.equal ( addr + 2, 0x01, 0x01 ) ( new_z80.pc, mem_value.value, new_z80.flags |> getFlags )
+            , test "0xDD 0xCB 0x06 0x45 RLC (IX + d) 0x31" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xDD
+                                |> setMem addr_plus_1 0xCB
+                                |> setMem (addr + 2) 0x45
+                                |> setMem (addr + 3) 0x06
+                                |> setMem 0x6545 0x31
+
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | ix = 0x6500, b = 0xA5 }
+                                }
+
+                        mem_value =
+                            new_z80.env |> mem 0x6545 new_z80.env.time z80rom
+                    in
+                    Expect.equal ( addr + 4, 0x62, 0x20 ) ( new_z80.pc, mem_value.value, new_z80.flags |> getFlags )
+            , test "0xDD 0xCB 0x06 0x45 RLC (IX + d) 0x80" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xDD
+                                |> setMem addr_plus_1 0xCB
+                                |> setMem (addr + 2) 0x45
+                                |> setMem (addr + 3) 0x06
+                                |> setMem 0x6545 0x80
+
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | ix = 0x6500 }
+                                }
+
+                        mem_value =
+                            new_z80.env |> mem 0x6545 new_z80.env.time z80rom
+                    in
+                    Expect.equal ( addr + 4, 0x01, 0x01 ) ( new_z80.pc, mem_value.value, new_z80.flags |> getFlags )
+            , test "0xFD 0xCB 0x06 0x45 RLC (IY - d)" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xFD
+                                |> setMem addr_plus_1 0xCB
+                                |> setMem (addr + 2) 0xFF
+                                |> setMem (addr + 3) 0x06
+                                |> setMem 0x6500 0x31
+
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | iy = 0x6501 }
+                                }
+
+                        mem_value =
+                            new_z80.env |> mem 0x6500 new_z80.env.time z80rom
+                    in
+                    Expect.equal ( addr + 4, 0x62, 0x20 ) ( new_z80.pc, mem_value.value, new_z80.flags |> getFlags )
             ]
-        , test "0xDD 0xCB 0x06 0x45 RLC (IX + d)" <|
-            \_ ->
-                let
-                    new_env =
-                        z80env
-                            |> setMem addr 0xDD
-                            |> setMem addr_plus_1 0xCB
-                            |> setMem (addr + 2) 0x45
-                            |> setMem (addr + 3) 0x06
-                            |> setMem 0x6545 0x31
-
-                    new_z80 =
-                        executeCoreInstruction z80rom
-                            { z80
-                                | env = { new_env | sp = 0x8765 }
-                                , main = { z80main | ix = 0x6500, b = 0xA5 }
-                                , flags = { flags | a = 0x39 }
-                            }
-
-                    mem_value =
-                        new_z80.env |> mem 0x6545 new_z80.env.time z80rom
-                in
-                Expect.equal ( addr + 4, 0x62 ) ( new_z80.pc, mem_value.value )
-        , test "0xFD 0xCB 0x06 0x45 RLC (IY + d)" <|
-            \_ ->
-                let
-                    new_env =
-                        z80env
-                            |> setMem addr 0xFD
-                            |> setMem addr_plus_1 0xCB
-                            |> setMem (addr + 2) 0x45
-                            |> setMem (addr + 3) 0x06
-                            |> setMem 0x6545 0x31
-
-                    new_z80 =
-                        executeCoreInstruction z80rom
-                            { z80
-                                | env = { new_env | sp = 0x8765 }
-                                , main = { z80main | iy = 0x6500, b = 0xA5 }
-                                , flags = { flags | a = 0x39 }
-                            }
-
-                    mem_value =
-                        new_z80.env |> mem 0x6545 new_z80.env.time z80rom
-                in
-                Expect.equal ( addr + 4, 0x62 ) ( new_z80.pc, mem_value.value )
         , test "0xCB 0x07 RLC A" <|
             \_ ->
                 let
