@@ -36,6 +36,7 @@ RSpec.describe "Spectrum Emulator" do
     let!(:full_flags) { create(:game, :z80_full_flags) }
     let!(:full) { create(:game, :z80_test_full) }
 
+    let(:z80base_directory) { Rails.root.join("public", "games") }
     let(:z80full_directory) { Rails.root.join("public", "games", "z80test") }
     let(:z80_game) { Game.find_by!(name: ENV.fetch("Z80_TEST", flags.name)) }
 
@@ -47,6 +48,7 @@ RSpec.describe "Spectrum Emulator" do
     }}
 
     before do
+      FileUtils.mkdir_p(z80base_directory)
       unless File.exist? z80full_directory
         load_tapfile z80_test_url, z80full_directory
       end
