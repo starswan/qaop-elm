@@ -36,11 +36,11 @@ RSpec.describe "Spectrum Emulator" do
     let!(:full_flags) { create(:game, :z80_full_flags) }
     let!(:full) { create(:game, :z80_test_full) }
 
-    let(:z80full_directory) { Rails.root.join("public", "z80test") }
+    let(:z80full_directory) { Rails.root.join("public", "games", "z80test") }
     let(:z80_game) { Game.find_by!(name: ENV.fetch("Z80_TEST", flags.name)) }
 
     let(:times) { {
-      flags.name => 7800,
+      flags.name => 7400,
       regs.name => 13200,
       full_flags.name => 15000,
       full.name => 18000,
@@ -56,8 +56,8 @@ RSpec.describe "Spectrum Emulator" do
 
     # Disabled some of the IM routines, and now completes.
     # Flags: 024 of 160 tests failed.
-    # 52 SRO (XY), R
-    # 73 BIT N,(XY), 74 BIT N,(XY)-
+    # 52 SRO (XY), R (DD CB 00 00)
+    # 73 BIT N,(XY), 74 BIT N,(XY)- DD CB 00 46 and DD CB 00 40
     # 89 LDIR-> NOP'. 90 LDDR ->NOP',
     # 91 CPI, 92 CPD, 93 CPIR, 94 CPDR
     # 96 -> 103 IN FE:FF -> BF

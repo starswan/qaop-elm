@@ -28,8 +28,8 @@ node_modules
 yarn-debug.log*
 .yarn-integrity
 index.html
-/public/z80test/
-/public/*.tap
+/public/games/z80test/
+/public/games/*.tap
 
 /app/assets/builds/*
 !/app/assets/builds/.keep
