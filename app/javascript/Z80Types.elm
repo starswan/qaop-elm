@@ -279,7 +279,7 @@ get_de z80 =
 
 set_bc_main : Int -> MainWithIndexRegisters -> MainWithIndexRegisters
 set_bc_main v z80_main =
-    { z80_main | b = shiftRightBy8 v, c = Bitwise.and v 0xFF }
+    { z80_main | b = v |> shiftRightBy8, c = Bitwise.and v 0xFF }
 
 
 set_de_main : Int -> MainWithIndexRegisters -> MainWithIndexRegisters

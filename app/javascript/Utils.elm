@@ -76,6 +76,7 @@ byte value =
 --    Bitwise.and value 0xFFFF
 
 
+char : Int -> Int
 char =
     0xFFFF |> Bitwise.and
 

@@ -159,17 +159,203 @@ group_xy_cb ixiyhl rom48k z80 =
         z80_4 |> WholeCore
 
 
-singleEnvMainRegsCB : Dict Int ( MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange, PCIncrement, InstructionDuration )
+singleEnvMainRegsCB : Dict Int ( MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )
 singleEnvMainRegsCB =
     Dict.fromList
-        [ ( 0x46, ( bit_0_indirect_hl, IncrementByTwo, TwelveTStates ) )
-        , ( 0x4E, ( bit_1_indirect_hl, IncrementByTwo, TwelveTStates ) )
-        , ( 0x56, ( bit_2_indirect_hl, IncrementByTwo, TwelveTStates ) )
-        , ( 0x5E, ( bit_3_indirect_hl, IncrementByTwo, TwelveTStates ) )
-        , ( 0x66, ( bit_4_indirect_hl, IncrementByTwo, TwelveTStates ) )
-        , ( 0x6E, ( bit_5_indirect_hl, IncrementByTwo, TwelveTStates ) )
-        , ( 0x76, ( bit_6_indirect_hl, IncrementByTwo, TwelveTStates ) )
-        , ( 0x7E, ( bit_7_indirect_hl, IncrementByTwo, TwelveTStates ) )
+        [ ( 0x46, ( bit_0_indirect_hl, TwelveTStates ) )
+        , ( 0x4E, ( bit_1_indirect_hl, TwelveTStates ) )
+        , ( 0x56, ( bit_2_indirect_hl, TwelveTStates ) )
+        , ( 0x5E, ( bit_3_indirect_hl, TwelveTStates ) )
+        , ( 0x66, ( bit_4_indirect_hl, TwelveTStates ) )
+        , ( 0x6E, ( bit_5_indirect_hl, TwelveTStates ) )
+        , ( 0x76, ( bit_6_indirect_hl, TwelveTStates ) )
+        , ( 0x7E, ( bit_7_indirect_hl, TwelveTStates ) )
+        ]
+
+
+
+--bit0indirectIx =
+--    List.range 0x40 0x47 |> List.map (\index -> ( index, ( bit_0_indirect_ix, TwentyTStates ) )) |> Dict.fromList
+--
+--
+--bit1indirectIx =
+--    List.range 0x48 0x4F |> List.map (\index -> ( index, ( bit_1_indirect_ix, TwentyTStates ) )) |> Dict.fromList
+--
+--
+--bit2indirectIx =
+--    List.range 0x50 0x57 |> List.map (\index -> ( index, ( bit_2_indirect_ix, TwentyTStates ) )) |> Dict.fromList
+--
+--
+--bit3indirectIx =
+--    List.range 0x05 0x5F |> List.map (\index -> ( index, ( bit_3_indirect_ix, TwentyTStates ) )) |> Dict.fromList
+--
+--
+--bit4indirectIx =
+--    List.range 0x60 0x67 |> List.map (\index -> ( index, ( bit_4_indirect_ix, TwentyTStates ) )) |> Dict.fromList
+--
+--
+--bit5indirectIx =
+--    List.range 0x68 0x6F |> List.map (\index -> ( index, ( bit_5_indirect_ix, TwentyTStates ) )) |> Dict.fromList
+--
+--
+--bit6indirectIx =
+--    List.range 0x70 0x77 |> List.map (\index -> ( index, ( bit_6_indirect_ix, TwentyTStates ) )) |> Dict.fromList
+--
+--
+--bit7indirectIx =
+--    List.range 0x78 0x7F |> List.map (\index -> ( index, ( bit_7_indirect_ix, TwentyTStates ) )) |> Dict.fromList
+--
+--
+--singleEnvMainRegsIXCB : Dict Int ( MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )
+--singleEnvMainRegsIXCB =
+--    bit0indirectIx
+--        |> Dict.union bit1indirectIx
+--        |> Dict.union bit2indirectIx
+--        |> Dict.union bit3indirectIx
+--        |> Dict.union bit4indirectIx
+--        |> Dict.union bit5indirectIx
+--        |> Dict.union bit6indirectIx
+--        |> Dict.union bit7indirectIx
+
+
+singleEnvMainRegsIXCB : Dict Int ( MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )
+singleEnvMainRegsIXCB =
+    Dict.fromList
+        [ ( 0x40, ( bit_0_indirect_ix, TwentyTStates ) )
+        , ( 0x41, ( bit_0_indirect_ix, TwentyTStates ) )
+        , ( 0x42, ( bit_0_indirect_ix, TwentyTStates ) )
+        , ( 0x43, ( bit_0_indirect_ix, TwentyTStates ) )
+        , ( 0x44, ( bit_0_indirect_ix, TwentyTStates ) )
+        , ( 0x45, ( bit_0_indirect_ix, TwentyTStates ) )
+        , ( 0x46, ( bit_0_indirect_ix, TwentyTStates ) )
+        , ( 0x47, ( bit_0_indirect_ix, TwentyTStates ) )
+        , ( 0x48, ( bit_1_indirect_ix, TwentyTStates ) )
+        , ( 0x49, ( bit_1_indirect_ix, TwentyTStates ) )
+        , ( 0x4A, ( bit_1_indirect_ix, TwentyTStates ) )
+        , ( 0x4B, ( bit_1_indirect_ix, TwentyTStates ) )
+        , ( 0x4C, ( bit_1_indirect_ix, TwentyTStates ) )
+        , ( 0x4D, ( bit_1_indirect_ix, TwentyTStates ) )
+        , ( 0x4E, ( bit_1_indirect_ix, TwentyTStates ) )
+        , ( 0x4F, ( bit_1_indirect_ix, TwentyTStates ) )
+        , ( 0x50, ( bit_2_indirect_ix, TwentyTStates ) )
+        , ( 0x51, ( bit_2_indirect_ix, TwentyTStates ) )
+        , ( 0x52, ( bit_2_indirect_ix, TwentyTStates ) )
+        , ( 0x53, ( bit_2_indirect_ix, TwentyTStates ) )
+        , ( 0x54, ( bit_2_indirect_ix, TwentyTStates ) )
+        , ( 0x55, ( bit_2_indirect_ix, TwentyTStates ) )
+        , ( 0x56, ( bit_2_indirect_ix, TwentyTStates ) )
+        , ( 0x57, ( bit_2_indirect_ix, TwentyTStates ) )
+        , ( 0x5E, ( bit_3_indirect_ix, TwentyTStates ) )
+        , ( 0x58, ( bit_3_indirect_ix, TwentyTStates ) )
+        , ( 0x59, ( bit_3_indirect_ix, TwentyTStates ) )
+        , ( 0x5A, ( bit_3_indirect_ix, TwentyTStates ) )
+        , ( 0x5B, ( bit_3_indirect_ix, TwentyTStates ) )
+        , ( 0x5C, ( bit_3_indirect_ix, TwentyTStates ) )
+        , ( 0x5D, ( bit_3_indirect_ix, TwentyTStates ) )
+        , ( 0x5E, ( bit_3_indirect_ix, TwentyTStates ) )
+        , ( 0x5F, ( bit_3_indirect_ix, TwentyTStates ) )
+        , ( 0x60, ( bit_4_indirect_ix, TwentyTStates ) )
+        , ( 0x61, ( bit_4_indirect_ix, TwentyTStates ) )
+        , ( 0x62, ( bit_4_indirect_ix, TwentyTStates ) )
+        , ( 0x63, ( bit_4_indirect_ix, TwentyTStates ) )
+        , ( 0x64, ( bit_4_indirect_ix, TwentyTStates ) )
+        , ( 0x65, ( bit_4_indirect_ix, TwentyTStates ) )
+        , ( 0x66, ( bit_4_indirect_ix, TwentyTStates ) )
+        , ( 0x67, ( bit_4_indirect_ix, TwentyTStates ) )
+        , ( 0x68, ( bit_5_indirect_ix, TwentyTStates ) )
+        , ( 0x69, ( bit_5_indirect_ix, TwentyTStates ) )
+        , ( 0x6A, ( bit_5_indirect_ix, TwentyTStates ) )
+        , ( 0x6B, ( bit_5_indirect_ix, TwentyTStates ) )
+        , ( 0x6C, ( bit_5_indirect_ix, TwentyTStates ) )
+        , ( 0x6D, ( bit_5_indirect_ix, TwentyTStates ) )
+        , ( 0x6E, ( bit_5_indirect_ix, TwentyTStates ) )
+        , ( 0x6F, ( bit_5_indirect_ix, TwentyTStates ) )
+        , ( 0x70, ( bit_6_indirect_ix, TwentyTStates ) )
+        , ( 0x71, ( bit_6_indirect_ix, TwentyTStates ) )
+        , ( 0x72, ( bit_6_indirect_ix, TwentyTStates ) )
+        , ( 0x73, ( bit_6_indirect_ix, TwentyTStates ) )
+        , ( 0x74, ( bit_6_indirect_ix, TwentyTStates ) )
+        , ( 0x75, ( bit_6_indirect_ix, TwentyTStates ) )
+        , ( 0x76, ( bit_6_indirect_ix, TwentyTStates ) )
+        , ( 0x77, ( bit_6_indirect_ix, TwentyTStates ) )
+        , ( 0x78, ( bit_7_indirect_ix, TwentyTStates ) )
+        , ( 0x79, ( bit_7_indirect_ix, TwentyTStates ) )
+        , ( 0x7A, ( bit_7_indirect_ix, TwentyTStates ) )
+        , ( 0x7B, ( bit_7_indirect_ix, TwentyTStates ) )
+        , ( 0x7C, ( bit_7_indirect_ix, TwentyTStates ) )
+        , ( 0x7D, ( bit_7_indirect_ix, TwentyTStates ) )
+        , ( 0x7E, ( bit_7_indirect_ix, TwentyTStates ) )
+        , ( 0x7F, ( bit_7_indirect_ix, TwentyTStates ) )
+        ]
+
+
+singleEnvMainRegsIYCB : Dict Int ( MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )
+singleEnvMainRegsIYCB =
+    Dict.fromList
+        [ ( 0x40, ( bit_0_indirect_iy, TwentyTStates ) )
+        , ( 0x41, ( bit_0_indirect_iy, TwentyTStates ) )
+        , ( 0x42, ( bit_0_indirect_iy, TwentyTStates ) )
+        , ( 0x43, ( bit_0_indirect_iy, TwentyTStates ) )
+        , ( 0x44, ( bit_0_indirect_iy, TwentyTStates ) )
+        , ( 0x45, ( bit_0_indirect_iy, TwentyTStates ) )
+        , ( 0x46, ( bit_0_indirect_iy, TwentyTStates ) )
+        , ( 0x47, ( bit_0_indirect_iy, TwentyTStates ) )
+        , ( 0x48, ( bit_1_indirect_iy, TwentyTStates ) )
+        , ( 0x49, ( bit_1_indirect_iy, TwentyTStates ) )
+        , ( 0x4A, ( bit_1_indirect_iy, TwentyTStates ) )
+        , ( 0x4B, ( bit_1_indirect_iy, TwentyTStates ) )
+        , ( 0x4C, ( bit_1_indirect_iy, TwentyTStates ) )
+        , ( 0x4D, ( bit_1_indirect_iy, TwentyTStates ) )
+        , ( 0x4E, ( bit_1_indirect_iy, TwentyTStates ) )
+        , ( 0x4F, ( bit_1_indirect_iy, TwentyTStates ) )
+        , ( 0x50, ( bit_2_indirect_iy, TwentyTStates ) )
+        , ( 0x51, ( bit_2_indirect_iy, TwentyTStates ) )
+        , ( 0x52, ( bit_2_indirect_iy, TwentyTStates ) )
+        , ( 0x53, ( bit_2_indirect_iy, TwentyTStates ) )
+        , ( 0x54, ( bit_2_indirect_iy, TwentyTStates ) )
+        , ( 0x55, ( bit_2_indirect_iy, TwentyTStates ) )
+        , ( 0x56, ( bit_2_indirect_iy, TwentyTStates ) )
+        , ( 0x57, ( bit_2_indirect_iy, TwentyTStates ) )
+        , ( 0x58, ( bit_3_indirect_iy, TwentyTStates ) )
+        , ( 0x59, ( bit_3_indirect_iy, TwentyTStates ) )
+        , ( 0x5A, ( bit_3_indirect_iy, TwentyTStates ) )
+        , ( 0x5B, ( bit_3_indirect_iy, TwentyTStates ) )
+        , ( 0x5C, ( bit_3_indirect_iy, TwentyTStates ) )
+        , ( 0x5D, ( bit_3_indirect_iy, TwentyTStates ) )
+        , ( 0x5E, ( bit_3_indirect_iy, TwentyTStates ) )
+        , ( 0x5F, ( bit_3_indirect_iy, TwentyTStates ) )
+        , ( 0x60, ( bit_4_indirect_iy, TwentyTStates ) )
+        , ( 0x61, ( bit_4_indirect_iy, TwentyTStates ) )
+        , ( 0x62, ( bit_4_indirect_iy, TwentyTStates ) )
+        , ( 0x63, ( bit_4_indirect_iy, TwentyTStates ) )
+        , ( 0x64, ( bit_4_indirect_iy, TwentyTStates ) )
+        , ( 0x65, ( bit_4_indirect_iy, TwentyTStates ) )
+        , ( 0x66, ( bit_4_indirect_iy, TwentyTStates ) )
+        , ( 0x67, ( bit_4_indirect_iy, TwentyTStates ) )
+        , ( 0x68, ( bit_5_indirect_iy, TwentyTStates ) )
+        , ( 0x69, ( bit_5_indirect_iy, TwentyTStates ) )
+        , ( 0x6A, ( bit_5_indirect_iy, TwentyTStates ) )
+        , ( 0x6B, ( bit_5_indirect_iy, TwentyTStates ) )
+        , ( 0x6C, ( bit_5_indirect_iy, TwentyTStates ) )
+        , ( 0x6D, ( bit_5_indirect_iy, TwentyTStates ) )
+        , ( 0x6E, ( bit_5_indirect_iy, TwentyTStates ) )
+        , ( 0x6F, ( bit_5_indirect_iy, TwentyTStates ) )
+        , ( 0x70, ( bit_6_indirect_iy, TwentyTStates ) )
+        , ( 0x71, ( bit_6_indirect_iy, TwentyTStates ) )
+        , ( 0x72, ( bit_6_indirect_iy, TwentyTStates ) )
+        , ( 0x73, ( bit_6_indirect_iy, TwentyTStates ) )
+        , ( 0x74, ( bit_6_indirect_iy, TwentyTStates ) )
+        , ( 0x75, ( bit_6_indirect_iy, TwentyTStates ) )
+        , ( 0x76, ( bit_6_indirect_iy, TwentyTStates ) )
+        , ( 0x77, ( bit_6_indirect_iy, TwentyTStates ) )
+        , ( 0x78, ( bit_7_indirect_iy, TwentyTStates ) )
+        , ( 0x79, ( bit_7_indirect_iy, TwentyTStates ) )
+        , ( 0x7A, ( bit_7_indirect_iy, TwentyTStates ) )
+        , ( 0x7B, ( bit_7_indirect_iy, TwentyTStates ) )
+        , ( 0x7C, ( bit_7_indirect_iy, TwentyTStates ) )
+        , ( 0x7D, ( bit_7_indirect_iy, TwentyTStates ) )
+        , ( 0x7E, ( bit_7_indirect_iy, TwentyTStates ) )
+        , ( 0x7F, ( bit_7_indirect_iy, TwentyTStates ) )
         ]
 
 
@@ -411,6 +597,323 @@ singleByteMainRegsCB =
         ]
 
 
+singleByteMainRegsIXCB : Dict Int ( Int -> MainWithIndexRegisters -> RegisterChange, InstructionDuration )
+singleByteMainRegsIXCB =
+    Dict.fromList
+        [ ( 0x06, ( \offset z80_main -> RegisterChangeShifter Shifter0 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
+        , ( 0x0E, ( \offset z80_main -> RegisterChangeShifter Shifter1 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
+        , ( 0x16, ( \offset z80_main -> RegisterChangeShifter Shifter2 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
+        , ( 0x1E, ( \offset z80_main -> RegisterChangeShifter Shifter3 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
+        , ( 0x26, ( \offset z80_main -> RegisterChangeShifter Shifter4 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
+        , ( 0x2E, ( \offset z80_main -> RegisterChangeShifter Shifter5 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
+        , ( 0x36, ( \offset z80_main -> RegisterChangeShifter Shifter6 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
+        , ( 0x3E, ( \offset z80_main -> RegisterChangeShifter Shifter7 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
+
+        -- reset bit0
+        --, ( 0x80, ( resetBbit Bit_0, EightTStates ) )
+        --, ( 0x81, ( resetCbit Bit_0, EightTStates ) )
+        --, ( 0x82, ( resetDbit Bit_0, EightTStates ) )
+        --, ( 0x83, ( resetEbit Bit_0, EightTStates ) )
+        --, ( 0x84, ( resetHbit Bit_0, EightTStates ) )
+        --, ( 0x85, ( resetLbit Bit_0, EightTStates ) )
+        , ( 0x86, ( resetIXbit Bit_0, EightTStates ) )
+
+        -- reset bit1
+        --, ( 0x88, ( resetBbit Bit_1, EightTStates ) )
+        --, ( 0x89, ( resetCbit Bit_1, EightTStates ) )
+        --, ( 0x8A, ( resetDbit Bit_1, EightTStates ) )
+        --, ( 0x8B, ( resetEbit Bit_1, EightTStates ) )
+        --, ( 0x8C, ( resetHbit Bit_1, EightTStates ) )
+        --, ( 0x8D, ( resetLbit Bit_1, EightTStates ) )
+        , ( 0x8E, ( resetIXbit Bit_1, EightTStates ) )
+
+        -- reset bit2
+        --, ( 0x90, ( resetBbit Bit_2, EightTStates ) )
+        --, ( 0x91, ( resetCbit Bit_2, EightTStates ) )
+        --, ( 0x92, ( resetDbit Bit_2, EightTStates ) )
+        --, ( 0x93, ( resetEbit Bit_2, EightTStates ) )
+        --, ( 0x94, ( resetHbit Bit_2, EightTStates ) )
+        --, ( 0x95, ( resetLbit Bit_2, EightTStates ) )
+        , ( 0x96, ( resetIXbit Bit_2, EightTStates ) )
+
+        -- reset bit3
+        --, ( 0x98, ( resetBbit Bit_3, EightTStates ) )
+        --, ( 0x99, ( resetCbit Bit_3, EightTStates ) )
+        --, ( 0x9A, ( resetDbit Bit_3, EightTStates ) )
+        --, ( 0x9B, ( resetEbit Bit_3, EightTStates ) )
+        --, ( 0x9C, ( resetHbit Bit_3, EightTStates ) )
+        --, ( 0x9D, ( resetLbit Bit_3, EightTStates ) )
+        , ( 0x9E, ( resetIXbit Bit_3, EightTStates ) )
+
+        -- reset bit4
+        --, ( 0xA0, ( resetBbit Bit_4, EightTStates ) )
+        --, ( 0xA1, ( resetCbit Bit_4, EightTStates ) )
+        --, ( 0xA2, ( resetDbit Bit_4, EightTStates ) )
+        --, ( 0xA3, ( resetEbit Bit_4, EightTStates ) )
+        --, ( 0xA4, ( resetHbit Bit_4, EightTStates ) )
+        --, ( 0xA5, ( resetLbit Bit_4, EightTStates ) )
+        , ( 0xA6, ( resetIXbit Bit_4, EightTStates ) )
+
+        -- reset bit5
+        --, ( 0xA8, ( resetBbit Bit_5, EightTStates ) )
+        --, ( 0xA9, ( resetCbit Bit_5, EightTStates ) )
+        --, ( 0xAA, ( resetDbit Bit_5, EightTStates ) )
+        --, ( 0xAB, ( resetEbit Bit_5, EightTStates ) )
+        --, ( 0xAC, ( resetHbit Bit_5, EightTStates ) )
+        --, ( 0xAD, ( resetLbit Bit_5, EightTStates ) )
+        , ( 0xAE, ( resetIXbit Bit_5, EightTStates ) )
+
+        -- reset bit6
+        --, ( 0xB0, ( resetBbit Bit_6, EightTStates ) )
+        --, ( 0xB1, ( resetCbit Bit_6, EightTStates ) )
+        --, ( 0xB2, ( resetDbit Bit_6, EightTStates ) )
+        --, ( 0xB3, ( resetEbit Bit_6, EightTStates ) )
+        --, ( 0xB4, ( resetHbit Bit_6, EightTStates ) )
+        --, ( 0xB5, ( resetLbit Bit_6, EightTStates ) )
+        , ( 0xB6, ( resetIXbit Bit_6, EightTStates ) )
+
+        -- reset bit7
+        --, ( 0xB8, ( resetBbit Bit_7, EightTStates ) )
+        --, ( 0xB9, ( resetCbit Bit_7, EightTStates ) )
+        --, ( 0xBA, ( resetDbit Bit_7, EightTStates ) )
+        --, ( 0xBB, ( resetEbit Bit_7, EightTStates ) )
+        --, ( 0xBC, ( resetHbit Bit_7, EightTStates ) )
+        --, ( 0xBD, ( resetLbit Bit_7, EightTStates ) )
+        , ( 0xBE, ( resetIXbit Bit_7, EightTStates ) )
+
+        -- set bit0
+        --, ( 0xC0, ( setBbit Bit_0, EightTStates ) )
+        --, ( 0xC1, ( setCbit Bit_0, EightTStates ) )
+        --, ( 0xC2, ( setDbit Bit_0, EightTStates ) )
+        --, ( 0xC3, ( setEbit Bit_0, EightTStates ) )
+        --, ( 0xC4, ( setHbit Bit_0, EightTStates ) )
+        --, ( 0xC5, ( setLbit Bit_0, EightTStates ) )
+        , ( 0xC6, ( setIXbit Bit_0, EightTStates ) )
+
+        -- set bit1
+        --, ( 0xC8, ( setBbit Bit_1, EightTStates ) )
+        --, ( 0xC9, ( setCbit Bit_1, EightTStates ) )
+        --, ( 0xCA, ( setDbit Bit_1, EightTStates ) )
+        --, ( 0xCB, ( setEbit Bit_1, EightTStates ) )
+        --, ( 0xCC, ( setHbit Bit_1, EightTStates ) )
+        --, ( 0xCD, ( setLbit Bit_1, EightTStates ) )
+        , ( 0xCE, ( setIXbit Bit_1, EightTStates ) )
+
+        -- set bit2
+        --, ( 0xD0, ( setBbit Bit_2, EightTStates ) )
+        --, ( 0xD1, ( setCbit Bit_2, EightTStates ) )
+        --, ( 0xD2, ( setDbit Bit_2, EightTStates ) )
+        --, ( 0xD3, ( setEbit Bit_2, EightTStates ) )
+        --, ( 0xD4, ( setHbit Bit_2, EightTStates ) )
+        --, ( 0xD5, ( setLbit Bit_2, EightTStates ) )
+        , ( 0xD6, ( setIXbit Bit_2, EightTStates ) )
+
+        -- set bit3
+        --, ( 0xD8, ( setBbit Bit_3, EightTStates ) )
+        --, ( 0xD9, ( setCbit Bit_3, EightTStates ) )
+        --, ( 0xDA, ( setDbit Bit_3, EightTStates ) )
+        --, ( 0xDB, ( setEbit Bit_3, EightTStates ) )
+        --, ( 0xDC, ( setHbit Bit_3, EightTStates ) )
+        --, ( 0xDD, ( setLbit Bit_3, EightTStates ) )
+        , ( 0xDE, ( setIXbit Bit_3, EightTStates ) )
+
+        --
+        ---- set bit4
+        --, ( 0xE0, ( setBbit Bit_4, EightTStates ) )
+        --, ( 0xE1, ( setCbit Bit_4, EightTStates ) )
+        --, ( 0xE2, ( setDbit Bit_4, EightTStates ) )
+        --, ( 0xE3, ( setEbit Bit_4, EightTStates ) )
+        --, ( 0xE4, ( setHbit Bit_4, EightTStates ) )
+        --, ( 0xE5, ( setLbit Bit_4, EightTStates ) )
+        , ( 0xE6, ( setIXbit Bit_4, EightTStates ) )
+
+        -- set bit5
+        --, ( 0xE8, ( setBbit Bit_5, EightTStates ) )
+        --, ( 0xE9, ( setCbit Bit_5, EightTStates ) )
+        --, ( 0xEA, ( setDbit Bit_5, EightTStates ) )
+        --, ( 0xEB, ( setEbit Bit_5, EightTStates ) )
+        --, ( 0xEC, ( setHbit Bit_5, EightTStates ) )
+        --, ( 0xED, ( setLbit Bit_5, EightTStates ) )
+        , ( 0xEE, ( setIXbit Bit_5, EightTStates ) )
+
+        -- set bit6
+        --, ( 0xF0, ( setBbit Bit_6, EightTStates ) )
+        --, ( 0xF1, ( setCbit Bit_6, EightTStates ) )
+        --, ( 0xF2, ( setDbit Bit_6, EightTStates ) )
+        --, ( 0xF3, ( setEbit Bit_6, EightTStates ) )
+        --, ( 0xF4, ( setHbit Bit_6, EightTStates ) )
+        --, ( 0xF5, ( setLbit Bit_6, EightTStates ) )
+        , ( 0xF6, ( setIXbit Bit_6, EightTStates ) )
+
+        -- set bit7
+        --, ( 0xF8, ( setBbit Bit_7, EightTStates ) )
+        --, ( 0xF9, ( setCbit Bit_7, EightTStates ) )
+        --, ( 0xFA, ( setDbit Bit_7, EightTStates ) )
+        --, ( 0xFB, ( setEbit Bit_7, EightTStates ) )
+        --, ( 0xFC, ( setHbit Bit_7, EightTStates ) )
+        --, ( 0xFD, ( setLbit Bit_7, EightTStates ) )
+        , ( 0xFE, ( setIXbit Bit_7, EightTStates ) )
+        ]
+
+
+singleByteMainRegsIYCB : Dict Int ( Int -> MainWithIndexRegisters -> RegisterChange, InstructionDuration )
+singleByteMainRegsIYCB =
+    Dict.fromList
+        [ ( 0x06, ( \offset z80_main -> RegisterChangeShifter Shifter0 ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
+        , ( 0x0E, ( \offset z80_main -> RegisterChangeShifter Shifter1 ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
+        , ( 0x16, ( \offset z80_main -> RegisterChangeShifter Shifter2 ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
+        , ( 0x1E, ( \offset z80_main -> RegisterChangeShifter Shifter3 ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
+        , ( 0x26, ( \offset z80_main -> RegisterChangeShifter Shifter4 ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
+        , ( 0x2E, ( \offset z80_main -> RegisterChangeShifter Shifter5 ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
+        , ( 0x36, ( \offset z80_main -> RegisterChangeShifter Shifter6 ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
+        , ( 0x3E, ( \offset z80_main -> RegisterChangeShifter Shifter7 ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
+
+        -- reset bit0
+        --, ( 0x80, ( resetBbit Bit_0, EightTStates ) )
+        --, ( 0x81, ( resetCbit Bit_0, EightTStates ) )
+        --, ( 0x82, ( resetDbit Bit_0, EightTStates ) )
+        --, ( 0x83, ( resetEbit Bit_0, EightTStates ) )
+        --, ( 0x84, ( resetHbit Bit_0, EightTStates ) )
+        --, ( 0x85, ( resetLbit Bit_0, EightTStates ) )
+        , ( 0x86, ( resetIYbit Bit_0, EightTStates ) )
+
+        -- reset bit1
+        --, ( 0x88, ( resetBbit Bit_1, EightTStates ) )
+        --, ( 0x89, ( resetCbit Bit_1, EightTStates ) )
+        --, ( 0x8A, ( resetDbit Bit_1, EightTStates ) )
+        --, ( 0x8B, ( resetEbit Bit_1, EightTStates ) )
+        --, ( 0x8C, ( resetHbit Bit_1, EightTStates ) )
+        --, ( 0x8D, ( resetLbit Bit_1, EightTStates ) )
+        , ( 0x8E, ( resetIYbit Bit_1, EightTStates ) )
+
+        -- reset bit2
+        --, ( 0x90, ( resetBbit Bit_2, EightTStates ) )
+        --, ( 0x91, ( resetCbit Bit_2, EightTStates ) )
+        --, ( 0x92, ( resetDbit Bit_2, EightTStates ) )
+        --, ( 0x93, ( resetEbit Bit_2, EightTStates ) )
+        --, ( 0x94, ( resetHbit Bit_2, EightTStates ) )
+        --, ( 0x95, ( resetLbit Bit_2, EightTStates ) )
+        , ( 0x96, ( resetIYbit Bit_2, EightTStates ) )
+
+        -- reset bit3
+        --, ( 0x98, ( resetBbit Bit_3, EightTStates ) )
+        --, ( 0x99, ( resetCbit Bit_3, EightTStates ) )
+        --, ( 0x9A, ( resetDbit Bit_3, EightTStates ) )
+        --, ( 0x9B, ( resetEbit Bit_3, EightTStates ) )
+        --, ( 0x9C, ( resetHbit Bit_3, EightTStates ) )
+        --, ( 0x9D, ( resetLbit Bit_3, EightTStates ) )
+        , ( 0x9E, ( resetIYbit Bit_3, EightTStates ) )
+
+        -- reset bit4
+        --, ( 0xA0, ( resetBbit Bit_4, EightTStates ) )
+        --, ( 0xA1, ( resetCbit Bit_4, EightTStates ) )
+        --, ( 0xA2, ( resetDbit Bit_4, EightTStates ) )
+        --, ( 0xA3, ( resetEbit Bit_4, EightTStates ) )
+        --, ( 0xA4, ( resetHbit Bit_4, EightTStates ) )
+        --, ( 0xA5, ( resetLbit Bit_4, EightTStates ) )
+        , ( 0xA6, ( resetIYbit Bit_4, EightTStates ) )
+
+        -- reset bit5
+        --, ( 0xA8, ( resetBbit Bit_5, EightTStates ) )
+        --, ( 0xA9, ( resetCbit Bit_5, EightTStates ) )
+        --, ( 0xAA, ( resetDbit Bit_5, EightTStates ) )
+        --, ( 0xAB, ( resetEbit Bit_5, EightTStates ) )
+        --, ( 0xAC, ( resetHbit Bit_5, EightTStates ) )
+        --, ( 0xAD, ( resetLbit Bit_5, EightTStates ) )
+        , ( 0xAE, ( resetIYbit Bit_5, EightTStates ) )
+
+        -- reset bit6
+        --, ( 0xB0, ( resetBbit Bit_6, EightTStates ) )
+        --, ( 0xB1, ( resetCbit Bit_6, EightTStates ) )
+        --, ( 0xB2, ( resetDbit Bit_6, EightTStates ) )
+        --, ( 0xB3, ( resetEbit Bit_6, EightTStates ) )
+        --, ( 0xB4, ( resetHbit Bit_6, EightTStates ) )
+        --, ( 0xB5, ( resetLbit Bit_6, EightTStates ) )
+        , ( 0xB6, ( resetIYbit Bit_6, EightTStates ) )
+
+        -- reset bit7
+        --, ( 0xB8, ( resetBbit Bit_7, EightTStates ) )
+        --, ( 0xB9, ( resetCbit Bit_7, EightTStates ) )
+        --, ( 0xBA, ( resetDbit Bit_7, EightTStates ) )
+        --, ( 0xBB, ( resetEbit Bit_7, EightTStates ) )
+        --, ( 0xBC, ( resetHbit Bit_7, EightTStates ) )
+        --, ( 0xBD, ( resetLbit Bit_7, EightTStates ) )
+        , ( 0xBE, ( resetIYbit Bit_7, EightTStates ) )
+
+        -- set bit0
+        --, ( 0xC0, ( setBbit Bit_0, EightTStates ) )
+        --, ( 0xC1, ( setCbit Bit_0, EightTStates ) )
+        --, ( 0xC2, ( setDbit Bit_0, EightTStates ) )
+        --, ( 0xC3, ( setEbit Bit_0, EightTStates ) )
+        --, ( 0xC4, ( setHbit Bit_0, EightTStates ) )
+        --, ( 0xC5, ( setLbit Bit_0, EightTStates ) )
+        , ( 0xC6, ( setIYbit Bit_0, EightTStates ) )
+
+        -- set bit1
+        --, ( 0xC8, ( setBbit Bit_1, EightTStates ) )
+        --, ( 0xC9, ( setCbit Bit_1, EightTStates ) )
+        --, ( 0xCA, ( setDbit Bit_1, EightTStates ) )
+        --, ( 0xCB, ( setEbit Bit_1, EightTStates ) )
+        --, ( 0xCC, ( setHbit Bit_1, EightTStates ) )
+        --, ( 0xCD, ( setLbit Bit_1, EightTStates ) )
+        , ( 0xCE, ( setIYbit Bit_1, EightTStates ) )
+
+        -- set bit2
+        --, ( 0xD0, ( setBbit Bit_2, EightTStates ) )
+        --, ( 0xD1, ( setCbit Bit_2, EightTStates ) )
+        --, ( 0xD2, ( setDbit Bit_2, EightTStates ) )
+        --, ( 0xD3, ( setEbit Bit_2, EightTStates ) )
+        --, ( 0xD4, ( setHbit Bit_2, EightTStates ) )
+        --, ( 0xD5, ( setLbit Bit_2, EightTStates ) )
+        , ( 0xD6, ( setIYbit Bit_2, EightTStates ) )
+
+        -- set bDt3
+        --, ( 0xD8, ( setBbit Bit_3, EightTStates ) )
+        --, ( 0xD9, ( setCbit Bit_3, EightTStates ) )
+        --, ( 0xDA, ( setDbit Bit_3, EightTStates ) )
+        --, ( 0xDB, ( setEbit Bit_3, EightTStates ) )
+        --, ( 0xDC, ( setHbit Bit_3, EightTStates ) )
+        --, ( 0xDD, ( setLbit Bit_3, EightTStates ) )
+        , ( 0xDE, ( setIYbit Bit_3, EightTStates ) )
+
+        -- set bit4
+        --, ( 0xE0, ( setBbit Bit_4, EightTStates ) )
+        --, ( 0xE1, ( setCbit Bit_4, EightTStates ) )
+        --, ( 0xE2, ( setDbit Bit_4, EightTStates ) )
+        --, ( 0xE3, ( setEbit Bit_4, EightTStates ) )
+        --, ( 0xE4, ( setHbit Bit_4, EightTStates ) )
+        --, ( 0xE5, ( setLbit Bit_4, EightTStates ) )
+        , ( 0xE6, ( setIYbit Bit_4, EightTStates ) )
+
+        -- set bEt5
+        --, ( 0xE8, ( setBbit Bit_5, EightTStates ) )
+        --, ( 0xE9, ( setCbit Bit_5, EightTStates ) )
+        --, ( 0xEA, ( setDbit Bit_5, EightTStates ) )
+        --, ( 0xEB, ( setEbit Bit_5, EightTStates ) )
+        --, ( 0xEC, ( setHbit Bit_5, EightTStates ) )
+        --, ( 0xED, ( setLbit Bit_5, EightTStates ) )
+        , ( 0xEE, ( setIYbit Bit_5, EightTStates ) )
+
+        -- set bit6
+        --, ( 0xF0, ( setBbit Bit_6, EightTStates ) )
+        --, ( 0xF1, ( setCbit Bit_6, EightTStates ) )
+        --, ( 0xF2, ( setDbit Bit_6, EightTStates ) )
+        --, ( 0xF3, ( setEbit Bit_6, EightTStates ) )
+        --, ( 0xF4, ( setHbit Bit_6, EightTStates ) )
+        --, ( 0xF5, ( setLbit Bit_6, EightTStates ) )
+        , ( 0xF6, ( setIYbit Bit_6, EightTStates ) )
+
+        -- set bFt7
+        --, ( 0xF8, ( setBbit Bit_7, EightTStates ) )
+        --, ( 0xF9, ( setCbit Bit_7, EightTStates ) )
+        --, ( 0xFA, ( setDbit Bit_7, EightTStates ) )
+        --, ( 0xFB, ( setEbit Bit_7, EightTStates ) )
+        --, ( 0xFC, ( setHbit Bit_7, EightTStates ) )
+        --, ( 0xFD, ( setLbit Bit_7, EightTStates ) )
+        , ( 0xFE, ( setIYbit Bit_7, EightTStates ) )
+        ]
+
+
 rlc_indirect_hl : MainWithIndexRegisters -> RegisterChange
 rlc_indirect_hl z80_main =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
@@ -502,6 +1005,18 @@ resetHLbit bitMask z80_main =
     IndirectBitReset bitMask z80_main.hl
 
 
+resetIXbit : BitTest -> Int -> MainWithIndexRegisters -> RegisterChange
+resetIXbit bitMask offset z80_main =
+    -- case 0x81: C=C&~(1<<o); break;
+    IndirectBitReset bitMask ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF)
+
+
+resetIYbit : BitTest -> Int -> MainWithIndexRegisters -> RegisterChange
+resetIYbit bitMask offset z80_main =
+    -- case 0x81: C=C&~(1<<o); break;
+    IndirectBitReset bitMask ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF)
+
+
 setBbit : BitTest -> MainWithIndexRegisters -> RegisterChange
 setBbit bitMask z80_main =
     --Bitwise.and raw.value (1 |> shiftLeftBy o |> complement)
@@ -545,105 +1060,344 @@ setHLbit bitMask z80_main =
     IndirectBitSet bitMask z80_main.hl
 
 
-singleByteMainAndFlagRegistersCB : Dict Int ( MainWithIndexRegisters -> FlagRegisters -> Z80Change, PCIncrement, InstructionDuration )
+setIXbit : BitTest -> Int -> MainWithIndexRegisters -> RegisterChange
+setIXbit bitMask offset z80_main =
+    -- case 0x81: C=C&~(1<<o); break;
+    IndirectBitSet bitMask ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF)
+
+
+setIYbit : BitTest -> Int -> MainWithIndexRegisters -> RegisterChange
+setIYbit bitMask offset z80_main =
+    -- case 0x81: C=C&~(1<<o); break;
+    IndirectBitSet bitMask ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF)
+
+
+singleByteMainAndFlagRegistersCB : Dict Int ( MainWithIndexRegisters -> FlagRegisters -> Z80Change, InstructionDuration )
 singleByteMainAndFlagRegistersCB =
     Dict.fromList
-        [ ( 0x00, ( rlc_b, IncrementByTwo, EightTStates ) )
-        , ( 0x01, ( rlc_c, IncrementByTwo, EightTStates ) )
-        , ( 0x02, ( rlc_d, IncrementByTwo, EightTStates ) )
-        , ( 0x03, ( rlc_e, IncrementByTwo, EightTStates ) )
-        , ( 0x04, ( rlc_h, IncrementByTwo, EightTStates ) )
-        , ( 0x05, ( rlc_l, IncrementByTwo, EightTStates ) )
-        , ( 0x08, ( rrc_b, IncrementByTwo, EightTStates ) )
-        , ( 0x09, ( rrc_c, IncrementByTwo, EightTStates ) )
-        , ( 0x0A, ( rrc_d, IncrementByTwo, EightTStates ) )
-        , ( 0x0B, ( rrc_e, IncrementByTwo, EightTStates ) )
-        , ( 0x0C, ( rrc_h, IncrementByTwo, EightTStates ) )
-        , ( 0x0D, ( rrc_l, IncrementByTwo, EightTStates ) )
-        , ( 0x10, ( rl_b, IncrementByTwo, EightTStates ) )
-        , ( 0x11, ( rl_c, IncrementByTwo, EightTStates ) )
-        , ( 0x12, ( rl_d, IncrementByTwo, EightTStates ) )
-        , ( 0x13, ( rl_e, IncrementByTwo, EightTStates ) )
-        , ( 0x14, ( rl_h, IncrementByTwo, EightTStates ) )
-        , ( 0x15, ( rl_l, IncrementByTwo, EightTStates ) )
-        , ( 0x18, ( rr_b, IncrementByTwo, EightTStates ) )
-        , ( 0x19, ( rr_c, IncrementByTwo, EightTStates ) )
-        , ( 0x1A, ( rr_d, IncrementByTwo, EightTStates ) )
-        , ( 0x1B, ( rr_e, IncrementByTwo, EightTStates ) )
-        , ( 0x1C, ( rr_h, IncrementByTwo, EightTStates ) )
-        , ( 0x1D, ( rr_l, IncrementByTwo, EightTStates ) )
-        , ( 0x20, ( sla_b, IncrementByTwo, EightTStates ) )
-        , ( 0x21, ( sla_c, IncrementByTwo, EightTStates ) )
-        , ( 0x22, ( sla_d, IncrementByTwo, EightTStates ) )
-        , ( 0x23, ( sla_e, IncrementByTwo, EightTStates ) )
-        , ( 0x24, ( sla_h, IncrementByTwo, EightTStates ) )
-        , ( 0x25, ( sla_l, IncrementByTwo, EightTStates ) )
-        , ( 0x28, ( sra_b, IncrementByTwo, EightTStates ) )
-        , ( 0x29, ( sra_c, IncrementByTwo, EightTStates ) )
-        , ( 0x2A, ( sra_d, IncrementByTwo, EightTStates ) )
-        , ( 0x2B, ( sra_e, IncrementByTwo, EightTStates ) )
-        , ( 0x2C, ( sra_h, IncrementByTwo, EightTStates ) )
-        , ( 0x2D, ( sra_l, IncrementByTwo, EightTStates ) )
-        , ( 0x30, ( sll_b, IncrementByTwo, EightTStates ) )
-        , ( 0x31, ( sll_c, IncrementByTwo, EightTStates ) )
-        , ( 0x32, ( sll_d, IncrementByTwo, EightTStates ) )
-        , ( 0x33, ( sll_e, IncrementByTwo, EightTStates ) )
-        , ( 0x34, ( sll_h, IncrementByTwo, EightTStates ) )
-        , ( 0x35, ( sll_l, IncrementByTwo, EightTStates ) )
-        , ( 0x38, ( srl_b, IncrementByTwo, EightTStates ) )
-        , ( 0x39, ( srl_c, IncrementByTwo, EightTStates ) )
-        , ( 0x3A, ( srl_d, IncrementByTwo, EightTStates ) )
-        , ( 0x3B, ( srl_e, IncrementByTwo, EightTStates ) )
-        , ( 0x3C, ( srl_h, IncrementByTwo, EightTStates ) )
-        , ( 0x3D, ( srl_l, IncrementByTwo, EightTStates ) )
-        , ( 0x40, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.b |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x41, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.c |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x42, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.d |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x43, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.e |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x44, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x45, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x48, ( bit_1_b, IncrementByTwo, EightTStates ) )
-        , ( 0x49, ( bit_1_c, IncrementByTwo, EightTStates ) )
-        , ( 0x4A, ( bit_1_d, IncrementByTwo, EightTStates ) )
-        , ( 0x4B, ( bit_1_e, IncrementByTwo, EightTStates ) )
-        , ( 0x4C, ( bit_1_h, IncrementByTwo, EightTStates ) )
-        , ( 0x4D, ( bit_1_l, IncrementByTwo, EightTStates ) )
-        , ( 0x50, ( bit_2_b, IncrementByTwo, EightTStates ) )
-        , ( 0x51, ( bit_2_c, IncrementByTwo, EightTStates ) )
-        , ( 0x52, ( bit_2_d, IncrementByTwo, EightTStates ) )
-        , ( 0x53, ( bit_2_e, IncrementByTwo, EightTStates ) )
-        , ( 0x54, ( bit_2_h, IncrementByTwo, EightTStates ) )
-        , ( 0x55, ( bit_2_l, IncrementByTwo, EightTStates ) )
-        , ( 0x58, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.b |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x59, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.c |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x5A, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.d |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x5B, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.e |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x5C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x5D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x60, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.b |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x61, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.c |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x62, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.d |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x63, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.e |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x64, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x65, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x68, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.b |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x69, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.c |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x6A, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.d |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x6B, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.e |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x6C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x6D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x70, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.b |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x71, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.c |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x72, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.d |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x73, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.e |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x74, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x75, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x78, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.b |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x79, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.c |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x7A, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.d |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x7B, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.e |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x7C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
-        , ( 0x7D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, IncrementByTwo, EightTStates ) )
+        [ ( 0x00, ( rlc_b, EightTStates ) )
+        , ( 0x01, ( rlc_c, EightTStates ) )
+        , ( 0x02, ( rlc_d, EightTStates ) )
+        , ( 0x03, ( rlc_e, EightTStates ) )
+        , ( 0x04, ( rlc_h, EightTStates ) )
+        , ( 0x05, ( rlc_l, EightTStates ) )
+        , ( 0x08, ( rrc_b, EightTStates ) )
+        , ( 0x09, ( rrc_c, EightTStates ) )
+        , ( 0x0A, ( rrc_d, EightTStates ) )
+        , ( 0x0B, ( rrc_e, EightTStates ) )
+        , ( 0x0C, ( rrc_h, EightTStates ) )
+        , ( 0x0D, ( rrc_l, EightTStates ) )
+        , ( 0x10, ( rl_b, EightTStates ) )
+        , ( 0x11, ( rl_c, EightTStates ) )
+        , ( 0x12, ( rl_d, EightTStates ) )
+        , ( 0x13, ( rl_e, EightTStates ) )
+        , ( 0x14, ( rl_h, EightTStates ) )
+        , ( 0x15, ( rl_l, EightTStates ) )
+        , ( 0x18, ( rr_b, EightTStates ) )
+        , ( 0x19, ( rr_c, EightTStates ) )
+        , ( 0x1A, ( rr_d, EightTStates ) )
+        , ( 0x1B, ( rr_e, EightTStates ) )
+        , ( 0x1C, ( rr_h, EightTStates ) )
+        , ( 0x1D, ( rr_l, EightTStates ) )
+        , ( 0x20, ( sla_b, EightTStates ) )
+        , ( 0x21, ( sla_c, EightTStates ) )
+        , ( 0x22, ( sla_d, EightTStates ) )
+        , ( 0x23, ( sla_e, EightTStates ) )
+        , ( 0x24, ( sla_h, EightTStates ) )
+        , ( 0x25, ( sla_l, EightTStates ) )
+        , ( 0x28, ( sra_b, EightTStates ) )
+        , ( 0x29, ( sra_c, EightTStates ) )
+        , ( 0x2A, ( sra_d, EightTStates ) )
+        , ( 0x2B, ( sra_e, EightTStates ) )
+        , ( 0x2C, ( sra_h, EightTStates ) )
+        , ( 0x2D, ( sra_l, EightTStates ) )
+        , ( 0x30, ( sll_b, EightTStates ) )
+        , ( 0x31, ( sll_c, EightTStates ) )
+        , ( 0x32, ( sll_d, EightTStates ) )
+        , ( 0x33, ( sll_e, EightTStates ) )
+        , ( 0x34, ( sll_h, EightTStates ) )
+        , ( 0x35, ( sll_l, EightTStates ) )
+        , ( 0x38, ( srl_b, EightTStates ) )
+        , ( 0x39, ( srl_c, EightTStates ) )
+        , ( 0x3A, ( srl_d, EightTStates ) )
+        , ( 0x3B, ( srl_e, EightTStates ) )
+        , ( 0x3C, ( srl_h, EightTStates ) )
+        , ( 0x3D, ( srl_l, EightTStates ) )
+        , ( 0x40, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.b |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x41, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.c |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x42, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.d |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x43, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.e |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x44, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x45, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x48, ( bit_1_b, EightTStates ) )
+        , ( 0x49, ( bit_1_c, EightTStates ) )
+        , ( 0x4A, ( bit_1_d, EightTStates ) )
+        , ( 0x4B, ( bit_1_e, EightTStates ) )
+        , ( 0x4C, ( bit_1_h, EightTStates ) )
+        , ( 0x4D, ( bit_1_l, EightTStates ) )
+        , ( 0x50, ( bit_2_b, EightTStates ) )
+        , ( 0x51, ( bit_2_c, EightTStates ) )
+        , ( 0x52, ( bit_2_d, EightTStates ) )
+        , ( 0x53, ( bit_2_e, EightTStates ) )
+        , ( 0x54, ( bit_2_h, EightTStates ) )
+        , ( 0x55, ( bit_2_l, EightTStates ) )
+        , ( 0x58, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.b |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x59, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.c |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x5A, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.d |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x5B, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.e |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x5C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x5D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x60, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.b |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x61, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.c |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x62, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.d |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x63, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.e |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x64, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x65, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x68, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.b |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x69, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.c |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x6A, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.d |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x6B, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.e |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x6C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x6D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x70, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.b |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x71, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.c |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x72, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.d |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x73, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.e |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x74, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x75, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x78, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.b |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x79, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.c |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x7A, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.d |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x7B, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.e |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x7C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x7D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, EightTStates ) )
+        ]
+
+
+singleByteMainAndFlagRegistersIXCB : Dict Int ( MainWithIndexRegisters -> FlagRegisters -> Z80Change, InstructionDuration )
+singleByteMainAndFlagRegistersIXCB =
+    Dict.fromList
+        [ ( 0x00, ( rlc_b, EightTStates ) )
+        , ( 0x01, ( rlc_c, EightTStates ) )
+        , ( 0x02, ( rlc_d, EightTStates ) )
+        , ( 0x03, ( rlc_e, EightTStates ) )
+
+        --
+        ----, ( 0x04, ( rlc_h, PCIncrementByFour, EightTStates ) )
+        ----, ( 0x05, ( rlc_l, PCIncrementByFour, EightTStates ) )
+        --, ( 0x08, ( rrc_b, PCIncrementByFour, EightTStates ) )
+        --, ( 0x09, ( rrc_c, PCIncrementByFour, EightTStates ) )
+        --, ( 0x0A, ( rrc_d, PCIncrementByFour, EightTStates ) )
+        --, ( 0x0B, ( rrc_e, PCIncrementByFour, EightTStates ) )
+        --
+        ----, ( 0x0C, ( rrc_h, PCIncrementByFour, EightTStates ) )
+        ----, ( 0x0D, ( rrc_l, PCIncrementByFour, EightTStates ) )
+        --, ( 0x10, ( rl_b, PCIncrementByFour, EightTStates ) )
+        --, ( 0x11, ( rl_c, PCIncrementByFour, EightTStates ) )
+        --, ( 0x12, ( rl_d, PCIncrementByFour, EightTStates ) )
+        --, ( 0x13, ( rl_e, PCIncrementByFour, EightTStates ) )
+        --
+        ----, ( 0x14, ( rl_h, PCIncrementByFour, EightTStates ) )
+        ----, ( 0x15, ( rl_l, PCIncrementByFour, EightTStates ) )
+        --, ( 0x18, ( rr_b, PCIncrementByFour, EightTStates ) )
+        --, ( 0x19, ( rr_c, PCIncrementByFour, EightTStates ) )
+        --, ( 0x1A, ( rr_d, PCIncrementByFour, EightTStates ) )
+        --, ( 0x1B, ( rr_e, PCIncrementByFour, EightTStates ) )
+        --
+        ----, ( 0x1C, ( rr_h, PCIncrementByFour, EightTStates ) )
+        ----, ( 0x1D, ( rr_l, PCIncrementByFour, EightTStates ) )
+        --, ( 0x20, ( sla_b, PCIncrementByFour, EightTStates ) )
+        --, ( 0x21, ( sla_c, PCIncrementByFour, EightTStates ) )
+        --, ( 0x22, ( sla_d, PCIncrementByFour, EightTStates ) )
+        --, ( 0x23, ( sla_e, PCIncrementByFour, EightTStates ) )
+        --
+        ----, ( 0x24, ( sla_h, PCIncrementByFour, EightTStates ) )
+        ----, ( 0x25, ( sla_l, PCIncrementByFour, EightTStates ) )
+        --, ( 0x28, ( sra_b, PCIncrementByFour, EightTStates ) )
+        --, ( 0x29, ( sra_c, PCIncrementByFour, EightTStates ) )
+        --, ( 0x2A, ( sra_d, PCIncrementByFour, EightTStates ) )
+        --, ( 0x2B, ( sra_e, PCIncrementByFour, EightTStates ) )
+        --
+        ----, ( 0x2C, ( sra_h, PCIncrementByFour, EightTStates ) )
+        ----, ( 0x2D, ( sra_l, PCIncrementByFour, EightTStates ) )
+        --, ( 0x30, ( sll_b, PCIncrementByFour, EightTStates ) )
+        --, ( 0x31, ( sll_c, PCIncrementByFour, EightTStates ) )
+        --, ( 0x32, ( sll_d, PCIncrementByFour, EightTStates ) )
+        --, ( 0x33, ( sll_e, PCIncrementByFour, EightTStates ) )
+        --, ( 0x34, ( sll_h, PCIncrementByFour, EightTStates ) )
+        --, ( 0x35, ( sll_l, PCIncrementByFour, EightTStates ) )
+        --, ( 0x38, ( srl_b, PCIncrementByFour, EightTStates ) )
+        --, ( 0x39, ( srl_c, PCIncrementByFour, EightTStates ) )
+        --, ( 0x3A, ( srl_d, PCIncrementByFour, EightTStates ) )
+        --, ( 0x3B, ( srl_e, PCIncrementByFour, EightTStates ) )
+        --
+        ----, ( 0x3C, ( srl_h, PCIncrementByFour, EightTStates ) )
+        ----, ( 0x3D, ( srl_l, PCIncrementByFour, EightTStates ) )
+        --, ( 0x40, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.b |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x41, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.c |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x42, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.d |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x43, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.e |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x44, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 (z80_main.ix |> shiftRightBy8) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x45, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 (z80_main.ix |> Bitwise.and 0xFF) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x48, ( bit_1_b, PCIncrementByFour, EightTStates ) )
+        --, ( 0x49, ( bit_1_c, PCIncrementByFour, EightTStates ) )
+        --, ( 0x4A, ( bit_1_d, PCIncrementByFour, EightTStates ) )
+        --, ( 0x4B, ( bit_1_e, PCIncrementByFour, EightTStates ) )
+        --, ( 0x4C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_1 (z80_main.ix |> shiftRightBy8) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x4D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_1 (z80_main.ix |> Bitwise.and 0xFF) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x50, ( bit_2_b, PCIncrementByFour, EightTStates ) )
+        --, ( 0x51, ( bit_2_c, PCIncrementByFour, EightTStates ) )
+        --, ( 0x52, ( bit_2_d, PCIncrementByFour, EightTStates ) )
+        --, ( 0x53, ( bit_2_e, PCIncrementByFour, EightTStates ) )
+        --, ( 0x54, ( \z80_main z80_flags -> z80_flags |> testBit Bit_2 (z80_main.ix |> shiftRightBy8) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x55, ( \z80_main z80_flags -> z80_flags |> testBit Bit_2 (z80_main.ix |> Bitwise.and 0xFF) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x58, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.b |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x59, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.c |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x5A, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.d |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x5B, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.e |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x5C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 (z80_main.ix |> shiftRightBy8) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x5D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 (z80_main.ix |> Bitwise.and 0xFF) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x60, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.b |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x61, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.c |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x62, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.d |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x63, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.e |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x64, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 (z80_main.ix |> shiftRightBy8) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x65, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 (z80_main.ix |> Bitwise.and 0xFF) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x68, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.b |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x69, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.c |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x6A, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.d |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x6B, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.e |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x6C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 (z80_main.ix |> shiftRightBy8) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x6D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 (z80_main.ix |> Bitwise.and 0xFF) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x70, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.b |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x71, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.c |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x72, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.d |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x73, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.e |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x74, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 (z80_main.ix |> shiftRightBy8) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x75, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 (z80_main.ix |> Bitwise.and 0xFF) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x78, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.b |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x79, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.c |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x7A, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.d |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x7B, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.e |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x7C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 (z80_main.ix |> shiftRightBy8) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x7D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 (z80_main.ix |> Bitwise.and 0xFF) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        ]
+
+
+singleByteMainAndFlagRegistersIYCB : Dict Int ( MainWithIndexRegisters -> FlagRegisters -> Z80Change, InstructionDuration )
+singleByteMainAndFlagRegistersIYCB =
+    Dict.fromList
+        [ ( 0x00, ( rlc_b, EightTStates ) )
+        , ( 0x01, ( rlc_c, EightTStates ) )
+        , ( 0x02, ( rlc_d, EightTStates ) )
+        , ( 0x03, ( rlc_e, EightTStates ) )
+
+        --( 0x00, ( rlc_b, PCIncrementByFour, EightTStates ) )
+        --, ( 0x01, ( rlc_c, PCIncrementByFour, EightTStates ) )
+        --, ( 0x02, ( rlc_d, PCIncrementByFour, EightTStates ) )
+        --, ( 0x03, ( rlc_e, PCIncrementByFour, EightTStates ) )
+        --
+        ----, ( 0x04, ( rlc_h, PCIncrementByFour, EightTStates ) )
+        ----, ( 0x05, ( rlc_l, PCIncrementByFour, EightTStates ) )
+        --, ( 0x08, ( rrc_b, PCIncrementByFour, EightTStates ) )
+        --, ( 0x09, ( rrc_c, PCIncrementByFour, EightTStates ) )
+        --, ( 0x0A, ( rrc_d, PCIncrementByFour, EightTStates ) )
+        --, ( 0x0B, ( rrc_e, PCIncrementByFour, EightTStates ) )
+        --
+        ----, ( 0x0C, ( rrc_h, PCIncrementByFour, EightTStates ) )
+        ----, ( 0x0D, ( rrc_l, PCIncrementByFour, EightTStates ) )
+        --, ( 0x10, ( rl_b, PCIncrementByFour, EightTStates ) )
+        --, ( 0x11, ( rl_c, PCIncrementByFour, EightTStates ) )
+        --, ( 0x12, ( rl_d, PCIncrementByFour, EightTStates ) )
+        --, ( 0x13, ( rl_e, PCIncrementByFour, EightTStates ) )
+        --
+        ----, ( 0x14, ( rl_h, PCIncrementByFour, EightTStates ) )
+        ----, ( 0x15, ( rl_l, PCIncrementByFour, EightTStates ) )
+        --, ( 0x18, ( rr_b, PCIncrementByFour, EightTStates ) )
+        --, ( 0x19, ( rr_c, PCIncrementByFour, EightTStates ) )
+        --, ( 0x1A, ( rr_d, PCIncrementByFour, EightTStates ) )
+        --, ( 0x1B, ( rr_e, PCIncrementByFour, EightTStates ) )
+        --
+        ----, ( 0x1C, ( rr_h, PCIncrementByFour, EightTStates ) )
+        ----, ( 0x1D, ( rr_l, PCIncrementByFour, EightTStates ) )
+        --, ( 0x20, ( sla_b, PCIncrementByFour, EightTStates ) )
+        --, ( 0x21, ( sla_c, PCIncrementByFour, EightTStates ) )
+        --, ( 0x22, ( sla_d, PCIncrementByFour, EightTStates ) )
+        --, ( 0x23, ( sla_e, PCIncrementByFour, EightTStates ) )
+        --
+        ----, ( 0x24, ( sla_h, PCIncrementByFour, EightTStates ) )
+        ----, ( 0x25, ( sla_l, PCIncrementByFour, EightTStates ) )
+        --, ( 0x28, ( sra_b, PCIncrementByFour, EightTStates ) )
+        --, ( 0x29, ( sra_c, PCIncrementByFour, EightTStates ) )
+        --, ( 0x2A, ( sra_d, PCIncrementByFour, EightTStates ) )
+        --, ( 0x2B, ( sra_e, PCIncrementByFour, EightTStates ) )
+        --
+        ----, ( 0x2C, ( sra_h, PCIncrementByFour, EightTStates ) )
+        ----, ( 0x2D, ( sra_l, PCIncrementByFour, EightTStates ) )
+        --, ( 0x30, ( sll_b, PCIncrementByFour, EightTStates ) )
+        --, ( 0x31, ( sll_c, PCIncrementByFour, EightTStates ) )
+        --, ( 0x32, ( sll_d, PCIncrementByFour, EightTStates ) )
+        --, ( 0x33, ( sll_e, PCIncrementByFour, EightTStates ) )
+        --
+        ----, ( 0x34, ( sll_h, PCIncrementByFour, EightTStates ) )
+        ----, ( 0x35, ( sll_l, PCIncrementByFour, EightTStates ) )
+        --, ( 0x38, ( srl_b, PCIncrementByFour, EightTStates ) )
+        --, ( 0x39, ( srl_c, PCIncrementByFour, EightTStates ) )
+        --, ( 0x3A, ( srl_d, PCIncrementByFour, EightTStates ) )
+        --, ( 0x3B, ( srl_e, PCIncrementByFour, EightTStates ) )
+        --
+        ----, ( 0x3C, ( srl_h, PCIncrementByFour, EightTStates ) )
+        ----, ( 0x3D, ( srl_l, PCIncrementByFour, EightTStates ) )
+        --, ( 0x40, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.b |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x41, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.c |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x42, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.d |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x43, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.e |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x44, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 (z80_main.iy |> shiftRightBy8) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x45, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 (z80_main.iy |> Bitwise.and 0xFF) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x48, ( bit_1_b, PCIncrementByFour, EightTStates ) )
+        --, ( 0x49, ( bit_1_c, PCIncrementByFour, EightTStates ) )
+        --, ( 0x4A, ( bit_1_d, PCIncrementByFour, EightTStates ) )
+        --, ( 0x4B, ( bit_1_e, PCIncrementByFour, EightTStates ) )
+        --
+        ----, ( 0x4C, ( bit_1_h, PCIncrementByFour, EightTStates ) )
+        ----, ( 0x4D, ( bit_1_l, PCIncrementByFour, EightTStates ) )
+        --, ( 0x50, ( bit_2_b, PCIncrementByFour, EightTStates ) )
+        --, ( 0x51, ( bit_2_c, PCIncrementByFour, EightTStates ) )
+        --, ( 0x52, ( bit_2_d, PCIncrementByFour, EightTStates ) )
+        --, ( 0x53, ( bit_2_e, PCIncrementByFour, EightTStates ) )
+        --
+        ----, ( 0x54, ( bit_2_h, PCIncrementByFour, EightTStates ) )
+        ----, ( 0x55, ( bit_2_l, PCIncrementByFour, EightTStates ) )
+        --, ( 0x58, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.b |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x59, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.c |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x5A, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.d |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x5B, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.e |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x5C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 (z80_main.iy |> shiftRightBy8) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x5D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 (z80_main.iy |> Bitwise.and 0xFF) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x60, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.b |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x61, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.c |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x62, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.d |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x63, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.e |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x64, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 (z80_main.iy |> shiftRightBy8) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x65, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 (z80_main.iy |> Bitwise.and 0xFF) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x68, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.b |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x69, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.c |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x6A, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.d |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x6B, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.e |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x6C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 (z80_main.iy |> shiftRightBy8) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x6D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 (z80_main.iy |> Bitwise.and 0xFF) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x70, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.b |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x71, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.c |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x72, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.d |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x73, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.e |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x74, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 (z80_main.iy |> shiftRightBy8) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x75, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 (z80_main.iy |> Bitwise.and 0xFF) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x78, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.b |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x79, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.c |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x7A, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.d |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x7B, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.e |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x7C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 (z80_main.iy |> shiftRightBy8) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
+        --, ( 0x7D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 (z80_main.iy |> Bitwise.and 0xFF) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
         ]
 
 
@@ -1140,3 +1894,163 @@ bit_2_h z80_main z80_flags =
 bit_2_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 bit_2_l z80_main z80_flags =
     z80_flags |> testBit Bit_2 (Bitwise.and z80_main.hl 0xFF) |> Z80ChangeFlags
+
+
+bit_0_indirect_ix : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
+bit_0_indirect_ix z80_main offset rom48k z80_env =
+    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    let
+        value =
+            z80_env |> mem ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
+    in
+    SingleBitTest Bit_0 value
+
+
+bit_1_indirect_ix : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
+bit_1_indirect_ix z80_main offset rom48k z80_env =
+    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    let
+        value =
+            z80_env |> mem ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
+    in
+    SingleBitTest Bit_1 value
+
+
+bit_2_indirect_ix : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
+bit_2_indirect_ix z80_main offset rom48k z80_env =
+    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    let
+        value =
+            z80_env |> mem ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
+    in
+    SingleBitTest Bit_2 value
+
+
+bit_3_indirect_ix : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
+bit_3_indirect_ix z80_main offset rom48k z80_env =
+    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    let
+        value =
+            z80_env |> mem ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
+    in
+    SingleBitTest Bit_3 value
+
+
+bit_4_indirect_ix : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
+bit_4_indirect_ix z80_main offset rom48k z80_env =
+    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    let
+        value =
+            z80_env |> mem ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
+    in
+    SingleBitTest Bit_4 value
+
+
+bit_5_indirect_ix : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
+bit_5_indirect_ix z80_main offset rom48k z80_env =
+    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    let
+        value =
+            z80_env |> mem ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
+    in
+    SingleBitTest Bit_5 value
+
+
+bit_6_indirect_ix : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
+bit_6_indirect_ix z80_main offset rom48k z80_env =
+    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    let
+        value =
+            z80_env |> mem ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
+    in
+    SingleBitTest Bit_6 value
+
+
+bit_7_indirect_ix : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
+bit_7_indirect_ix z80_main offset rom48k z80_env =
+    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    let
+        value =
+            z80_env |> mem ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
+    in
+    SingleBitTest Bit_7 value
+
+
+bit_0_indirect_iy : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
+bit_0_indirect_iy z80_main offset rom48k z80_env =
+    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    let
+        value =
+            z80_env |> mem ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
+    in
+    SingleBitTest Bit_0 value
+
+
+bit_1_indirect_iy : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
+bit_1_indirect_iy z80_main offset rom48k z80_env =
+    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    let
+        value =
+            z80_env |> mem ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
+    in
+    SingleBitTest Bit_1 value
+
+
+bit_2_indirect_iy : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
+bit_2_indirect_iy z80_main offset rom48k z80_env =
+    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    let
+        value =
+            z80_env |> mem ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
+    in
+    SingleBitTest Bit_2 value
+
+
+bit_3_indirect_iy : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
+bit_3_indirect_iy z80_main offset rom48k z80_env =
+    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    let
+        value =
+            z80_env |> mem ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
+    in
+    SingleBitTest Bit_3 value
+
+
+bit_4_indirect_iy : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
+bit_4_indirect_iy z80_main offset rom48k z80_env =
+    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    let
+        value =
+            z80_env |> mem ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
+    in
+    SingleBitTest Bit_4 value
+
+
+bit_5_indirect_iy : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
+bit_5_indirect_iy z80_main offset rom48k z80_env =
+    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    let
+        value =
+            z80_env |> mem ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
+    in
+    SingleBitTest Bit_5 value
+
+
+bit_6_indirect_iy : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
+bit_6_indirect_iy z80_main offset rom48k z80_env =
+    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    let
+        value =
+            z80_env |> mem ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
+    in
+    SingleBitTest Bit_6 value
+
+
+bit_7_indirect_iy : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
+bit_7_indirect_iy z80_main offset rom48k z80_env =
+    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    let
+        value =
+            z80_env |> mem ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
+    in
+    SingleBitTest Bit_7 value
