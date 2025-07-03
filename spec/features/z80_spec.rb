@@ -41,7 +41,7 @@ RSpec.describe "Spectrum Emulator" do
     let(:z80_game) { Game.find_by!(name: ENV.fetch("Z80_TEST", flags.name)) }
 
     let(:times) { {
-      flags.name => 7400,
+      flags.name => 7800,
       regs.name => 13200,
       full_flags.name => 15000,
       full.name => 18000,
@@ -58,28 +58,35 @@ RSpec.describe "Spectrum Emulator" do
 
     # Disabled some of the IM routines, and now completes.
     # Flags: 024 of 160 tests failed.
+    # 51 SRO (XY) passes
     # 52 SRO (XY), R (DD CB 00 00)
-    # 73 BIT N,(XY), 74 BIT N,(XY)- DD CB 00 46 and DD CB 00 40
+    # 73 BIT N,(XY) used to fail, but passes with my
+    # IXCB implmentation rather than the ported Java
+    # 74 BIT N,(XY)- DD CB 00 40
     # 89 LDIR-> NOP'. 90 LDDR ->NOP',
     # 91 CPI, 92 CPD, 93 CPIR, 94 CPDR
     # 96 -> 103 IN FE:FF -> BF
     # 107 OUTI, 108 OUTD, 109 OTIR, 110 OTDR
     # 156 LD A,I 157 LD A, R
     #
-    # Regs: 037 of 160 tests failed.
+    # Regs: 036 of 160 tests failed.
     # 11 NEG, 12 NEG'
     # 52 SRO (XY) ,R
+    # 65 ADD HL,RR passes, as does 69 SBC HL,RR
     # 68 ADC HL,RR
-    # 73 BIT N,(XY), 74 BIT N,(XY)-
+    # 74 BIT N,(XY),-
+    # 78 SET N,(XY) passes
     # 79 SET N, (XY), R
+    # 83 RES N, (XY) passes
     # 84 RES N, (XY), R
-    # 89 LDIR-> NOP'. 90 LDDR ->NOP',
+    # 89 LDIR->NOP'. 90 LDDR->NOP',
     # 91 CPI, 92 CPD, 93 CPIR, 94 CPDR
     # 96 -> 103 IN FE:FF -> BF
     # 105 OUT (C), R
     # 107 OUTI, 108 OUTD, 109 OTIR, 110 OTDR
     # 122 RETN 123 RETI 124 RETI/RETN
-    # 148 LD RR, (NN)
+    # HL, (NN) and XY, (NN) both pass
+    # 148 LD RR, (NN) -
     # 154 LD I,A 155 LD R, A
     # 156 LD A,I 157 LD A, R
     # 159 IM N
@@ -90,11 +97,12 @@ RSpec.describe "Spectrum Emulator" do
       expect(page).to have_content 'Refresh Interval'
 
       cpu_count = find("#cyclecount")
+      # wait for Spectrum ROM to initialize so that
+      # we can send LOAD "" to load the tape
       while cpu_count.text.to_i < 80
         sleep 0.5
       end
 
-      # sleep 20
       # This is very slow, but calling send_keys
       # with a string on an array
       # is too quick
@@ -110,7 +118,7 @@ RSpec.describe "Spectrum Emulator" do
       speed = measure_speed_in_hz spectrum
       if ENV.key? "Z80_TEST"
         while cpu_count.text.to_i < times.fetch(z80_game.name)
-          sleep 10
+          sleep 5
           spectrum.send_keys 'y'
         end
       end

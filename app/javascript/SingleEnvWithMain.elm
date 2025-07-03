@@ -21,10 +21,6 @@ type EightBitMain
 
 type SingleEnvMainChange
     = SingleEnvNewARegister Int CpuTimeCTime
-      --| SingleEnvNewBRegister Int CpuTimeCTime
-      --| SingleEnvNewCRegister Int CpuTimeCTime
-      --| SingleEnvNewDRegister Int CpuTimeCTime
-      --| SingleEnvNewERegister Int CpuTimeCTime
     | SingleEnv8BitMain EightBitMain Int CpuTimeCTime
     | SingleEnvNewHLRegister Int CpuTimeCTime
     | SingleBitTest BitTest CpuTimeAndValue
@@ -56,17 +52,17 @@ singleEnvMainRegs =
         ]
 
 
-singleEnvMainRegsIX : Dict Int ( MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange, PCIncrement, InstructionDuration )
+singleEnvMainRegsIX : Dict Int ( MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )
 singleEnvMainRegsIX =
     Dict.fromList
-        [ ( 0x39, ( add_ix_sp, IncrementByTwo, FifteenTStates ) )
+        [ ( 0x39, ( add_ix_sp, FifteenTStates ) )
         ]
 
 
-singleEnvMainRegsIY : Dict Int ( MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange, PCIncrement, InstructionDuration )
+singleEnvMainRegsIY : Dict Int ( MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )
 singleEnvMainRegsIY =
     Dict.fromList
-        [ ( 0x39, ( add_iy_sp, IncrementByTwo, FifteenTStates ) )
+        [ ( 0x39, ( add_iy_sp, FifteenTStates ) )
         ]
 
 
@@ -86,6 +82,9 @@ applySingleEnvMainChange pcInc duration z80changeData z80 =
 
                 IncrementByTwo ->
                     Bitwise.and (z80.pc + 2) 0xFFFF
+
+                PCIncrementByFour ->
+                    Bitwise.and (z80.pc + 4) 0xFFFF
     in
     case z80changeData of
         SingleEnvNewARegister int cpuTimeCTime ->

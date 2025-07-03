@@ -92,8 +92,6 @@ applyDeltaWithChanges z80delta z80 =
         EnvWithPc z80Env programCounter ->
             { z80 | env = z80Env, pc = programCounter, interrupts = z80delta.interrupts }
 
-        --FlagsWithPCMainAndTime flagRegisters pc mainWithIndexRegisters cpu_time ->
-        --    { z80 | flags = flagRegisters, pc = pc, env = { z80_env | time = z80delta.time |> addCpuTimeTimeInc cpu_time }, main = mainWithIndexRegisters, interrupts = z80delta.interrupts }
         FlagsWithMainAndTime flagRegisters mainWithIndexRegisters cpu_time ->
             { z80 | flags = flagRegisters, pc = z80delta.pc, env = { z80_env | time = z80delta.time |> addCpuTimeTime cpu_time }, main = mainWithIndexRegisters, interrupts = z80delta.interrupts }
 
@@ -106,8 +104,6 @@ applyDeltaWithChanges z80delta z80 =
         CpuTimeWithFlagsAndPc cpu_time flagRegisters pc ->
             { z80 | flags = flagRegisters, pc = pc, env = { z80_env | time = cpu_time }, interrupts = z80delta.interrupts }
 
-        --MainRegs mainWithIndexRegisters ->
-        --    { z80 | main = mainWithIndexRegisters, pc = z80delta.pc, env = { z80_env | time = z80delta.time }, interrupts = z80delta.interrupts }
         MainRegsWithPc mainWithIndexRegisters pc ->
             { z80 | main = mainWithIndexRegisters, pc = pc, env = { z80_env | time = z80delta.time }, interrupts = z80delta.interrupts }
 

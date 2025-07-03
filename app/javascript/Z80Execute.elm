@@ -378,6 +378,9 @@ applyFlagDelta pcInc duration z80_flags rom48k z80 =
                 IncrementByTwo ->
                     (z80.pc + 2) |> Bitwise.and 0xFFFF
 
+                PCIncrementByFour ->
+                    Bitwise.and (z80.pc + 4) 0xFFFF
+
         env_1 =
             { env | time = time |> addDuration duration }
     in
@@ -462,6 +465,9 @@ applyPureDelta cpuInc cpu_time z80changeData tmp_z80 =
 
                 IncrementByTwo ->
                     (z80.pc + 2) |> Bitwise.and 0xFFFF
+
+                PCIncrementByFour ->
+                    Bitwise.and (z80.pc + 4) 0xFFFF
     in
     { z80 | pc = new_pc, r = z80.r + 1 } |> applyZ80Change z80changeData
 
@@ -482,6 +488,9 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
 
                 IncrementByTwo ->
                     Bitwise.and (z80.pc + 2) 0xFFFF
+
+                PCIncrementByFour ->
+                    Bitwise.and (z80.pc + 4) 0xFFFF
     in
     case z80.main |> applyRegisterChange z80changeData z80.flags of
         MainRegsApplied new_main ->

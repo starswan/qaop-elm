@@ -82,29 +82,29 @@ singleByteMainAndFlagRegisters =
         ]
 
 
-singleByteMainAndFlagRegistersIX : Dict Int ( MainWithIndexRegisters -> FlagRegisters -> Z80Change, PCIncrement, InstructionDuration )
+singleByteMainAndFlagRegistersIX : Dict Int ( MainWithIndexRegisters -> FlagRegisters -> Z80Change, InstructionDuration )
 singleByteMainAndFlagRegistersIX =
     Dict.fromList
-        [ ( 0x09, ( add_ix_bc, IncrementByTwo, FifteenTStates ) )
-        , ( 0x19, ( add_ix_de, IncrementByTwo, FifteenTStates ) )
-        , ( 0x24, ( inc_h_ix, IncrementByTwo, EightTStates ) )
-        , ( 0x25, ( dec_h_ix, IncrementByTwo, EightTStates ) )
-        , ( 0x29, ( add_ix_ix, IncrementByTwo, FifteenTStates ) )
-        , ( 0x2C, ( inc_ix_l, IncrementByTwo, EightTStates ) )
-        , ( 0x2D, ( dec_ix_l, IncrementByTwo, EightTStates ) )
+        [ ( 0x09, ( add_ix_bc, FifteenTStates ) )
+        , ( 0x19, ( add_ix_de, FifteenTStates ) )
+        , ( 0x24, ( inc_h_ix, EightTStates ) )
+        , ( 0x25, ( dec_h_ix, EightTStates ) )
+        , ( 0x29, ( add_ix_ix, FifteenTStates ) )
+        , ( 0x2C, ( inc_ix_l, EightTStates ) )
+        , ( 0x2D, ( dec_ix_l, EightTStates ) )
         ]
 
 
-singleByteMainAndFlagRegistersIY : Dict Int ( MainWithIndexRegisters -> FlagRegisters -> Z80Change, PCIncrement, InstructionDuration )
+singleByteMainAndFlagRegistersIY : Dict Int ( MainWithIndexRegisters -> FlagRegisters -> Z80Change, InstructionDuration )
 singleByteMainAndFlagRegistersIY =
     Dict.fromList
-        [ ( 0x09, ( add_iy_bc, IncrementByTwo, FifteenTStates ) )
-        , ( 0x19, ( add_iy_de, IncrementByTwo, FifteenTStates ) )
-        , ( 0x24, ( inc_h_iy, IncrementByTwo, EightTStates ) )
-        , ( 0x25, ( dec_h_iy, IncrementByTwo, EightTStates ) )
-        , ( 0x29, ( add_iy_iy, IncrementByTwo, FifteenTStates ) )
-        , ( 0x2C, ( inc_iy_l, IncrementByTwo, EightTStates ) )
-        , ( 0x2D, ( dec_iy_l, IncrementByTwo, EightTStates ) )
+        [ ( 0x09, ( add_iy_bc, FifteenTStates ) )
+        , ( 0x19, ( add_iy_de, FifteenTStates ) )
+        , ( 0x24, ( inc_h_iy, EightTStates ) )
+        , ( 0x25, ( dec_h_iy, EightTStates ) )
+        , ( 0x29, ( add_iy_iy, FifteenTStates ) )
+        , ( 0x2C, ( inc_iy_l, EightTStates ) )
+        , ( 0x2D, ( dec_iy_l, EightTStates ) )
         ]
 
 

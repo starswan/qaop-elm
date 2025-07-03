@@ -1,9 +1,17 @@
 module PCIncrement exposing (..)
 
-type PCIncrement = IncrementByOne | IncrementByTwo
 
-type TriplePCIncrement = IncrementByThree | IncrementByFour
+type PCIncrement
+    = IncrementByOne
+    | IncrementByTwo
+    | PCIncrementByFour
 
-type MediumPCIncrement = IncreaseByTwo | IncreaseByThree
+
+type TriplePCIncrement
+    = IncrementByThree
+    | IncrementByFour
 
 
+type MediumPCIncrement
+    = IncreaseByTwo
+    | IncreaseByThree
