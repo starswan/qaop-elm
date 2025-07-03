@@ -225,7 +225,7 @@ ed_neg rom48k z80 =
         new_flags =
             { flags | a = 0 } |> z80_sub v
     in
-    FlagRegs new_flags
+    FlagRegsWithPc new_flags z80.pc
 
 
 setImED46 : Z80ROM -> Z80Core -> Z80Delta
@@ -345,8 +345,11 @@ execute_ED5B rom48k z80 =
 
 execute_ED6B : Z80ROM -> Z80Core -> Z80Delta
 execute_ED6B rom48k z80 =
-    -- case 0x5B: MP=(v=imm16())+1; v=env.mem16(v); D=v>>>8; E=v&0xFF; time+=6; break;
+    -- case 0x6B: MP=(v=imm16())+1; HL=env.mem16(v); time+=6; break;
     let
+        z80_main =
+            z80.main
+
         v1 =
             z80 |> imm16 rom48k
 
@@ -357,8 +360,7 @@ execute_ED6B rom48k z80 =
         v2 =
             { env | time = v1.time } |> mem16 v1.value16 rom48k
     in
-    --{ z80_1 | env = { env | time = v2.time } } |> set_de v2.value |> add_cpu_time 6 |> Whole
-    MainRegsWithPcAndCpuTime (z80.main |> set_bc_main v2.value16) v1.pc (v2.time |> addCpuTimeTime 6)
+    MainRegsWithPcAndCpuTime { z80_main | hl = v2.value16 } v1.pc (v2.time |> addCpuTimeTime 6)
 
 
 execute_ED72 : Z80ROM -> Z80Core -> Z80Delta
@@ -891,22 +893,22 @@ adc_hl b z80 =
             z80.main.hl
 
         r1 =
-            a + b + Bitwise.and (shiftRightBy8 z80.flags.ff) c_FC
+            a + b + Bitwise.and (z80.flags.ff |> shiftRightBy8) c_FC
 
         ff =
-            shiftRightBy8 r1
+            r1 |> shiftRightBy8
 
         fa =
-            shiftRightBy8 a
+            a |> shiftRightBy8
 
         fb =
-            shiftRightBy8 b
+            b |> shiftRightBy8
 
         r =
             char r1
 
         fr =
-            Bitwise.or (shiftRightBy8 r) (shiftLeftBy8 r)
+            Bitwise.or (r |> shiftRightBy8) (r |> shiftLeftBy8)
 
         main =
             z80.main
@@ -915,7 +917,7 @@ adc_hl b z80 =
             z80.flags
     in
     --{ z80 | main = { main | hl = r }, flags = { flags | ff = ff, fa = fa, fb = fb, fr = fr} } |> add_cpu_time 7
-    FlagsWithMainAndTime { flags | ff = ff, fa = fa, fb = fb, fr = fr } { main | hl = r } 7
+    FlagsWithPCMainAndCpuTime { flags | ff = ff, fa = fa, fb = fb, fr = fr } z80.pc { main | hl = r } (z80.env.time |> addCpuTimeTime 7)
 
 
 cpir : DirectionForLDIR -> Bool -> Z80ROM -> Z80Core -> Z80Delta
@@ -1004,11 +1006,11 @@ cpir incOrDec repeat rom48k z80_core =
 
         --		Ff |= v<<4&0x20 | v&8;
         ff =
-            Bitwise.or old_ff (v |> shiftLeftBy 4 |> Bitwise.and 0x20 |> Bitwise.or (Bitwise.and v 0x08))
+            Bitwise.or old_ff (new_v |> shiftLeftBy 4 |> Bitwise.and 0x20 |> Bitwise.or (Bitwise.and new_v 0x08))
 
         --	}
     in
-    HLBCWithFlagsAndPc hl bc { z80_flags | ff = ff, fa = fb, fb = fb, fr = fr } new_pc
+    HLBCWithFlagsAndPc hl bc { z80_flags | ff = ff, fa = new_fa, fb = new_fb, fr = fr } new_pc
 
 
 
