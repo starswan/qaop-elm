@@ -57,7 +57,7 @@ RSpec.describe "Spectrum Emulator" do
     end
 
     # Disabled some of the IM routines, and now completes.
-    # Flags: 024 of 160 tests failed.
+    # Flags: 019 of 160 tests failed.
     # 51 SRO (XY) passes
     # 52 SRO (XY), R (DD CB 00 00)
     # 73 BIT N,(XY) passes
