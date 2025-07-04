@@ -13,6 +13,7 @@ import Z80Types exposing (MainWithIndexRegisters)
 
 type TripleMainChange
     = Store16BitValue Int Int
+    | Store8BitValue Int Int
 
 
 tripleMainRegs : Dict Int ( Int -> MainWithIndexRegisters -> TripleMainChange, TriplePCIncrement, InstructionDuration )
