@@ -14,9 +14,9 @@ import Z80Types exposing (IXIY, IXIYHL(..), get_xy_ixiy)
 miniDict30 : Dict Int (IXIY -> Z80ROM -> Z80Core -> Z80Delta)
 miniDict30 =
     Dict.fromList
-        [ --( 0x34, inc_indirect_hl )
-          --, ( 0x35, dec_indirect_hl )
-          ( 0x36, ld_indirect_hl_n )
+        [--( 0x34, inc_indirect_hl )
+         --, ( 0x35, dec_indirect_hl )
+         --( 0x36, ld_indirect_hl_n )
         ]
 
 
