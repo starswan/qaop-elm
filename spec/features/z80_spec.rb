@@ -70,7 +70,7 @@ RSpec.describe "Spectrum Emulator" do
     #
     # FullFlags - 028 tests failed
     #
-    # Regs: 030 of 160 tests failed.
+    # Regs: 028 of 160 tests failed.
     # 52 SRO (XY) ,R (undocumented?) DD CB xx 00
     # 73 BIT N,(XY) passes
     # 74 BIT N,(XY)- DD CB xx 40
