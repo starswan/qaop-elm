@@ -116,3 +116,9 @@ ld_iy_indirect_nn : Int -> TripleByteChange
 ld_iy_indirect_nn param16 =
     -- case 0x2A: MP=(v=imm16())+1; xy=env.mem16(v); time+=6; break;
     NewIYIndirect param16
+
+
+ld_a_indirect_nn : Int -> TripleByteChange
+ld_a_indirect_nn param16 =
+    -- case 0x3A: MP=(v=imm16())+1; A=env.mem(v); time+=3; break;
+    NewAIndirect param16
