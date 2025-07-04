@@ -29,6 +29,7 @@ tripleByteWith16BitParam =
         , ( 0x31, ( ld_sp_nn, IncrementByThree, TenTStates ) )
         , ( 0xC3, ( jp_nn, IncrementByThree, TenTStates ) )
         , ( 0xCD, ( call_0xCD, IncrementByThree, SeventeenTStates ) )
+        , ( 0x3A, ( ld_a_indirect_nn, IncrementByThree, ThirteenTStates ) )
         ]
 
 
