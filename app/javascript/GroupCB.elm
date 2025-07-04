@@ -18,17 +18,17 @@ import Z80Types exposing (IXIY, IXIYHL(..), IntWithFlagsTimeAndPC, MainWithIndex
 
 
 --
---	private void group_xy_cb(int xy)
---	{
---		int pc = PC;
---		int a = MP = (char)(xy + (byte)env.mem(pc));
---		time += 3;
---		int c = env.mem((char)(pc+1));
---		PC = (char)(pc+2);
---		time += 5;
---		int v = env.mem(a);
---		time += 4;
---		int o = c>>>3 & 7;
+--  private void group_xy_cb(int xy)
+--  {
+--    int pc = PC;
+--    int a = MP = (char)(xy + (byte)env.mem(pc));
+--    time += 3;
+--    int c = env.mem((char)(pc+1));
+--    PC = (char)(pc+2);
+--    time += 5;
+--    int v = env.mem(a);
+--    time += 4;
+--    int o = c>>>3 & 7;
 
 
 group_xy_cb : IXIY -> Z80ROM -> Z80Core -> Z80Delta
@@ -64,12 +64,12 @@ group_xy_cb ixiyhl rom48k z80 =
         cAndC0 =
             Bitwise.and c.value 0xC0
 
-        --		switch(c&0xC0) {
-        --			case 0x00: v = shifter(o, v); break;
-        --			case 0x40: bit(o, v); Ff=Ff&~F53 | a>>8&F53; return;
-        --			case 0x80: v &= ~(1<<o); break;
-        --			case 0xC0: v |= 1<<o; break;
-        --		}
+        --    switch(c&0xC0) {
+        --      case 0x00: v = shifter(o, v); break;
+        --      case 0x40: bit(o, v); Ff=Ff&~F53 | a>>8&F53; return;
+        --      case 0x80: v &= ~(1<<o); break;
+        --      case 0xC0: v |= 1<<o; break;
+        --    }
         v2 =
             case cAndC0 of
                 0x00 ->
@@ -129,20 +129,20 @@ group_xy_cb ixiyhl rom48k z80 =
         --                                                   " set " ++ (a |> toHexString) ++
         --                                                   " from " ++ (v1.value |> toHexString2) ++
         --                                                   " to " ++ (v2.value |> toHexString2)) new_env
-        --		env.mem(a, v);
-        --		time += 3;
+        --    env.mem(a, v);
+        --    time += 3;
         z80_4 =
             { z80_3 | flags = v2.flags, env = new_env }
 
-        --		switch(c&0x07) {
-        --			case 0: B = v; break;
-        --			case 1: C = v; break;
-        --			case 2: D = v; break;
-        --			case 3: E = v; break;
-        --			case 4: HL = HL&0x00FF | v<<8; break;
-        --			case 5: HL = HL&0xFF00 | v; break;
-        --			case 7: A = v; break;
-        --		}
+        --    switch(c&0x07) {
+        --      case 0: B = v; break;
+        --      case 1: C = v; break;
+        --      case 2: D = v; break;
+        --      case 3: E = v; break;
+        --      case 4: HL = HL&0x00FF | v<<8; break;
+        --      case 5: HL = HL&0xFF00 | v; break;
+        --      case 7: A = v; break;
+        --    }
         caseval =
             Bitwise.and c.value 0x07
     in
@@ -173,190 +173,93 @@ singleEnvMainRegsCB =
         ]
 
 
+bit0indirectIx =
+    List.range 0x40 0x47 |> List.map (\index -> ( index, ( bit_0_indirect_ix, TwentyTStates ) )) |> Dict.fromList
 
---bit0indirectIx =
---    List.range 0x40 0x47 |> List.map (\index -> ( index, ( bit_0_indirect_ix, TwentyTStates ) )) |> Dict.fromList
---
---
---bit1indirectIx =
---    List.range 0x48 0x4F |> List.map (\index -> ( index, ( bit_1_indirect_ix, TwentyTStates ) )) |> Dict.fromList
---
---
---bit2indirectIx =
---    List.range 0x50 0x57 |> List.map (\index -> ( index, ( bit_2_indirect_ix, TwentyTStates ) )) |> Dict.fromList
---
---
---bit3indirectIx =
---    List.range 0x05 0x5F |> List.map (\index -> ( index, ( bit_3_indirect_ix, TwentyTStates ) )) |> Dict.fromList
---
---
---bit4indirectIx =
---    List.range 0x60 0x67 |> List.map (\index -> ( index, ( bit_4_indirect_ix, TwentyTStates ) )) |> Dict.fromList
---
---
---bit5indirectIx =
---    List.range 0x68 0x6F |> List.map (\index -> ( index, ( bit_5_indirect_ix, TwentyTStates ) )) |> Dict.fromList
---
---
---bit6indirectIx =
---    List.range 0x70 0x77 |> List.map (\index -> ( index, ( bit_6_indirect_ix, TwentyTStates ) )) |> Dict.fromList
---
---
---bit7indirectIx =
---    List.range 0x78 0x7F |> List.map (\index -> ( index, ( bit_7_indirect_ix, TwentyTStates ) )) |> Dict.fromList
---
---
---singleEnvMainRegsIXCB : Dict Int ( MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )
---singleEnvMainRegsIXCB =
---    bit0indirectIx
---        |> Dict.union bit1indirectIx
---        |> Dict.union bit2indirectIx
---        |> Dict.union bit3indirectIx
---        |> Dict.union bit4indirectIx
---        |> Dict.union bit5indirectIx
---        |> Dict.union bit6indirectIx
---        |> Dict.union bit7indirectIx
+
+bit1indirectIx =
+    List.range 0x48 0x4F |> List.map (\index -> ( index, ( bit_1_indirect_ix, TwentyTStates ) )) |> Dict.fromList
+
+
+bit2indirectIx =
+    List.range 0x50 0x57 |> List.map (\index -> ( index, ( bit_2_indirect_ix, TwentyTStates ) )) |> Dict.fromList
+
+
+bit3indirectIx =
+    List.range 0x58 0x5F |> List.map (\index -> ( index, ( bit_3_indirect_ix, TwentyTStates ) )) |> Dict.fromList
+
+
+bit4indirectIx =
+    List.range 0x60 0x67 |> List.map (\index -> ( index, ( bit_4_indirect_ix, TwentyTStates ) )) |> Dict.fromList
+
+
+bit5indirectIx =
+    List.range 0x68 0x6F |> List.map (\index -> ( index, ( bit_5_indirect_ix, TwentyTStates ) )) |> Dict.fromList
+
+
+bit6indirectIx =
+    List.range 0x70 0x77 |> List.map (\index -> ( index, ( bit_6_indirect_ix, TwentyTStates ) )) |> Dict.fromList
+
+
+bit7indirectIx =
+    List.range 0x78 0x7F |> List.map (\index -> ( index, ( bit_7_indirect_ix, TwentyTStates ) )) |> Dict.fromList
 
 
 singleEnvMainRegsIXCB : Dict Int ( MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )
 singleEnvMainRegsIXCB =
-    Dict.fromList
-        [ ( 0x40, ( bit_0_indirect_ix, TwentyTStates ) )
-        , ( 0x41, ( bit_0_indirect_ix, TwentyTStates ) )
-        , ( 0x42, ( bit_0_indirect_ix, TwentyTStates ) )
-        , ( 0x43, ( bit_0_indirect_ix, TwentyTStates ) )
-        , ( 0x44, ( bit_0_indirect_ix, TwentyTStates ) )
-        , ( 0x45, ( bit_0_indirect_ix, TwentyTStates ) )
-        , ( 0x46, ( bit_0_indirect_ix, TwentyTStates ) )
-        , ( 0x47, ( bit_0_indirect_ix, TwentyTStates ) )
-        , ( 0x48, ( bit_1_indirect_ix, TwentyTStates ) )
-        , ( 0x49, ( bit_1_indirect_ix, TwentyTStates ) )
-        , ( 0x4A, ( bit_1_indirect_ix, TwentyTStates ) )
-        , ( 0x4B, ( bit_1_indirect_ix, TwentyTStates ) )
-        , ( 0x4C, ( bit_1_indirect_ix, TwentyTStates ) )
-        , ( 0x4D, ( bit_1_indirect_ix, TwentyTStates ) )
-        , ( 0x4E, ( bit_1_indirect_ix, TwentyTStates ) )
-        , ( 0x4F, ( bit_1_indirect_ix, TwentyTStates ) )
-        , ( 0x50, ( bit_2_indirect_ix, TwentyTStates ) )
-        , ( 0x51, ( bit_2_indirect_ix, TwentyTStates ) )
-        , ( 0x52, ( bit_2_indirect_ix, TwentyTStates ) )
-        , ( 0x53, ( bit_2_indirect_ix, TwentyTStates ) )
-        , ( 0x54, ( bit_2_indirect_ix, TwentyTStates ) )
-        , ( 0x55, ( bit_2_indirect_ix, TwentyTStates ) )
-        , ( 0x56, ( bit_2_indirect_ix, TwentyTStates ) )
-        , ( 0x57, ( bit_2_indirect_ix, TwentyTStates ) )
-        , ( 0x5E, ( bit_3_indirect_ix, TwentyTStates ) )
-        , ( 0x58, ( bit_3_indirect_ix, TwentyTStates ) )
-        , ( 0x59, ( bit_3_indirect_ix, TwentyTStates ) )
-        , ( 0x5A, ( bit_3_indirect_ix, TwentyTStates ) )
-        , ( 0x5B, ( bit_3_indirect_ix, TwentyTStates ) )
-        , ( 0x5C, ( bit_3_indirect_ix, TwentyTStates ) )
-        , ( 0x5D, ( bit_3_indirect_ix, TwentyTStates ) )
-        , ( 0x5E, ( bit_3_indirect_ix, TwentyTStates ) )
-        , ( 0x5F, ( bit_3_indirect_ix, TwentyTStates ) )
-        , ( 0x60, ( bit_4_indirect_ix, TwentyTStates ) )
-        , ( 0x61, ( bit_4_indirect_ix, TwentyTStates ) )
-        , ( 0x62, ( bit_4_indirect_ix, TwentyTStates ) )
-        , ( 0x63, ( bit_4_indirect_ix, TwentyTStates ) )
-        , ( 0x64, ( bit_4_indirect_ix, TwentyTStates ) )
-        , ( 0x65, ( bit_4_indirect_ix, TwentyTStates ) )
-        , ( 0x66, ( bit_4_indirect_ix, TwentyTStates ) )
-        , ( 0x67, ( bit_4_indirect_ix, TwentyTStates ) )
-        , ( 0x68, ( bit_5_indirect_ix, TwentyTStates ) )
-        , ( 0x69, ( bit_5_indirect_ix, TwentyTStates ) )
-        , ( 0x6A, ( bit_5_indirect_ix, TwentyTStates ) )
-        , ( 0x6B, ( bit_5_indirect_ix, TwentyTStates ) )
-        , ( 0x6C, ( bit_5_indirect_ix, TwentyTStates ) )
-        , ( 0x6D, ( bit_5_indirect_ix, TwentyTStates ) )
-        , ( 0x6E, ( bit_5_indirect_ix, TwentyTStates ) )
-        , ( 0x6F, ( bit_5_indirect_ix, TwentyTStates ) )
-        , ( 0x70, ( bit_6_indirect_ix, TwentyTStates ) )
-        , ( 0x71, ( bit_6_indirect_ix, TwentyTStates ) )
-        , ( 0x72, ( bit_6_indirect_ix, TwentyTStates ) )
-        , ( 0x73, ( bit_6_indirect_ix, TwentyTStates ) )
-        , ( 0x74, ( bit_6_indirect_ix, TwentyTStates ) )
-        , ( 0x75, ( bit_6_indirect_ix, TwentyTStates ) )
-        , ( 0x76, ( bit_6_indirect_ix, TwentyTStates ) )
-        , ( 0x77, ( bit_6_indirect_ix, TwentyTStates ) )
-        , ( 0x78, ( bit_7_indirect_ix, TwentyTStates ) )
-        , ( 0x79, ( bit_7_indirect_ix, TwentyTStates ) )
-        , ( 0x7A, ( bit_7_indirect_ix, TwentyTStates ) )
-        , ( 0x7B, ( bit_7_indirect_ix, TwentyTStates ) )
-        , ( 0x7C, ( bit_7_indirect_ix, TwentyTStates ) )
-        , ( 0x7D, ( bit_7_indirect_ix, TwentyTStates ) )
-        , ( 0x7E, ( bit_7_indirect_ix, TwentyTStates ) )
-        , ( 0x7F, ( bit_7_indirect_ix, TwentyTStates ) )
-        ]
+    bit0indirectIx
+        |> Dict.union bit1indirectIx
+        |> Dict.union bit2indirectIx
+        |> Dict.union bit3indirectIx
+        |> Dict.union bit4indirectIx
+        |> Dict.union bit5indirectIx
+        |> Dict.union bit6indirectIx
+        |> Dict.union bit7indirectIx
+
+
+bit0indirectIy : Dict Int ( MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )
+bit0indirectIy =
+    List.range 0x40 0x47 |> List.map (\index -> ( index, ( bit_0_indirect_iy, TwentyTStates ) )) |> Dict.fromList
+
+
+bit1indirectIy =
+    List.range 0x48 0x4F |> List.map (\index -> ( index, ( bit_1_indirect_iy, TwentyTStates ) )) |> Dict.fromList
+
+
+bit2indirectIy =
+    List.range 0x50 0x57 |> List.map (\index -> ( index, ( bit_2_indirect_iy, TwentyTStates ) )) |> Dict.fromList
+
+
+bit3indirectIy =
+    List.range 0x58 0x5F |> List.map (\index -> ( index, ( bit_3_indirect_iy, TwentyTStates ) )) |> Dict.fromList
+
+
+bit4indirectIy =
+    List.range 0x60 0x67 |> List.map (\index -> ( index, ( bit_4_indirect_iy, TwentyTStates ) )) |> Dict.fromList
+
+
+bit5indirectIy =
+    List.range 0x68 0x6F |> List.map (\index -> ( index, ( bit_5_indirect_iy, TwentyTStates ) )) |> Dict.fromList
+
+
+bit6indirectIy =
+    List.range 0x70 0x77 |> List.map (\index -> ( index, ( bit_6_indirect_iy, TwentyTStates ) )) |> Dict.fromList
+
+
+bit7indirectIy =
+    List.range 0x78 0x7F |> List.map (\index -> ( index, ( bit_7_indirect_iy, TwentyTStates ) )) |> Dict.fromList
 
 
 singleEnvMainRegsIYCB : Dict Int ( MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )
 singleEnvMainRegsIYCB =
-    Dict.fromList
-        [ ( 0x40, ( bit_0_indirect_iy, TwentyTStates ) )
-        , ( 0x41, ( bit_0_indirect_iy, TwentyTStates ) )
-        , ( 0x42, ( bit_0_indirect_iy, TwentyTStates ) )
-        , ( 0x43, ( bit_0_indirect_iy, TwentyTStates ) )
-        , ( 0x44, ( bit_0_indirect_iy, TwentyTStates ) )
-        , ( 0x45, ( bit_0_indirect_iy, TwentyTStates ) )
-        , ( 0x46, ( bit_0_indirect_iy, TwentyTStates ) )
-        , ( 0x47, ( bit_0_indirect_iy, TwentyTStates ) )
-        , ( 0x48, ( bit_1_indirect_iy, TwentyTStates ) )
-        , ( 0x49, ( bit_1_indirect_iy, TwentyTStates ) )
-        , ( 0x4A, ( bit_1_indirect_iy, TwentyTStates ) )
-        , ( 0x4B, ( bit_1_indirect_iy, TwentyTStates ) )
-        , ( 0x4C, ( bit_1_indirect_iy, TwentyTStates ) )
-        , ( 0x4D, ( bit_1_indirect_iy, TwentyTStates ) )
-        , ( 0x4E, ( bit_1_indirect_iy, TwentyTStates ) )
-        , ( 0x4F, ( bit_1_indirect_iy, TwentyTStates ) )
-        , ( 0x50, ( bit_2_indirect_iy, TwentyTStates ) )
-        , ( 0x51, ( bit_2_indirect_iy, TwentyTStates ) )
-        , ( 0x52, ( bit_2_indirect_iy, TwentyTStates ) )
-        , ( 0x53, ( bit_2_indirect_iy, TwentyTStates ) )
-        , ( 0x54, ( bit_2_indirect_iy, TwentyTStates ) )
-        , ( 0x55, ( bit_2_indirect_iy, TwentyTStates ) )
-        , ( 0x56, ( bit_2_indirect_iy, TwentyTStates ) )
-        , ( 0x57, ( bit_2_indirect_iy, TwentyTStates ) )
-        , ( 0x58, ( bit_3_indirect_iy, TwentyTStates ) )
-        , ( 0x59, ( bit_3_indirect_iy, TwentyTStates ) )
-        , ( 0x5A, ( bit_3_indirect_iy, TwentyTStates ) )
-        , ( 0x5B, ( bit_3_indirect_iy, TwentyTStates ) )
-        , ( 0x5C, ( bit_3_indirect_iy, TwentyTStates ) )
-        , ( 0x5D, ( bit_3_indirect_iy, TwentyTStates ) )
-        , ( 0x5E, ( bit_3_indirect_iy, TwentyTStates ) )
-        , ( 0x5F, ( bit_3_indirect_iy, TwentyTStates ) )
-        , ( 0x60, ( bit_4_indirect_iy, TwentyTStates ) )
-        , ( 0x61, ( bit_4_indirect_iy, TwentyTStates ) )
-        , ( 0x62, ( bit_4_indirect_iy, TwentyTStates ) )
-        , ( 0x63, ( bit_4_indirect_iy, TwentyTStates ) )
-        , ( 0x64, ( bit_4_indirect_iy, TwentyTStates ) )
-        , ( 0x65, ( bit_4_indirect_iy, TwentyTStates ) )
-        , ( 0x66, ( bit_4_indirect_iy, TwentyTStates ) )
-        , ( 0x67, ( bit_4_indirect_iy, TwentyTStates ) )
-        , ( 0x68, ( bit_5_indirect_iy, TwentyTStates ) )
-        , ( 0x69, ( bit_5_indirect_iy, TwentyTStates ) )
-        , ( 0x6A, ( bit_5_indirect_iy, TwentyTStates ) )
-        , ( 0x6B, ( bit_5_indirect_iy, TwentyTStates ) )
-        , ( 0x6C, ( bit_5_indirect_iy, TwentyTStates ) )
-        , ( 0x6D, ( bit_5_indirect_iy, TwentyTStates ) )
-        , ( 0x6E, ( bit_5_indirect_iy, TwentyTStates ) )
-        , ( 0x6F, ( bit_5_indirect_iy, TwentyTStates ) )
-        , ( 0x70, ( bit_6_indirect_iy, TwentyTStates ) )
-        , ( 0x71, ( bit_6_indirect_iy, TwentyTStates ) )
-        , ( 0x72, ( bit_6_indirect_iy, TwentyTStates ) )
-        , ( 0x73, ( bit_6_indirect_iy, TwentyTStates ) )
-        , ( 0x74, ( bit_6_indirect_iy, TwentyTStates ) )
-        , ( 0x75, ( bit_6_indirect_iy, TwentyTStates ) )
-        , ( 0x76, ( bit_6_indirect_iy, TwentyTStates ) )
-        , ( 0x77, ( bit_6_indirect_iy, TwentyTStates ) )
-        , ( 0x78, ( bit_7_indirect_iy, TwentyTStates ) )
-        , ( 0x79, ( bit_7_indirect_iy, TwentyTStates ) )
-        , ( 0x7A, ( bit_7_indirect_iy, TwentyTStates ) )
-        , ( 0x7B, ( bit_7_indirect_iy, TwentyTStates ) )
-        , ( 0x7C, ( bit_7_indirect_iy, TwentyTStates ) )
-        , ( 0x7D, ( bit_7_indirect_iy, TwentyTStates ) )
-        , ( 0x7E, ( bit_7_indirect_iy, TwentyTStates ) )
-        , ( 0x7F, ( bit_7_indirect_iy, TwentyTStates ) )
-        ]
+    bit0indirectIy
+        |> Dict.union bit1indirectIy
+        |> Dict.union bit2indirectIy
+        |> Dict.union bit3indirectIy
+        |> Dict.union bit4indirectIy
+        |> Dict.union bit5indirectIy
+        |> Dict.union bit6indirectIy
+        |> Dict.union bit7indirectIy
 
 
 bit_0_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
@@ -1898,7 +1801,7 @@ bit_2_l z80_main z80_flags =
 
 bit_0_indirect_ix : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
 bit_0_indirect_ix z80_main offset rom48k z80_env =
-    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    --case 0x40: bit(o, v); Ff=Ff&~F53 | a>>8&F53; return;
     let
         value =
             z80_env |> mem ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
@@ -1908,7 +1811,7 @@ bit_0_indirect_ix z80_main offset rom48k z80_env =
 
 bit_1_indirect_ix : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
 bit_1_indirect_ix z80_main offset rom48k z80_env =
-    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    --case 0x40: bit(o, v); Ff=Ff&~F53 | a>>8&F53; return;
     let
         value =
             z80_env |> mem ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
@@ -1918,7 +1821,7 @@ bit_1_indirect_ix z80_main offset rom48k z80_env =
 
 bit_2_indirect_ix : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
 bit_2_indirect_ix z80_main offset rom48k z80_env =
-    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    --case 0x40: bit(o, v); Ff=Ff&~F53 | a>>8&F53; return;
     let
         value =
             z80_env |> mem ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
@@ -1928,7 +1831,7 @@ bit_2_indirect_ix z80_main offset rom48k z80_env =
 
 bit_3_indirect_ix : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
 bit_3_indirect_ix z80_main offset rom48k z80_env =
-    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    --case 0x40: bit(o, v); Ff=Ff&~F53 | a>>8&F53; return;
     let
         value =
             z80_env |> mem ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
@@ -1938,7 +1841,7 @@ bit_3_indirect_ix z80_main offset rom48k z80_env =
 
 bit_4_indirect_ix : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
 bit_4_indirect_ix z80_main offset rom48k z80_env =
-    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    --case 0x40: bit(o, v); Ff=Ff&~F53 | a>>8&F53; return;
     let
         value =
             z80_env |> mem ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
@@ -1948,7 +1851,7 @@ bit_4_indirect_ix z80_main offset rom48k z80_env =
 
 bit_5_indirect_ix : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
 bit_5_indirect_ix z80_main offset rom48k z80_env =
-    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    --case 0x40: bit(o, v); Ff=Ff&~F53 | a>>8&F53; return;
     let
         value =
             z80_env |> mem ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
@@ -1958,7 +1861,7 @@ bit_5_indirect_ix z80_main offset rom48k z80_env =
 
 bit_6_indirect_ix : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
 bit_6_indirect_ix z80_main offset rom48k z80_env =
-    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    --case 0x40: bit(o, v); Ff=Ff&~F53 | a>>8&F53; return;
     let
         value =
             z80_env |> mem ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
@@ -1968,7 +1871,7 @@ bit_6_indirect_ix z80_main offset rom48k z80_env =
 
 bit_7_indirect_ix : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
 bit_7_indirect_ix z80_main offset rom48k z80_env =
-    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    --case 0x40: bit(o, v); Ff=Ff&~F53 | a>>8&F53; return;
     let
         value =
             z80_env |> mem ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
@@ -1978,7 +1881,7 @@ bit_7_indirect_ix z80_main offset rom48k z80_env =
 
 bit_0_indirect_iy : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
 bit_0_indirect_iy z80_main offset rom48k z80_env =
-    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    --case 0x40: bit(o, v); Ff=Ff&~F53 | a>>8&F53; return;
     let
         value =
             z80_env |> mem ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
@@ -1988,7 +1891,7 @@ bit_0_indirect_iy z80_main offset rom48k z80_env =
 
 bit_1_indirect_iy : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
 bit_1_indirect_iy z80_main offset rom48k z80_env =
-    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    --case 0x40: bit(o, v); Ff=Ff&~F53 | a>>8&F53; return;
     let
         value =
             z80_env |> mem ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
@@ -1998,7 +1901,7 @@ bit_1_indirect_iy z80_main offset rom48k z80_env =
 
 bit_2_indirect_iy : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
 bit_2_indirect_iy z80_main offset rom48k z80_env =
-    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    --case 0x40: bit(o, v); Ff=Ff&~F53 | a>>8&F53; return;
     let
         value =
             z80_env |> mem ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
@@ -2008,7 +1911,7 @@ bit_2_indirect_iy z80_main offset rom48k z80_env =
 
 bit_3_indirect_iy : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
 bit_3_indirect_iy z80_main offset rom48k z80_env =
-    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    --case 0x40: bit(o, v); Ff=Ff&~F53 | a>>8&F53; return;
     let
         value =
             z80_env |> mem ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
@@ -2018,7 +1921,7 @@ bit_3_indirect_iy z80_main offset rom48k z80_env =
 
 bit_4_indirect_iy : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
 bit_4_indirect_iy z80_main offset rom48k z80_env =
-    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    --case 0x40: bit(o, v); Ff=Ff&~F53 | a>>8&F53; return;
     let
         value =
             z80_env |> mem ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
@@ -2028,7 +1931,7 @@ bit_4_indirect_iy z80_main offset rom48k z80_env =
 
 bit_5_indirect_iy : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
 bit_5_indirect_iy z80_main offset rom48k z80_env =
-    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    --case 0x40: bit(o, v); Ff=Ff&~F53 | a>>8&F53; return;
     let
         value =
             z80_env |> mem ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
@@ -2038,7 +1941,7 @@ bit_5_indirect_iy z80_main offset rom48k z80_env =
 
 bit_6_indirect_iy : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
 bit_6_indirect_iy z80_main offset rom48k z80_env =
-    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    --case 0x40: bit(o, v); Ff=Ff&~F53 | a>>8&F53; return;
     let
         value =
             z80_env |> mem ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
@@ -2048,7 +1951,7 @@ bit_6_indirect_iy z80_main offset rom48k z80_env =
 
 bit_7_indirect_iy : MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange
 bit_7_indirect_iy z80_main offset rom48k z80_env =
-    -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+    --case 0x40: bit(o, v); Ff=Ff&~F53 | a>>8&F53; return;
     let
         value =
             z80_env |> mem ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF) z80_env.time rom48k
