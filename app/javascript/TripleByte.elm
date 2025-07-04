@@ -5,11 +5,20 @@ import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..), TriplePCIncrement(..))
 
 
+type TripleByteRegister
+    = TripleByteBC
+    | TripleByteDE
+    | TripleByteHL
+
+
+
+--| TripleByteIY
+--| TripleByteSP
+--| TripleBytePC
+
+
 type TripleByteChange
-    = NewBCRegister Int
-    | NewDERegister Int
-    | NewHLRegister Int
-    | NewHLIndirect Int
+    = NewHLIndirect Int
     | NewIXRegister Int
     | NewIXIndirect Int
     | NewIYRegister Int
@@ -18,6 +27,7 @@ type TripleByteChange
     | NewPCRegister Int
     | CallImmediate Int
     | NewAIndirect Int
+    | NewTripleRegister Int TripleByteRegister
 
 
 tripleByteWith16BitParam : Dict Int ( Int -> TripleByteChange, TriplePCIncrement, InstructionDuration )
@@ -53,20 +63,20 @@ tripleByteWith16BitParamFD =
 ld_bc_nn : Int -> TripleByteChange
 ld_bc_nn param16 =
     -- case 0x01: v=imm16(); B=v>>>8; C=v&0xFF; break;
-    NewBCRegister param16
+    NewTripleRegister param16 TripleByteBC
 
 
 ld_de_nn : Int -> TripleByteChange
 ld_de_nn param16 =
     --case 0x11: v=imm16(); D=v>>>8; E=v&0xFF; break;
-    NewDERegister param16
+    NewTripleRegister param16 TripleByteDE
 
 
 ld_hl_nn : Int -> TripleByteChange
 ld_hl_nn param16 =
     -- case 0x21: HL=imm16(); break;
     -- case 0x21: xy=imm16(); break;
-    NewHLRegister param16
+    NewTripleRegister param16 TripleByteHL
 
 
 ld_ix_nn : Int -> TripleByteChange
