@@ -2,7 +2,6 @@ module Group0xF0 exposing (..)
 
 import Array exposing (Array)
 import Dict exposing (Dict)
-import Group0x30 exposing (miniDict30)
 import Group0x50 exposing (miniDict50)
 import Group0x60 exposing (miniDict60)
 import Group0x70 exposing (miniDict70)
@@ -70,5 +69,4 @@ xYDict =
         |> Dict.union miniDictA0
         |> Dict.union miniDictB0
         |> Dict.union miniDictE0
-        |> Dict.union miniDict30
         |> Dict.union miniDictC0
