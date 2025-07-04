@@ -161,8 +161,11 @@ makeColourRun globalFlash colourValue =
         |> Array.fromList
 
 
+
 --(plainColourRuns, flashColourRuns) : Array ( Array (List ScreenColourRun), Array (List ScreenColourRun) )
-plainColourRuns: Array (Array (List ScreenColourRun))
+
+
+plainColourRuns : Array (Array (List ScreenColourRun))
 plainColourRuns =
     -- 1st lookup is for global flash off, the other for global flash on
     -- Array (data) -> Array (colour) -> (List ScreenColourRun)
@@ -178,7 +181,8 @@ plainColourRuns =
             )
         |> Array.fromList
 
-flashColourRuns: Array (Array (List ScreenColourRun))
+
+flashColourRuns : Array (Array (List ScreenColourRun))
 flashColourRuns =
     -- 1st lookup is for global flash off, the other for global flash on
     -- Array (data) -> Array (colour) -> (List ScreenColourRun)
@@ -194,15 +198,18 @@ flashColourRuns =
             )
         |> Array.fromList
 
-lookupColour : Bool -> Int -> RunCount -> ScreenColourRun
-lookupColour globalFlash raw_colour runcount =
-    let
-        lookup = if globalFlash then
-                    flashColourRuns
-                 else
-                    plainColourRuns
-        rcList = lookup |> Array.get raw_colour |> Maybe.withDefault ([] |> Array.fromList)
-    in
+
+
+--lookupColour : Bool -> Int -> RunCount -> ScreenColourRun
+--lookupColour globalFlash raw_colour runcount =
+--    let
+--        lookup = if globalFlash then
+--                    flashColourRuns
+--                 else
+--                    plainColourRuns
+--        rcList = lookup |> Array.get raw_colour |> Maybe.withDefault ([] |> Array.fromList)
+--    in
+--
 
 
 toDrawn : Bool -> ScreenData -> List ScreenColourRun -> List ScreenColourRun
@@ -248,4 +255,3 @@ screenLines z80_screen =
         |> rawScreenData
         |> List.map (\x -> x |> Vector32.foldr foldUp [])
         |> List.map (\x -> x |> List.foldr foldDrawn [])
-
