@@ -788,7 +788,19 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
             }
 
         NewAIndirect int ->
+            let
+                value =
+                    env |> mem int cpu_time rom48k
 
+                flags =
+                    z80.flags
+            in
+            { z80
+                | flags = { flags | a = value.value }
+                , pc = new_pc
+                , env = { env | time = value.time }
+                , r = z80.r + 1
+            }
 
 
 z80_call : Int -> Z80Core -> Z80Core

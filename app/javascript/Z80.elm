@@ -9,7 +9,6 @@ import Array exposing (Array)
 import Bitwise exposing (and, or)
 import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAndValue, InstructionDuration(..), addDuration)
 import Dict exposing (Dict)
-import Group0x30 exposing (delta_dict_lite_30)
 import Group0xE0 exposing (delta_dict_lite_E0)
 import Group0xF0 exposing (list0255, lt40_array, xYDict)
 import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainAndFlagRegistersIXCB, singleByteMainAndFlagRegistersIYCB, singleByteMainRegsCB, singleByteMainRegsIXCB, singleByteMainRegsIYCB, singleEnvMainRegsCB, singleEnvMainRegsIXCB, singleEnvMainRegsIYCB)
@@ -255,7 +254,6 @@ lt40_delta_dict_lite =
         [ ( 0xDD, \z80 -> group_xy IXIY_IX z80 )
         , ( 0xFD, \z80 -> group_xy IXIY_IY z80 )
         ]
-        |> Dict.union delta_dict_lite_30
         |> Dict.union delta_dict_lite_E0
 
 
