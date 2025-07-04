@@ -8,7 +8,7 @@ import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
 import SingleEnvWithMain exposing (SingleEnvMainChange, applySingleEnvMainChange)
 import SingleNoParams exposing (NoParamChange(..), applyNoParamsDelta)
 import SingleWith8BitParameter exposing (DoubleWithRegisterChange(..), JumpChange(..), Single8BitChange, applySimple8BitChange)
-import TripleByte exposing (TripleByteChange(..))
+import TripleByte exposing (TripleByteChange(..), TripleByteRegister(..))
 import TripleWithFlags exposing (TripleWithFlagsChange(..))
 import TripleWithMain exposing (TripleMainChange, applyTripleMainChange)
 import Utils exposing (bitMaskFromBit, byte, inverseBitMaskFromBit, shiftLeftBy8, toHexString2)
@@ -673,34 +673,6 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
             z80.env
     in
     case z80changeData of
-        NewBCRegister int ->
-            { z80
-                | main = z80.main |> set_bc_main int
-                , pc = new_pc
-                , env = { env | time = cpu_time }
-                , r = z80.r + 1
-            }
-
-        NewDERegister int ->
-            { z80
-                | main = z80.main |> set_de_main int
-                , pc = new_pc
-                , env = { env | time = cpu_time }
-                , r = z80.r + 1
-            }
-
-        NewHLRegister int ->
-            let
-                main =
-                    z80.main
-            in
-            { z80
-                | main = { main | hl = int }
-                , pc = new_pc
-                , env = { env | time = cpu_time }
-                , r = z80.r + 1
-            }
-
         NewSPRegister int ->
             { z80
                 | pc = new_pc
@@ -784,6 +756,45 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
                 | main = { main | iy = value.value16 }
                 , pc = new_pc
                 , env = { env | time = value.time }
+                , r = z80.r + 1
+            }
+
+        NewAIndirect int ->
+            let
+                value =
+                    env |> mem int cpu_time rom48k
+
+                flags =
+                    z80.flags
+            in
+            { z80
+                | flags = { flags | a = value.value }
+                , pc = new_pc
+                , env = { env | time = value.time }
+                , r = z80.r + 1
+            }
+
+        NewTripleRegister int tripleByteRegister ->
+            let
+                z80_main =
+                    case tripleByteRegister of
+                        TripleByteBC ->
+                            z80.main |> set_bc_main int
+
+                        TripleByteDE ->
+                            z80.main |> set_de_main int
+
+                        TripleByteHL ->
+                            let
+                                main =
+                                    z80.main
+                            in
+                            { main | hl = int }
+            in
+            { z80
+                | main = z80_main
+                , pc = new_pc
+                , env = { env | time = cpu_time }
                 , r = z80.r + 1
             }
 
