@@ -25,6 +25,7 @@ tripleMainRegsIX : Dict Int ( Int -> MainWithIndexRegisters -> TripleMainChange,
 tripleMainRegsIX =
     Dict.fromList
         [ ( 0x22, ( ld_nn_indirect_ix, IncrementByFour, TwentyTStates ) )
+        , ( 0x36, ( ld_indirect_ix_n, IncrementByFour, TwentyTStates ) )
         ]
 
 
@@ -32,6 +33,7 @@ tripleMainRegsIY : Dict Int ( Int -> MainWithIndexRegisters -> TripleMainChange,
 tripleMainRegsIY =
     Dict.fromList
         [ ( 0x22, ( ld_nn_indirect_iy, IncrementByFour, TwentyTStates ) )
+        , ( 0x36, ( ld_indirect_iy_n, IncrementByFour, TwentyTStates ) )
         ]
 
 
