@@ -787,6 +787,9 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
                 , r = z80.r + 1
             }
 
+        NewAIndirect int ->
+
+
 
 z80_call : Int -> Z80Core -> Z80Core
 z80_call addr z80 =

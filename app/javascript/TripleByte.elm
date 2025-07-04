@@ -17,6 +17,7 @@ type TripleByteChange
     | NewSPRegister Int
     | NewPCRegister Int
     | CallImmediate Int
+    | NewAIndirect Int
 
 
 tripleByteWith16BitParam : Dict Int ( Int -> TripleByteChange, TriplePCIncrement, InstructionDuration )
