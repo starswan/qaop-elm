@@ -1,10 +1,10 @@
 module GroupED exposing (..)
 
---	private void group_ed()
---	{
---		int v, c = env.m1(PC, IR|R++&0x7F);
---		PC = (char)(PC+1); time += 4;
---		switch(c) {
+--  private void group_ed()
+--  {
+--    int v, c = env.m1(PC, IR|R++&0x7F);
+--    PC = (char)(PC+1); time += 4;
+--    switch(c) {
 
 import Bitwise exposing (complement, shiftLeftBy, shiftRightBy)
 import CpuTimeCTime exposing (addCpuTimeTime)
@@ -683,22 +683,22 @@ group_ed rom48k z80_0 =
 -- case 0xBA:
 -- case 0xBB: inir_otir(c); break;
 --// -------------- >8
---		default: System.out.println(PC+": Not emulated ED/"+c);
---		}
---	}
+--    default: System.out.println(PC+": Not emulated ED/"+c);
+--    }
+--  }
 --
 --
---	private void sbc_hl(int b)
---	{
---		int a,r;
---		r = (a=HL) - b - (Ff>>>8 & FC);
---		Ff = r>>>8;
---		Fa = a>>>8; Fb = ~(b>>>8);
---		HL = r = (char)r;
---		Fr = r>>>8 | r<<8;
---		MP = a+1;
---		time += 7;
---	}
+--  private void sbc_hl(int b)
+--  {
+--    int a,r;
+--    r = (a=HL) - b - (Ff>>>8 & FC);
+--    Ff = r>>>8;
+--    Fa = a>>>8; Fb = ~(b>>>8);
+--    HL = r = (char)r;
+--    Fr = r>>>8 | r<<8;
+--    MP = a+1;
+--    time += 7;
+--  }
 
 
 sbc_hl : Int -> Z80Core -> Z80Delta
@@ -744,8 +744,8 @@ set_im_direct value z80 =
 
 --
 --
---	private void ldir(int i, boolean r)
---	{
+--  private void ldir(int i, boolean r)
+--  {
 
 
 type DirectionForLDIR
@@ -755,7 +755,7 @@ type DirectionForLDIR
 
 ldir : DirectionForLDIR -> Bool -> Z80ROM -> Z80Core -> Z80Delta
 ldir incOrDec repeat rom48k z80 =
-    --	private void ldir(int i, boolean r)
+    --  private void ldir(int i, boolean r)
     let
         --v = env.mem(a = HL); HL = (char)(a+i); time += 3;
         --env.mem(a = de(), v); de((char)(a+i)); time += 5;
@@ -822,16 +822,16 @@ ldir incOrDec repeat rom48k z80 =
         ff =
             Bitwise.or (Bitwise.or (Bitwise.and z80_2.flags.ff (complement c_F53)) (Bitwise.and v2 c_F3)) (Bitwise.and (shiftLeftBy 4 v2) c_F5)
 
-        --		bc(a = (char)(bc()-1));
-        --		v = 0;
-        --		if(a!=0) {
-        --			if(r) {
-        --				time += 5;
-        --				MP = (PC = (char)(PC-2)) + 1;
-        --			}
-        --			v = 0x80;
-        --		}
-        --		Fa = Fb = v;
+        --    bc(a = (char)(bc()-1));
+        --    v = 0;
+        --    if(a!=0) {
+        --      if(r) {
+        --        time += 5;
+        --        MP = (PC = (char)(PC-2)) + 1;
+        --      }
+        --      v = 0x80;
+        --    }
+        --    Fa = Fb = v;
         a =
             Bitwise.and ((z80_2.main |> get_bc) - 1) 0xFFFF
 
@@ -856,7 +856,7 @@ ldir incOrDec repeat rom48k z80 =
 
 
 
---	void i(int v) {IR = IR&0xFF | v<<8;}
+--  void i(int v) {IR = IR&0xFF | v<<8;}
 
 
 set_i : Int -> Z80Core -> InterruptRegisters
@@ -873,17 +873,17 @@ set_i v z80 =
 
 
 
---	private void adc_hl(int b)
---	{
---		int a,r;
---		r = (a=HL) + b + (Ff>>>8 & FC);
---		Ff = r>>>8;
---		Fa = a>>>8; Fb = b>>>8;
---		HL = r = (char)r;
---		Fr = r>>>8 | r<<8;
---		MP = a+1;
---		time += 7;
---	}
+--  private void adc_hl(int b)
+--  {
+--    int a,r;
+--    r = (a=HL) + b + (Ff>>>8 & FC);
+--    Ff = r>>>8;
+--    Fa = a>>>8; Fb = b>>>8;
+--    HL = r = (char)r;
+--    Fr = r>>>8 | r<<8;
+--    MP = a+1;
+--    time += 7;
+--  }
 
 
 adc_hl : Int -> Z80Core -> Z80Delta
@@ -920,17 +920,42 @@ adc_hl b z80 =
     FlagsWithPCMainAndCpuTime { flags | ff = ff, fa = fa, fb = fb, fr = fr } z80.pc { main | hl = r } (z80.env.time |> addCpuTimeTime 7)
 
 
+
+--private void cpir(int i, boolean r)
+--{
+--  int a,b,v;
+--
+--  v = A-(b = env.mem(a=HL)) & 0xFF;
+--  MP += i;
+--  HL = (char)(a+i);
+--  time += 8;
+--
+--  Fr = v & 0x7F | v>>>7;
+--  Fb = ~(b | 0x80);
+--  Fa = A & 0x7F;
+--
+--  bc(a = (char)(bc() - 1));
+--  if(a!=0) {
+--    Fa |= 0x80;
+--    Fb |= 0x80;
+--    if(r && v!=0) {
+--      MP = (PC = (char)(PC-2)) + 1;
+--      time += 5;
+--    }
+--  }
+--
+--  Ff = Ff&~0xFF | v&~F53;
+--  if(((v ^ b ^ A)&FH) != 0) v--;
+--  Ff |= v<<4&0x20 | v&8;
+--}
+
+
 cpir : DirectionForLDIR -> Bool -> Z80ROM -> Z80Core -> Z80Delta
 cpir incOrDec repeat rom48k z80_core =
     let
         z80_flags =
             z80_core.flags
 
-        --	private void cpir(int i, boolean r)
-        --	{
-        --		int a,b,v;
-        --
-        --		v = A-(b = env.mem(a=HL)) & 0xFF;
         old_a =
             z80_core.main.hl
 
@@ -948,55 +973,39 @@ cpir incOrDec repeat rom48k z80_core =
                 Backwards ->
                     (old_a - 1) |> Bitwise.and 0xFFFF
 
-        --		MP += i;
-        --		HL = (char)(a+i);
-        --		time += 8;
-        --
-        --		Fr = v & 0x7F | v>>>7;
         fr =
             Bitwise.or (v |> Bitwise.and 0x7F) (v |> shiftRightBy 7)
 
-        --		Fb = ~(b | 0x80);
         fb =
             b.value |> Bitwise.or 0x80 |> complement
 
-        --		Fa = A & 0x7F;
         fa =
             z80_core.flags.a |> Bitwise.and 0x7F
 
-        --
-        --		bc(a = (char)(bc() - 1));
-        bc =
+        new_bc =
             (z80_core.main |> get_bc) - 1 |> Bitwise.and 0xFFFF
 
-        --		if(a!=0) {
-        ( new_fa, new_fb ) =
-            if bc /= 0 then
-                ( Bitwise.or 0x80 fa, Bitwise.or 0x80 fb )
+        a =
+            new_bc
+
+        ( new_fa, new_fb, new_pc ) =
+            if a /= 0 then
+                let
+                    newish_pc =
+                        if repeat && v /= 0 then
+                            z80_core.pc - 2 |> Bitwise.and 0xFFFF
+
+                        else
+                            z80_core.pc
+                in
+                ( Bitwise.or 0x80 fa, Bitwise.or 0x80 fb, newish_pc )
 
             else
-                ( fa, fb )
+                ( fa, fb, z80_core.pc )
 
-        --			Fa |= 0x80;
-        --			Fb |= 0x80;
-        --			if(r && v!=0) {
-        --				MP = (PC = (char)(PC-2)) + 1;
-        --				time += 5;
-        --			}
-        new_pc =
-            if repeat && v /= 0 then
-                z80_core.pc - 2 |> Bitwise.and 0x000FFFFF
-
-            else
-                z80_core.pc
-
-        --		}
-        --
-        --		Ff = Ff&~0xFF | v&~F53;
         old_ff =
             Bitwise.or (z80_core.flags.ff |> Bitwise.and 0xFF00) (v |> Bitwise.and (c_F53 |> complement))
 
-        --		if(((v ^ b ^ A)&FH) != 0) v--;
         new_v =
             if (v |> Bitwise.xor b.value |> Bitwise.xor z80_core.flags.a |> Bitwise.and c_FH) /= 0 then
                 v - 1
@@ -1004,25 +1013,22 @@ cpir incOrDec repeat rom48k z80_core =
             else
                 v
 
-        --		Ff |= v<<4&0x20 | v&8;
         ff =
-            Bitwise.or old_ff (new_v |> shiftLeftBy 4 |> Bitwise.and 0x20 |> Bitwise.or (Bitwise.and new_v 0x08))
-
-        --	}
+            Bitwise.or old_ff ((new_v |> shiftLeftBy 4) |> Bitwise.and 0x20) |> Bitwise.or (Bitwise.and new_v 0x08)
     in
-    HLBCWithFlagsAndPc hl bc { z80_flags | ff = ff, fa = new_fa, fb = new_fb, fr = fr } new_pc
+    HLBCWithFlagsAndPc hl new_bc { z80_flags | ff = ff, fa = new_fa, fb = new_fb, fr = fr } new_pc
 
 
 
---	private void rld()
---	{
---		int v = env.mem(HL)<<4 | A&0x0F;
---		time += 7;
---		f_szh0n0p(A = A&0xF0 | v>>>8);
---		env.mem(HL, v & 0xFF);
---		MP = HL+1;
---		time += 3;
---	}
+--  private void rld()
+--  {
+--    int v = env.mem(HL)<<4 | A&0x0F;
+--    time += 7;
+--    f_szh0n0p(A = A&0xF0 | v>>>8);
+--    env.mem(HL, v & 0xFF);
+--    MP = HL+1;
+--    time += 3;
+--  }
 
 
 rld : Z80ROM -> Z80Core -> Z80Delta
@@ -1067,12 +1073,12 @@ rld rom48k z80 =
 
 --private void rrd()
 --{
---	int v = env.mem(HL) | A<<8;
---	time += 7;
---	f_szh0n0p(A = A&0xF0 | v&0x0F);
---	env.mem(HL, v>>>4 & 0xFF);
---	MP = HL+1;
---	time += 3;
+--  int v = env.mem(HL) | A<<8;
+--  time += 7;
+--  f_szh0n0p(A = A&0xF0 | v&0x0F);
+--  env.mem(HL, v>>>4 & 0xFF);
+--  MP = HL+1;
+--  time += 3;
 --}
 
 

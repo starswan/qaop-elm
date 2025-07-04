@@ -62,8 +62,8 @@ RSpec.describe "Spectrum Emulator" do
     # 52 SRO (XY), R (DD CB 00 00)
     # 73 BIT N,(XY) passes
     # 74 BIT N,(XY)- DD CB xx 40-47 (undoc?) - same as DD CB 00 46
+    # (needs some extra flags setting as per Java code)
     # 89 LDIR-> NOP'. 90 LDDR ->NOP',
-    # 93 CPIR, 94 CPDR
     # 96 -> 103 IN FE:FF -> BF
     # 107 OUTI, 108 OUTD, 109 OTIR, 110 OTDR
     # 156 LD A,I 157 LD A, R
@@ -79,7 +79,6 @@ RSpec.describe "Spectrum Emulator" do
     # 83 RES N, (XY) passes
     # 84 RES N, (XY), R       DD CB xx 80
     # 89 LDIR->NOP'. 90 LDDR->NOP',
-    # 93 CPIR, 94 CPDR
     # 96 -> 103 IN FE:FF -> BF
     # 105 OUT (C), R
     # 106 OUT (C), 0 passes
