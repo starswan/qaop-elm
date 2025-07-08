@@ -15,7 +15,7 @@ gem 'rails', '~> 7.1', '< 7.2'
 # Use sqlite3 as the database for Active Record
 gem 'sqlite3', '~> 2.8'
 gem "cssbundling-rails"
-gem "jsbundling-rails"
+gem "vite_rails"
 gem "propshaft"
 
 # mysql in production
