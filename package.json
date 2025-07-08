@@ -4,6 +4,7 @@
   "dependencies": {
     "@rails/ujs": "7.1.501",
     "elm": "^0.19.1-6",
+    "elm-optimize-level-2": "^0.3.5",
     "esbuild": "^0.15.18"
   },
   "overrides": {
@@ -17,7 +18,7 @@
     "sass": "^1.89.2"
   },
   "scripts": {
-    "build": "node ./esbuild.config.js",
+    "build": "elm-optimize-level-2 app/javascript/Main.elm --output app/assets/builds/hello_elm.js",
     "build:css": "sass ./app/assets/stylesheets/application.scss:./app/assets/builds/application.css --no-source-map --load-path=node_modules --quiet-deps --style compressed"
   }
 }
