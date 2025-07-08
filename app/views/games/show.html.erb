@@ -1,5 +1,6 @@
 <!-- $Id$ -->
-<%= javascript_include_tag "hello_elm", type: "module" %>
+<%= vite_javascript_tag 'hello_elm' %>
+
 <div align="center">
   <div class="page-header">
     <b><%= t '.title', :default => @game.name %></b>(<%= @game.filename %>)

@@ -7,7 +7,8 @@ timings=()
 for i in $(seq $count)
 do
   time=$(date +%T)
-  value=$(HZ=2 rspec spec/features/z80_spec.rb | grep -F Speed | cut --delim=' ' -f2)
+  value=$(RAILS_ENV=test HZ=2 rspec spec/features/z80_spec.rb | grep -F Speed | cut --delim=' ' -f2)
+#  value=$(HZ=2 rake spec | grep -F Speed | cut --delim=' ' -f2)
   timings+=($value)
   echo -n $time $i "Timings" ${timings[*]}
   sum=$(echo ${timings[*]} | tr ' ' '+')
