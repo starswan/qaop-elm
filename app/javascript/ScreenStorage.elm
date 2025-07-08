@@ -5,48 +5,47 @@ module ScreenStorage exposing (..)
 import Bitwise exposing (shiftLeftBy, shiftRightBy)
 import Vector24 exposing (Vector24)
 import Vector32 exposing (Vector32)
+import Vector8
 import Z80Memory exposing (Z80Memory, getMemValue)
 
 
-range07 =
-    --    List.range 0 7
-    --    Vector8.from8 Vector24.Index0 Vector24.Index1 Vector24.Index2 Vector24.Index3 Vector24.Index4 Vector24.Index5 Vector24.Index6 Vector24.Index7
-    [ Vector24.Index0, Vector24.Index1, Vector24.Index2, Vector24.Index3, Vector24.Index4, Vector24.Index5, Vector24.Index6, Vector24.Index7 ]
 
-
-range8_15 =
-    --List.range 8 15
-    --Vector8.from8 Vector24.Index8 Vector24.Index9 Vector24.Index10 Vector24.Index11 Vector24.Index12 Vector24.Index13 Vector24.Index14 Vector24.Index15
-    [ Vector24.Index8, Vector24.Index9, Vector24.Index10, Vector24.Index11, Vector24.Index12, Vector24.Index13, Vector24.Index14, Vector24.Index15 ]
-
-
-range16_23 =
-    --List.range 16 23
-    --Vector8.from8 Vector24.Index16 Vector24.Index17 Vector24.Index18 Vector24.Index19 Vector24.Index20 Vector24.Index21 Vector24.Index22 Vector24.Index23
-    [ Vector24.Index16, Vector24.Index17, Vector24.Index18, Vector24.Index19, Vector24.Index20, Vector24.Index21, Vector24.Index22, Vector24.Index23 ]
-
-
-bank0_attr_indexes =
-    --range07 ++ range07 ++ range07 ++ range07 ++ range07 ++ range07 ++ range07 ++ range07
-    List.repeat 8 range07 |> List.concat
-
-
-bank1_attr_indexes =
-    --range8_15 ++ range8_15 ++ range8_15 ++ range8_15 ++ range8_15 ++ range8_15 ++ range8_15 ++ range8_15
-    List.repeat 8 range8_15 |> List.concat
-
-
-bank2_attr_indexes =
-    --range16_23 ++ range16_23 ++ range16_23 ++ range16_23 ++ range16_23 ++ range16_23 ++ range16_23 ++ range16_23
-    List.repeat 8 range16_23 |> List.concat
-
-
-
+--range07 =
+--    --    List.range 0 7
+--    --    Vector8.from8 Vector24.Index0 Vector24.Index1 Vector24.Index2 Vector24.Index3 Vector24.Index4 Vector24.Index5 Vector24.Index6 Vector24.Index7
+--    [ Vector24.Index0, Vector24.Index1, Vector24.Index2, Vector24.Index3, Vector24.Index4, Vector24.Index5, Vector24.Index6, Vector24.Index7 ]
+--
+--
+--range8_15 =
+--    --List.range 8 15
+--    --Vector8.from8 Vector24.Index8 Vector24.Index9 Vector24.Index10 Vector24.Index11 Vector24.Index12 Vector24.Index13 Vector24.Index14 Vector24.Index15
+--    [ Vector24.Index8, Vector24.Index9, Vector24.Index10, Vector24.Index11, Vector24.Index12, Vector24.Index13, Vector24.Index14, Vector24.Index15 ]
+--
+--
+--range16_23 =
+--    --List.range 16 23
+--    --Vector8.from8 Vector24.Index16 Vector24.Index17 Vector24.Index18 Vector24.Index19 Vector24.Index20 Vector24.Index21 Vector24.Index22 Vector24.Index23
+--    [ Vector24.Index16, Vector24.Index17, Vector24.Index18, Vector24.Index19, Vector24.Index20, Vector24.Index21, Vector24.Index22, Vector24.Index23 ]
+--bank0_attr_indexes =
+--    --range07 ++ range07 ++ range07 ++ range07 ++ range07 ++ range07 ++ range07 ++ range07
+--    List.repeat 8 range07 |> List.concat
+--
+--
+--bank1_attr_indexes =
+--    --range8_15 ++ range8_15 ++ range8_15 ++ range8_15 ++ range8_15 ++ range8_15 ++ range8_15 ++ range8_15
+--    List.repeat 8 range8_15 |> List.concat
+--
+--
+--bank2_attr_indexes =
+--    --range16_23 ++ range16_23 ++ range16_23 ++ range16_23 ++ range16_23 ++ range16_23 ++ range16_23 ++ range16_23
+--    List.repeat 8 range16_23 |> List.concat
 -- 192 mappings of screen index to attribute data index
 
 
+attr_indexes : List Vector24.Index
 attr_indexes =
-    bank0_attr_indexes ++ bank1_attr_indexes ++ bank2_attr_indexes
+    --bank0_attr_indexes ++ bank1_attr_indexes ++ bank2_attr_indexes
+    Vector24.indices |> Vector24.map (\ind24 -> List.repeat 8 ind24) |> Vector24.toList |> List.concat
 
 
 type alias Z80Screen =
@@ -109,8 +108,28 @@ screenOffsets =
     attr_indexes |> List.indexedMap (\index attr_index -> ( calcDataOffset index, attr_index ))
 
 
-range031 =
-    List.range 0 31
+rowIndexes =
+    Vector24.indices
+
+
+vec32Indexes =
+    Vector32.indices
+
+
+vec8Indexes =
+    Vector8.indices
+
+
+rowStartIndexes =
+    rowIndexes
+        |> Vector24.map
+            (\ind24 ->
+                let
+                    offsets =
+                        vec8Indexes |> Vector8.map (\index -> (index |> Vector8.indexToInt) * 8)
+                in
+                ( ind24, offsets )
+            )
 
 
 
