@@ -7,9 +7,15 @@
     "@rails/ujs": "7.1.501",
     "bootstrap": "^5.3.7",
     "elm": "^0.19.1-6",
-    "esbuild": "^0.15.18",
-    "esbuild-plugin-elm": "^0.0.12",
-    "sass": "^1.89.2"
+    "elm-optimize-level-2": "^0.3.5",
+    "postcss": "^8.5.6",
+    "postcss-flexbugs-fixes": "^5.0.2",
+    "postcss-import": "^16.1.1",
+    "postcss-preset-env": "^10.2.4",
+    "sass": "^1.89.2",
+    "vite": "^5.4.19",
+    "vite-plugin-elm": "^2.9.0",
+    "vite-plugin-ruby": "^5.1.0"
   },
   "overrides": {
     "cross-spawn": ">= 7.0.3"
@@ -20,7 +26,7 @@
     "elm-test": "0.19.1-revision16"
   },
   "scripts": {
-    "build": "node ./esbuild.config.js",
+    "build": "vite build",
     "build:css": "sass -I node_modules app/assets/stylesheets/application.scss:app/assets/builds/application.css app/assets/stylesheets/active_admin.scss:app/assets/builds/active_admin.css"
   }
 }

@@ -26,7 +26,7 @@ jobs:
         ruby-version: ['3.4']
 
     env:
-      HZ: 35.618
+      HZ: 25.618
     steps:
       - uses: actions/checkout@v4
       - name: Set up Ruby
@@ -39,35 +39,18 @@ jobs:
         with:
           node-version: 20
 
-      - name: Get yarn cache directory path
-        id: yarn-cache-dir-path
-        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
-
-      - name: Set up yarn cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-
-      - name: Set up elm cache
-        uses: actions/cache@v4
-        with:
-          path: | 
-            $HOME/.elm 
-            elm-stuff
-          key: ${{ runner.os }}-qaop-elm-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-qaop-elm-
-
       - name: Yarn install
         run: yarn install
+
+      - name: Undebug
+        run: cp app/helpers/Undebug.elm app/javascript/Z80Debug.elm
+
+      - name: Precompile assets
+        run: bin/rails assets:precompile
+
       # Run elm tests for correctness before speed tests
       - name: Run Elm tests
         run: yarn run elm-test
-      - name: Undebug
-        run: cp app/helpers/Undebug.elm app/javascript/Z80Debug.elm
 
       # Run ruby tests in headless mode
       - name: Ruby tests compiled for production mode
