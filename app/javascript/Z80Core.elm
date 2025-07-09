@@ -76,16 +76,17 @@ hl_deref_with_z80_ixiy ixiyhl rom48k z80 =
     CpuTimePcAndValue new_b.time a.pc new_b.value
 
 
-inc_pcr : Z80 -> Z80
-inc_pcr z80 =
-    let
-        core =
-            z80.core
 
-        pc =
-            Bitwise.and (core.pc + 1) 0xFFFF
-    in
-    { z80 | core = { core | pc = pc, r = core.r + 1 } }
+--inc_pcr : Z80 -> Z80
+--inc_pcr z80 =
+--    let
+--        core =
+--            z80.core
+--
+--        pc =
+--            Bitwise.and (core.pc + 1) 0xFFFF
+--    in
+--    { z80 | core = { core | pc = pc, r = core.r + 1 } }
 
 
 inc_pc : Z80Core -> Int

@@ -41,7 +41,7 @@ RSpec.describe "Spectrum Emulator" do
     let(:z80_game) { Game.find_by!(name: ENV.fetch("Z80_TEST", flags.name)) }
 
     let(:times) { {
-      flags.name => 7800,
+      flags.name => 7500,
       regs.name => 12800,
       full_flags.name => 8300,
       full.name => 18000,

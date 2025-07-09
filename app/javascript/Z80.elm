@@ -12,6 +12,7 @@ import Dict exposing (Dict)
 import Group0xE0 exposing (delta_dict_lite_E0)
 import Group0xF0 exposing (list0255, lt40_array, xYDict)
 import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainAndFlagRegistersIXCB, singleByteMainAndFlagRegistersIYCB, singleByteMainRegsCB, singleByteMainRegsIXCB, singleByteMainRegsIYCB, singleEnvMainRegsCB, singleEnvMainRegsIXCB, singleEnvMainRegsIYCB)
+import GroupED exposing (singleByteFlagsED, singleByteMainAndFlagsED, singleByteMainRegsED)
 import Loop
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
 import Set
@@ -25,7 +26,7 @@ import SingleWith8BitParameter exposing (doubleWithRegisters, doubleWithRegister
 import TripleByte exposing (tripleByteWith16BitParam, tripleByteWith16BitParamDD, tripleByteWith16BitParamFD)
 import TripleWithFlags exposing (triple16WithFlags)
 import TripleWithMain exposing (tripleMainRegs, tripleMainRegsIX, tripleMainRegsIY)
-import Z80Core exposing (Z80, Z80Core, add_cpu_time, inc_pc, inc_pcr, z80_halt)
+import Z80Core exposing (Z80, Z80Core, add_cpu_time, inc_pc, z80_halt)
 import Z80Debug exposing (debugLog)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..))
 import Z80Env exposing (Z80Env, c_TIME_LIMIT, m1, mem, mem16, z80env_constructor)
@@ -322,6 +323,7 @@ type ExecutionType
     | BitManipCB CpuTimeAndValue
     | IXCB Int CpuTimeAndValue
     | IYCB Int CpuTimeAndValue
+    | EDMisc CpuTimeAndValue
 
 
 execute_delta : CpuTimeAndValue -> Z80ROM -> Z80Core -> DeltaWithChanges
@@ -338,6 +340,13 @@ execute_delta ct rom48k z80 =
                             z80.env |> mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k
                     in
                     ( BitManipCB param, singleByteMainRegsCB |> Dict.get param.value, IncrementByTwo )
+
+                0xED ->
+                    let
+                        param =
+                            z80.env |> mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k
+                    in
+                    ( EDMisc param, singleByteMainRegsED |> Dict.get param.value, IncrementByTwo )
 
                 0xDD ->
                     let
@@ -711,8 +720,26 @@ runDelta executionType rom48k z80 =
                                 Nothing ->
                                     oldDelta 0xFD instrTime z80.interrupts z80 rom48k
 
+        EDMisc param ->
+            let
+                instrTime =
+                    param.time
+            in
+            case singleByteFlagsED |> Dict.get param.value of
+                Just ( flagFunc, duration ) ->
+                    FlagDelta IncrementByTwo duration (flagFunc z80.flags)
+
+                Nothing ->
+                    case singleByteMainAndFlagsED |> Dict.get param.value of
+                        Just ( f, pcInc, duration ) ->
+                            PureDelta pcInc (instrTime |> addDuration duration) (f z80.main z80.flags)
+
+                        Nothing ->
+                            oldDelta 0xED instrTime z80.interrupts z80 rom48k
 
 
+
+--UnknownInstruction "execute ED" param.value
 --UnknownInstruction "execute IYCB" param.value
 -- case 0xD4: call((Ff&0x100)==0); break;
 -- case 0xE4: call((flags()&FP)==0); break;
@@ -870,7 +897,17 @@ executeCore rom48k z80 =
     in
     case nonCoreFuncs |> Dict.get ct1.value of
         Just f ->
-            z80_1 |> f |> inc_pcr
+            let
+                z80_2 =
+                    z80_1 |> f
+
+                core =
+                    z80_2.core
+
+                pc =
+                    Bitwise.and (core.pc + 1) 0xFFFF
+            in
+            { z80_2 | core = { core | pc = pc, r = core.r + 1 } }
 
         Nothing ->
             z80_1

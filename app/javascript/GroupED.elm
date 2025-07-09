@@ -7,17 +7,20 @@ module GroupED exposing (..)
 --    switch(c) {
 
 import Bitwise exposing (complement, shiftLeftBy, shiftRightBy)
-import CpuTimeCTime exposing (addCpuTimeTime)
+import CpuTimeCTime exposing (InstructionDuration(..), addCpuTimeTime)
 import Dict exposing (Dict)
 import Keyboard exposing (Keyboard)
+import PCIncrement exposing (PCIncrement(..))
+import RegisterChange exposing (RegisterChange)
 import Utils exposing (char, shiftLeftBy8, shiftRightBy8, toHexString2)
+import Z80Change exposing (FlagChange(..), Z80Change(..))
 import Z80Core exposing (Z80Core, add_cpu_time, imm16, inc_pc)
 import Z80Debug exposing (debugLog)
 import Z80Delta exposing (Z80Delta(..))
-import Z80Env exposing (addCpuTimeEnv, m1, mem, mem16, setMem, setMem16, z80_in)
+import Z80Env exposing (Z80Env, addCpuTimeEnv, m1, mem, mem16, setMem, setMem16, z80_in)
 import Z80Flags exposing (FlagRegisters, c_F3, c_F5, c_F53, c_FC, c_FH, f_szh0n0p, z80_sub)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIYHL(..), InterruptRegisters, get_bc, get_de, set_bc_main, set_de_main)
+import Z80Types exposing (IXIYHL(..), InterruptRegisters, MainWithIndexRegisters, get_bc, get_de, set_bc_main, set_de_main)
 
 
 group_ed_dict : Dict Int (Z80ROM -> Z80Core -> Z80Delta)
@@ -26,24 +29,27 @@ group_ed_dict =
         [ ( 0x40, execute_ED40 )
         , ( 0x42, execute_ED42 )
         , ( 0x43, execute_ED43 )
-        , ( 0x44, ed_neg )
-        , ( 0x4C, ed_neg )
-        , ( 0x54, ed_neg )
-        , ( 0x5C, ed_neg )
-        , ( 0x64, ed_neg )
-        , ( 0x6C, ed_neg )
-        , ( 0x74, ed_neg )
-        , ( 0x7C, ed_neg )
+
+        --, ( 0x44, ed_neg )
+        --, ( 0x4C, ed_neg )
+        --, ( 0x54, ed_neg )
+        --, ( 0x5C, ed_neg )
+        --, ( 0x64, ed_neg )
+        --, ( 0x6C, ed_neg )
+        --, ( 0x74, ed_neg )
+        --, ( 0x7C, ed_neg )
         , ( 0x46, setImED46 )
         , ( 0x47, execute_ED47 )
         , ( 0x48, execute_ED48 )
-        , ( 0x4A, adc_hl_bc )
+
+        --, ( 0x4A, adc_hl_bc )
         , ( 0x4B, execute_ED4B )
         , ( 0x4E, setImED4E )
         , ( 0x4F, ld_r_a )
         , ( 0x50, execute_ED50 )
-        , ( 0x5A, adc_hl_de )
-        , ( 0x6A, adc_hl_hl )
+
+        --, ( 0x5A, adc_hl_de )
+        --, ( 0x6A, adc_hl_hl )
         , ( 0x7A, adc_hl_sp )
 
         -- case 0x4F: r(A); time++; break;
@@ -152,8 +158,6 @@ group_ed_dict =
 
         -- case 0x7D: IFF|=IFF>>1; MP=PC=pop(); break;
         -- TODO: Implement ED 7D (all these are the same)
-        , ( 0x45, \rom48k z80 -> NoOp )
-        , ( 0x4D, \rom48k z80 -> NoOp )
         , ( 0x55, \rom48k z80 -> NoOp )
         , ( 0x5D, \rom48k z80 -> NoOp )
         , ( 0x65, \rom48k z80 -> NoOp )
@@ -211,21 +215,19 @@ execute_ED43 rom48k z80 =
 --case 0x6C:
 --case 0x74:
 --case 0x7C: v=A; A=0; sub(v); break;
-
-
-ed_neg : Z80ROM -> Z80Core -> Z80Delta
-ed_neg rom48k z80 =
-    let
-        v =
-            z80.flags.a
-
-        flags =
-            z80.flags
-
-        new_flags =
-            { flags | a = 0 } |> z80_sub v
-    in
-    FlagRegsWithPc new_flags z80.pc
+--ed_neg : Z80ROM -> Z80Core -> Z80Delta
+--ed_neg rom48k z80 =
+--    let
+--        v =
+--            z80.flags.a
+--
+--        flags =
+--            z80.flags
+--
+--        new_flags =
+--            { flags | a = 0 } |> z80_sub v
+--    in
+--    FlagRegsWithPc new_flags z80.pc
 
 
 setImED46 : Z80ROM -> Z80Core -> Z80Delta
@@ -543,25 +545,24 @@ execute_ED48 rom48k z80 =
     z80 |> execute_ED40485058606870 0x48 rom48k.keyboard
 
 
-adc_hl_bc : Z80ROM -> Z80Core -> Z80Delta
-adc_hl_bc _ z80 =
-    -- case 0x4A: adc_hl(B<<8|C); break;
-    --0x4A -> z80 |> adc_hl (z80 |> get_bc)
-    z80 |> adc_hl (z80.main |> get_bc)
 
-
-adc_hl_de : Z80ROM -> Z80Core -> Z80Delta
-adc_hl_de _ z80 =
-    ---- case 0x5A: adc_hl(D<<8|E); break;
-    --0x5A -> z80 |> adc_hl (z80 |> get_de)
-    z80 |> adc_hl (z80.main |> get_de)
-
-
-adc_hl_hl : Z80ROM -> Z80Core -> Z80Delta
-adc_hl_hl _ z80 =
-    ---- case 0x6A: adc_hl(HL); break;
-    --0x6A -> z80 |> adc_hl z80.main.hl
-    z80 |> adc_hl z80.main.hl
+--adc_hl_bc : Z80ROM -> Z80Core -> Z80Delta
+--adc_hl_bc _ z80 =
+--    -- case 0x4A: adc_hl(B<<8|C); break;
+--    --0x4A -> z80 |> adc_hl (z80 |> get_bc)
+--    z80 |> adc_hl (z80.main |> get_bc)
+--adc_hl_de : Z80ROM -> Z80Core -> Z80Delta
+--adc_hl_de _ z80 =
+--    ---- case 0x5A: adc_hl(D<<8|E); break;
+--    --0x5A -> z80 |> adc_hl (z80 |> get_de)
+--    z80 |> adc_hl (z80.main |> get_de)
+--
+--
+--adc_hl_hl : Z80ROM -> Z80Core -> Z80Delta
+--adc_hl_hl _ z80 =
+--    ---- case 0x6A: adc_hl(HL); break;
+--    --0x6A -> z80 |> adc_hl z80.main.hl
+--    z80 |> adc_hl z80.main.hl
 
 
 adc_hl_sp : Z80ROM -> Z80Core -> Z80Delta
@@ -741,13 +742,6 @@ set_im_direct value z80 =
     SetImValue value
 
 
-
---
---
---  private void ldir(int i, boolean r)
---  {
-
-
 type DirectionForLDIR
     = Forwards
     | Backwards
@@ -884,40 +878,22 @@ set_i v z80 =
 --    MP = a+1;
 --    time += 7;
 --  }
+--ed_adc_hl : Int -> MainWithIndexRegisters -> FlagRegisters -> ( FlagRegisters, Int )
+--ed_adc_hl b z80_main z80_flags =
 
 
 adc_hl : Int -> Z80Core -> Z80Delta
 adc_hl b z80 =
     let
-        a =
-            z80.main.hl
-
-        r1 =
-            a + b + Bitwise.and (z80.flags.ff |> shiftRightBy8) c_FC
-
-        ff =
-            r1 |> shiftRightBy8
-
-        fa =
-            a |> shiftRightBy8
-
-        fb =
-            b |> shiftRightBy8
-
-        r =
-            char r1
-
-        fr =
-            Bitwise.or (r |> shiftRightBy8) (r |> shiftLeftBy8)
-
-        main =
+        z80_main =
             z80.main
 
-        flags =
-            z80.flags
+        ( flags, hl ) =
+            ed_adc_hl b z80_main z80.flags
     in
     --{ z80 | main = { main | hl = r }, flags = { flags | ff = ff, fa = fa, fb = fb, fr = fr} } |> add_cpu_time 7
-    FlagsWithPCMainAndCpuTime { flags | ff = ff, fa = fa, fb = fb, fr = fr } z80.pc { main | hl = r } (z80.env.time |> addCpuTimeTime 7)
+    --FlagsWithPCMainAndCpuTime { flags | ff = ff, fa = fa, fb = fb, fr = fr } z80.pc { main | hl = r } (z80.env.time |> addCpuTimeTime 7)
+    FlagsWithPCMainAndCpuTime flags z80.pc { z80_main | hl = hl } (z80.env.time |> addCpuTimeTime 7)
 
 
 
@@ -1146,3 +1122,119 @@ ed_cpir : Z80ROM -> Z80Core -> Z80Delta
 ed_cpir rom48k z80 =
     -- case 0xB1: cpir(1,true); break;
     z80 |> cpir Forwards True rom48k
+
+
+singleByteMainRegsED : Dict Int ( MainWithIndexRegisters -> RegisterChange, InstructionDuration )
+singleByteMainRegsED =
+    Dict.fromList
+        []
+
+
+singleByteFlagsED : Dict Int ( FlagRegisters -> FlagChange, InstructionDuration )
+singleByteFlagsED =
+    Dict.fromList
+        [ ( 0x44, ( ed_44_neg, EightTStates ) )
+        , ( 0x4C, ( ed_44_neg, EightTStates ) )
+        , ( 0x54, ( ed_44_neg, EightTStates ) )
+        , ( 0x5C, ( ed_44_neg, EightTStates ) )
+        , ( 0x64, ( ed_44_neg, EightTStates ) )
+        , ( 0x6C, ( ed_44_neg, EightTStates ) )
+        , ( 0x74, ( ed_44_neg, EightTStates ) )
+        , ( 0x7C, ( ed_44_neg, EightTStates ) )
+        ]
+
+
+ed_44_neg : FlagRegisters -> FlagChange
+ed_44_neg z80_flags =
+    let
+        v =
+            z80_flags.a
+
+        new_flags =
+            { z80_flags | a = 0 } |> z80_sub v
+    in
+    OnlyFlags new_flags
+
+
+singleByteMainAndFlagsED : Dict Int ( MainWithIndexRegisters -> FlagRegisters -> Z80Change, PCIncrement, InstructionDuration )
+singleByteMainAndFlagsED =
+    Dict.fromList
+        [ ( 0x4A, ( ed4a_adc_hl_bc, IncrementByTwo, FifteenTStates ) )
+        , ( 0x5A, ( ed5a_adc_hl_de, IncrementByTwo, FifteenTStates ) )
+        , ( 0x6A, ( ed6a_adc_hl_hl, IncrementByTwo, FifteenTStates ) )
+        ]
+
+
+ed4a_adc_hl_bc : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+ed4a_adc_hl_bc z80_main z80_flags =
+    -- case 0x4A: adc_hl(B<<8|C); break;
+    let
+        ( flags, hl ) =
+            ed_adc_hl (z80_main |> get_bc) z80_main z80_flags
+    in
+    FlagsWithHLRegister flags hl
+
+
+ed5a_adc_hl_de : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+ed5a_adc_hl_de z80_main z80_flags =
+    ---- case 0x5A: adc_hl(D<<8|E); break;
+    let
+        ( flags, hl ) =
+            ed_adc_hl (z80_main |> get_de) z80_main z80_flags
+    in
+    FlagsWithHLRegister flags hl
+
+
+ed6a_adc_hl_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+ed6a_adc_hl_hl z80_main z80_flags =
+    ---- case 0x6A: adc_hl(HL); break;
+    let
+        ( flags, hl ) =
+            ed_adc_hl z80_main.hl z80_main z80_flags
+    in
+    FlagsWithHLRegister flags hl
+
+
+
+--  private void adc_hl(int b)
+--  {
+--    int a,r;
+--    r = (a=HL) + b + (Ff>>>8 & FC);
+--    Ff = r>>>8;
+--    Fa = a>>>8; Fb = b>>>8;
+--    HL = r = (char)r;
+--    Fr = r>>>8 | r<<8;
+--    MP = a+1;
+--    time += 7;
+--  }
+
+
+ed_adc_hl : Int -> MainWithIndexRegisters -> FlagRegisters -> ( FlagRegisters, Int )
+ed_adc_hl b z80_main z80_flags =
+    let
+        a =
+            z80_main.hl
+
+        r1 =
+            a + b + Bitwise.and (z80_flags.ff |> shiftRightBy8) c_FC
+
+        ff =
+            r1 |> shiftRightBy8
+
+        fa =
+            a |> shiftRightBy8
+
+        fb =
+            b |> shiftRightBy8
+
+        r =
+            char r1
+
+        fr =
+            Bitwise.or (r |> shiftRightBy8) (r |> shiftLeftBy8)
+
+        flags =
+            z80_flags
+    in
+    --FlagsWithHLRegister { flags | ff = ff, fa = fa, fb = fb, fr = fr } r
+    ( { flags | ff = ff, fa = fa, fb = fb, fr = fr }, r )
