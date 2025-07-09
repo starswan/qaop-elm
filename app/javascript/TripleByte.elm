@@ -11,12 +11,6 @@ type TripleByteRegister
     | TripleByteHL
 
 
-
---| TripleByteIY
---| TripleByteSP
---| TripleBytePC
-
-
 type TripleByteChange
     = NewHLIndirect Int
     | NewIXRegister Int
