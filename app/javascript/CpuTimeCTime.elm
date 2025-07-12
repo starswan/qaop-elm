@@ -22,17 +22,23 @@ type
     | TwentyThreeTStates
 
 
-c_NOCONT =
-    99999
-
-
 c_SCRENDT =
     191 * 224 + 126
 
 
+type alias CpuTime =
+    { cpu_time : Int
+    }
+
+
+type CTime
+    = NoCont
+    | ContUntil Int
+
+
 type alias CpuTimeCTime =
     { cpu_time : Int
-    , ctime : Int
+    , ctime : CTime
     }
 
 
@@ -144,78 +150,79 @@ cont1 tmp_t z80 =
 
 
 cont : Int -> CpuTimeCTime -> CpuTimeCTime
-cont n z80env =
-    let
-        t =
-            z80env.ctime
-    in
-    if t + n <= 0 then
-        z80env
+cont n cpuTimeCTime =
+    case cpuTimeCTime.ctime of
+        NoCont ->
+            cpuTimeCTime
 
-    else
-        let
-            s =
-                c_SCRENDT - t
-        in
-        if s < 0 then
-            z80env
+        ContUntil t ->
+            if t + n <= 0 then
+                cpuTimeCTime
 
-        else
-            let
-                new_s =
-                    s |> modBy 224
+            else
+                let
+                    s =
+                        c_SCRENDT - t
+                in
+                if s < 0 then
+                    cpuTimeCTime
 
-                maybe_ntk =
-                    if new_s > 126 then
-                        let
-                            new_n =
-                                n - (new_s - 126)
-                        in
-                        if new_n <= 0 then
-                            Nothing
-
-                        else
-                            Just { n = new_n, t = 6, k = 15 }
-
-                    else
-                        let
-                            k =
-                                new_s |> shiftRightBy 3
-
-                            s2 =
-                                Bitwise.and new_s 0x07
-                        in
-                        if s2 == 7 then
-                            let
-                                n1 =
-                                    n - 1
-                            in
-                            if n1 == 0 then
-                                Nothing
-
-                            else
-                                Just { n = n1, t = s2 - 1, k = k }
-
-                        else
-                            Just { n = n, t = s2, k = k }
-            in
-            case maybe_ntk of
-                Just ntk ->
+                else
                     let
-                        n3 =
-                            (ntk.n - 1) |> shiftRightBy 1
+                        new_s =
+                            s |> modBy 224
 
-                        n4 =
-                            if ntk.k < n3 then
-                                ntk.k
+                        maybe_ntk =
+                            if new_s > 126 then
+                                let
+                                    new_n =
+                                        n - (new_s - 126)
+                                in
+                                if new_n <= 0 then
+                                    Nothing
+
+                                else
+                                    Just { n = new_n, t = 6, k = 15 }
 
                             else
-                                n3
-                    in
-                    { z80env | cpu_time = z80env.cpu_time + (ntk.t + 6 * n4) }
+                                let
+                                    k =
+                                        new_s |> shiftRightBy 3
 
-                Nothing ->
-                    z80env
+                                    s2 =
+                                        Bitwise.and new_s 0x07
+                                in
+                                if s2 == 7 then
+                                    let
+                                        n1 =
+                                            n - 1
+                                    in
+                                    if n1 == 0 then
+                                        Nothing
+
+                                    else
+                                        Just { n = n1, t = s2 - 1, k = k }
+
+                                else
+                                    Just { n = n, t = s2, k = k }
+                    in
+                    case maybe_ntk of
+                        Just ntk ->
+                            let
+                                n3 =
+                                    (ntk.n - 1) |> shiftRightBy 1
+
+                                n4 =
+                                    if ntk.k < n3 then
+                                        ntk.k
+
+                                    else
+                                        n3
+                            in
+                            { cpuTimeCTime | cpu_time = cpuTimeCTime.cpu_time + (ntk.t + 6 * n4) }
+
+                        Nothing ->
+                            cpuTimeCTime
 
 
 
@@ -238,43 +245,48 @@ cont n z80env =
 
 cont_port : Int -> CpuTimeCTime -> CpuTimeCTime
 cont_port portn z80env =
-    let
-        n =
-            z80env.cpu_time - z80env.ctime
+    case z80env.ctime of
+        NoCont ->
+            z80env
 
-        env1_time =
-            if n > 0 then
-                z80env |> cont n
+        ContUntil ctime ->
+            let
+                n =
+                    z80env.cpu_time - ctime
 
-            else
-                z80env
+                env1_time =
+                    if n > 0 then
+                        z80env |> cont n
 
-        env2 =
-            if Bitwise.and portn 0xC000 /= 0x4000 then
-                let
-                    env3 =
-                        if Bitwise.and portn 0x01 == 0 then
-                            env1_time |> cont1 1
+                    else
+                        z80env
 
-                        else
-                            env1_time
-                in
-                { env3 | ctime = c_NOCONT }
+                env2 =
+                    if Bitwise.and portn 0xC000 /= 0x4000 then
+                        let
+                            env3 =
+                                if Bitwise.and portn 0x01 == 0 then
+                                    env1_time |> cont1 1
 
-            else
-                let
-                    env3 =
-                        CpuTimeCTime env1_time.cpu_time env1_time.cpu_time
+                                else
+                                    env1_time
+                        in
+                        { env3 | ctime = NoCont }
 
-                    contval =
-                        Bitwise.and portn 1 |> shiftLeftBy 1
+                    else
+                        let
+                            env3 =
+                                { env1_time | ctime = ContUntil env1_time.cpu_time }
 
-                    env4 =
-                        env3 |> cont (2 + contval)
-                in
-                env4 |> addCpuTimeTime 4
-    in
-    env2
+                            contval =
+                                Bitwise.and portn 1 |> shiftLeftBy 1
+
+                            env4 =
+                                env3 |> cont (2 + contval)
+                        in
+                        env4 |> addCpuTimeTime 4
+            in
+            env2
 
 
 addCpuTimeTime : Int -> CpuTimeCTime -> CpuTimeCTime

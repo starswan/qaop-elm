@@ -6,7 +6,7 @@
 module Z80Env exposing (..)
 
 import Bitwise exposing (and, or, shiftRightBy)
-import CpuTimeCTime exposing (CpuTimeAnd16BitValue, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAndValue, CpuTimeSpAnd16BitValue, CpuTimeSpAndValue, addCpuTimeTime, c_NOCONT, cont, cont1, cont_port)
+import CpuTimeCTime exposing (CTime(..), CpuTimeAnd16BitValue, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAndValue, CpuTimeSpAnd16BitValue, CpuTimeSpAndValue, addCpuTimeTime, cont, cont1, cont_port)
 import Dict exposing (Dict)
 import Keyboard exposing (Keyboard, z80_keyboard_input)
 import Utils exposing (shiftLeftBy8, shiftRightBy8)
@@ -56,7 +56,7 @@ type alias ValueWithTime =
 
 
 z80env_constructor =
-    Z80Env Dict.empty (CpuTimeCTime c_FRSTART 0) 0
+    Z80Env Dict.empty (CpuTimeCTime c_FRSTART NoCont) 0
 
 
 
@@ -94,15 +94,21 @@ z80env_constructor =
 m1 : Int -> Int -> Z80ROM -> Z80Env -> CpuTimeAndValue
 m1 addr ir rom48k z80env =
     let
-        n =
-            z80env.time.cpu_time - z80env.time.ctime
-
         z80env_time =
-            if n > 0 then
-                z80env.time |> cont n
+            case z80env.time.ctime of
+                NoCont ->
+                    z80env.time
 
-            else
-                z80env.time
+                ContUntil until ->
+                    let
+                        n =
+                            z80env.time.cpu_time - until
+                    in
+                    if n > 0 then
+                        z80env.time |> cont n
+
+                    else
+                        z80env.time
 
         ramAddr =
             addr - 0x4000
@@ -116,10 +122,10 @@ m1 addr ir rom48k z80env =
 
         ctime =
             if Bitwise.and ir 0xC000 == 0x4000 then
-                z80env_1_time.cpu_time + 4
+                ContUntil (z80env_1_time.cpu_time + 4)
 
             else
-                c_NOCONT
+                NoCont
 
         value =
             if ramAddr >= 0 then
@@ -153,15 +159,21 @@ m1 addr ir rom48k z80env =
 mem : Int -> CpuTimeCTime -> Z80ROM -> Z80Env -> CpuTimeAndValue
 mem base_addr time rom48k ram =
     let
-        n =
-            time.cpu_time - time.ctime
-
         z80env_time =
-            if n > 0 then
-                time |> cont n
+            case time.ctime of
+                NoCont ->
+                    time
 
-            else
-                time
+                ContUntil until ->
+                    let
+                        n =
+                            time.cpu_time - until
+                    in
+                    if n > 0 then
+                        time |> cont n
+
+                    else
+                        time
 
         addr =
             base_addr - 0x4000
@@ -173,13 +185,13 @@ mem base_addr time rom48k ram =
                         new_z80 =
                             z80env_time |> cont1 0
                     in
-                    ( new_z80, new_z80.cpu_time + 3, ram |> getRamValue addr rom48k )
+                    ( new_z80, ContUntil (new_z80.cpu_time + 3), ram |> getRamValue addr rom48k )
 
                 else
-                    ( z80env_time, c_NOCONT, ram |> getRamValue addr rom48k )
+                    ( z80env_time, NoCont, ram |> getRamValue addr rom48k )
 
             else
-                ( z80env_time, c_NOCONT, rom48k |> getROMValue base_addr )
+                ( z80env_time, NoCont, rom48k |> getROMValue base_addr )
     in
     CpuTimeAndValue { new_time | ctime = ctime } value
 
@@ -218,15 +230,21 @@ mem base_addr time rom48k ram =
 mem16 : Int -> Z80ROM -> Z80Env -> CpuTimeAnd16BitValue
 mem16 addr rom48k z80env =
     let
-        n =
-            z80env.time.cpu_time - z80env.time.ctime
-
         z80env_time =
-            if n > 0 then
-                z80env.time |> cont n
+            case z80env.time.ctime of
+                NoCont ->
+                    z80env.time
 
-            else
-                z80env.time
+                ContUntil until ->
+                    let
+                        n =
+                            z80env.time.cpu_time - until
+                    in
+                    if n > 0 then
+                        z80env.time |> cont n
+
+                    else
+                        z80env.time
 
         addr1 =
             addr - 0x3FFF
@@ -240,7 +258,7 @@ mem16 addr rom48k z80env =
                 high =
                     getROMValue (addr1 + 0x4000) rom48k
             in
-            CpuTimeAnd16BitValue { z80env_time | ctime = c_NOCONT } (Bitwise.or low (shiftLeftBy8 high))
+            CpuTimeAnd16BitValue { z80env_time | ctime = NoCont } (Bitwise.or low (shiftLeftBy8 high))
 
         else
             let
@@ -255,7 +273,7 @@ mem16 addr rom48k z80env =
                         z80env_time |> cont1 0 |> cont1 3 |> addCpuTimeTime 6
 
                     else
-                        { z80env_time | ctime = c_NOCONT }
+                        { z80env_time | ctime = NoCont }
             in
             CpuTimeAnd16BitValue z80env_1_time (Bitwise.or low (shiftLeftBy8 high))
 
@@ -298,7 +316,7 @@ mem16 addr rom48k z80env =
                 high =
                     z80env |> getRamValue addr1 rom48k
             in
-            CpuTimeAnd16BitValue { z80env_time | ctime = c_NOCONT } (or low (shiftLeftBy8 high))
+            CpuTimeAnd16BitValue { z80env_time | ctime = NoCont } (or low (shiftLeftBy8 high))
 
         else
             let
@@ -308,7 +326,7 @@ mem16 addr rom48k z80env =
                 high =
                     rom48k |> getROMValue 0
             in
-            CpuTimeAnd16BitValue { z80env_time | ctime = c_NOCONT } (or low (shiftLeftBy8 high))
+            CpuTimeAnd16BitValue { z80env_time | ctime = NoCont } (or low (shiftLeftBy8 high))
 
 
 setRam : Int -> Int -> Z80Env -> Z80Env
@@ -351,15 +369,21 @@ setMem z80_addr value z80env =
         time_input =
             z80env.time
 
-        n =
-            time_input.cpu_time - time_input.ctime
-
         z80env_time =
-            if n > 0 then
-                time_input |> cont n
+            case time_input.ctime of
+                NoCont ->
+                    z80env.time
 
-            else
-                { time_input | ctime = c_NOCONT }
+                ContUntil until ->
+                    let
+                        n =
+                            time_input.cpu_time - until
+                    in
+                    if n > 0 then
+                        time_input |> cont n
+
+                    else
+                        { time_input | ctime = NoCont }
 
         addr =
             z80_addr - 0x4000
@@ -367,7 +391,7 @@ setMem z80_addr value z80env =
         ( new_env, ctime ) =
             if addr < 0x4000 then
                 if addr < 0 then
-                    ( z80env, c_NOCONT )
+                    ( z80env, NoCont )
 
                 else
                     let
@@ -375,7 +399,7 @@ setMem z80_addr value z80env =
                             z80env_time |> cont1 0
 
                         new_time =
-                            z80env_1_time.cpu_time + 3
+                            ContUntil (z80env_1_time.cpu_time + 3)
 
                         -- maybe this code is all about refreshing the screen only if it changes...?
                         --ram_value =
@@ -388,8 +412,8 @@ setMem z80_addr value z80env =
                     ( { z80env | ram = z80env.ram |> Dict.insert addr value }, new_time )
 
             else
-                --( z80env |> setRam addr value, c_NOCONT )
-                ( { z80env | ram = z80env.ram |> Dict.insert addr value }, c_NOCONT )
+                --( z80env |> setRam addr value, NoCont )
+                ( { z80env | ram = z80env.ram |> Dict.insert addr value }, NoCont )
     in
     { new_env | time = { z80env_time | ctime = ctime } }
 
@@ -428,18 +452,24 @@ setMem16 addr value z80env =
             time_input =
                 z80env.time
 
-            n =
-                time_input.cpu_time - time_input.ctime
-
             z80env_time =
-                if n > 0 then
-                    cont n time_input
+                case time_input.ctime of
+                    NoCont ->
+                        time_input
 
-                else
-                    time_input
+                    ContUntil until ->
+                        let
+                            n =
+                                time_input.cpu_time - until
+                        in
+                        if n > 0 then
+                            cont n time_input
+
+                        else
+                            time_input
 
             env_1 =
-                { z80env | time = { z80env_time | ctime = c_NOCONT } }
+                { z80env | time = { z80env_time | ctime = NoCont } }
         in
         if addr1 < 0 then
             env_1
@@ -530,7 +560,7 @@ addCpuTimeEnv value z80env =
 
 reset_cpu_time : Z80Env -> Z80Env
 reset_cpu_time z80env =
-    { z80env | time = CpuTimeCTime c_FRSTART 0 }
+    { z80env | time = CpuTimeCTime c_FRSTART NoCont }
 
 
 
