@@ -746,3 +746,27 @@ ld_d_iy_h : MainWithIndexRegisters -> RegisterChange
 ld_d_iy_h z80_main =
     --    -- case 0x54: D=HL>>>8; break;
     ChangeRegisterD (shiftRightBy8 z80_main.iy)
+
+
+ld_e_iy_l : MainWithIndexRegisters -> RegisterChange
+ld_e_iy_l z80_main =
+    -- case 0x5D: E=HL&0xFF; break;
+    ChangeRegisterE (Bitwise.and z80_main.iy 0xFF)
+
+
+ld_e_ix_h : MainWithIndexRegisters -> RegisterChange
+ld_e_ix_h z80_main =
+    -- case 0x5C: E=HL>>>8; break;
+    ChangeRegisterE (shiftRightBy8 z80_main.ix)
+
+
+ld_e_ix_l : MainWithIndexRegisters -> RegisterChange
+ld_e_ix_l z80_main =
+    -- case 0x5D: E=HL&0xFF; break;
+    ChangeRegisterE (Bitwise.and z80_main.ix 0xFF)
+
+
+ld_e_iy_h : MainWithIndexRegisters -> RegisterChange
+ld_e_iy_h z80_main =
+    -- case 0x5C: E=HL>>>8; break;
+    ChangeRegisterE (shiftRightBy8 z80_main.iy)
