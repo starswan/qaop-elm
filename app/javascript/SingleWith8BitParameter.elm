@@ -39,6 +39,8 @@ doubleWithRegistersIX =
         , ( 0x35, ( dec_indirect_ix, IncreaseByThree, TwentyThreeTStates ) )
         , ( 0x46, ( ld_b_indirect_ix, IncreaseByThree, SevenTStates ) )
         , ( 0x4E, ( ld_c_indirect_ix, IncreaseByThree, SevenTStates ) )
+        , ( 0x56, ( ld_d_indirect_ix, IncreaseByThree, SevenTStates ) )
+        , ( 0x5E, ( ld_e_indirect_ix, IncreaseByThree, SevenTStates ) )
         ]
 
 
@@ -51,6 +53,8 @@ doubleWithRegistersIY =
         , ( 0x35, ( dec_indirect_iy, IncreaseByThree, TwentyThreeTStates ) )
         , ( 0x46, ( ld_b_indirect_iy, IncreaseByThree, SevenTStates ) )
         , ( 0x4E, ( ld_c_indirect_iy, IncreaseByThree, SevenTStates ) )
+        , ( 0x56, ( ld_d_indirect_iy, IncreaseByThree, SevenTStates ) )
+        , ( 0x5E, ( ld_e_indirect_iy, IncreaseByThree, SevenTStates ) )
         ]
 
 
