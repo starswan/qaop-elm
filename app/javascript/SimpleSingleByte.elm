@@ -718,3 +718,9 @@ ex_de_hl : MainWithIndexRegisters -> RegisterChange
 ex_de_hl z80_main =
     -- case 0xEB: v=HL; HL=D<<8|E; D=v>>>8; E=v&0xFF; break;
     ChangeRegisterDEAndHL z80_main.hl (z80_main |> get_de)
+
+
+ld_d_ix_h : MainWithIndexRegisters -> RegisterChange
+ld_d_ix_h z80_main =
+    --    -- case 0x54: D=HL>>>8; break;
+    ChangeRegisterD (shiftRightBy8 z80_main.ix)
