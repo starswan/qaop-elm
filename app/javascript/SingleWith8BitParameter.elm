@@ -451,3 +451,15 @@ dec_indirect_iy z80_main param =
     -- case 0x35: v=dec(env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     -- case 0x35: {int a; v=dec(env.mem(a=getd(xy))); time+=4; env.mem(a,v); time+=3;} break;
     IndexedIndirectDecrement z80_main.iy param
+
+
+ld_d_indirect_ix : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
+ld_d_indirect_ix z80_main param =
+    --case 0x56: D=env.mem(getd(xy)); time+=3; break;
+    NewDIndexedIndirect z80_main.ix param
+
+
+ld_e_indirect_ix : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
+ld_e_indirect_ix z80_main param =
+    --case 0x5E: E=env.mem(getd(xy)); time+=3; break;
+    NewEIndexedIndirect z80_main.ix param
