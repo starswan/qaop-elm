@@ -724,3 +724,9 @@ ld_d_ix_h : MainWithIndexRegisters -> RegisterChange
 ld_d_ix_h z80_main =
     --    -- case 0x54: D=HL>>>8; break;
     ChangeRegisterD (shiftRightBy8 z80_main.ix)
+
+
+ld_d_ix_l : MainWithIndexRegisters -> RegisterChange
+ld_d_ix_l z80_main =
+    --    -- case 0x55: D=HL&0xFF; break;
+    ChangeRegisterD (Bitwise.and z80_main.ix 0xFF)
