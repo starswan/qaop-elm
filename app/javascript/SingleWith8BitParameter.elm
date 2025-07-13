@@ -39,6 +39,8 @@ doubleWithRegistersIX =
         , ( 0x35, ( dec_indirect_ix, IncreaseByThree, TwentyThreeTStates ) )
         , ( 0x46, ( ld_b_indirect_ix, IncreaseByThree, SevenTStates ) )
         , ( 0x4E, ( ld_c_indirect_ix, IncreaseByThree, SevenTStates ) )
+        , ( 0x56, ( ld_d_indirect_ix, IncreaseByThree, SevenTStates ) )
+        , ( 0x5E, ( ld_e_indirect_ix, IncreaseByThree, SevenTStates ) )
         ]
 
 
@@ -51,6 +53,8 @@ doubleWithRegistersIY =
         , ( 0x35, ( dec_indirect_iy, IncreaseByThree, TwentyThreeTStates ) )
         , ( 0x46, ( ld_b_indirect_iy, IncreaseByThree, SevenTStates ) )
         , ( 0x4E, ( ld_c_indirect_iy, IncreaseByThree, SevenTStates ) )
+        , ( 0x56, ( ld_d_indirect_iy, IncreaseByThree, SevenTStates ) )
+        , ( 0x5E, ( ld_e_indirect_iy, IncreaseByThree, SevenTStates ) )
         ]
 
 
@@ -89,6 +93,8 @@ type DoubleWithRegisterChange
     | NewIYRegisterValue Int
     | NewBRegisterIndirect Int
     | NewCRegisterIndirect Int
+    | NewDRegisterIndirect Int
+    | NewERegisterIndirect Int
     | IndexedIndirectIncrement Int Int
     | IndexedIndirectDecrement Int Int
 
@@ -451,3 +457,59 @@ dec_indirect_iy z80_main param =
     -- case 0x35: v=dec(env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     -- case 0x35: {int a; v=dec(env.mem(a=getd(xy))); time+=4; env.mem(a,v); time+=3;} break;
     IndexedIndirectDecrement z80_main.iy param
+
+
+ld_d_indirect_ix : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
+ld_d_indirect_ix z80_main param =
+    --case 0x56: D=env.mem(getd(xy)); time+=3; break;
+    let
+        address =
+            z80_main.ix + byte param
+    in
+    NewDRegisterIndirect address
+
+
+
+--    NewDIndexedIndirect z80_main.ix param
+
+
+ld_e_indirect_ix : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
+ld_e_indirect_ix z80_main param =
+    --case 0x5E: E=env.mem(getd(xy)); time+=3; break;
+    let
+        address =
+            z80_main.ix + byte param
+    in
+    NewERegisterIndirect address
+
+
+
+--NewEIndexedIndirect z80_main.ix param
+
+
+ld_d_indirect_iy : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
+ld_d_indirect_iy z80_main param =
+    --case 0x56: D=env.mem(getd(xy)); time+=3; break;
+    let
+        address =
+            z80_main.iy + byte param
+    in
+    NewDRegisterIndirect address
+
+
+
+--NewDIndexedIndirect z80_main.iy param
+
+
+ld_e_indirect_iy : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
+ld_e_indirect_iy z80_main param =
+    --case 0x5E: E=env.mem(getd(xy)); time+=3; break;
+    let
+        address =
+            z80_main.iy + byte param
+    in
+    NewERegisterIndirect address
+
+
+
+--NewEIndexedIndirect z80_main.iy param
