@@ -41,6 +41,10 @@ doubleWithRegistersIX =
         , ( 0x4E, ( ld_c_indirect_ix, IncreaseByThree, SevenTStates ) )
         , ( 0x56, ( ld_d_indirect_ix, IncreaseByThree, SevenTStates ) )
         , ( 0x5E, ( ld_e_indirect_ix, IncreaseByThree, SevenTStates ) )
+        , ( 0x86, ( add_a_indirect_ix, IncreaseByThree, NineteenTStates ) )
+
+        -- case 0x8E: adc(env.mem(HL)); time+=3; break;
+        , ( 0x8E, ( \z80_main param -> AdcIndexedIndirect z80_main.ix param, IncreaseByThree, NineteenTStates ) )
         ]
 
 
