@@ -3,6 +3,8 @@
 source 'http://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
+gem "activeadmin"
+
 # gem "base64"
 # gem "bigdecimal"
 # gem "drb"
