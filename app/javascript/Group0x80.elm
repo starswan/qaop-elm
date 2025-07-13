@@ -11,46 +11,9 @@ import Z80Types exposing (IXIY, IXIYHL, get_h_ixiy, get_l_ixiy)
 miniDict80 : Dict Int (IXIY -> Z80ROM -> Z80Core -> Z80Delta)
 miniDict80 =
     Dict.fromList
-        [ --( 0x84, add_a_h )
-          --, ( 0x85, add_a_l )
-          ( 0x86, add_a_indirect_hl )
-        , ( 0x8C, adc_a_h )
-        , ( 0x8D, adc_a_l )
+        [ ( 0x86, add_a_indirect_hl )
         , ( 0x8E, adc_a_indirect_hl )
         ]
-
-
-
---add_a_h : IXIY -> Z80ROM -> Z80Core -> Z80Delta
---add_a_h ixiyhl rom z80 =
---    -- case 0x84: add(HL>>>8); break;
---    -- case 0x84: add(xy>>>8); break;
---    --z80 |> set_flag_regs (z80_add (get_h ixiyhl z80.main) z80.flags)
---    FlagRegsWithPc (z80_add (get_h_ixiy ixiyhl z80.main) z80.flags) z80.pc
---
---
---add_a_l : IXIY -> Z80ROM -> Z80Core -> Z80Delta
---add_a_l ixiyhl rom z80 =
---    -- case 0x85: add(HL&0xFF); break;
---    -- case 0x85: add(xy&0xFF); break;
---    --z80 |> set_flag_regs (z80_add (get_l ixiyhl z80.main) z80.flags)
---    FlagRegsWithPc (z80_add (get_l_ixiy ixiyhl z80.main) z80.flags) z80.pc
-
-
-adc_a_h : IXIY -> Z80ROM -> Z80Core -> Z80Delta
-adc_a_h ixiyhl rom z80 =
-    -- case 0x8C: adc(HL>>>8); break;
-    -- case 0x8C: adc(xy>>>8); break;
-    --z80 |> set_flag_regs (adc (get_h ixiyhl z80.main) z80.flags)
-    FlagRegsWithPc (z80.flags |> adc (get_h_ixiy ixiyhl z80.main)) z80.pc
-
-
-adc_a_l : IXIY -> Z80ROM -> Z80Core -> Z80Delta
-adc_a_l ixiyhl rom z80 =
-    -- case 0x8D: adc(HL&0xFF); break;
-    -- case 0x8D: adc(xy&0xFF); break;
-    --z80 |> set_flag_regs (adc (get_l ixiyhl z80.main) z80.flags)
-    FlagRegsWithPc (z80.flags |> adc (get_l_ixiy ixiyhl z80.main)) z80.pc
 
 
 add_a_indirect_hl : IXIY -> Z80ROM -> Z80Core -> Z80Delta

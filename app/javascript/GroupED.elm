@@ -215,19 +215,6 @@ execute_ED43 rom48k z80 =
 --case 0x6C:
 --case 0x74:
 --case 0x7C: v=A; A=0; sub(v); break;
---ed_neg : Z80ROM -> Z80Core -> Z80Delta
---ed_neg rom48k z80 =
---    let
---        v =
---            z80.flags.a
---
---        flags =
---            z80.flags
---
---        new_flags =
---            { flags | a = 0 } |> z80_sub v
---    in
---    FlagRegsWithPc new_flags z80.pc
 
 
 setImED46 : Z80ROM -> Z80Core -> Z80Delta
