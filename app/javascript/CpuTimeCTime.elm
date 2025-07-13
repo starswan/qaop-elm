@@ -18,6 +18,7 @@ type
     | FifteenTStates
     | SixteenTStates
     | SeventeenTStates
+    | NineteenTStates
     | TwentyTStates
     | TwentyThreeTStates
 
@@ -349,5 +350,8 @@ addDuration duration time =
 
                 TwentyThreeTStates ->
                     23
+
+                NineteenTStates ->
+                    19
     in
     { time | cpu_time = time.cpu_time + offset }

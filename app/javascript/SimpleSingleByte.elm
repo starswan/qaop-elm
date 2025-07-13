@@ -121,6 +121,8 @@ singleByteMainRegsFD =
         , ( 0x69, ( ld_iyl_c, EightTStates ) )
         , ( 0x6A, ( ld_iyl_d, EightTStates ) )
         , ( 0x6B, ( ld_iyl_e, EightTStates ) )
+        , ( 0x7C, ( \z80_main -> ChangeRegisterA (z80_main.iy |> shiftRightBy8), EightTStates ) )
+        , ( 0x7D, ( \z80_main -> ChangeRegisterA (z80_main.iy |> Bitwise.and 0xFF), EightTStates ) )
         ]
         |> Dict.union commonDDFDOps
 
@@ -142,6 +144,8 @@ singleByteMainRegsDD =
         , ( 0x69, ( ld_ixl_c, EightTStates ) )
         , ( 0x6A, ( ld_ixl_d, EightTStates ) )
         , ( 0x6B, ( ld_ixl_e, EightTStates ) )
+        , ( 0x7C, ( \z80_main -> ChangeRegisterA (z80_main.ix |> shiftRightBy8), EightTStates ) )
+        , ( 0x7D, ( \z80_main -> ChangeRegisterA (z80_main.ix |> Bitwise.and 0xFF), EightTStates ) )
         ]
         |> Dict.union commonDDFDOps
 
