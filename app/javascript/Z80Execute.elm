@@ -272,6 +272,48 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 , r = z80.r + 1
             }
 
+        NewDRegisterIndirect addr ->
+            let
+                pc =
+                    Bitwise.and new_pc 0xFFFF
+
+                env_1 =
+                    { old_env | time = cpu_time }
+
+                main =
+                    z80.main
+
+                new_b =
+                    env_1 |> mem addr env_1.time rom48k
+            in
+            { z80
+                | pc = pc
+                , env = { env_1 | time = new_b.time }
+                , main = { main | d = new_b.value }
+                , r = z80.r + 1
+            }
+
+        NewERegisterIndirect addr ->
+            let
+                pc =
+                    Bitwise.and new_pc 0xFFFF
+
+                env_1 =
+                    { old_env | time = cpu_time }
+
+                main =
+                    z80.main
+
+                new_b =
+                    env_1 |> mem addr env_1.time rom48k
+            in
+            { z80
+                | pc = pc
+                , env = { env_1 | time = new_b.time }
+                , main = { main | e = new_b.value }
+                , r = z80.r + 1
+            }
+
         IndexedIndirectIncrement addr offset ->
             let
                 ramAddr =

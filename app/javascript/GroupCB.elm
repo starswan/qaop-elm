@@ -150,8 +150,6 @@ group_xy_cb ixiyhl rom48k z80 =
         let
             ( main, flags, env ) =
                 set408bitHL caseval v2.value ( z80.main, z80.flags, z80.env )
-
-            --z80_4 |> set408bitHL caseval v2.value |> WholeCore
         in
         { z80_4 | main = main, flags = flags, env = env } |> WholeCore
 

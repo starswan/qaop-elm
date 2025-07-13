@@ -233,13 +233,13 @@ execute_ED43 rom48k z80 =
 setImED46 : Z80ROM -> Z80Core -> Z80Delta
 setImED46 rom48k z80 =
     --z80 |> set_im_value 0x46
-    z80 |> WholeCore
+    NoOp
 
 
 setImED4E : Z80ROM -> Z80Core -> Z80Delta
 setImED4E rom48k z80 =
     --z80 |> set_im_value 0x4E
-    z80 |> WholeCore
+    NoOp
 
 
 execute_ED47 : Z80ROM -> Z80Core -> Z80Delta
@@ -486,10 +486,6 @@ set_im_value value z80 =
     z80 |> set_im_direct new_im
 
 
-
---z80 |> WholeCore
-
-
 setIm0x56 : Z80ROM -> Z80Core -> Z80Delta
 setIm0x56 _ z80 =
     z80 |> set_im_value 0x56
@@ -498,25 +494,25 @@ setIm0x56 _ z80 =
 setIm0x5E : Z80ROM -> Z80Core -> Z80Delta
 setIm0x5E _ z80 =
     --z80 |> set_im_value 0x5E
-    z80 |> WholeCore
+    NoOp
 
 
 setImED66 : Z80ROM -> Z80Core -> Z80Delta
 setImED66 _ z80 =
     --z80 |> set_im_value 0x66
-    z80 |> WholeCore
+    NoOp
 
 
 setImED6E : Z80ROM -> Z80Core -> Z80Delta
 setImED6E _ z80 =
     --z80 |> set_im_value 0x6E
-    z80 |> WholeCore
+    NoOp
 
 
 setImED76 : Z80ROM -> Z80Core -> Z80Delta
 setImED76 _ z80 =
     --z80 |> set_im_value 0x76
-    z80 |> WholeCore
+    NoOp
 
 
 setImED7E : Z80ROM -> Z80Core -> Z80Delta
@@ -643,7 +639,6 @@ group_ed rom48k z80_0 =
             --      flags_1 = { flags | a = 0 } |> z80_sub flags.a
             --   in
             --      z80 |> set_flag_regs flags_1
-            --debugTodo "group_ed" (c.value |> toHexString2) z80 |> WholeCore
             UnknownIntValue "group_ed" c.value
 
 

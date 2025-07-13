@@ -9,28 +9,38 @@ import Z80Flags exposing (FlagRegisters, f_szh0n0p)
 import Z80Types exposing (IXIYHL(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters, set_bc_main)
 
 
-type Z80Delta
+type
+    Z80Delta
+    -- only used by LDIR
     = WholeCore Z80Core
     | MainRegsWithPcAndCpuTime MainWithIndexRegisters Int CpuTimeCTime
     | FlagsWithPCMainAndCpuTime FlagRegisters Int MainWithIndexRegisters CpuTimeCTime
     | FlagRegsWithPc FlagRegisters Int
+      -- only used in groupo 60
     | MainRegsWithPc MainWithIndexRegisters Int
     | CpuTimeWithFlagsAndPc CpuTimeCTime FlagRegisters Int
+      -- only used by 0xF9
     | SpAndCpuTimeWithPc Int Int Int
     | EnvWithPc Z80Env Int
+      -- only used by ED78
     | CpuTimeWithSpAndPc CpuTimeCTime Int Int
+      -- only used by JP (HL)
     | OnlyPc Int
     | FlagsWithPcAndTime FlagRegisters Int CpuTimeCTime
     | InterruptsWithCpuTime InterruptRegisters CpuTimeCTime
     | SetImValue Int
+      -- only used by POP IX and POP IY
     | MainRegsWithSpPcAndTime MainWithIndexRegisters Int Int CpuTimeCTime
+      -- only used by PUSH HL
     | PushWithPc Int Int
     | PushWithMainSpCpuTimeAndPc Int MainWithIndexRegisters Int CpuTimeCTime Int
     | PushWithMainSpCpuTime Int MainWithIndexRegisters Int CpuTimeCTime
     | SetMem8WithCpuTimeIncrementAndPc Int Int CpuTimeCTime Int Int
     | Fszh0n0pTimeDeltaSet408Bit Int Int Int
+      -- only used by RLD
     | FlagsWithPcEnvAndCpuTime FlagRegisters Int Z80Env Int
     | UnknownIntValue String Int
+      -- only used by CPIR
     | HLBCWithFlagsAndPc Int Int FlagRegisters Int
     | NewRValue Int
     | NewAValue Int
