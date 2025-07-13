@@ -5,6 +5,7 @@ import CpuTimeCTime exposing (CpuTimeIncrement(..), InstructionDuration(..))
 import Dict exposing (Dict)
 import RegisterChange exposing (RegisterChange(..), Shifter(..))
 import Utils exposing (BitTest(..), shiftRightBy8)
+import Z80Flags exposing (FlagFunc(..))
 import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, get_bc, get_de)
 
 
@@ -123,6 +124,8 @@ singleByteMainRegsFD =
         , ( 0x6B, ( ld_iyl_e, EightTStates ) )
         , ( 0x7C, ( \z80_main -> ChangeRegisterA (z80_main.iy |> shiftRightBy8), EightTStates ) )
         , ( 0x7D, ( \z80_main -> ChangeRegisterA (z80_main.iy |> Bitwise.and 0xFF), EightTStates ) )
+        , ( 0x84, ( \z80_main -> SingleEnvFlagFunc AddA (z80_main.ix |> shiftRightBy8), EightTStates ) )
+        , ( 0x85, ( \z80_main -> SingleEnvFlagFunc AddA (z80_main.ix |> Bitwise.and 0xFF), EightTStates ) )
         ]
         |> Dict.union commonDDFDOps
 
@@ -146,6 +149,8 @@ singleByteMainRegsDD =
         , ( 0x6B, ( ld_ixl_e, EightTStates ) )
         , ( 0x7C, ( \z80_main -> ChangeRegisterA (z80_main.ix |> shiftRightBy8), EightTStates ) )
         , ( 0x7D, ( \z80_main -> ChangeRegisterA (z80_main.ix |> Bitwise.and 0xFF), EightTStates ) )
+        , ( 0x84, ( \z80_main -> SingleEnvFlagFunc AddA (z80_main.iy |> shiftRightBy8), EightTStates ) )
+        , ( 0x85, ( \z80_main -> SingleEnvFlagFunc AddA (z80_main.iy |> Bitwise.and 0xFF), EightTStates ) )
         ]
         |> Dict.union commonDDFDOps
 
