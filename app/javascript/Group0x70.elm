@@ -5,15 +5,13 @@ import Dict exposing (Dict)
 import Z80Core exposing (Z80Core, env_mem_hl_ixiy, hl_deref_with_z80_ixiy)
 import Z80Delta exposing (Z80Delta(..))
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIY, IXIYHL(..), get_h_ixiy, get_l_ixiy)
+import Z80Types exposing (IXIY, IXIYHL(..))
 
 
 miniDict70 : Dict Int (IXIY -> Z80ROM -> Z80Core -> Z80Delta)
 miniDict70 =
     Dict.fromList
         [ ( 0x77, ld_indirect_hl_a )
-        , ( 0x7C, ld_a_h )
-        , ( 0x7D, ld_a_l )
         , ( 0x7E, ld_a_indirect_hl )
         ]
 
@@ -48,30 +46,6 @@ ld_indirect_hl_a ixiyhl rom48k z80 =
     --in
     --   { z80 | pc = mem_target.pc } |> set_env new_env |> add_cpu_time 3
     execute_0x7077_ixiy ixiyhl rom48k z80 z80.flags.a
-
-
-ld_a_h : IXIY -> Z80ROM -> Z80Core -> Z80Delta
-ld_a_h ixiyhl rom z80 =
-    -- case 0x7C: A=HL>>>8; break;
-    -- case 0x7C: A=xy>>>8; break;
-    --z80 |> set_a (get_h ixiyhl z80.main)
-    let
-        flags =
-            z80.flags
-    in
-    FlagRegsWithPc { flags | a = get_h_ixiy ixiyhl z80.main } z80.pc
-
-
-ld_a_l : IXIY -> Z80ROM -> Z80Core -> Z80Delta
-ld_a_l ixiyhl rom z80 =
-    -- case 0x7D: A=HL&0xFF; break;
-    -- case 0x7D: A=xy&0xFF; break;
-    --z80 |> set_a (get_l ixiyhl z80.main)
-    let
-        flags =
-            z80.flags
-    in
-    FlagRegsWithPc { flags | a = get_l_ixiy ixiyhl z80.main } z80.pc
 
 
 ld_a_indirect_hl : IXIY -> Z80ROM -> Z80Core -> Z80Delta
