@@ -314,6 +314,31 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 , r = z80.r + 1
             }
 
+        FlagOpIndexedIndirect flagFunc addr offset ->
+            let
+                flags =
+                    z80.flags
+
+                env_1 =
+                    { old_env | time = cpu_time }
+
+                address =
+                    addr + byte offset |> Bitwise.and 0xFFFF
+
+                pc =
+                    Bitwise.and new_pc 0xFFFF
+
+                new_b =
+                    env_1 |> mem address env_1.time rom48k
+            in
+            { z80
+                | pc = pc
+                , flags = flags |> changeFlags flagFunc int
+                , env = { env_1 | time = new_b.time }
+                , r = z80.r + 1
+            }
+
+        --Just { pcIncrement = new_pc, time = cpu_time, timeIncrement = FifteenTStates, operation = ChangeFlagRegisters (z80.flags |> adc value.value) }
         IndexedIndirectIncrement addr offset ->
             let
                 ramAddr =
