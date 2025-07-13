@@ -88,6 +88,9 @@ applyRegisterChange change z80_flags main =
         ChangeRegisterA int ->
             FlagRegsApplied { z80_flags | a = int }
 
+        SingleEnvFlagFunc flagFunc value ->
+            FlagRegsApplied (z80_flags |> changeFlags flagFunc value)
+
         ChangeRegisterE int ->
             MainRegsApplied { main | e = int }
 
