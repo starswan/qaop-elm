@@ -43,6 +43,12 @@ doubleWithRegistersIX =
         , ( 0x5E, ( ld_e_indirect_ix, IncreaseByThree, SevenTStates ) )
         , ( 0x86, ( \z80_main param -> FlagOpIndexedIndirect AddA z80_main.ix param, IncreaseByThree, NineteenTStates ) )
         , ( 0x8E, ( \z80_main param -> FlagOpIndexedIndirect AdcA z80_main.ix param, IncreaseByThree, NineteenTStates ) )
+        , ( 0x96, ( \z80_main param -> FlagOpIndexedIndirect SubA z80_main.ix param, IncreaseByThree, NineteenTStates ) )
+        , ( 0x9E, ( \z80_main param -> FlagOpIndexedIndirect SbcA z80_main.ix param, IncreaseByThree, NineteenTStates ) )
+        , ( 0xA6, ( \z80_main param -> FlagOpIndexedIndirect AndA z80_main.ix param, IncreaseByThree, NineteenTStates ) )
+        , ( 0xAE, ( \z80_main param -> FlagOpIndexedIndirect XorA z80_main.ix param, IncreaseByThree, NineteenTStates ) )
+        , ( 0xB6, ( \z80_main param -> FlagOpIndexedIndirect OrA z80_main.ix param, IncreaseByThree, NineteenTStates ) )
+        , ( 0xBE, ( \z80_main param -> FlagOpIndexedIndirect CpA z80_main.ix param, IncreaseByThree, NineteenTStates ) )
         ]
 
 
@@ -59,6 +65,12 @@ doubleWithRegistersIY =
         , ( 0x5E, ( ld_e_indirect_iy, IncreaseByThree, SevenTStates ) )
         , ( 0x86, ( \z80_main param -> FlagOpIndexedIndirect AddA z80_main.iy param, IncreaseByThree, NineteenTStates ) )
         , ( 0x8E, ( \z80_main param -> FlagOpIndexedIndirect AdcA z80_main.iy param, IncreaseByThree, NineteenTStates ) )
+        , ( 0x96, ( \z80_main param -> FlagOpIndexedIndirect SubA z80_main.iy param, IncreaseByThree, NineteenTStates ) )
+        , ( 0x9E, ( \z80_main param -> FlagOpIndexedIndirect SbcA z80_main.iy param, IncreaseByThree, NineteenTStates ) )
+        , ( 0xA6, ( \z80_main param -> FlagOpIndexedIndirect AndA z80_main.iy param, IncreaseByThree, NineteenTStates ) )
+        , ( 0xAE, ( \z80_main param -> FlagOpIndexedIndirect XorA z80_main.iy param, IncreaseByThree, NineteenTStates ) )
+        , ( 0xB6, ( \z80_main param -> FlagOpIndexedIndirect OrA z80_main.iy param, IncreaseByThree, NineteenTStates ) )
+        , ( 0xBE, ( \z80_main param -> FlagOpIndexedIndirect CpA z80_main.iy param, IncreaseByThree, NineteenTStates ) )
         ]
 
 

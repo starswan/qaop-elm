@@ -4,9 +4,6 @@ import Array exposing (Array)
 import Dict exposing (Dict)
 import Group0x60 exposing (miniDict60)
 import Group0x70 exposing (miniDict70)
-import Group0x90 exposing (miniDict90)
-import Group0xA0 exposing (miniDictA0)
-import Group0xB0 exposing (miniDictB0)
 import Group0xC0 exposing (miniDictC0)
 import Group0xE0 exposing (delta_dict_E0, miniDictE0)
 import Z80Core exposing (Z80Core)
@@ -61,8 +58,5 @@ xYDict =
     miniDictF0
         |> Dict.union miniDict60
         |> Dict.union miniDict70
-        |> Dict.union miniDict90
-        |> Dict.union miniDictA0
-        |> Dict.union miniDictB0
         |> Dict.union miniDictE0
         |> Dict.union miniDictC0
