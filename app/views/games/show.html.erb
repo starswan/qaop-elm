@@ -1,7 +1,8 @@
 <!-- $Id$ -->
+<%= javascript_include_tag "hello_elm", type: "module" %>
 <div align="center">
   <div class="page-header">
-    <b><%= t '.title', :default => @game.name %></b>(<%= @game.tapfile %>)
+    <b><%= t '.title', :default => @game.name %></b>(<%= @game.filename %>)
   </div>
 
   <dl class="dl-horizontal">
@@ -13,7 +14,7 @@
   <div>
     <%= content_tag :canvas, 'Game', width: 512, height: 384, id: 'applet',
                     class: 'applet',
-                    data: { load: "#{request.protocol}#{request.host_with_port}/games/#{@game.tapfile}",
+                    data: { load: "#{request.protocol}#{request.host_with_port}/games/#{@game.id}/download",
                             rom: "#{request.protocol}#{request.host_with_port}/spectrum.rom" } %>
   </div>
   <%= inline_svg_tag 'keyboard.svg', preserveAspectRatio: "xMinYMin" %>
