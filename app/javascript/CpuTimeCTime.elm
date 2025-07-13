@@ -18,6 +18,7 @@ type
     | FifteenTStates
     | SixteenTStates
     | SeventeenTStates
+    | NineteenTStates
     | TwentyTStates
     | TwentyThreeTStates
 
