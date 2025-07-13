@@ -2,7 +2,7 @@ module RegisterChange exposing (..)
 
 import Bitwise
 import Utils exposing (BitTest, shiftLeftBy8)
-import Z80Flags exposing (FlagFunc, FlagRegisters)
+import Z80Flags exposing (FlagFunc, FlagRegisters, changeFlags)
 import Z80Types exposing (MainWithIndexRegisters, set_de_main)
 
 
