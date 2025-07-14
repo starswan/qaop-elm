@@ -2,7 +2,7 @@ module RegisterChange exposing (..)
 
 import Bitwise
 import Utils exposing (BitTest, shiftLeftBy8)
-import Z80Flags exposing (FlagRegisters)
+import Z80Flags exposing (FlagFunc, FlagRegisters, changeFlags)
 import Z80Types exposing (MainWithIndexRegisters, set_de_main)
 
 
@@ -43,6 +43,7 @@ type RegisterChange
     | IndirectBitReset BitTest Int
     | IndirectBitSet BitTest Int
     | RegChangeNoOp
+    | SingleEnvFlagFunc FlagFunc Int
 
 
 type RegisterChangeApplied
@@ -86,6 +87,9 @@ applyRegisterChange change z80_flags main =
 
         ChangeRegisterA int ->
             FlagRegsApplied { z80_flags | a = int }
+
+        SingleEnvFlagFunc flagFunc value ->
+            FlagRegsApplied (z80_flags |> changeFlags flagFunc value)
 
         ChangeRegisterE int ->
             MainRegsApplied { main | e = int }

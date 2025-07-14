@@ -5,6 +5,7 @@ import CpuTimeCTime exposing (CpuTimeIncrement(..), InstructionDuration(..))
 import Dict exposing (Dict)
 import RegisterChange exposing (RegisterChange(..), Shifter(..))
 import Utils exposing (BitTest(..), shiftRightBy8)
+import Z80Flags exposing (FlagFunc(..))
 import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, get_bc, get_de)
 
 
@@ -123,6 +124,22 @@ singleByteMainRegsFD =
         , ( 0x6B, ( ld_iyl_e, EightTStates ) )
         , ( 0x7C, ( \z80_main -> ChangeRegisterA (z80_main.iy |> shiftRightBy8), EightTStates ) )
         , ( 0x7D, ( \z80_main -> ChangeRegisterA (z80_main.iy |> Bitwise.and 0xFF), EightTStates ) )
+        , ( 0x84, ( \z80_main -> SingleEnvFlagFunc AddA (z80_main.iy |> shiftRightBy8), EightTStates ) )
+        , ( 0x85, ( \z80_main -> SingleEnvFlagFunc AddA (z80_main.iy |> Bitwise.and 0xFF), EightTStates ) )
+        , ( 0x8C, ( \z80_main -> SingleEnvFlagFunc AdcA (z80_main.iy |> shiftRightBy8), EightTStates ) )
+        , ( 0x8D, ( \z80_main -> SingleEnvFlagFunc AdcA (z80_main.iy |> Bitwise.and 0xFF), EightTStates ) )
+        , ( 0x94, ( \z80_main -> SingleEnvFlagFunc SubA (z80_main.iy |> shiftRightBy8), EightTStates ) )
+        , ( 0x95, ( \z80_main -> SingleEnvFlagFunc SubA (z80_main.iy |> Bitwise.and 0xFF), EightTStates ) )
+        , ( 0x9C, ( \z80_main -> SingleEnvFlagFunc SbcA (z80_main.iy |> shiftRightBy8), EightTStates ) )
+        , ( 0x9D, ( \z80_main -> SingleEnvFlagFunc SbcA (z80_main.iy |> Bitwise.and 0xFF), EightTStates ) )
+        , ( 0xA4, ( \z80_main -> SingleEnvFlagFunc AndA (z80_main.iy |> shiftRightBy8), EightTStates ) )
+        , ( 0xA5, ( \z80_main -> SingleEnvFlagFunc AndA (z80_main.iy |> Bitwise.and 0xFF), EightTStates ) )
+        , ( 0xAC, ( \z80_main -> SingleEnvFlagFunc XorA (z80_main.iy |> shiftRightBy8), EightTStates ) )
+        , ( 0xAD, ( \z80_main -> SingleEnvFlagFunc XorA (z80_main.iy |> Bitwise.and 0xFF), EightTStates ) )
+        , ( 0xB4, ( \z80_main -> SingleEnvFlagFunc OrA (z80_main.iy |> shiftRightBy8), EightTStates ) )
+        , ( 0xB5, ( \z80_main -> SingleEnvFlagFunc OrA (z80_main.iy |> Bitwise.and 0xFF), EightTStates ) )
+        , ( 0xBC, ( \z80_main -> SingleEnvFlagFunc CpA (z80_main.iy |> shiftRightBy8), EightTStates ) )
+        , ( 0xBD, ( \z80_main -> SingleEnvFlagFunc CpA (z80_main.iy |> Bitwise.and 0xFF), EightTStates ) )
         ]
         |> Dict.union commonDDFDOps
 
@@ -146,6 +163,22 @@ singleByteMainRegsDD =
         , ( 0x6B, ( ld_ixl_e, EightTStates ) )
         , ( 0x7C, ( \z80_main -> ChangeRegisterA (z80_main.ix |> shiftRightBy8), EightTStates ) )
         , ( 0x7D, ( \z80_main -> ChangeRegisterA (z80_main.ix |> Bitwise.and 0xFF), EightTStates ) )
+        , ( 0x84, ( \z80_main -> SingleEnvFlagFunc AddA (z80_main.ix |> shiftRightBy8), EightTStates ) )
+        , ( 0x85, ( \z80_main -> SingleEnvFlagFunc AddA (z80_main.ix |> Bitwise.and 0xFF), EightTStates ) )
+        , ( 0x8C, ( \z80_main -> SingleEnvFlagFunc AdcA (z80_main.ix |> shiftRightBy8), EightTStates ) )
+        , ( 0x8D, ( \z80_main -> SingleEnvFlagFunc AdcA (z80_main.ix |> Bitwise.and 0xFF), EightTStates ) )
+        , ( 0x94, ( \z80_main -> SingleEnvFlagFunc SubA (z80_main.ix |> shiftRightBy8), EightTStates ) )
+        , ( 0x95, ( \z80_main -> SingleEnvFlagFunc SubA (z80_main.ix |> Bitwise.and 0xFF), EightTStates ) )
+        , ( 0x9C, ( \z80_main -> SingleEnvFlagFunc SbcA (z80_main.ix |> shiftRightBy8), EightTStates ) )
+        , ( 0x9D, ( \z80_main -> SingleEnvFlagFunc SbcA (z80_main.ix |> Bitwise.and 0xFF), EightTStates ) )
+        , ( 0xA4, ( \z80_main -> SingleEnvFlagFunc AndA (z80_main.ix |> shiftRightBy8), EightTStates ) )
+        , ( 0xA5, ( \z80_main -> SingleEnvFlagFunc AndA (z80_main.ix |> Bitwise.and 0xFF), EightTStates ) )
+        , ( 0xAC, ( \z80_main -> SingleEnvFlagFunc XorA (z80_main.ix |> shiftRightBy8), EightTStates ) )
+        , ( 0xAD, ( \z80_main -> SingleEnvFlagFunc XorA (z80_main.ix |> Bitwise.and 0xFF), EightTStates ) )
+        , ( 0xB4, ( \z80_main -> SingleEnvFlagFunc OrA (z80_main.ix |> shiftRightBy8), EightTStates ) )
+        , ( 0xB5, ( \z80_main -> SingleEnvFlagFunc OrA (z80_main.ix |> Bitwise.and 0xFF), EightTStates ) )
+        , ( 0xBC, ( \z80_main -> SingleEnvFlagFunc CpA (z80_main.ix |> shiftRightBy8), EightTStates ) )
+        , ( 0xBD, ( \z80_main -> SingleEnvFlagFunc CpA (z80_main.ix |> Bitwise.and 0xFF), EightTStates ) )
         ]
         |> Dict.union commonDDFDOps
 

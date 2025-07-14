@@ -5,7 +5,7 @@ import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..))
 import Utils exposing (byte, shiftLeftBy8)
-import Z80Flags exposing (FlagRegisters, adc, sbc, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
+import Z80Flags exposing (FlagFunc(..), FlagRegisters, adc, sbc, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
 import Z80Types exposing (MainWithIndexRegisters)
 
 
@@ -41,6 +41,14 @@ doubleWithRegistersIX =
         , ( 0x4E, ( ld_c_indirect_ix, IncreaseByThree, SevenTStates ) )
         , ( 0x56, ( ld_d_indirect_ix, IncreaseByThree, SevenTStates ) )
         , ( 0x5E, ( ld_e_indirect_ix, IncreaseByThree, SevenTStates ) )
+        , ( 0x86, ( \z80_main param -> FlagOpIndexedIndirect AddA z80_main.ix param, IncreaseByThree, NineteenTStates ) )
+        , ( 0x8E, ( \z80_main param -> FlagOpIndexedIndirect AdcA z80_main.ix param, IncreaseByThree, NineteenTStates ) )
+        , ( 0x96, ( \z80_main param -> FlagOpIndexedIndirect SubA z80_main.ix param, IncreaseByThree, NineteenTStates ) )
+        , ( 0x9E, ( \z80_main param -> FlagOpIndexedIndirect SbcA z80_main.ix param, IncreaseByThree, NineteenTStates ) )
+        , ( 0xA6, ( \z80_main param -> FlagOpIndexedIndirect AndA z80_main.ix param, IncreaseByThree, NineteenTStates ) )
+        , ( 0xAE, ( \z80_main param -> FlagOpIndexedIndirect XorA z80_main.ix param, IncreaseByThree, NineteenTStates ) )
+        , ( 0xB6, ( \z80_main param -> FlagOpIndexedIndirect OrA z80_main.ix param, IncreaseByThree, NineteenTStates ) )
+        , ( 0xBE, ( \z80_main param -> FlagOpIndexedIndirect CpA z80_main.ix param, IncreaseByThree, NineteenTStates ) )
         ]
 
 
@@ -55,6 +63,14 @@ doubleWithRegistersIY =
         , ( 0x4E, ( ld_c_indirect_iy, IncreaseByThree, SevenTStates ) )
         , ( 0x56, ( ld_d_indirect_iy, IncreaseByThree, SevenTStates ) )
         , ( 0x5E, ( ld_e_indirect_iy, IncreaseByThree, SevenTStates ) )
+        , ( 0x86, ( \z80_main param -> FlagOpIndexedIndirect AddA z80_main.iy param, IncreaseByThree, NineteenTStates ) )
+        , ( 0x8E, ( \z80_main param -> FlagOpIndexedIndirect AdcA z80_main.iy param, IncreaseByThree, NineteenTStates ) )
+        , ( 0x96, ( \z80_main param -> FlagOpIndexedIndirect SubA z80_main.iy param, IncreaseByThree, NineteenTStates ) )
+        , ( 0x9E, ( \z80_main param -> FlagOpIndexedIndirect SbcA z80_main.iy param, IncreaseByThree, NineteenTStates ) )
+        , ( 0xA6, ( \z80_main param -> FlagOpIndexedIndirect AndA z80_main.iy param, IncreaseByThree, NineteenTStates ) )
+        , ( 0xAE, ( \z80_main param -> FlagOpIndexedIndirect XorA z80_main.iy param, IncreaseByThree, NineteenTStates ) )
+        , ( 0xB6, ( \z80_main param -> FlagOpIndexedIndirect OrA z80_main.iy param, IncreaseByThree, NineteenTStates ) )
+        , ( 0xBE, ( \z80_main param -> FlagOpIndexedIndirect CpA z80_main.iy param, IncreaseByThree, NineteenTStates ) )
         ]
 
 
@@ -97,6 +113,18 @@ type DoubleWithRegisterChange
     | NewERegisterIndirect Int
     | IndexedIndirectIncrement Int Int
     | IndexedIndirectDecrement Int Int
+    | FlagOpIndexedIndirect FlagFunc Int Int
+
+
+
+--| AdcIndexedIndirect Int Int
+--| AddIndexedIndirect Int Int
+--| SubIndexedIndirect Int Int
+--| SbcIndexedIndirect Int Int
+--| AndIndexedIndirect Int Int
+--| XorIndexedIndirect Int Int
+--| OrIndexedIndirect Int Int
+--| CpIndexedIndirect Int Int
 
 
 type JumpChange
