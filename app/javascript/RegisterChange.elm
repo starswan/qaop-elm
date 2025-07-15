@@ -105,6 +105,12 @@ applyRegisterChange change z80_flags main =
         ChangeRegisterL int ->
             MainRegsApplied { main | hl = Bitwise.or (Bitwise.and main.hl 0xFF00) int }
 
+        ChangeRegisterIXH int ->
+            MainRegsApplied { main | ix = Bitwise.or (Bitwise.and main.ix 0xFF) (int |> shiftLeftBy8) }
+
+        ChangeRegisterIYH int ->
+            MainRegsApplied { main | iy = Bitwise.or (Bitwise.and main.iy 0xFF) (int |> shiftLeftBy8) }
+
         ChangeRegisterIXL int ->
             MainRegsApplied { main | ix = Bitwise.or (Bitwise.and main.ix 0xFF00) int }
 
