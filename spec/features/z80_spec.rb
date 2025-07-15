@@ -42,7 +42,7 @@ RSpec.describe "Spectrum Emulator" do
 
     let(:times) { {
       flags.name => 7500,
-      regs.name => 12800,
+      regs.name => 13800,
       full_flags.name => 8300,
       full.name => 18000,
     }}
@@ -67,7 +67,8 @@ RSpec.describe "Spectrum Emulator" do
     # 107 OUTI, 108 OUTD, 109 OTIR, 110 OTDR
     # 156 LD A,I 157 LD A,R
     #
-    # Regs: 028 of 160 tests failed.
+    # Regs: 027 of 160 tests failed.
+    # LD R,A now passes when it used to fail?
     # 52 SRO (XY) ,R (undocumented?) DD CB xx 00
     # 73 BIT N,(XY) passes
     # 74 BIT N,(XY)- DD CB xx 40
@@ -81,7 +82,7 @@ RSpec.describe "Spectrum Emulator" do
     # 106 OUT (C), 0 passes
     # 107 OUTI, 108 OUTD, 109 OTIR, 110 OTDR
     # 122 RETN 123 RETI 124 RETI/RETN
-    # 154 LD I,A 155 LD R,A
+    # 154 LD I,A
     # 156 LD A,I 157 LD A,R
     # 159 IM N
     #
