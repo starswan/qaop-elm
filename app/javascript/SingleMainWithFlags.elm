@@ -840,3 +840,51 @@ ld_indirect_hl_a z80_main z80_flags =
     -- case 0x77: env.mem(HL,A); time+=3; break;
     -- case 0x77: env.mem(getd(xy),A); time+=3; break;
     Z80ChangeSetIndirect z80_main.hl z80_flags.a
+
+
+ld_ixh_a : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+ld_ixh_a z80_main z80_flags =
+    let
+        l =
+            Bitwise.and z80_main.ix 0xFF
+
+        new_xy =
+            Bitwise.or (z80_flags.a |> shiftLeftBy8) l
+    in
+    JustIXRegister new_xy
+
+
+ld_ixl_a : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+ld_ixl_a z80_main z80_flags =
+    let
+        h =
+            Bitwise.and z80_main.ix 0xFF00
+
+        new_xy =
+            Bitwise.or z80_flags.a h
+    in
+    JustIXRegister new_xy
+
+
+ld_iyl_a : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+ld_iyl_a z80_main z80_flags =
+    let
+        h =
+            Bitwise.and z80_main.iy 0xFF00
+
+        new_xy =
+            Bitwise.or z80_flags.a h
+    in
+    JustIYRegister new_xy
+
+
+ld_iyh_a : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+ld_iyh_a z80_main z80_flags =
+    let
+        l =
+            Bitwise.and z80_main.iy 0xFF
+
+        new_xy =
+            Bitwise.or (z80_flags.a |> shiftLeftBy8) l
+    in
+    JustIYRegister new_xy
