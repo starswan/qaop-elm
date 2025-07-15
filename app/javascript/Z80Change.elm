@@ -109,3 +109,17 @@ applyZ80Change change z80 =
                     z80.main
             in
             { z80 | flags = flagRegisters, main = { main | iy = int } }
+
+        JustIXRegister int ->
+            let
+                main =
+                    z80.main
+            in
+            { z80 | main = { main | ix = int } }
+
+        JustIYRegister int ->
+            let
+                main =
+                    z80.main
+            in
+            { z80 | main = { main | iy = int } }
