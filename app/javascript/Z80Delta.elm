@@ -15,9 +15,8 @@ type
     = WholeCore Z80Core
     | MainRegsWithPcAndCpuTime MainWithIndexRegisters Int CpuTimeCTime
     | FlagsWithPCMainAndCpuTime FlagRegisters Int MainWithIndexRegisters CpuTimeCTime
-      --| FlagRegsWithPc FlagRegisters Int
       -- only used in groupo 60
-    | MainRegsWithPc MainWithIndexRegisters Int
+      --| MainRegsWithPc MainWithIndexRegisters Int
     | CpuTimeWithFlagsAndPc CpuTimeCTime FlagRegisters Int
       -- only used by 0xF9
     | SpAndCpuTimeWithPc Int Int Int
@@ -26,6 +25,7 @@ type
     | CpuTimeWithSpAndPc CpuTimeCTime Int Int
       -- only used by JP (HL)
     | OnlyPc Int
+      -- only used by 0x7E
     | FlagsWithPcAndTime FlagRegisters Int CpuTimeCTime
     | InterruptsWithCpuTime InterruptRegisters CpuTimeCTime
     | SetImValue Int
@@ -86,9 +86,8 @@ applyDeltaWithChanges z80delta z80 =
         CpuTimeWithFlagsAndPc cpu_time flagRegisters pc ->
             { z80 | flags = flagRegisters, pc = pc, env = { z80_env | time = cpu_time }, interrupts = z80delta.interrupts }
 
-        MainRegsWithPc mainWithIndexRegisters pc ->
-            { z80 | main = mainWithIndexRegisters, pc = pc, env = { z80_env | time = z80delta.time }, interrupts = z80delta.interrupts }
-
+        --MainRegsWithPc mainWithIndexRegisters pc ->
+        --    { z80 | main = mainWithIndexRegisters, pc = pc, env = { z80_env | time = z80delta.time }, interrupts = z80delta.interrupts }
         OnlyPc pc ->
             { z80 | pc = pc, env = { z80_env | time = z80delta.time }, interrupts = z80delta.interrupts }
 

@@ -350,7 +350,6 @@ adc_n param z80_flags =
         --env_1 = z80.env
     in
     --{z80 | pc = v.pc, env = { env_1 | time = v.time }, flags = flags }
-    --FlagsWithPcAndTime flags v.pc v.time
     FlagJump flags
 
 
@@ -365,7 +364,6 @@ sub_n param z80_flags =
         --env_1 = z80.env
     in
     --{ z80 | flags = flags, env = { env_1 | time = v.time }, pc = v.pc }
-    --FlagsWithPcAndTime flags v.pc v.time
     FlagJump flags
 
 
@@ -391,7 +389,6 @@ and_n param z80_flags =
             z80_flags |> z80_and param
     in
     --{ z80_1 | flags = flags }
-    --FlagsWithPcAndTime flags a.pc a.time
     FlagJump flags
 
 
@@ -407,7 +404,6 @@ xor_n param z80_flags =
             z80_flags |> z80_xor param
     in
     --{ z80_1 | flags = flags }
-    --FlagsWithPcAndTime flags v.pc v.time
     FlagJump flags
 
 
@@ -422,7 +418,6 @@ or_n param z80_flags =
             z80_flags |> z80_or param
     in
     --{ z80_1 | flags = flags }
-    --FlagsWithPcAndTime flags a.pc a.time
     FlagJump flags
 
 
