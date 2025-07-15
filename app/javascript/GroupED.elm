@@ -45,7 +45,8 @@ group_ed_dict =
         --, ( 0x4A, adc_hl_bc )
         , ( 0x4B, execute_ED4B )
         , ( 0x4E, setImED4E )
-        , ( 0x4F, ld_r_a )
+
+        --, ( 0x4F, ld_r_a )
         , ( 0x50, execute_ED50 )
 
         --, ( 0x5A, adc_hl_de )
@@ -258,10 +259,11 @@ execute_ED4B rom48k z80 =
     MainRegsWithPcAndCpuTime (z80.main |> set_bc_main v2.value16) v1.pc (v2.time |> addCpuTimeTime 6)
 
 
-ld_r_a : Z80ROM -> Z80Core -> Z80Delta
-ld_r_a rom48k z80 =
-    -- case 0x4F: r(A); time++; break;
-    NewRValue z80.flags.a
+
+--ld_r_a : Z80ROM -> Z80Core -> Z80Delta
+--ld_r_a rom48k z80 =
+--    -- case 0x4F: r(A); time++; break;
+--    NewRValue z80.flags.a
 
 
 execute_ED52 : Z80ROM -> Z80Core -> Z80Delta
@@ -1117,6 +1119,9 @@ singleByteFlagsED =
     Dict.fromList
         [ ( 0x44, ( ed_44_neg, EightTStates ) )
         , ( 0x4C, ( ed_44_neg, EightTStates ) )
+
+        -- case 0x4F: r(A); time++; break;
+        , ( 0x4F, ( \z80_flags -> FlagNewRValue z80_flags.a, NineTStates ) )
         , ( 0x54, ( ed_44_neg, EightTStates ) )
         , ( 0x5C, ( ed_44_neg, EightTStates ) )
         , ( 0x64, ( ed_44_neg, EightTStates ) )

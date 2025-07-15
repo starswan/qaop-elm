@@ -3,14 +3,13 @@ module CpuTimeCTime exposing (..)
 import Bitwise exposing (shiftLeftBy, shiftRightBy)
 
 
-type
-    InstructionDuration
-    --= ZeroTStates
+type InstructionDuration
     = FourTStates
     | FiveTStates
     | SixTStates
     | SevenTStates
     | EightTStates
+    | NineTStates
     | TenTStates
     | ElevenTStates
     | TwelveTStates
@@ -323,6 +322,9 @@ addDuration duration time =
 
                 EightTStates ->
                     8
+
+                NineTStates ->
+                    9
 
                 TenTStates ->
                     10

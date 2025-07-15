@@ -554,6 +554,9 @@ applyFlagDelta pcInc duration z80_flags rom48k z80 =
         EmptyFlagChange ->
             { z80 | pc = new_pc, env = env_1, r = z80.r + 1 }
 
+        FlagNewRValue int ->
+            { z80 | pc = new_pc, env = env_1, r = int }
+
         FlagChangePush int ->
             { z80 | pc = new_pc, r = z80.r + 1, env = env_1 |> z80_push int }
 

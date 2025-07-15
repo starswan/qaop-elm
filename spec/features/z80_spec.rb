@@ -62,13 +62,10 @@ RSpec.describe "Spectrum Emulator" do
     # 52 SRO (XY), R (DD CB 00 00)
     # 73 BIT N,(XY) passes
     # 74 BIT N,(XY)- DD CB xx 40-47 (undoc?) - same as DD CB 00 46
-    # (needs some extra flags setting as per Java code)
     # 89 LDIR-> NOP'. 90 LDDR ->NOP',
     # 96 -> 103 IN FE:FF -> BF
     # 107 OUTI, 108 OUTD, 109 OTIR, 110 OTDR
-    # 156 LD A,I 157 LD A, R
-    #
-    # FullFlags - 028 tests failed
+    # 156 LD A,I 157 LD A,R
     #
     # Regs: 028 of 160 tests failed.
     # 52 SRO (XY) ,R (undocumented?) DD CB xx 00
@@ -84,9 +81,11 @@ RSpec.describe "Spectrum Emulator" do
     # 106 OUT (C), 0 passes
     # 107 OUTI, 108 OUTD, 109 OTIR, 110 OTDR
     # 122 RETN 123 RETI 124 RETI/RETN
-    # 154 LD I,A 155 LD R, A
-    # 156 LD A,I 157 LD A, R
+    # 154 LD I,A 155 LD R,A
+    # 156 LD A,I 157 LD A,R
     # 159 IM N
+    #
+    # FullFlags - 028 of 160 tests failed
 
     it "loads the emulator", :js do
       click_on z80_game.name

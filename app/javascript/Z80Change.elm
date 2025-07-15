@@ -32,6 +32,7 @@ type FlagChange
     | ReturnWithPop
     | EmptyFlagChange
     | FlagChangePush Int
+    | FlagNewRValue Int
 
 
 applyZ80Change : Z80Change -> Z80Core -> Z80Core
