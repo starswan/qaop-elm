@@ -17,6 +17,8 @@ type Z80Change
     | Z80RegisterC Int
     | Z80ChangeFlags FlagRegisters
     | Z80ChangeSetIndirect Int Int
+    | JustIXRegister Int
+    | JustIYRegister Int
 
 
 type FlagChange
