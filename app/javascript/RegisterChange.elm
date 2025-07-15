@@ -30,7 +30,9 @@ type RegisterChange
     | ChangeRegisterC Int
     | ChangeRegisterH Int
     | ChangeRegisterL Int
+    | ChangeRegisterIXH Int
     | ChangeRegisterIXL Int
+    | ChangeRegisterIYH Int
     | ChangeRegisterIYL Int
     | PushedValue Int
     | RegChangeNewSP Int
