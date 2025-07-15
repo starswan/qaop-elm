@@ -92,6 +92,8 @@ singleByteMainAndFlagRegistersIX =
         , ( 0x29, ( add_ix_ix, FifteenTStates ) )
         , ( 0x2C, ( inc_ix_l, EightTStates ) )
         , ( 0x2D, ( dec_ix_l, EightTStates ) )
+        , ( 0x67, ( ld_ixh_a, EightTStates ) )
+        , ( 0x6F, ( ld_ixl_a, EightTStates ) )
         ]
 
 
@@ -105,6 +107,8 @@ singleByteMainAndFlagRegistersIY =
         , ( 0x29, ( add_iy_iy, FifteenTStates ) )
         , ( 0x2C, ( inc_iy_l, EightTStates ) )
         , ( 0x2D, ( dec_iy_l, EightTStates ) )
+        , ( 0x67, ( ld_iyh_a, EightTStates ) )
+        , ( 0x6F, ( ld_iyl_a, EightTStates ) )
         ]
 
 
