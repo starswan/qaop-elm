@@ -331,7 +331,7 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
             { z80
                 | pc = pc
                 , env = { env_1 | time = new_b.time }
-                , main = { main | e = new_b.value }
+                , main = { main | hl = Bitwise.or (main.hl |> Bitwise.and 0xFF) (new_b.value |> shiftLeftBy8) }
                 , r = z80.r + 1
             }
 
@@ -352,7 +352,7 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
             { z80
                 | pc = pc
                 , env = { env_1 | time = new_b.time }
-                , main = { main | e = new_b.value }
+                , main = { main | hl = Bitwise.or (main.hl |> Bitwise.and 0xFF00) (new_b.value |> Bitwise.and 0xFF) }
                 , r = z80.r + 1
             }
 
