@@ -1,15 +1,5 @@
 FactoryBot.define do
   factory :game do
-    trait :one do
-        name { 'MyString' }
-      tapfile { 'MyString' }
-    end
-
-    trait :two do
-      name { 'MyString' }
-      tapfile { 'MyString' }
-    end
-
     trait :match_day do
       name { 'Match Day' }
       tapfile { 'MATCHDAY.tap' }
@@ -27,7 +17,10 @@ FactoryBot.define do
 
     trait :z80_test_flags do
       name { 'Flags' }
-      tapfile { 'z80test/z80docflags.tap' }
+      directory { "z80test-1.2a" }
+      download_url { "https://github.com/raxoft/z80test/releases/download/v1.2a/z80test-1.2a.zip" }
+      filetype {  "tap" }
+      filename { 'z80docflags.tap' }
     end
 
     trait :z80_full_flags do
