@@ -2,8 +2,8 @@ require 'rails_helper'
 
 RSpec.describe GamesController, type: :controller do
   before do
-    create :game, :one
-    create :game, :two
+    create :game, :z80_test_doc
+    create :game, :z80_test_flags
   end
   let(:game_one) { Game.first }
 

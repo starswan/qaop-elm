@@ -19,8 +19,9 @@ class GamesController < ApplicationController
   def download
     @game = Game.find(params[:id])
     # @file = Rails.cache.fetch("games_#{@game.id}") do
-    zipfile = Faraday.get @game.download_url
-    zip_stream = Zip::InputStream.new zipfile
+
+    zipfile = faraday.get @game.download_url
+    zip_stream = Zip::InputStream.new zipfile.body
 
     file = nil
     while entry = zip_stream.get_next_entry
@@ -31,5 +32,15 @@ class GamesController < ApplicationController
       end
     end
     send_data file.get_input_stream.read
+  end
+
+  private
+
+  def faraday
+      Faraday.new do |f|
+        f.response :raise_error
+        f.response :follow_redirects
+        f.adapter Faraday.default_adapter
+      end
   end
 end
