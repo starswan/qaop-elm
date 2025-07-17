@@ -870,6 +870,15 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
 
 
         ChangeRegisterDEAndHL de hl ->
+            let
+                main = z80.main
+            in
+                                                { z80
+                                                    | pc = new_pc
+                                                    , main = { main | hl = hl } |> set_de_main de
+                                                    , env = env_1
+                                                    , r = new_r
+                                                }
 
 
         RegisterChangeShifter shifter addr ->
