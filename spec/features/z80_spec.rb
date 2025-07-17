@@ -68,22 +68,32 @@ RSpec.describe "Spectrum Emulator" do
     # 156 LD A,I 157 LD A,R
     #
     # Regs: 026 of 160 tests failed.
-    # 52 SRO (XY) ,R (undocumented?) DD CB xx 00
-    # 73 BIT N,(XY) passes
-    # 74 BIT N,(XY)- DD CB xx 40
-    # 78 SET N,(XY) passes
-    # 79 SET N, (XY), R       DD CB xx C0
-    # 83 RES N, (XY) passes
-    # 84 RES N, (XY), R       DD CB xx 80
-    # 89 LDIR->NOP'. 90 LDDR->NOP',
-    # 96 -> 103 IN FE:FF -> BF
-    # 105 OUT (C), R
-    # 106 OUT (C), 0 passes
-    # 107 OUTI, 108 OUTD, 109 OTIR, 110 OTDR
-    # 122 RETN 123 RETI 124 RETI/RETN
-    # 154 LD I,A
-    # 156 LD A,I 157 LD A,R
-    # 159 IM N
+    # 1. 52 SRO (XY) ,R (undocumented?) DD CB xx 00
+    # 2. 74 BIT N,(XY)- DD CB xx 40
+    # 3. 79 SET N, (XY), R       DD CB xx C0
+    # 4. 84 RES N, (XY), R       DD CB xx 80
+    # 5. 89 LDIR->NOP'
+    # 6. 90 LDDR->NOP',
+    # 7. 96 IN FE:FF -> BF
+    # 8. 97 IN FE:FF -> BF
+    # 9. 98 IN FE:FF -> BF
+    # 10. 99 IN FE:FF -> BF
+    # 11. 100 IN FE:FF -> BF
+    # 12. 101 IN FE:FF -> BF
+    # 13. 102 IN FE:FF -> BF
+    # 14. 103 IN FE:FF -> BF
+    # 15. 105 OUT (C), R
+    # 16. 107 OUTI
+    # 17. 108 OUTD
+    # 18. 109 OTIR
+    # 19. 110 OTDR
+    # 20. 122 RETN
+    # 21. 123 RETI
+    # 22. 124 RETI/RETN
+    # 23. 154 LD I,A
+    # 24. 156 LD A,I
+    # 25. 157 LD A,R
+    # 26. 159 IM N
     #
     # FullFlags - 028 of 160 tests failed
 
