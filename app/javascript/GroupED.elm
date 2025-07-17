@@ -19,7 +19,7 @@ import Z80Delta exposing (Z80Delta(..))
 import Z80Env exposing (Z80Env, addCpuTimeEnv, m1, mem, mem16, setMem, setMem16, z80_in)
 import Z80Flags exposing (FlagRegisters, c_F3, c_F5, c_F53, c_FC, c_FH, f_szh0n0p, z80_sub)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (InterruptRegisters, MainWithIndexRegisters, get_bc, get_de, set_bc_main, set_de_main)
+import Z80Types exposing (InterruptMode(..), InterruptRegisters, MainWithIndexRegisters, get_bc, get_de, set_bc_main, set_de_main)
 
 
 group_ed_dict : Dict Int (Z80ROM -> Z80Core -> Z80Delta)
@@ -1112,10 +1112,10 @@ singleByteMainRegsED =
         , ( 0x4E, ( \_ -> RegChangeNoOp, EightTStates ) )
 
         --, ( 0x56, ( \_ -> RegChangeIm (0x56 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
-        , ( 0x56, ( \_ -> RegChangeIm 1, EightTStates ) )
+        , ( 0x56, ( \_ -> RegChangeIm IM1, EightTStates ) )
 
         --, ( 0x5E, ( \_ -> RegChangeIm (0x5E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
-        , ( 0x5E, ( \_ -> RegChangeIm 2, EightTStates ) )
+        , ( 0x5E, ( \_ -> RegChangeIm IM2, EightTStates ) )
 
         --, ( 0x66, ( \_ -> RegChangeIm (0x66 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
         --, ( 0x66, ( \_ -> RegChangeIm 0, EightTStates ) )
@@ -1126,10 +1126,10 @@ singleByteMainRegsED =
         , ( 0x6E, ( \_ -> RegChangeNoOp, EightTStates ) )
 
         --, ( 0x76, ( \_ -> RegChangeIm (0x76 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
-        , ( 0x76, ( \_ -> RegChangeIm 1, EightTStates ) )
+        , ( 0x76, ( \_ -> RegChangeIm IM1, EightTStates ) )
 
         --, ( 0x7E, ( \_ -> RegChangeIm (0x7E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
-        , ( 0x7E, ( \_ -> RegChangeIm 2, EightTStates ) )
+        , ( 0x7E, ( \_ -> RegChangeIm IM2, EightTStates ) )
         ]
 
 

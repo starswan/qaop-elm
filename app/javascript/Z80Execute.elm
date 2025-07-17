@@ -724,16 +724,18 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
         RegChangeAppliedNoOp ->
             { z80 | pc = new_pc, env = env_1, r = new_r }
 
-        RegChangeImApplied int ->
+        RegChangeImApplied intMode ->
             let
                 interrupts =
-                    debugLog "SetInterruptMode" int z80.interrupts
+                    debugLog "SetInterruptMode" intMode z80.interrupts
             in
             { z80
                 | pc = new_pc
                 , env = env_1
                 , r = new_r
-                , interrupts = { interrupts | iM = int + 1 }
+
+                --, interrupts = { interrupts | iM = int + 1 }
+                , interrupts = { interrupts | iM = intMode }
             }
 
 
