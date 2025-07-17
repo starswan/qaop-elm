@@ -506,7 +506,8 @@ setImED76 _ z80 =
 
 setImED7E : Z80ROM -> Z80Core -> Z80Delta
 setImED7E _ z80 =
-    z80 |> set_im_value 0x7E
+    --z80 |> set_im_value 0x7E
+    NoOp
 
 
 execute_ED40485058606870 : Int -> Keyboard -> Z80Core -> Z80Delta

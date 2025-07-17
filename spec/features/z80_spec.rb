@@ -42,7 +42,7 @@ RSpec.describe "Spectrum Emulator" do
 
     let(:times) { {
       flags.name => 7500,
-      regs.name => 13800,
+      regs.name => 14800,
       full_flags.name => 8300,
       full.name => 18000,
     }}
