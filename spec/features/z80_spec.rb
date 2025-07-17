@@ -43,7 +43,7 @@ RSpec.describe "Spectrum Emulator" do
     let(:times) { {
       flags.name => 7400,
       regs.name => 13000,
-      full_flags.name => 8300,
+      full_flags.name => 7900,
       full.name => 18000,
     }}
 
@@ -58,11 +58,10 @@ RSpec.describe "Spectrum Emulator" do
 
     # Disabled some of the IM routines, and now completes.
     # Flags: 019 of 160 tests failed.
-    # 51 SRO (XY) passes
     # 52 SRO (XY), R (DD CB 00 00)
-    # 73 BIT N,(XY) passes
     # 74 BIT N,(XY)- DD CB xx 40-47 (undoc?) - same as DD CB 00 46
     # 89 LDIR-> NOP'. 90 LDDR ->NOP',
+    # 95 IN A, (N)
     # 96 -> 103 IN FE:FF -> BF
     # 107 OUTI, 108 OUTD, 109 OTIR, 110 OTDR
     # 156 LD A,I 157 LD A,R
@@ -95,7 +94,14 @@ RSpec.describe "Spectrum Emulator" do
     # 25. 156 LD A,I
     # 26. 157 LD A,R
     #
-    # FullFlags - 028 of 160 tests failed
+    # FullFlags - 026 of 160 tests failed
+    # 1. SCF
+    # 2. CCF
+    # 3. SCF (ST)
+    # 4. CCF (ST)
+    # 5. 071 BIT N,(HL)
+    # 6. 072 BIT N,[ R, (HL)]
+    # 7. 073 BIT N, (XY)
 
     it "loads the emulator", :js do
       click_on z80_game.name
