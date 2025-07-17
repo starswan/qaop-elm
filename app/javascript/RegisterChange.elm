@@ -16,17 +16,20 @@ type Shifter
     | Shifter7
 
 
+type ChangeOneRegister
+    = AlterRegisterA
+    | AlterRegisterB
+    | AlterRegisterC
+    | AlterRegisterD
+    | ChangeRegisterE
+
+
 type RegisterChange
     = ChangeRegisterBC Int Int
-    | ChangeRegisterB Int
     | ChangeRegisterDE Int Int
-    | ChangeRegisterE Int
     | ChangeRegisterHL Int
     | ChangeRegisterIX Int
     | ChangeRegisterIY Int
-    | ChangeRegisterD Int
-    | ChangeRegisterA Int
-    | ChangeRegisterC Int
     | ChangeRegisterH Int
     | ChangeRegisterL Int
     | ChangeRegisterIXH Int
@@ -47,3 +50,4 @@ type RegisterChange
     | SingleEnvFlagFunc FlagFunc Int
     | RegChangeIm InterruptMode
     | ExchangeTopOfStackWith IXIYHL
+    | SingleRegisterChange ChangeOneRegister Int
