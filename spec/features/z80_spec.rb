@@ -74,26 +74,26 @@ RSpec.describe "Spectrum Emulator" do
     # 4. 84 RES N, (XY), R       DD CB xx 80
     # 5. 89 LDIR->NOP'
     # 6. 90 LDDR->NOP',
-    # 7. 96 IN FE:FF -> BF
-    # 8. 97 IN FE:FF -> BF
-    # 9. 98 IN FE:FF -> BF
-    # 10. 99 IN FE:FF -> BF
-    # 11. 100 IN FE:FF -> BF
-    # 12. 101 IN FE:FF -> BF
-    # 13. 102 IN FE:FF -> BF
-    # 14. 103 IN FE:FF -> BF
-    # 15. 105 OUT (C), R
-    # 16. 107 OUTI
-    # 17. 108 OUTD
-    # 18. 109 OTIR
-    # 19. 110 OTDR
-    # 20. 122 RETN
-    # 21. 123 RETI
-    # 22. 124 RETI/RETN
-    # 23. 154 LD I,A
-    # 24. 156 LD A,I
-    # 25. 157 LD A,R
-    # 26. 159 IM N
+    # 7. 95 IN A, (N)
+    # 8. 96 IN FE:FF -> BF
+    # 9. 97 IN FE:FF -> BF
+    # 10. 98 IN FE:FF -> BF
+    # 11. 99 IN FE:FF -> BF
+    # 12. 100 IN FE:FF -> BF
+    # 13. 101 IN FE:FF -> BF
+    # 14. 102 IN FE:FF -> BF
+    # 15. 103 IN FE:FF -> BF
+    # 16. 105 OUT (C), R
+    # 17. 107 OUTI
+    # 18. 108 OUTD
+    # 19. 109 OTIR
+    # 20. 110 OTDR
+    # 21. 122 RETN
+    # 22. 123 RETI
+    # 23. 124 RETI/RETN
+    # 24. 154 LD I,A
+    # 25. 156 LD A,I
+    # 26. 157 LD A,R
     #
     # FullFlags - 028 of 160 tests failed
 
