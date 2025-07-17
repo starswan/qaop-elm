@@ -3,7 +3,7 @@ module RegisterChange exposing (..)
 import Bitwise
 import Utils exposing (BitTest, shiftLeftBy8)
 import Z80Flags exposing (FlagFunc, FlagRegisters, changeFlags)
-import Z80Types exposing (InterruptMode, MainWithIndexRegisters, set_de_main)
+import Z80Types exposing (IXIYHL, InterruptMode, MainWithIndexRegisters, set_de_main)
 
 
 type Shifter
@@ -47,6 +47,7 @@ type RegisterChange
     | RegChangeNoOp
     | SingleEnvFlagFunc FlagFunc Int
     | RegChangeIm InterruptMode
+    | ExchangeTopOfStackWith IXIYHL
 
 
 type RegisterChangeApplied
@@ -63,6 +64,7 @@ type RegisterChangeApplied
     | IndirectBitSetApplied BitTest Int
     | RegChangeAppliedNoOp
     | RegChangeImApplied InterruptMode
+    | ExTopOfStackApplied IXIYHL
 
 
 applyRegisterChange : RegisterChange -> FlagRegisters -> MainWithIndexRegisters -> RegisterChangeApplied
@@ -154,3 +156,6 @@ applyRegisterChange change z80_flags main =
 
         RegChangeIm int ->
             RegChangeImApplied int
+
+        ExchangeTopOfStackWith ixiyhl ->
+            ExTopOfStackApplied ixiyhl

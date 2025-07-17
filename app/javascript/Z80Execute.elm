@@ -19,7 +19,7 @@ import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..), applyDeltaWithChan
 import Z80Env exposing (Z80Env, getRamValue, mem, mem16, setMem, setRam, z80_pop, z80_push)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, inc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (MainWithIndexRegisters, set_bc_main, set_de_main)
+import Z80Types exposing (MainWithIndexRegisters, get_xy, set_bc_main, set_de_main, set_xy)
 
 
 type DeltaWithChanges
@@ -733,10 +733,24 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                 | pc = new_pc
                 , env = env_1
                 , r = new_r
-
-                --, interrupts = { interrupts | iM = int + 1 }
                 , interrupts = { interrupts | iM = intMode }
             }
+
+        ExTopOfStackApplied ixiyhl ->
+            let
+                popped =
+                    env_1 |> z80_pop rom48k
+
+                xy =
+                    z80.main |> get_xy ixiyhl
+
+                env_2 =
+                    { env_1 | sp = popped.sp } |> z80_push xy
+
+                main =
+                    z80.main |> set_xy popped.value16 ixiyhl
+            in
+            { z80 | pc = new_pc, r = new_r, env = env_2, main = main }
 
 
 applyShifter : Int -> Shifter -> Int -> CpuTimeCTime -> Z80ROM -> Z80Core -> Z80Core
