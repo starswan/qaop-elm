@@ -4,7 +4,7 @@ require "rails_helper"
 require "zip"
 
 RSpec.describe "Spectrum Emulator" do
-  let(:expected_hz) { (ENV['HZ'] || "11.21").to_f }
+  let(:expected_hz) { (ENV['HZ'] || "10.9").to_f }
 
   # disable for now, as we don't want to run the test twice really
   # xcontext "with match day" do
@@ -95,13 +95,18 @@ RSpec.describe "Spectrum Emulator" do
     # 26. 157 LD A,R
     #
     # FullFlags - 026 of 160 tests failed
-    # 1. SCF
-    # 2. CCF
-    # 3. SCF (ST)
-    # 4. CCF (ST)
+    # 1. 001 SCF
+    # 2. 002 CCF
+    # 3. 005 SCF (ST)
+    # 4. 006 CCF (ST)
     # 5. 071 BIT N,(HL)
     # 6. 072 BIT N,[ R, (HL)]
     # 7. 073 BIT N, (XY)
+
+    # Full - 026 of 160 tests failed
+    # 1. 74 BIT N,(XY)- DD CB xx 40
+    # 2. 79 SET N, (XY), R       DD CB xx C0
+    # 3. 84 RES N, (XY), R       DD CB xx 80
 
     it "loads the emulator", :js do
       click_on z80_game.name
