@@ -22,7 +22,8 @@ jobs:
     strategy:
       matrix:
         #  3.3 tested locally, so just test beyond that (we're writing Elm, not Ruby here)
-        ruby-version: ['3.4', '3.5']
+        #  3.5 is still preview-1 so doesn't work yet (nokigiri)
+        ruby-version: ['3.4']
 
     env:
       HZ: 19.450
