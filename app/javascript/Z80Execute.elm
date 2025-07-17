@@ -3,7 +3,7 @@ module Z80Execute exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDuration(..), addCpuTimeTime, addDuration)
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
-import RegisterChange exposing (RegisterChange(..), RegisterChangeApplied(..), Shifter(..), applyRegisterChange)
+import RegisterChange exposing (RegisterChange(..), Shifter(..))
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
 import SingleEnvWithMain exposing (SingleEnvMainChange, applySingleEnvMainChange)
 import SingleNoParams exposing (NoParamChange(..), applyNoParamsDelta)
