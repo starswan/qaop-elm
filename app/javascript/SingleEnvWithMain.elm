@@ -1,12 +1,12 @@
 module SingleEnvWithMain exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, InstructionDuration(..), addDuration)
+import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, CpuTimeSpAnd16BitValue, InstructionDuration(..), addDuration)
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
 import Utils exposing (BitTest(..), shiftLeftBy8)
 import Z80Core exposing (Z80Core)
-import Z80Env exposing (Z80Env, mem)
+import Z80Env exposing (Z80Env, mem, z80_pop, z80_push)
 import Z80Flags exposing (FlagFunc(..), FlagRegisters, add16, changeFlags, testBit)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIYHL(..), MainWithIndexRegisters, set_xy)
@@ -27,6 +27,7 @@ type SingleEnvMainChange
     | SingleBitTest BitTest CpuTimeAndValue
     | SingleEnvFlagFunc FlagFunc Int CpuTimeCTime
     | SingleEnvNewHL16BitAdd IXIYHL Int Int
+    | PushWithSPAndHL IXIYHL Int CpuTimeSpAnd16BitValue
 
 
 singleEnvMainRegs : Dict Int ( MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange, PCIncrement, InstructionDuration )
@@ -50,6 +51,7 @@ singleEnvMainRegs =
         , ( 0xAE, ( xor_indirect_hl, IncrementByOne, SevenTStates ) )
         , ( 0xB6, ( or_indirect_hl, IncrementByOne, SevenTStates ) )
         , ( 0xBE, ( cp_indirect_hl, IncrementByOne, SevenTStates ) )
+        , ( 0xE3, ( ex_indirect_sp_hl, IncrementByOne, NineteenTStates ) )
         ]
 
 
@@ -57,6 +59,7 @@ singleEnvMainRegsIX : Dict Int ( MainWithIndexRegisters -> Z80ROM -> Z80Env -> S
 singleEnvMainRegsIX =
     Dict.fromList
         [ ( 0x39, ( add_ix_sp, FifteenTStates ) )
+        , ( 0xE3, ( ex_indirect_sp_ix, TwentyThreeTStates ) )
         ]
 
 
@@ -64,6 +67,7 @@ singleEnvMainRegsIY : Dict Int ( MainWithIndexRegisters -> Z80ROM -> Z80Env -> S
 singleEnvMainRegsIY =
     Dict.fromList
         [ ( 0x39, ( add_iy_sp, FifteenTStates ) )
+        , ( 0xE3, ( ex_indirect_sp_iy, TwentyThreeTStates ) )
         ]
 
 
@@ -169,6 +173,14 @@ applySingleEnvMainChange pcInc duration z80changeData z80 =
                 , env = env_1
                 , flags = new_xy.flags
                 , main = z80.main |> set_xy new_xy.value ixiyhl
+                , r = z80.r + 1
+            }
+
+        PushWithSPAndHL ixiyhl pushed popped ->
+            { z80
+                | pc = new_pc
+                , main = z80.main |> set_xy popped.value16 ixiyhl
+                , env = { env_1 | sp = popped.sp } |> z80_push pushed
                 , r = z80.r + 1
             }
 
@@ -385,3 +397,33 @@ add_iy_sp : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
 add_iy_sp z80_main rom48k z80_env =
     --case 0x39: xy=add16(xy,SP); break;
     SingleEnvNewHL16BitAdd IY z80_main.iy z80_env.sp
+
+
+ex_indirect_sp_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
+ex_indirect_sp_hl z80_main rom48k z80_env =
+    -- case 0xE3: v=pop(); push(HL); MP=HL=v; time+=2; break;
+    let
+        popped =
+            z80_env |> z80_pop rom48k
+    in
+    PushWithSPAndHL HL z80_main.hl popped
+
+
+ex_indirect_sp_ix : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
+ex_indirect_sp_ix z80_main rom48k z80_env =
+    -- case 0xE3: v=pop(); push(xy); MP=xy=v; time+=2; break;
+    let
+        popped =
+            z80_env |> z80_pop rom48k
+    in
+    PushWithSPAndHL IX z80_main.ix popped
+
+
+ex_indirect_sp_iy : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
+ex_indirect_sp_iy z80_main rom48k z80_env =
+    -- case 0xE3: v=pop(); push(xy); MP=xy=v; time+=2; break;
+    let
+        popped =
+            z80_env |> z80_pop rom48k
+    in
+    PushWithSPAndHL IY z80_main.iy popped

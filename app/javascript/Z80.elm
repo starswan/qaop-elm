@@ -10,7 +10,7 @@ import Bitwise exposing (and, or)
 import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAndValue, InstructionDuration(..), addDuration)
 import Dict exposing (Dict)
 import Group0xE0 exposing (delta_dict_lite_E0)
-import Group0xF0 exposing (list0255, lt40_array, xYDict)
+import Group0xF0 exposing (list0255, xYDict)
 import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainAndFlagRegistersIXCB, singleByteMainAndFlagRegistersIYCB, singleByteMainRegsCB, singleByteMainRegsIXCB, singleByteMainRegsIYCB, singleEnvMainRegsCB, singleEnvMainRegsIXCB, singleEnvMainRegsIYCB)
 import GroupED exposing (singleByteFlagsED, singleByteMainAndFlagsED, singleByteMainRegsED)
 import Loop
@@ -181,17 +181,12 @@ constructor =
 
 execute_ltC0 : Int -> Z80ROM -> Z80Core -> Maybe Z80Delta
 execute_ltC0 c rom48k z80 =
-    case lt40_array |> Array.get c |> Maybe.withDefault Nothing of
-        Just f ->
-            Just (z80 |> f HL rom48k)
+    case lt40_array_lite |> Array.get c |> Maybe.withDefault Nothing of
+        Just f_without_ixiyhl ->
+            Just (z80 |> f_without_ixiyhl rom48k)
 
         Nothing ->
-            case lt40_array_lite |> Array.get c |> Maybe.withDefault Nothing of
-                Just f_without_ixiyhl ->
-                    Just (z80 |> f_without_ixiyhl rom48k)
-
-                Nothing ->
-                    Nothing
+            Nothing
 
 
 execute_ltC0_xy : Int -> IXIY -> Z80ROM -> Z80Core -> Maybe Z80Delta
@@ -210,17 +205,12 @@ execute_ltC0_xy c ixoriy rom48k z80 =
                         IXIY_IY ->
                             IY
             in
-            case lt40_array |> Array.get c |> Maybe.withDefault Nothing of
-                Just f ->
-                    Just (z80 |> f only_ixiy rom48k)
+            case lt40_array_lite |> Array.get c |> Maybe.withDefault Nothing of
+                Just f_without_ixiyhl ->
+                    Just (z80 |> f_without_ixiyhl rom48k)
 
                 Nothing ->
-                    case lt40_array_lite |> Array.get c |> Maybe.withDefault Nothing of
-                        Just f_without_ixiyhl ->
-                            Just (z80 |> f_without_ixiyhl rom48k)
-
-                        Nothing ->
-                            Nothing
+                    Nothing
 
 
 
