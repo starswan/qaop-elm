@@ -79,51 +79,73 @@ suite =
                     in
                     Expect.equal ( addr + 2, 0x3445, sp + 2 ) ( new_z80.pc, new_z80.main.iy, new_z80.env.sp )
             ]
-        , test "0xE3 EX (SP),HL" <|
-            \_ ->
-                let
-                    new_env =
-                        z80env
-                            |> setMem addr 0xE3
-                            |> setMem sp 0x45
-                            |> setMem (sp + 1) 0x34
+        , describe "0xE3"
+            [ test "0xE3 EX (SP),HL" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xE3
+                                |> setMem sp 0x45
+                                |> setMem (sp + 1) 0x34
 
-                    new_z80 =
-                        executeCoreInstruction z80rom
-                            { z80
-                                | env = new_env
-                                , main = { z80main | hl = 0xA000 }
-                            }
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | hl = 0xA000 }
+                                }
 
-                    top_lo =
-                        (new_z80.env |> m1 sp 0 z80rom).value
+                        top_lo =
+                            (new_z80.env |> m1 sp 0 z80rom).value
 
-                    top_hi =
-                        (new_z80.env |> m1 (sp + 1) 0 z80rom).value
-                in
-                Expect.equal
-                    { pc = new_z80.pc, sp = new_z80.env.sp, hl = new_z80.main.hl, top_lo = top_lo, top_hi = top_hi }
-                    { pc = addr + 1, sp = sp, hl = 0x3445, top_lo = 0x00, top_hi = 0xA0 }
-        , test "0xDD 0xE3 EX (SP),IX" <|
-            \_ ->
-                let
-                    new_env =
-                        z80env
-                            |> setMem addr 0xDD
-                            |> setMem (addr + 1) 0xE3
-                            |> setMem sp 0x45
-                            |> setMem (sp + 1) 0x34
+                        top_hi =
+                            (new_z80.env |> m1 (sp + 1) 0 z80rom).value
+                    in
+                    Expect.equal
+                        { pc = new_z80.pc, sp = new_z80.env.sp, hl = new_z80.main.hl, top_lo = top_lo, top_hi = top_hi }
+                        { pc = addr + 1, sp = sp, hl = 0x3445, top_lo = 0x00, top_hi = 0xA0 }
+            , test "0xDD 0xE3 EX (SP),IX" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xDD
+                                |> setMem (addr + 1) 0xE3
+                                |> setMem sp 0x45
+                                |> setMem (sp + 1) 0x34
 
-                    new_z80 =
-                        executeCoreInstruction z80rom
-                            { z80
-                                | env = new_env
-                                , main = { z80main | ix = 0xA000 }
-                            }
-                in
-                Expect.equal
-                    { pc = new_z80.pc, sp = new_z80.env.sp, ix = new_z80.main.ix, top = (new_z80.env |> mem16 sp z80rom).value16 }
-                    { pc = addr + 2, sp = sp, ix = 0x3445, top = 0xA000 }
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | ix = 0xA000 }
+                                }
+                    in
+                    Expect.equal
+                        { pc = new_z80.pc, sp = new_z80.env.sp, ix = new_z80.main.ix, top = (new_z80.env |> mem16 sp z80rom).value16 }
+                        { pc = addr + 2, sp = sp, ix = 0x3445, top = 0xA000 }
+            , test "0xFD 0xE3 EX (SP),IY" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xFD
+                                |> setMem (addr + 1) 0xE3
+                                |> setMem sp 0x45
+                                |> setMem (sp + 1) 0x34
+
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | iy = 0xA000 }
+                                }
+                    in
+                    Expect.equal
+                        { pc = new_z80.pc, sp = new_z80.env.sp, iy = new_z80.main.iy, top = (new_z80.env |> mem16 sp z80rom).value16 }
+                        { pc = addr + 2, sp = sp, iy = 0x3445, top = 0xA000 }
+            ]
         , test "0xE5 PUSH HL" <|
             \_ ->
                 let
