@@ -174,40 +174,41 @@ get_ixiy_xy ixiy z80_main =
             z80_main.iy
 
 
-set_h : Int -> IXIYHL -> MainWithIndexRegisters -> MainWithIndexRegisters
-set_h value ixiyhl z80 =
-    let
-        xy =
-            get_xy ixiyhl z80
-    in
-    set_xy (Bitwise.or (Bitwise.and xy 0xFF) (shiftLeftBy8 value)) ixiyhl z80
 
-
-set_h_ixiy : Int -> IXIY -> MainWithIndexRegisters -> MainWithIndexRegisters
-set_h_ixiy value ixiyhl z80 =
-    let
-        xy =
-            get_xy_ixiy ixiyhl z80
-    in
-    set_xy_ixiy (Bitwise.or (Bitwise.and xy 0xFF) (shiftLeftBy8 value)) ixiyhl z80
-
-
-set_l : Int -> IXIYHL -> MainWithIndexRegisters -> MainWithIndexRegisters
-set_l value ixiyhl z80 =
-    let
-        xy =
-            get_xy ixiyhl z80
-    in
-    set_xy (Bitwise.or (Bitwise.and xy 0xFF00) value) ixiyhl z80
-
-
-set_l_ixiy : Int -> IXIY -> MainWithIndexRegisters -> MainWithIndexRegisters
-set_l_ixiy value ixiyhl z80 =
-    let
-        xy =
-            get_xy_ixiy ixiyhl z80
-    in
-    set_xy_ixiy (Bitwise.or (Bitwise.and xy 0xFF00) value) ixiyhl z80
+--set_h : Int -> IXIYHL -> MainWithIndexRegisters -> MainWithIndexRegisters
+--set_h value ixiyhl z80 =
+--    let
+--        xy =
+--            get_xy ixiyhl z80
+--    in
+--    set_xy (Bitwise.or (Bitwise.and xy 0xFF) (shiftLeftBy8 value)) ixiyhl z80
+--
+--
+--set_h_ixiy : Int -> IXIY -> MainWithIndexRegisters -> MainWithIndexRegisters
+--set_h_ixiy value ixiyhl z80 =
+--    let
+--        xy =
+--            get_xy_ixiy ixiyhl z80
+--    in
+--    set_xy_ixiy (Bitwise.or (Bitwise.and xy 0xFF) (shiftLeftBy8 value)) ixiyhl z80
+--
+--
+--set_l : Int -> IXIYHL -> MainWithIndexRegisters -> MainWithIndexRegisters
+--set_l value ixiyhl z80 =
+--    let
+--        xy =
+--            get_xy ixiyhl z80
+--    in
+--    set_xy (Bitwise.or (Bitwise.and xy 0xFF00) value) ixiyhl z80
+--
+--
+--set_l_ixiy : Int -> IXIY -> MainWithIndexRegisters -> MainWithIndexRegisters
+--set_l_ixiy value ixiyhl z80 =
+--    let
+--        xy =
+--            get_xy_ixiy ixiyhl z80
+--    in
+--    set_xy_ixiy (Bitwise.or (Bitwise.and xy 0xFF00) value) ixiyhl z80
 
 
 get_xy : IXIYHL -> MainWithIndexRegisters -> Int
@@ -246,17 +247,16 @@ set_xy value ixiyhl z80 =
             { z80 | hl = value }
 
 
-set_xy_ixiy : Int -> IXIY -> MainWithIndexRegisters -> MainWithIndexRegisters
-set_xy_ixiy value ixiyhl z80 =
-    case ixiyhl of
-        IXIY_IX ->
-            { z80 | ix = value }
 
-        IXIY_IY ->
-            { z80 | iy = value }
-
-
-
+--set_xy_ixiy : Int -> IXIY -> MainWithIndexRegisters -> MainWithIndexRegisters
+--set_xy_ixiy value ixiyhl z80 =
+--    case ixiyhl of
+--        IXIY_IX ->
+--            { z80 | ix = value }
+--
+--        IXIY_IY ->
+--            { z80 | iy = value }
+--
 --
 --	private int getd(int xy)
 --	{
@@ -307,23 +307,21 @@ set_de_main v z80_main =
 --    in
 --    --z80 |> set_env mempc.env |> add_cpu_time 8 |> set_pc (z80.pc + d + 1)
 --    CpuTimeAndPc (mempc.time |> addCpuTimeTime 8) (Bitwise.and (z80.pc + d + 1) 0xFFFF)
-
-
-get_h : IXIYHL -> MainWithIndexRegisters -> Int
-get_h ixiyhl z80 =
-    shiftRightBy8 (get_xy ixiyhl z80)
-
-
-get_h_ixiy : IXIY -> MainWithIndexRegisters -> Int
-get_h_ixiy ixiyhl z80 =
-    shiftRightBy8 (get_xy_ixiy ixiyhl z80)
-
-
-get_l : IXIYHL -> MainWithIndexRegisters -> Int
-get_l ixiyhl z80 =
-    Bitwise.and (get_xy ixiyhl z80) 0xFF
-
-
-get_l_ixiy : IXIY -> MainWithIndexRegisters -> Int
-get_l_ixiy ixiyhl z80 =
-    Bitwise.and (get_xy_ixiy ixiyhl z80) 0xFF
+--get_h : IXIYHL -> MainWithIndexRegisters -> Int
+--get_h ixiyhl z80 =
+--    shiftRightBy8 (get_xy ixiyhl z80)
+--
+--
+--get_h_ixiy : IXIY -> MainWithIndexRegisters -> Int
+--get_h_ixiy ixiyhl z80 =
+--    shiftRightBy8 (get_xy_ixiy ixiyhl z80)
+--
+--
+--get_l : IXIYHL -> MainWithIndexRegisters -> Int
+--get_l ixiyhl z80 =
+--    Bitwise.and (get_xy ixiyhl z80) 0xFF
+--
+--
+--get_l_ixiy : IXIY -> MainWithIndexRegisters -> Int
+--get_l_ixiy ixiyhl z80 =
+--    Bitwise.and (get_xy_ixiy ixiyhl z80) 0xFF

@@ -19,7 +19,7 @@ import Z80Delta exposing (Z80Delta(..))
 import Z80Env exposing (Z80Env, addCpuTimeEnv, m1, mem, mem16, setMem, setMem16, z80_in)
 import Z80Flags exposing (FlagRegisters, c_F3, c_F5, c_F53, c_FC, c_FH, f_szh0n0p, z80_sub)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIYHL(..), InterruptRegisters, MainWithIndexRegisters, get_bc, get_de, set_bc_main, set_de_main)
+import Z80Types exposing (InterruptRegisters, MainWithIndexRegisters, get_bc, get_de, set_bc_main, set_de_main)
 
 
 group_ed_dict : Dict Int (Z80ROM -> Z80Core -> Z80Delta)
@@ -199,28 +199,16 @@ execute_ED43 rom48k z80 =
 
 
 
--- All these other ED codes are 'undocumented' and do interesting things,
--- but point back to ED44 in Qaop Java version
---case 0x44:
---case 0x4C:
---case 0x54:
---case 0x5C:
---case 0x64:
---case 0x6C:
---case 0x74:
---case 0x7C: v=A; A=0; sub(v); break;
-
-
-setImED46 : Z80ROM -> Z80Core -> Z80Delta
-setImED46 rom48k z80 =
-    --z80 |> set_im_value 0x46
-    NoOp
-
-
-setImED4E : Z80ROM -> Z80Core -> Z80Delta
-setImED4E rom48k z80 =
-    --z80 |> set_im_value 0x4E
-    NoOp
+--setImED46 : Z80ROM -> Z80Core -> Z80Delta
+--setImED46 rom48k z80 =
+--    --z80 |> set_im_value 0x46
+--    NoOp
+--
+--
+--setImED4E : Z80ROM -> Z80Core -> Z80Delta
+--setImED4E rom48k z80 =
+--    --z80 |> set_im_value 0x4E
+--    NoOp
 
 
 execute_ED47 : Z80ROM -> Z80Core -> Z80Delta
@@ -1110,13 +1098,38 @@ singleByteMainRegsED =
           --case 0x6E:
           --case 0x76:
           --case 0x7E: IM = c>>3&3; break;
-          ( 0x46, ( \_ -> RegChangeIm (0x46 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
-        , ( 0x56, ( \_ -> RegChangeIm (0x56 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
-        , ( 0x5E, ( \_ -> RegChangeIm (0x5E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
-        , ( 0x66, ( \_ -> RegChangeIm (0x66 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
-        , ( 0x6E, ( \_ -> RegChangeIm (0x6E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
-        , ( 0x76, ( \_ -> RegChangeIm (0x76 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
-        , ( 0x7E, ( \_ -> RegChangeIm (0x7E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
+          --https://www.cpcwiki.eu/index.php/Z80_-_undocumented_opcodes
+          --( 0x46, ( \_ -> RegChangeIm (0x46 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
+          -- IM0 (iM == 1) seems to crash the emulator quite badly because of this code:
+          --  1 ->
+          --      new_z80 |> im0 bus
+          -- iM == 0 (which has the same code) appears to be impossible as there is no IM3 instruction
+          --( 0x46, ( \_ -> RegChangeIm 0, EightTStates ) )
+          ( 0x46, ( \_ -> RegChangeNoOp, EightTStates ) )
+
+        --( 0x4E, ( \_ -> RegChangeIm (0x4E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
+        --, ( 0x4E, ( \_ -> RegChangeIm 0, EightTStates ) )
+        , ( 0x4E, ( \_ -> RegChangeNoOp, EightTStates ) )
+
+        --, ( 0x56, ( \_ -> RegChangeIm (0x56 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
+        , ( 0x56, ( \_ -> RegChangeIm 1, EightTStates ) )
+
+        --, ( 0x5E, ( \_ -> RegChangeIm (0x5E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
+        , ( 0x5E, ( \_ -> RegChangeIm 2, EightTStates ) )
+
+        --, ( 0x66, ( \_ -> RegChangeIm (0x66 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
+        --, ( 0x66, ( \_ -> RegChangeIm 0, EightTStates ) )
+        , ( 0x66, ( \_ -> RegChangeNoOp, EightTStates ) )
+
+        --, ( 0x6E, ( \_ -> RegChangeIm (0x6E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
+        --, ( 0x6E, ( \_ -> RegChangeIm 0, EightTStates ) )
+        , ( 0x6E, ( \_ -> RegChangeNoOp, EightTStates ) )
+
+        --, ( 0x76, ( \_ -> RegChangeIm (0x76 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
+        , ( 0x76, ( \_ -> RegChangeIm 1, EightTStates ) )
+
+        --, ( 0x7E, ( \_ -> RegChangeIm (0x7E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
+        , ( 0x7E, ( \_ -> RegChangeIm 2, EightTStates ) )
         ]
 
 
@@ -1139,6 +1152,16 @@ singleByteFlagsED =
 
 ed_44_neg : FlagRegisters -> FlagChange
 ed_44_neg z80_flags =
+    -- All these other ED codes are 'undocumented' and do interesting things,
+    -- but point back to ED44 in Qaop Java version
+    --case 0x44:
+    --case 0x4C:
+    --case 0x54:
+    --case 0x5C:
+    --case 0x64:
+    --case 0x6C:
+    --case 0x74:
+    --case 0x7C: v=A; A=0; sub(v); break;
     let
         v =
             z80_flags.a

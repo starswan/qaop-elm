@@ -41,8 +41,8 @@ RSpec.describe "Spectrum Emulator" do
     let(:z80_game) { Game.find_by!(name: ENV.fetch("Z80_TEST", flags.name)) }
 
     let(:times) { {
-      flags.name => 17500,
-      regs.name => 14800,
+      flags.name => 7400,
+      regs.name => 13000,
       full_flags.name => 8300,
       full.name => 18000,
     }}
@@ -67,8 +67,7 @@ RSpec.describe "Spectrum Emulator" do
     # 107 OUTI, 108 OUTD, 109 OTIR, 110 OTDR
     # 156 LD A,I 157 LD A,R
     #
-    # Regs: 027 of 160 tests failed.
-    # LD R,A now passes when it used to fail?
+    # Regs: 026 of 160 tests failed.
     # 52 SRO (XY) ,R (undocumented?) DD CB xx 00
     # 73 BIT N,(XY) passes
     # 74 BIT N,(XY)- DD CB xx 40

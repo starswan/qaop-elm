@@ -3,10 +3,10 @@ module Z80Delta exposing (..)
 import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimeIncrement, InstructionDuration, addCpuTimeTime)
 import Utils exposing (toHexString2)
 import Z80Core exposing (Z80, Z80Core, add_cpu_time, set408bitHL)
-import Z80Debug exposing (debugLog, debugTodo)
+import Z80Debug exposing (debugTodo)
 import Z80Env exposing (Z80Env, addCpuTimeEnv, setMem, z80_push)
 import Z80Flags exposing (FlagRegisters, f_szh0n0p)
-import Z80Types exposing (IXIYHL(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters, set_bc_main)
+import Z80Types exposing (InterruptRegisters, MainRegisters, MainWithIndexRegisters, set_bc_main)
 
 
 type

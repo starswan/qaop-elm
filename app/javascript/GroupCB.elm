@@ -13,7 +13,7 @@ import Z80Delta exposing (Z80Delta(..))
 import Z80Env exposing (Z80Env, addCpuTimeEnv, mem, setMem)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, bit, c_F53, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIY, IXIYHL(..), IntWithFlagsTimeAndPC, MainWithIndexRegisters, get_ixiy_xy)
+import Z80Types exposing (IXIY, IntWithFlagsTimeAndPC, MainWithIndexRegisters, get_ixiy_xy)
 
 
 

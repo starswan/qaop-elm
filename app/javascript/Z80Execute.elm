@@ -19,7 +19,7 @@ import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..), applyDeltaWithChan
 import Z80Env exposing (Z80Env, getRamValue, mem, mem16, setMem, setRam, z80_pop, z80_push)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, inc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIYHL(..), MainWithIndexRegisters, set_bc_main, set_de_main)
+import Z80Types exposing (MainWithIndexRegisters, set_bc_main, set_de_main)
 
 
 type DeltaWithChanges
@@ -733,7 +733,7 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                 | pc = new_pc
                 , env = env_1
                 , r = new_r
-                , interrupts = { interrupts | iM = int }
+                , interrupts = { interrupts | iM = int + 1 }
             }
 
 

@@ -6,7 +6,7 @@ import Dict exposing (Dict)
 import RegisterChange exposing (RegisterChange(..), Shifter(..))
 import Utils exposing (BitTest(..), shiftRightBy8)
 import Z80Flags exposing (FlagFunc(..))
-import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, get_bc, get_de)
+import Z80Types exposing (MainRegisters, MainWithIndexRegisters, get_bc, get_de)
 
 
 singleByteMainRegs : Dict Int ( MainWithIndexRegisters -> RegisterChange, InstructionDuration )

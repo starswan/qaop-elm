@@ -5,7 +5,7 @@ import Dict exposing (Dict)
 import Z80Core exposing (Z80Core, env_mem_hl_ixiy, hl_deref_with_z80_ixiy)
 import Z80Delta exposing (Z80Delta(..))
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIY, IXIYHL(..))
+import Z80Types exposing (IXIY)
 
 
 miniDict70 : Dict Int (IXIY -> Z80ROM -> Z80Core -> Z80Delta)
