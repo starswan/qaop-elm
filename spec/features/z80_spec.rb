@@ -44,7 +44,7 @@ RSpec.describe "Spectrum Emulator" do
       flags.name => 7400,
       regs.name => 13000,
       full_flags.name => 7900,
-      full.name => 18000,
+      full.name => 14000,
     }}
 
     before do
@@ -103,7 +103,7 @@ RSpec.describe "Spectrum Emulator" do
     # 6. 072 BIT N,[ R, (HL)]
     # 7. 073 BIT N, (XY)
 
-    # Full - 026 of 160 tests failed
+    # Full - 033 of 160 tests failed
     # 1. 74 BIT N,(XY)- DD CB xx 40
     # 2. 79 SET N, (XY), R       DD CB xx C0
     # 3. 84 RES N, (XY), R       DD CB xx 80
