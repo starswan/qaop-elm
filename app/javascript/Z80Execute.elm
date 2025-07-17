@@ -668,30 +668,6 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                 , r = new_r
             }
 
-        ChangeRegisterH int ->
-            let
-                main =
-                    z80.main
-            in
-            { z80
-                | pc = new_pc
-                , main = { main | hl = Bitwise.or (Bitwise.and main.hl 0xFF) (shiftLeftBy8 int) }
-                , env = env_1
-                , r = new_r
-            }
-
-        ChangeRegisterL int ->
-            let
-                main =
-                    z80.main
-            in
-            { z80
-                | pc = new_pc
-                , main = { main | hl = Bitwise.or (Bitwise.and main.hl 0xFF00) int }
-                , env = env_1
-                , r = new_r
-            }
-
         ChangeRegisterIXH int ->
             let
                 main =
@@ -938,6 +914,22 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                     { z80
                         | pc = new_pc
                         , main = { z80_main | e = int }
+                        , env = env_1
+                        , r = new_r
+                    }
+
+                ChangeRegisterH ->
+                    { z80
+                        | pc = new_pc
+                        , main = { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 int) }
+                        , env = env_1
+                        , r = new_r
+                    }
+
+                ChangeRegisterL ->
+                    { z80
+                        | pc = new_pc
+                        , main = { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) int }
                         , env = env_1
                         , r = new_r
                     }

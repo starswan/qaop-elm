@@ -22,6 +22,8 @@ type ChangeOneRegister
     | AlterRegisterC
     | AlterRegisterD
     | ChangeRegisterE
+    | ChangeRegisterH
+    | ChangeRegisterL
 
 
 type RegisterChange
@@ -30,8 +32,6 @@ type RegisterChange
     | ChangeRegisterHL Int
     | ChangeRegisterIX Int
     | ChangeRegisterIY Int
-    | ChangeRegisterH Int
-    | ChangeRegisterL Int
     | ChangeRegisterIXH Int
     | ChangeRegisterIXL Int
     | ChangeRegisterIYH Int

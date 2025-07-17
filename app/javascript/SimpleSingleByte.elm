@@ -482,7 +482,7 @@ ld_h_b z80_main =
     -- case 0x60: HL=HL&0xFF|B<<8; break;
     -- case 0x60: xy=xy&0xFF|B<<8; break;
     --z80 |> set_h_z80 z80.main.b ixiyhl
-    ChangeRegisterH z80_main.b
+    SingleRegisterChange ChangeRegisterH z80_main.b
 
 
 ld_h_c : MainWithIndexRegisters -> RegisterChange
@@ -490,7 +490,7 @@ ld_h_c z80_main =
     -- case 0x61: HL=HL&0xFF|C<<8; break;
     -- case 0x61: xy=xy&0xFF|C<<8; break;
     --z80 |> set_h_z80 z80.main.c ixiyhl
-    ChangeRegisterH z80_main.c
+    SingleRegisterChange ChangeRegisterH z80_main.c
 
 
 ld_h_d : MainWithIndexRegisters -> RegisterChange
@@ -498,7 +498,7 @@ ld_h_d z80_main =
     -- case 0x62: HL=HL&0xFF|D<<8; break;
     -- case 0x62: xy=xy&0xFF|D<<8; break;
     --z80 |> set_h_z80 z80.main.d ixiyhl
-    ChangeRegisterH z80_main.d
+    SingleRegisterChange ChangeRegisterH z80_main.d
 
 
 ld_h_e : MainWithIndexRegisters -> RegisterChange
@@ -506,7 +506,7 @@ ld_h_e z80_main =
     -- case 0x63: HL=HL&0xFF|E<<8; break;
     -- case 0x63: xy=xy&0xFF|E<<8; break;
     --z80 |> set_h_z80 z80.main.e ixiyhl
-    ChangeRegisterH z80_main.e
+    SingleRegisterChange ChangeRegisterH z80_main.e
 
 
 ld_h_l : MainWithIndexRegisters -> RegisterChange
@@ -514,7 +514,7 @@ ld_h_l z80_main =
     -- case 0x65: HL=HL&0xFF|(HL&0xFF)<<8; break;
     -- case 0x65: xy=xy&0xFF|(xy&0xFF)<<8; break;
     --z80 |> set_h_z80 (get_l ixiyhl z80.main) ixiyhl
-    ChangeRegisterH (Bitwise.and z80_main.hl 0xFF)
+    SingleRegisterChange ChangeRegisterH (Bitwise.and z80_main.hl 0xFF)
 
 
 ld_l_b : MainWithIndexRegisters -> RegisterChange
@@ -522,35 +522,35 @@ ld_l_b z80_main =
     -- case 0x68: HL=HL&0xFF00|B; break;
     -- case 0x68: xy=xy&0xFF00|B; break;
     --z80 |> set_l_z80 z80.main.b ixiyhl
-    ChangeRegisterL z80_main.b
+    SingleRegisterChange ChangeRegisterL z80_main.b
 
 
 ld_l_c : MainWithIndexRegisters -> RegisterChange
 ld_l_c z80_main =
     -- case 0x69: HL=HL&0xFF00|C; break;
     -- case 0x69: xy=xy&0xFF00|C; break;
-    ChangeRegisterL z80_main.c
+    SingleRegisterChange ChangeRegisterL z80_main.c
 
 
 ld_l_d : MainWithIndexRegisters -> RegisterChange
 ld_l_d z80_main =
     -- case 0x6A: HL=HL&0xFF00|D; break;
     -- case 0x6A: xy=xy&0xFF00|D; break;
-    ChangeRegisterL z80_main.d
+    SingleRegisterChange ChangeRegisterL z80_main.d
 
 
 ld_l_e : MainWithIndexRegisters -> RegisterChange
 ld_l_e z80_main =
     -- case 0x6B: HL=HL&0xFF00|E; break;
     -- case 0x6B: xy=xy&0xFF00|E; break;
-    ChangeRegisterL z80_main.e
+    SingleRegisterChange ChangeRegisterL z80_main.e
 
 
 ld_l_h : MainWithIndexRegisters -> RegisterChange
 ld_l_h z80_main =
     -- case 0x6C: HL=HL&0xFF00|HL>>>8; break;
     -- case 0x6C: xy=xy&0xFF00|xy>>>8; break;
-    ChangeRegisterL (shiftRightBy8 z80_main.hl)
+    SingleRegisterChange ChangeRegisterL (shiftRightBy8 z80_main.hl)
 
 
 ld_a_b : MainWithIndexRegisters -> RegisterChange
