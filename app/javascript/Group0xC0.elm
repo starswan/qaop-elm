@@ -5,7 +5,7 @@ import GroupCB exposing (group_xy_cb)
 import Z80Core exposing (Z80Core)
 import Z80Delta exposing (Z80Delta(..))
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIY(..), IXIYHL(..))
+import Z80Types exposing (IXIY(..))
 
 
 miniDictC0 : Dict Int (IXIY -> Z80ROM -> Z80Core -> Z80Delta)

@@ -21,11 +21,12 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        #  3.3 tested locally, so just test 3.4 (we're writing Elm, not Ruby here)
+        #  3.3 tested locally, so just test beyond that (we're writing Elm, not Ruby here)
+        #  3.5 is still preview-1 so doesn't work yet (nokigiri)
         ruby-version: ['3.4']
 
     env:
-      HZ: 19.502
+      HZ: 19.016
     steps:
       - uses: actions/checkout@v4
       - name: Set up Ruby
@@ -36,7 +37,29 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 18
+
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+
+      - name: Set up yarn cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Set up elm cache
+        uses: actions/cache@v4
+        with:
+          path: | 
+            $HOME/.elm 
+            elm-stuff
+          key: ${{ runner.os }}-qaop-elm-${{ hashFiles('elm.json') }}
+          restore-keys: |
+            ${{ runner.os }}-qaop-elm-
 
       - name: Yarn install
         run: yarn install

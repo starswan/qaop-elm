@@ -1,10 +1,9 @@
 module Group0xF0 exposing (..)
 
-import Array exposing (Array)
 import Dict exposing (Dict)
 import Group0x70 exposing (miniDict70)
 import Group0xC0 exposing (miniDictC0)
-import Group0xE0 exposing (delta_dict_E0, miniDictE0)
+import Group0xE0 exposing (miniDictE0)
 import Z80Core exposing (Z80Core)
 import Z80Delta exposing (Z80Delta(..))
 import Z80Rom exposing (Z80ROM)
@@ -34,22 +33,8 @@ ld_sp_hl ixiyhl rom48k z80 =
     SpAndCpuTimeWithPc v 2 z80.pc
 
 
-lt40_delta_dict : Dict Int (IXIYHL -> Z80ROM -> Z80Core -> Z80Delta)
-lt40_delta_dict =
-    delta_dict_E0
-
-
 list0255 =
     List.range 0 255
-
-
-lt40_array : Array (Maybe (IXIYHL -> Z80ROM -> Z80Core -> Z80Delta))
-lt40_array =
-    let
-        delta_funcs =
-            list0255 |> List.map (\index -> lt40_delta_dict |> Dict.get index)
-    in
-    delta_funcs |> Array.fromList
 
 
 xYDict : Dict Int (IXIY -> Z80ROM -> Z80Core -> Z80Delta)

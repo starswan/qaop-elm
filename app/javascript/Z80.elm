@@ -10,7 +10,7 @@ import Bitwise exposing (and, or)
 import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAndValue, InstructionDuration(..), addDuration)
 import Dict exposing (Dict)
 import Group0xE0 exposing (delta_dict_lite_E0)
-import Group0xF0 exposing (list0255, lt40_array, xYDict)
+import Group0xF0 exposing (list0255, xYDict)
 import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainAndFlagRegistersIXCB, singleByteMainAndFlagRegistersIYCB, singleByteMainRegsCB, singleByteMainRegsIXCB, singleByteMainRegsIYCB, singleEnvMainRegsCB, singleEnvMainRegsIXCB, singleEnvMainRegsIYCB)
 import GroupED exposing (singleByteFlagsED, singleByteMainAndFlagsED, singleByteMainRegsED)
 import Loop
@@ -33,7 +33,7 @@ import Z80Env exposing (Z80Env, c_TIME_LIMIT, m1, mem, mem16, z80env_constructor
 import Z80Execute exposing (DeltaWithChanges(..), apply_delta)
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
 import Z80Rom exposing (Z80ROM, romRoutineNames)
-import Z80Types exposing (IXIY(..), IXIYHL(..), IntWithFlagsTimeAndPC, InterruptRegisters, MainRegisters, MainWithIndexRegisters)
+import Z80Types exposing (IXIY(..), IXIYHL(..), IntWithFlagsTimeAndPC, InterruptMode(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
 
 
 constructor : Z80
@@ -52,7 +52,7 @@ constructor =
             FlagRegisters 0 0 0 0 0
 
         interrupts =
-            InterruptRegisters 0 0 0 False
+            InterruptRegisters 0 0 IM0 False
     in
     --Z80 z80env_constructor 0 main main_flags alternate alt_flags 0 interrupts
     Z80 (Z80Core z80env_constructor 0 main main_flags 0 interrupts) alternate alt_flags
@@ -171,27 +171,16 @@ constructor =
 --
 --	/* Note: EI isn't prefix here - interrupt will be acknowledged */
 --
---toString: IXIYHL -> String
---toString ixiyhl =
---   case ixiyhl of
---      IX -> "IX"
---      IY -> "IY"
---      HL -> "HL"
 
 
 execute_ltC0 : Int -> Z80ROM -> Z80Core -> Maybe Z80Delta
 execute_ltC0 c rom48k z80 =
-    case lt40_array |> Array.get c |> Maybe.withDefault Nothing of
-        Just f ->
-            Just (z80 |> f HL rom48k)
+    case lt40_array_lite |> Array.get c |> Maybe.withDefault Nothing of
+        Just f_without_ixiyhl ->
+            Just (z80 |> f_without_ixiyhl rom48k)
 
         Nothing ->
-            case lt40_array_lite |> Array.get c |> Maybe.withDefault Nothing of
-                Just f_without_ixiyhl ->
-                    Just (z80 |> f_without_ixiyhl rom48k)
-
-                Nothing ->
-                    Nothing
+            Nothing
 
 
 execute_ltC0_xy : Int -> IXIY -> Z80ROM -> Z80Core -> Maybe Z80Delta
@@ -201,41 +190,12 @@ execute_ltC0_xy c ixoriy rom48k z80 =
             Just (z80 |> xyFunc ixoriy rom48k)
 
         Nothing ->
-            let
-                only_ixiy =
-                    case ixoriy of
-                        IXIY_IX ->
-                            IX
-
-                        IXIY_IY ->
-                            IY
-            in
-            case lt40_array |> Array.get c |> Maybe.withDefault Nothing of
-                Just f ->
-                    Just (z80 |> f only_ixiy rom48k)
+            case lt40_array_lite |> Array.get c |> Maybe.withDefault Nothing of
+                Just f_without_ixiyhl ->
+                    Just (z80 |> f_without_ixiyhl rom48k)
 
                 Nothing ->
-                    case lt40_array_lite |> Array.get c |> Maybe.withDefault Nothing of
-                        Just f_without_ixiyhl ->
-                            Just (z80 |> f_without_ixiyhl rom48k)
-
-                        Nothing ->
-                            Nothing
-
-
-
---z80_to_delta: Maybe (Z80ROM -> Z80 -> Z80) -> Maybe (Z80ROM -> Z80 -> Z80Delta)
---z80_to_delta z80func =
---    case z80func of
---        Just f ->  Just (\rom48k z80  -> Whole (z80 |> f rom48k))
---        Nothing -> Nothing
---mergeFuncList:  Maybe (Z80ROM -> Z80 -> Z80Delta) -> Maybe (Z80ROM -> Z80 -> Z80Delta) -> Maybe (Z80ROM -> Z80 -> Z80Delta)
---mergeFuncList afunc bfunc =
---    case afunc of
---        Just a -> Just a
---        Nothing -> case bfunc of
---                        Just b -> Just b
---                        Nothing -> Nothing
+                    Nothing
 
 
 lt40_array_lite : Array (Maybe (Z80ROM -> Z80Core -> Z80Delta))
@@ -827,15 +787,15 @@ oldDelta c_value c_time interrupts tmp_z80 rom48k =
 fetchInstruction : Z80ROM -> Z80Core -> CpuTimeAndValue
 fetchInstruction rom48k z80 =
     let
-        log =
+        pc_value =
             case romRoutineNames |> Dict.get z80.pc of
                 Just name ->
-                    debugLog "fetch PC " name Nothing
+                    debugLog "fetch PC " name z80.pc
 
                 Nothing ->
-                    Nothing
+                    z80.pc
     in
-    z80.env |> m1 z80.pc (Bitwise.or z80.interrupts.ir (Bitwise.and z80.r 0x7F)) rom48k
+    z80.env |> m1 pc_value (Bitwise.or z80.interrupts.ir (Bitwise.and z80.r 0x7F)) rom48k
 
 
 executeCoreInstruction : Z80ROM -> Z80Core -> Z80Core
@@ -845,16 +805,6 @@ executeCoreInstruction rom48k z80 =
             fetchInstruction rom48k z80
     in
     z80 |> execute_delta ct rom48k |> apply_delta z80 rom48k
-
-
-
---executeCoreDumy : Z80ROM -> Z80Core -> Z80Core
---executeCoreDumy rom48k z80 =
---    let
---        execute_f =
---            executeCoreInstruction rom48k
---    in
---    Loop.while (\x -> c_TIME_LIMIT > x.env.time.cpu_time) execute_f z80
 
 
 nonCoreFuncs : Dict Int (Z80 -> Z80)

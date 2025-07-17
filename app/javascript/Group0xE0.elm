@@ -21,13 +21,6 @@ miniDictE0 =
         ]
 
 
-delta_dict_E0 : Dict Int (IXIYHL -> Z80ROM -> Z80Core -> Z80Delta)
-delta_dict_E0 =
-    Dict.fromList
-        [ ( 0xE3, ex_indirect_sp_hl )
-        ]
-
-
 delta_dict_lite_E0 : Dict Int (Z80ROM -> Z80Core -> Z80Delta)
 delta_dict_lite_E0 =
     Dict.fromList
@@ -56,46 +49,6 @@ pop_hl ixiyhl rom48k z80 =
 
         IXIY_IY ->
             MainRegsWithSpPcAndTime { main | iy = hl.value16 } hl.sp z80.pc hl.time
-
-
-ex_indirect_sp_hl : IXIYHL -> Z80ROM -> Z80Core -> Z80Delta
-ex_indirect_sp_hl ixiyhl rom48k z80 =
-    -- case 0xE3: v=pop(); push(HL); MP=HL=v; time+=2; break;
-    -- case 0xE3: v=pop(); push(xy); MP=xy=v; time+=2; break;
-    let
-        hl =
-            z80.env |> z80_pop rom48k
-
-        env =
-            z80.env
-
-        z80_1 =
-            { z80 | env = { env | time = hl.time, sp = hl.sp } }
-
-        toBePushed =
-            z80_1.main |> get_xy ixiyhl
-
-        hl_time =
-            hl.time |> addCpuTimeTime 2
-
-        main =
-            z80_1.main
-    in
-    case ixiyhl of
-        --IX -> { z80_2 | main = { main | ix = v.value } }
-        --IY -> { z80_2 | main = { main | iy = v.value } }
-        --HL -> { z80_2 | main = { main | hl = v.value } }
-        IX ->
-            --MainRegsWithEnvAndPc { main | ix = hl.value } pushed z80.pc
-            PushWithMainSpCpuTimeAndPc toBePushed { main | ix = hl.value16 } hl.sp hl_time z80.pc
-
-        IY ->
-            --MainRegsWithEnvAndPc { main | iy = hl.value } pushed z80.pc
-            PushWithMainSpCpuTimeAndPc toBePushed { main | iy = hl.value16 } hl.sp hl_time z80.pc
-
-        HL ->
-            --MainRegsWithEnv { main | hl = hl.value } pushed
-            PushWithMainSpCpuTime toBePushed { main | hl = hl.value16 } hl.sp hl_time
 
 
 push_hl : IXIY -> Z80ROM -> Z80Core -> Z80Delta

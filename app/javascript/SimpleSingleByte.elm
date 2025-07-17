@@ -64,6 +64,7 @@ singleByteMainRegs =
         , ( 0x7D, ( ld_a_l, FourTStates ) )
         , ( 0xC5, ( push_bc, ElevenTStates ) )
         , ( 0xD5, ( push_de, ElevenTStates ) )
+        , ( 0xE3, ( ex_indirect_sp_hl, NineteenTStates ) )
         , ( 0xE5, ( push_hl, ElevenTStates ) )
         , ( 0xE9, ( jp_hl, FourTStates ) )
         , ( 0xEB, ( ex_de_hl, FourTStates ) )
@@ -146,6 +147,7 @@ singleByteMainRegsFD =
         , ( 0xB5, ( \z80_main -> SingleEnvFlagFunc OrA (z80_main.iy |> Bitwise.and 0xFF), EightTStates ) )
         , ( 0xBC, ( \z80_main -> SingleEnvFlagFunc CpA (z80_main.iy |> shiftRightBy8), EightTStates ) )
         , ( 0xBD, ( \z80_main -> SingleEnvFlagFunc CpA (z80_main.iy |> Bitwise.and 0xFF), EightTStates ) )
+        , ( 0xE3, ( ex_indirect_sp_iy, TwentyThreeTStates ) )
         ]
         |> Dict.union commonDDFDOps
 
@@ -191,6 +193,7 @@ singleByteMainRegsDD =
         , ( 0xB5, ( \z80_main -> SingleEnvFlagFunc OrA (z80_main.ix |> Bitwise.and 0xFF), EightTStates ) )
         , ( 0xBC, ( \z80_main -> SingleEnvFlagFunc CpA (z80_main.ix |> shiftRightBy8), EightTStates ) )
         , ( 0xBD, ( \z80_main -> SingleEnvFlagFunc CpA (z80_main.ix |> Bitwise.and 0xFF), EightTStates ) )
+        , ( 0xE3, ( ex_indirect_sp_ix, TwentyThreeTStates ) )
         ]
         |> Dict.union commonDDFDOps
 
@@ -755,3 +758,21 @@ ld_e_iy_h : MainWithIndexRegisters -> RegisterChange
 ld_e_iy_h z80_main =
     -- case 0x5C: E=HL>>>8; break;
     ChangeRegisterE (shiftRightBy8 z80_main.iy)
+
+
+ex_indirect_sp_hl : MainWithIndexRegisters -> RegisterChange
+ex_indirect_sp_hl _ =
+    -- case 0xE3: v=pop(); push(HL); MP=HL=v; time+=2; break;
+    ExchangeTopOfStackWith HL
+
+
+ex_indirect_sp_ix : MainWithIndexRegisters -> RegisterChange
+ex_indirect_sp_ix _ =
+    -- case 0xE3: v=pop(); push(xy); MP=xy=v; time+=2; break;
+    ExchangeTopOfStackWith IX
+
+
+ex_indirect_sp_iy : MainWithIndexRegisters -> RegisterChange
+ex_indirect_sp_iy _ =
+    -- case 0xE3: v=pop(); push(xy); MP=xy=v; time+=2; break;
+    ExchangeTopOfStackWith IY

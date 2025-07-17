@@ -3,10 +3,10 @@ module Z80Delta exposing (..)
 import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimeIncrement, InstructionDuration, addCpuTimeTime)
 import Utils exposing (toHexString2)
 import Z80Core exposing (Z80, Z80Core, add_cpu_time, set408bitHL)
-import Z80Debug exposing (debugLog, debugTodo)
+import Z80Debug exposing (debugTodo)
 import Z80Env exposing (Z80Env, addCpuTimeEnv, setMem, z80_push)
 import Z80Flags exposing (FlagRegisters, f_szh0n0p)
-import Z80Types exposing (IXIYHL(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters, set_bc_main)
+import Z80Types exposing (InterruptRegisters, MainRegisters, MainWithIndexRegisters, set_bc_main)
 
 
 type
@@ -15,9 +15,8 @@ type
     = WholeCore Z80Core
     | MainRegsWithPcAndCpuTime MainWithIndexRegisters Int CpuTimeCTime
     | FlagsWithPCMainAndCpuTime FlagRegisters Int MainWithIndexRegisters CpuTimeCTime
-      --| FlagRegsWithPc FlagRegisters Int
       -- only used in groupo 60
-    | MainRegsWithPc MainWithIndexRegisters Int
+      --| MainRegsWithPc MainWithIndexRegisters Int
     | CpuTimeWithFlagsAndPc CpuTimeCTime FlagRegisters Int
       -- only used by 0xF9
     | SpAndCpuTimeWithPc Int Int Int
@@ -26,9 +25,10 @@ type
     | CpuTimeWithSpAndPc CpuTimeCTime Int Int
       -- only used by JP (HL)
     | OnlyPc Int
+      -- only used by 0x7E
     | FlagsWithPcAndTime FlagRegisters Int CpuTimeCTime
     | InterruptsWithCpuTime InterruptRegisters CpuTimeCTime
-    | SetImValue Int
+      --| SetImValue Int
       -- only used by POP IX and POP IY
     | MainRegsWithSpPcAndTime MainWithIndexRegisters Int Int CpuTimeCTime
       -- only used by PUSH HL
@@ -42,7 +42,7 @@ type
     | UnknownIntValue String Int
       -- only used by CPIR
     | HLBCWithFlagsAndPc Int Int FlagRegisters Int
-    | NewRValue Int
+      --| NewRValue Int
     | NewAValue Int
     | NoOp
 
@@ -86,9 +86,8 @@ applyDeltaWithChanges z80delta z80 =
         CpuTimeWithFlagsAndPc cpu_time flagRegisters pc ->
             { z80 | flags = flagRegisters, pc = pc, env = { z80_env | time = cpu_time }, interrupts = z80delta.interrupts }
 
-        MainRegsWithPc mainWithIndexRegisters pc ->
-            { z80 | main = mainWithIndexRegisters, pc = pc, env = { z80_env | time = z80delta.time }, interrupts = z80delta.interrupts }
-
+        --MainRegsWithPc mainWithIndexRegisters pc ->
+        --    { z80 | main = mainWithIndexRegisters, pc = pc, env = { z80_env | time = z80delta.time }, interrupts = z80delta.interrupts }
         OnlyPc pc ->
             { z80 | pc = pc, env = { z80_env | time = z80delta.time }, interrupts = z80delta.interrupts }
 
@@ -101,18 +100,17 @@ applyDeltaWithChanges z80delta z80 =
         InterruptsWithCpuTime interruptRegisters cpuTimeCTime ->
             { z80 | pc = z80delta.pc, env = { z80_env | time = cpuTimeCTime }, interrupts = interruptRegisters }
 
-        SetImValue imvalue ->
-            let
-                interruptRegisters =
-                    debugLog "set_im" imvalue z80.interrupts
-
-                --    not sure setting IM to other than 2 really works
-                -- 0 and 1 are IM0, 2 is IM1, 3 is IM2...?
-                --imvalue =
-                --    2
-            in
-            { z80 | pc = z80delta.pc, env = { z80_env | time = z80delta.time }, interrupts = { interruptRegisters | iM = imvalue } }
-
+        --SetImValue imvalue ->
+        --    let
+        --        interruptRegisters =
+        --            debugLog "set_im" imvalue z80.interrupts
+        --
+        --        --    not sure setting IM to other than 2 really works
+        --        -- 0 and 1 are IM0, 2 is IM1, 3 is IM2...?
+        --        --imvalue =
+        --        --    2
+        --    in
+        --    { z80 | pc = z80delta.pc, env = { z80_env | time = z80delta.time }, interrupts = { interruptRegisters | iM = imvalue } }
         MainRegsWithSpPcAndTime main sp pc time ->
             { z80 | main = main, pc = pc, env = { z80_env | sp = sp, time = time }, interrupts = z80delta.interrupts }
 
@@ -160,9 +158,8 @@ applyDeltaWithChanges z80delta z80 =
         UnknownIntValue string int ->
             debugTodo string (int |> toHexString2) z80
 
-        NewRValue int ->
-            { z80 | pc = z80delta.pc, env = { z80_env | time = z80delta.time }, interrupts = z80delta.interrupts, r = int }
-
+        --NewRValue int ->
+        --    { z80 | pc = z80delta.pc, env = { z80_env | time = z80delta.time }, interrupts = z80delta.interrupts, r = int }
         NoOp ->
             { z80 | pc = z80delta.pc, env = { z80_env | time = z80delta.time }, interrupts = z80delta.interrupts }
 

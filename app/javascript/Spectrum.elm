@@ -15,7 +15,7 @@ import Z80Flags exposing (c_FC, c_FZ, getFlags, setFlags)
 import Z80Ram exposing (setRamValue)
 import Z80Rom exposing (Z80ROM)
 import Z80Tape exposing (TapePosition, Z80Tape)
-import Z80Types exposing (IXIYHL(..), get_de)
+import Z80Types exposing (get_de)
 
 
 type alias Audio =
@@ -1290,11 +1290,6 @@ doLoad2 full_cpu z80rom tape =
             , continue = False
             }
 
-        --headerLoading =
-        --    initial.de == 17
-        headerLoading =
-            startState.a == 0x00
-
         toLog =
             "ix = "
                 ++ (startState.ix |> toHexString)
@@ -1307,8 +1302,9 @@ doLoad2 full_cpu z80rom tape =
                 ++ " p "
                 ++ (p.tapfileNumber |> String.fromInt)
 
-        xxy =
-            debugLog "input" toLog Nothing
+        -- a = 0x00 for header block, 0xFF for data block
+        headerLoading =
+            debugLog "input" toLog (flags.a == 0x00)
 
         maybeData : Maybe TapeState
         maybeData =

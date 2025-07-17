@@ -6,7 +6,7 @@ import Utils exposing (char, shiftLeftBy8, wordPlusOffset)
 import Z80Env exposing (Z80Env, addCpuTimeEnv, c_TIME_LIMIT, mem, mem16, setMem, z80_push)
 import Z80Flags exposing (FlagRegisters)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIY(..), IXIYHL(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
+import Z80Types exposing (IXIY(..), InterruptMode(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
 
 
 type alias Z80Core =
@@ -219,16 +219,15 @@ interrupt bus rom48k full_z80 =
                 { full_z80 | core = new_core }
         in
         case ints.iM of
-            0 ->
+            IM0 ->
                 new_z80 |> im0 bus
 
-            1 ->
-                new_z80 |> im0 bus
-
-            2 ->
+            --1 ->
+            --    new_z80 |> im0 bus
+            IM1 ->
                 new_z80 |> set_pc 0x38
 
-            3 ->
+            IM2 ->
                 let
                     new_ir =
                         Bitwise.and ints.ir 0xFF00
@@ -247,11 +246,10 @@ interrupt bus rom48k full_z80 =
                 in
                 { new_z80 | core = core_1 }
 
-            _ ->
-                new_z80
 
 
-
+--_ ->
+--    new_z80
 --	void pc(int v) {PC = v;}
 
 
