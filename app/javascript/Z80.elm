@@ -171,12 +171,6 @@ constructor =
 --
 --	/* Note: EI isn't prefix here - interrupt will be acknowledged */
 --
---toString: IXIYHL -> String
---toString ixiyhl =
---   case ixiyhl of
---      IX -> "IX"
---      IY -> "IY"
---      HL -> "HL"
 
 
 execute_ltC0 : Int -> Z80ROM -> Z80Core -> Maybe Z80Delta
@@ -196,36 +190,12 @@ execute_ltC0_xy c ixoriy rom48k z80 =
             Just (z80 |> xyFunc ixoriy rom48k)
 
         Nothing ->
-            let
-                only_ixiy =
-                    case ixoriy of
-                        IXIY_IX ->
-                            IX
-
-                        IXIY_IY ->
-                            IY
-            in
             case lt40_array_lite |> Array.get c |> Maybe.withDefault Nothing of
                 Just f_without_ixiyhl ->
                     Just (z80 |> f_without_ixiyhl rom48k)
 
                 Nothing ->
                     Nothing
-
-
-
---z80_to_delta: Maybe (Z80ROM -> Z80 -> Z80) -> Maybe (Z80ROM -> Z80 -> Z80Delta)
---z80_to_delta z80func =
---    case z80func of
---        Just f ->  Just (\rom48k z80  -> Whole (z80 |> f rom48k))
---        Nothing -> Nothing
---mergeFuncList:  Maybe (Z80ROM -> Z80 -> Z80Delta) -> Maybe (Z80ROM -> Z80 -> Z80Delta) -> Maybe (Z80ROM -> Z80 -> Z80Delta)
---mergeFuncList afunc bfunc =
---    case afunc of
---        Just a -> Just a
---        Nothing -> case bfunc of
---                        Just b -> Just b
---                        Nothing -> Nothing
 
 
 lt40_array_lite : Array (Maybe (Z80ROM -> Z80Core -> Z80Delta))
@@ -835,16 +805,6 @@ executeCoreInstruction rom48k z80 =
             fetchInstruction rom48k z80
     in
     z80 |> execute_delta ct rom48k |> apply_delta z80 rom48k
-
-
-
---executeCoreDumy : Z80ROM -> Z80Core -> Z80Core
---executeCoreDumy rom48k z80 =
---    let
---        execute_f =
---            executeCoreInstruction rom48k
---    in
---    Loop.while (\x -> c_TIME_LIMIT > x.env.time.cpu_time) execute_f z80
 
 
 nonCoreFuncs : Dict Int (Z80 -> Z80)
