@@ -11,11 +11,10 @@ import CpuTimeCTime exposing (InstructionDuration(..), addCpuTimeTime)
 import Dict exposing (Dict)
 import Keyboard exposing (Keyboard)
 import PCIncrement exposing (PCIncrement(..))
-import RegisterChange exposing (RegisterChange)
-import Utils exposing (char, shiftLeftBy8, shiftRightBy8, toHexString2)
+import RegisterChange exposing (RegisterChange(..))
+import Utils exposing (char, shiftLeftBy8, shiftRightBy8)
 import Z80Change exposing (FlagChange(..), Z80Change(..))
 import Z80Core exposing (Z80Core, add_cpu_time, imm16, inc_pc)
-import Z80Debug exposing (debugLog)
 import Z80Delta exposing (Z80Delta(..))
 import Z80Env exposing (Z80Env, addCpuTimeEnv, m1, mem, mem16, setMem, setMem16, z80_in)
 import Z80Flags exposing (FlagRegisters, c_F3, c_F5, c_F53, c_FC, c_FH, f_szh0n0p, z80_sub)
@@ -30,22 +29,14 @@ group_ed_dict =
         , ( 0x42, execute_ED42 )
         , ( 0x43, execute_ED43 )
 
-        --, ( 0x44, ed_neg )
-        --, ( 0x4C, ed_neg )
-        --, ( 0x54, ed_neg )
-        --, ( 0x5C, ed_neg )
-        --, ( 0x64, ed_neg )
-        --, ( 0x6C, ed_neg )
-        --, ( 0x74, ed_neg )
-        --, ( 0x7C, ed_neg )
-        , ( 0x46, setImED46 )
+        --, ( 0x46, setImED46 )
         , ( 0x47, execute_ED47 )
         , ( 0x48, execute_ED48 )
 
         --, ( 0x4A, adc_hl_bc )
         , ( 0x4B, execute_ED4B )
-        , ( 0x4E, setImED4E )
 
+        --, ( 0x4E, setImED4E )
         --, ( 0x4F, ld_r_a )
         , ( 0x50, execute_ED50 )
 
@@ -71,14 +62,16 @@ group_ed_dict =
         , ( 0x5B, execute_ED5B )
         , ( 0x6B, execute_ED6B )
         , ( 0x72, execute_ED72 )
-        , ( 0x56, setIm0x56 )
-        , ( 0x5E, setIm0x5E )
-        , ( 0x66, setImED66 )
+
+        --, ( 0x56, setIm0x56 )
+        --, ( 0x5E, setIm0x5E )
+        --, ( 0x66, setImED66 )
         , ( 0x67, rrd )
         , ( 0x6F, rld )
-        , ( 0x6E, setImED6E )
-        , ( 0x76, setImED76 )
-        , ( 0x7E, setImED7E )
+
+        --, ( 0x6E, setImED6E )
+        --, ( 0x76, setImED76 )
+        --, ( 0x7E, setImED7E )
         , ( 0x58, execute_ED58 )
         , ( 0x60, execute_ED60 )
         , ( 0x68, execute_ED68 )
@@ -461,53 +454,49 @@ ed_cpdr rom48k z80 =
 -- case 0x6E:
 -- case 0x76:
 -- case 0x7E: IM = c>>3&3; break;
-
-
-set_im_value : Int -> Z80Core -> Z80Delta
-set_im_value value z80 =
-    let
-        ed_value =
-            debugLog "set im ED" (value |> toHexString2) value
-
-        new_im =
-            ed_value |> shiftRightBy 3 |> Bitwise.and 0x03
-    in
-    z80 |> set_im_direct new_im
-
-
-setIm0x56 : Z80ROM -> Z80Core -> Z80Delta
-setIm0x56 _ z80 =
-    z80 |> set_im_value 0x56
-
-
-setIm0x5E : Z80ROM -> Z80Core -> Z80Delta
-setIm0x5E _ z80 =
-    --z80 |> set_im_value 0x5E
-    NoOp
-
-
-setImED66 : Z80ROM -> Z80Core -> Z80Delta
-setImED66 _ z80 =
-    --z80 |> set_im_value 0x66
-    NoOp
-
-
-setImED6E : Z80ROM -> Z80Core -> Z80Delta
-setImED6E _ z80 =
-    --z80 |> set_im_value 0x6E
-    NoOp
-
-
-setImED76 : Z80ROM -> Z80Core -> Z80Delta
-setImED76 _ z80 =
-    --z80 |> set_im_value 0x76
-    NoOp
-
-
-setImED7E : Z80ROM -> Z80Core -> Z80Delta
-setImED7E _ z80 =
-    --z80 |> set_im_value 0x7E
-    NoOp
+--set_im_value : Int -> Z80Core -> Z80Delta
+--set_im_value value z80 =
+--    let
+--        ed_value =
+--            debugLog "set im ED" (value |> toHexString2) value
+--
+--        new_im =
+--            ed_value |> shiftRightBy 3 |> Bitwise.and 0x03
+--    in
+--    z80 |> set_im_direct new_im
+--setIm0x56 : Z80ROM -> Z80Core -> Z80Delta
+--setIm0x56 _ z80 =
+--    z80 |> set_im_value 0x56
+--
+--
+--setIm0x5E : Z80ROM -> Z80Core -> Z80Delta
+--setIm0x5E _ z80 =
+--    --z80 |> set_im_value 0x5E
+--    NoOp
+--
+--
+--setImED66 : Z80ROM -> Z80Core -> Z80Delta
+--setImED66 _ z80 =
+--    --z80 |> set_im_value 0x66
+--    NoOp
+--
+--
+--setImED6E : Z80ROM -> Z80Core -> Z80Delta
+--setImED6E _ z80 =
+--    --z80 |> set_im_value 0x6E
+--    NoOp
+--
+--
+--setImED76 : Z80ROM -> Z80Core -> Z80Delta
+--setImED76 _ z80 =
+--    --z80 |> set_im_value 0x76
+--    NoOp
+--
+--
+--setImED7E : Z80ROM -> Z80Core -> Z80Delta
+--setImED7E _ z80 =
+--    --z80 |> set_im_value 0x7E
+--    NoOp
 
 
 execute_ED40485058606870 : Int -> Keyboard -> Z80Core -> Z80Delta
@@ -721,10 +710,11 @@ sbc_hl b z80 =
     FlagsWithPCMainAndCpuTime { flags | ff = ff, fa = fa, fb = fb, fr = fr } z80.pc { main | hl = r } (z80.env.time |> addCpuTimeTime 7)
 
 
-set_im_direct : Int -> Z80Core -> Z80Delta
-set_im_direct value z80 =
-    --{ z80 | interrupts = { ints | iM = value } } |> Whole
-    SetImValue value
+
+--set_im_direct : Int -> Z80Core -> Z80Delta
+--set_im_direct value z80 =
+--    --{ z80 | interrupts = { ints | iM = value } } |> Whole
+--    SetImValue value
 
 
 type DirectionForLDIR
@@ -1112,7 +1102,22 @@ ed_cpir rom48k z80 =
 singleByteMainRegsED : Dict Int ( MainWithIndexRegisters -> RegisterChange, InstructionDuration )
 singleByteMainRegsED =
     Dict.fromList
-        []
+        [ --case 0x46:
+          --case 0x4E:
+          --case 0x56:
+          --case 0x5E:
+          --case 0x66:
+          --case 0x6E:
+          --case 0x76:
+          --case 0x7E: IM = c>>3&3; break;
+          ( 0x46, ( \_ -> RegChangeIm (0x46 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
+        , ( 0x56, ( \_ -> RegChangeIm (0x56 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
+        , ( 0x5E, ( \_ -> RegChangeIm (0x5E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
+        , ( 0x66, ( \_ -> RegChangeIm (0x66 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
+        , ( 0x6E, ( \_ -> RegChangeIm (0x6E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
+        , ( 0x76, ( \_ -> RegChangeIm (0x76 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
+        , ( 0x7E, ( \_ -> RegChangeIm (0x7E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
+        ]
 
 
 singleByteFlagsED : Dict Int ( FlagRegisters -> FlagChange, InstructionDuration )

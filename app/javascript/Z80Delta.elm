@@ -28,7 +28,7 @@ type
       -- only used by 0x7E
     | FlagsWithPcAndTime FlagRegisters Int CpuTimeCTime
     | InterruptsWithCpuTime InterruptRegisters CpuTimeCTime
-    | SetImValue Int
+      --| SetImValue Int
       -- only used by POP IX and POP IY
     | MainRegsWithSpPcAndTime MainWithIndexRegisters Int Int CpuTimeCTime
       -- only used by PUSH HL
@@ -100,18 +100,17 @@ applyDeltaWithChanges z80delta z80 =
         InterruptsWithCpuTime interruptRegisters cpuTimeCTime ->
             { z80 | pc = z80delta.pc, env = { z80_env | time = cpuTimeCTime }, interrupts = interruptRegisters }
 
-        SetImValue imvalue ->
-            let
-                interruptRegisters =
-                    debugLog "set_im" imvalue z80.interrupts
-
-                --    not sure setting IM to other than 2 really works
-                -- 0 and 1 are IM0, 2 is IM1, 3 is IM2...?
-                --imvalue =
-                --    2
-            in
-            { z80 | pc = z80delta.pc, env = { z80_env | time = z80delta.time }, interrupts = { interruptRegisters | iM = imvalue } }
-
+        --SetImValue imvalue ->
+        --    let
+        --        interruptRegisters =
+        --            debugLog "set_im" imvalue z80.interrupts
+        --
+        --        --    not sure setting IM to other than 2 really works
+        --        -- 0 and 1 are IM0, 2 is IM1, 3 is IM2...?
+        --        --imvalue =
+        --        --    2
+        --    in
+        --    { z80 | pc = z80delta.pc, env = { z80_env | time = z80delta.time }, interrupts = { interruptRegisters | iM = imvalue } }
         MainRegsWithSpPcAndTime main sp pc time ->
             { z80 | main = main, pc = pc, env = { z80_env | sp = sp, time = time }, interrupts = z80delta.interrupts }
 

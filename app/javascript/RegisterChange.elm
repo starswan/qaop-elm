@@ -46,6 +46,7 @@ type RegisterChange
     | IndirectBitSet BitTest Int
     | RegChangeNoOp
     | SingleEnvFlagFunc FlagFunc Int
+    | RegChangeIm Int
 
 
 type RegisterChangeApplied
@@ -61,6 +62,7 @@ type RegisterChangeApplied
     | IndirectBitResetApplied BitTest Int
     | IndirectBitSetApplied BitTest Int
     | RegChangeAppliedNoOp
+    | RegChangeImApplied Int
 
 
 applyRegisterChange : RegisterChange -> FlagRegisters -> MainWithIndexRegisters -> RegisterChangeApplied
@@ -149,3 +151,6 @@ applyRegisterChange change z80_flags main =
 
         RegChangeNoOp ->
             RegChangeAppliedNoOp
+
+        RegChangeIm int ->
+            RegChangeImApplied int

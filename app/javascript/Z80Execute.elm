@@ -14,7 +14,7 @@ import TripleWithMain exposing (TripleMainChange, applyTripleMainChange)
 import Utils exposing (bitMaskFromBit, byte, inverseBitMaskFromBit, shiftLeftBy8, toHexString2)
 import Z80Change exposing (FlagChange(..), Z80Change, applyZ80Change)
 import Z80Core exposing (Z80Core)
-import Z80Debug exposing (debugTodo)
+import Z80Debug exposing (debugLog, debugTodo)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..), applyDeltaWithChanges)
 import Z80Env exposing (Z80Env, getRamValue, mem, mem16, setMem, setRam, z80_pop, z80_push)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, inc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
@@ -603,6 +603,9 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
 
                 PCIncrementByFour ->
                     Bitwise.and (z80.pc + 4) 0xFFFF
+
+        new_r =
+            z80.r + 1
     in
     case z80.main |> applyRegisterChange z80changeData z80.flags of
         MainRegsApplied new_main ->
@@ -610,7 +613,7 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                 | pc = new_pc
                 , main = new_main
                 , env = env_1
-                , r = z80.r + 1
+                , r = new_r
             }
 
         FlagRegsApplied new_flags ->
@@ -618,28 +621,28 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                 | pc = new_pc
                 , flags = new_flags
                 , env = env_1
-                , r = z80.r + 1
+                , r = new_r
             }
 
         PushedValueApplied int ->
             { z80
                 | pc = new_pc
                 , env = env_1 |> z80_push int
-                , r = z80.r + 1
+                , r = new_r
             }
 
         NewSPApplied int ->
             { z80
                 | pc = new_pc
                 , env = { env_1 | sp = int }
-                , r = z80.r + 1
+                , r = new_r
             }
 
         JumpApplied int ->
             { z80
                 | pc = int
                 , env = env_1
-                , r = z80.r + 1
+                , r = new_r
             }
 
         IncrementIndirectApplied addr ->
@@ -657,7 +660,7 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                 env_3 =
                     env_2 |> setMem addr flags.value
             in
-            { z80 | pc = new_pc, env = env_3, flags = flags.flags, r = z80.r + 1 }
+            { z80 | pc = new_pc, env = env_3, flags = flags.flags, r = new_r }
 
         DecrementIndirectApplied addr ->
             -- This should be a primitive operation on Z80Env to decrement a stored value
@@ -674,14 +677,14 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                 env_3 =
                     env_2 |> setMem addr flags.value
             in
-            { z80 | pc = new_pc, env = env_3, flags = flags.flags, r = z80.r + 1 }
+            { z80 | pc = new_pc, env = env_3, flags = flags.flags, r = new_r }
 
         SetIndirectApplied addr value ->
             let
                 env_2 =
                     env_1 |> setMem addr value
             in
-            { z80 | pc = new_pc, env = env_2, r = z80.r + 1 }
+            { z80 | pc = new_pc, env = env_2, r = new_r }
 
         RegisterChangeShifterApplied shifter addr ->
             z80 |> applyShifter new_pc shifter addr env_1.time rom48k
@@ -700,7 +703,7 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                 env_3 =
                     env_2 |> setMem addr new_value
             in
-            { z80 | pc = new_pc, env = env_3, r = z80.r + 1 }
+            { z80 | pc = new_pc, env = env_3, r = new_r }
 
         IndirectBitSetApplied bitMask addr ->
             let
@@ -716,13 +719,21 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                 env_3 =
                     env_2 |> setMem addr new_value
             in
-            { z80 | pc = new_pc, env = env_3, r = z80.r + 1 }
+            { z80 | pc = new_pc, env = env_3, r = new_r }
 
         RegChangeAppliedNoOp ->
+            { z80 | pc = new_pc, env = env_1, r = new_r }
+
+        RegChangeImApplied int ->
+            let
+                interrupts =
+                    debugLog "SetInterruptMode" int z80.interrupts
+            in
             { z80
                 | pc = new_pc
                 , env = env_1
-                , r = z80.r + 1
+                , r = new_r
+                , interrupts = { interrupts | iM = int }
             }
 
 

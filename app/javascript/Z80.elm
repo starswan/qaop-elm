@@ -827,15 +827,15 @@ oldDelta c_value c_time interrupts tmp_z80 rom48k =
 fetchInstruction : Z80ROM -> Z80Core -> CpuTimeAndValue
 fetchInstruction rom48k z80 =
     let
-        log =
+        pc_value =
             case romRoutineNames |> Dict.get z80.pc of
                 Just name ->
-                    debugLog "fetch PC " name Nothing
+                    debugLog "fetch PC " name z80.pc
 
                 Nothing ->
-                    Nothing
+                    z80.pc
     in
-    z80.env |> m1 z80.pc (Bitwise.or z80.interrupts.ir (Bitwise.and z80.r 0x7F)) rom48k
+    z80.env |> m1 pc_value (Bitwise.or z80.interrupts.ir (Bitwise.and z80.r 0x7F)) rom48k
 
 
 executeCoreInstruction : Z80ROM -> Z80Core -> Z80Core
