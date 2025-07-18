@@ -3,7 +3,7 @@ module Z80Execute exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDuration(..), addCpuTimeTime, addDuration)
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
-import RegisterChange exposing (RegisterChange, RegisterChangeApplied(..), Shifter(..), applyRegisterChange)
+import RegisterChange exposing (ChangeOneRegister(..), RegisterChange(..), Shifter(..))
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
 import SingleEnvWithMain exposing (SingleEnvMainChange, applySingleEnvMainChange)
 import SingleNoParams exposing (NoParamChange(..), applyNoParamsDelta)
@@ -607,45 +607,130 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
         new_r =
             z80.r + 1
     in
-    case z80.main |> applyRegisterChange z80changeData z80.flags of
-        MainRegsApplied new_main ->
+    case z80changeData of
+        ChangeRegisterBC reg_b reg_c ->
+            let
+                z80_main =
+                    z80.main
+            in
             { z80
                 | pc = new_pc
-                , main = new_main
+                , main = { z80_main | b = reg_b, c = reg_c }
                 , env = env_1
                 , r = new_r
             }
 
-        FlagRegsApplied new_flags ->
+        ChangeRegisterDE reg_d reg_e ->
+            let
+                z80_main =
+                    z80.main
+            in
             { z80
                 | pc = new_pc
-                , flags = new_flags
+                , main = { z80_main | d = reg_d, e = reg_e }
                 , env = env_1
                 , r = new_r
             }
 
-        PushedValueApplied int ->
+        ChangeRegisterHL int ->
+            let
+                z80_main =
+                    z80.main
+            in
+            { z80
+                | pc = new_pc
+                , main = { z80_main | hl = int }
+                , env = env_1
+                , r = new_r
+            }
+
+        ChangeRegisterIX int ->
+            let
+                z80_main =
+                    z80.main
+            in
+            { z80
+                | pc = new_pc
+                , main = { z80_main | ix = int }
+                , env = env_1
+                , r = new_r
+            }
+
+        ChangeRegisterIY int ->
+            let
+                z80_main =
+                    z80.main
+            in
+            { z80
+                | pc = new_pc
+                , main = { z80_main | iy = int }
+                , env = env_1
+                , r = new_r
+            }
+
+        ChangeRegisterIXH int ->
+            let
+                main =
+                    z80.main
+            in
+            { z80
+                | pc = new_pc
+                , main = { main | ix = Bitwise.or (Bitwise.and main.ix 0xFF) (int |> shiftLeftBy8) }
+                , env = env_1
+                , r = new_r
+            }
+
+        ChangeRegisterIXL int ->
+            let
+                main =
+                    z80.main
+            in
+            { z80
+                | pc = new_pc
+                , main = { main | ix = Bitwise.or (Bitwise.and main.ix 0xFF00) int }
+                , env = env_1
+                , r = new_r
+            }
+
+        ChangeRegisterIYH int ->
+            let
+                main =
+                    z80.main
+            in
+            { z80
+                | pc = new_pc
+                , main = { main | iy = Bitwise.or (Bitwise.and main.iy 0xFF) (int |> shiftLeftBy8) }
+                , env = env_1
+                , r = new_r
+            }
+
+        ChangeRegisterIYL int ->
+            let
+                main =
+                    z80.main
+            in
+            { z80
+                | pc = new_pc
+                , main = { main | iy = Bitwise.or (Bitwise.and main.iy 0xFF00) int }
+                , env = env_1
+                , r = new_r
+            }
+
+        PushedValue int ->
             { z80
                 | pc = new_pc
                 , env = env_1 |> z80_push int
                 , r = new_r
             }
 
-        NewSPApplied int ->
+        RegChangeNewSP int ->
             { z80
                 | pc = new_pc
                 , env = { env_1 | sp = int }
                 , r = new_r
             }
 
-        JumpApplied int ->
-            { z80
-                | pc = int
-                , env = env_1
-                , r = new_r
-            }
-
-        IncrementIndirectApplied addr ->
+        IncrementIndirect addr ->
             -- This should be a primitive operation on Z80Env to increment a stored value
             let
                 value =
@@ -662,7 +747,7 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
             in
             { z80 | pc = new_pc, env = env_3, flags = flags.flags, r = new_r }
 
-        DecrementIndirectApplied addr ->
+        DecrementIndirect addr ->
             -- This should be a primitive operation on Z80Env to decrement a stored value
             let
                 value =
@@ -679,17 +764,36 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
             in
             { z80 | pc = new_pc, env = env_3, flags = flags.flags, r = new_r }
 
-        SetIndirectApplied addr value ->
+        RegisterChangeJump int ->
+            { z80
+                | pc = int
+                , env = env_1
+                , r = new_r
+            }
+
+        SetIndirect addr value ->
             let
                 env_2 =
                     env_1 |> setMem addr value
             in
             { z80 | pc = new_pc, env = env_2, r = new_r }
 
-        RegisterChangeShifterApplied shifter addr ->
+        ChangeRegisterDEAndHL de hl ->
+            let
+                main =
+                    z80.main
+            in
+            { z80
+                | pc = new_pc
+                , main = { main | hl = hl } |> set_de_main de
+                , env = env_1
+                , r = new_r
+            }
+
+        RegisterChangeShifter shifter addr ->
             z80 |> applyShifter new_pc shifter addr env_1.time rom48k
 
-        IndirectBitResetApplied bitMask addr ->
+        IndirectBitReset bitMask addr ->
             let
                 value =
                     z80.env |> mem addr env_1.time rom48k
@@ -705,7 +809,7 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
             in
             { z80 | pc = new_pc, env = env_3, r = new_r }
 
-        IndirectBitSetApplied bitMask addr ->
+        IndirectBitSet bitMask addr ->
             let
                 value =
                     z80.env |> mem addr env_1.time rom48k
@@ -721,10 +825,22 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
             in
             { z80 | pc = new_pc, env = env_3, r = new_r }
 
-        RegChangeAppliedNoOp ->
+        RegChangeNoOp ->
             { z80 | pc = new_pc, env = env_1, r = new_r }
 
-        RegChangeImApplied intMode ->
+        SingleEnvFlagFunc flagFunc value ->
+            let
+                z80_flags =
+                    z80.flags
+            in
+            { z80
+                | pc = new_pc
+                , flags = z80_flags |> changeFlags flagFunc value
+                , env = env_1
+                , r = new_r
+            }
+
+        RegChangeIm intMode ->
             let
                 interrupts =
                     debugLog "SetInterruptMode" intMode z80.interrupts
@@ -736,7 +852,7 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                 , interrupts = { interrupts | iM = intMode }
             }
 
-        ExTopOfStackApplied ixiyhl ->
+        ExchangeTopOfStackWith ixiyhl ->
             let
                 popped =
                     env_1 |> z80_pop rom48k
@@ -751,6 +867,72 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                     z80.main |> set_xy popped.value16 ixiyhl
             in
             { z80 | pc = new_pc, r = new_r, env = env_2, main = main }
+
+        SingleRegisterChange changeOneRegister int ->
+            let
+                z80_main =
+                    z80.main
+            in
+            case changeOneRegister of
+                AlterRegisterB ->
+                    { z80
+                        | pc = new_pc
+                        , main = { z80_main | b = int }
+                        , env = env_1
+                        , r = new_r
+                    }
+
+                AlterRegisterC ->
+                    { z80
+                        | pc = new_pc
+                        , main = { z80_main | c = int }
+                        , env = env_1
+                        , r = new_r
+                    }
+
+                AlterRegisterA ->
+                    let
+                        z80_flags =
+                            z80.flags
+                    in
+                    { z80
+                        | pc = new_pc
+                        , flags = { z80_flags | a = int }
+                        , env = env_1
+                        , r = new_r
+                    }
+
+                AlterRegisterD ->
+                    { z80
+                        | pc = new_pc
+                        , main = { z80_main | d = int }
+                        , env = env_1
+                        , r = new_r
+                    }
+
+                ChangeRegisterE ->
+                    { z80
+                        | pc = new_pc
+                        , main = { z80_main | e = int }
+                        , env = env_1
+                        , r = new_r
+                    }
+
+                ChangeRegisterH ->
+                    { z80
+                        | pc = new_pc
+                        , main = { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 int) }
+                        , env = env_1
+                        , r = new_r
+                    }
+
+                ChangeRegisterL ->
+                    { z80
+                        | pc = new_pc
+                        , main = { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) int }
+                        , env = env_1
+                        , r = new_r
+                    }
 
 
 applyShifter : Int -> Shifter -> Int -> CpuTimeCTime -> Z80ROM -> Z80Core -> Z80Core
