@@ -39,6 +39,7 @@ RSpec.describe "Spectrum Emulator" do
     # let(:z80base_directory) { Rails.root.join("public", "games") }
     # let(:z80full_directory) { Rails.root.join("public", "games", "z80test") }
     let(:z80_game) { Game.find_by!(name: ENV.fetch("Z80_TEST", flags.name)) }
+    # let!(:z80_game) { create(:game, :football_manager) }
 
     let(:times) { {
       flags.name => 7400,

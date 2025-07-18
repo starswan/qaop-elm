@@ -1,3 +1,5 @@
+require "zip"
+
 class GamesController < ApplicationController
   # GET /games
   # GET /games.xml
@@ -17,34 +19,39 @@ class GamesController < ApplicationController
   end
 
   def download
-    @game = Game.find(params[:id])
+    game = Game.find(params[:id])
     # @file = Rails.cache.fetch("games_#{@game.id}") do
 
-    input_url = @game.download_url
-    zip_data = []
-    faraday.get(input_url) do |req|
-      req.options.on_data = Proc.new do |chunk, size|
-        zip_data  << chunk
-      end
-    end
-    zipdata = zip_data.join
-    zipfile = StringIO.new zipdata
+    input_url = game.download_url
 
-    data = nil
-    Zip::InputStream.open(zipfile) do |zip_stream|
-      while (entry = zip_stream.get_next_entry)
-        entry_filename = entry.name.split("/").last
-        # if entry.name.ends_with?(".tap")
-        if entry_filename == @game.filename
-          data = entry.get_input_stream.read
-          break
-          # File.open("#{output_directory}/#{entry_filename}", "wb+") do |file|
-          #   file.write(data)
-          # end
+    download_data = Rails.cache.fetch("games_#{game.id}") do
+      zip_data = []
+      logger.debug "Fetching #{input_url}"
+      faraday.get(input_url) do |req|
+        req.options.on_data = Proc.new do |chunk, size|
+          zip_data  << chunk
         end
       end
-    end
+      zipdata = zip_data.join
+      zipfile = StringIO.new zipdata
 
+      data = nil
+      Zip::InputStream.open(zipfile) do |zip_stream|
+        while (entry = zip_stream.get_next_entry)
+          entry_filename = entry.name.split("/").last
+          # if entry.name.ends_with?(".tap")
+          if entry_filename == game.filename
+            data = entry.get_input_stream.read
+            break
+            # File.open("#{output_directory}/#{entry_filename}", "wb+") do |file|
+            #   file.write(data)
+            # end
+          end
+        end
+      end
+      data
+    end
+    # download_data = data
 
     # zipfile = faraday.get @game.download_url
     # zip_stream = Zip::InputStream.new zipfile
@@ -58,7 +65,7 @@ class GamesController < ApplicationController
     #   end
     # end
     # send_data file.get_input_stream.read
-    send_data data
+    send_data download_data
   end
 
   private
