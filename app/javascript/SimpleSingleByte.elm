@@ -68,7 +68,9 @@ singleByteMainRegs =
         , ( 0xE5, ( push_hl, ElevenTStates ) )
         , ( 0xE9, ( jp_hl, FourTStates ) )
         , ( 0xEB, ( ex_de_hl, FourTStates ) )
-        , ( 0xF9, ( ld_sp_hl, SixTStates ) )
+
+        -- case 0xF9: SP=HL; time+=2; break;
+        , ( 0xF9, ( \z80_main -> RegChangeNewSP z80_main.hl, SixTStates ) )
         ]
 
 
@@ -148,6 +150,9 @@ singleByteMainRegsFD =
         , ( 0xBC, ( \z80_main -> SingleEnvFlagFunc CpA (z80_main.iy |> shiftRightBy8), EightTStates ) )
         , ( 0xBD, ( \z80_main -> SingleEnvFlagFunc CpA (z80_main.iy |> Bitwise.and 0xFF), EightTStates ) )
         , ( 0xE3, ( ex_indirect_sp_iy, TwentyThreeTStates ) )
+
+        -- case 0xF9: SP=xy; time+=2; break;
+        , ( 0xF9, ( \z80_main -> RegChangeNewSP z80_main.iy, TenTStates ) )
         ]
         |> Dict.union commonDDFDOps
 
@@ -194,6 +199,9 @@ singleByteMainRegsDD =
         , ( 0xBC, ( \z80_main -> SingleEnvFlagFunc CpA (z80_main.ix |> shiftRightBy8), EightTStates ) )
         , ( 0xBD, ( \z80_main -> SingleEnvFlagFunc CpA (z80_main.ix |> Bitwise.and 0xFF), EightTStates ) )
         , ( 0xE3, ( ex_indirect_sp_ix, TwentyThreeTStates ) )
+
+        -- case 0xF9: SP=xy; time+=2; break;
+        , ( 0xF9, ( \z80_main -> RegChangeNewSP z80_main.ix, TenTStates ) )
         ]
         |> Dict.union commonDDFDOps
 
@@ -635,12 +643,6 @@ push_hl z80_main =
     --in
     ----{ z80 | env = pushed }
     PushedValue z80_main.hl
-
-
-ld_sp_hl : MainWithIndexRegisters -> RegisterChange
-ld_sp_hl z80_main =
-    -- case 0xF9: SP=HL; time+=2; break;
-    RegChangeNewSP z80_main.hl
 
 
 inc_indirect_hl : MainWithIndexRegisters -> RegisterChange

@@ -10,7 +10,7 @@ import Bitwise exposing (and, or)
 import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAndValue, InstructionDuration(..), addDuration)
 import Dict exposing (Dict)
 import Group0xE0 exposing (delta_dict_lite_E0)
-import Group0xF0 exposing (list0255, xYDict)
+import Group0xF0 exposing (xYDict)
 import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainAndFlagRegistersIXCB, singleByteMainAndFlagRegistersIYCB, singleByteMainRegsCB, singleByteMainRegsIXCB, singleByteMainRegsIYCB, singleEnvMainRegsCB, singleEnvMainRegsIXCB, singleEnvMainRegsIYCB)
 import GroupED exposing (singleByteFlagsED, singleByteMainAndFlagsED, singleByteMainRegsED)
 import Loop
@@ -196,6 +196,10 @@ execute_ltC0_xy c ixoriy rom48k z80 =
 
                 Nothing ->
                     Nothing
+
+
+list0255 =
+    List.range 0 255
 
 
 lt40_array_lite : Array (Maybe (Z80ROM -> Z80Core -> Z80Delta))
