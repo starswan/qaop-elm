@@ -1,38 +1,42 @@
 FactoryBot.define do
   factory :game do
-    trait :one do
-        name { 'MyString' }
-      tapfile { 'MyString' }
-    end
-
-    trait :two do
-      name { 'MyString' }
-      tapfile { 'MyString' }
-    end
+    filetype {  "tap" }
 
     trait :match_day do
       name { 'Match Day' }
       tapfile { 'MATCHDAY.tap' }
     end
 
-    trait :z80_test_doc do
-      name { 'Regs' }
-      tapfile { 'z80test/z80doc.tap' }
-    end
-
-    trait :z80_test_full do
-      name { 'Full' }
-      tapfile { 'z80test/z80full.tap' }
-    end
-
     trait :z80_test_flags do
       name { 'Flags' }
-      tapfile { 'z80test/z80docflags.tap' }
+      download_url { "https://github.com/raxoft/z80test/releases/download/v1.2a/z80test-1.2a.zip" }
+      filetype {  "tap" }
+      filename { 'z80docflags.tap' }
+    end
+
+    trait :z80_test_doc do
+      name { 'Regs' }
+      download_url { "https://github.com/raxoft/z80test/releases/download/v1.2a/z80test-1.2a.zip" }
+      filename { 'z80doc.tap' }
     end
 
     trait :z80_full_flags do
       name { 'FullFlags' }
-      tapfile { 'z80test/z80flags.tap' }
+      download_url { "https://github.com/raxoft/z80test/releases/download/v1.2a/z80test-1.2a.zip" }
+      filename { 'z80flags.tap' }
+    end
+
+    trait :z80_test_full do
+      name { 'Full' }
+      download_url { "https://github.com/raxoft/z80test/releases/download/v1.2a/z80test-1.2a.zip" }
+      filename { 'z80full.tap' }
+    end
+
+    trait :football_manager do
+      name {  'Football Manager' }
+      filename { 'FOOTMANG.TAP' }
+      picture_url { "https://worldofspectrum.net/pub/sinclair/screens/in-game/f/FootballManager.gif" }
+      download_url { "https://worldofspectrum.net/pub/sinclair/games/f/FootballManager.tap.zip" }
     end
   end
 end
