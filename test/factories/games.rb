@@ -24,12 +24,16 @@ FactoryBot.define do
 
     trait :z80_full_flags do
       name { 'FullFlags' }
-      tapfile { 'z80test/z80flags.tap' }
+      directory { "z80test-1.2a" }
+      download_url { "https://github.com/raxoft/z80test/releases/download/v1.2a/z80test-1.2a.zip" }
+      filename { 'z80flags.tap' }
     end
 
     trait :z80_test_full do
       name { 'Full' }
-      tapfile { 'z80test/z80full.tap' }
+      directory { "z80test-1.2a" }
+      download_url { "https://github.com/raxoft/z80test/releases/download/v1.2a/z80test-1.2a.zip" }
+      filename { 'z80full.tap' }
     end
 
     trait :football_manager do

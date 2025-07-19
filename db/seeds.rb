@@ -12,15 +12,17 @@ Game.create! :name => 'Football Manager', :filename => 'FOOTMANG.TAP',
              download_url: "https://worldofspectrum.net/pub/sinclair/games/f/FootballManager.tap.zip",
              filetype: "tap"
 
-Game.create! :name => 'Documented Flags Test', :filename => 'z80docflags.tap',
-             directory: "z80test-1.2a",
-             download_url: "https://github.com/raxoft/z80test/releases/download/v1.2a/z80test-1.2a.zip",
-              filetype: "tap"
-
-# let(:version) { "1.2a" }
-# let(:z80_test_url) { "https://github.com/raxoft/z80test/releases/download/v#{version}/z80test-#{version}.zip" }
-
-
+{
+  'z80docflags' => 'Documented Flags Test',
+  'z80doc' => 'Documented Z80 Test',
+  'z80flags' => 'Full Flags Test',
+  'z80full' => 'Full Z80 Test',
+}.each do |tap, name|
+  Game.create! name: name, filename: "#{tap}.tap",
+               directory: "z80test-1.2a",
+               download_url: "https://github.com/raxoft/z80test/releases/download/v1.2a/z80test-1.2a.zip",
+               filetype: "tap"
+end
 
 #  see https://github.com/raxoft/z80test
 # Game.create! :name => 'Full Z80 Test', :tapfile => 'z80test/z80full.tap'

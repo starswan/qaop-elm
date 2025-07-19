@@ -14,7 +14,7 @@
       <tr>
         <td><%= link_to game.name, game_path(game) %></td>
         <td><%= game.filename %></td>
-        <td><%= image_tag game.picture_url if game.picture_url.present? %></td>
+        <td><%= image_tag game.picture_url, height: 192 if game.picture_url.present? %></td>
       </tr>
     <% end %>
   </tbody>
