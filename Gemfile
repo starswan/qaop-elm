@@ -47,15 +47,15 @@ gem 'net-smtp', require: false
 # gem 'rexml', require: false
 gem 'rubyzip', '< 3'
 
+gem "faraday", ">= 2"
+gem "faraday-follow_redirects"
+# gem "faraday_middleware"
+
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug', platforms: [:mri, :mingw, :x64_mingw]
 
   gem "capybara"
-
-  gem "faraday", ">= 2"
-  gem "faraday-follow_redirects"
-  # gem "faraday_middleware"
 
   gem "guard-bundler"
   gem "guard-rspec"
