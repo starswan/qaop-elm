@@ -33,7 +33,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_13_190953) do
     t.string "picture_url"
     t.string "download_url"
     t.string "filetype"
-    t.string "directory"
   end
 
 end

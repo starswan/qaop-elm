@@ -9,7 +9,6 @@ FactoryBot.define do
 
     trait :z80_test_flags do
       name { 'Flags' }
-      directory { "z80test-1.2a" }
       download_url { "https://github.com/raxoft/z80test/releases/download/v1.2a/z80test-1.2a.zip" }
       filetype {  "tap" }
       filename { 'z80docflags.tap' }
@@ -17,21 +16,18 @@ FactoryBot.define do
 
     trait :z80_test_doc do
       name { 'Regs' }
-      directory { "z80test-1.2a" }
       download_url { "https://github.com/raxoft/z80test/releases/download/v1.2a/z80test-1.2a.zip" }
       filename { 'z80doc.tap' }
     end
 
     trait :z80_full_flags do
       name { 'FullFlags' }
-      directory { "z80test-1.2a" }
       download_url { "https://github.com/raxoft/z80test/releases/download/v1.2a/z80test-1.2a.zip" }
       filename { 'z80flags.tap' }
     end
 
     trait :z80_test_full do
       name { 'Full' }
-      directory { "z80test-1.2a" }
       download_url { "https://github.com/raxoft/z80test/releases/download/v1.2a/z80test-1.2a.zip" }
       filename { 'z80full.tap' }
     end
@@ -39,7 +35,6 @@ FactoryBot.define do
     trait :football_manager do
       name {  'Football Manager' }
       filename { 'FOOTMANG.TAP' }
-      directory {  "/" }
       picture_url { "https://worldofspectrum.net/pub/sinclair/screens/in-game/f/FootballManager.gif" }
       download_url { "https://worldofspectrum.net/pub/sinclair/games/f/FootballManager.tap.zip" }
     end

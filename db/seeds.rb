@@ -7,7 +7,6 @@
 #   Character.create(name: 'Luke', movie: movies.first)
 # Game.create! :name => 'Match Day', :tapfile => 'MATCHDAY.tap'
 Game.create! :name => 'Football Manager', :filename => 'FOOTMANG.TAP',
-             directory: "",
              picture_url: "https://worldofspectrum.net/pub/sinclair/screens/in-game/f/FootballManager.gif",
              download_url: "https://worldofspectrum.net/pub/sinclair/games/f/FootballManager.tap.zip",
              filetype: "tap"
@@ -19,7 +18,6 @@ Game.create! :name => 'Football Manager', :filename => 'FOOTMANG.TAP',
   'z80full' => 'Full Z80 Test',
 }.each do |tap, name|
   Game.create! name: name, filename: "#{tap}.tap",
-               directory: "z80test-1.2a",
                download_url: "https://github.com/raxoft/z80test/releases/download/v1.2a/z80test-1.2a.zip",
                filetype: "tap"
 end
