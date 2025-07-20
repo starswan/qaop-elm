@@ -182,10 +182,10 @@ mem base_addr time rom48k ram =
             if addr >= 0 then
                 if addr < 0x4000 then
                     let
-                        new_z80 =
+                        new_z80_time =
                             z80env_time |> cont1 0
                     in
-                    ( new_z80, ContUntil (new_z80.cpu_time + 3), ram |> getRamValue addr rom48k )
+                    ( new_z80_time, ContUntil (new_z80_time.cpu_time + 3), ram |> getRamValue addr rom48k )
 
                 else
                     ( z80env_time, NoCont, ram |> getRamValue addr rom48k )
