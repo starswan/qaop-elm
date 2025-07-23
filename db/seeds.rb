@@ -6,6 +6,14 @@
 #   movies = Movie.create([{ name: 'Star Wars' }, { name: 'Lord of the Rings' }])
 #   Character.create(name: 'Luke', movie: movies.first)
 # Game.create! :name => 'Match Day', :tapfile => 'MATCHDAY.tap'
+
+"https://worldofspectrum.org//pub/sinclair/screens/in-game/m/MatchDay.gif"
+
+Game.create! :name => 'Match Day', :filename => 'MATCHDAY.TAP',
+             picture_url: "https://worldofspectrum.org/pub/sinclair/screens/in-game/m/MatchDay.gif",
+             download_url: "https://www.worldofspectrum.org/pub/sinclair/games/m/MatchDay.tap.zip",
+             filetype: "tap"
+
 Game.create! :name => 'Football Manager', :filename => 'FOOTMANG.TAP',
              picture_url: "https://worldofspectrum.net/pub/sinclair/screens/in-game/f/FootballManager.gif",
              download_url: "https://worldofspectrum.net/pub/sinclair/games/f/FootballManager.tap.zip",
