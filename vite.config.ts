@@ -11,7 +11,7 @@ export default defineConfig({
       elmPlugin({
           optimize: false, // no `--optimize` option when using elm-optimize-level-2
           nodeElmCompilerOptions: {
-              pathToElm: process.env.NODE_ENV === 'production' ? 'node_modules/elm-optimize-level-2/bin/elm-optimize-level-2' : undefined
+              pathToElm: process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'arthur' ? 'node_modules/elm-optimize-level-2/bin/elm-optimize-level-2' : undefined
           }
       })
   ],
