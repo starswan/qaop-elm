@@ -6,7 +6,8 @@ if (process.env.RAILS_ENV !== 'test' && (process.env.NODE_ENV === 'production' |
     elm = elmPlugin({
         optimize: false, // no `--optimize` option when using elm-optimize-level-2
         nodeElmCompilerOptions: {
-            pathToElm: 'node_modules/elm-optimize-level-2/bin/elm-optimize-level-2'
+            pathToElm: 'node_modules/elm-optimize-level-2/bin/elm-optimize-level-2',
+            processOpts: "--optimize-speed"
         }
     })
 } else {
