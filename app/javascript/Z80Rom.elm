@@ -93,8 +93,7 @@ romRoutineNames =
         -- way too busy to log accesses
         --, ( 0x10, "PRINT-A-1" )
         --, ( 0x4D, "0x004D" )
-        , ( 0x38, "MASK-INT" )
-
+        --, ( 0x38, "MASK-INT" )
         --, ( 0x48, "KEY-INT" )
         --, ( 0x11DC, "RAM-FILL" )
         --, ( 0x15F2, "PRINT-A-2" )
@@ -162,8 +161,8 @@ romRoutineNames =
         , ( 0x16B0, "SET-MIN" )
         , ( 0x11EF, "RAM-DONE" )
         , ( 0x0F0C, "COPY-L-2" )
-        , ( 0x03B5, "BEEPER" )
 
+        --, ( 0x03B5, "BEEPER" )
         --, ( 0x1F05, "TEST-ROOM" )
         , ( 0x110D, "KEY-NEXT" )
 

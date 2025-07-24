@@ -5,7 +5,7 @@ import Bytes exposing (Bytes, Endianness(..), width)
 import Bytes.Decode exposing (Decoder, Step(..), andThen, fail, loop, map, map2, map3, map4, map5, string, succeed, unsignedInt16, unsignedInt8)
 import Char exposing (toCode)
 import String exposing (toList)
-import Utils exposing (shiftRightBy8, toPlainHexString2)
+import Utils exposing (shiftRightBy8, toHexString2, toPlainHexString2)
 import Z80Debug exposing (debugLog, debugTodo)
 
 
@@ -243,7 +243,7 @@ tapfileDataDecoder headerType =
             map Code codeHeaderDecoder
 
         _ ->
-            fail
+            debugLog "tapfileDataDecoder unknown header type" (headerType |> toHexString2) fail
 
 
 
@@ -269,11 +269,17 @@ debugProgram list =
 decodeTapBody : TapfileHeader -> Decoder Tapfile
 decodeTapBody tapfileheader =
     let
-        x =
-            debugLog "filename blocklen" ( tapfileheader.data |> tapFilename, tapfileheader.data |> tapBlockLength ) Nothing
+        tapBlockLen =
+            tapfileheader.data |> tapBlockLength
+
+        filename =
+            tapfileheader.data |> tapFilename
+
+        actualBlockLength =
+            debugLog "filename blocklen" ( filename, tapBlockLen, tapBlockLen |> toHexString2 ) tapBlockLen
 
         block_decoder =
-            tapFileBlockDecoder (tapfileheader.data |> tapBlockLength)
+            tapFileBlockDecoder actualBlockLength
     in
     block_decoder |> andThen (grabWholeThingDecoder tapfileheader)
 
