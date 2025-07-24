@@ -139,11 +139,10 @@ group_ed_dict =
         -- case 0xBA:
         -- case 0xBB: inir_otir(c); break;
         -- TODO: implement outi etc
-        , ( 0xA3, \rom48k z80 -> NoOp )
-        , ( 0xAB, \rom48k z80 -> NoOp )
-        , ( 0xB3, \rom48k z80 -> NoOp )
-        , ( 0xBB, \rom48k z80 -> NoOp )
-
+        --, ( 0xA3, \rom48k z80 -> NoOp )
+        --, ( 0xAB, \rom48k z80 -> NoOp )
+        --, ( 0xB3, \rom48k z80 -> NoOp )
+        --, ( 0xBB, \rom48k z80 -> NoOp )
         -- RETN - end of NMI. NMIs aren't enabled on the Spectrum?
         , ( 0x45, \rom48k z80 -> NoOp )
 
