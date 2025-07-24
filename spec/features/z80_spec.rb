@@ -35,10 +35,11 @@ RSpec.describe "Spectrum Emulator" do
     let!(:regs) { create(:game, :z80_test_doc) }
     let!(:full_flags) { create(:game, :z80_full_flags) }
     let!(:full) { create(:game, :z80_test_full) }
+    let!(:cyrus) { create(:game, :cyrus) }
 
     # let(:z80base_directory) { Rails.root.join("public", "games") }
     # let(:z80full_directory) { Rails.root.join("public", "games", "z80test") }
-    let(:z80_game) { Game.find_by!(name: ENV.fetch("Z80_TEST", flags.name)) }
+    let(:z80_game) { Game.find_by!(name: ENV.fetch("Z80_TEST", cyrus.name)) }
     # let!(:z80_game) { create(:game, :football_manager) }
 
     let(:times) { {
@@ -120,21 +121,30 @@ RSpec.describe "Spectrum Emulator" do
       while cpu_count.text.to_i < 80
         sleep 0.5
       end
+      spectrum = find("#spectrum")
 
       # This is very slow, but calling send_keys
-      # with a string on an array
-      # is too quick
-      # data = "20eThis is a comment"
+      # with a string on an array is too quick
+      # due to the 50Hz keyboard polling rate
       # Load tape
-      spectrum = find("#spectrum")
       data = 'j""'
       data.each_char do |k|
         spectrum.send_keys k
       end
       spectrum.send_keys [:enter]
 
-      speed = measure_speed_in_hz spectrum
-      if ENV.key? "Z80_TEST"
+      if z80_game == cyrus
+        # Wait for cyrus chess to initialise before
+        # sending 'd' for demo mode
+        while cpu_count.text.to_i < 300
+          sleep 0.5
+        end
+        spectrum.send_keys 'd'
+        speed = measure_speed_in_hz
+      else
+        speed = measure_speed_in_hz do
+          spectrum.send_keys 'y'
+        end
         while cpu_count.text.to_i < times.fetch(z80_game.name)
           sleep 5
           spectrum.send_keys 'y'
@@ -146,7 +156,7 @@ RSpec.describe "Spectrum Emulator" do
     end
   end
 
-  def measure_speed_in_hz spectrum
+  def measure_speed_in_hz
     # Test emulation speed in Hz
     low = 0
     high = page.find("#hz").text.to_f
@@ -159,31 +169,32 @@ RSpec.describe "Spectrum Emulator" do
       low = times.min
       high = times.max
       # response to 'scroll?' question if required
-      spectrum.send_keys 'y'
+      # spectrum.send_keys 'y'
+      yield if block_given?
     end
     high
   end
 
-  def load_tapfile input_url, output_directory
-    zip_data = []
-    faraday.get(input_url) do |req|
-      req.options.on_data = Proc.new do |chunk, size|
-        zip_data  << chunk
-      end
-    end
-    zipdata = zip_data.join
-    zipfile = StringIO.new zipdata
-    Dir.mkdir output_directory
-    Zip::InputStream.open(zipfile) do |zip_stream|
-      while (entry = zip_stream.get_next_entry)
-        entry_filename = entry.name.split("/").last
-        if entry.name.ends_with?(".tap")
-          data = entry.get_input_stream.read
-          File.open("#{output_directory}/#{entry_filename}", "wb+") do |file|
-            file.write(data)
-          end
-        end
-      end
-    end
-  end
+  # def load_tapfile input_url, output_directory
+  #   zip_data = []
+  #   faraday.get(input_url) do |req|
+  #     req.options.on_data = Proc.new do |chunk, size|
+  #       zip_data  << chunk
+  #     end
+  #   end
+  #   zipdata = zip_data.join
+  #   zipfile = StringIO.new zipdata
+  #   Dir.mkdir output_directory
+  #   Zip::InputStream.open(zipfile) do |zip_stream|
+  #     while (entry = zip_stream.get_next_entry)
+  #       entry_filename = entry.name.split("/").last
+  #       if entry.name.ends_with?(".tap")
+  #         data = entry.get_input_stream.read
+  #         File.open("#{output_directory}/#{entry_filename}", "wb+") do |file|
+  #           file.write(data)
+  #         end
+  #       end
+  #     end
+  #   end
+  # end
 end

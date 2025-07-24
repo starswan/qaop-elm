@@ -7,6 +7,14 @@ FactoryBot.define do
       tapfile { 'MATCHDAY.tap' }
     end
 
+    trait :cyrus do
+      name { 'Cyrus IS Chess' }
+      download_url { "https://www.worldofspectrum.org/pub/sinclair/games/c/CyrusISChess.tap.zip" }
+      # picture_url { "https://worldofspectrum.org/pub/sinclair/screens/in-game/c/CyrusISChess.gif" }
+      filetype {  "tap" }
+      filename { 'CYRCHESS.TAP' }
+    end
+
     trait :z80_test_flags do
       name { 'Flags' }
       download_url { "https://github.com/raxoft/z80test/releases/download/v1.2a/z80test-1.2a.zip" }

@@ -18,6 +18,11 @@ Game.create! :name => 'Football Manager', :filename => 'FOOTMANG.TAP',
              download_url: "https://worldofspectrum.net/pub/sinclair/games/f/FootballManager.tap.zip",
              filetype: "tap"
 
+Game.create! :name => 'Cyrus IS Chess', :filename => 'CYRCHESS.TAP',
+             picture_url: "https://worldofspectrum.org/pub/sinclair/screens/in-game/c/CyrusISChess.gif",
+             download_url: "https://www.worldofspectrum.org/pub/sinclair/games/c/CyrusISChess.tap.zip",
+             filetype: "tap"
+
 {
   'z80docflags' => 'Documented Flags Test',
   'z80doc' => 'Documented Z80 Test',
