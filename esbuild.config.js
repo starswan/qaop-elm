@@ -15,7 +15,9 @@ const elm_options = function() {
     if (node_env === "production" || node_env === "arthur") {
         return {
             optimize: true,
-            debug: false
+            debug: false,
+            verbose: true,
+            pathToElm: "node_modules/elm-optimize-level-2/bin/elm-optimize-level-2"
         }
     } else {
         return {
