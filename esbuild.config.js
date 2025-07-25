@@ -5,7 +5,7 @@ const path = require('path')
 const ElmPlugin = require('esbuild-plugin-elm')
 const esbuild = require('esbuild')
 
-const node_env = process.env.RAILS_ENV
+const node_env = process.env.NODE_ENV || process.env.RAILS_ENV
 const watch = process.argv.includes("--watch");
 
 

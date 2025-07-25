@@ -7,7 +7,9 @@
     "@rails/ujs": "7.1.501",
     "bootstrap": "^5.3.7",
     "elm": "^0.19.1-6",
-    "esbuild": "^0.15.18"
+    "esbuild": "^0.15.18",
+    "esbuild-plugin-elm": "^0.0.12",
+    "sass": "^1.89.2"
   },
   "overrides": {
     "cross-spawn": ">= 7.0.3"
@@ -15,9 +17,7 @@
   "version": "0.1.0",
   "devDependencies": {
     "elm-format": "^0.8.8",
-    "elm-test": "0.19.1-revision16",
-    "esbuild-plugin-elm": "^0.0.12",
-    "sass": "^1.89.2"
+    "elm-test": "0.19.1-revision16"
   },
   "scripts": {
     "build": "node ./esbuild.config.js",
