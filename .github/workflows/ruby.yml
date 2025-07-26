@@ -70,5 +70,7 @@ jobs:
         run: cp app/helpers/Undebug.elm app/javascript/Z80Debug.elm
 
       # Run ruby tests in headless mode
-      - name: Ruby tests compiled for test mode
+      - name: Ruby tests compiled for production mode
+        env:
+          NODE_ENV: production
         run: xvfb-run -a bundle exec rake spec
