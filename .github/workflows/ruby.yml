@@ -46,6 +46,8 @@ jobs:
         run: cp app/helpers/Undebug.elm app/javascript/Z80Debug.elm
 
       - name: Precompile assets
+        env:
+          NODE_ENV: production
         run: bin/rails assets:precompile
 
       # Run elm tests for correctness before speed tests
