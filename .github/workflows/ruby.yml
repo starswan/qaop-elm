@@ -57,7 +57,7 @@ jobs:
           path: | 
             $HOME/.elm 
             elm-stuff
-          key: ${{ runner.os }}-qaop-elm-${{ hashFiles('elm.json') }}
+          key: ${{ runner.os }}-qaop-elm-${{ hashFiles('yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-qaop-elm-
 
