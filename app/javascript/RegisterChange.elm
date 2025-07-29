@@ -1,5 +1,6 @@
 module RegisterChange exposing (..)
 
+import SingleEnvWithMain exposing (EightBitMain)
 import Utils exposing (BitTest)
 import Z80Flags exposing (FlagFunc, FlagRegisters)
 import Z80Types exposing (IXIYHL, InterruptMode, MainWithIndexRegisters)

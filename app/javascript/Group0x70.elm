@@ -12,7 +12,6 @@ miniDict70 : Dict Int (IXIY -> Z80ROM -> Z80Core -> Z80Delta)
 miniDict70 =
     Dict.fromList
         [ ( 0x77, ld_indirect_hl_a )
-        , ( 0x7E, ld_a_indirect_hl )
         ]
 
 
@@ -51,17 +50,18 @@ ld_indirect_hl_a ixiyhl rom48k z80 =
     SetMem8WithCpuTimeIncrementAndPc mem_target.value16 value mem_target.time 3 mem_target.pc
 
 
-ld_a_indirect_hl : IXIY -> Z80ROM -> Z80Core -> Z80Delta
-ld_a_indirect_hl ixiyhl rom48k z80 =
-    -- case 0x7E: A=env.mem(HL); time+=3; break;
-    -- case 0x7E: A=env.mem(getd(xy)); time+=3; break;
-    let
-        value =
-            z80 |> hl_deref_with_z80_ixiy ixiyhl rom48k
 
-        --env_1 = z80.env
-        flags =
-            z80.flags
-    in
-    --{ z80 | pc = value.pc, env = { env_1 | time = value.time } } |> set_a value.value
-    FlagsWithPcAndTime { flags | a = value.value } value.pc value.time
+--ld_a_indirect_hl : IXIY -> Z80ROM -> Z80Core -> Z80Delta
+--ld_a_indirect_hl ixiyhl rom48k z80 =
+--    -- case 0x7E: A=env.mem(HL); time+=3; break;
+--    -- case 0x7E: A=env.mem(getd(xy)); time+=3; break;
+--    let
+--        value =
+--            z80 |> hl_deref_with_z80_ixiy ixiyhl rom48k
+--
+--        --env_1 = z80.env
+--        flags =
+--            z80.flags
+--    in
+--    --{ z80 | pc = value.pc, env = { env_1 | time = value.time } } |> set_a value.value
+--    FlagsWithPcAndTime { flags | a = value.value } value.pc value.time

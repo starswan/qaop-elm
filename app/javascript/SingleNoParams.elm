@@ -17,6 +17,8 @@ type NoParamChange
     | PopBC
     | PopDE
     | PopHL
+    | PopIX
+    | PopIY
     | PopAF
       --| Exx
       --| ExAfAfDash
@@ -78,21 +80,30 @@ singleWithNoParam =
         ]
 
 
+singleWithNoParamDD : Dict Int ( NoParamChange, InstructionDuration )
+singleWithNoParamDD =
+    Dict.fromList
+        [ ( 0xE1, ( PopIX, FourteenTStates ) )
+        ]
+
+
+singleWithNoParamFD : Dict Int ( NoParamChange, InstructionDuration )
+singleWithNoParamFD =
+    Dict.fromList
+        [ ( 0xE1, ( PopIY, FourteenTStates ) )
+        ]
+
+
 applyNoParamsDelta : CpuTimeCTime -> NoParamChange -> Z80ROM -> Z80Core -> Z80Core
 applyNoParamsDelta cpu_time z80changeData rom48k z80 =
     let
-        --interrupts =
-        --    z80.interrupts
         old_env =
             z80.env
-
-        pc =
-            Bitwise.and (z80.pc + 1) 0xFFFF
     in
     case z80changeData of
         NoOp ->
             { z80
-                | pc = pc
+                | pc = Bitwise.and (z80.pc + 1) 0xFFFF
                 , env = { old_env | time = cpu_time }
                 , r = z80.r + 1
             }
@@ -110,7 +121,7 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
                 --x = debug_log "pop_bc" (v.value |> toHexString) Nothing
             in
             { z80
-                | pc = pc
+                | pc = Bitwise.and (z80.pc + 1) 0xFFFF
                 , main = z80.main |> set_bc_main v.value16
                 , env = { env1 | time = v.time, sp = v.sp }
                 , r = z80.r + 1
@@ -128,8 +139,44 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
                     z80.main
             in
             { z80
-                | pc = pc
+                | pc = Bitwise.and (z80.pc + 1) 0xFFFF
                 , main = { main | hl = v.value16 }
+                , env = { env1 | time = v.time, sp = v.sp }
+                , r = z80.r + 1
+            }
+
+        PopIX ->
+            let
+                env1 =
+                    { old_env | time = cpu_time }
+
+                v =
+                    env1 |> z80_pop rom48k
+
+                main =
+                    z80.main
+            in
+            { z80
+                | pc = Bitwise.and (z80.pc + 2) 0xFFFF
+                , main = { main | ix = v.value16 }
+                , env = { env1 | time = v.time, sp = v.sp }
+                , r = z80.r + 1
+            }
+
+        PopIY ->
+            let
+                env1 =
+                    { old_env | time = cpu_time }
+
+                v =
+                    env1 |> z80_pop rom48k
+
+                main =
+                    z80.main
+            in
+            { z80
+                | pc = Bitwise.and (z80.pc + 2) 0xFFFF
+                , main = { main | iy = v.value16 }
                 , env = { env1 | time = v.time, sp = v.sp }
                 , r = z80.r + 1
             }
@@ -141,7 +188,7 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
                     z80 |> set_iff 0
             in
             { z80
-                | pc = pc
+                | pc = Bitwise.and (z80.pc + 1) 0xFFFF
                 , interrupts = ints
                 , r = z80.r + 1
             }
@@ -153,7 +200,7 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
                     z80 |> set_iff 3
             in
             { z80
-                | pc = pc
+                | pc = Bitwise.and (z80.pc + 1) 0xFFFF
                 , interrupts = ints
                 , r = z80.r + 1
             }
@@ -193,7 +240,7 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
                     env1 |> z80_pop rom48k
             in
             { z80
-                | pc = pc
+                | pc = Bitwise.and (z80.pc + 1) 0xFFFF
                 , flags = set_af v.value16
                 , env = { env1 | time = v.time, sp = v.sp }
                 , r = z80.r + 1
@@ -209,7 +256,7 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
                     env1 |> z80_pop rom48k
             in
             { z80
-                | pc = pc
+                | pc = Bitwise.and (z80.pc + 1) 0xFFFF
                 , main = z80.main |> set_de_main v.value16
                 , env = { env1 | time = v.time, sp = v.sp }
                 , r = z80.r + 1

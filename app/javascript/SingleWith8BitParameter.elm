@@ -51,6 +51,7 @@ doubleWithRegistersIX =
         , ( 0xAE, ( \z80_main param -> FlagOpIndexedIndirect XorA z80_main.ix param, IncreaseByThree, NineteenTStates ) )
         , ( 0xB6, ( \z80_main param -> FlagOpIndexedIndirect OrA z80_main.ix param, IncreaseByThree, NineteenTStates ) )
         , ( 0xBE, ( \z80_main param -> FlagOpIndexedIndirect CpA z80_main.ix param, IncreaseByThree, NineteenTStates ) )
+        , ( 0x7E, ( ld_a_indirect_ix, IncreaseByThree, NineteenTStates ) )
         ]
 
 
@@ -75,6 +76,7 @@ doubleWithRegistersIY =
         , ( 0xAE, ( \z80_main param -> FlagOpIndexedIndirect XorA z80_main.iy param, IncreaseByThree, NineteenTStates ) )
         , ( 0xB6, ( \z80_main param -> FlagOpIndexedIndirect OrA z80_main.iy param, IncreaseByThree, NineteenTStates ) )
         , ( 0xBE, ( \z80_main param -> FlagOpIndexedIndirect CpA z80_main.iy param, IncreaseByThree, NineteenTStates ) )
+        , ( 0x7E, ( ld_a_indirect_iy, IncreaseByThree, NineteenTStates ) )
         ]
 
 
@@ -111,6 +113,7 @@ type DoubleWithRegisterChange
     | NewHLRegisterValue Int
     | NewIXRegisterValue Int
     | NewIYRegisterValue Int
+    | NewARegisterIndirect Int
     | NewBRegisterIndirect Int
     | NewCRegisterIndirect Int
     | NewDRegisterIndirect Int
@@ -214,6 +217,30 @@ ld_b_indirect_ix z80_main param =
             z80_main.ix + byte param
     in
     NewBRegisterIndirect address
+
+
+ld_a_indirect_ix : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
+ld_a_indirect_ix z80_main param =
+    -- case 0x7E: A=env.mem(HL); time+=3; break;
+    -- case 0x7E: A=env.mem(getd(xy)); time+=3; break;
+    let
+        address =
+            z80_main.ix + byte param
+    in
+    --{ z80 | pc = value.pc, env = { env_1 | time = value.time } } |> set_a value.value
+    NewARegisterIndirect address
+
+
+ld_a_indirect_iy : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
+ld_a_indirect_iy z80_main param =
+    -- case 0x7E: A=env.mem(HL); time+=3; break;
+    -- case 0x7E: A=env.mem(getd(xy)); time+=3; break;
+    let
+        address =
+            z80_main.iy + byte param
+    in
+    --{ z80 | pc = value.pc, env = { env_1 | time = value.time } } |> set_a value.value
+    NewARegisterIndirect address
 
 
 ld_b_indirect_iy : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
@@ -527,7 +554,3 @@ ld_e_indirect_iy z80_main param =
             z80_main.iy + byte param
     in
     NewERegisterIndirect address
-
-
-
---NewEIndexedIndirect z80_main.iy param

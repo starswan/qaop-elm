@@ -21,7 +21,7 @@ import SimpleSingleByte exposing (singleByteMainRegs, singleByteMainRegsDD, sing
 import SingleByteWithEnv exposing (singleByteZ80Env)
 import SingleEnvWithMain exposing (singleEnvMainRegs, singleEnvMainRegsIX, singleEnvMainRegsIY)
 import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters, singleByteMainAndFlagRegistersIX, singleByteMainAndFlagRegistersIY)
-import SingleNoParams exposing (ex_af, exx, singleWithNoParam)
+import SingleNoParams exposing (ex_af, exx, singleWithNoParam, singleWithNoParamDD, singleWithNoParamFD)
 import SingleWith8BitParameter exposing (doubleWithRegisters, doubleWithRegistersIX, doubleWithRegistersIY, maybeRelativeJump, singleWith8BitParam)
 import TripleByte exposing (tripleByteWith16BitParam, tripleByteWith16BitParamDD, tripleByteWith16BitParamFD)
 import TripleWithFlags exposing (triple16WithFlags)
@@ -135,39 +135,6 @@ constructor =
 --	}
 --
 --
---	private void inir_otir(int op) // op: 101rd01o
---	{
---		int bc, hl, d, v;
---
---		hl = (char)(HL + (d = (op&8)==0 ? 1 : -1));
---		bc = B<<8|C;
---		time++;
---		if((op&1)==0) {
---			v = env.in(bc); time += 4;
---			MP = bc+d;
---			bc = (char)(bc-256);
---			env.mem(HL, v); time += 3;
---			d += bc;
---		} else {
---			v = env.mem(HL); time += 3;
---			bc = (char)(bc-256);
---			MP = bc+d;
---			env.out(bc, v); time += 4;
---			d = hl;
---		}
---		d = (d&0xFF) + v;
---		HL = hl;
---		B = (bc >>= 8);
---		if(op>0xB0 && bc>0) {
---			time += 5;
---			PC = (char)(PC-2);
---		}
---		int x = d&7 ^ bc;
---		Ff = bc | (d &= 0x100);
---		Fa = (Fr = bc) ^ 0x80;
---		x = 0x4B3480 >> ((x^x>>>4)&15);
---		Fb = (x^bc) & 0x80 | d>>>4 | (v & 0x80)<<2;
---	}
 --
 --	/* Note: EI isn't prefix here - interrupt will be acknowledged */
 --
@@ -550,7 +517,14 @@ runDelta executionType rom48k z80 =
                                                             TripleMainChangeDelta doubleParam.time pcInc (f doubleParam.value16 z80.main)
 
                                                         Nothing ->
-                                                            oldDelta 0xDD instrTime z80.interrupts z80 rom48k
+                                                            case singleWithNoParamDD |> Dict.get param.value of
+                                                                Just ( f, duration ) ->
+                                                                    NoParamsDelta (instrTime |> addDuration duration) f
+
+                                                                Nothing ->
+                                                                    -- fails on DD 77
+                                                                    --UnknownInstruction "execute IndexIX" param.value
+                                                                    oldDelta 0xDD instrTime z80.interrupts z80 rom48k
 
         IndexIY param ->
             case singleByteFlagsFD |> Dict.get param.value of
@@ -619,7 +593,14 @@ runDelta executionType rom48k z80 =
                                                             TripleMainChangeDelta doubleParam.time pcInc (f doubleParam.value16 z80.main)
 
                                                         Nothing ->
-                                                            oldDelta 0xFD instrTime z80.interrupts z80 rom48k
+                                                            case singleWithNoParamFD |> Dict.get param.value of
+                                                                Just ( f, duration ) ->
+                                                                    NoParamsDelta (instrTime |> addDuration duration) f
+
+                                                                Nothing ->
+                                                                    -- fails on FD 77
+                                                                    --UnknownInstruction "execute IndexIY" param.value
+                                                                    oldDelta 0xFD instrTime z80.interrupts z80 rom48k
 
         Special specialType ->
             case specialType of
@@ -665,6 +646,8 @@ runDelta executionType rom48k z80 =
                                             PureDelta PCIncrementByFour (instrTime |> addDuration duration) (f z80.main z80.flags)
 
                                         Nothing ->
+                                            -- This fails on DD CB 3E xx
+                                            --UnknownInstruction "execute IXCB" param.value
                                             oldDelta 0xDD instrTime z80.interrupts z80 rom48k
 
                 --UnknownInstruction "execute IXCB" param.value
@@ -688,6 +671,8 @@ runDelta executionType rom48k z80 =
                                             PureDelta PCIncrementByFour (instrTime |> addDuration duration) (f z80.main z80.flags)
 
                                         Nothing ->
+                                            -- This fails on FD CB 3E xx
+                                            --UnknownInstruction "execute IYCB" param.value
                                             oldDelta 0xFD instrTime z80.interrupts z80 rom48k
 
                 EDMisc param ->

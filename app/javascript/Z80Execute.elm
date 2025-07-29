@@ -5,7 +5,7 @@ import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDur
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
 import RegisterChange exposing (ChangeOneRegister(..), RegisterChange(..), Shifter(..))
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
-import SingleEnvWithMain exposing (SingleEnvMainChange, applySingleEnvMainChange)
+import SingleEnvWithMain exposing (EightBitMain(..), SingleEnvMainChange, applySingleEnvMainChange)
 import SingleNoParams exposing (NoParamChange(..), applyNoParamsDelta)
 import SingleWith8BitParameter exposing (DoubleWithRegisterChange(..), JumpChange(..), Single8BitChange, applySimple8BitChange)
 import TripleByte exposing (TripleByteChange(..), TripleByteRegister(..))
@@ -248,6 +248,27 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 | pc = pc
                 , env = { env_1 | time = new_b.time }
                 , main = { main | b = new_b.value }
+                , r = z80.r + 1
+            }
+
+        NewARegisterIndirect addr ->
+            let
+                pc =
+                    Bitwise.and new_pc 0xFFFF
+
+                env_1 =
+                    { old_env | time = cpu_time }
+
+                flags =
+                    z80.flags
+
+                new_a =
+                    env_1 |> mem addr env_1.time rom48k
+            in
+            { z80
+                | pc = pc
+                , env = { env_1 | time = new_a.time }
+                , flags = { flags | a = new_a.value }
                 , r = z80.r + 1
             }
 
@@ -497,33 +518,23 @@ applyFlagDelta pcInc duration z80_flags rom48k z80 =
         OnlyFlags flagRegisters ->
             { z80 | pc = new_pc, env = env_1, r = z80.r + 1, flags = flagRegisters }
 
-        FlagChangeB int ->
+        FlagChange8Bit register value ->
             let
                 main =
                     z80.main
             in
-            { z80 | pc = new_pc, env = env_1, r = z80.r + 1, main = { main | b = int } }
+            case register of
+                RegisterB ->
+                    { z80 | pc = new_pc, env = env_1, r = z80.r + 1, main = { main | b = value } }
 
-        FlagChangeC int ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | pc = new_pc, env = env_1, r = z80.r + 1, main = { main | c = int } }
+                RegisterC ->
+                    { z80 | pc = new_pc, env = env_1, r = z80.r + 1, main = { main | c = value } }
 
-        FlagChangeD int ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | pc = new_pc, env = env_1, r = z80.r + 1, main = { main | d = int } }
+                RegisterD ->
+                    { z80 | pc = new_pc, env = env_1, r = z80.r + 1, main = { main | d = value } }
 
-        FlagChangeE int ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | pc = new_pc, env = env_1, r = z80.r + 1, main = { main | e = int } }
+                RegisterE ->
+                    { z80 | pc = new_pc, env = env_1, r = z80.r + 1, main = { main | e = value } }
 
         FlagChangeH int ->
             let
