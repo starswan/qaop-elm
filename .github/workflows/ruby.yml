@@ -48,6 +48,7 @@ jobs:
       - name: Precompile assets
         env:
           NODE_ENV: production
+          RAILS_ENV: production
         run: bin/rails assets:precompile
 
       # Run elm tests for correctness before speed tests
