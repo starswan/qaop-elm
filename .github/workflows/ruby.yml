@@ -26,7 +26,7 @@ jobs:
         ruby-version: ['3.4']
 
     env:
-      HZ: 35.794
+      HZ: 35.618
     steps:
       - uses: actions/checkout@v4
       - name: Set up Ruby
@@ -57,7 +57,7 @@ jobs:
           path: | 
             $HOME/.elm 
             elm-stuff
-          key: ${{ runner.os }}-qaop-elm-${{ hashFiles('elm.json') }}
+          key: ${{ runner.os }}-qaop-elm-${{ hashFiles('yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-qaop-elm-
 
