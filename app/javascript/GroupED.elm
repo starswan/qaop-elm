@@ -139,10 +139,11 @@ group_ed_dict =
         -- case 0xBA:
         -- case 0xBB: inir_otir(c); break;
         -- TODO: implement outi etc
-        --, ( 0xA3, \rom48k z80 -> NoOp )
-        --, ( 0xAB, \rom48k z80 -> NoOp )
-        --, ( 0xB3, \rom48k z80 -> NoOp )
-        --, ( 0xBB, \rom48k z80 -> NoOp )
+        , ( 0xA3, \rom48k z80 -> NoOp )
+        , ( 0xAB, \rom48k z80 -> NoOp )
+        , ( 0xB3, \rom48k z80 -> NoOp )
+        , ( 0xBB, \rom48k z80 -> NoOp )
+
         -- RETN - end of NMI. NMIs aren't enabled on the Spectrum?
         , ( 0x45, \rom48k z80 -> NoOp )
 
@@ -1253,3 +1254,39 @@ ed_adc_hl b z80_main z80_flags =
     in
     --FlagsWithHLRegister { flags | ff = ff, fa = fa, fb = fb, fr = fr } r
     ( { flags | ff = ff, fa = fa, fb = fb, fr = fr }, r )
+
+
+
+--	private void inir_otir(int op) // op: 101rd01o
+--	{
+--		int bc, hl, d, v;
+--
+--		hl = (char)(HL + (d = (op&8)==0 ? 1 : -1));
+--		bc = B<<8|C;
+--		time++;
+--		if((op&1)==0) {
+--			v = env.in(bc); time += 4;
+--			MP = bc+d;
+--			bc = (char)(bc-256);
+--			env.mem(HL, v); time += 3;
+--			d += bc;
+--		} else {
+--			v = env.mem(HL); time += 3;
+--			bc = (char)(bc-256);
+--			MP = bc+d;
+--			env.out(bc, v); time += 4;
+--			d = hl;
+--		}
+--		d = (d&0xFF) + v;
+--		HL = hl;
+--		B = (bc >>= 8);
+--		if(op>0xB0 && bc>0) {
+--			time += 5;
+--			PC = (char)(PC-2);
+--		}
+--		int x = d&7 ^ bc;
+--		Ff = bc | (d &= 0x100);
+--		Fa = (Fr = bc) ^ 0x80;
+--		x = 0x4B3480 >> ((x^x>>>4)&15);
+--		Fb = (x^bc) & 0x80 | d>>>4 | (v & 0x80)<<2;
+--	}

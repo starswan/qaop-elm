@@ -14,6 +14,7 @@ type InstructionDuration
     | ElevenTStates
     | TwelveTStates
     | ThirteenTStates
+    | FourteenTStates
     | FifteenTStates
     | SixteenTStates
     | SeventeenTStates
@@ -337,6 +338,9 @@ addDuration duration time =
 
                 ThirteenTStates ->
                     13
+
+                FourteenTStates ->
+                    14
 
                 FifteenTStates ->
                     15

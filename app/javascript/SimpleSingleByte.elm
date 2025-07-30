@@ -65,7 +65,7 @@ singleByteMainRegs =
         , ( 0xC5, ( push_bc, ElevenTStates ) )
         , ( 0xD5, ( push_de, ElevenTStates ) )
         , ( 0xE3, ( ex_indirect_sp_hl, NineteenTStates ) )
-        , ( 0xE5, ( push_hl, ElevenTStates ) )
+        , ( 0xE5, ( \z80_main -> PushedValue z80_main.hl, ElevenTStates ) )
         , ( 0xE9, ( jp_hl, FourTStates ) )
         , ( 0xEB, ( ex_de_hl, FourTStates ) )
 
@@ -150,6 +150,8 @@ singleByteMainRegsFD =
         , ( 0xBC, ( \z80_main -> SingleEnvFlagFunc CpA (z80_main.iy |> shiftRightBy8), EightTStates ) )
         , ( 0xBD, ( \z80_main -> SingleEnvFlagFunc CpA (z80_main.iy |> Bitwise.and 0xFF), EightTStates ) )
         , ( 0xE3, ( ex_indirect_sp_iy, TwentyThreeTStates ) )
+        , ( 0xE5, ( \z80_main -> PushedValue z80_main.iy, FifteenTStates ) )
+        , ( 0xE9, ( jp_iy, EightTStates ) )
 
         -- case 0xF9: SP=xy; time+=2; break;
         , ( 0xF9, ( \z80_main -> RegChangeNewSP z80_main.iy, TenTStates ) )
@@ -199,6 +201,8 @@ singleByteMainRegsDD =
         , ( 0xBC, ( \z80_main -> SingleEnvFlagFunc CpA (z80_main.ix |> shiftRightBy8), EightTStates ) )
         , ( 0xBD, ( \z80_main -> SingleEnvFlagFunc CpA (z80_main.ix |> Bitwise.and 0xFF), EightTStates ) )
         , ( 0xE3, ( ex_indirect_sp_ix, TwentyThreeTStates ) )
+        , ( 0xE5, ( \z80_main -> PushedValue z80_main.ix, FifteenTStates ) )
+        , ( 0xE9, ( jp_ix, EightTStates ) )
 
         -- case 0xF9: SP=xy; time+=2; break;
         , ( 0xF9, ( \z80_main -> RegChangeNewSP z80_main.ix, TenTStates ) )
@@ -664,6 +668,20 @@ jp_hl z80_main =
     -- case 0xE9: PC=HL; break;
     -- case 0xE9: PC=xy; break;
     RegisterChangeJump z80_main.hl
+
+
+jp_ix : MainWithIndexRegisters -> RegisterChange
+jp_ix z80_main =
+    -- case 0xE9: PC=HL; break;
+    -- case 0xE9: PC=xy; break;
+    RegisterChangeJump z80_main.ix
+
+
+jp_iy : MainWithIndexRegisters -> RegisterChange
+jp_iy z80_main =
+    -- case 0xE9: PC=HL; break;
+    -- case 0xE9: PC=xy; break;
+    RegisterChangeJump z80_main.iy
 
 
 ld_indirect_hl_b : MainWithIndexRegisters -> RegisterChange

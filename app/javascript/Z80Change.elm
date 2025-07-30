@@ -1,5 +1,6 @@
 module Z80Change exposing (..)
 
+import SingleEnvWithMain exposing (EightBitMain)
 import Z80Core exposing (Z80Core)
 import Z80Env exposing (setMem)
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
@@ -23,10 +24,7 @@ type Z80Change
 
 type FlagChange
     = OnlyFlags FlagRegisters
-    | FlagChangeB Int
-    | FlagChangeC Int
-    | FlagChangeD Int
-    | FlagChangeE Int
+    | FlagChange8Bit EightBitMain Int
     | FlagChangeH Int
     | FlagChangeL Int
     | ReturnWithPop

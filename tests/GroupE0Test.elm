@@ -60,6 +60,24 @@ suite =
                                 }
                     in
                     Expect.equal { pc = addr + 1, hl = 0x5616, sp = 0xFF79 } { sp = new_z80.env.sp, pc = new_z80.pc, hl = new_z80.main.hl }
+            , test "0xFD 0xE1 POP IX" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xDD
+                                |> setMem (addr + 1) 0xE1
+                                |> setMem sp 0x45
+                                |> setMem (sp + 1) 0x34
+
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | hl = 0x6545, b = 0xA5, c = 0x5F }
+                                }
+                    in
+                    Expect.equal ( addr + 2, 0x3445, sp + 2 ) ( new_z80.pc, new_z80.main.ix, new_z80.env.sp )
             , test "0xFD 0xE1 POP IY" <|
                 \_ ->
                     let

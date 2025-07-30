@@ -1,11 +1,10 @@
 module Z80Types exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimePcAnd16BitValue, CpuTimePcAndValue, addCpuTimeTime)
+import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimePcAnd16BitValue, CpuTimePcAndValue)
 import Utils exposing (shiftLeftBy8, shiftRightBy8)
-import Z80Env exposing (Z80Env, Z80EnvWithPC, mem)
+import Z80Env exposing (Z80Env, Z80EnvWithPC)
 import Z80Flags exposing (FlagRegisters)
-import Z80Rom exposing (Z80ROM)
 
 
 type alias MainRegisters =
@@ -77,32 +76,6 @@ type IXIYHL
 type IXIY
     = IXIY_IX
     | IXIY_IY
-
-
-
---
---	private int imm8()
---	{
---		int v = env.mem(PC);
---		PC = (char)(PC+1);
---		time += 3;
---		return v;
---	}
-
-
-imm8 : Int -> CpuTimeCTime -> Z80ROM -> Z80Env -> CpuTimePcAndValue
-imm8 pc time rom48k ram =
-    let
-        v =
-            mem pc time rom48k ram
-
-        new_pc =
-            Bitwise.and (pc + 1) 0xFFFF
-
-        env_1 =
-            v.time |> addCpuTimeTime 3
-    in
-    CpuTimePcAndValue env_1 new_pc v.value
 
 
 

@@ -2,21 +2,22 @@ module Z80Execute exposing (..)
 
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDuration(..), addCpuTimeTime, addDuration)
+import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
 import RegisterChange exposing (ChangeOneRegister(..), RegisterChange(..), Shifter(..))
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
-import SingleEnvWithMain exposing (SingleEnvMainChange, applySingleEnvMainChange)
+import SingleEnvWithMain exposing (EightBitMain(..), SingleEnvMainChange, applySingleEnvMainChange)
 import SingleNoParams exposing (NoParamChange(..), applyNoParamsDelta)
-import SingleWith8BitParameter exposing (DoubleWithRegisterChange(..), JumpChange(..), Single8BitChange, applySimple8BitChange)
+import SingleWith8BitParameter exposing (JumpChange(..), Single8BitChange, applySimple8BitChange)
 import TripleByte exposing (TripleByteChange(..), TripleByteRegister(..))
 import TripleWithFlags exposing (TripleWithFlagsChange(..))
 import TripleWithMain exposing (TripleMainChange, applyTripleMainChange)
-import Utils exposing (bitMaskFromBit, byte, inverseBitMaskFromBit, shiftLeftBy8, toHexString2)
+import Utils exposing (bitMaskFromBit, inverseBitMaskFromBit, shiftLeftBy8, toHexString2)
 import Z80Change exposing (FlagChange(..), Z80Change, applyZ80Change)
 import Z80Core exposing (Z80Core)
 import Z80Debug exposing (debugLog, debugTodo)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..), applyDeltaWithChanges)
-import Z80Env exposing (Z80Env, getRamValue, mem, mem16, setMem, setRam, z80_pop, z80_push)
+import Z80Env exposing (Z80Env, mem, mem16, setMem, z80_pop, z80_push)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, inc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (MainWithIndexRegisters, get_xy, set_bc_main, set_de_main, set_xy)
@@ -127,327 +128,6 @@ applyJumpChangeDelta cpu_time z80changeData z80 =
             }
 
 
-applyDoubleWithRegistersDelta : MediumPCIncrement -> CpuTimeCTime -> DoubleWithRegisterChange -> Z80ROM -> Z80Core -> Z80Core
-applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
-    let
-        old_env =
-            z80.env
-
-        new_pc =
-            case pc_inc of
-                IncreaseByTwo ->
-                    z80.pc + 2
-
-                IncreaseByThree ->
-                    z80.pc + 3
-    in
-    case z80changeData of
-        RelativeJumpWithTimeOffset single8BitChange maybeInt timeOffset ->
-            let
-                pc =
-                    case maybeInt of
-                        Just jump ->
-                            Bitwise.and (new_pc + jump) 0xFFFF
-
-                        Nothing ->
-                            Bitwise.and new_pc 0xFFFF
-
-                main =
-                    z80.main |> applySimple8BitChange single8BitChange
-            in
-            { z80
-                | main = main
-                , pc = pc
-                , env = { old_env | time = cpu_time |> addCpuTimeTime timeOffset }
-                , r = z80.r + 1
-            }
-
-        DoubleRegChangeStoreIndirect addr value ->
-            let
-                pc =
-                    Bitwise.and new_pc 0xFFFF
-
-                env_1 =
-                    { old_env | time = cpu_time } |> setMem addr value
-            in
-            { z80
-                | pc = pc
-                , env = env_1
-                , r = z80.r + 1
-            }
-
-        NewHLRegisterValue int ->
-            let
-                pc =
-                    Bitwise.and new_pc 0xFFFF
-
-                env_1 =
-                    { old_env | time = cpu_time }
-
-                main =
-                    z80.main
-            in
-            { z80
-                | pc = pc
-                , env = env_1
-                , main = { main | hl = int }
-                , r = z80.r + 1
-            }
-
-        NewIXRegisterValue int ->
-            let
-                pc =
-                    Bitwise.and new_pc 0xFFFF
-
-                env_1 =
-                    { old_env | time = cpu_time }
-
-                main =
-                    z80.main
-            in
-            { z80
-                | pc = pc
-                , env = env_1
-                , main = { main | ix = int }
-                , r = z80.r + 1
-            }
-
-        NewIYRegisterValue int ->
-            let
-                pc =
-                    Bitwise.and new_pc 0xFFFF
-
-                env_1 =
-                    { old_env | time = cpu_time }
-
-                main =
-                    z80.main
-            in
-            { z80
-                | pc = pc
-                , env = env_1
-                , main = { main | iy = int }
-                , r = z80.r + 1
-            }
-
-        NewBRegisterIndirect addr ->
-            let
-                pc =
-                    Bitwise.and new_pc 0xFFFF
-
-                env_1 =
-                    { old_env | time = cpu_time }
-
-                main =
-                    z80.main
-
-                new_b =
-                    env_1 |> mem addr env_1.time rom48k
-            in
-            { z80
-                | pc = pc
-                , env = { env_1 | time = new_b.time }
-                , main = { main | b = new_b.value }
-                , r = z80.r + 1
-            }
-
-        NewCRegisterIndirect addr ->
-            let
-                pc =
-                    Bitwise.and new_pc 0xFFFF
-
-                env_1 =
-                    { old_env | time = cpu_time }
-
-                main =
-                    z80.main
-
-                new_b =
-                    env_1 |> mem addr env_1.time rom48k
-            in
-            { z80
-                | pc = pc
-                , env = { env_1 | time = new_b.time }
-                , main = { main | c = new_b.value }
-                , r = z80.r + 1
-            }
-
-        NewDRegisterIndirect addr ->
-            let
-                pc =
-                    Bitwise.and new_pc 0xFFFF
-
-                env_1 =
-                    { old_env | time = cpu_time }
-
-                main =
-                    z80.main
-
-                new_b =
-                    env_1 |> mem addr env_1.time rom48k
-            in
-            { z80
-                | pc = pc
-                , env = { env_1 | time = new_b.time }
-                , main = { main | d = new_b.value }
-                , r = z80.r + 1
-            }
-
-        NewERegisterIndirect addr ->
-            let
-                pc =
-                    Bitwise.and new_pc 0xFFFF
-
-                env_1 =
-                    { old_env | time = cpu_time }
-
-                main =
-                    z80.main
-
-                new_b =
-                    env_1 |> mem addr env_1.time rom48k
-            in
-            { z80
-                | pc = pc
-                , env = { env_1 | time = new_b.time }
-                , main = { main | e = new_b.value }
-                , r = z80.r + 1
-            }
-
-        NewHRegisterIndirect addr ->
-            let
-                pc =
-                    Bitwise.and new_pc 0xFFFF
-
-                env_1 =
-                    { old_env | time = cpu_time }
-
-                main =
-                    z80.main
-
-                new_b =
-                    env_1 |> mem addr env_1.time rom48k
-            in
-            { z80
-                | pc = pc
-                , env = { env_1 | time = new_b.time }
-                , main = { main | hl = Bitwise.or (main.hl |> Bitwise.and 0xFF) (new_b.value |> shiftLeftBy8) }
-                , r = z80.r + 1
-            }
-
-        NewLRegisterIndirect addr ->
-            let
-                pc =
-                    Bitwise.and new_pc 0xFFFF
-
-                env_1 =
-                    { old_env | time = cpu_time }
-
-                main =
-                    z80.main
-
-                new_b =
-                    env_1 |> mem addr env_1.time rom48k
-            in
-            { z80
-                | pc = pc
-                , env = { env_1 | time = new_b.time }
-                , main = { main | hl = Bitwise.or (main.hl |> Bitwise.and 0xFF00) (new_b.value |> Bitwise.and 0xFF) }
-                , r = z80.r + 1
-            }
-
-        FlagOpIndexedIndirect flagFunc addr offset ->
-            let
-                flags =
-                    z80.flags
-
-                env_1 =
-                    { old_env | time = cpu_time }
-
-                address =
-                    addr + byte offset |> Bitwise.and 0xFFFF
-
-                pc =
-                    Bitwise.and new_pc 0xFFFF
-
-                value =
-                    env_1 |> mem address env_1.time rom48k
-            in
-            { z80
-                | pc = pc
-                , flags = flags |> changeFlags flagFunc value.value
-                , env = { env_1 | time = value.time }
-                , r = z80.r + 1
-            }
-
-        --Just { pcIncrement = new_pc, time = cpu_time, timeIncrement = FifteenTStates, operation = ChangeFlagRegisters (z80.flags |> adc value.value) }
-        IndexedIndirectIncrement addr offset ->
-            let
-                ramAddr =
-                    (addr + byte offset |> Bitwise.and 0xFFFF) - 0x4000
-
-                pc =
-                    Bitwise.and new_pc 0xFFFF
-            in
-            if ramAddr >= 0 then
-                let
-                    value =
-                        old_env |> getRamValue ramAddr rom48k
-
-                    valueWithFlags =
-                        z80.flags |> inc value
-
-                    env_1 =
-                        --{ old_env | ram = old_env.ram |> setRamValue ramAddr valueWithFlags.value }
-                        old_env |> setRam ramAddr valueWithFlags.value
-                in
-                { z80
-                    | pc = pc
-                    , env = env_1
-                    , flags = valueWithFlags.flags
-                    , r = z80.r + 1
-                }
-
-            else
-                { z80
-                    | pc = pc
-                    , r = z80.r + 1
-                }
-
-        IndexedIndirectDecrement addr offset ->
-            let
-                ramAddr =
-                    (addr + byte offset |> Bitwise.and 0xFFFF) - 0x4000
-
-                pc =
-                    Bitwise.and new_pc 0xFFFF
-            in
-            if ramAddr >= 0 then
-                let
-                    value =
-                        old_env |> getRamValue ramAddr rom48k
-
-                    valueWithFlags =
-                        z80.flags |> dec value
-
-                    env_1 =
-                        --{ old_env | ram = old_env.ram |> setRamValue ramAddr valueWithFlags.value }
-                        old_env |> setRam ramAddr valueWithFlags.value
-                in
-                { z80
-                    | pc = pc
-                    , env = env_1
-                    , flags = valueWithFlags.flags
-                    , r = z80.r + 1
-                }
-
-            else
-                { z80
-                    | pc = pc
-                    , r = z80.r + 1
-                }
-
-
 applySimple8BitDelta : MediumPCIncrement -> CpuTimeCTime -> Single8BitChange -> Z80Core -> Z80Core
 applySimple8BitDelta pcInc cpu_time z80changeData z80 =
     let
@@ -497,33 +177,23 @@ applyFlagDelta pcInc duration z80_flags rom48k z80 =
         OnlyFlags flagRegisters ->
             { z80 | pc = new_pc, env = env_1, r = z80.r + 1, flags = flagRegisters }
 
-        FlagChangeB int ->
+        FlagChange8Bit register value ->
             let
                 main =
                     z80.main
             in
-            { z80 | pc = new_pc, env = env_1, r = z80.r + 1, main = { main | b = int } }
+            case register of
+                RegisterB ->
+                    { z80 | pc = new_pc, env = env_1, r = z80.r + 1, main = { main | b = value } }
 
-        FlagChangeC int ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | pc = new_pc, env = env_1, r = z80.r + 1, main = { main | c = int } }
+                RegisterC ->
+                    { z80 | pc = new_pc, env = env_1, r = z80.r + 1, main = { main | c = value } }
 
-        FlagChangeD int ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | pc = new_pc, env = env_1, r = z80.r + 1, main = { main | d = int } }
+                RegisterD ->
+                    { z80 | pc = new_pc, env = env_1, r = z80.r + 1, main = { main | d = value } }
 
-        FlagChangeE int ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | pc = new_pc, env = env_1, r = z80.r + 1, main = { main | e = int } }
+                RegisterE ->
+                    { z80 | pc = new_pc, env = env_1, r = z80.r + 1, main = { main | e = value } }
 
         FlagChangeH int ->
             let
