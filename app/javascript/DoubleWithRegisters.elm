@@ -20,6 +20,7 @@ type DoubleWithRegisterChange
     | NewIXRegisterValue Int
     | NewIYRegisterValue Int
     | NewARegisterIndirect Int
+    | SetARegisterIndirect Int
     | NewBRegisterIndirect Int
     | NewCRegisterIndirect Int
     | NewDRegisterIndirect Int
@@ -63,6 +64,7 @@ doubleWithRegistersIX =
         , ( 0xAE, ( \z80_main param -> FlagOpIndexedIndirect XorA z80_main.ix param, IncreaseByThree, NineteenTStates ) )
         , ( 0xB6, ( \z80_main param -> FlagOpIndexedIndirect OrA z80_main.ix param, IncreaseByThree, NineteenTStates ) )
         , ( 0xBE, ( \z80_main param -> FlagOpIndexedIndirect CpA z80_main.ix param, IncreaseByThree, NineteenTStates ) )
+        , ( 0x77, ( ld_indirect_ix_a, IncreaseByThree, NineteenTStates ) )
         , ( 0x7E, ( ld_a_indirect_ix, IncreaseByThree, NineteenTStates ) )
         ]
 
@@ -88,6 +90,7 @@ doubleWithRegistersIY =
         , ( 0xAE, ( \z80_main param -> FlagOpIndexedIndirect XorA z80_main.iy param, IncreaseByThree, NineteenTStates ) )
         , ( 0xB6, ( \z80_main param -> FlagOpIndexedIndirect OrA z80_main.iy param, IncreaseByThree, NineteenTStates ) )
         , ( 0xBE, ( \z80_main param -> FlagOpIndexedIndirect CpA z80_main.iy param, IncreaseByThree, NineteenTStates ) )
+        , ( 0x77, ( ld_indirect_iy_a, IncreaseByThree, NineteenTStates ) )
         , ( 0x7E, ( ld_a_indirect_iy, IncreaseByThree, NineteenTStates ) )
         ]
 
@@ -136,6 +139,28 @@ ld_b_indirect_ix z80_main param =
             z80_main.ix + byte param
     in
     NewBRegisterIndirect address
+
+
+ld_indirect_ix_a : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
+ld_indirect_ix_a z80_main param =
+    -- case 0x77: env.mem(HL,A); time+=3; break;
+    -- case 0x77: env.mem(getd(xy),A); time+=3; break;
+    let
+        address =
+            z80_main.ix + byte param
+    in
+    SetARegisterIndirect address
+
+
+ld_indirect_iy_a : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
+ld_indirect_iy_a z80_main param =
+    -- case 0x77: env.mem(HL,A); time+=3; break;
+    -- case 0x77: env.mem(getd(xy),A); time+=3; break;
+    let
+        address =
+            z80_main.iy + byte param
+    in
+    SetARegisterIndirect address
 
 
 ld_a_indirect_ix : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
@@ -438,6 +463,20 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 | pc = pc
                 , env = { env_1 | time = new_a.time }
                 , flags = { flags | a = new_a.value }
+                , r = z80.r + 1
+            }
+
+        SetARegisterIndirect addr ->
+            let
+                pc =
+                    Bitwise.and new_pc 0xFFFF
+
+                env_1 =
+                    { old_env | time = cpu_time } |> setMem addr z80.flags.a
+            in
+            { z80
+                | pc = pc
+                , env = env_1
                 , r = z80.r + 1
             }
 

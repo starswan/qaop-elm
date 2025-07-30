@@ -10,8 +10,8 @@ import Bitwise exposing (and, or)
 import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAndValue, InstructionDuration(..), addDuration)
 import Dict exposing (Dict)
 import DoubleWithRegisters exposing (doubleWithRegisters, doubleWithRegistersIX, doubleWithRegistersIY)
+import Group0xC0 exposing (miniDictC0)
 import Group0xE0 exposing (delta_dict_lite_E0)
-import Group0xF0 exposing (xYDict)
 import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainAndFlagRegistersIXCB, singleByteMainAndFlagRegistersIYCB, singleByteMainRegsCB, singleByteMainRegsIXCB, singleByteMainRegsIYCB, singleEnvMainRegsCB, singleEnvMainRegsIXCB, singleEnvMainRegsIYCB)
 import GroupED exposing (singleByteFlagsED, singleByteMainAndFlagsED, singleByteMainRegsED)
 import Loop
@@ -153,7 +153,7 @@ execute_ltC0 c rom48k z80 =
 
 execute_ltC0_xy : Int -> IXIY -> Z80ROM -> Z80Core -> Maybe Z80Delta
 execute_ltC0_xy c ixoriy rom48k z80 =
-    case xYDict |> Dict.get c of
+    case miniDictC0 |> Dict.get c of
         Just xyFunc ->
             Just (z80 |> xyFunc ixoriy rom48k)
 
@@ -523,10 +523,9 @@ runDelta executionType rom48k z80 =
                                                                     NoParamsDelta (instrTime |> addDuration duration) f
 
                                                                 Nothing ->
-                                                                    -- fails on DD 77
+                                                                    --oldDelta 0xDD instrTime z80.interrupts z80 rom48k
                                                                     UnknownInstruction "execute IndexIX" param.value
 
-        --oldDelta 0xDD instrTime z80.interrupts z80 rom48k
         IndexIY param ->
             case singleByteFlagsFD |> Dict.get param.value of
                 Just ( flagFunc, duration ) ->
@@ -599,9 +598,8 @@ runDelta executionType rom48k z80 =
                                                                     NoParamsDelta (instrTime |> addDuration duration) f
 
                                                                 Nothing ->
-                                                                    -- fails on FD 77
-                                                                    --UnknownInstruction "execute IndexIY" param.value
-                                                                    oldDelta 0xFD instrTime z80.interrupts z80 rom48k
+                                                                    --oldDelta 0xFD instrTime z80.interrupts z80 rom48k
+                                                                    UnknownInstruction "execute IndexIY" param.value
 
         Special specialType ->
             case specialType of

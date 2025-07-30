@@ -32,7 +32,7 @@ type
       --| PushWithPc Int Int
     | PushWithMainSpCpuTimeAndPc Int MainWithIndexRegisters Int CpuTimeCTime Int
     | PushWithMainSpCpuTime Int MainWithIndexRegisters Int CpuTimeCTime
-    | SetMem8WithCpuTimeIncrementAndPc Int Int CpuTimeCTime Int Int
+      --| SetMem8WithCpuTimeIncrementAndPc Int Int CpuTimeCTime Int Int
     | Fszh0n0pTimeDeltaSet408Bit Int Int Int
       -- only used by RLD
     | FlagsWithPcEnvAndCpuTime FlagRegisters Int Z80Env Int
@@ -102,9 +102,8 @@ applyDeltaWithChanges z80delta z80 =
         --            z80.env
         --    in
         --    { z80 | pc = pc, env = { env | time = z80delta.time } |> z80_push value, interrupts = z80delta.interrupts }
-        SetMem8WithCpuTimeIncrementAndPc addr value cpuTimeCTime time pc ->
-            { z80 | pc = pc, env = { z80_env | time = cpuTimeCTime } |> setMem addr value |> addCpuTimeEnv time, interrupts = z80delta.interrupts }
-
+        --SetMem8WithCpuTimeIncrementAndPc addr value cpuTimeCTime time pc ->
+        --    { z80 | pc = pc, env = { z80_env | time = cpuTimeCTime } |> setMem addr value |> addCpuTimeEnv time, interrupts = z80delta.interrupts }
         Fszh0n0pTimeDeltaSet408Bit timeDelta caseval result ->
             let
                 ( main, flags, env ) =
