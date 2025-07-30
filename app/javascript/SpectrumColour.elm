@@ -71,20 +71,44 @@ c_WHITE =
     "#FFFFFF"
 
 
-c_UNBRIGHT =
-    "D7"
+c_DULL_BLUE =
+    "#0000D7"
+
+
+c_DULL_RED =
+    "#D70000"
+
+
+c_DULL_MAGENTA =
+    "#D700D7"
+
+
+c_DULL_GREEN =
+    "#00D700"
+
+
+c_DULL_CYAN =
+    "#00D7D7"
+
+
+c_DULL_YELLOW =
+    "#D7D700"
+
+
+c_DULL_WHITE =
+    "#D7D7D7"
 
 
 spectrumColours =
     Dict.fromList
         [ ( 0, { value = Black, colour = c_BLACK } )
-        , ( 1, { value = Blue, colour = c_UNBRIGHT_BLUE } )
-        , ( 2, { value = Red, colour = c_UNBRIGHT_RED } )
-        , ( 3, { value = Magenta, colour = c_UNBRIGHT_MAGENTA } )
-        , ( 4, { value = Green, colour = c_UNBRIGHT_GREEN } )
-        , ( 5, { value = Cyan, colour = c_UNBRIGHT_CYAN } )
-        , ( 6, { value = Yellow, colour = c_UNBRIGHT_YELLOW } )
-        , ( 7, { value = White, colour = c_UNBRIGHT_WHITE } )
+        , ( 1, { value = Blue, colour = c_DULL_BLUE } )
+        , ( 2, { value = Red, colour = c_DULL_RED } )
+        , ( 3, { value = Magenta, colour = c_DULL_MAGENTA } )
+        , ( 4, { value = Green, colour = c_DULL_GREEN } )
+        , ( 5, { value = Cyan, colour = c_DULL_CYAN } )
+        , ( 6, { value = Yellow, colour = c_DULL_YELLOW } )
+        , ( 7, { value = White, colour = c_DULL_WHITE } )
         ]
 
 
@@ -109,59 +133,31 @@ borderColour border =
             c_BLACK
 
         BorderBlue ->
-            c_UNBRIGHT_BLUE
+            c_DULL_BLUE
 
         BorderRed ->
-            c_UNBRIGHT_RED
+            c_DULL_RED
 
         BorderMagenta ->
-            c_UNBRIGHT_MAGENTA
+            c_DULL_MAGENTA
 
         BorderGreen ->
-            c_UNBRIGHT_GREEN
+            c_DULL_GREEN
 
         BorderCyan ->
-            c_UNBRIGHT_CYAN
+            c_DULL_CYAN
 
         BorderYellow ->
-            c_UNBRIGHT_YELLOW
+            c_DULL_YELLOW
 
         BorderWhite ->
-            c_UNBRIGHT_WHITE
+            c_DULL_WHITE
 
 
 spectrumColour : Int -> Bool -> SpectrumColour
 spectrumColour value bright =
     if bright then
-        Dict.get value spectrumBrightColours |> withDefault { value = White, colour = c_UNBRIGHT_WHITE }
+        Dict.get value spectrumBrightColours |> withDefault { value = White, colour = c_DULL_WHITE }
 
     else
-        Dict.get value spectrumColours |> withDefault { value = White, colour = c_UNBRIGHT_WHITE }
-
-
-c_UNBRIGHT_BLUE =
-    c_BLUE |> String.replace "FF" c_UNBRIGHT
-
-
-c_UNBRIGHT_RED =
-    c_RED |> String.replace "FF" c_UNBRIGHT
-
-
-c_UNBRIGHT_MAGENTA =
-    c_MAGENTA |> String.replace "FF" c_UNBRIGHT
-
-
-c_UNBRIGHT_GREEN =
-    c_GREEN |> String.replace "FF" c_UNBRIGHT
-
-
-c_UNBRIGHT_CYAN =
-    c_CYAN |> String.replace "FF" c_UNBRIGHT
-
-
-c_UNBRIGHT_YELLOW =
-    c_YELLOW |> String.replace "FF" c_UNBRIGHT
-
-
-c_UNBRIGHT_WHITE =
-    c_WHITE |> String.replace "FF" c_UNBRIGHT
+        Dict.get value spectrumColours |> withDefault { value = White, colour = c_DULL_WHITE }
