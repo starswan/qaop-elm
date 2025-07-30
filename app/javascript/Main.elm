@@ -18,7 +18,7 @@ import Loader exposing (LoadAction(..), trimActionList)
 import MessageHandler exposing (bytesToRom, bytesToTap)
 import Qaop exposing (Qaop, pause)
 import Spectrum exposing (Spectrum, frames, new_tape)
-import SpectrumColour exposing (spectrumColour)
+import SpectrumColour exposing (borderColour, spectrumColour)
 import Svg exposing (Svg, line, rect, svg)
 import Svg.Attributes exposing (fill, height, rx, stroke, viewBox, width, x1, x2, y1, y2)
 import Tapfile exposing (Tapfile)
@@ -155,7 +155,7 @@ view model =
 
         -- border colour is never bright
         border_colour =
-            spectrumColour screen.border False |> .colour
+            borderColour screen.border
 
         background =
             [ rect [ height "100%", width "100%", fill border_colour, rx "15" ] [] ]

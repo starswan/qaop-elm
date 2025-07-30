@@ -4,6 +4,17 @@ import Dict
 import Maybe exposing (withDefault)
 
 
+type BorderColour
+    = BorderBlack
+    | BorderBlue
+    | BorderRed
+    | BorderMagenta
+    | BorderGreen
+    | BorderCyan
+    | BorderYellow
+    | BorderWhite
+
+
 type SpectrumColourValue
     = Black
     | Blue
@@ -88,6 +99,35 @@ spectrumBrightColours =
         , ( 6, { value = BrightYellow, colour = c_YELLOW } )
         , ( 7, { value = BrightWhite, colour = c_WHITE } )
         ]
+
+
+borderColour : BorderColour -> String
+borderColour border =
+    -- borderColours are never bright
+    case border of
+        BorderBlack ->
+            c_BLACK
+
+        BorderBlue ->
+            c_UNBRIGHT_BLUE
+
+        BorderRed ->
+            c_UNBRIGHT_RED
+
+        BorderMagenta ->
+            c_UNBRIGHT_MAGENTA
+
+        BorderGreen ->
+            c_UNBRIGHT_GREEN
+
+        BorderCyan ->
+            c_UNBRIGHT_CYAN
+
+        BorderYellow ->
+            c_UNBRIGHT_YELLOW
+
+        BorderWhite ->
+            c_UNBRIGHT_WHITE
 
 
 spectrumColour : Int -> Bool -> SpectrumColour

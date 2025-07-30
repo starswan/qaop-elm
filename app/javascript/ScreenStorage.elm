@@ -3,9 +3,9 @@ module ScreenStorage exposing (..)
 -- Convert row index into start row data location
 
 import Bitwise exposing (shiftLeftBy, shiftRightBy)
+import SpectrumColour exposing (BorderColour(..))
 import Vector24 exposing (Vector24)
 import Vector32 exposing (Vector32)
-import Vector8
 import Z80Memory exposing (Z80Memory, getMemValue)
 
 
@@ -51,7 +51,7 @@ attr_indexes =
 type alias Z80Screen =
     { data : Z80Memory
     , attrs : Vector24 (Vector32 Int)
-    , border : Int
+    , border : BorderColour
     , flash : Bool
 
     --refrs_a: Int,
@@ -86,7 +86,7 @@ constructor =
         attributes =
             Vector24.repeat attr_line
     in
-    Z80Screen screen_data attributes 7 False
+    Z80Screen screen_data attributes BorderWhite False
 
 
 calcDataOffset : Int -> Int
@@ -108,31 +108,23 @@ screenOffsets =
     attr_indexes |> List.indexedMap (\index attr_index -> ( calcDataOffset index, attr_index ))
 
 
-rowIndexes =
-    Vector24.indices
 
-
-vec32Indexes =
-    Vector32.indices
-
-
-vec8Indexes =
-    Vector8.indices
-
-
-rowStartIndexes =
-    rowIndexes
-        |> Vector24.map
-            (\ind24 ->
-                let
-                    offsets =
-                        vec8Indexes |> Vector8.map (\index -> (index |> Vector8.indexToInt) * 8)
-                in
-                ( ind24, offsets )
-            )
-
-
-
+--rowIndexes =
+--    Vector24.indices
+--vec32Indexes =
+--    Vector32.indices
+--vec8Indexes =
+--    Vector8.indices
+--rowStartIndexes =
+--    rowIndexes
+--        |> Vector24.map
+--            (\ind24 ->
+--                let
+--                    offsets =
+--                        vec8Indexes |> Vector8.map (\index -> (index |> Vector8.indexToInt) * 8)
+--                in
+--                ( ind24, offsets )
+--            )
 --mapScreen : ( Int, Int ) -> Z80Screen -> Int -> RawScreenData
 --mapScreen ( row_index, attr_index ) z80_screen index =
 --    let
