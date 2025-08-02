@@ -19,7 +19,7 @@ import Loader exposing (LoadAction(..), trimActionList)
 import MessageHandler exposing (bytesToRom, bytesToTap)
 import Qaop exposing (Qaop, pause)
 import Spectrum exposing (Spectrum, frames, new_tape)
-import SpectrumColour exposing (borderColour, spectrumColour)
+import SpectrumColour exposing (borderColour)
 import Svg exposing (Svg, line, rect, svg)
 import Svg.Attributes exposing (fill, height, rx, stroke, viewBox, width, x1, x2, y1, y2)
 import Tapfile exposing (Tapfile)
@@ -61,6 +61,11 @@ c_SCALEFACTOR =
     2
 
 
+type AutoKey
+    = AutoChar Char
+    | AutoControl String
+
+
 type alias Model =
     { qaop : Qaop
     , -- This doesn't look like a variable, but think it might be useful to adjust it at runtime
@@ -76,6 +81,7 @@ type Message
     | GotRom (Result Http.Error (Maybe Z80ROM))
     | Tick Time.Posix
     | Pause
+    | Autoload
     | CharacterKey Char
     | CharacterUnKey Char
     | ControlKeyDown String
@@ -167,7 +173,7 @@ view model =
         load_disabled =
             case model.qaop.spectrum.tape of
                 Just tape ->
-                    tape.tapePos.tapfileNumber == (tape.tapfiles |> Dict.size)
+                    model.count < 100 || tape.tapePos.tapfileNumber == (tape.tapfiles |> Dict.size)
 
                 Nothing ->
                     True
@@ -193,7 +199,7 @@ view model =
                         "Pause"
                     )
                 ]
-            , button [ onClick Pause, disabled load_disabled ]
+            , button [ onClick Autoload, disabled load_disabled ]
                 [ text "Load"
                 ]
             ]
@@ -304,6 +310,35 @@ update message model =
 
         ControlKeyUp str ->
             ( model, Delay.after 2 (ControlUnKey str) )
+
+        Autoload ->
+            ( model, Cmd.batch loadingCommands )
+
+
+loadingCommands : List (Cmd Message)
+loadingCommands =
+    let
+        loadList =
+            [ AutoChar 'j', AutoChar '"', AutoChar '"', AutoControl "Enter" ]
+    in
+    loadList
+        |> List.indexedMap
+            (\index item ->
+                let
+                    ( down, up ) =
+                        case item of
+                            AutoChar char ->
+                                ( CharacterKey char, CharacterKeyUp char )
+
+                            AutoControl string ->
+                                ( ControlKeyDown string, ControlKeyUp string )
+
+                    delayList =
+                        [ Delay.after (2000 * index) down, Delay.after (2000 * index + 200) up ]
+                in
+                delayList
+            )
+        |> List.concat
 
 
 subscriptions : Model -> Sub Message

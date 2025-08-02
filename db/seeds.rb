@@ -23,6 +23,11 @@ Game.create! :name => 'Cyrus IS Chess', :filename => 'CYRCHESS.TAP',
              download_url: "https://www.worldofspectrum.org/pub/sinclair/games/c/CyrusISChess.tap.zip",
              filetype: "tap"
 
+Game.create! :name => 'Manic Miner', :filename => 'MANIC.TAP',
+             picture_url: "https://www.worldofspectrum.org//pub/sinclair/screens/in-game/m/ManicMiner.gif",
+             download_url: "https://www.worldofspectrum.org//pub/sinclair/games/m/ManicMiner.tap.zip",
+             filetype: "tap"
+
 {
   'z80docflags' => 'Documented Flags Test',
   'z80doc' => 'Documented Z80 Test',

@@ -3,7 +3,8 @@ module Keyboard exposing (..)
 import Bitwise exposing (shiftLeftBy, shiftRightBy)
 import Char exposing (toUpper)
 import Dict
-import String exposing (fromChar)
+import String
+import Utils exposing (toHexString2)
 import Vector5 exposing (Vector5)
 import Vector8 exposing (Vector8)
 import Z80Debug exposing (debugLog, debugTodo)
@@ -145,20 +146,21 @@ z80_keyboard_input portnum keyboard =
     if Bitwise.and portnum 0xE0 == 0 then
         let
             val =
-                keyboard.kempston |> List.foldl (\kemp total -> Bitwise.or (kempstonMapping kemp) total) 0
+                if keyboard.kempston |> List.isEmpty then
+                    0xFF
+
+                else
+                    keyboard.kempston |> List.foldl (\kemp total -> Bitwise.or (kempstonMapping kemp) total) 0
         in
-        debugLog "kempston" val val
+        -- can't log this as Manic Miner seems to poll it *very* fast
+        --debugLog "kempston" (val |> toHexString2) val
+        val
 
     else if Bitwise.and portnum 0x01 == 0 then
         let
             list1 =
                 keyboard.keyboard |> Vector8.toList |> List.indexedMap Tuple.pair
 
-            --debug_flag = (keyboard.keyboard |> List.sum) /= 255 * 8
-            --x = if debug_flag then
-            --      debug_log ("keyboard poll " ++ (portnum |> toHexString)) keyboard.keyboard Nothing
-            --    else
-            --      Nothing
             list2 =
                 list1 |> List.filter (\( index, value_ ) -> Bitwise.and portnum (0x0100 |> shiftLeftBy index) == 0)
 
