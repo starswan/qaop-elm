@@ -8,8 +8,9 @@ module Main exposing (..)
 import Bitwise exposing (complement)
 import Browser
 import Delay
+import Dict
 import Html exposing (Attribute, Html, button, div, h2, span, text)
-import Html.Attributes exposing (id, style, tabindex)
+import Html.Attributes exposing (disabled, id, style, tabindex)
 import Html.Events exposing (onClick, preventDefaultOn)
 import Http exposing (Metadata)
 import Json.Decode as Decode exposing (Decoder)
@@ -163,13 +164,14 @@ view model =
         screen_data_list =
             background :: screen_data |> List.concat
 
-        --load_disabled =
-        --    case model.qaop.spectrum.tape of
-        --        Just _ ->
-        --            False
-        --
-        --        Nothing ->
-        --            True
+        load_disabled =
+            case model.qaop.spectrum.tape of
+                Just tape ->
+                    tape.tapePos.tapfileNumber == (tape.tapfiles |> Dict.size)
+
+                Nothing ->
+                    True
+
         speed =
             speed_in_hz model.elapsed_millis model.count
 
@@ -191,14 +193,8 @@ view model =
                         "Pause"
                     )
                 ]
-            , div []
-                [ text
-                    (if model.qaop.spectrum.loading then
-                        "Loading"
-
-                     else
-                        "Running"
-                    )
+            , button [ onClick Pause, disabled load_disabled ]
+                [ text "Load"
                 ]
             ]
         , div
