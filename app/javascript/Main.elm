@@ -73,6 +73,7 @@ type alias Model =
     , count : Int
     , elapsed_millis : Int
     , time : Maybe Time.Posix
+    , loadPressed : Bool
     }
 
 
@@ -82,7 +83,7 @@ type Message
     | Tick Time.Posix
     | Pause
     | Autoload
-    | CharacterKey Char
+    | CharacterKeyDown Char
     | CharacterUnKey Char
     | ControlKeyDown String
     | ControlUnKey String
@@ -108,7 +109,7 @@ init data =
         ( newQaop, cmd ) =
             Qaop.new params |> run
     in
-    ( Model newQaop c_TICKTIME 0 0 Nothing, cmd )
+    ( Model newQaop c_TICKTIME 0 0 Nothing False, cmd )
 
 
 lineToSvg : Int -> ( Int, ScreenColourRun ) -> Svg Message
@@ -173,7 +174,7 @@ view model =
         load_disabled =
             case model.qaop.spectrum.tape of
                 Just tape ->
-                    model.count < 100 || tape.tapePos.tapfileNumber == (tape.tapfiles |> Dict.size)
+                    model.loadPressed || model.count < 100 || tape.tapePos.tapfileNumber == (tape.tapfiles |> Dict.size)
 
                 Nothing ->
                     True
@@ -272,7 +273,7 @@ update message model =
         Pause ->
             ( { model | time = Nothing, qaop = model.qaop |> pause (not model.qaop.spectrum.paused) }, Cmd.none )
 
-        CharacterKey char ->
+        CharacterKeyDown char ->
             let
                 qaop =
                     model.qaop
@@ -312,31 +313,28 @@ update message model =
             ( model, Delay.after 2 (ControlUnKey str) )
 
         Autoload ->
-            ( model, Cmd.batch loadingCommands )
+            ( { model | loadPressed = True }, Cmd.batch loadingCommands )
+
+
+loadQuoteQuoteEnter =
+    [ AutoChar 'j', AutoChar '"', AutoChar '"', AutoControl "Enter" ]
 
 
 loadingCommands : List (Cmd Message)
 loadingCommands =
-    let
-        loadList =
-            [ AutoChar 'j', AutoChar '"', AutoChar '"', AutoControl "Enter" ]
-    in
-    loadList
+    loadQuoteQuoteEnter
         |> List.indexedMap
             (\index item ->
                 let
                     ( down, up ) =
                         case item of
                             AutoChar char ->
-                                ( CharacterKey char, CharacterKeyUp char )
+                                ( CharacterKeyDown char, CharacterKeyUp char )
 
                             AutoControl string ->
                                 ( ControlKeyDown string, ControlKeyUp string )
-
-                    delayList =
-                        [ Delay.after (2000 * index) down, Delay.after (2000 * index + 200) up ]
                 in
-                delayList
+                [ Delay.after (2000 * index) down, Delay.after (2000 * index + 200) up ]
             )
         |> List.concat
 
@@ -368,7 +366,7 @@ toKey keyValue repeat =
     else
         case String.uncons keyValue of
             Just ( char, "" ) ->
-                CharacterKey char
+                CharacterKeyDown char
 
             _ ->
                 ControlKeyDown keyValue
