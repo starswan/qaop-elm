@@ -321,11 +321,11 @@ loadQuoteQuoteEnter =
 
 
 c_LOADING_KEY_DELAY =
-    500
+    600
 
 
 c_LOADING_KEY_OFFSET =
-    200
+    300
 
 
 loadingCommands : List (Cmd Message)
