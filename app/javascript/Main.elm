@@ -338,6 +338,8 @@ loadingCommands =
                             AutoControl string ->
                                 ( ControlKeyDown string, ControlKeyUp string )
                 in
+                -- TODO: loading delay is based on time not cycles. Once keyboard
+                -- scanner is always run at 50Hz, this value could be reduced
                 [ Delay.after (c_LOADING_KEY_DELAY * index) down
                 , Delay.after (c_LOADING_KEY_DELAY * index + c_LOADING_KEY_DELAY // 2) up
                 ]
