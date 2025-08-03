@@ -8,8 +8,9 @@ module Main exposing (..)
 import Bitwise exposing (complement)
 import Browser
 import Delay
+import Dict
 import Html exposing (Attribute, Html, button, div, h2, span, text)
-import Html.Attributes exposing (id, style, tabindex)
+import Html.Attributes exposing (disabled, id, style, tabindex)
 import Html.Events exposing (onClick, preventDefaultOn)
 import Http exposing (Metadata)
 import Json.Decode as Decode exposing (Decoder)
@@ -18,7 +19,7 @@ import Loader exposing (LoadAction(..), trimActionList)
 import MessageHandler exposing (bytesToRom, bytesToTap)
 import Qaop exposing (Qaop, pause)
 import Spectrum exposing (Spectrum, frames, new_tape)
-import SpectrumColour exposing (borderColour, spectrumColour)
+import SpectrumColour exposing (borderColour)
 import Svg exposing (Svg, line, rect, svg)
 import Svg.Attributes exposing (fill, height, rx, stroke, viewBox, width, x1, x2, y1, y2)
 import Tapfile exposing (Tapfile)
@@ -60,6 +61,11 @@ c_SCALEFACTOR =
     2
 
 
+type AutoKey
+    = AutoChar Char
+    | AutoControl String
+
+
 type alias Model =
     { qaop : Qaop
     , -- This doesn't look like a variable, but think it might be useful to adjust it at runtime
@@ -67,6 +73,7 @@ type alias Model =
     , count : Int
     , elapsed_millis : Int
     , time : Maybe Time.Posix
+    , loadPressed : Bool
     }
 
 
@@ -75,7 +82,8 @@ type Message
     | GotRom (Result Http.Error (Maybe Z80ROM))
     | Tick Time.Posix
     | Pause
-    | CharacterKey Char
+    | Autoload
+    | CharacterKeyDown Char
     | CharacterUnKey Char
     | ControlKeyDown String
     | ControlUnKey String
@@ -101,7 +109,7 @@ init data =
         ( newQaop, cmd ) =
             Qaop.new params |> run
     in
-    ( Model newQaop c_TICKTIME 0 0 Nothing, cmd )
+    ( Model newQaop c_TICKTIME 0 0 Nothing False, cmd )
 
 
 lineToSvg : Int -> ( Int, ScreenColourRun ) -> Svg Message
@@ -163,13 +171,14 @@ view model =
         screen_data_list =
             background :: screen_data |> List.concat
 
-        --load_disabled =
-        --    case model.qaop.spectrum.tape of
-        --        Just _ ->
-        --            False
-        --
-        --        Nothing ->
-        --            True
+        load_disabled =
+            case model.qaop.spectrum.tape of
+                Just tape ->
+                    model.loadPressed || model.count < 100 || tape.tapePos.tapfileNumber == (tape.tapfiles |> Dict.size)
+
+                Nothing ->
+                    True
+
         speed =
             speed_in_hz model.elapsed_millis model.count
 
@@ -191,14 +200,8 @@ view model =
                         "Pause"
                     )
                 ]
-            , div []
-                [ text
-                    (if model.qaop.spectrum.loading then
-                        "Loading"
-
-                     else
-                        "Running"
-                    )
+            , button [ onClick Autoload, disabled load_disabled ]
+                [ text "Load"
                 ]
             ]
         , div
@@ -270,7 +273,7 @@ update message model =
         Pause ->
             ( { model | time = Nothing, qaop = model.qaop |> pause (not model.qaop.spectrum.paused) }, Cmd.none )
 
-        CharacterKey char ->
+        CharacterKeyDown char ->
             let
                 qaop =
                     model.qaop
@@ -309,6 +312,40 @@ update message model =
         ControlKeyUp str ->
             ( model, Delay.after 2 (ControlUnKey str) )
 
+        Autoload ->
+            ( { model | loadPressed = True }, Cmd.batch loadingCommands )
+
+
+loadQuoteQuoteEnter =
+    [ AutoChar 'j', AutoChar '"', AutoChar '"', AutoControl "Enter" ]
+
+
+c_LOADING_KEY_DELAY =
+    800
+
+
+loadingCommands : List (Cmd Message)
+loadingCommands =
+    loadQuoteQuoteEnter
+        |> List.indexedMap
+            (\index item ->
+                let
+                    ( down, up ) =
+                        case item of
+                            AutoChar char ->
+                                ( CharacterKeyDown char, CharacterKeyUp char )
+
+                            AutoControl string ->
+                                ( ControlKeyDown string, ControlKeyUp string )
+                in
+                -- TODO: loading delay is based on time not cycles. Once keyboard
+                -- scanner is always run at 50Hz, this value could be reduced
+                [ Delay.after (c_LOADING_KEY_DELAY * index) down
+                , Delay.after (c_LOADING_KEY_DELAY * index + c_LOADING_KEY_DELAY // 2) up
+                ]
+            )
+        |> List.concat
+
 
 subscriptions : Model -> Sub Message
 subscriptions model =
@@ -337,7 +374,7 @@ toKey keyValue repeat =
     else
         case String.uncons keyValue of
             Just ( char, "" ) ->
-                CharacterKey char
+                CharacterKeyDown char
 
             _ ->
                 ControlKeyDown keyValue
