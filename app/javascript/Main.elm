@@ -321,7 +321,7 @@ loadQuoteQuoteEnter =
 
 
 c_LOADING_KEY_DELAY =
-    600
+    800
 
 
 loadingCommands : List (Cmd Message)
