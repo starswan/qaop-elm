@@ -320,6 +320,14 @@ loadQuoteQuoteEnter =
     [ AutoChar 'j', AutoChar '"', AutoChar '"', AutoControl "Enter" ]
 
 
+c_LOADING_KEY_DELAY =
+    500
+
+
+c_LOADING_KEY_OFFSET =
+    200
+
+
 loadingCommands : List (Cmd Message)
 loadingCommands =
     loadQuoteQuoteEnter
@@ -334,7 +342,7 @@ loadingCommands =
                             AutoControl string ->
                                 ( ControlKeyDown string, ControlKeyUp string )
                 in
-                [ Delay.after (500 * index) down, Delay.after (500 * index + 200) up ]
+                [ Delay.after (c_LOADING_KEY_DELAY * index) down, Delay.after (c_LOADING_KEY_DELAY * index + c_LOADING_KEY_OFFSET) up ]
             )
         |> List.concat
 
