@@ -338,7 +338,9 @@ loadingCommands =
                             AutoControl string ->
                                 ( ControlKeyDown string, ControlKeyUp string )
                 in
-                [ Delay.after (c_LOADING_KEY_DELAY * index) down, Delay.after (c_LOADING_KEY_DELAY * index + c_LOADING_KEY_DELAY // 2) up ]
+                [ Delay.after (c_LOADING_KEY_DELAY * index) down
+                , Delay.after (c_LOADING_KEY_DELAY * index + c_LOADING_KEY_DELAY // 2) up
+                ]
             )
         |> List.concat
 
