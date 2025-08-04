@@ -364,7 +364,7 @@ GEM
       rspec-support (~> 3.13)
     rspec-support (3.13.3)
     ruby2_keywords (0.0.5)
-    rubyzip (2.4.1)
+    rubyzip (3.0.0)
     rvm-capistrano (1.5.6)
       capistrano (~> 2.15.4)
     securerandom (0.4.1)
@@ -421,7 +421,7 @@ DEPENDENCIES
   rails (~> 7.1, < 7.2)
   rails-controller-testing
   rspec-rails (> 5.2)
-  rubyzip (< 3)
+  rubyzip (< 4)
   rvm-capistrano
   simplecov
   sqlite3 (~> 2.7)
