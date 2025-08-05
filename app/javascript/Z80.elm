@@ -282,7 +282,7 @@ execute_delta ct rom48k z80 =
                         param =
                             z80.env |> mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k
                     in
-                    ( Special (EDMisc param), singleByteMainRegsED |> Dict.get param.value, IncrementByTwo )
+                    ( Special (EDMisc param), Nothing, IncrementByTwo )
 
                 0xDD ->
                     let
@@ -714,17 +714,22 @@ runSpecial specialType rom48k z80 =
                 instrTime =
                     param.time
             in
-            case singleByteFlagsED |> Dict.get param.value of
-                Just ( flagFunc, duration ) ->
-                    FlagDelta IncrementByTwo duration (flagFunc z80.flags)
+            case singleByteMainRegsED |> Dict.get param.value of
+                Just ( mainRegFunc, duration ) ->
+                    RegisterChangeDelta IncrementByTwo duration (mainRegFunc z80.main)
 
                 Nothing ->
-                    case singleByteMainAndFlagsED |> Dict.get param.value of
-                        Just ( f, pcInc, duration ) ->
-                            PureDelta pcInc (instrTime |> addDuration duration) (f z80.main z80.flags)
+                    case singleByteFlagsED |> Dict.get param.value of
+                        Just ( flagFunc, duration ) ->
+                            FlagDelta IncrementByTwo duration (flagFunc z80.flags)
 
                         Nothing ->
-                            oldDelta 0xED instrTime z80.interrupts z80 rom48k
+                            case singleByteMainAndFlagsED |> Dict.get param.value of
+                                Just ( f, pcInc, duration ) ->
+                                    PureDelta pcInc (instrTime |> addDuration duration) (f z80.main z80.flags)
+
+                                Nothing ->
+                                    oldDelta 0xED instrTime z80.interrupts z80 rom48k
 
 
 
