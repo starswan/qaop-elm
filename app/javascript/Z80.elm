@@ -268,21 +268,21 @@ execute_delta ct rom48k z80 =
     --PC = (char)(PC+1); time += 4;
     --switch(c) {
     let
-        ( executionType, maybeReg, mainPcIncrement ) =
+        executionType =
             case ct.value of
                 0xCB ->
                     let
                         param =
                             z80.env |> mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k
                     in
-                    ( Special (BitManipCB param), Nothing, IncrementByTwo )
+                    Special (BitManipCB param)
 
                 0xED ->
                     let
                         param =
                             z80.env |> mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k
                     in
-                    ( Special (EDMisc param), Nothing, IncrementByTwo )
+                    Special (EDMisc param)
 
                 0xDD ->
                     let
@@ -297,10 +297,10 @@ execute_delta ct rom48k z80 =
                             ixcbparam =
                                 z80.env |> mem (Bitwise.and (z80.pc + 3) 0xFFFF) ct.time rom48k
                         in
-                        ( Special (IXCB ixcboffset.value ixcbparam), Nothing, PCIncrementByFour )
+                        Special (IXCB ixcboffset.value ixcbparam)
 
                     else
-                        ( IndexIX param, Nothing, IncrementByTwo )
+                        IndexIX param
 
                 0xFD ->
                     let
@@ -315,31 +315,26 @@ execute_delta ct rom48k z80 =
                             iycbparam =
                                 z80.env |> mem (Bitwise.and (z80.pc + 3) 0xFFFF) ct.time rom48k
                         in
-                        ( Special (IYCB iycboffset.value iycbparam), Nothing, PCIncrementByFour )
+                        Special (IYCB iycboffset.value iycbparam)
 
                     else
-                        ( IndexIY param, Nothing, IncrementByTwo )
+                        IndexIY param
 
                 _ ->
-                    ( Ordinary ct.value ct.time, Nothing, IncrementByOne )
+                    Ordinary ct.value ct.time
     in
-    case maybeReg of
-        Just ( mainRegFunc, duration ) ->
-            RegisterChangeDelta mainPcIncrement duration (mainRegFunc z80.main)
+    case executionType of
+        Ordinary int cpuTimeCTime ->
+            runOrdinary int cpuTimeCTime rom48k z80
 
-        Nothing ->
-            case executionType of
-                Ordinary int cpuTimeCTime ->
-                    runOrdinary int cpuTimeCTime rom48k z80
+        IndexIX cpuTimeAndValue ->
+            runIndexIX cpuTimeAndValue rom48k z80
 
-                IndexIX cpuTimeAndValue ->
-                    runIndexIX cpuTimeAndValue rom48k z80
+        IndexIY cpuTimeAndValue ->
+            runIndexIY cpuTimeAndValue rom48k z80
 
-                IndexIY cpuTimeAndValue ->
-                    runIndexIY cpuTimeAndValue rom48k z80
-
-                Special specialExecutionType ->
-                    runSpecial specialExecutionType rom48k z80
+        Special specialExecutionType ->
+            runSpecial specialExecutionType rom48k z80
 
 
 runOrdinary : Int -> CpuTimeCTime -> Z80ROM -> Z80Core -> DeltaWithChanges
