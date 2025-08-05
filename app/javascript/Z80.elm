@@ -345,16 +345,16 @@ runOrdinary ct_value instrTime rom48k z80 =
 
         Nothing ->
             case singleByteFlags |> Dict.get ct_value of
-                Just ( flagFunc, pcIncrement, duration ) ->
-                    FlagDelta pcIncrement duration (flagFunc z80.flags)
+                Just ( flagFunc, duration ) ->
+                    FlagDelta IncrementByOne duration (flagFunc z80.flags)
 
                 Nothing ->
                     let
-                        ( triple16, paramOffset ) =
-                            ( tripleByteWith16BitParam |> Dict.get ct_value, 1 )
+                        triple16 =
+                            tripleByteWith16BitParam |> Dict.get ct_value
                     in
                     case triple16 of
-                        Just ( f, pcInc, duration ) ->
+                        Just ( f, duration ) ->
                             let
                                 env =
                                     z80.env
@@ -363,9 +363,9 @@ runOrdinary ct_value instrTime rom48k z80 =
                                     { env | time = instrTime |> addDuration duration }
 
                                 doubleParam =
-                                    env_1 |> mem16 (Bitwise.and (z80.pc + paramOffset) 0xFFFF) rom48k
+                                    env_1 |> mem16 (Bitwise.and (z80.pc + 1) 0xFFFF) rom48k
                             in
-                            Triple16ParamDelta doubleParam.time pcInc (f doubleParam.value16)
+                            Triple16ParamDelta doubleParam.time IncrementByThree (f doubleParam.value16)
 
                         Nothing ->
                             case maybeRelativeJump |> Dict.get ct_value of
@@ -395,7 +395,7 @@ runOrdinary ct_value instrTime rom48k z80 =
                                                             { env | time = env.time |> addDuration duration }
 
                                                         doubleParam =
-                                                            env_1 |> mem16 (Bitwise.and (z80.pc + paramOffset) 0xFFFF) rom48k
+                                                            env_1 |> mem16 (Bitwise.and (z80.pc + 1) 0xFFFF) rom48k
                                                     in
                                                     Triple16FlagsDelta doubleParam.time (f doubleParam.value16 z80.flags)
 
@@ -432,7 +432,7 @@ runOrdinary ct_value instrTime rom48k z80 =
                                                                                     z80.env
 
                                                                                 doubleParam =
-                                                                                    { env | time = time } |> mem16 (Bitwise.and (z80.pc + paramOffset) 0xFFFF) rom48k
+                                                                                    { env | time = time } |> mem16 (Bitwise.and (z80.pc + 1) 0xFFFF) rom48k
                                                                             in
                                                                             TripleMainChangeDelta doubleParam.time pcInc (f doubleParam.value16 z80.main)
 

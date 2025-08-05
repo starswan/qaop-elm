@@ -24,17 +24,17 @@ type TripleByteChange
     | NewTripleRegister Int TripleByteRegister
 
 
-tripleByteWith16BitParam : Dict Int ( Int -> TripleByteChange, TriplePCIncrement, InstructionDuration )
+tripleByteWith16BitParam : Dict Int ( Int -> TripleByteChange, InstructionDuration )
 tripleByteWith16BitParam =
     Dict.fromList
-        [ ( 0x01, ( ld_bc_nn, IncrementByThree, TenTStates ) )
-        , ( 0x11, ( ld_de_nn, IncrementByThree, TenTStates ) )
-        , ( 0x21, ( ld_hl_nn, IncrementByThree, TenTStates ) )
-        , ( 0x2A, ( ld_hl_indirect_nn, IncrementByThree, SixteenTStates ) )
-        , ( 0x31, ( ld_sp_nn, IncrementByThree, TenTStates ) )
-        , ( 0xC3, ( jp_nn, IncrementByThree, TenTStates ) )
-        , ( 0xCD, ( call_0xCD, IncrementByThree, SeventeenTStates ) )
-        , ( 0x3A, ( ld_a_indirect_nn, IncrementByThree, ThirteenTStates ) )
+        [ ( 0x01, ( ld_bc_nn, TenTStates ) )
+        , ( 0x11, ( ld_de_nn, TenTStates ) )
+        , ( 0x21, ( ld_hl_nn, TenTStates ) )
+        , ( 0x2A, ( ld_hl_indirect_nn, SixteenTStates ) )
+        , ( 0x31, ( ld_sp_nn, TenTStates ) )
+        , ( 0xC3, ( jp_nn, TenTStates ) )
+        , ( 0xCD, ( call_0xCD, SeventeenTStates ) )
+        , ( 0x3A, ( ld_a_indirect_nn, ThirteenTStates ) )
         ]
 
 
