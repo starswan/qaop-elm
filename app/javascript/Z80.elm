@@ -296,11 +296,8 @@ execute_delta ct rom48k z80 =
 
                             ixcbparam =
                                 z80.env |> mem (Bitwise.and (z80.pc + 3) 0xFFFF) ct.time rom48k
-
-                            ixfunc =
-                                singleByteMainRegsIXCB |> Dict.get ixcbparam.value |> Maybe.map (\( f, d ) -> ( f ixcboffset.value, d ))
                         in
-                        ( Special (IXCB ixcboffset.value ixcbparam), ixfunc, PCIncrementByFour )
+                        ( Special (IXCB ixcboffset.value ixcbparam), Nothing, PCIncrementByFour )
 
                     else
                         ( IndexIX param, Nothing, IncrementByTwo )
@@ -317,11 +314,8 @@ execute_delta ct rom48k z80 =
 
                             iycbparam =
                                 z80.env |> mem (Bitwise.and (z80.pc + 3) 0xFFFF) ct.time rom48k
-
-                            iyfunc =
-                                singleByteMainRegsIYCB |> Dict.get iycbparam.value |> Maybe.map (\( f, d ) -> ( f iycboffset.value, d ))
                         in
-                        ( Special (IYCB iycboffset.value iycbparam), iyfunc, PCIncrementByFour )
+                        ( Special (IYCB iycboffset.value iycbparam), Nothing, PCIncrementByFour )
 
                     else
                         ( IndexIY param, Nothing, IncrementByTwo )
@@ -665,49 +659,59 @@ runSpecial specialType rom48k z80 =
                 instrTime =
                     param.time
             in
-            case singleByteFlagsCB |> Dict.get param.value of
-                Just ( flagFunc, duration ) ->
-                    FlagDelta PCIncrementByFour duration (flagFunc z80.flags)
+            case singleByteMainRegsIXCB |> Dict.get param.value |> Maybe.map (\( f, d ) -> ( f offset, d )) of
+                Just ( mainRegFunc, duration ) ->
+                    RegisterChangeDelta PCIncrementByFour duration (mainRegFunc z80.main)
 
                 Nothing ->
-                    case singleEnvMainRegsIXCB |> Dict.get param.value of
-                        Just ( f, duration ) ->
-                            MainWithEnvDelta PCIncrementByFour duration (f z80.main offset rom48k z80.env)
+                    case singleByteFlagsCB |> Dict.get param.value of
+                        Just ( flagFunc, duration ) ->
+                            FlagDelta PCIncrementByFour duration (flagFunc z80.flags)
 
                         Nothing ->
-                            case singleByteMainAndFlagRegistersIXCB |> Dict.get param.value of
+                            case singleEnvMainRegsIXCB |> Dict.get param.value of
                                 Just ( f, duration ) ->
-                                    PureDelta PCIncrementByFour (instrTime |> addDuration duration) (f z80.main z80.flags)
+                                    MainWithEnvDelta PCIncrementByFour duration (f z80.main offset rom48k z80.env)
 
                                 Nothing ->
-                                    -- This fails on DD CB 3E xx
-                                    --UnknownInstruction "execute IXCB" param.value
-                                    oldDelta 0xDD instrTime z80.interrupts z80 rom48k
+                                    case singleByteMainAndFlagRegistersIXCB |> Dict.get param.value of
+                                        Just ( f, duration ) ->
+                                            PureDelta PCIncrementByFour (instrTime |> addDuration duration) (f z80.main z80.flags)
+
+                                        Nothing ->
+                                            -- This fails on DD CB 3E xx
+                                            --UnknownInstruction "execute IXCB" param.value
+                                            oldDelta 0xDD instrTime z80.interrupts z80 rom48k
 
         --UnknownInstruction "execute IXCB" param.value
-        IYCB offset param ->
+        IYCB iycboffset param ->
             let
                 instrTime =
                     param.time
             in
-            case singleByteFlagsCB |> Dict.get param.value of
-                Just ( flagFunc, duration ) ->
-                    FlagDelta PCIncrementByFour duration (flagFunc z80.flags)
+            case singleByteMainRegsIYCB |> Dict.get param.value |> Maybe.map (\( f, d ) -> ( f iycboffset, d )) of
+                Just ( mainRegFunc, duration ) ->
+                    RegisterChangeDelta PCIncrementByFour duration (mainRegFunc z80.main)
 
                 Nothing ->
-                    case singleEnvMainRegsIYCB |> Dict.get param.value of
-                        Just ( f, duration ) ->
-                            MainWithEnvDelta PCIncrementByFour duration (f z80.main offset rom48k z80.env)
+                    case singleByteFlagsCB |> Dict.get param.value of
+                        Just ( flagFunc, duration ) ->
+                            FlagDelta PCIncrementByFour duration (flagFunc z80.flags)
 
                         Nothing ->
-                            case singleByteMainAndFlagRegistersIYCB |> Dict.get param.value of
+                            case singleEnvMainRegsIYCB |> Dict.get param.value of
                                 Just ( f, duration ) ->
-                                    PureDelta PCIncrementByFour (instrTime |> addDuration duration) (f z80.main z80.flags)
+                                    MainWithEnvDelta PCIncrementByFour duration (f z80.main iycboffset rom48k z80.env)
 
                                 Nothing ->
-                                    -- This fails on FD CB 3E xx
-                                    --UnknownInstruction "execute IYCB" param.value
-                                    oldDelta 0xFD instrTime z80.interrupts z80 rom48k
+                                    case singleByteMainAndFlagRegistersIYCB |> Dict.get param.value of
+                                        Just ( f, duration ) ->
+                                            PureDelta PCIncrementByFour (instrTime |> addDuration duration) (f z80.main z80.flags)
+
+                                        Nothing ->
+                                            -- This fails on FD CB 3E xx
+                                            --UnknownInstruction "execute IYCB" param.value
+                                            oldDelta 0xFD instrTime z80.interrupts z80 rom48k
 
         EDMisc param ->
             let
