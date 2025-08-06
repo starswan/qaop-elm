@@ -6,6 +6,7 @@ import Bitwise exposing (shiftLeftBy, shiftRightBy)
 import SpectrumColour exposing (BorderColour(..))
 import Vector24 exposing (Vector24)
 import Vector32 exposing (Vector32)
+import Vector8 exposing (Vector8)
 import Z80Memory exposing (Z80Memory, getMemValue)
 
 
@@ -40,12 +41,14 @@ import Z80Memory exposing (Z80Memory, getMemValue)
 --    --range16_23 ++ range16_23 ++ range16_23 ++ range16_23 ++ range16_23 ++ range16_23 ++ range16_23 ++ range16_23
 --    List.repeat 8 range16_23 |> List.concat
 -- 192 mappings of screen index to attribute data index
+--attr_indexes : List Vector24.Index
+--attr_indexes =
+--    Vector24.indices |> Vector24.map (\ind24 -> List.repeat 8 ind24) |> Vector24.toList |> List.concat
 
 
-attr_indexes : List Vector24.Index
+attr_indexes : Vector24 (Vector8 Vector24.Index)
 attr_indexes =
-    --bank0_attr_indexes ++ bank1_attr_indexes ++ bank2_attr_indexes
-    Vector24.indices |> Vector24.map (\ind24 -> List.repeat 8 ind24) |> Vector24.toList |> List.concat
+    Vector24.indices |> Vector24.map (\ind24 -> Vector8.repeat ind24)
 
 
 type alias Z80Screen =
@@ -61,12 +64,9 @@ type alias Z80Screen =
     }
 
 
-
--- colour data is bit 7 flash, bit 6 bright, bits 5-3 paper, bits 2-0 ink
-
-
 type alias RawScreenData =
-    { colour : Int
+    { -- colour data is bit 7 flash, bit 6 bright, bits 5-3 paper, bits 2-0 ink
+      colour : Int
     , data : Int
     }
 
@@ -104,8 +104,37 @@ calcDataOffset start =
     bankStart + bankOffset + data_offset
 
 
+
+--screenOffsets : List (Int, Vector24.Index)
+--screenOffsets =
+--    attr_indexes |> List.indexedMap (\index attr_index -> ( calcDataOffset index, attr_index ))
+--attr_indexes : Vector24 (Vector8 Vector24.Index)
+--screenOffsets : List (Int, Vector24.Index)
+--screenOffsets =
+--    attr_indexes |> List.indexedMap (\index attr_index -> ( calcDataOffset index, attr_index ))
+--screenOffsets : Vector24 (Vector8 ( Int, Vector24.Index ))
+
+
+screenOffsets : List ( Int, Vector24.Index )
 screenOffsets =
-    attr_indexes |> List.indexedMap (\index attr_index -> ( calcDataOffset index, attr_index ))
+    let
+        offsets : Vector24 (Vector8 ( Int, Vector24.Index ))
+        offsets =
+            attr_indexes
+                |> Vector24.indexedMap
+                    (\vec8_index vec8 ->
+                        vec8
+                            |> Vector8.indexedMap
+                                (\index8 item ->
+                                    let
+                                        index =
+                                            (vec8_index |> Vector24.indexToInt) * 8 + (index8 |> Vector8.indexToInt)
+                                    in
+                                    ( calcDataOffset index, item )
+                                )
+                    )
+    in
+    offsets |> Vector24.map (\vec8 -> vec8 |> Vector8.toList) |> Vector24.toList |> List.concat
 
 
 
