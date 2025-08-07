@@ -113,9 +113,10 @@ calcDataOffset start =
 --screenOffsets =
 --    attr_indexes |> List.indexedMap (\index attr_index -> ( calcDataOffset index, attr_index ))
 --screenOffsets : Vector24 (Vector8 ( Int, Vector24.Index ))
+--screenOffsets : List ( Int, Vector24.Index )
 
 
-screenOffsets : List ( Int, Vector24.Index )
+screenOffsets : Vector24 (Vector8 ( Int, Vector24.Index ))
 screenOffsets =
     let
         offsets : Vector24 (Vector8 ( Int, Vector24.Index ))
@@ -134,7 +135,8 @@ screenOffsets =
                                 )
                     )
     in
-    offsets |> Vector24.map (\vec8 -> vec8 |> Vector8.toList) |> Vector24.toList |> List.concat
+    --offsets |> Vector24.map (\vec8 -> vec8 |> Vector8.toList) |> Vector24.toList |> List.concat
+    offsets
 
 
 
@@ -226,18 +228,27 @@ getScreenValue addr screen =
 
 rawScreenData : Z80Screen -> List (Vector32 RawScreenData)
 rawScreenData z80_screen =
-    screenOffsets
-        |> List.map
-            (\( row_index, attr_index ) ->
-                let
-                    data_row =
-                        memoryRow z80_screen row_index
+    let
+        screendata : Vector24 (Vector8 (Vector32 RawScreenData))
+        screendata =
+            screenOffsets
+                |> Vector24.map
+                    (\vect8 ->
+                        vect8
+                            |> Vector8.map
+                                (\( row_index, attr_index ) ->
+                                    let
+                                        data_row =
+                                            memoryRow z80_screen row_index
 
-                    attr_row =
-                        z80_screen.attrs |> Vector24.get attr_index
-                in
-                Vector32.map2 (\data attr -> { colour = attr, data = data }) data_row attr_row
-            )
+                                        attr_row =
+                                            z80_screen.attrs |> Vector24.get attr_index
+                                    in
+                                    Vector32.map2 (\data attr -> { colour = attr, data = data }) data_row attr_row
+                                )
+                    )
+    in
+    screendata |> Vector24.map (\vec8 -> vec8 |> Vector8.toList) |> Vector24.toList |> List.concat
 
 
 memoryRow : Z80Screen -> Int -> Vector32 Int
