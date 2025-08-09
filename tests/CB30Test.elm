@@ -312,23 +312,25 @@ suite =
                             }
                 in
                 Expect.equal ( addr + 2, 0x2845 ) ( new_z80.pc, new_z80.main.hl )
-        , test "0xCB 0x3D SRL L" <|
-            \_ ->
-                let
-                    new_env =
-                        z80env
-                            |> setMem addr 0xCB
-                            |> setMem (addr + 1) 0x3D
+        , describe "SRL (HL)"
+            [ test "0xCB 0x3D SRL L" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xCB
+                                |> setMem (addr + 1) 0x3D
 
-                    new_z80 =
-                        executeCoreInstruction z80rom
-                            { z80
-                                | env = { new_env | sp = 0x8765 }
-                                , main = { z80main | hl = 0x5050, d = 0x50 }
-                                , flags = { flags | a = 0x39 }
-                            }
-                in
-                Expect.equal ( addr + 2, 0x5028 ) ( new_z80.pc, new_z80.main.hl )
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = { new_env | sp = 0x8765 }
+                                    , main = { z80main | hl = 0x5050, d = 0x50 }
+                                    , flags = { flags | a = 0x39 }
+                                }
+                    in
+                    Expect.equal ( addr + 2, 0x5028 ) ( new_z80.pc, new_z80.main.hl )
+            ]
         , describe "SRL (HL)"
             [ test "0xCB 0x03E SRL (HL)" <|
                 \_ ->
