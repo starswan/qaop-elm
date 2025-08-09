@@ -329,73 +329,75 @@ suite =
                             }
                 in
                 Expect.equal ( addr + 2, 0x5028 ) ( new_z80.pc, new_z80.main.hl )
-        , test "0xCB 0x03E SRL (HL)" <|
-            \_ ->
-                let
-                    new_env =
-                        z80env
-                            |> setMem addr 0xCB
-                            |> setMem (addr + 1) 0x3E
-                            |> setMem 0x6545 0x50
+        , describe "SRL (HL)"
+            [ test "0xCB 0x03E SRL (HL)" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xCB
+                                |> setMem (addr + 1) 0x3E
+                                |> setMem 0x6545 0x50
 
-                    new_z80 =
-                        executeCoreInstruction z80rom
-                            { z80
-                                | env = new_env
-                                , main = { z80main | hl = 0x6545, b = 0xA5 }
-                                , flags = { flags | a = 0x39 }
-                            }
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | hl = 0x6545, b = 0xA5 }
+                                    , flags = { flags | a = 0x39 }
+                                }
 
-                    mem_value =
-                        new_z80.env |> mem 0x6545 new_z80.env.time z80rom
-                in
-                Expect.equal ( addr + 2, 0x28 ) ( new_z80.pc, mem_value.value )
-        , test "0xDD 0xCB 0x3E 0x45 SRL (IX + d)" <|
-            \_ ->
-                let
-                    new_env =
-                        z80env
-                            |> setMem addr 0xDD
-                            |> setMem (addr + 1) 0xCB
-                            |> setMem (addr + 2) 0x45
-                            |> setMem (addr + 3) 0x3E
-                            |> setMem 0x6545 0x50
+                        mem_value =
+                            new_z80.env |> mem 0x6545 new_z80.env.time z80rom
+                    in
+                    Expect.equal ( addr + 2, 0x28 ) ( new_z80.pc, mem_value.value )
+            , test "0xDD 0xCB 0x3E 0x45 SRL (IX + d)" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xDD
+                                |> setMem (addr + 1) 0xCB
+                                |> setMem (addr + 2) 0x45
+                                |> setMem (addr + 3) 0x3E
+                                |> setMem 0x6545 0x50
 
-                    new_z80 =
-                        executeCoreInstruction z80rom
-                            { z80
-                                | env = { new_env | sp = 0x8765 }
-                                , main = { z80main | ix = 0x6500, b = 0xA5 }
-                                , flags = { flags | a = 0x39 }
-                            }
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = { new_env | sp = 0x8765 }
+                                    , main = { z80main | ix = 0x6500, b = 0xA5 }
+                                    , flags = { flags | a = 0x39 }
+                                }
 
-                    mem_value =
-                        new_z80.env |> mem 0x6545 new_z80.env.time z80rom
-                in
-                Expect.equal ( addr + 4, 0x28 ) ( new_z80.pc, mem_value.value )
-        , test "0xFD 0xCB 0x3E 0x45 SRL (IY + d)" <|
-            \_ ->
-                let
-                    new_env =
-                        z80env
-                            |> setMem addr 0xFD
-                            |> setMem (addr + 1) 0xCB
-                            |> setMem (addr + 2) 0x45
-                            |> setMem (addr + 3) 0x3E
-                            |> setMem 0x6545 0x50
+                        mem_value =
+                            new_z80.env |> mem 0x6545 new_z80.env.time z80rom
+                    in
+                    Expect.equal ( addr + 4, 0x28 ) ( new_z80.pc, mem_value.value )
+            , test "0xFD 0xCB 0x3E 0x45 SRL (IY + d)" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xFD
+                                |> setMem (addr + 1) 0xCB
+                                |> setMem (addr + 2) 0x45
+                                |> setMem (addr + 3) 0x3E
+                                |> setMem 0x6545 0x50
 
-                    new_z80 =
-                        executeCoreInstruction z80rom
-                            { z80
-                                | env = { new_env | sp = 0x8765 }
-                                , main = { z80main | iy = 0x6500, b = 0xA5 }
-                                , flags = { flags | a = 0x39 }
-                            }
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = { new_env | sp = 0x8765 }
+                                    , main = { z80main | iy = 0x6500, b = 0xA5 }
+                                    , flags = { flags | a = 0x39 }
+                                }
 
-                    mem_value =
-                        new_z80.env |> mem 0x6545 new_z80.env.time z80rom
-                in
-                Expect.equal ( addr + 4, 0x28 ) ( new_z80.pc, mem_value.value )
+                        mem_value =
+                            new_z80.env |> mem 0x6545 new_z80.env.time z80rom
+                    in
+                    Expect.equal ( addr + 4, 0x28 ) ( new_z80.pc, mem_value.value )
+            ]
         , test "0xCB 0x3F SRL A" <|
             \_ ->
                 let
