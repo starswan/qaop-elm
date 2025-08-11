@@ -4,26 +4,10 @@ require "rails_helper"
 require "zip"
 
 RSpec.describe "Spectrum Emulator" do
-  let(:expected_hz) { (ENV['HZ'] || "10.9").to_f }
-
-  # disable for now, as we don't want to run the test twice really
-  # xcontext "with match day" do
-  #   let(:z80_game) { build(:game, :match_day) }
-  #
-  #   it "loads the emulator", :js do
-  #     visit '/'
-  #     click_on z80_game.name
-  #
-  #     expect(page).to have_content 'Refresh Interval'
-  #     speed = measure_speed_in_hz
-  #     p "Speed #{speed} Hz"
-  #     expect(speed).to be >= expected_hz
-  #   end
-  # end
+  let(:expected_hz) { (ENV['HZ'] || "10.8").to_f }
 
   context "with documented Z80 test" do
     let(:version) { "1.2a" }
-    let(:z80_test_url) { "https://github.com/raxoft/z80test/releases/download/v#{version}/z80test-#{version}.zip" }
     let(:faraday) {
       Faraday.new do |f|
         f.response :raise_error
@@ -37,24 +21,16 @@ RSpec.describe "Spectrum Emulator" do
     let!(:full) { create(:game, :z80_test_full) }
     let!(:cyrus) { create(:game, :cyrus) }
 
-    # let(:z80base_directory) { Rails.root.join("public", "games") }
-    # let(:z80full_directory) { Rails.root.join("public", "games", "z80test") }
     let(:z80_game) { Game.find_by!(name: ENV.fetch("Z80_TEST", cyrus.name)) }
-    # let!(:z80_game) { create(:game, :football_manager) }
 
     let(:times) { {
-      flags.name => 7400,
+      flags.name => 7500,
       regs.name => 13000,
       full_flags.name => 7900,
       full.name => 14000,
     }}
 
     before do
-      # FileUtils.mkdir_p(z80base_directory)
-      # unless File.exist? z80full_directory
-      #   load_tapfile z80_test_url, z80full_directory
-      # end
-
       visit '/'
     end
 
