@@ -295,40 +295,130 @@ suite =
                             }
                 in
                 Expect.equal ( addr + 2, 0x28 ) ( new_z80.pc, new_z80.main.e )
-        , test "0xCB 0x1C RR H" <|
-            \_ ->
-                let
-                    new_env =
-                        z80env
-                            |> setMem addr 0xCB
-                            |> setMem (addr + 1) 0x1C
+        , describe "RR H"
+            [ test "0xCB 0x1C RR H" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xCB
+                                |> setMem (addr + 1) 0x1C
 
-                    new_z80 =
-                        executeCoreInstruction z80rom
-                            { z80
-                                | env = { new_env | sp = 0x8765 }
-                                , main = { z80main | hl = 0x5045, d = 0x50 }
-                                , flags = { flags | a = 0x39 }
-                            }
-                in
-                Expect.equal ( addr + 2, 0x2845 ) ( new_z80.pc, new_z80.main.hl )
-        , test "0xCB 0x1D RR L" <|
-            \_ ->
-                let
-                    new_env =
-                        z80env
-                            |> setMem addr 0xCB
-                            |> setMem (addr + 1) 0x1D
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | hl = 0x5045, d = 0x50 }
+                                }
+                    in
+                    Expect.equal ( addr + 2, 0x2845 ) ( new_z80.pc, new_z80.main.hl )
+            , test "0xDD 0xCB d 0x1C RR (IX + d), H" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xDD
+                                |> setMem (addr + 1) 0xCB
+                                |> setMem (addr + 2) 0x45
+                                |> setMem (addr + 3) 0x1C
+                                |> setMem 0x6545 0x50
 
-                    new_z80 =
-                        executeCoreInstruction z80rom
-                            { z80
-                                | env = { new_env | sp = 0x8765 }
-                                , main = { z80main | hl = 0x5050, d = 0x50 }
-                                , flags = { flags | a = 0x39 }
-                            }
-                in
-                Expect.equal ( addr + 2, 0x5028 ) ( new_z80.pc, new_z80.main.hl )
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | ix = 0x6500, hl = 0x5050 }
+                                }
+
+                        mem_value =
+                            new_z80.env |> mem 0x6545 new_z80.env.time z80rom
+                    in
+                    Expect.equal ( addr + 4, 0x2850, 0x28 ) ( new_z80.pc, new_z80.main.hl, mem_value.value )
+            , test "0xFD 0xCB d 0x1C RR (IY + d), H" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xFD
+                                |> setMem (addr + 1) 0xCB
+                                |> setMem (addr + 2) 0xFF
+                                |> setMem (addr + 3) 0x1C
+                                |> setMem 0x6545 0x50
+
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | iy = 0x6546, hl = 0x5050 }
+                                }
+
+                        mem_value =
+                            new_z80.env |> mem 0x6545 new_z80.env.time z80rom
+                    in
+                    Expect.equal ( addr + 4, 0x2850, 0x28 ) ( new_z80.pc, new_z80.main.hl, mem_value.value )
+            ]
+        , describe "RR L"
+            [ test "0xCB 0x1D RR L" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xCB
+                                |> setMem (addr + 1) 0x1D
+
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | hl = 0x5050 }
+                                }
+                    in
+                    Expect.equal ( addr + 2, 0x5028 ) ( new_z80.pc, new_z80.main.hl )
+            , test "0xDD 0xCB d 0x1D RR (IX + d), L" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xDD
+                                |> setMem (addr + 1) 0xCB
+                                |> setMem (addr + 2) 0x45
+                                |> setMem (addr + 3) 0x1D
+                                |> setMem 0x6545 0x50
+
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | ix = 0x6500, hl = 0x5050 }
+                                }
+
+                        mem_value =
+                            new_z80.env |> mem 0x6545 new_z80.env.time z80rom
+                    in
+                    Expect.equal ( addr + 4, 0x5028, 0x28 ) ( new_z80.pc, new_z80.main.hl, mem_value.value )
+            , test "0xFD 0xCB d 0x1D RR (IY + d), L" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xFD
+                                |> setMem (addr + 1) 0xCB
+                                |> setMem (addr + 2) 0xFF
+                                |> setMem (addr + 3) 0x1D
+                                |> setMem 0x6545 0x50
+
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | iy = 0x6546, hl = 0x5050 }
+                                }
+
+                        mem_value =
+                            new_z80.env |> mem 0x6545 new_z80.env.time z80rom
+                    in
+                    Expect.equal ( addr + 4, 0x5028, 0x28 ) ( new_z80.pc, new_z80.main.hl, mem_value.value )
+            ]
         , test "0xCB 0x1E RR (HL)" <|
             \_ ->
                 let

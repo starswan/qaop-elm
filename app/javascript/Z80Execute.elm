@@ -604,8 +604,11 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                         , r = new_r
                     }
 
-        RegisterIndirectWithShifter shifterFunc addr changeOneRegister ->
+        RegisterIndirectWithShifter shifterFunc changeOneRegister raw_addr ->
             let
+                addr =
+                    raw_addr |> Bitwise.and 0xFFFF
+
                 input =
                     env_1 |> mem addr z80.env.time rom48k
 

@@ -51,4 +51,4 @@ type RegisterChange
     | RegChangeIm InterruptMode
     | ExchangeTopOfStackWith IXIYHL
     | SingleRegisterChange ChangeOneRegister Int
-    | RegisterIndirectWithShifter Shifter Int ChangeOneRegister
+    | RegisterIndirectWithShifter Shifter ChangeOneRegister Int
