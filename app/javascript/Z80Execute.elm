@@ -544,7 +544,7 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                     z80.main
             in
             case changeOneRegister of
-                AlterRegisterB ->
+                ChangeBRegister ->
                     { z80
                         | pc = new_pc
                         , main = { z80_main | b = int }
@@ -552,7 +552,7 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                         , r = new_r
                     }
 
-                AlterRegisterC ->
+                ChangeCRegister ->
                     { z80
                         | pc = new_pc
                         , main = { z80_main | c = int }
@@ -560,7 +560,7 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                         , r = new_r
                     }
 
-                AlterRegisterA ->
+                ChangeARegister ->
                     let
                         z80_flags =
                             z80.flags
@@ -572,7 +572,7 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                         , r = new_r
                     }
 
-                AlterRegisterD ->
+                ChangeDRegister ->
                     { z80
                         | pc = new_pc
                         , main = { z80_main | d = int }
@@ -580,7 +580,7 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                         , r = new_r
                     }
 
-                ChangeRegisterE ->
+                ChangeERegister ->
                     { z80
                         | pc = new_pc
                         , main = { z80_main | e = int }
@@ -588,7 +588,7 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                         , r = new_r
                     }
 
-                ChangeRegisterH ->
+                ChangeHRegister ->
                     { z80
                         | pc = new_pc
                         , main = { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 int) }
@@ -596,7 +596,7 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                         , r = new_r
                     }
 
-                ChangeRegisterL ->
+                ChangeLRegister ->
                     { z80
                         | pc = new_pc
                         , main = { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) int }
@@ -643,25 +643,25 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
 
                 ( new_main, new_flags ) =
                     case changeOneRegister of
-                        AlterRegisterA ->
+                        ChangeARegister ->
                             ( main, { flags | a = value.value } )
 
-                        AlterRegisterB ->
+                        ChangeBRegister ->
                             ( { main | b = value.value }, flags )
 
-                        AlterRegisterC ->
+                        ChangeCRegister ->
                             ( { main | c = value.value }, flags )
 
-                        AlterRegisterD ->
+                        ChangeDRegister ->
                             ( { main | d = value.value }, flags )
 
-                        ChangeRegisterE ->
+                        ChangeERegister ->
                             ( { main | e = value.value }, flags )
 
-                        ChangeRegisterH ->
+                        ChangeHRegister ->
                             ( { main | hl = Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80.main.hl 0xFF) }, flags )
 
-                        ChangeRegisterL ->
+                        ChangeLRegister ->
                             ( { main | hl = Bitwise.or value.value (Bitwise.and z80.main.hl 0xFF00) }, flags )
 
                 env_2 =

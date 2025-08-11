@@ -17,13 +17,13 @@ type Shifter
 
 
 type ChangeOneRegister
-    = AlterRegisterA
-    | AlterRegisterB
-    | AlterRegisterC
-    | AlterRegisterD
-    | ChangeRegisterE
-    | ChangeRegisterH
-    | ChangeRegisterL
+    = ChangeARegister
+    | ChangeBRegister
+    | ChangeCRegister
+    | ChangeDRegister
+    | ChangeERegister
+    | ChangeHRegister
+    | ChangeLRegister
 
 
 type RegisterChange

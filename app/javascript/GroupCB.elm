@@ -506,8 +506,14 @@ singleByteMainRegsIXCB =
         , ( 0x1E, ( \offset z80_main -> RegisterChangeShifter Shifter3 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
         , ( 0x26, ( \offset z80_main -> RegisterChangeShifter Shifter4 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
         , ( 0x2E, ( \offset z80_main -> RegisterChangeShifter Shifter5 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
+        , ( 0x35, ( \offset z80_main -> RegisterIndirectWithShifter Shifter6 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF) ChangeLRegister, TwentyThreeTStates ) )
         , ( 0x36, ( \offset z80_main -> RegisterChangeShifter Shifter6 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
-        , ( 0x3D, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF) ChangeRegisterL, TwentyThreeTStates ) )
+        , ( 0x38, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF) ChangeBRegister, TwentyThreeTStates ) )
+        , ( 0x39, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF) ChangeCRegister, TwentyThreeTStates ) )
+        , ( 0x3A, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF) ChangeDRegister, TwentyThreeTStates ) )
+        , ( 0x3B, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF) ChangeERegister, TwentyThreeTStates ) )
+        , ( 0x3C, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF) ChangeHRegister, TwentyThreeTStates ) )
+        , ( 0x3D, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF) ChangeLRegister, TwentyThreeTStates ) )
         , ( 0x3E, ( \offset z80_main -> RegisterChangeShifter Shifter7 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
 
         -- reset bit0
@@ -666,8 +672,14 @@ singleByteMainRegsIYCB =
         , ( 0x1E, ( \offset z80_main -> RegisterChangeShifter Shifter3 ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
         , ( 0x26, ( \offset z80_main -> RegisterChangeShifter Shifter4 ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
         , ( 0x2E, ( \offset z80_main -> RegisterChangeShifter Shifter5 ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
+        , ( 0x35, ( \offset z80_main -> RegisterIndirectWithShifter Shifter6 ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF) ChangeLRegister, TwentyThreeTStates ) )
         , ( 0x36, ( \offset z80_main -> RegisterChangeShifter Shifter6 ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
-        , ( 0x3D, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF) ChangeRegisterL, TwentyThreeTStates ) )
+        , ( 0x38, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF) ChangeBRegister, TwentyThreeTStates ) )
+        , ( 0x39, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF) ChangeCRegister, TwentyThreeTStates ) )
+        , ( 0x3A, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF) ChangeDRegister, TwentyThreeTStates ) )
+        , ( 0x3B, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF) ChangeERegister, TwentyThreeTStates ) )
+        , ( 0x3C, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF) ChangeHRegister, TwentyThreeTStates ) )
+        , ( 0x3D, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF) ChangeLRegister, TwentyThreeTStates ) )
         , ( 0x3E, ( \offset z80_main -> RegisterChangeShifter Shifter7 ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
 
         -- reset bit0
@@ -868,37 +880,37 @@ resetBbit : BitTest -> MainWithIndexRegisters -> RegisterChange
 resetBbit bitMask z80_main =
     --Bitwise.and raw.value (1 |> shiftLeftBy o |> complement)
     -- case 0x80: B=B&~(1<<o); break;
-    SingleRegisterChange AlterRegisterB (bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.b)
+    SingleRegisterChange ChangeBRegister (bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.b)
 
 
 resetCbit : BitTest -> MainWithIndexRegisters -> RegisterChange
 resetCbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
-    SingleRegisterChange AlterRegisterC (bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.c)
+    SingleRegisterChange ChangeCRegister (bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.c)
 
 
 resetDbit : BitTest -> MainWithIndexRegisters -> RegisterChange
 resetDbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
-    SingleRegisterChange AlterRegisterD (bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.d)
+    SingleRegisterChange ChangeDRegister (bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.d)
 
 
 resetEbit : BitTest -> MainWithIndexRegisters -> RegisterChange
 resetEbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
-    SingleRegisterChange ChangeRegisterE (bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.e)
+    SingleRegisterChange ChangeERegister (bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.e)
 
 
 resetHbit : BitTest -> MainWithIndexRegisters -> RegisterChange
 resetHbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
-    SingleRegisterChange ChangeRegisterH (bitMask |> inverseBitMaskFromBit |> Bitwise.and (z80_main.hl |> shiftRightBy8))
+    SingleRegisterChange ChangeHRegister (bitMask |> inverseBitMaskFromBit |> Bitwise.and (z80_main.hl |> shiftRightBy8))
 
 
 resetLbit : BitTest -> MainWithIndexRegisters -> RegisterChange
 resetLbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
-    SingleRegisterChange ChangeRegisterL (bitMask |> inverseBitMaskFromBit |> Bitwise.and (z80_main.hl |> Bitwise.and 0xFF))
+    SingleRegisterChange ChangeLRegister (bitMask |> inverseBitMaskFromBit |> Bitwise.and (z80_main.hl |> Bitwise.and 0xFF))
 
 
 resetHLbit : BitTest -> MainWithIndexRegisters -> RegisterChange
@@ -923,37 +935,37 @@ setBbit : BitTest -> MainWithIndexRegisters -> RegisterChange
 setBbit bitMask z80_main =
     --Bitwise.and raw.value (1 |> shiftLeftBy o |> complement)
     -- case 0x80: B=B&~(1<<o); break;
-    SingleRegisterChange AlterRegisterB (bitMask |> bitMaskFromBit |> Bitwise.or z80_main.b)
+    SingleRegisterChange ChangeBRegister (bitMask |> bitMaskFromBit |> Bitwise.or z80_main.b)
 
 
 setCbit : BitTest -> MainWithIndexRegisters -> RegisterChange
 setCbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
-    SingleRegisterChange AlterRegisterC (bitMask |> bitMaskFromBit |> Bitwise.or z80_main.c)
+    SingleRegisterChange ChangeCRegister (bitMask |> bitMaskFromBit |> Bitwise.or z80_main.c)
 
 
 setDbit : BitTest -> MainWithIndexRegisters -> RegisterChange
 setDbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
-    SingleRegisterChange AlterRegisterD (bitMask |> bitMaskFromBit |> Bitwise.or z80_main.d)
+    SingleRegisterChange ChangeDRegister (bitMask |> bitMaskFromBit |> Bitwise.or z80_main.d)
 
 
 setEbit : BitTest -> MainWithIndexRegisters -> RegisterChange
 setEbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
-    SingleRegisterChange ChangeRegisterE (bitMask |> bitMaskFromBit |> Bitwise.or z80_main.e)
+    SingleRegisterChange ChangeERegister (bitMask |> bitMaskFromBit |> Bitwise.or z80_main.e)
 
 
 setHbit : BitTest -> MainWithIndexRegisters -> RegisterChange
 setHbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
-    SingleRegisterChange ChangeRegisterH (bitMask |> bitMaskFromBit |> Bitwise.or (z80_main.hl |> shiftRightBy8))
+    SingleRegisterChange ChangeHRegister (bitMask |> bitMaskFromBit |> Bitwise.or (z80_main.hl |> shiftRightBy8))
 
 
 setLbit : BitTest -> MainWithIndexRegisters -> RegisterChange
 setLbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
-    SingleRegisterChange ChangeRegisterL (bitMask |> bitMaskFromBit |> Bitwise.or (z80_main.hl |> Bitwise.and 0xFF))
+    SingleRegisterChange ChangeLRegister (bitMask |> bitMaskFromBit |> Bitwise.or (z80_main.hl |> Bitwise.and 0xFF))
 
 
 setHLbit : BitTest -> MainWithIndexRegisters -> RegisterChange
