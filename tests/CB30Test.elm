@@ -53,9 +53,8 @@ suite =
                         new_z80 =
                             executeCoreInstruction z80rom
                                 { z80
-                                    | env = { new_env | sp = 0x8765 }
+                                    | env = new_env
                                     , main = { z80main | hl = 0x6545, b = 0x50 }
-                                    , flags = { flags | a = 0x39 }
                                 }
                     in
                     Expect.equal ( addr + 2, 0xA1 ) ( new_z80.pc, new_z80.main.b )
@@ -116,9 +115,8 @@ suite =
                         new_z80 =
                             executeCoreInstruction z80rom
                                 { z80
-                                    | env = { new_env | sp = 0x8765 }
+                                    | env = new_env
                                     , main = { z80main | hl = 0x6545, c = 0x50 }
-                                    , flags = { flags | a = 0x39 }
                                 }
                     in
                     Expect.equal ( addr + 2, 0xA1 ) ( new_z80.pc, new_z80.main.c )
