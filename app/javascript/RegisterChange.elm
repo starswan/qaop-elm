@@ -53,6 +53,7 @@ type RegisterChange
     | SetIndirect Int Int
     | ChangeRegisterDEAndHL Int Int
     | RegisterChangeShifter Shifter Int
+    | RegisterChangeIndexShifter Shifter Int
     | IndirectBitReset BitTest Int
     | IndirectBitSet BitTest Int
     | RegChangeNoOp
@@ -62,3 +63,4 @@ type RegisterChange
     | SingleRegisterChange ChangeOneRegister Int
     | RegisterIndirectWithShifter Shifter ChangeOneRegister Int
     | SetBitIndirectWithCopy BitTest ChangeMainRegister Int
+    | ResetBitIndirectWithCopy BitTest ChangeMainRegister Int
