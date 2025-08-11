@@ -92,4 +92,66 @@ suite =
                             }
                 in
                 Expect.equal ( addr + 2, 0x80 ) ( new_z80.pc, new_z80.main.b )
+        , describe "SET 7 Indirect"
+            [ test "0xCB 0xFD SET 7, L" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xCB
+                                |> setMem (addr + 1) 0xFD
+
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | hl = 0x5000 }
+                                }
+                    in
+                    Expect.equal ( addr + 2, 0x5080 ) ( new_z80.pc, new_z80.main.hl )
+            , test "0xDD 0xCB d 0xFD SET 7, (IX + d), L" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xDD
+                                |> setMem (addr + 1) 0xCB
+                                |> setMem (addr + 2) 0x45
+                                |> setMem (addr + 3) 0xFD
+                                |> setMem 0x6545 0x00
+
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | ix = 0x6500, hl = 0x5000 }
+                                }
+
+                        mem_value =
+                            new_z80.env |> mem 0x6545 new_z80.env.time z80rom
+                    in
+                    Expect.equal ( addr + 4, 0x5080, 0x80 ) ( new_z80.pc, new_z80.main.hl, mem_value.value )
+            , test "0xFD 0xCB d 0xFD SET 7, (IY + d), L" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xFD
+                                |> setMem (addr + 1) 0xCB
+                                |> setMem (addr + 2) 0xFF
+                                |> setMem (addr + 3) 0xFD
+                                |> setMem 0x6545 0x00
+
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | iy = 0x6546, hl = 0x5000 }
+                                }
+
+                        mem_value =
+                            new_z80.env |> mem 0x6545 new_z80.env.time z80rom
+                    in
+                    Expect.equal ( addr + 4, 0x5080, 0x80 ) ( new_z80.pc, new_z80.main.hl, mem_value.value )
+            ]
         ]

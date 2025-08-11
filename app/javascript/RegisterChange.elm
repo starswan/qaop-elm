@@ -26,6 +26,15 @@ type ChangeOneRegister
     | ChangeLRegister
 
 
+type ChangeMainRegister
+    = ChangeMainB
+    | ChangeMainC
+    | ChangeMainD
+    | ChangeMainE
+    | ChangeMainH
+    | ChangeMainL
+
+
 type RegisterChange
     = ChangeRegisterBC Int Int
     | ChangeRegisterDE Int Int
@@ -52,3 +61,4 @@ type RegisterChange
     | ExchangeTopOfStackWith IXIYHL
     | SingleRegisterChange ChangeOneRegister Int
     | RegisterIndirectWithShifter Shifter ChangeOneRegister Int
+    | SetBitIndirectWithCopy BitTest ChangeMainRegister Int
