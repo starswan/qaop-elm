@@ -45,7 +45,7 @@ gem 'nokogiri', '< 1.19'
 # This is something to do with ruby 3.1...?
 gem 'net-smtp', require: false
 # gem 'rexml', require: false
-gem 'rubyzip', '< 3'
+gem 'rubyzip', '< 4'
 
 gem "faraday", ">= 2"
 gem "faraday-follow_redirects"
