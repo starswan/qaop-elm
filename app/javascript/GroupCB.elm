@@ -509,6 +509,10 @@ singleByteMainRegsIXCB =
         [ ( 0x06, ( \offset z80_main -> RegisterChangeShifter Shifter0 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
         , ( 0x0E, ( \offset z80_main -> RegisterChangeShifter Shifter1 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
         , ( 0x16, ( \offset z80_main -> RegisterChangeShifter Shifter2 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
+        , ( 0x18, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeBRegister (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x19, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeCRegister (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x1A, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeDRegister (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x1B, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeERegister (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x1C, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeHRegister (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x1D, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeLRegister (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x1E, ( \offset z80_main -> RegisterChangeShifter Shifter3 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
@@ -696,6 +700,10 @@ singleByteMainRegsIYCB =
         , ( 0x16, ( \offset z80_main -> RegisterChangeShifter Shifter2 ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
 
         --shifter3
+        , ( 0x18, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeBRegister (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x19, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeCRegister (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x1A, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeDRegister (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x1B, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeERegister (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x1C, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeHRegister (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x1D, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeLRegister (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x1E, ( \offset z80_main -> RegisterChangeShifter Shifter3 ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
