@@ -34,7 +34,7 @@ import Z80Env exposing (Z80Env, c_TIME_LIMIT, m1, mem, mem16, z80env_constructor
 import Z80Execute exposing (DeltaWithChanges(..), apply_delta)
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
 import Z80Rom exposing (Z80ROM, romRoutineNames)
-import Z80Types exposing (IXIY(..), IXIYHL(..), IntWithFlagsTimeAndPC, InterruptMode(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
+import Z80Types exposing (IXIY(..), IntWithFlagsTimeAndPC, InterruptMode(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
 
 
 constructor : Z80
@@ -674,10 +674,10 @@ runSpecial specialType rom48k z80 =
                                             PureDelta PCIncrementByFour (instrTime |> addDuration duration) (f z80.main z80.flags)
 
                                         Nothing ->
-                                            -- This fails on DD CB 3E xx
-                                            --UnknownInstruction "execute IXCB" param.value
-                                            oldDelta 0xDD instrTime z80.interrupts z80 rom48k
+                                            -- This fails on DD CB 3D xx
+                                            UnknownInstruction "execute IXCB" param.value
 
+        --oldDelta 0xDD instrTime z80.interrupts z80 rom48k
         --UnknownInstruction "execute IXCB" param.value
         IYCB iycboffset param ->
             let
@@ -704,10 +704,10 @@ runSpecial specialType rom48k z80 =
                                             PureDelta PCIncrementByFour (instrTime |> addDuration duration) (f z80.main z80.flags)
 
                                         Nothing ->
-                                            -- This fails on FD CB 3E xx
-                                            --UnknownInstruction "execute IYCB" param.value
-                                            oldDelta 0xFD instrTime z80.interrupts z80 rom48k
+                                            -- This fails on FD CB 3D xx
+                                            UnknownInstruction "execute IYCB" param.value
 
+        --oldDelta 0xFD instrTime z80.interrupts z80 rom48k
         EDMisc param ->
             let
                 instrTime =

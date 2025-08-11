@@ -12,7 +12,7 @@ import Z80Delta exposing (Z80Delta(..))
 import Z80Env exposing (Z80Env, addCpuTimeEnv, mem, setMem)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, bit, c_F53, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIY, IntWithFlagsTimeAndPC, MainWithIndexRegisters, get_ixiy_xy)
+import Z80Types exposing (IXIY(..), IntWithFlagsTimeAndPC, MainWithIndexRegisters, get_ixiy_xy)
 
 
 
@@ -507,6 +507,7 @@ singleByteMainRegsIXCB =
         , ( 0x26, ( \offset z80_main -> RegisterChangeShifter Shifter4 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
         , ( 0x2E, ( \offset z80_main -> RegisterChangeShifter Shifter5 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
         , ( 0x36, ( \offset z80_main -> RegisterChangeShifter Shifter6 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
+        , ( 0x3D, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF) ChangeRegisterL, TwentyThreeTStates ) )
         , ( 0x3E, ( \offset z80_main -> RegisterChangeShifter Shifter7 ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
 
         -- reset bit0
@@ -666,6 +667,7 @@ singleByteMainRegsIYCB =
         , ( 0x26, ( \offset z80_main -> RegisterChangeShifter Shifter4 ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
         , ( 0x2E, ( \offset z80_main -> RegisterChangeShifter Shifter5 ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
         , ( 0x36, ( \offset z80_main -> RegisterChangeShifter Shifter6 ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
+        , ( 0x3D, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF) ChangeRegisterL, TwentyThreeTStates ) )
         , ( 0x3E, ( \offset z80_main -> RegisterChangeShifter Shifter7 ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF), FifteenTStates ) )
 
         -- reset bit0
@@ -1082,16 +1084,15 @@ singleByteMainAndFlagRegistersIXCB =
         , ( 0x02, ( rlc_d, EightTStates ) )
         , ( 0x03, ( rlc_e, EightTStates ) )
 
-        --
-        ----, ( 0x04, ( rlc_h, PCIncrementByFour, EightTStates ) )
-        ----, ( 0x05, ( rlc_l, PCIncrementByFour, EightTStates ) )
+        --, ( 0x04, ( rlc_h, PCIncrementByFour, EightTStates ) )
+        --, ( 0x05, ( rlc_l, PCIncrementByFour, EightTStates ) )
         --, ( 0x08, ( rrc_b, PCIncrementByFour, EightTStates ) )
         --, ( 0x09, ( rrc_c, PCIncrementByFour, EightTStates ) )
         --, ( 0x0A, ( rrc_d, PCIncrementByFour, EightTStates ) )
         --, ( 0x0B, ( rrc_e, PCIncrementByFour, EightTStates ) )
         --
-        ----, ( 0x0C, ( rrc_h, PCIncrementByFour, EightTStates ) )
-        ----, ( 0x0D, ( rrc_l, PCIncrementByFour, EightTStates ) )
+        --, ( 0x0C, ( rrc_h, PCIncrementByFour, EightTStates ) )
+        --, ( 0x0D, ( rrc_l, PCIncrementByFour, EightTStates ) )
         --, ( 0x10, ( rl_b, PCIncrementByFour, EightTStates ) )
         --, ( 0x11, ( rl_c, PCIncrementByFour, EightTStates ) )
         --, ( 0x12, ( rl_d, PCIncrementByFour, EightTStates ) )
@@ -1131,8 +1132,8 @@ singleByteMainAndFlagRegistersIXCB =
         --, ( 0x3A, ( srl_d, PCIncrementByFour, EightTStates ) )
         --, ( 0x3B, ( srl_e, PCIncrementByFour, EightTStates ) )
         --
-        ----, ( 0x3C, ( srl_h, PCIncrementByFour, EightTStates ) )
-        ----, ( 0x3D, ( srl_l, PCIncrementByFour, EightTStates ) )
+        --, ( 0x3C, ( srl_h, PCIncrementByFour, EightTStates ) )
+        --, ( 0x3D, ( srl_ixl, TwentyThreeTStates ) )
         --, ( 0x40, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.b |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
         --, ( 0x41, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.c |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
         --, ( 0x42, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.d |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
@@ -1192,27 +1193,22 @@ singleByteMainAndFlagRegistersIYCB =
         , ( 0x02, ( rlc_d, EightTStates ) )
         , ( 0x03, ( rlc_e, EightTStates ) )
 
-        --( 0x00, ( rlc_b, PCIncrementByFour, EightTStates ) )
-        --, ( 0x01, ( rlc_c, PCIncrementByFour, EightTStates ) )
-        --, ( 0x02, ( rlc_d, PCIncrementByFour, EightTStates ) )
-        --, ( 0x03, ( rlc_e, PCIncrementByFour, EightTStates ) )
-        --
-        ----, ( 0x04, ( rlc_h, PCIncrementByFour, EightTStates ) )
-        ----, ( 0x05, ( rlc_l, PCIncrementByFour, EightTStates ) )
+        --, ( 0x04, ( rlc_h, PCIncrementByFour, EightTStates ) )
+        --, ( 0x05, ( rlc_l, PCIncrementByFour, EightTStates ) )
         --, ( 0x08, ( rrc_b, PCIncrementByFour, EightTStates ) )
         --, ( 0x09, ( rrc_c, PCIncrementByFour, EightTStates ) )
         --, ( 0x0A, ( rrc_d, PCIncrementByFour, EightTStates ) )
         --, ( 0x0B, ( rrc_e, PCIncrementByFour, EightTStates ) )
         --
-        ----, ( 0x0C, ( rrc_h, PCIncrementByFour, EightTStates ) )
-        ----, ( 0x0D, ( rrc_l, PCIncrementByFour, EightTStates ) )
+        --, ( 0x0C, ( rrc_h, PCIncrementByFour, EightTStates ) )
+        --, ( 0x0D, ( rrc_l, PCIncrementByFour, EightTStates ) )
         --, ( 0x10, ( rl_b, PCIncrementByFour, EightTStates ) )
         --, ( 0x11, ( rl_c, PCIncrementByFour, EightTStates ) )
         --, ( 0x12, ( rl_d, PCIncrementByFour, EightTStates ) )
         --, ( 0x13, ( rl_e, PCIncrementByFour, EightTStates ) )
         --
-        ----, ( 0x14, ( rl_h, PCIncrementByFour, EightTStates ) )
-        ----, ( 0x15, ( rl_l, PCIncrementByFour, EightTStates ) )
+        --, ( 0x14, ( rl_h, PCIncrementByFour, EightTStates ) )
+        --, ( 0x15, ( rl_l, PCIncrementByFour, EightTStates ) )
         --, ( 0x18, ( rr_b, PCIncrementByFour, EightTStates ) )
         --, ( 0x19, ( rr_c, PCIncrementByFour, EightTStates ) )
         --, ( 0x1A, ( rr_d, PCIncrementByFour, EightTStates ) )
@@ -1246,8 +1242,8 @@ singleByteMainAndFlagRegistersIYCB =
         --, ( 0x3A, ( srl_d, PCIncrementByFour, EightTStates ) )
         --, ( 0x3B, ( srl_e, PCIncrementByFour, EightTStates ) )
         --
-        ----, ( 0x3C, ( srl_h, PCIncrementByFour, EightTStates ) )
-        ----, ( 0x3D, ( srl_l, PCIncrementByFour, EightTStates ) )
+        --, ( 0x3C, ( srl_h, PCIncrementByFour, EightTStates ) )
+        --, ( 0x3D, ( srl_iyl, TwentyThreeTStates ) )
         --, ( 0x40, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.b |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
         --, ( 0x41, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.c |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
         --, ( 0x42, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.d |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
