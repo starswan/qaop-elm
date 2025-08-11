@@ -61,6 +61,6 @@ type RegisterChange
     | RegChangeIm InterruptMode
     | ExchangeTopOfStackWith IXIYHL
     | SingleRegisterChange ChangeOneRegister Int
-    | RegisterIndirectWithShifter Shifter ChangeOneRegister Int
+    | RegisterIndirectWithShifter Shifter ChangeMainRegister Int
     | SetBitIndirectWithCopy BitTest ChangeMainRegister Int
     | ResetBitIndirectWithCopy BitTest ChangeMainRegister Int

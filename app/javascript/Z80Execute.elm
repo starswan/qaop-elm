@@ -647,36 +647,30 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                 main =
                     z80.main
 
-                flags =
-                    value.flags
-
-                ( new_main, new_flags ) =
+                new_main =
                     case changeOneRegister of
-                        ChangeARegister ->
-                            ( main, { flags | a = value.value } )
+                        ChangeMainB ->
+                            { main | b = value.value }
 
-                        ChangeBRegister ->
-                            ( { main | b = value.value }, flags )
+                        ChangeMainC ->
+                            { main | c = value.value }
 
-                        ChangeCRegister ->
-                            ( { main | c = value.value }, flags )
+                        ChangeMainD ->
+                            { main | d = value.value }
 
-                        ChangeDRegister ->
-                            ( { main | d = value.value }, flags )
+                        ChangeMainE ->
+                            { main | e = value.value }
 
-                        ChangeERegister ->
-                            ( { main | e = value.value }, flags )
+                        ChangeMainH ->
+                            { main | hl = Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80.main.hl 0xFF) }
 
-                        ChangeHRegister ->
-                            ( { main | hl = Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80.main.hl 0xFF) }, flags )
-
-                        ChangeLRegister ->
-                            ( { main | hl = Bitwise.or value.value (Bitwise.and z80.main.hl 0xFF00) }, flags )
+                        ChangeMainL ->
+                            { main | hl = Bitwise.or value.value (Bitwise.and z80.main.hl 0xFF00) }
 
                 env_2 =
                     { env_1 | time = input.time } |> setMem addr value.value
             in
-            { z80 | pc = new_pc, main = new_main, flags = new_flags, env = env_2, r = z80.r + 1 }
+            { z80 | pc = new_pc, main = new_main, flags = value.flags, env = env_2, r = z80.r + 1 }
 
         SetBitIndirectWithCopy bitTest changeOneRegister raw_addr ->
             let

@@ -11,7 +11,8 @@ import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTi
 import Dict exposing (Dict)
 import DoubleWithRegisters exposing (doubleWithRegisters, doubleWithRegistersIX, doubleWithRegistersIY)
 import Group0xE0 exposing (delta_dict_lite_E0)
-import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainAndFlagRegistersIXCB, singleByteMainAndFlagRegistersIYCB, singleByteMainRegsCB, singleByteMainRegsIXCB, singleByteMainRegsIYCB, singleEnvMainRegsCB, singleEnvMainRegsIXCB, singleEnvMainRegsIYCB)
+import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainAndFlagRegistersIXCB, singleByteMainAndFlagRegistersIYCB, singleByteMainRegsCB, singleEnvMainRegsCB)
+import GroupCBIXIY exposing (singleByteMainRegsIXCB, singleByteMainRegsIYCB, singleEnvMainRegsIXCB, singleEnvMainRegsIYCB)
 import GroupED exposing (singleByteFlagsED, singleByteMainAndFlagsED, singleByteMainRegsED)
 import Loop
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
@@ -173,21 +174,10 @@ list0255 =
 lt40_array_lite : Array (Maybe (Z80ROM -> Z80Core -> Z80Delta))
 lt40_array_lite =
     let
-        --z80_funcs = []
         delta_funcs =
-            list0255 |> List.map (\index -> lt40_delta_dict_lite |> Dict.get index)
+            list0255 |> List.map (\index -> delta_dict_lite_E0 |> Dict.get index)
     in
-    --List.map2 mergeFuncList z80_funcs delta_funcs |> Array.fromList
     delta_funcs |> Array.fromList
-
-
-lt40_delta_dict_lite : Dict Int (Z80ROM -> Z80Core -> Z80Delta)
-lt40_delta_dict_lite =
-    Dict.fromList
-        [--( 0xDD, \z80 -> group_xy IXIY_IX z80 )
-         --, ( 0xFD, \z80 -> group_xy IXIY_IY z80 )
-        ]
-        |> Dict.union delta_dict_lite_E0
 
 
 
