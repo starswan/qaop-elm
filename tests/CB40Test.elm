@@ -2,8 +2,10 @@ module CB40Test exposing (..)
 
 import Expect exposing (Expectation)
 import Test exposing (..)
+import Utils exposing (toHexString2)
 import Z80 exposing (executeCoreInstruction)
-import Z80Env exposing (setMem)
+import Z80Env exposing (mem, setMem)
+import Z80Flags exposing (getFlags)
 import Z80Rom
 
 
@@ -41,40 +43,84 @@ suite =
             Z80Rom.constructor
     in
     describe "Bit instructions (CB)"
-        [ test "0xCB 0x40 BIT 0,B (unset)" <|
-            \_ ->
-                let
-                    new_env =
-                        z80env
-                            |> setMem addr 0xCB
-                            |> setMem (addr + 1) 0x40
+        [ describe "CB 40 BIT 0,B"
+            [ test "0xCB 0x40 BIT 0,B (unset)" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xCB
+                                |> setMem (addr + 1) 0x40
 
-                    new_z80 =
-                        executeCoreInstruction z80rom
-                            { z80
-                                | env = { new_env | sp = 0x8765 }
-                                , main = { z80main | hl = 0x6545, b = 0x50 }
-                                , flags = { flags | a = 0x39 }
-                            }
-                in
-                Expect.equal ( addr + 2, 0x00 ) ( new_z80.pc, new_z80.flags.fr )
-        , test "0xCB 0x40 BIT 0,B (set)" <|
-            \_ ->
-                let
-                    new_env =
-                        z80env
-                            |> setMem addr 0xCB
-                            |> setMem (addr + 1) 0x40
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = { new_env | sp = 0x8765 }
+                                    , main = { z80main | hl = 0x6545, b = 0x50 }
+                                    , flags = { flags | a = 0x39 }
+                                }
+                    in
+                    Expect.equal ( addr + 2, 0x00 ) ( new_z80.pc, new_z80.flags.fr )
+            , test "0xCB 0x40 BIT 0,B (set)" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xCB
+                                |> setMem (addr + 1) 0x40
 
-                    new_z80 =
-                        executeCoreInstruction z80rom
-                            { z80
-                                | env = { new_env | sp = 0x8765 }
-                                , main = { z80main | hl = 0x6545, b = 0x51 }
-                                , flags = { flags | a = 0x39 }
-                            }
-                in
-                Expect.equal ( addr + 2, 0x01 ) ( new_z80.pc, new_z80.flags.fr )
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = { new_env | sp = 0x8765 }
+                                    , main = { z80main | hl = 0x6545, b = 0x51 }
+                                    , flags = { flags | a = 0x39 }
+                                }
+                    in
+                    Expect.equal ( addr + 2, 0x01 ) ( new_z80.pc, new_z80.flags.fr )
+            , test "0xDD 0xCB d 0x40 BIT 0, (IX + d)" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xDD
+                                |> setMem (addr + 1) 0xCB
+                                |> setMem (addr + 2) 0x45
+                                |> setMem (addr + 3) 0x40
+                                |> setMem 0x6545 0xFE
+
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | ix = 0x6500, b = 0x50 }
+                                }
+                    in
+                    { pc = new_z80.pc, flags = new_z80.flags |> getFlags }
+                        |> Expect.equal { pc = addr + 4, flags = 0x54 }
+            , test "0xFD 0xCB d 0x40 BIT 0, (IY + d)" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xFD
+                                |> setMem (addr + 1) 0xCB
+                                |> setMem (addr + 2) 0xFF
+                                |> setMem (addr + 3) 0x40
+                                |> setMem 0x6545 0xFE
+
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | iy = 0x6546, b = 0x50 }
+                                }
+
+                        mem_value =
+                            new_z80.env |> mem 0x6545 new_z80.env.time z80rom
+                    in
+                    Expect.equal ( addr + 4, 0x54 ) ( new_z80.pc, new_z80.flags |> getFlags )
+            ]
         , test "0xCB 0x41 BIT 0,C (unset)" <|
             \_ ->
                 let

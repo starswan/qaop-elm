@@ -6,8 +6,8 @@ import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
 import Utils exposing (BitTest(..), shiftLeftBy8)
 import Z80Core exposing (Z80Core)
-import Z80Env exposing (Z80Env, mem, z80_pop, z80_push)
-import Z80Flags exposing (FlagFunc(..), FlagRegisters, add16, changeFlags, testBit)
+import Z80Env exposing (Z80Env, mem)
+import Z80Flags exposing (FlagFunc(..), FlagRegisters, add16, c_F53, changeFlags, testBit)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIYHL(..), MainWithIndexRegisters, set_xy)
 
@@ -139,10 +139,14 @@ applySingleEnvMainChange pcInc duration z80changeData z80 =
 
         SingleBitTest bitTest intwithTime ->
             -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
+            let
+                new_flags =
+                    z80.flags |> testBit bitTest intwithTime.value
+            in
             { z80
                 | pc = new_pc
                 , env = { env_1 | time = intwithTime.time }
-                , flags = z80.flags |> testBit bitTest intwithTime.value
+                , flags = { new_flags | ff = new_flags.ff |> Bitwise.and (Bitwise.complement c_F53) }
                 , r = z80.r + 1
             }
 
