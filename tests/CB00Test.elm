@@ -98,27 +98,51 @@ suite =
                                 }
                     in
                     Expect.equal ( addr + 2, 0xFD, 0xA9 ) ( new_z80.pc, new_z80.main.b, new_z80.flags |> getFlags )
+            , test "0xDD 0xCB d 0x00 RLC (IX + d), B" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xDD
+                                |> setMem (addr + 1) 0xCB
+                                |> setMem (addr + 2) 0x45
+                                |> setMem (addr + 3) 0x00
+                                |> setMem 0x6545 0xFE
 
-            --        undocumented (and looks wrong)
-            --, test "DD CB 00 00" <|
-            --    \_ ->
-            --        let
-            --            new_env =
-            --                z80env
-            --                    |> setMem addr_minus_1 0xDD
-            --                    |> setMem addr_plus_1 0x45
-            --                    |> setMem addr_plus_2 0x00
-            --                    |> setMem 0x6545 0x80
-            --
-            --            new_z80 =
-            --                executeCoreInstruction z80rom
-            --                    { z80
-            --                        | env = new_env
-            --                        , main = { z80main | ix = 0x6500, b = 0xA5 }
-            --                        , pc = addr_minus_1
-            --                    }
-            --        in
-            --        Expect.equal ( addr + 3, 0x01, 0x40 ) ( new_z80.pc, new_z80.main.b, new_z80.flags |> getFlags )
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | ix = 0x6500, b = 0x50 }
+                                }
+
+                        mem_value =
+                            new_z80.env |> mem 0x6545 new_z80.env.time z80rom
+                    in
+                    { pc = new_z80.pc, b = new_z80.main.b, mem = mem_value.value, flags = new_z80.flags |> getFlags }
+                        |> Expect.equal { pc = addr + 4, b = 0xFD, mem = 0xFD, flags = 0xA9 }
+            , test "0xFD 0xCB d 0x00 RLC (IY + d), B" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xFD
+                                |> setMem (addr + 1) 0xCB
+                                |> setMem (addr + 2) 0xFF
+                                |> setMem (addr + 3) 0x00
+                                |> setMem 0x6545 0xFE
+
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | iy = 0x6546, b = 0x50 }
+                                }
+
+                        mem_value =
+                            new_z80.env |> mem 0x6545 new_z80.env.time z80rom
+                    in
+                    Expect.equal ( addr + 4, 0xFD, 0xFD ) ( new_z80.pc, new_z80.main.b, mem_value.value )
             ]
         , test "0xCB 0x01 RLC C" <|
             \_ ->

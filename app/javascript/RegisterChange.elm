@@ -17,13 +17,22 @@ type Shifter
 
 
 type ChangeOneRegister
-    = AlterRegisterA
-    | AlterRegisterB
-    | AlterRegisterC
-    | AlterRegisterD
-    | ChangeRegisterE
-    | ChangeRegisterH
-    | ChangeRegisterL
+    = ChangeARegister
+    | ChangeBRegister
+    | ChangeCRegister
+    | ChangeDRegister
+    | ChangeERegister
+    | ChangeHRegister
+    | ChangeLRegister
+
+
+type ChangeMainRegister
+    = ChangeMainB
+    | ChangeMainC
+    | ChangeMainD
+    | ChangeMainE
+    | ChangeMainH
+    | ChangeMainL
 
 
 type RegisterChange
@@ -44,6 +53,7 @@ type RegisterChange
     | SetIndirect Int Int
     | ChangeRegisterDEAndHL Int Int
     | RegisterChangeShifter Shifter Int
+    | RegisterChangeIndexShifter Shifter Int
     | IndirectBitReset BitTest Int
     | IndirectBitSet BitTest Int
     | RegChangeNoOp
@@ -51,3 +61,6 @@ type RegisterChange
     | RegChangeIm InterruptMode
     | ExchangeTopOfStackWith IXIYHL
     | SingleRegisterChange ChangeOneRegister Int
+    | RegisterIndirectWithShifter Shifter ChangeMainRegister Int
+    | SetBitIndirectWithCopy BitTest ChangeMainRegister Int
+    | ResetBitIndirectWithCopy BitTest ChangeMainRegister Int

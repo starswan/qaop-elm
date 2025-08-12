@@ -41,22 +41,68 @@ suite =
             Z80Rom.constructor
     in
     describe "Bit instructions (CB)"
-        [ test "0xCB 80 RES 0,B" <|
-            \_ ->
-                let
-                    new_env =
-                        z80env
-                            |> setMem addr 0xCB
-                            |> setMem (addr + 1) 0x80
+        [ describe "RES 0,B"
+            [ test "0xCB 80 RES 0,B" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xCB
+                                |> setMem (addr + 1) 0x80
 
-                    new_z80 =
-                        executeCoreInstruction z80rom
-                            { z80
-                                | env = new_env
-                                , main = { z80main | b = 0xFF }
-                            }
-                in
-                Expect.equal ( addr + 2, 0xFE ) ( new_z80.pc, new_z80.main.b )
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | b = 0xFF }
+                                }
+                    in
+                    Expect.equal ( addr + 2, 0xFE ) ( new_z80.pc, new_z80.main.b )
+            , test "0xDD 0xCB d 0x80 RES 0 (IX + d), B" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xDD
+                                |> setMem (addr + 1) 0xCB
+                                |> setMem (addr + 2) 0x45
+                                |> setMem (addr + 3) 0x80
+                                |> setMem 0x6545 0xFF
+
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | ix = 0x6500, b = 0xFF }
+                                }
+
+                        mem_value =
+                            new_z80.env |> mem 0x6545 new_z80.env.time z80rom
+                    in
+                    Expect.equal ( addr + 4, 0xFE, 0xFE ) ( new_z80.pc, new_z80.main.b, mem_value.value )
+            , test "0xFD 0xCB d 0x80 RES 0 (IY + d), B" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMem addr 0xFD
+                                |> setMem (addr + 1) 0xCB
+                                |> setMem (addr + 2) 0xFF
+                                |> setMem (addr + 3) 0x80
+                                |> setMem 0x6545 0xFF
+
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | iy = 0x6546, hl = 0x5000 }
+                                }
+
+                        mem_value =
+                            new_z80.env |> mem 0x6545 new_z80.env.time z80rom
+                    in
+                    Expect.equal ( addr + 4, 0xFE, 0xFE ) ( new_z80.pc, new_z80.main.b, mem_value.value )
+            ]
         , test "0xCB 81 RES 0,C" <|
             \_ ->
                 let

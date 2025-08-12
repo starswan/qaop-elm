@@ -241,3 +241,13 @@ wordPlusOffset z80byte z80word =
     in
     --Z80Word loval hival
     newvalue
+
+
+setBit : BitTest -> Int -> Int
+setBit testType input =
+    testType |> bitMaskFromBit |> Bitwise.or input
+
+
+clearBit : BitTest -> Int -> Int
+clearBit testType input =
+    testType |> inverseBitMaskFromBit |> Bitwise.and input

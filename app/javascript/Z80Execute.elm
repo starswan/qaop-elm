@@ -4,7 +4,7 @@ import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDuration(..), addCpuTimeTime, addDuration)
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
-import RegisterChange exposing (ChangeOneRegister(..), RegisterChange(..), Shifter(..))
+import RegisterChange exposing (ChangeMainRegister(..), ChangeOneRegister(..), RegisterChange(..), Shifter(..))
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
 import SingleEnvWithMain exposing (EightBitMain(..), SingleEnvMainChange, applySingleEnvMainChange)
 import SingleNoParams exposing (NoParamChange(..), applyNoParamsDelta)
@@ -12,7 +12,7 @@ import SingleWith8BitParameter exposing (JumpChange(..), Single8BitChange, apply
 import TripleByte exposing (TripleByteChange(..), TripleByteRegister(..))
 import TripleWithFlags exposing (TripleWithFlagsChange(..))
 import TripleWithMain exposing (TripleMainChange, applyTripleMainChange)
-import Utils exposing (bitMaskFromBit, inverseBitMaskFromBit, shiftLeftBy8, toHexString2)
+import Utils exposing (bitMaskFromBit, clearBit, inverseBitMaskFromBit, setBit, shiftLeftBy8, toHexString2)
 import Z80Change exposing (FlagChange(..), Z80Change, applyZ80Change)
 import Z80Core exposing (Z80Core)
 import Z80Debug exposing (debugLog, debugTodo)
@@ -463,6 +463,9 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
         RegisterChangeShifter shifter addr ->
             z80 |> applyShifter new_pc shifter addr env_1.time rom48k
 
+        RegisterChangeIndexShifter shifter raw_addr ->
+            z80 |> applyShifter new_pc shifter (raw_addr |> Bitwise.and 0xFFFF) env_1.time rom48k
+
         IndirectBitReset bitMask addr ->
             let
                 value =
@@ -479,8 +482,11 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
             in
             { z80 | pc = new_pc, env = env_3, r = new_r }
 
-        IndirectBitSet bitMask addr ->
+        IndirectBitSet bitMask raw_addr ->
             let
+                addr =
+                    raw_addr |> Bitwise.and 0xFFFF
+
                 value =
                     z80.env |> mem addr env_1.time rom48k
 
@@ -544,7 +550,7 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                     z80.main
             in
             case changeOneRegister of
-                AlterRegisterB ->
+                ChangeBRegister ->
                     { z80
                         | pc = new_pc
                         , main = { z80_main | b = int }
@@ -552,7 +558,7 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                         , r = new_r
                     }
 
-                AlterRegisterC ->
+                ChangeCRegister ->
                     { z80
                         | pc = new_pc
                         , main = { z80_main | c = int }
@@ -560,7 +566,7 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                         , r = new_r
                     }
 
-                AlterRegisterA ->
+                ChangeARegister ->
                     let
                         z80_flags =
                             z80.flags
@@ -572,7 +578,7 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                         , r = new_r
                     }
 
-                AlterRegisterD ->
+                ChangeDRegister ->
                     { z80
                         | pc = new_pc
                         , main = { z80_main | d = int }
@@ -580,7 +586,7 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                         , r = new_r
                     }
 
-                ChangeRegisterE ->
+                ChangeERegister ->
                     { z80
                         | pc = new_pc
                         , main = { z80_main | e = int }
@@ -588,7 +594,7 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                         , r = new_r
                     }
 
-                ChangeRegisterH ->
+                ChangeHRegister ->
                     { z80
                         | pc = new_pc
                         , main = { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 int) }
@@ -596,13 +602,153 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                         , r = new_r
                     }
 
-                ChangeRegisterL ->
+                ChangeLRegister ->
                     { z80
                         | pc = new_pc
                         , main = { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) int }
                         , env = env_1
                         , r = new_r
                     }
+
+        RegisterIndirectWithShifter shifterFunc changeOneRegister raw_addr ->
+            let
+                addr =
+                    raw_addr |> Bitwise.and 0xFFFF
+
+                input =
+                    env_1 |> mem addr z80.env.time rom48k
+
+                value =
+                    case shifterFunc of
+                        Shifter0 ->
+                            shifter0 input.value z80.flags
+
+                        Shifter1 ->
+                            shifter1 input.value z80.flags
+
+                        Shifter2 ->
+                            shifter2 input.value z80.flags
+
+                        Shifter3 ->
+                            shifter3 input.value z80.flags
+
+                        Shifter4 ->
+                            shifter4 input.value z80.flags
+
+                        Shifter5 ->
+                            shifter5 input.value z80.flags
+
+                        Shifter6 ->
+                            shifter6 input.value z80.flags
+
+                        Shifter7 ->
+                            shifter7 input.value z80.flags
+
+                main =
+                    z80.main
+
+                new_main =
+                    case changeOneRegister of
+                        ChangeMainB ->
+                            { main | b = value.value }
+
+                        ChangeMainC ->
+                            { main | c = value.value }
+
+                        ChangeMainD ->
+                            { main | d = value.value }
+
+                        ChangeMainE ->
+                            { main | e = value.value }
+
+                        ChangeMainH ->
+                            { main | hl = Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80.main.hl 0xFF) }
+
+                        ChangeMainL ->
+                            { main | hl = Bitwise.or value.value (Bitwise.and z80.main.hl 0xFF00) }
+
+                env_2 =
+                    { env_1 | time = input.time } |> setMem addr value.value
+            in
+            { z80 | pc = new_pc, main = new_main, flags = value.flags, env = env_2, r = z80.r + 1 }
+
+        SetBitIndirectWithCopy bitTest changeOneRegister raw_addr ->
+            let
+                addr =
+                    raw_addr |> Bitwise.and 0xFFFF
+
+                input =
+                    env_1 |> mem addr z80.env.time rom48k
+
+                value =
+                    input.value |> setBit bitTest
+
+                main =
+                    z80.main
+
+                new_main =
+                    case changeOneRegister of
+                        ChangeMainB ->
+                            { main | b = value }
+
+                        ChangeMainC ->
+                            { main | c = value }
+
+                        ChangeMainD ->
+                            { main | d = value }
+
+                        ChangeMainE ->
+                            { main | e = value }
+
+                        ChangeMainH ->
+                            { main | hl = Bitwise.or (value |> shiftLeftBy8) (Bitwise.and z80.main.hl 0xFF) }
+
+                        ChangeMainL ->
+                            { main | hl = Bitwise.or value (Bitwise.and z80.main.hl 0xFF00) }
+
+                env_2 =
+                    { env_1 | time = input.time } |> setMem addr value
+            in
+            { z80 | pc = new_pc, main = new_main, env = env_2, r = z80.r + 1 }
+
+        ResetBitIndirectWithCopy bitTest changeOneRegister raw_addr ->
+            let
+                addr =
+                    raw_addr |> Bitwise.and 0xFFFF
+
+                input =
+                    env_1 |> mem addr z80.env.time rom48k
+
+                value =
+                    input.value |> clearBit bitTest
+
+                main =
+                    z80.main
+
+                new_main =
+                    case changeOneRegister of
+                        ChangeMainB ->
+                            { main | b = value }
+
+                        ChangeMainC ->
+                            { main | c = value }
+
+                        ChangeMainD ->
+                            { main | d = value }
+
+                        ChangeMainE ->
+                            { main | e = value }
+
+                        ChangeMainH ->
+                            { main | hl = Bitwise.or (value |> shiftLeftBy8) (Bitwise.and z80.main.hl 0xFF) }
+
+                        ChangeMainL ->
+                            { main | hl = Bitwise.or value (Bitwise.and z80.main.hl 0xFF00) }
+
+                env_2 =
+                    { env_1 | time = input.time } |> setMem addr value
+            in
+            { z80 | pc = new_pc, main = new_main, env = env_2, r = z80.r + 1 }
 
 
 applyShifter : Int -> Shifter -> Int -> CpuTimeCTime -> Z80ROM -> Z80Core -> Z80Core
