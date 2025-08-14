@@ -4,6 +4,6 @@ import $ from 'jquery';
 // window.jQuery = window.$ = $
 window.$ = $;
 
-import 'jquery-ui';
-import 'jquery-ui/ui/widgets/mouse';
+// import 'jquery-ui';
+// import 'jquery-ui/ui/widgets/mouse';
 import '@activeadmin/activeadmin';
