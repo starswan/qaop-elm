@@ -9,7 +9,11 @@
     "elm": "^0.19.1-6",
     "esbuild": "^0.15.18",
     "esbuild-plugin-elm": "^0.0.12",
+    "jquery": "^3.7.1",
     "sass": "^1.90.0"
+  },
+  "optionalDependenciesComments": {
+    "jquery": "needed for active admin"
   },
   "overrides": {
     "cross-spawn": ">= 7.0.3"
