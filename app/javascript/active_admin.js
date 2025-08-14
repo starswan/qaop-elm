@@ -1,9 +1,9 @@
 // from https://github.com/activeadmin/activeadmin/discussions/7947
 //
-import jQuery from 'jquery';
+import jquery from 'jquery';
 // import 'jquery';
 // window.jQuery = window.$ = $
-window.$ = jQuery;
+window.$ = jquery;
 
 // import 'jquery-ui';
 // import 'jquery-ui/ui/widgets/mouse';
