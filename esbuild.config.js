@@ -31,7 +31,7 @@ const options = elm_options()
 // https://stackoverflow.com/questions/75221520/invalid-option-in-build-call-watch
 
 const config = {
-    entryPoints: ['./hello_elm.js', 'active_admin.js'],
+    entryPoints: ['./hello_elm.js', 'application.js', 'active_admin.js'],
     bundle: true,
     outdir: path.join(process.cwd(), "app/assets/builds"),
     absWorkingDir: path.join(process.cwd(), "app/javascript"),
