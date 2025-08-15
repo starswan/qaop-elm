@@ -351,3 +351,19 @@ ActiveAdmin.setup do |config|
   #
   config.use_webpacker = true
 end
+
+# from https://github.com/activeadmin/activeadmin/discussions/7947
+module ActiveAdminViteJS
+  def stylesheet_pack_tag(style, **options)
+    style = 'active_admin.scss' if style == 'active_admin.css'
+    # vite_stylesheet_tag(style, **options)
+    stylesheet_link_tag(style, **options)
+  end
+
+  def javascript_pack_tag(script, **options)
+    # vite_javascript_tag(script, **options)
+    javascript_include_tag(script, **options)
+  end
+end
+
+ActiveAdmin::Views::Pages::Base.include ActiveAdminViteJS
