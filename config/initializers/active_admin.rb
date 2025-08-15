@@ -355,7 +355,7 @@ end
 # from https://github.com/activeadmin/activeadmin/discussions/7947
 module ActiveAdminViteJS
   def stylesheet_pack_tag(style, **options)
-    style = 'active_admin.scss' if style == 'active_admin.css'
+    # style = 'active_admin.scss' if style == 'active_admin.css'
     # vite_stylesheet_tag(style, **options)
     stylesheet_link_tag(style, **options)
   end
