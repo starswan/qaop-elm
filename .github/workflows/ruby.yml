@@ -57,4 +57,7 @@ jobs:
 
       # Run ruby tests in headless mode
       - name: Ruby tests compiled for production mode
+        env:
+          VITE_RUBY_AUTO_BUILD: false
+          RAILS_ENV: production
         run: xvfb-run -a bundle exec rspec
