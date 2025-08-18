@@ -40,31 +40,32 @@ type alias SpectrumColour =
 
 
 c_BLACK =
+    -- from https://en.wikipedia.org/wiki/ZX_Spectrum_graphic_modes
     "#000000"
 
 
-c_BLUE =
-    "#0000FF"
+c_BRIGHT_BLUE =
+    "#0200FD"
 
 
-c_RED =
-    "#FF0000"
+c_BRIGHT_RED =
+    "#FF0201"
 
 
-c_MAGENTA =
-    "#FF00FF"
+c_BRIGHT_MAGENTA =
+    "#FF02FD"
 
 
-c_GREEN =
-    "#00FF00"
+c_BRIGHT_GREEN =
+    "#00FF1C"
 
 
-c_CYAN =
-    "#00FFFF"
+c_BRIGHT_CYAN =
+    "#02FFFF"
 
 
-c_YELLOW =
-    "#FFFF00"
+c_BRIGHT_YELLOW =
+    "#FFFF1D"
 
 
 c_WHITE =
@@ -72,31 +73,31 @@ c_WHITE =
 
 
 c_DULL_BLUE =
-    "#0000D7"
+    "#0100CE"
 
 
 c_DULL_RED =
-    "#D70000"
+    "#CF0100"
 
 
 c_DULL_MAGENTA =
-    "#D700D7"
+    "#CF01CE"
 
 
 c_DULL_GREEN =
-    "#00D700"
+    "#00CF15"
 
 
 c_DULL_CYAN =
-    "#00D7D7"
+    "#01CFCF"
 
 
 c_DULL_YELLOW =
-    "#D7D700"
+    "#CFCF15"
 
 
 c_DULL_WHITE =
-    "#D7D7D7"
+    "#CFCFCF"
 
 
 spectrumColours =
@@ -115,12 +116,12 @@ spectrumColours =
 spectrumBrightColours =
     Dict.fromList
         [ ( 0, { value = Black, colour = c_BLACK } )
-        , ( 1, { value = BrightBlue, colour = c_BLUE } )
-        , ( 2, { value = BrightRed, colour = c_RED } )
-        , ( 3, { value = BrightMagenta, colour = c_MAGENTA } )
-        , ( 4, { value = BrightGreen, colour = c_GREEN } )
-        , ( 5, { value = BrightCyan, colour = c_CYAN } )
-        , ( 6, { value = BrightYellow, colour = c_YELLOW } )
+        , ( 1, { value = BrightBlue, colour = c_BRIGHT_BLUE } )
+        , ( 2, { value = BrightRed, colour = c_BRIGHT_RED } )
+        , ( 3, { value = BrightMagenta, colour = c_BRIGHT_MAGENTA } )
+        , ( 4, { value = BrightGreen, colour = c_BRIGHT_GREEN } )
+        , ( 5, { value = BrightCyan, colour = c_BRIGHT_CYAN } )
+        , ( 6, { value = BrightYellow, colour = c_BRIGHT_YELLOW } )
         , ( 7, { value = BrightWhite, colour = c_WHITE } )
         ]
 
