@@ -59,4 +59,5 @@ jobs:
       - name: Ruby tests compiled for production mode
         env:
           VITE_RUBY_AUTO_BUILD: false
+          NODE_ENV: production
         run: xvfb-run -a bundle exec rake spec
