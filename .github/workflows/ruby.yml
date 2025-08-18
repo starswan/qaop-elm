@@ -48,7 +48,7 @@ jobs:
       - name: Precompile assets
         env:
           VITE_RUBY_AUTO_BUILD: false
-          RAILS_ENV: production
+          NODE_ENV: production
         run: bin/rails assets:precompile
 
       # Run elm tests for correctness before speed tests
