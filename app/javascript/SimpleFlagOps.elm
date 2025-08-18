@@ -3,7 +3,6 @@ module SimpleFlagOps exposing (..)
 import Bitwise exposing (complement)
 import CpuTimeCTime exposing (CpuTimeIncrement(..), InstructionDuration(..))
 import Dict exposing (Dict)
-import PCIncrement exposing (PCIncrement(..))
 import SingleEnvWithMain exposing (EightBitMain(..))
 import Utils exposing (BitTest(..), bitMaskFromBit, inverseBitMaskFromBit, shiftLeftBy8, shiftRightBy8)
 import Z80Change exposing (FlagChange(..))
@@ -98,14 +97,14 @@ singleByteFlagsCB =
         , ( 0xAF, ( \z80_flags -> z80_flags |> resetBit Bit_5 |> OnlyFlags, EightTStates ) )
         , ( 0xB7, ( \z80_flags -> z80_flags |> resetBit Bit_6 |> OnlyFlags, EightTStates ) )
         , ( 0xBF, ( \z80_flags -> z80_flags |> resetBit Bit_7 |> OnlyFlags, EightTStates ) )
-        , ( 0xC7, ( \z80_flags -> z80_flags |> setBit Bit_0 |> OnlyFlags, EightTStates ) )
-        , ( 0xCF, ( \z80_flags -> z80_flags |> setBit Bit_1 |> OnlyFlags, EightTStates ) )
-        , ( 0xD7, ( \z80_flags -> z80_flags |> setBit Bit_2 |> OnlyFlags, EightTStates ) )
-        , ( 0xDF, ( \z80_flags -> z80_flags |> setBit Bit_3 |> OnlyFlags, EightTStates ) )
-        , ( 0xE7, ( \z80_flags -> z80_flags |> setBit Bit_4 |> OnlyFlags, EightTStates ) )
-        , ( 0xEF, ( \z80_flags -> z80_flags |> setBit Bit_5 |> OnlyFlags, EightTStates ) )
-        , ( 0xF7, ( \z80_flags -> z80_flags |> setBit Bit_6 |> OnlyFlags, EightTStates ) )
-        , ( 0xFF, ( \z80_flags -> z80_flags |> setBit Bit_7 |> OnlyFlags, EightTStates ) )
+        , ( 0xC7, ( \z80_flags -> z80_flags |> setFlagBit Bit_0 |> OnlyFlags, EightTStates ) )
+        , ( 0xCF, ( \z80_flags -> z80_flags |> setFlagBit Bit_1 |> OnlyFlags, EightTStates ) )
+        , ( 0xD7, ( \z80_flags -> z80_flags |> setFlagBit Bit_2 |> OnlyFlags, EightTStates ) )
+        , ( 0xDF, ( \z80_flags -> z80_flags |> setFlagBit Bit_3 |> OnlyFlags, EightTStates ) )
+        , ( 0xE7, ( \z80_flags -> z80_flags |> setFlagBit Bit_4 |> OnlyFlags, EightTStates ) )
+        , ( 0xEF, ( \z80_flags -> z80_flags |> setFlagBit Bit_5 |> OnlyFlags, EightTStates ) )
+        , ( 0xF7, ( \z80_flags -> z80_flags |> setFlagBit Bit_6 |> OnlyFlags, EightTStates ) )
+        , ( 0xFF, ( \z80_flags -> z80_flags |> setFlagBit Bit_7 |> OnlyFlags, EightTStates ) )
         ]
 
 
@@ -426,8 +425,8 @@ resetBit testType flagRegs =
     { flagRegs | a = new_a }
 
 
-setBit : BitTest -> FlagRegisters -> FlagRegisters
-setBit testType flagRegs =
+setFlagBit : BitTest -> FlagRegisters -> FlagRegisters
+setFlagBit testType flagRegs =
     let
         new_a =
             testType |> bitMaskFromBit |> Bitwise.or flagRegs.a

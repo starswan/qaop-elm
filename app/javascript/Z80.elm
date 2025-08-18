@@ -6,13 +6,13 @@
 module Z80 exposing (..)
 
 import Array exposing (Array)
-import Bitwise exposing (and, or)
+import Bitwise
 import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAndValue, InstructionDuration(..), addDuration)
 import Dict exposing (Dict)
 import DoubleWithRegisters exposing (doubleWithRegisters, doubleWithRegistersIX, doubleWithRegistersIY)
-import Group0xC0 exposing (miniDictC0)
 import Group0xE0 exposing (delta_dict_lite_E0)
-import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainAndFlagRegistersIXCB, singleByteMainAndFlagRegistersIYCB, singleByteMainRegsCB, singleByteMainRegsIXCB, singleByteMainRegsIYCB, singleEnvMainRegsCB, singleEnvMainRegsIXCB, singleEnvMainRegsIYCB)
+import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainAndFlagRegistersIXCB, singleByteMainAndFlagRegistersIYCB, singleByteMainRegsCB, singleEnvMainRegsCB)
+import GroupCBIXIY exposing (singleByteMainRegsIXCB, singleByteMainRegsIYCB, singleEnvMainRegsIXCB, singleEnvMainRegsIYCB)
 import GroupED exposing (singleByteFlagsED, singleByteMainAndFlagsED, singleByteMainRegsED)
 import Loop
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
@@ -27,14 +27,14 @@ import SingleWith8BitParameter exposing (maybeRelativeJump, singleWith8BitParam)
 import TripleByte exposing (tripleByteWith16BitParam, tripleByteWith16BitParamDD, tripleByteWith16BitParamFD)
 import TripleWithFlags exposing (triple16WithFlags)
 import TripleWithMain exposing (tripleMainRegs, tripleMainRegsIX, tripleMainRegsIY)
-import Z80Core exposing (Z80, Z80Core, add_cpu_time, inc_pc, z80_halt)
+import Z80Core exposing (Z80, Z80Core, add_cpu_time, z80_halt)
 import Z80Debug exposing (debugLog)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..))
 import Z80Env exposing (Z80Env, c_TIME_LIMIT, m1, mem, mem16, z80env_constructor)
 import Z80Execute exposing (DeltaWithChanges(..), apply_delta)
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
 import Z80Rom exposing (Z80ROM, romRoutineNames)
-import Z80Types exposing (IXIY(..), IXIYHL(..), IntWithFlagsTimeAndPC, InterruptMode(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
+import Z80Types exposing (IXIY(..), IntWithFlagsTimeAndPC, InterruptMode(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
 
 
 constructor : Z80
@@ -151,19 +151,20 @@ execute_ltC0 c rom48k z80 =
             Nothing
 
 
-execute_ltC0_xy : Int -> IXIY -> Z80ROM -> Z80Core -> Maybe Z80Delta
-execute_ltC0_xy c ixoriy rom48k z80 =
-    case miniDictC0 |> Dict.get c of
-        Just xyFunc ->
-            Just (z80 |> xyFunc ixoriy rom48k)
 
-        Nothing ->
-            case lt40_array_lite |> Array.get c |> Maybe.withDefault Nothing of
-                Just f_without_ixiyhl ->
-                    Just (z80 |> f_without_ixiyhl rom48k)
-
-                Nothing ->
-                    Nothing
+--execute_ltC0_xy : Int -> IXIY -> Z80ROM -> Z80Core -> Maybe Z80Delta
+--execute_ltC0_xy c ixoriy rom48k z80 =
+--    --case miniDictC0 |> Dict.get c of
+--    --    Just xyFunc ->
+--    --        Just (z80 |> xyFunc ixoriy rom48k)
+--    --
+--    --    Nothing ->
+--    case lt40_array_lite |> Array.get c |> Maybe.withDefault Nothing of
+--        Just f_without_ixiyhl ->
+--            Just (z80 |> f_without_ixiyhl rom48k)
+--
+--        Nothing ->
+--            Nothing
 
 
 list0255 =
@@ -173,21 +174,10 @@ list0255 =
 lt40_array_lite : Array (Maybe (Z80ROM -> Z80Core -> Z80Delta))
 lt40_array_lite =
     let
-        --z80_funcs = []
         delta_funcs =
-            list0255 |> List.map (\index -> lt40_delta_dict_lite |> Dict.get index)
+            list0255 |> List.map (\index -> delta_dict_lite_E0 |> Dict.get index)
     in
-    --List.map2 mergeFuncList z80_funcs delta_funcs |> Array.fromList
     delta_funcs |> Array.fromList
-
-
-lt40_delta_dict_lite : Dict Int (Z80ROM -> Z80Core -> Z80Delta)
-lt40_delta_dict_lite =
-    Dict.fromList
-        [ ( 0xDD, \z80 -> group_xy IXIY_IX z80 )
-        , ( 0xFD, \z80 -> group_xy IXIY_IY z80 )
-        ]
-        |> Dict.union delta_dict_lite_E0
 
 
 
@@ -674,10 +664,10 @@ runSpecial specialType rom48k z80 =
                                             PureDelta PCIncrementByFour (instrTime |> addDuration duration) (f z80.main z80.flags)
 
                                         Nothing ->
-                                            -- This fails on DD CB 3E xx
-                                            --UnknownInstruction "execute IXCB" param.value
-                                            oldDelta 0xDD instrTime z80.interrupts z80 rom48k
+                                            -- This fails on DD CB 3D xx
+                                            UnknownInstruction "execute IXCB" param.value
 
+        --oldDelta 0xDD instrTime z80.interrupts z80 rom48k
         --UnknownInstruction "execute IXCB" param.value
         IYCB iycboffset param ->
             let
@@ -704,10 +694,10 @@ runSpecial specialType rom48k z80 =
                                             PureDelta PCIncrementByFour (instrTime |> addDuration duration) (f z80.main z80.flags)
 
                                         Nothing ->
-                                            -- This fails on FD CB 3E xx
-                                            --UnknownInstruction "execute IYCB" param.value
-                                            oldDelta 0xFD instrTime z80.interrupts z80 rom48k
+                                            -- This fails on FD CB 3D xx
+                                            UnknownInstruction "execute IYCB" param.value
 
+        --oldDelta 0xFD instrTime z80.interrupts z80 rom48k
         EDMisc param ->
             let
                 instrTime =
@@ -943,40 +933,35 @@ execute rom48k z80 =
 --			PC = (char)(PC+1); time += 4;
 --			switch(c) {
 --// -------------- >8 xy
-
-
-group_xy : IXIY -> Z80ROM -> Z80Core -> Z80Delta
-group_xy ixiy rom48k old_z80 =
-    let
-        c =
-            old_z80.env |> m1 old_z80.pc (or old_z80.interrupts.ir (and old_z80.r 0x7F)) rom48k
-
-        --intr = old_z80.interrupts
-        env =
-            old_z80.env
-
-        z80_1 =
-            { old_z80 | env = { env | time = c.time }, r = old_z80.r + 1 }
-
-        new_pc =
-            z80_1 |> inc_pc
-
-        z80 =
-            { z80_1 | pc = new_pc } |> add_cpu_time 4
-
-        ltc0 =
-            z80 |> execute_ltC0_xy c.value ixiy rom48k
-    in
-    case ltc0 of
-        Just z_z80 ->
-            z_z80
-
-        Nothing ->
-            --debugTodo "group_xy" (c.value |> toHexString) z80 |> Whole
-            UnknownIntValue "group_xy" c.value
-
-
-
+--group_xy : IXIY -> Z80ROM -> Z80Core -> Z80Delta
+--group_xy ixiy rom48k old_z80 =
+--    let
+--        c =
+--            old_z80.env |> m1 old_z80.pc (or old_z80.interrupts.ir (and old_z80.r 0x7F)) rom48k
+--
+--        --intr = old_z80.interrupts
+--        env =
+--            old_z80.env
+--
+--        z80_1 =
+--            { old_z80 | env = { env | time = c.time }, r = old_z80.r + 1 }
+--
+--        new_pc =
+--            z80_1 |> inc_pc
+--
+--        z80 =
+--            { z80_1 | pc = new_pc } |> add_cpu_time 4
+--
+--        ltc0 =
+--            z80 |> execute_ltC0_xy c.value ixiy rom48k
+--    in
+--    case ltc0 of
+--        Just z_z80 ->
+--            z_z80
+--
+--        Nothing ->
+--            --debugTodo "group_xy" (c.value |> toHexString) z80 |> Whole
+--            UnknownIntValue "group_xy" c.value
 --_ -> case ixiy of
 --        IXIY_IX -> execute_gtc0 c.value IX z80
 --        IXIY_IY -> execute_gtc0 c.value IY z80

@@ -57,16 +57,6 @@ type alias IntWithFlagsTimeAndPC =
     }
 
 
-type alias Z80PushValue =
-    { value : Int
-    }
-
-
-
--- Think this could be a useful parameter to execute_lt40 to avoid the duplication
--- problem currently being experienced in function group_xy
-
-
 type IXIYHL
     = IX
     | IY
@@ -141,53 +131,6 @@ type IXIY
 --            z80.env |> z80_push z80.pc
 --    in
 --    { z80 | env = pushed, pc = c - 199 }
-
-
-get_ixiy_xy : IXIY -> MainWithIndexRegisters -> Int
-get_ixiy_xy ixiy z80_main =
-    case ixiy of
-        IXIY_IX ->
-            z80_main.ix
-
-        IXIY_IY ->
-            z80_main.iy
-
-
-
---set_h : Int -> IXIYHL -> MainWithIndexRegisters -> MainWithIndexRegisters
---set_h value ixiyhl z80 =
---    let
---        xy =
---            get_xy ixiyhl z80
---    in
---    set_xy (Bitwise.or (Bitwise.and xy 0xFF) (shiftLeftBy8 value)) ixiyhl z80
---
---
---set_h_ixiy : Int -> IXIY -> MainWithIndexRegisters -> MainWithIndexRegisters
---set_h_ixiy value ixiyhl z80 =
---    let
---        xy =
---            get_xy_ixiy ixiyhl z80
---    in
---    set_xy_ixiy (Bitwise.or (Bitwise.and xy 0xFF) (shiftLeftBy8 value)) ixiyhl z80
---
---
---set_l : Int -> IXIYHL -> MainWithIndexRegisters -> MainWithIndexRegisters
---set_l value ixiyhl z80 =
---    let
---        xy =
---            get_xy ixiyhl z80
---    in
---    set_xy (Bitwise.or (Bitwise.and xy 0xFF00) value) ixiyhl z80
---
---
---set_l_ixiy : Int -> IXIY -> MainWithIndexRegisters -> MainWithIndexRegisters
---set_l_ixiy value ixiyhl z80 =
---    let
---        xy =
---            get_xy_ixiy ixiyhl z80
---    in
---    set_xy_ixiy (Bitwise.or (Bitwise.and xy 0xFF00) value) ixiyhl z80
 
 
 get_xy : IXIYHL -> MainWithIndexRegisters -> Int
@@ -304,3 +247,13 @@ set_de_main v z80_main =
 --get_l_ixiy : IXIY -> MainWithIndexRegisters -> Int
 --get_l_ixiy ixiyhl z80 =
 --    Bitwise.and (get_xy_ixiy ixiyhl z80) 0xFF
+
+
+get_ixiy_xy : IXIY -> MainWithIndexRegisters -> Int
+get_ixiy_xy ixiy z80_main =
+    case ixiy of
+        IXIY_IX ->
+            z80_main.ix
+
+        IXIY_IY ->
+            z80_main.iy
