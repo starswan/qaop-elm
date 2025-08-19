@@ -66,6 +66,7 @@ server "arthur.broadband",
 set :deploy_to, "#{ENV['HOME']}/retroelm"
 set :rvm_type, :system
 set :rvm_custom_path, "/usr/share/rvm"
+set :rails_env, "arthur"
 
 append :linked_files, ".env.arthur"
 
