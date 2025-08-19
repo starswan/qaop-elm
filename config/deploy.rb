@@ -15,8 +15,7 @@ else
 #   set :repository, "http://arthur/svn/starswan/trunk/projects/retro/retroelm"
 end
 
-# Default deploy_to directory is /var/www/my_app_name
-# set :deploy_to, "/var/www/my_app_name"
+set :passenger_restart_with_touch, true
 
 # Default value for :format is :airbrussh.
 # set :format, :airbrussh
