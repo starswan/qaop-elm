@@ -61,8 +61,13 @@
 #   }
 server "arthur.broadband",
        user: ENV.fetch("USER"),
-       roles: %w{web app db},
-       deploy_to: "#{ENV['HOME']}/retroelm"
+       roles: %w{web app db}
+
+set :deploy_to, "#{ENV['HOME']}/retroelm"
+set :rvm_type, :system
+set :rvm_custom_path, "/usr/share/rvm"
+
+append :linked_files, ".env.arthur"
 
 # require "rvm/capistrano"
 #
