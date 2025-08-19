@@ -47,28 +47,9 @@ set :keep_releases, 50
 # Uncomment the following to require manually verifying the host key before first deploy.
 # set :ssh_options, verify_host_key: :secure
 
-# require "capistrano/ext/multistage"
-# set :stages, %w(alice arthur dell)
-# set :default_stage, "arthur"
-# set :linked_dirs, fetch(:linked_dirs, []).push('games')
-#
-# # server details
+# server details
 # set :deploy_via, :copy
 # set :use_sudo, false
-#
-# if ENV.key? "BRANCH"
-#   set :scm, :git
-#   set :repository, "git@github.com:starswan/qaop-elm.git"
-#   # set :repository, "https://github.com/starswan/qaop-elm.git"
-#   set :branch, ENV.fetch("BRANCH")
-# else
-#   # repo details
-#   set :scm, :subversion
-#   set :repository, "http://arthur/svn/starswan/trunk/projects/retro/retroelm"
-# end
-#
-# # runtime dependencies
-# # depend :remote, :gem, "bundler", ">=1.0.0.rc.2"
 #
 # tasks
 namespace :deploy do
