@@ -13,7 +13,7 @@ import elmPlugin from 'vite-plugin-elm';
 export default defineConfig(({ mode }) => {
     // const env = loadEnv(mode, process.cwd());
 
-    const isBuild = (mode === 'production') || ((mode === 'test') && (process.env.NODE_ENV === 'production'))
+    const isBuild = (mode === 'production') || (mode === 'arthur') || ((mode === 'test') && (process.env.NODE_ENV === 'production'))
 
     const elmOptions = isBuild ? {
         // optimize: false, // no `--optimize` option when using elm-optimize-level-2
