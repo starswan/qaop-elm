@@ -69,8 +69,8 @@ append :linked_dirs, "log", "tmp/pids", "tmp/cache", "tmp/sockets", "public/syst
 # # runtime dependencies
 # # depend :remote, :gem, "bundler", ">=1.0.0.rc.2"
 #
-# # tasks
-# namespace :deploy do
+# tasks
+namespace :deploy do
 #   task :start, roles: :app do
 #     run "touch #{current_path}/tmp/restart.txt"
 #   end
@@ -97,14 +97,16 @@ append :linked_dirs, "log", "tmp/pids", "tmp/cache", "tmp/sockets", "public/syst
 #     end
 #   end
 #
-#   desc "Copy Undebug module"
-#   task :undebug, roles: :app do
-#     run "cd #{release_path}/app/javascript && cp ../helpers/Undebug.elm Z80Debug.elm"
-#   end
-# end
+  desc "Copy Undebug module"
+  task :undebug do
+    on roles(:app) do
+      execute "cd #{release_path}/app/javascript && cp ../helpers/Undebug.elm Z80Debug.elm"
+    end
+  end
+end
 #
 # after "deploy:update_code", "deploy:symlink_shared"
-# after "bundler:install", "deploy:undebug"
+after "bundler:install", "deploy:undebug"
 #
 # namespace :bundler do
 #   desc "Symlink bundled gems on each release"
