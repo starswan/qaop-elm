@@ -73,6 +73,7 @@ group :development do
   # gem 'spring'
   # gem 'spring-watcher-listen', '~> 2.0.0'
 
+  gem 'bcrypt_pbkdf'
   # Use Capistrano for deployment
   gem "capistrano", ">=3"
   gem "capistrano-bundler"
@@ -81,7 +82,8 @@ group :development do
   gem "capistrano-rvm", require: false
 
   gem 'ed25519'
-  gem 'bcrypt_pbkdf'
+  # required for passenger support
+  gem 'rexml'
 end
 
 group :test do
