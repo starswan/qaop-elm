@@ -6,7 +6,7 @@ const isTest = process.env.RAILS_ENV === 'test'
 const isProduction = process.env.NODE_ENV === 'production'
 const isArthur = process.env.NODE_ENV === 'arthur'
 // const isBuild = (process.env.RAILS_ENV !== 'test' && (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'arthur'))
-const isBuild= (isTest && isProduction) || isProduction || isArthur
+const isBuild= (isTest && !isProduction) || isProduction || isArthur
 
 const elmOptions = isBuild ? {
         // optimize: false, // no `--optimize` option when using elm-optimize-level-2
