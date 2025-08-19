@@ -61,14 +61,11 @@
 #   }
 server "alice",
         user: "starswan",
-        roles: %w{web app db},
-        deploy_to: "/home/starswan/html/retro"
+        roles: %w{web app db}
 
-# require "rvm/capistrano"
-#
-# set :deploy_to, "/home/starswan/html/retro"
-# set :user, "starswan"
-# set :rvm_ruby_string, "3.3.9@retroelm"
+set :deploy_to, "/home/starswan/html/retro"
+set :rails_env, "production"
+set :rvm_ruby_version, "3.3.9@retroelm"
 # # Try to speed up ruby compilation on Raspberry Pi 2
 # # set :rvm_install_ruby_threads, 5
 # set :default_environment,
