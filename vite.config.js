@@ -22,6 +22,7 @@ export default defineConfig(({ mode }) => {
         //     processOpts: "--optimize-speed"
         // }
         optimize: true,
+        debug: false,
         nodeElmCompilerOptions: {
           verbose: true
         }
