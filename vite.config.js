@@ -43,8 +43,8 @@ export default defineConfig(({ mode }) => {
         //     verbose: true
         //   }
         // })
-        elmPlugin(elmOptions)
-        // elmPlugin()
+        // elmPlugin(elmOptions)
+        elmPlugin()
       ]
     }
 });
