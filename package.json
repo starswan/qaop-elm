@@ -1,6 +1,7 @@
 {
   "name": "retroelm",
   "private": true,
+  "type": "module",
   "dependencies": {
     "@activeadmin/activeadmin": "~3.3.0",
     "@popperjs/core": "^2.11.8",
