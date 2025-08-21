@@ -27,6 +27,7 @@ jobs:
 
     env:
       HZ: 36.185
+      VITE_RUBY_AUTO_BUILD: false
     steps:
       - uses: actions/checkout@v4
       - name: Set up Ruby
@@ -47,7 +48,6 @@ jobs:
 
       - name: Precompile assets
         env:
-          VITE_RUBY_AUTO_BUILD: false
           RAILS_ENV: test
         run: bundle exec rake assets:precompile
 
