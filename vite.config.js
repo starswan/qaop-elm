@@ -38,14 +38,9 @@ export default defineConfig(({ mode }) => {
             assetsInlineLimit: 24576
           },
       plugins: [
-        RubyPlugin(),
-        // elmPlugin({
-        //   nodeElmCompilerOptions: {
-        //     verbose: true
-        //   }
-        // })
-        elmPlugin(elmOptions)
+        elmPlugin(elmOptions),
         // elmPlugin()
+        RubyPlugin()
       ]
     }
 });
