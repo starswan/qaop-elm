@@ -1,6 +1,7 @@
 module ScreenTest exposing (..)
 
 import Expect
+import SpectrumColour exposing (attributeFromInt)
 import Test exposing (..)
 import Z80Screen exposing (foldBoolRunCounts, foldUp)
 
@@ -12,17 +13,26 @@ suite =
             [ test "without dups" <|
                 \_ ->
                     let
+                        colour70 =
+                            0x70 |> attributeFromInt
+
                         a =
-                            [ { colour = 0x70, data = 0x76 } ]
+                            [ { colour = colour70, data = 0x76 } ]
                     in
-                    Expect.equal [ { colour = 0x70, data = [ 0x76 ] } ] (a |> List.foldr foldUp [])
+                    Expect.equal [ { colour = colour70, data = [ 0x76 ] } ] (a |> List.foldr foldUp [])
             , test "with dups" <|
                 \_ ->
                     let
+                        colour70 =
+                            0x70 |> attributeFromInt
+
+                        colour45 =
+                            0x45 |> attributeFromInt
+
                         a =
-                            [ { colour = 0x70, data = 0x76 }, { colour = 0x70, data = 0x71 }, { colour = 0x45, data = 0x87 } ]
+                            [ { colour = colour70, data = 0x76 }, { colour = colour70, data = 0x71 }, { colour = colour45, data = 0x87 } ]
                     in
-                    Expect.equal [ { colour = 0x70, data = [ 0x76, 0x71 ] }, { colour = 0x45, data = [ 0x87 ] } ] (a |> List.foldr foldUp [])
+                    Expect.equal [ { colour = colour70, data = [ 0x76, 0x71 ] }, { colour = colour45, data = [ 0x87 ] } ] (a |> List.foldr foldUp [])
             ]
         , describe "rawToLines"
             [ test "foldBoolRunCounts" <|
