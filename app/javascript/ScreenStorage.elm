@@ -183,16 +183,16 @@ getScreenValue addr screen =
             offset =
                 addr - 0x1800
 
-            row =
+            rowIndex =
                 offset // 32 |> Vector24.intToIndex |> Maybe.withDefault Vector24.Index0
 
-            oldrow =
-                screen.attrs |> Vector24.get row
+            row =
+                screen.attrs |> Vector24.get rowIndex
 
             col =
                 offset |> remainderBy 32 |> Vector32.intToIndex |> Maybe.withDefault Vector32.Index0
         in
-        oldrow |> Vector32.get col |> attributeToInt
+        row |> Vector32.get col |> attributeToInt
 
 
 rawScreenData : Z80Screen -> List (Vector32 RawScreenData)

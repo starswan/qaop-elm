@@ -110,12 +110,11 @@ RSpec.describe "Spectrum Emulator" do
       spectrum.send_keys [:enter]
 
       if z80_game == cyrus
-        # Wait for cyrus chess to initialise before
-        # sending 'd' for demo mode
-        while cpu_count.text.to_i < 300
+        # Wait for cyrus chess to initialise
+        while cpu_count.text.to_i < 250
           sleep 0.5
         end
-        # square colours
+        # make square colours higher contrast
         cycles = cpu_count.text.to_i
         "a0724".each_char do |k|
           spectrum.send_keys k

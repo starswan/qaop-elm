@@ -128,61 +128,6 @@ borderColour border =
             c_DULL_WHITE
 
 
-spectrumColour : BorderColour -> Bool -> SpectrumColour
-spectrumColour value bright =
-    if bright then
-        case value of
-            BorderBlack ->
-                { value = Black, colour = c_BLACK }
-
-            BorderBlue ->
-                { value = BrightBlue, colour = c_BRIGHT_BLUE }
-
-            BorderRed ->
-                { value = BrightRed, colour = c_BRIGHT_RED }
-
-            BorderMagenta ->
-                { value = BrightMagenta, colour = c_BRIGHT_MAGENTA }
-
-            BorderGreen ->
-                { value = BrightGreen, colour = c_BRIGHT_GREEN }
-
-            BorderCyan ->
-                { value = BrightCyan, colour = c_BRIGHT_CYAN }
-
-            BorderYellow ->
-                { value = BrightYellow, colour = c_BRIGHT_YELLOW }
-
-            BorderWhite ->
-                { value = BrightWhite, colour = c_WHITE }
-
-    else
-        case value of
-            BorderBlack ->
-                { value = Black, colour = c_BLACK }
-
-            BorderBlue ->
-                { value = Blue, colour = c_DULL_BLUE }
-
-            BorderRed ->
-                { value = Red, colour = c_DULL_RED }
-
-            BorderMagenta ->
-                { value = Magenta, colour = c_DULL_MAGENTA }
-
-            BorderGreen ->
-                { value = Green, colour = c_DULL_GREEN }
-
-            BorderCyan ->
-                { value = Cyan, colour = c_DULL_CYAN }
-
-            BorderYellow ->
-                { value = Yellow, colour = c_DULL_YELLOW }
-
-            BorderWhite ->
-                { value = White, colour = c_DULL_WHITE }
-
-
 type alias ScreenAttribute =
     { flash : Bool
     , bright : Bool
@@ -276,7 +221,7 @@ attributeToInt attribute =
                 0x00
 
         bright =
-            if attribute.flash then
+            if attribute.bright then
                 0x40
 
             else
@@ -292,10 +237,10 @@ attributeToInt attribute =
 
 
 attributeAndBitToColour : Bool -> ScreenAttribute -> Bool -> SpectrumColour
-attributeAndBitToColour globalFlash raw_colour bitValue =
+attributeAndBitToColour globalFlash screenAttr bitValue =
     let
         value =
-            if raw_colour.flash && globalFlash then
+            if screenAttr.flash && globalFlash then
                 not bitValue
 
             else
@@ -303,13 +248,59 @@ attributeAndBitToColour globalFlash raw_colour bitValue =
 
         colour =
             if value then
-                -- ink
-                --Bitwise.and raw_colour 0x07
-                raw_colour.ink
+                screenAttr.ink
 
             else
-                --paper
-                --Bitwise.and raw_colour 0x38 |> shiftRightBy 3
-                raw_colour.paper
+                screenAttr.paper
     in
-    spectrumColour colour raw_colour.bright
+    if screenAttr.bright then
+        case colour of
+            BorderBlack ->
+                { value = Black, colour = c_BLACK }
+
+            BorderBlue ->
+                { value = BrightBlue, colour = c_BRIGHT_BLUE }
+
+            BorderRed ->
+                { value = BrightRed, colour = c_BRIGHT_RED }
+
+            BorderMagenta ->
+                { value = BrightMagenta, colour = c_BRIGHT_MAGENTA }
+
+            BorderGreen ->
+                { value = BrightGreen, colour = c_BRIGHT_GREEN }
+
+            BorderCyan ->
+                { value = BrightCyan, colour = c_BRIGHT_CYAN }
+
+            BorderYellow ->
+                { value = BrightYellow, colour = c_BRIGHT_YELLOW }
+
+            BorderWhite ->
+                { value = BrightWhite, colour = c_WHITE }
+
+    else
+        case colour of
+            BorderBlack ->
+                { value = Black, colour = c_BLACK }
+
+            BorderBlue ->
+                { value = Blue, colour = c_DULL_BLUE }
+
+            BorderRed ->
+                { value = Red, colour = c_DULL_RED }
+
+            BorderMagenta ->
+                { value = Magenta, colour = c_DULL_MAGENTA }
+
+            BorderGreen ->
+                { value = Green, colour = c_DULL_GREEN }
+
+            BorderCyan ->
+                { value = Cyan, colour = c_DULL_CYAN }
+
+            BorderYellow ->
+                { value = Yellow, colour = c_DULL_YELLOW }
+
+            BorderWhite ->
+                { value = White, colour = c_DULL_WHITE }
