@@ -27,7 +27,9 @@ export default defineConfig(({ mode }) => {
           verbose: true
         }
     } : {
-      optimize: false,
+      //   proof that these options are not respected in the output - no debugger
+      // in test mode
+      debug: true,
       nodeElmCompilerOptions: {
         verbose: true
       }
@@ -38,9 +40,9 @@ export default defineConfig(({ mode }) => {
             assetsInlineLimit: 24576
           },
       plugins: [
-        elmPlugin(elmOptions),
+        RubyPlugin(),
+        elmPlugin(elmOptions)
         // elmPlugin()
-        RubyPlugin()
       ]
     }
 });
