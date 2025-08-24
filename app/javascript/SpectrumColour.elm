@@ -133,6 +133,8 @@ type alias ScreenAttribute =
     , bright : Bool
     , paper : BorderColour
     , ink : BorderColour
+    , paperColour : SpectrumColour
+    , inkColour : SpectrumColour
     }
 
 
@@ -198,16 +200,20 @@ attributeFromInt int =
         flash =
             Bitwise.and int 0x80 /= 0
 
-        bright =
-            Bitwise.and int 0x40 /= 0
-
         paper =
             intToColour (int |> Bitwise.and 0x38 |> shiftRightBy 3)
 
         ink =
             intToColour (int |> Bitwise.and 0x07)
+
+        ( bright, ic, pc ) =
+            if Bitwise.and int 0x40 /= 0 then
+                ( True, brightColourToSpectrumColour True ink, brightColourToSpectrumColour True paper )
+
+            else
+                ( False, brightColourToSpectrumColour False ink, brightColourToSpectrumColour False paper )
     in
-    { flash = flash, bright = bright, paper = paper, ink = ink }
+    { flash = flash, bright = bright, paper = paper, ink = ink, inkColour = ic, paperColour = pc }
 
 
 attributeToInt : ScreenAttribute -> Int
@@ -236,24 +242,9 @@ attributeToInt attribute =
     flash + bright + paper + ink
 
 
-attributeAndBitToColour : Bool -> ScreenAttribute -> Bool -> SpectrumColour
-attributeAndBitToColour globalFlash screenAttr bitValue =
-    let
-        value =
-            if screenAttr.flash && globalFlash then
-                not bitValue
-
-            else
-                bitValue
-
-        colour =
-            if value then
-                screenAttr.ink
-
-            else
-                screenAttr.paper
-    in
-    if screenAttr.bright then
+brightColourToSpectrumColour : Bool -> BorderColour -> SpectrumColour
+brightColourToSpectrumColour bright colour =
+    if bright then
         case colour of
             BorderBlack ->
                 { value = Black, colour = c_BLACK }
@@ -304,3 +295,23 @@ attributeAndBitToColour globalFlash screenAttr bitValue =
 
             BorderWhite ->
                 { value = White, colour = c_DULL_WHITE }
+
+
+attributeAndBitToColour : Bool -> ScreenAttribute -> Bool -> SpectrumColour
+attributeAndBitToColour globalFlash screenAttr bitValue =
+    let
+        value =
+            if screenAttr.flash && globalFlash then
+                not bitValue
+
+            else
+                bitValue
+
+        colour =
+            if value then
+                screenAttr.ink
+
+            else
+                screenAttr.paper
+    in
+    brightColourToSpectrumColour screenAttr.bright colour
