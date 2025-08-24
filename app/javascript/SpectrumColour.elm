@@ -206,12 +206,14 @@ attributeFromInt int =
         ink =
             intToColour (int |> Bitwise.and 0x07)
 
-        ( bright, ic, pc ) =
-            if Bitwise.and int 0x40 /= 0 then
-                ( True, brightColourToSpectrumColour True ink, brightColourToSpectrumColour True paper )
+        bright =
+            Bitwise.and int 0x40 /= 0
 
-            else
-                ( False, brightColourToSpectrumColour False ink, brightColourToSpectrumColour False paper )
+        ic =
+            brightColourToSpectrumColour bright ink
+
+        pc =
+            brightColourToSpectrumColour bright paper
     in
     { flash = flash, bright = bright, paper = paper, ink = ink, inkColour = ic, paperColour = pc }
 
@@ -306,12 +308,9 @@ attributeAndBitToColour globalFlash screenAttr bitValue =
 
             else
                 bitValue
-
-        colour =
-            if value then
-                screenAttr.ink
-
-            else
-                screenAttr.paper
     in
-    brightColourToSpectrumColour screenAttr.bright colour
+    if value then
+        screenAttr.inkColour
+
+    else
+        screenAttr.paperColour

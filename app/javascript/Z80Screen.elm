@@ -81,10 +81,10 @@ type alias ScreenColourRun =
 
 
 pairToColour : Bool -> ScreenAttribute -> RunCount -> ScreenColourRun
-pairToColour globalFlash raw_colour runcount =
+pairToColour globalFlash screenAttr runcount =
     let
         colour =
-            attributeAndBitToColour globalFlash raw_colour runcount.value
+            attributeAndBitToColour globalFlash screenAttr runcount.value
     in
     ScreenColourRun runcount.count colour
 
