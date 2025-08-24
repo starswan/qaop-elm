@@ -21,7 +21,7 @@ import MessageHandler exposing (bytesToRom, bytesToTap)
 import Qaop exposing (Qaop, pause)
 import ScreenStorage exposing (ScreenLine, Z80Screen)
 import Spectrum exposing (frames, new_tape)
-import SpectrumColour exposing (borderColour)
+import SpectrumColour exposing (borderColourToString)
 import Svg exposing (Svg, g, line, rect, svg)
 import Svg.Attributes exposing (fill, height, rx, stroke, viewBox, width, x1, x2, y1, y2)
 import Svg.Lazy
@@ -136,7 +136,7 @@ backgroundNode screen =
     let
         -- border colour is never bright
         border_colour =
-            borderColour screen.border
+            borderColourToString screen.border
     in
     rect [ height "100%", width "100%", fill border_colour, rx "15" ] []
 
@@ -172,11 +172,11 @@ screenDataNodeList flash screenLines =
                 let
                     -- if flash is off (bit 7) on the whole line, use False for globalFlash value to help SVG caching
                     localFlash =
-                        if (line.attrs |> Vector32.foldl (\x y -> Bitwise.or x y) 0x00 |> Bitwise.and 0x80) == 0x00 then
-                            False
+                        if line.attrs |> Vector32.foldl (\x y -> y || x.flash) False then
+                            flash
 
                         else
-                            flash
+                            False
                 in
                 line
                     |> Svg.Lazy.lazy3 mapScreenLineToSvg localFlash index

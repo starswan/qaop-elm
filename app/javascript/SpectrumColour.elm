@@ -1,8 +1,8 @@
 module SpectrumColour exposing (..)
 
 import Array
+import Bitwise exposing (shiftRightBy)
 import Dict
-import Maybe exposing (withDefault)
 
 
 type BorderColour
@@ -22,7 +22,7 @@ borders =
 
 intToBorderColour : Int -> BorderColour
 intToBorderColour value =
-    borders |> Array.get value |> withDefault BorderWhite
+    borders |> Array.get value |> Maybe.withDefault BorderWhite
 
 
 type SpectrumColourValue
@@ -136,8 +136,8 @@ spectrumBrightColours =
         ]
 
 
-borderColour : BorderColour -> String
-borderColour border =
+borderColourToString : BorderColour -> String
+borderColourToString border =
     -- borderColours are never bright
     case border of
         BorderBlack ->
@@ -165,10 +165,44 @@ borderColour border =
             c_DULL_WHITE
 
 
-spectrumColour : Int -> Bool -> SpectrumColour
-spectrumColour value bright =
-    if bright then
-        Dict.get value spectrumBrightColours |> withDefault { value = White, colour = c_DULL_WHITE }
+type alias ScreenAttribute =
+    { flash : Bool
+    , value : Int
+    , paperColour : SpectrumColour
+    , inkColour : SpectrumColour
+    }
 
-    else
-        Dict.get value spectrumColours |> withDefault { value = White, colour = c_DULL_WHITE }
+
+attributeFromInt : Int -> ScreenAttribute
+attributeFromInt int =
+    let
+        flash =
+            Bitwise.and int 0x80 /= 0
+
+        paper =
+            int |> Bitwise.and 0x38 |> shiftRightBy 3
+
+        ink =
+            int |> Bitwise.and 0x07
+
+        bright =
+            Bitwise.and int 0x40 /= 0
+
+        ( ic, pc ) =
+            if bright then
+                ( brightColourToSpectrumColour ink, brightColourToSpectrumColour paper )
+
+            else
+                ( dullColourToSpectrumColour ink, dullColourToSpectrumColour paper )
+    in
+    { flash = flash, inkColour = ic, paperColour = pc, value = int }
+
+
+brightColourToSpectrumColour : Int -> SpectrumColour
+brightColourToSpectrumColour colour =
+    spectrumBrightColours |> Dict.get colour |> Maybe.withDefault { value = BrightWhite, colour = c_WHITE }
+
+
+dullColourToSpectrumColour : Int -> SpectrumColour
+dullColourToSpectrumColour colour =
+    spectrumColours |> Dict.get colour |> Maybe.withDefault { value = White, colour = c_DULL_WHITE }
