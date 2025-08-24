@@ -3,7 +3,7 @@ module ScreenStorage exposing (..)
 -- Convert row index into start row data location
 
 import Bitwise exposing (shiftLeftBy, shiftRightBy)
-import SpectrumColour exposing (BorderColour(..))
+import SpectrumColour exposing (BorderColour(..), ScreenAttribute, attributeFromInt, attributeToInt)
 import Vector24 exposing (Vector24)
 import Vector32 exposing (Vector32)
 import Z80Memory exposing (Z80Memory, getMemValue)
@@ -50,7 +50,7 @@ attr_indexes =
 
 type alias Z80Screen =
     { data : Z80Memory
-    , attrs : Vector24 (Vector32 Int)
+    , attrs : Vector24 (Vector32 ScreenAttribute)
     , border : BorderColour
     , flash : Bool
 
@@ -66,7 +66,7 @@ type alias Z80Screen =
 
 
 type alias RawScreenData =
-    { colour : Int
+    { colour : ScreenAttribute
     , data : Int
     }
 
@@ -81,7 +81,7 @@ constructor =
         --attributes =
         --    List.repeat 768 0x38 |> Z80Memory.constructor
         attr_line =
-            Vector32.repeat 0x38
+            Vector32.repeat (0x38 |> attributeFromInt)
 
         attributes =
             Vector24.repeat attr_line
@@ -166,7 +166,7 @@ setScreenValue addr value z80screen =
                 offset |> remainderBy 32 |> Vector32.intToIndex |> Maybe.withDefault Vector32.Index0
 
             new_row =
-                oldrow |> Vector32.set col value
+                oldrow |> Vector32.set col (value |> attributeFromInt)
         in
         --{ z80screen | attrs = z80screen.attrs |> Z80Memory.setMemValue (addr - 0x1800) value }
         { z80screen | attrs = z80screen.attrs |> Vector24.set row new_row }
@@ -192,7 +192,7 @@ getScreenValue addr screen =
             col =
                 offset |> remainderBy 32 |> Vector32.intToIndex |> Maybe.withDefault Vector32.Index0
         in
-        oldrow |> Vector32.get col
+        oldrow |> Vector32.get col |> attributeToInt
 
 
 rawScreenData : Z80Screen -> List (Vector32 RawScreenData)

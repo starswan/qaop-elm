@@ -1,16 +1,15 @@
 module Z80Screen exposing (..)
 
 import Array exposing (Array)
-import Bitwise exposing (shiftRightBy)
 import Byte exposing (Byte, getBit)
 import Maybe
 import ScreenStorage exposing (RawScreenData, Z80Screen, rawScreenData)
-import SpectrumColour exposing (SpectrumColour, spectrumColour)
+import SpectrumColour exposing (ScreenAttribute, SpectrumColour, attributeAndBitToColour)
 import Vector32 exposing (Vector32)
 
 
 type alias ScreenData =
-    { colour : Int
+    { colour : ScreenAttribute
     , data : List Int
     }
 
@@ -81,50 +80,11 @@ type alias ScreenColourRun =
     }
 
 
-intToColour : Bool -> Int -> Bool -> SpectrumColour
-intToColour globalFlash raw_colour bitValue =
-    let
-        colour_byte =
-            Byte.fromInt raw_colour
-
-        bright =
-            --(raw_colour |> Bitwise.and 0x40) /= 0
-            colour_byte |> getBit 6
-
-        --
-        flash =
-            --(raw_colour |> Bitwise.and 0x80) /= 0
-            colour_byte |> getBit 7
-
-        --(flash, bright) = case raw_colour |> Bitwise.and 0xC0 of
-        --    0 -> (False, False)
-        --    1 -> (False, True)
-        --    2 -> (True, False)
-        --    _ -> (True, True)
-        value =
-            if flash && globalFlash then
-                not bitValue
-
-            else
-                bitValue
-
-        colour =
-            if value then
-                -- ink
-                Bitwise.and raw_colour 0x07
-
-            else
-                --paper
-                Bitwise.and raw_colour 0x38 |> shiftRightBy 3
-    in
-    spectrumColour colour bright
-
-
-pairToColour : Bool -> Int -> RunCount -> ScreenColourRun
+pairToColour : Bool -> ScreenAttribute -> RunCount -> ScreenColourRun
 pairToColour globalFlash raw_colour runcount =
     let
         colour =
-            intToColour globalFlash raw_colour runcount.value
+            attributeAndBitToColour globalFlash raw_colour runcount.value
     in
     ScreenColourRun runcount.count colour
 
