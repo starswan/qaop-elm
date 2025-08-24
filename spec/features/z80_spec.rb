@@ -115,7 +115,18 @@ RSpec.describe "Spectrum Emulator" do
         while cpu_count.text.to_i < 300
           sleep 0.5
         end
-        spectrum.send_keys 'd'
+        # square colours
+        cycles = cpu_count.text.to_i
+        "a0724".each_char do |k|
+          spectrum.send_keys k
+        end
+        while cpu_count.text.to_i - cycles < 150
+          sleep 0.5
+        end
+        # Level 3 demo mode Cyrus vs Cyrus
+        "ld".each_char do |k|
+          spectrum.send_keys k
+        end
         speed = measure_speed_in_hz
       else
         speed = measure_speed_in_hz do
