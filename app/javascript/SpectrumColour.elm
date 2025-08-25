@@ -99,8 +99,8 @@ c_DULL_WHITE =
     "#CFCFCF"
 
 
-borderColour : BorderColour -> String
-borderColour border =
+borderColourToString : BorderColour -> String
+borderColourToString border =
     -- borderColours are never bright
     case border of
         BorderBlack ->
