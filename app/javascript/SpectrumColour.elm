@@ -1,6 +1,6 @@
 module SpectrumColour exposing (..)
 
-import Bitwise exposing (shiftLeftBy, shiftRightBy)
+import Bitwise exposing (shiftRightBy)
 
 
 type BorderColour
@@ -131,6 +131,7 @@ borderColourToString border =
 type alias ScreenAttribute =
     { flash : Bool
     , bright : Bool
+    , value : Int
     , paper : BorderColour
     , ink : BorderColour
     , paperColour : SpectrumColour
@@ -166,32 +167,33 @@ intToColour int =
             BorderWhite
 
 
-intFromColour : BorderColour -> Int
-intFromColour int =
-    case int of
-        BorderBlack ->
-            0
 
-        BorderBlue ->
-            1
-
-        BorderRed ->
-            2
-
-        BorderMagenta ->
-            3
-
-        BorderGreen ->
-            4
-
-        BorderCyan ->
-            5
-
-        BorderYellow ->
-            6
-
-        BorderWhite ->
-            7
+--intFromColour : BorderColour -> Int
+--intFromColour int =
+--    case int of
+--        BorderBlack ->
+--            0
+--
+--        BorderBlue ->
+--            1
+--
+--        BorderRed ->
+--            2
+--
+--        BorderMagenta ->
+--            3
+--
+--        BorderGreen ->
+--            4
+--
+--        BorderCyan ->
+--            5
+--
+--        BorderYellow ->
+--            6
+--
+--        BorderWhite ->
+--            7
 
 
 attributeFromInt : Int -> ScreenAttribute
@@ -215,33 +217,7 @@ attributeFromInt int =
         pc =
             brightColourToSpectrumColour bright paper
     in
-    { flash = flash, bright = bright, paper = paper, ink = ink, inkColour = ic, paperColour = pc }
-
-
-attributeToInt : ScreenAttribute -> Int
-attributeToInt attribute =
-    let
-        flash =
-            if attribute.flash then
-                0x80
-
-            else
-                0x00
-
-        bright =
-            if attribute.bright then
-                0x40
-
-            else
-                0x00
-
-        paper =
-            attribute.paper |> intFromColour |> shiftLeftBy 3
-
-        ink =
-            attribute.ink |> intFromColour
-    in
-    flash + bright + paper + ink
+    { flash = flash, bright = bright, paper = paper, ink = ink, inkColour = ic, paperColour = pc, value = int }
 
 
 brightColourToSpectrumColour : Bool -> BorderColour -> SpectrumColour
@@ -297,20 +273,3 @@ brightColourToSpectrumColour bright colour =
 
             BorderWhite ->
                 { value = White, colour = c_DULL_WHITE }
-
-
-attributeAndBitToColour : Bool -> ScreenAttribute -> Bool -> SpectrumColour
-attributeAndBitToColour globalFlash screenAttr bitValue =
-    let
-        value =
-            if screenAttr.flash && globalFlash then
-                not bitValue
-
-            else
-                bitValue
-    in
-    if value then
-        screenAttr.inkColour
-
-    else
-        screenAttr.paperColour

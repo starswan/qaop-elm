@@ -4,7 +4,7 @@ import Array exposing (Array)
 import Byte exposing (Byte, getBit)
 import Maybe
 import ScreenStorage exposing (RawScreenData, Z80Screen, rawScreenData)
-import SpectrumColour exposing (ScreenAttribute, SpectrumColour, attributeAndBitToColour)
+import SpectrumColour exposing (ScreenAttribute, SpectrumColour)
 import Vector32 exposing (Vector32)
 
 
@@ -83,8 +83,19 @@ type alias ScreenColourRun =
 pairToColour : Bool -> ScreenAttribute -> RunCount -> ScreenColourRun
 pairToColour globalFlash screenAttr runcount =
     let
+        value =
+            if screenAttr.flash && globalFlash then
+                not runcount.value
+
+            else
+                runcount.value
+
         colour =
-            attributeAndBitToColour globalFlash screenAttr runcount.value
+            if value then
+                screenAttr.inkColour
+
+            else
+                screenAttr.paperColour
     in
     ScreenColourRun runcount.count colour
 
