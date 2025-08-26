@@ -18,10 +18,12 @@ import Keyboard exposing (ctrlKeyDownEvent, ctrlKeyUpEvent, keyDownEvent, keyUpE
 import Loader exposing (LoadAction(..), trimActionList)
 import MessageHandler exposing (bytesToRom, bytesToTap)
 import Qaop exposing (Qaop, pause)
+import ScreenStorage exposing (Z80Screen)
 import Spectrum exposing (Spectrum, frames, new_tape)
 import SpectrumColour exposing (borderColour)
-import Svg exposing (Svg, line, rect, svg)
+import Svg exposing (Svg, g, line, rect, svg)
 import Svg.Attributes exposing (fill, height, rx, stroke, viewBox, width, x1, x2, y1, y2)
+import Svg.Lazy exposing (lazy)
 import Tapfile exposing (Tapfile)
 import Time exposing (posixToMillis)
 import Utils exposing (speed_in_hz, time_display)
@@ -139,6 +141,16 @@ foldScr item list =
             List.singleton ( 0, item )
 
 
+backgroundNode : Z80Screen -> Svg Message
+backgroundNode screen =
+    let
+        -- border colour is never bright
+        border_colour =
+            borderColour screen.border
+    in
+    rect [ height "100%", width "100%", fill border_colour, rx "15" ] []
+
+
 view : Model -> Html Message
 view model =
     let
@@ -156,21 +168,19 @@ view model =
             screen1
                 |> List.map (\scrList -> scrList |> List.foldl foldScr [] |> List.reverse)
 
-        screen_data : List (List (Svg Message))
+        screen_data : List (Svg Message)
         screen_data =
             screen2
                 |> List.indexedMap lineListToSvg
+                |> List.concat
 
         -- border colour is never bright
-        border_colour =
-            borderColour screen.border
-
-        background =
-            [ rect [ height "100%", width "100%", fill border_colour, rx "15" ] [] ]
-
-        screen_data_list =
-            background :: screen_data |> List.concat
-
+        --border_colour =
+        --    borderColour screen.border
+        --background =
+        --    rect [ height "100%", width "100%", fill border_colour, rx "15" ] []
+        --screen_data_list =
+        --    background :: screen_data
         load_disabled =
             case model.qaop.spectrum.tape of
                 Just tape ->
@@ -216,7 +226,9 @@ view model =
                 , viewBox "0 0 352 272"
                 ]
                 --<rect width="100%" height="100%" fill="green" />
-                screen_data_list
+                [ lazy backgroundNode screen
+                , g [] screen_data
+                ]
             ]
 
         --,svg [style "height" "192px", style "width" "256px"] (List.indexedMap lineListToSvg lines |> List.concat)
