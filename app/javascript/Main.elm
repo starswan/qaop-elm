@@ -151,12 +151,9 @@ backgroundNode screen =
     rect [ height "100%", width "100%", fill border_colour, rx "15" ] []
 
 
-view : Model -> Html Message
-view model =
+screenDataNodeList : Z80Screen -> List (List (Svg Message))
+screenDataNodeList screen =
     let
-        screen =
-            model.qaop.spectrum.rom48k.z80ram.screen
-
         -- List (0-255) of List SCR
         screen1 : List (List ScreenColourRun)
         screen1 =
@@ -167,20 +164,32 @@ view model =
         screen2 =
             screen1
                 |> List.map (\scrList -> scrList |> List.foldl foldScr [] |> List.reverse)
+    in
+    screen2
+        |> List.indexedMap lineListToSvg
 
-        screen_data : List (Svg Message)
-        screen_data =
-            screen2
-                |> List.indexedMap lineListToSvg
-                |> List.concat
 
-        -- border colour is never bright
-        --border_colour =
-        --    borderColour screen.border
-        --background =
-        --    rect [ height "100%", width "100%", fill border_colour, rx "15" ] []
-        --screen_data_list =
-        --    background :: screen_data
+svgNode : Z80Screen -> Html Message
+svgNode screen =
+    svg
+        [ height (272 * c_SCALEFACTOR |> String.fromInt)
+        , width (352 * c_SCALEFACTOR |> String.fromInt)
+        , viewBox "0 0 352 272"
+        ]
+        --<rect width="100%" height="100%" fill="green" />
+        [ Svg.Lazy.lazy backgroundNode screen
+
+        --, g [] (screenDataNodes screen)
+        , g [] (screen |> screenDataNodeList |> List.map (\l -> g [] l))
+        ]
+
+
+view : Model -> Html Message
+view model =
+    let
+        screen =
+            model.qaop.spectrum.rom48k.z80ram.screen
+
         load_disabled =
             case model.qaop.spectrum.tape of
                 Just tape ->
@@ -220,15 +229,7 @@ view model =
             , preventDefaultOn "keydown" (Decode.map alwaysPreventDefault keyDownDecoder)
             , preventDefaultOn "keyup" (Decode.map alwaysPreventDefault keyUpDecoder)
             ]
-            [ svg
-                [ height (272 * c_SCALEFACTOR |> String.fromInt)
-                , width (352 * c_SCALEFACTOR |> String.fromInt)
-                , viewBox "0 0 352 272"
-                ]
-                --<rect width="100%" height="100%" fill="green" />
-                [ lazy backgroundNode screen
-                , g [] screen_data
-                ]
+            [ Svg.Lazy.lazy svgNode screen
             ]
 
         --,svg [style "height" "192px", style "width" "256px"] (List.indexedMap lineListToSvg lines |> List.concat)
