@@ -18,6 +18,7 @@ import Keyboard exposing (ctrlKeyDownEvent, ctrlKeyUpEvent, keyDownEvent, keyUpE
 import Loader exposing (LoadAction(..), trimActionList)
 import MessageHandler exposing (bytesToRom, bytesToTap)
 import Qaop exposing (Qaop, pause)
+import ScreenStorage exposing (Z80Screen)
 import Spectrum exposing (Spectrum, frames, new_tape)
 import SpectrumColour exposing (borderColourToString)
 import Svg exposing (Svg, line, rect, svg)
