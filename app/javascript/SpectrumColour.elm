@@ -1,7 +1,6 @@
 module SpectrumColour exposing (..)
 
-import Dict
-import Maybe exposing (withDefault)
+import Bitwise exposing (shiftRightBy)
 
 
 type BorderColour
@@ -100,34 +99,8 @@ c_DULL_WHITE =
     "#CFCFCF"
 
 
-spectrumColours =
-    Dict.fromList
-        [ ( 0, { value = Black, colour = c_BLACK } )
-        , ( 1, { value = Blue, colour = c_DULL_BLUE } )
-        , ( 2, { value = Red, colour = c_DULL_RED } )
-        , ( 3, { value = Magenta, colour = c_DULL_MAGENTA } )
-        , ( 4, { value = Green, colour = c_DULL_GREEN } )
-        , ( 5, { value = Cyan, colour = c_DULL_CYAN } )
-        , ( 6, { value = Yellow, colour = c_DULL_YELLOW } )
-        , ( 7, { value = White, colour = c_DULL_WHITE } )
-        ]
-
-
-spectrumBrightColours =
-    Dict.fromList
-        [ ( 0, { value = Black, colour = c_BLACK } )
-        , ( 1, { value = BrightBlue, colour = c_BRIGHT_BLUE } )
-        , ( 2, { value = BrightRed, colour = c_BRIGHT_RED } )
-        , ( 3, { value = BrightMagenta, colour = c_BRIGHT_MAGENTA } )
-        , ( 4, { value = BrightGreen, colour = c_BRIGHT_GREEN } )
-        , ( 5, { value = BrightCyan, colour = c_BRIGHT_CYAN } )
-        , ( 6, { value = BrightYellow, colour = c_BRIGHT_YELLOW } )
-        , ( 7, { value = BrightWhite, colour = c_WHITE } )
-        ]
-
-
-borderColour : BorderColour -> String
-borderColour border =
+borderColourToString : BorderColour -> String
+borderColourToString border =
     -- borderColours are never bright
     case border of
         BorderBlack ->
@@ -155,10 +128,148 @@ borderColour border =
             c_DULL_WHITE
 
 
-spectrumColour : Int -> Bool -> SpectrumColour
-spectrumColour value bright =
+type alias ScreenAttribute =
+    { flash : Bool
+    , bright : Bool
+    , value : Int
+    , paper : BorderColour
+    , ink : BorderColour
+    , paperColour : SpectrumColour
+    , inkColour : SpectrumColour
+    }
+
+
+intToColour : Int -> BorderColour
+intToColour int =
+    case int of
+        0 ->
+            BorderBlack
+
+        1 ->
+            BorderBlue
+
+        2 ->
+            BorderRed
+
+        3 ->
+            BorderMagenta
+
+        4 ->
+            BorderGreen
+
+        5 ->
+            BorderCyan
+
+        6 ->
+            BorderYellow
+
+        _ ->
+            BorderWhite
+
+
+
+--intFromColour : BorderColour -> Int
+--intFromColour int =
+--    case int of
+--        BorderBlack ->
+--            0
+--
+--        BorderBlue ->
+--            1
+--
+--        BorderRed ->
+--            2
+--
+--        BorderMagenta ->
+--            3
+--
+--        BorderGreen ->
+--            4
+--
+--        BorderCyan ->
+--            5
+--
+--        BorderYellow ->
+--            6
+--
+--        BorderWhite ->
+--            7
+
+
+attributeFromInt : Int -> ScreenAttribute
+attributeFromInt int =
+    let
+        flash =
+            Bitwise.and int 0x80 /= 0
+
+        paper =
+            intToColour (int |> Bitwise.and 0x38 |> shiftRightBy 3)
+
+        ink =
+            intToColour (int |> Bitwise.and 0x07)
+
+        bright =
+            Bitwise.and int 0x40 /= 0
+
+        ic =
+            brightColourToSpectrumColour bright ink
+
+        pc =
+            brightColourToSpectrumColour bright paper
+    in
+    { flash = flash, bright = bright, paper = paper, ink = ink, inkColour = ic, paperColour = pc, value = int }
+
+
+brightColourToSpectrumColour : Bool -> BorderColour -> SpectrumColour
+brightColourToSpectrumColour bright colour =
     if bright then
-        Dict.get value spectrumBrightColours |> withDefault { value = White, colour = c_DULL_WHITE }
+        case colour of
+            BorderBlack ->
+                { value = Black, colour = c_BLACK }
+
+            BorderBlue ->
+                { value = BrightBlue, colour = c_BRIGHT_BLUE }
+
+            BorderRed ->
+                { value = BrightRed, colour = c_BRIGHT_RED }
+
+            BorderMagenta ->
+                { value = BrightMagenta, colour = c_BRIGHT_MAGENTA }
+
+            BorderGreen ->
+                { value = BrightGreen, colour = c_BRIGHT_GREEN }
+
+            BorderCyan ->
+                { value = BrightCyan, colour = c_BRIGHT_CYAN }
+
+            BorderYellow ->
+                { value = BrightYellow, colour = c_BRIGHT_YELLOW }
+
+            BorderWhite ->
+                { value = BrightWhite, colour = c_WHITE }
 
     else
-        Dict.get value spectrumColours |> withDefault { value = White, colour = c_DULL_WHITE }
+        case colour of
+            BorderBlack ->
+                { value = Black, colour = c_BLACK }
+
+            BorderBlue ->
+                { value = Blue, colour = c_DULL_BLUE }
+
+            BorderRed ->
+                { value = Red, colour = c_DULL_RED }
+
+            BorderMagenta ->
+                { value = Magenta, colour = c_DULL_MAGENTA }
+
+            BorderGreen ->
+                { value = Green, colour = c_DULL_GREEN }
+
+            BorderCyan ->
+                { value = Cyan, colour = c_DULL_CYAN }
+
+            BorderYellow ->
+                { value = Yellow, colour = c_DULL_YELLOW }
+
+            BorderWhite ->
+                { value = White, colour = c_DULL_WHITE }

@@ -18,8 +18,9 @@ import Keyboard exposing (ctrlKeyDownEvent, ctrlKeyUpEvent, keyDownEvent, keyUpE
 import Loader exposing (LoadAction(..), trimActionList)
 import MessageHandler exposing (bytesToRom, bytesToTap)
 import Qaop exposing (Qaop, pause)
+import ScreenStorage exposing (Z80Screen)
 import Spectrum exposing (Spectrum, frames, new_tape)
-import SpectrumColour exposing (borderColour)
+import SpectrumColour exposing (borderColourToString)
 import Svg exposing (Svg, line, rect, svg)
 import Svg.Attributes exposing (fill, height, rx, stroke, viewBox, width, x1, x2, y1, y2)
 import Tapfile exposing (Tapfile)
@@ -163,7 +164,7 @@ view model =
 
         -- border colour is never bright
         border_colour =
-            borderColour screen.border
+            borderColourToString screen.border
 
         background =
             [ rect [ height "100%", width "100%", fill border_colour, rx "15" ] [] ]
