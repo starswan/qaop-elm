@@ -16,20 +16,15 @@ import Http exposing (Metadata)
 import Json.Decode as Decode exposing (Decoder)
 import Keyboard exposing (ctrlKeyDownEvent, ctrlKeyUpEvent, keyDownEvent, keyUpEvent)
 import Loader exposing (LoadAction(..), trimActionList)
-import MessageHandler exposing (bytesToRom, bytesToTap)
+import MessageHandler exposing (Message(..), bytesToRom, bytesToTap)
 import Qaop exposing (Qaop, pause)
-import ScreenStorage exposing (Z80Screen)
 import Spectrum exposing (Spectrum, frames, new_tape)
-import SpectrumColour exposing (borderColour)
-import Svg exposing (Svg, g, line, rect, svg)
-import Svg.Attributes exposing (fill, height, rx, stroke, viewBox, width, x1, x2, y1, y2)
-import Svg.Lazy exposing (lazy)
+import SvgView exposing (lazySvgNode)
 import Tapfile exposing (Tapfile)
 import Time exposing (posixToMillis)
 import Utils exposing (speed_in_hz, time_display)
 import Z80Debug exposing (debugLog)
 import Z80Rom exposing (Z80ROM)
-import Z80Screen exposing (ScreenColourRun, screenLines)
 
 
 
@@ -53,16 +48,6 @@ c_TICKTIME =
     20
 
 
-
--- I'm currently unsure whether scaling the display results in a significant slowdown or not
--- what it does show is that changing the screen makes everything slower, which probably means in practice
--- that the display code will need some optimisation
-
-
-c_SCALEFACTOR =
-    2
-
-
 type AutoKey
     = AutoChar Char
     | AutoControl String
@@ -77,21 +62,6 @@ type alias Model =
     , time : Maybe Time.Posix
     , loadPressed : Bool
     }
-
-
-type Message
-    = GotTAP (Result Http.Error (List Tapfile))
-    | GotRom (Result Http.Error (Maybe Z80ROM))
-    | Tick Time.Posix
-    | Pause
-    | Autoload
-    | CharacterKeyDown Char
-    | CharacterUnKey Char
-    | ControlKeyDown String
-    | ControlUnKey String
-    | KeyRepeat
-    | CharacterKeyUp Char
-    | ControlKeyUp String
 
 
 type alias Flags =
@@ -112,76 +82,6 @@ init data =
             Qaop.new params |> run
     in
     ( Model newQaop c_TICKTIME 0 0 Nothing False, cmd )
-
-
-lineToSvg : Int -> ( Int, ScreenColourRun ) -> Svg Message
-lineToSvg y_index ( start, linedata ) =
-    line
-        [ x1 (48 + start |> String.fromInt)
-        , y1 (40 + y_index |> String.fromInt)
-        , x2 ((48 + start + linedata.length) |> String.fromInt)
-        , y2 (40 + y_index |> String.fromInt)
-        , stroke (linedata.colour |> .colour)
-        ]
-        []
-
-
-lineListToSvg : Int -> List ( Int, ScreenColourRun ) -> List (Svg Message)
-lineListToSvg y_index linelist =
-    linelist |> List.map (lineToSvg y_index)
-
-
-foldScr : ScreenColourRun -> List ( Int, ScreenColourRun ) -> List ( Int, ScreenColourRun )
-foldScr item list =
-    case list of
-        ( head, headScr ) :: tail ->
-            ( head + headScr.length, item ) :: list
-
-        _ ->
-            List.singleton ( 0, item )
-
-
-backgroundNode : Z80Screen -> Svg Message
-backgroundNode screen =
-    let
-        -- border colour is never bright
-        border_colour =
-            borderColour screen.border
-    in
-    rect [ height "100%", width "100%", fill border_colour, rx "15" ] []
-
-
-screenDataNodeList : Z80Screen -> List (List (Svg Message))
-screenDataNodeList screen =
-    let
-        -- List (0-255) of List SCR
-        screen1 : List (List ScreenColourRun)
-        screen1 =
-            screen
-                |> screenLines
-
-        screen2 : List (List ( Int, ScreenColourRun ))
-        screen2 =
-            screen1
-                |> List.map (\scrList -> scrList |> List.foldl foldScr [] |> List.reverse)
-    in
-    screen2
-        |> List.indexedMap lineListToSvg
-
-
-svgNode : Z80Screen -> Html Message
-svgNode screen =
-    svg
-        [ height (272 * c_SCALEFACTOR |> String.fromInt)
-        , width (352 * c_SCALEFACTOR |> String.fromInt)
-        , viewBox "0 0 352 272"
-        ]
-        --<rect width="100%" height="100%" fill="green" />
-        [ Svg.Lazy.lazy backgroundNode screen
-
-        --, g [] (screenDataNodes screen)
-        , g [] (screen |> screenDataNodeList |> List.map (\l -> g [] l))
-        ]
 
 
 view : Model -> Html Message
@@ -229,7 +129,7 @@ view model =
             , preventDefaultOn "keydown" (Decode.map alwaysPreventDefault keyDownDecoder)
             , preventDefaultOn "keyup" (Decode.map alwaysPreventDefault keyUpDecoder)
             ]
-            [ Svg.Lazy.lazy svgNode screen
+            [ lazySvgNode screen
             ]
 
         --,svg [style "height" "192px", style "width" "256px"] (List.indexedMap lineListToSvg lines |> List.concat)
