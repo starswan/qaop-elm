@@ -40,8 +40,6 @@ svgNode screen =
         ]
         --<rect width="100%" height="100%" fill="green" />
         [ lazy backgroundNode screen
-
-        --, g [] (screenDataNodes screen)
         , g [] (screen |> screenDataNodeList |> List.map (\l -> g [] l))
         ]
 
