@@ -3,7 +3,33 @@ module MessageHandler exposing (..)
 import Bytes exposing (Bytes, Endianness(..))
 import Http exposing (Error, Expect, Metadata, Response)
 import Tapfile exposing (Tapfile, parseTapFile)
+import Time
 import Z80Rom exposing (Z80ROM, parseRomFile)
+
+
+type Message
+    = GotTAP (Result Http.Error (List Tapfile))
+    | GotRom (Result Http.Error (Maybe Z80ROM))
+    | Tick Time.Posix
+    | Pause
+    | Autoload
+    | CharacterKeyDown Char
+    | CharacterUnKey Char
+    | ControlKeyDown String
+    | ControlUnKey String
+    | KeyRepeat
+    | CharacterKeyUp Char
+    | ControlKeyUp String
+
+
+
+-- I'm currently unsure whether scaling the display results in a significant slowdown or not
+-- what it does show is that changing the screen makes everything slower, which probably means in practice
+-- that the display code will need some optimisation
+
+
+c_SCALEFACTOR =
+    2
 
 
 bytesToTap : Response Bytes -> Result Error (List Tapfile)
