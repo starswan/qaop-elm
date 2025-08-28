@@ -6,6 +6,7 @@ import Bitwise exposing (shiftLeftBy, shiftRightBy)
 import SpectrumColour exposing (BorderColour(..))
 import Vector24 exposing (Vector24)
 import Vector32 exposing (Vector32)
+import Vector8
 import Z80Memory exposing (Z80Memory, getMemValue)
 
 
@@ -91,6 +92,8 @@ constructor =
 
 calcDataOffset : Int -> Int
 calcDataOffset start =
+    -- given an offset 0-191, return the start screen address
+    -- for the data row 0-191 (which needs multiplying by 32 to get an actual address)
     let
         bankStart =
             start |> Bitwise.and 0xC0
@@ -104,8 +107,30 @@ calcDataOffset start =
     bankStart + bankOffset + data_offset
 
 
+type alias VectorDataOffset =
+    { index24 : Vector24.Index
+    , index8 : Vector8.Index
+    }
+
+
+calcVectorDataOffset : Int -> VectorDataOffset
+calcVectorDataOffset int =
+    let
+        dataOffset =
+            calcDataOffset int
+
+        rowIndex =
+            dataOffset // 8 |> Vector24.intToIndex |> Maybe.withDefault Vector24.Index0
+
+        dataIndex =
+            (dataOffset |> remainderBy 8) |> Vector8.intToIndex |> Maybe.withDefault Vector8.Index0
+    in
+    VectorDataOffset rowIndex dataIndex
+
+
+screenOffsets : List ( VectorDataOffset, Vector24.Index )
 screenOffsets =
-    attr_indexes |> List.indexedMap (\index attr_index -> ( calcDataOffset index, attr_index ))
+    attr_indexes |> List.indexedMap (\index attr_index -> ( calcVectorDataOffset index, attr_index ))
 
 
 
@@ -211,107 +236,110 @@ rawScreenData z80_screen =
             )
 
 
-memoryRow : Z80Screen -> Int -> Vector32 Int
-memoryRow z80_screen row_index =
+memoryRow : Z80Screen -> VectorDataOffset -> Vector32 Int
+memoryRow z80_screen screenOffset =
     let
-        offset =
+        row_index =
+            (screenOffset.index8 |> Vector8.indexToInt) + 8 * (screenOffset.index24 |> Vector24.indexToInt)
+
+        dataOffset =
             row_index * 32
 
         d0 =
-            z80_screen.data |> getMemValue (offset + 0)
+            z80_screen.data |> getMemValue (dataOffset + 0)
 
         d1 =
-            z80_screen.data |> getMemValue (offset + 1)
+            z80_screen.data |> getMemValue (dataOffset + 1)
 
         d2 =
-            z80_screen.data |> getMemValue (offset + 2)
+            z80_screen.data |> getMemValue (dataOffset + 2)
 
         d3 =
-            z80_screen.data |> getMemValue (offset + 3)
+            z80_screen.data |> getMemValue (dataOffset + 3)
 
         d4 =
-            z80_screen.data |> getMemValue (offset + 4)
+            z80_screen.data |> getMemValue (dataOffset + 4)
 
         d5 =
-            z80_screen.data |> getMemValue (offset + 5)
+            z80_screen.data |> getMemValue (dataOffset + 5)
 
         d6 =
-            z80_screen.data |> getMemValue (offset + 6)
+            z80_screen.data |> getMemValue (dataOffset + 6)
 
         d7 =
-            z80_screen.data |> getMemValue (offset + 7)
+            z80_screen.data |> getMemValue (dataOffset + 7)
 
         d8 =
-            z80_screen.data |> getMemValue (offset + 8)
+            z80_screen.data |> getMemValue (dataOffset + 8)
 
         d9 =
-            z80_screen.data |> getMemValue (offset + 9)
+            z80_screen.data |> getMemValue (dataOffset + 9)
 
         d10 =
-            z80_screen.data |> getMemValue (offset + 10)
+            z80_screen.data |> getMemValue (dataOffset + 10)
 
         d11 =
-            z80_screen.data |> getMemValue (offset + 11)
+            z80_screen.data |> getMemValue (dataOffset + 11)
 
         d12 =
-            z80_screen.data |> getMemValue (offset + 12)
+            z80_screen.data |> getMemValue (dataOffset + 12)
 
         d13 =
-            z80_screen.data |> getMemValue (offset + 13)
+            z80_screen.data |> getMemValue (dataOffset + 13)
 
         d14 =
-            z80_screen.data |> getMemValue (offset + 14)
+            z80_screen.data |> getMemValue (dataOffset + 14)
 
         d15 =
-            z80_screen.data |> getMemValue (offset + 15)
+            z80_screen.data |> getMemValue (dataOffset + 15)
 
         d16 =
-            z80_screen.data |> getMemValue (offset + 16)
+            z80_screen.data |> getMemValue (dataOffset + 16)
 
         d17 =
-            z80_screen.data |> getMemValue (offset + 17)
+            z80_screen.data |> getMemValue (dataOffset + 17)
 
         d18 =
-            z80_screen.data |> getMemValue (offset + 18)
+            z80_screen.data |> getMemValue (dataOffset + 18)
 
         d19 =
-            z80_screen.data |> getMemValue (offset + 19)
+            z80_screen.data |> getMemValue (dataOffset + 19)
 
         d20 =
-            z80_screen.data |> getMemValue (offset + 20)
+            z80_screen.data |> getMemValue (dataOffset + 20)
 
         d21 =
-            z80_screen.data |> getMemValue (offset + 21)
+            z80_screen.data |> getMemValue (dataOffset + 21)
 
         d22 =
-            z80_screen.data |> getMemValue (offset + 22)
+            z80_screen.data |> getMemValue (dataOffset + 22)
 
         d23 =
-            z80_screen.data |> getMemValue (offset + 23)
+            z80_screen.data |> getMemValue (dataOffset + 23)
 
         d24 =
-            z80_screen.data |> getMemValue (offset + 24)
+            z80_screen.data |> getMemValue (dataOffset + 24)
 
         d25 =
-            z80_screen.data |> getMemValue (offset + 25)
+            z80_screen.data |> getMemValue (dataOffset + 25)
 
         d26 =
-            z80_screen.data |> getMemValue (offset + 26)
+            z80_screen.data |> getMemValue (dataOffset + 26)
 
         d27 =
-            z80_screen.data |> getMemValue (offset + 27)
+            z80_screen.data |> getMemValue (dataOffset + 27)
 
         d28 =
-            z80_screen.data |> getMemValue (offset + 28)
+            z80_screen.data |> getMemValue (dataOffset + 28)
 
         d29 =
-            z80_screen.data |> getMemValue (offset + 29)
+            z80_screen.data |> getMemValue (dataOffset + 29)
 
         d30 =
-            z80_screen.data |> getMemValue (offset + 30)
+            z80_screen.data |> getMemValue (dataOffset + 30)
 
         d31 =
-            z80_screen.data |> getMemValue (offset + 31)
+            z80_screen.data |> getMemValue (dataOffset + 31)
 
         data_row =
             Vector32.from32 d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 d17 d18 d19 d20 d21 d22 d23 d24 d25 d26 d27 d28 d29 d30 d31
