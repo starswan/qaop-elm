@@ -70,14 +70,14 @@ suite =
                             List.range 0 7 |> List.map (\x -> calcVectorDataOffset x)
                     in
                     Expect.equal
-                        [ { index24 = Vector24.Index0, index8 = Vector8.Index0 }
-                        , { index24 = Vector24.Index1, index8 = Vector8.Index0 }
-                        , { index24 = Vector24.Index2, index8 = Vector8.Index0 }
-                        , { index24 = Vector24.Index3, index8 = Vector8.Index0 }
-                        , { index24 = Vector24.Index4, index8 = Vector8.Index0 }
-                        , { index24 = Vector24.Index5, index8 = Vector8.Index0 }
-                        , { index24 = Vector24.Index6, index8 = Vector8.Index0 }
-                        , { index24 = Vector24.Index7, index8 = Vector8.Index0 }
+                        [ ( Vector24.Index0, Vector8.Index0 )
+                        , ( Vector24.Index1, Vector8.Index0 )
+                        , ( Vector24.Index2, Vector8.Index0 )
+                        , ( Vector24.Index3, Vector8.Index0 )
+                        , ( Vector24.Index4, Vector8.Index0 )
+                        , ( Vector24.Index5, Vector8.Index0 )
+                        , ( Vector24.Index6, Vector8.Index0 )
+                        , ( Vector24.Index7, Vector8.Index0 )
                         ]
                         result
             ]
