@@ -109,12 +109,13 @@ calcDataOffset start =
 
 
 type alias VectorDataOffset =
-    { index24 : Vector24.Index
-    , index8 : Vector8.Index
+    { dataIndex24 : Vector24.Index
+    , dataIndex8 : Vector8.Index
+    , attrIndex : Vector24.Index
     }
 
 
-calcVectorDataOffset : Int -> VectorDataOffset
+calcVectorDataOffset : Int -> ( Vector24.Index, Vector8.Index )
 calcVectorDataOffset int =
     let
         dataOffset =
@@ -126,12 +127,20 @@ calcVectorDataOffset int =
         dataIndex =
             (dataOffset |> remainderBy 8) |> Vector8.intToIndex |> Maybe.withDefault Vector8.Index0
     in
-    VectorDataOffset rowIndex dataIndex
+    ( rowIndex, dataIndex )
 
 
-screenOffsets : List ( VectorDataOffset, Vector24.Index )
+screenOffsets : List VectorDataOffset
 screenOffsets =
-    attr_indexes |> List.indexedMap (\index attr_index -> ( calcVectorDataOffset index, attr_index ))
+    attr_indexes
+        |> List.indexedMap
+            (\index attr_index ->
+                let
+                    ( data24, data8 ) =
+                        calcVectorDataOffset index
+                in
+                VectorDataOffset data24 data8 attr_index
+            )
 
 
 
@@ -236,23 +245,25 @@ rawScreenData : Z80Screen -> List (Vector32 RawScreenData)
 rawScreenData z80_screen =
     screenOffsets
         |> List.map
-            (\( row_index, attr_index ) ->
+            (\vectorOffset ->
                 let
+                    data_row : Vector32 Int
                     data_row =
-                        memoryRow z80_screen row_index
+                        memoryRow z80_screen vectorOffset.dataIndex24 vectorOffset.dataIndex8
 
+                    attr_row : Vector32 Int
                     attr_row =
-                        z80_screen.attrs |> Vector24.get attr_index
+                        z80_screen.attrs |> Vector24.get vectorOffset.attrIndex
                 in
                 Vector32.map2 (\data attr -> { colour = attr, data = data }) data_row attr_row
             )
 
 
-memoryRow : Z80Screen -> VectorDataOffset -> Vector32 Int
-memoryRow z80_screen screenOffset =
+memoryRow : Z80Screen -> Vector24.Index -> Vector8.Index -> Vector32 Int
+memoryRow z80_screen index24 index8 =
     let
         row_index =
-            (screenOffset.index8 |> Vector8.indexToInt) + 8 * (screenOffset.index24 |> Vector24.indexToInt)
+            (index8 |> Vector8.indexToInt) + 8 * (index24 |> Vector24.indexToInt)
 
         data_row =
             z80_screen.data |> Dict.get row_index |> Maybe.withDefault (Vector32.repeat 0)
