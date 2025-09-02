@@ -18,18 +18,20 @@ import Keyboard exposing (ctrlKeyDownEvent, ctrlKeyUpEvent, keyDownEvent, keyUpE
 import Loader exposing (LoadAction(..), trimActionList)
 import MessageHandler exposing (bytesToRom, bytesToTap)
 import Qaop exposing (Qaop, pause)
-import ScreenStorage exposing (Z80Screen)
+import ScreenStorage exposing (ScreenLine, Z80Screen)
 import Spectrum exposing (Spectrum, frames, new_tape)
 import SpectrumColour exposing (borderColour)
 import Svg exposing (Svg, g, line, rect, svg)
 import Svg.Attributes exposing (fill, height, rx, stroke, viewBox, width, x1, x2, y1, y2)
-import Svg.Lazy exposing (lazy)
+import Svg.Lazy
 import Tapfile exposing (Tapfile)
 import Time exposing (posixToMillis)
 import Utils exposing (speed_in_hz, time_display)
+import Vector24 exposing (Vector24)
+import Vector8 exposing (Vector8)
 import Z80Debug exposing (debugLog)
 import Z80Rom exposing (Z80ROM)
-import Z80Screen exposing (ScreenColourRun, screenLines)
+import Z80Screen exposing (ScreenColourRun, mapScreenLine)
 
 
 
@@ -126,21 +128,6 @@ lineToSvg y_index ( start, linedata ) =
         []
 
 
-lineListToSvg : Int -> List ( Int, ScreenColourRun ) -> List (Svg Message)
-lineListToSvg y_index linelist =
-    linelist |> List.map (lineToSvg y_index)
-
-
-foldScr : ScreenColourRun -> List ( Int, ScreenColourRun ) -> List ( Int, ScreenColourRun )
-foldScr item list =
-    case list of
-        ( head, headScr ) :: tail ->
-            ( head + headScr.length, item ) :: list
-
-        _ ->
-            List.singleton ( 0, item )
-
-
 backgroundNode : Z80Screen -> Svg Message
 backgroundNode screen =
     let
@@ -151,26 +138,44 @@ backgroundNode screen =
     rect [ height "100%", width "100%", fill border_colour, rx "15" ] []
 
 
-screenDataNodeList : Z80Screen -> List (List (Svg Message))
-screenDataNodeList screen =
+screenDataNodeList : Bool -> Vector24 ScreenLine -> List (Svg Message)
+screenDataNodeList flash screenLines =
     let
-        -- List (0-255) of List SCR
-        screen1 : List (List ScreenColourRun)
-        screen1 =
-            screen
-                |> screenLines
+        scrFolded : Vector24 (Vector8 (List ( Int, ScreenColourRun )))
+        scrFolded =
+            screenLines
+                |> Vector24.map (\s -> s |> mapScreenLine flash)
 
-        screen2 : List (List ( Int, ScreenColourRun ))
-        screen2 =
-            screen1
-                |> List.map (\scrList -> scrList |> List.foldl foldScr [] |> List.reverse)
+        s3 : List (List ( Int, ScreenColourRun ))
+        s3 =
+            scrFolded
+                |> Vector24.map (\vec8 -> vec8 |> Vector8.toList)
+                |> Vector24.toList
+                |> List.concat
     in
-    screen2
-        |> List.indexedMap lineListToSvg
+    s3
+        |> List.indexedMap (\y_index linelist -> linelist |> List.map (lineToSvg y_index))
+        |> List.map (\l -> g [] l)
+
+
+flashNodeList =
+    screenDataNodeList True
+
+
+unflashNodeList =
+    screenDataNodeList False
 
 
 svgNode : Z80Screen -> Html Message
 svgNode screen =
+    let
+        nodelist =
+            if screen.flash then
+                flashNodeList
+
+            else
+                unflashNodeList
+    in
     svg
         [ height (272 * c_SCALEFACTOR |> String.fromInt)
         , width (352 * c_SCALEFACTOR |> String.fromInt)
@@ -180,7 +185,7 @@ svgNode screen =
         [ Svg.Lazy.lazy backgroundNode screen
 
         --, g [] (screenDataNodes screen)
-        , g [] (screen |> screenDataNodeList |> List.map (\l -> g [] l))
+        , g [] (screen.lines |> nodelist)
         ]
 
 

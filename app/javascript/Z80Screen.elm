@@ -4,9 +4,11 @@ import Array exposing (Array)
 import Bitwise exposing (shiftRightBy)
 import Byte exposing (Byte, getBit)
 import Maybe
-import ScreenStorage exposing (RawScreenData, Z80Screen, rawScreenData)
+import ScreenStorage exposing (RawScreenData, ScreenLine, Z80Screen, memoryRow)
 import SpectrumColour exposing (SpectrumColour, spectrumColour)
+import Vector24 exposing (Vector24)
 import Vector32 exposing (Vector32)
+import Vector8 exposing (Vector8)
 
 
 type alias ScreenData =
@@ -194,13 +196,48 @@ foldUp raw list =
             [ ScreenData raw.colour [ raw.data ] ]
 
 
-screenLines : Z80Screen -> List (List ScreenColourRun)
-screenLines z80_screen =
+mapScreenLine : Bool -> ScreenLine -> Vector8 (List ( Int, ScreenColourRun ))
+mapScreenLine globalFlash screenLine =
     let
+        foldDrawn : ScreenData -> List ScreenColourRun -> List ScreenColourRun
         foldDrawn =
-            toDrawn z80_screen.flash
+            toDrawn globalFlash
+
+        rawData : Vector8 (Vector32 RawScreenData)
+        rawData =
+            Vector8.indices
+                |> Vector8.map
+                    (\dataIndex ->
+                        let
+                            dataRow =
+                                memoryRow screenLine.data dataIndex
+
+                            attr_row =
+                                screenLine.attrs
+                        in
+                        Vector32.map2 (\data attr -> { colour = attr, data = data }) dataRow attr_row
+                    )
+
+        foldedLines : Vector8 (List ScreenData)
+        foldedLines =
+            rawData |> Vector8.map (\v32 -> v32 |> Vector32.foldr foldUp [])
+
+        drawnFolded : Vector8 (List ScreenColourRun)
+        drawnFolded =
+            foldedLines |> Vector8.map (\v32 -> v32 |> List.foldr foldDrawn [])
+
+        scrFolded : Vector8 (List ( Int, ScreenColourRun ))
+        scrFolded =
+            drawnFolded |> Vector8.map (\scrList -> scrList |> List.foldl foldScr [] |> List.reverse)
     in
-    z80_screen
-        |> rawScreenData
-        |> List.map (\x -> x |> Vector32.foldr foldUp [])
-        |> List.map (\x -> x |> List.foldr foldDrawn [])
+    scrFolded
+
+
+foldScr : ScreenColourRun -> List ( Int, ScreenColourRun ) -> List ( Int, ScreenColourRun )
+foldScr item list =
+    case list |> List.head of
+        Just ( head, headScr ) ->
+            ( head + headScr.length, item ) :: list
+
+        Nothing ->
+            List.singleton ( 0, item )
