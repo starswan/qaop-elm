@@ -236,8 +236,8 @@ mapScreenLine globalFlash screenLine =
 foldScr : ScreenColourRun -> List ( Int, ScreenColourRun ) -> List ( Int, ScreenColourRun )
 foldScr item list =
     case list |> List.head of
-        Just ( head, headScr ) ->
-            ( head + headScr.length, item ) :: list
+        Just ( head, headItem ) ->
+            ( head + headItem.length, item ) :: list
 
         Nothing ->
             List.singleton ( 0, item )

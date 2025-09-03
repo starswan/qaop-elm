@@ -116,8 +116,8 @@ init data =
     ( Model newQaop c_TICKTIME 0 0 Nothing False, cmd )
 
 
-lineToSvg : Int -> ( Int, ScreenColourRun ) -> Svg Message
-lineToSvg y_index ( start, linedata ) =
+mapLineToSvg : Int -> ( Int, ScreenColourRun ) -> Svg Message
+mapLineToSvg y_index ( start, linedata ) =
     line
         [ x1 (48 + start |> String.fromInt)
         , y1 (40 + y_index |> String.fromInt)
@@ -146,35 +146,45 @@ screenDataNodeList flash screenLines =
             screenLines
                 |> Vector24.map (\s -> s |> mapScreenLine flash)
 
-        s3 : List (List ( Int, ScreenColourRun ))
-        s3 =
+        folded2 : Vector24 (Vector8 (List (Svg Message)))
+        folded2 =
             scrFolded
+                |> Vector24.indexedMap
+                    (\index24 vec8 ->
+                        vec8
+                            |> Vector8.indexedMap
+                                (\index8 vec ->
+                                    let
+                                        y_index =
+                                            ((index24 |> Vector24.indexToInt) * 8) + (index8 |> Vector8.indexToInt)
+                                    in
+                                    vec |> List.map (mapLineToSvg y_index)
+                                )
+                    )
+
+        folded3 : List (List (Svg Message))
+        folded3 =
+            folded2
                 |> Vector24.map (\vec8 -> vec8 |> Vector8.toList)
                 |> Vector24.toList
                 |> List.concat
+
+        scrList3 : List (Svg Message)
+        scrList3 =
+            folded3
+                |> List.map (\l -> g [] l)
     in
-    s3
-        |> List.indexedMap (\y_index linelist -> linelist |> List.map (lineToSvg y_index))
-        |> List.map (\l -> g [] l)
-
-
-flashNodeList =
-    screenDataNodeList True
-
-
-unflashNodeList =
-    screenDataNodeList False
+    scrList3
 
 
 svgNode : Z80Screen -> Html Message
 svgNode screen =
     let
         nodelist =
-            if screen.flash then
-                flashNodeList
+            screenDataNodeList screen.flash
 
-            else
-                unflashNodeList
+        screenLines =
+            screen.lines |> nodelist
     in
     svg
         [ height (272 * c_SCALEFACTOR |> String.fromInt)
@@ -185,7 +195,7 @@ svgNode screen =
         [ Svg.Lazy.lazy backgroundNode screen
 
         --, g [] (screenDataNodes screen)
-        , g [] (screen.lines |> nodelist)
+        , g [] screenLines
         ]
 
 
