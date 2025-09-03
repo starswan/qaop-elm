@@ -171,26 +171,14 @@ mapScreenLineToSvg flash index24 screenLine =
 
 screenDataNodeList : Bool -> Vector24 ScreenLine -> Vector24 (Svg Message)
 screenDataNodeList flash screenLines =
-    screenLines |> Vector24.indexedMap (\index line -> line |> mapScreenLineToSvg flash index)
-
-
-flashNodeList =
-    screenDataNodeList True
-
-
-unflashNodeList =
-    screenDataNodeList False
+    screenLines |> Vector24.indexedMap (\index line -> line |> Svg.Lazy.lazy3 mapScreenLineToSvg flash index)
 
 
 svgNode : Z80Screen -> Html Message
 svgNode screen =
     let
         nodelist =
-            if screen.flash then
-                flashNodeList
-
-            else
-                unflashNodeList
+            screenDataNodeList screen.flash
 
         screenLines =
             screen.lines |> nodelist |> Vector24.toList
