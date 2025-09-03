@@ -39,10 +39,18 @@ export default defineConfig(({ mode }) => {
         build: {
             assetsInlineLimit: 24576
           },
-      plugins: [
-        RubyPlugin(),
-        elmPlugin(elmOptions)
-        // elmPlugin()
-      ]
+        plugins: [
+            RubyPlugin(),
+            elmPlugin(elmOptions),
+            {
+              name: 'log',
+              options(options) {
+                  console.log('options', options);
+              },
+              outputOptions(outputOptions) {
+                  console.log('outputOptions', outputOptions);
+              },
+            }
+        ]
     }
 });
