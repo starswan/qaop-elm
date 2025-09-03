@@ -18,18 +18,20 @@ import Keyboard exposing (ctrlKeyDownEvent, ctrlKeyUpEvent, keyDownEvent, keyUpE
 import Loader exposing (LoadAction(..), trimActionList)
 import MessageHandler exposing (bytesToRom, bytesToTap)
 import Qaop exposing (Qaop, pause)
-import ScreenStorage exposing (Z80Screen)
+import ScreenStorage exposing (ScreenLine, Z80Screen)
 import Spectrum exposing (Spectrum, frames, new_tape)
 import SpectrumColour exposing (borderColour)
 import Svg exposing (Svg, g, line, rect, svg)
 import Svg.Attributes exposing (fill, height, rx, stroke, viewBox, width, x1, x2, y1, y2)
-import Svg.Lazy exposing (lazy)
+import Svg.Lazy
 import Tapfile exposing (Tapfile)
 import Time exposing (posixToMillis)
 import Utils exposing (speed_in_hz, time_display)
+import Vector24 exposing (Vector24)
+import Vector8 exposing (Vector8)
 import Z80Debug exposing (debugLog)
 import Z80Rom exposing (Z80ROM)
-import Z80Screen exposing (ScreenColourRun, screenLines)
+import Z80Screen exposing (ScreenColourRun, mapScreenLine)
 
 
 
@@ -114,8 +116,8 @@ init data =
     ( Model newQaop c_TICKTIME 0 0 Nothing False, cmd )
 
 
-lineToSvg : Int -> ( Int, ScreenColourRun ) -> Svg Message
-lineToSvg y_index ( start, linedata ) =
+mapLineToSvg : Int -> ( Int, ScreenColourRun ) -> Svg Message
+mapLineToSvg y_index ( start, linedata ) =
     line
         [ x1 (48 + start |> String.fromInt)
         , y1 (40 + y_index |> String.fromInt)
@@ -124,21 +126,6 @@ lineToSvg y_index ( start, linedata ) =
         , stroke (linedata.colour |> .colour)
         ]
         []
-
-
-lineListToSvg : Int -> List ( Int, ScreenColourRun ) -> List (Svg Message)
-lineListToSvg y_index linelist =
-    linelist |> List.map (lineToSvg y_index)
-
-
-foldScr : ScreenColourRun -> List ( Int, ScreenColourRun ) -> List ( Int, ScreenColourRun )
-foldScr item list =
-    case list of
-        ( head, headScr ) :: tail ->
-            ( head + headScr.length, item ) :: list
-
-        _ ->
-            List.singleton ( 0, item )
 
 
 backgroundNode : Z80Screen -> Svg Message
@@ -151,26 +138,51 @@ backgroundNode screen =
     rect [ height "100%", width "100%", fill border_colour, rx "15" ] []
 
 
-screenDataNodeList : Z80Screen -> List (List (Svg Message))
-screenDataNodeList screen =
+mapScreenLineToSvg : Bool -> Vector24.Index -> ScreenLine -> Svg Message
+mapScreenLineToSvg flash index24 screenLine =
     let
-        -- List (0-255) of List SCR
-        screen1 : List (List ScreenColourRun)
-        screen1 =
-            screen
-                |> screenLines
+        scrFolded : Vector8 (List ( Int, ScreenColourRun ))
+        scrFolded =
+            screenLine
+                |> mapScreenLine flash
 
-        screen2 : List (List ( Int, ScreenColourRun ))
-        screen2 =
-            screen1
-                |> List.map (\scrList -> scrList |> List.foldl foldScr [] |> List.reverse)
+        folded2 : Vector8 (List (Svg Message))
+        folded2 =
+            scrFolded
+                |> Vector8.indexedMap
+                    (\index8 vec ->
+                        let
+                            y_index =
+                                ((index24 |> Vector24.indexToInt) * 8) + (index8 |> Vector8.indexToInt)
+                        in
+                        vec |> List.map (mapLineToSvg y_index)
+                    )
+
+        folded4 : List (Svg Message)
+        folded4 =
+            folded2 |> Vector8.map (\row -> g [] row) |> Vector8.toList
+
+        folded5 : Svg Message
+        folded5 =
+            folded4 |> g []
     in
-    screen2
-        |> List.indexedMap lineListToSvg
+    folded5
+
+
+screenDataNodeList : Bool -> Vector24 ScreenLine -> Vector24 (Svg Message)
+screenDataNodeList flash screenLines =
+    screenLines |> Vector24.indexedMap (\index line -> line |> Svg.Lazy.lazy3 mapScreenLineToSvg flash index)
 
 
 svgNode : Z80Screen -> Html Message
 svgNode screen =
+    let
+        nodelist =
+            screenDataNodeList screen.flash
+
+        screenLines =
+            screen.lines |> nodelist |> Vector24.toList
+    in
     svg
         [ height (272 * c_SCALEFACTOR |> String.fromInt)
         , width (352 * c_SCALEFACTOR |> String.fromInt)
@@ -180,7 +192,7 @@ svgNode screen =
         [ Svg.Lazy.lazy backgroundNode screen
 
         --, g [] (screenDataNodes screen)
-        , g [] (screen |> screenDataNodeList |> List.map (\l -> g [] l))
+        , g [] screenLines
         ]
 
 
