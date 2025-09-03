@@ -138,39 +138,40 @@ backgroundNode screen =
     rect [ height "100%", width "100%", fill border_colour, rx "15" ] []
 
 
-screenDataNodeList : Bool -> Vector24 ScreenLine -> Vector24 (Svg Message)
-screenDataNodeList flash screenLines =
+mapScreenLineToSvg : Bool -> Vector24.Index -> ScreenLine -> Svg Message
+mapScreenLineToSvg flash index24 screenLine =
     let
-        scrFolded : Vector24 (Vector8 (List ( Int, ScreenColourRun )))
+        scrFolded : Vector8 (List ( Int, ScreenColourRun ))
         scrFolded =
-            screenLines
-                |> Vector24.map (\s -> s |> mapScreenLine flash)
+            screenLine
+                |> mapScreenLine flash
 
-        folded2 : Vector24 (Vector8 (List (Svg Message)))
+        folded2 : Vector8 (List (Svg Message))
         folded2 =
             scrFolded
-                |> Vector24.indexedMap
-                    (\index24 vec8 ->
-                        vec8
-                            |> Vector8.indexedMap
-                                (\index8 vec ->
-                                    let
-                                        y_index =
-                                            ((index24 |> Vector24.indexToInt) * 8) + (index8 |> Vector8.indexToInt)
-                                    in
-                                    vec |> List.map (mapLineToSvg y_index)
-                                )
+                |> Vector8.indexedMap
+                    (\index8 vec ->
+                        let
+                            y_index =
+                                ((index24 |> Vector24.indexToInt) * 8) + (index8 |> Vector8.indexToInt)
+                        in
+                        vec |> List.map (mapLineToSvg y_index)
                     )
 
-        folded4 : Vector24 (List (Svg Message))
+        folded4 : List (Svg Message)
         folded4 =
-            folded2 |> Vector24.map (\vec8 -> vec8 |> Vector8.map (\row -> g [] row) |> Vector8.toList)
+            folded2 |> Vector8.map (\row -> g [] row) |> Vector8.toList
 
-        folded5 : Vector24 (Svg Message)
+        folded5 : Svg Message
         folded5 =
-            folded4 |> Vector24.map (\c_list -> g [] c_list)
+            folded4 |> g []
     in
     folded5
+
+
+screenDataNodeList : Bool -> Vector24 ScreenLine -> Vector24 (Svg Message)
+screenDataNodeList flash screenLines =
+    screenLines |> Vector24.indexedMap (\index line -> line |> mapScreenLineToSvg flash index)
 
 
 flashNodeList =
