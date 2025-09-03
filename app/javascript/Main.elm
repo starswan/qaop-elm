@@ -138,7 +138,7 @@ backgroundNode screen =
     rect [ height "100%", width "100%", fill border_colour, rx "15" ] []
 
 
-screenDataNodeList : Bool -> Vector24 ScreenLine -> List (Svg Message)
+screenDataNodeList : Bool -> Vector24 ScreenLine -> Vector24 (Svg Message)
 screenDataNodeList flash screenLines =
     let
         scrFolded : Vector24 (Vector8 (List ( Int, ScreenColourRun )))
@@ -162,29 +162,37 @@ screenDataNodeList flash screenLines =
                                 )
                     )
 
-        folded3 : List (List (Svg Message))
-        folded3 =
-            folded2
-                |> Vector24.map (\vec8 -> vec8 |> Vector8.toList)
-                |> Vector24.toList
-                |> List.concat
+        folded4 : Vector24 (List (Svg Message))
+        folded4 =
+            folded2 |> Vector24.map (\vec8 -> vec8 |> Vector8.map (\row -> g [] row) |> Vector8.toList)
 
-        scrList3 : List (Svg Message)
-        scrList3 =
-            folded3
-                |> List.map (\l -> g [] l)
+        folded5 : Vector24 (Svg Message)
+        folded5 =
+            folded4 |> Vector24.map (\c_list -> g [] c_list)
     in
-    scrList3
+    folded5
+
+
+flashNodeList =
+    screenDataNodeList True
+
+
+unflashNodeList =
+    screenDataNodeList False
 
 
 svgNode : Z80Screen -> Html Message
 svgNode screen =
     let
         nodelist =
-            screenDataNodeList screen.flash
+            if screen.flash then
+                flashNodeList
+
+            else
+                unflashNodeList
 
         screenLines =
-            screen.lines |> nodelist
+            screen.lines |> nodelist |> Vector24.toList
     in
     svg
         [ height (272 * c_SCALEFACTOR |> String.fromInt)
