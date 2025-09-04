@@ -53,13 +53,13 @@ suite =
                             List.range 64 71 |> List.map (\x -> calcDataOffset x)
                     in
                     Expect.equal [ 64, 72, 80, 88, 96, 104, 112, 120 ] result
-            , test "191" <|
+            , test "184 to 191" <|
                 \_ ->
                     let
                         result =
-                            calcDataOffset 191
+                            List.range 184 191 |> List.map (\x -> calcDataOffset x)
                     in
-                    Expect.equal 191 result
+                    Expect.equal [ 135, 143, 151, 159, 167, 175, 183, 191 ] result
             ]
         , describe "calcVectorDataOffset"
             [ test "zero through7" <|
