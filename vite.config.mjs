@@ -48,7 +48,10 @@ export default defineConfig(({ mode }) => {
             assetsInlineLimit: 24576,
             rollupOptions: {
                 onLog: {
-                    level: 'debug'
+                    level: 'debug',
+                    log: {
+                        plugin: true
+                    }
                 }
             },
             terserOptions: {
@@ -64,16 +67,16 @@ export default defineConfig(({ mode }) => {
           },
         plugins: [
             RubyPlugin(),
-            elmPlugin(elmOptions),
-            {
-              name: 'log',
-              options(options) {
-                  console.log('options', options);
-              },
-              outputOptions(outputOptions) {
-                  console.log('outputOptions', outputOptions);
-              },
-            }
+            elmPlugin(elmOptions)
+            // {
+            //   name: 'log',
+            //   options(options) {
+            //       console.log('options', options);
+            //   },
+            //   outputOptions(outputOptions) {
+            //       console.log('outputOptions', outputOptions);
+            //   },
+            // }
         ]
     }
 });
