@@ -13,7 +13,10 @@ import elmPlugin from 'vite-plugin-elm';
 export default defineConfig(({ mode }) => {
     // const env = loadEnv(mode, process.cwd());
 
-    const isBuild = (mode === 'production') || (mode === 'arthur') || ((mode === 'test') && (process.env.VITE_RUBY_AUTO_BUILD === 'false'))
+    console.log('mode', mode);
+    console.log('rails_env', process.env.RAILS_ENV);
+
+    const isBuild = (mode === 'production' && process.env.RAILS_ENV !== 'test') || (mode === 'arthur') || (mode === 'test' && (process.env.VITE_RUBY_AUTO_BUILD === 'false'))
 
     const elmOptions = isBuild ? {
         // optimize: false, // no `--optimize` option when using elm-optimize-level-2
@@ -35,9 +38,23 @@ export default defineConfig(({ mode }) => {
       }
     }
 
+    // from https://guide.elm-lang.org/optimization/asset_size.html
+    // uglifyjs elm.js --compress 'pure_funcs=[F2,F3,F4,F5,F6,F7,F8,F9,A2,A3,A4,A5,A6,A7,A8,A9],pure_getters,keep_fargs=false,unsafe_comps,unsafe' | uglifyjs --mangle --output elm.min.js
+
+    // from https://terser.org/docs/options/
+
     return {
         build: {
-            assetsInlineLimit: 24576
+            assetsInlineLimit: 24576,
+            terserOptions: {
+                compress: {
+                    pure_funcs: ['F2','F3','F4','F5','F6','F7','F8','F9','A2','A3','A4','A5','A6','A7','A8','A9'],
+                    pure_getters: true,
+                    keep_fargs: false,
+                    unsafe_comps: true,
+                    unsafe: true
+                }
+            }
           },
         plugins: [
             RubyPlugin(),
