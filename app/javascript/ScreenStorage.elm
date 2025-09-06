@@ -90,13 +90,6 @@ calcVectorDataOffset int =
     VectorDataOffset rowIndex dataIndex
 
 
-
---screenOffsets : List ( VectorDataOffset, Vector24.Index )
---screenOffsets =
---     Attrs are List of 192 values: [0] * 8, [1] * 8, ... [23] * 8
---attr_indexes |> List.indexedMap (\index attr_index -> ( calcVectorDataOffset index, attr_index ))
-
-
 getScreenDataOffset : Int -> ( Vector24.Index, Vector8.Index, Vector32.Index )
 getScreenDataOffset addr =
     let
@@ -110,40 +103,6 @@ getScreenDataOffset addr =
             calcVectorDataOffset lineOffset
     in
     ( dataOffset.index24, dataOffset.index8, line32 )
-
-
-
---rowIndexes =
---    Vector24.indices
---vec32Indexes =
---    Vector32.indices
---vec8Indexes =
---    Vector8.indices
---rowStartIndexes =
---    rowIndexes
---        |> Vector24.map
---            (\ind24 ->
---                let
---                    offsets =
---                        vec8Indexes |> Vector8.map (\index -> (index |> Vector8.indexToInt) * 8)
---                in
---                ( ind24, offsets )
---            )
---mapScreen : ( Int, Int ) -> Z80Screen -> Int -> RawScreenData
---mapScreen ( row_index, attr_index ) z80_screen index =
---    let
---        --row_offset =
---        --    row_index * 32
---        --
---        --attr_offset =
---        --    attr_index * 32
---        data =
---            z80_screen.data |> getMemValue (row_index * 32 + index)
---
---        colour =
---            z80_screen.attrs |> getMemValue (attr_index * 32 + index)
---    in
---    { colour = colour, data = data }
 
 
 getScreenDataIndex : Int -> ( Vector24.Index, Vector8.Index, Vector32.Index )
