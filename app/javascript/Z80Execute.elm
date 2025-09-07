@@ -71,7 +71,7 @@ apply_delta z80 rom48k z80delta =
             z80 |> applyEnvChangeDelta cpuTimeCTime singleByteEnvChange
 
         MainWithEnvDelta pcInc duration singleEnvMainChange ->
-            z80 |> applySingleEnvMainChange pcInc duration singleEnvMainChange
+            z80 |> applySingleEnvMainChange pcInc duration singleEnvMainChange rom48k
 
         TripleMainChangeDelta cpuTimeCTime triplePCIncrement tripleMainChange ->
             z80 |> applyTripleMainChange cpuTimeCTime triplePCIncrement tripleMainChange

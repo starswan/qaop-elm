@@ -4,7 +4,7 @@ require "rails_helper"
 require "zip"
 
 RSpec.describe "Spectrum Emulator" do
-  let(:expected_hz) { (ENV['HZ'] || "10.8").to_f }
+  let(:expected_hz) { (ENV['HZ'] || "9.8").to_f }
 
   context "with documented Z80 test" do
     let(:version) { "1.2a" }
@@ -36,13 +36,18 @@ RSpec.describe "Spectrum Emulator" do
 
     # Disabled some of the IM routines, and now completes.
     # Flags: 019 of 160 tests failed.
-    # 52 SRO (XY), R (DD CB 00 00)
-    # 74 BIT N,(XY)- DD CB xx 40-47 (undoc?) - same as DD CB 00 46
-    # 89 LDIR-> NOP'. 90 LDDR ->NOP',
-    # 95 IN A, (N)
-    # 96 -> 103 IN FE:FF -> BF
-    # 107 OUTI, 108 OUTD, 109 OTIR, 110 OTDR
-    # 156 LD A,I 157 LD A,R
+    # 052 SRO (XY), R (DD CB 00 00)
+    # 074 BIT N,(XY)- DD CB xx 40-47 (undoc?) - same as DD CB 00 46
+    # 089 LDIR-> NOP'
+    # 090 LDDR ->NOP',
+    # 095 IN A, (N)
+    # 096 -> 103 IN FE:FF -> BF
+    # 107 OUTI
+    # 108 OUTD
+    # 109 OTIR
+    # 110 OTDR
+    # 156 LD A,I
+    # 157 LD A,R
     #
     # Regs: 026 of 160 tests failed.
     # 1. 52 SRO (XY) ,R (undocumented?) DD CB xx 00

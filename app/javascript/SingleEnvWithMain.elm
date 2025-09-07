@@ -4,7 +4,7 @@ import Bitwise
 import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, CpuTimeSpAnd16BitValue, InstructionDuration(..), addDuration)
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
-import Utils exposing (BitTest(..), shiftLeftBy8)
+import Utils exposing (BitTest(..), shiftLeftBy8, shiftRightBy8)
 import Z80Core exposing (Z80Core)
 import Z80Env exposing (Z80Env, mem)
 import Z80Flags exposing (FlagFunc(..), FlagRegisters, add16, c_F53, changeFlags, testBit)
@@ -23,7 +23,7 @@ type SingleEnvMainChange
     = SingleEnvNewARegister Int CpuTimeCTime
     | SingleEnv8BitMain EightBitMain Int CpuTimeCTime
     | SingleEnvNewHLRegister Int CpuTimeCTime
-    | SingleBitTest BitTest CpuTimeAndValue
+    | IndirectBitTest BitTest Int
     | SingleEnvFlagFunc FlagFunc Int CpuTimeCTime
     | SingleEnvNewHL16BitAdd IXIYHL Int Int
 
@@ -66,8 +66,8 @@ singleEnvMainRegsIY =
         ]
 
 
-applySingleEnvMainChange : PCIncrement -> InstructionDuration -> SingleEnvMainChange -> Z80Core -> Z80Core
-applySingleEnvMainChange pcInc duration z80changeData z80 =
+applySingleEnvMainChange : PCIncrement -> InstructionDuration -> SingleEnvMainChange -> Z80ROM -> Z80Core -> Z80Core
+applySingleEnvMainChange pcInc duration z80changeData rom48k z80 =
     let
         env =
             z80.env
@@ -137,16 +137,21 @@ applySingleEnvMainChange pcInc duration z80changeData z80 =
                 , r = z80.r + 1
             }
 
-        SingleBitTest bitTest intwithTime ->
+        IndirectBitTest bitTest mp_address ->
             -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
             let
+                value =
+                    z80.env |> mem mp_address z80.env.time rom48k
+
                 new_flags =
-                    z80.flags |> testBit bitTest intwithTime.value
+                    z80.flags |> testBit bitTest value.value
             in
             { z80
                 | pc = new_pc
-                , env = { env_1 | time = intwithTime.time }
-                , flags = { new_flags | ff = new_flags.ff |> Bitwise.and (Bitwise.complement c_F53) }
+                , env = { env_1 | time = value.time }
+
+                --, flags = { new_flags | ff = new_flags.ff |> Bitwise.and (Bitwise.complement c_F53) }
+                , flags = { new_flags | ff = new_flags.ff |> Bitwise.and (Bitwise.complement c_F53) |> Bitwise.or (mp_address |> shiftRightBy8 |> Bitwise.and c_F53) }
                 , r = z80.r + 1
             }
 
