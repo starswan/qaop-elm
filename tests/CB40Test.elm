@@ -97,7 +97,7 @@ suite =
                                 }
                     in
                     { pc = new_z80.pc, flags = new_z80.flags |> getFlags }
-                        |> Expect.equal { pc = addr + 4, flags = 0x54 }
+                        |> Expect.equal { pc = addr + 4, flags = 0x74 }
             , test "0xFD 0xCB d 0x40 BIT 0, (IY + d)" <|
                 \_ ->
                     let
@@ -119,7 +119,7 @@ suite =
                         mem_value =
                             new_z80.env |> mem 0x6545 new_z80.env.time z80rom
                     in
-                    Expect.equal ( addr + 4, 0x54 ) ( new_z80.pc, new_z80.flags |> getFlags )
+                    Expect.equal ( addr + 4, 0x74 ) ( new_z80.pc, new_z80.flags |> getFlags )
             ]
         , test "0xCB 0x41 BIT 0,C (unset)" <|
             \_ ->

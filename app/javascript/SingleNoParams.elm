@@ -337,11 +337,11 @@ ex_af z80 =
     let
         core =
             z80.core
-
-        core_1 =
-            { core | flags = z80.alt_flags }
     in
-    { z80 | core = core_1, alt_flags = core.flags }
+    { z80
+        | core = { core | flags = z80.alt_flags }
+        , alt_flags = core.flags
+    }
 
 
 exx : Z80 -> Z80
@@ -356,8 +356,8 @@ exx z80 =
 
         alt =
             z80.alt_main
-
-        new_core =
-            { core | main = { main | b = alt.b, c = alt.c, d = alt.d, e = alt.e, hl = alt.hl } }
     in
-    { z80 | core = new_core, alt_main = { alt | b = main.b, c = main.c, d = main.d, e = main.e, hl = main.hl } }
+    { z80
+        | core = { core | main = { main | b = alt.b, c = alt.c, d = alt.d, e = alt.e, hl = alt.hl } }
+        , alt_main = { alt | b = main.b, c = main.c, d = main.d, e = main.e, hl = main.hl }
+    }
