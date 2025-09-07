@@ -46,8 +46,7 @@ group_ed_dict =
 
         -- case 0x4F: r(A); time++; break;
         -- case 0x57: ld_a_ir(IR>>>8); break;
-        , ( 0x57, ld_a_i )
-
+        --, ( 0x57, ld_a_i )
         -- case 0x5F: ld_a_ir(r()); break;
         , ( 0x5F, ld_a_r )
 
@@ -361,10 +360,11 @@ execute_ED73 rom48k z80 =
     EnvWithPc (env2 |> addCpuTimeEnv 6) v.pc
 
 
-ld_a_i : Z80ROM -> Z80Core -> Z80Delta
-ld_a_i rom48k z80 =
-    -- case 0x57: ld_a_ir(IR>>>8); break;
-    NewAValue (z80.main.ir |> shiftRightBy8)
+
+--ld_a_i : Z80ROM -> Z80Core -> Z80Delta
+--ld_a_i rom48k z80 =
+--     case 0x57: ld_a_ir(IR>>>8); break;
+--NewAValue (z80.main.ir |> shiftRightBy8)
 
 
 ld_a_r : Z80ROM -> Z80Core -> Z80Delta
@@ -1130,6 +1130,9 @@ singleByteMainRegsED =
 
         --, ( 0x7E, ( \_ -> RegChangeIm (0x7E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
         , ( 0x7E, ( \_ -> RegChangeIm IM2, EightTStates ) )
+
+        -- case 0x57: ld_a_ir(IR>>>8); break;
+        , ( 0x57, ( \_ -> LoadAFromI, NineTStates ) )
         ]
 
 
