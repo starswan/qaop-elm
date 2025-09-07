@@ -824,17 +824,32 @@ executeCoreInstruction rom48k z80 =
     z80 |> execute_delta ct rom48k |> apply_delta z80 rom48k
 
 
+c_EX_AF_AFDASH =
+    0x08
+
+
+c_EXX =
+    0xD9
+
+
 nonCoreFuncs : Dict Int (Z80 -> Z80)
 nonCoreFuncs =
     -- 0x08 is EX AF,AF' and 0xD9 is EXX
     Dict.fromList
-        [ ( 0x08, ex_af )
-        , ( 0xD9, exx )
+        [ ( c_EX_AF_AFDASH, ex_af )
+        , ( c_EXX, exx )
         ]
 
 
-nonCoreOpCodes =
-    nonCoreFuncs |> Dict.keys |> Set.fromList
+
+--nonCoreOpCodes =
+--    nonCoreFuncs |> Dict.keys |> Set.fromList
+
+
+isCoreOpCode : Int -> Bool
+isCoreOpCode value =
+    --nonCoreOpCodes |> Set.member value |> not
+    value /= c_EX_AF_AFDASH && value /= c_EXX
 
 
 stillLooping : Z80Core -> Bool
@@ -844,7 +859,7 @@ stillLooping z80core =
 
 coreLooping : ( Z80Core, CpuTimeAndValue ) -> Bool
 coreLooping ( z80core, timeAndValue ) =
-    (z80core |> stillLooping) && (nonCoreOpCodes |> Set.member timeAndValue.value |> not)
+    isCoreOpCode timeAndValue.value && (z80core |> stillLooping)
 
 
 executeCore : Z80ROM -> Z80 -> Z80
