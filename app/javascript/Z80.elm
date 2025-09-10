@@ -856,8 +856,8 @@ stillLooping z80core =
     c_TIME_LIMIT > z80core.env.time.cpu_time
 
 
-coreLooping : ( Z80Core, CpuTimeAndValue ) -> Bool
-coreLooping ( z80core, timeAndValue ) =
+coreLooping : ( Z80Core, CpuTimeAndValue, Int ) -> Bool
+coreLooping ( z80core, timeAndValue, r_register ) =
     isCoreOpCode timeAndValue.value && (z80core |> stillLooping)
 
 
@@ -868,19 +868,18 @@ executeCore rom48k z80 =
             z80.core
 
         execute_f =
-            \( core, ct ) ->
+            \( core, ct, r_register ) ->
                 let
                     core_1 =
                         core |> execute_delta ct rom48k |> apply_delta core rom48k
                 in
-                ( { core_1 | r = core_1.r + 1 }, fetchInstruction rom48k core_1.r core_1 )
+                ( core_1, fetchInstruction rom48k r_register core_1, r_register + 1 )
 
-        ( core_2, ct1 ) =
-            --Loop.while (\( x, n ) -> c_TIME_LIMIT > x.env.time.cpu_time && (nonCoreCodes |> List.member n.value |> not)) execute_f ( z80_core, ct1 )
-            Loop.while coreLooping execute_f ( z80_core, fetchInstruction rom48k z80_core.r z80_core )
+        ( core_2, ct1, new_r ) =
+            Loop.while coreLooping execute_f ( z80_core, fetchInstruction rom48k z80_core.r z80_core, z80_core.r )
 
         z80_1 =
-            { z80 | core = core_2 }
+            { z80 | core = { core_2 | r = new_r } }
     in
     case nonCoreFuncs |> Dict.get ct1.value of
         Just f ->
