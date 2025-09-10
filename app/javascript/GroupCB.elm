@@ -10,7 +10,7 @@ import Z80Change exposing (Z80Change(..))
 import Z80Env exposing (Z80Env, mem)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIY(..), IntWithFlagsTimeAndPC, MainWithIndexRegisters)
+import Z80Types exposing (IntWithFlagsTimeAndPC, MainWithIndexRegisters)
 
 
 

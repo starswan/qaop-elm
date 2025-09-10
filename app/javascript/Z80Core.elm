@@ -6,7 +6,7 @@ import Utils exposing (shiftLeftBy8)
 import Z80Env exposing (Z80Env, addCpuTimeEnv, c_TIME_LIMIT, mem16, setMem, z80_push)
 import Z80Flags exposing (FlagRegisters)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIY(..), InterruptMode(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
+import Z80Types exposing (InterruptMode(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
 
 
 type alias Z80Core =
@@ -69,12 +69,12 @@ inc_pc z80 =
     Bitwise.and (z80.pc + 1) 0xFFFF
 
 
-set_iff : Int -> Z80Core -> MainWithIndexRegisters
+set_iff : Int -> Z80Core -> InterruptRegisters
 set_iff value z80 =
     let
         --y = debug_log "set_iff" value Nothing
         interrupts =
-            z80.main
+            z80.interrupts
     in
     { interrupts | iff = value }
 
@@ -139,7 +139,7 @@ interrupt bus rom48k full_z80 =
         main =
             z80.main
     in
-    if Bitwise.and main.iff 1 == 0 then
+    if Bitwise.and ints.iff 1 == 0 then
         full_z80
 
     else
@@ -148,7 +148,7 @@ interrupt bus rom48k full_z80 =
             --new_ints =
             --    { ints | iff = 0, halted = False }
             z80_1 =
-                { z80 | interrupts = { ints | halted = False }, main = { main | iff = 0 } }
+                { z80 | interrupts = { ints | halted = False, iff = 0 } }
 
             pushed =
                 z80_1.env |> z80_push z80_1.pc
@@ -171,7 +171,7 @@ interrupt bus rom48k full_z80 =
             IM2 ->
                 let
                     new_ir =
-                        Bitwise.and ints.ir 0xFF00
+                        Bitwise.and main.ir 0xFF00
 
                     addr =
                         Bitwise.or new_ir bus
@@ -237,7 +237,7 @@ set_pc pc z80 =
 
 get_ei : Z80Core -> Bool
 get_ei z80 =
-    Bitwise.and z80.main.iff 1 /= 0
+    Bitwise.and z80.interrupts.iff 1 /= 0
 
 
 z80_halt : Z80 -> Z80

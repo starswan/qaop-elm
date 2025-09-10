@@ -33,7 +33,7 @@ import Z80Env exposing (Z80Env, c_TIME_LIMIT, m1, mem, mem16, z80env_constructor
 import Z80Execute exposing (DeltaWithChanges(..), apply_delta)
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
 import Z80Rom exposing (Z80ROM, romRoutineNames)
-import Z80Types exposing (IXIY(..), IntWithFlagsTimeAndPC, InterruptMode(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
+import Z80Types exposing (IntWithFlagsTimeAndPC, InterruptMode(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
 
 
 constructor : Z80
@@ -52,7 +52,7 @@ constructor =
             FlagRegisters 0 0 0 0 0
 
         interrupts =
-            InterruptRegisters 0 IM0 False
+            InterruptRegisters IM0 False 0
     in
     --Z80 z80env_constructor 0 main main_flags alternate alt_flags 0 interrupts
     Z80 (Z80Core z80env_constructor 0 main main_flags 0 interrupts) alternate alt_flags
@@ -811,7 +811,7 @@ fetchInstruction rom48k z80 =
                 Nothing ->
                     z80.pc
     in
-    z80.env |> m1 pc_value (Bitwise.or z80.interrupts.ir (Bitwise.and z80.r 0x7F)) rom48k
+    z80.env |> m1 pc_value (Bitwise.or z80.main.ir (Bitwise.and z80.r 0x7F)) rom48k
 
 
 executeCoreInstruction : Z80ROM -> Z80Core -> Z80Core
