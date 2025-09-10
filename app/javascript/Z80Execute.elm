@@ -1,6 +1,6 @@
 module Z80Execute exposing (..)
 
-import Bitwise
+import Bitwise exposing (shiftLeftBy)
 import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDuration(..), addCpuTimeTime, addDuration)
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
@@ -12,7 +12,7 @@ import SingleWith8BitParameter exposing (JumpChange(..), Single8BitChange, apply
 import TripleByte exposing (TripleByteChange(..), TripleByteRegister(..))
 import TripleWithFlags exposing (TripleWithFlagsChange(..))
 import TripleWithMain exposing (TripleMainChange, applyTripleMainChange)
-import Utils exposing (bitMaskFromBit, clearBit, inverseBitMaskFromBit, setBit, shiftLeftBy8, toHexString2)
+import Utils exposing (bitMaskFromBit, clearBit, inverseBitMaskFromBit, setBit, shiftLeftBy8, shiftRightBy8, toHexString2)
 import Z80Change exposing (FlagChange(..), Z80Change, applyZ80Change)
 import Z80Core exposing (Z80Core)
 import Z80Debug exposing (debugLog, debugTodo)
@@ -20,7 +20,7 @@ import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..), applyDeltaWithChan
 import Z80Env exposing (Z80Env, mem, mem16, setMem, z80_pop, z80_push)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, inc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (MainWithIndexRegisters, get_xy, set_bc_main, set_de_main, set_xy)
+import Z80Types exposing (InterruptRegisters, MainWithIndexRegisters, get_xy, set_bc_main, set_de_main, set_xy)
 
 
 type DeltaWithChanges
@@ -749,6 +749,39 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                     { env_1 | time = input.time } |> setMem addr value
             in
             { z80 | pc = new_pc, main = new_main, env = env_2, r = z80.r + 1 }
+
+        LoadAFromIR value ->
+            let
+                flags =
+                    z80.flags |> ld_a_ir value z80.interrupts
+            in
+            { z80 | pc = new_pc, r = z80.r + 1, flags = flags }
+
+
+ld_a_ir : Int -> InterruptRegisters -> FlagRegisters -> FlagRegisters
+ld_a_ir v interrupts flags =
+    --private void ld_a_ir(int v)
+    --{
+    --	Ff = Ff&~0xFF | (A = v);
+    --	Fr = v==0 ? 0 : 1;
+    --	Fa = Fb = IFF<<6 & 0x80;
+    --	time++;
+    --}
+    let
+        ff =
+            flags.ff |> Bitwise.and (Bitwise.complement 0xFF) |> Bitwise.or v
+
+        fr =
+            if v == 0 then
+                0
+
+            else
+                1
+
+        fab =
+            interrupts.iff |> shiftLeftBy 6 |> Bitwise.and 0x80
+    in
+    { flags | a = v, ff = ff, fr = fr, fa = fab, fb = fab }
 
 
 applyShifter : Int -> Shifter -> Int -> CpuTimeCTime -> Z80ROM -> Z80Core -> Z80Core

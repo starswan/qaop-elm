@@ -35,7 +35,7 @@ RSpec.describe "Spectrum Emulator" do
     end
 
     # Disabled some of the IM routines, and now completes.
-    # Flags: 019 of 160 tests failed.
+    # Flags: 018 of 160 tests failed.
     # 052 SRO (XY), R (DD CB 00 00)
     # 074 BIT N,(XY)- DD CB xx 40-47 (undoc?) - same as DD CB 00 46
     # 089 LDIR-> NOP'
@@ -46,14 +46,13 @@ RSpec.describe "Spectrum Emulator" do
     # 108 OUTD
     # 109 OTIR
     # 110 OTDR
-    # 156 LD A,I
     # 157 LD A,R
     #
     # Regs: 026 of 160 tests failed.
     # 1. 52 SRO (XY) ,R (undocumented?) DD CB xx 00
     # 2. 74 BIT N,(XY)- DD CB xx 40
-    # 3. 79 SET N, (XY), R       DD CB xx C0
-    # 4. 84 RES N, (XY), R       DD CB xx 80
+    # 3. 79 SET N,(XY),R       DD CB xx C0
+    # 4. 84 RES N,(XY),R       DD CB xx 80
     # 5. 89 LDIR->NOP'
     # 6. 90 LDDR->NOP',
     # 7. 95 IN A, (N)
