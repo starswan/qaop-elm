@@ -4,7 +4,7 @@ import Bitwise exposing (shiftLeftBy)
 import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDuration(..), addCpuTimeTime, addDuration)
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
-import RegisterChange exposing (ChangeMainRegister(..), ChangeOneRegister(..), RegisterChange(..), Shifter(..))
+import RegisterChange exposing (ChangeMainRegister(..), ChangeOneRegister(..), InterruptChange(..), RegisterChange(..), Shifter(..))
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
 import SingleEnvWithMain exposing (EightBitMain(..), SingleEnvMainChange, applySingleEnvMainChange)
 import SingleNoParams exposing (NoParamChange(..), applyNoParamsDelta)
@@ -26,6 +26,7 @@ import Z80Types exposing (InterruptRegisters, MainWithIndexRegisters, get_xy, se
 type DeltaWithChanges
     = OldDeltaWithChanges DeltaWithChangesData
     | PureDelta PCIncrement CpuTimeCTime Z80Change
+    | InterruptDelta PCIncrement InstructionDuration InterruptChange
     | FlagDelta PCIncrement InstructionDuration FlagChange
     | RegisterChangeDelta PCIncrement InstructionDuration RegisterChange
     | Simple8BitDelta MediumPCIncrement CpuTimeCTime Single8BitChange
@@ -84,6 +85,9 @@ apply_delta z80 rom48k z80delta =
 
         UnknownInstruction string int ->
             debugTodo string (int |> toHexString2) z80
+
+        InterruptDelta pCIncrement duration interruptChange ->
+            z80 |> applyInterruptChange pCIncrement duration interruptChange
 
 
 applyJumpChangeDelta : CpuTimeCTime -> JumpChange -> Z80Core -> Z80Core
@@ -145,6 +149,38 @@ applySimple8BitDelta pcInc cpu_time z80changeData z80 =
             z80.main |> applySimple8BitChange z80changeData
     in
     { z80 | pc = new_pc, main = main, env = { z80_env | time = cpu_time } }
+
+
+applyInterruptChange : PCIncrement -> InstructionDuration -> InterruptChange -> Z80Core -> Z80Core
+applyInterruptChange pcInc duration chaange z80 =
+    let
+        new_pc =
+            case pcInc of
+                IncrementByOne ->
+                    (z80.pc + 1) |> Bitwise.and 0xFFFF
+
+                IncrementByTwo ->
+                    (z80.pc + 2) |> Bitwise.and 0xFFFF
+
+                PCIncrementByFour ->
+                    Bitwise.and (z80.pc + 4) 0xFFFF
+
+        env =
+            z80.env
+
+        time =
+            env.time
+
+        env_1 =
+            { env | time = time |> addDuration duration }
+    in
+    case chaange of
+        LoadAFromIR value ->
+            let
+                flags =
+                    z80.flags |> ld_a_ir value z80.interrupts
+            in
+            { z80 | pc = new_pc, flags = flags, env = env_1 }
 
 
 applyFlagDelta : PCIncrement -> InstructionDuration -> FlagChange -> Z80ROM -> Z80Core -> Z80Core
@@ -721,13 +757,6 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
                     { env_1 | time = input.time } |> setMem addr value
             in
             { z80 | pc = new_pc, main = new_main, env = env_2 }
-
-        LoadAFromIR value ->
-            let
-                flags =
-                    z80.flags |> ld_a_ir value z80.interrupts
-            in
-            { z80 | pc = new_pc, flags = flags }
 
 
 ld_a_ir : Int -> InterruptRegisters -> FlagRegisters -> FlagRegisters

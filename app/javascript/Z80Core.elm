@@ -171,7 +171,7 @@ interrupt bus rom48k full_z80 =
             IM2 ->
                 let
                     new_ir =
-                        Bitwise.and main.ir 0xFF00
+                        Bitwise.and ints.ir 0xFF00
 
                     addr =
                         Bitwise.or new_ir bus
@@ -231,12 +231,9 @@ set_pc pc z80 =
     z80_1
 
 
-
---	boolean ei() {return (IFF&1)!=0;}
-
-
 get_ei : Z80Core -> Bool
 get_ei z80 =
+    --	boolean ei() {return (IFF&1)!=0;}
     Bitwise.and z80.interrupts.iff 1 /= 0
 
 

@@ -24,7 +24,6 @@ type alias MainWithIndexRegisters =
     , hl : Int
     , ix : Int
     , iy : Int
-    , ir : Int
     }
 
 
@@ -39,6 +38,7 @@ type alias InterruptRegisters =
       iM : InterruptMode
     , halted : Bool
     , iff : Int
+    , ir : Int
     }
 
 
