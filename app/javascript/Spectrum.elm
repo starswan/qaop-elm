@@ -1061,7 +1061,7 @@ checkLoad spectrum =
         pc1 =
             cpu.core.pc
     in
-    if (cpu.core |> get_ei) || pc1 < 0x056B || pc1 > 0x0604 then
+    if (cpu |> get_ei) || pc1 < 0x056B || pc1 > 0x0604 then
         Nothing
 
     else
