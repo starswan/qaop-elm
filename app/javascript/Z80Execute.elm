@@ -258,7 +258,11 @@ applyFlagDelta pcInc duration z80_flags rom48k z80 =
             { z80 | pc = new_pc, env = env_1 }
 
         FlagNewRValue int ->
-            { z80 | pc = new_pc, env = env_1, r = int }
+            let
+                ints =
+                    z80.interrupts
+            in
+            { z80 | pc = new_pc, env = env_1, interrupts = { ints | r = int } }
 
         FlagChangePush int ->
             { z80 | pc = new_pc, env = env_1 |> z80_push int }

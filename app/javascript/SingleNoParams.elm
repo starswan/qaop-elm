@@ -4,6 +4,7 @@ import Bitwise exposing (shiftRightBy)
 import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDuration(..))
 import Dict exposing (Dict)
 import Z80Core exposing (Z80, Z80Core, add_cpu_time, set_iff)
+import Z80Debug exposing (debugLog)
 import Z80Env exposing (c_TIME_LIMIT, z80_pop, z80_push)
 import Z80Flags exposing (set_af)
 import Z80Rom exposing (Z80ROM)
@@ -341,16 +342,10 @@ execute_0x76_halt z80 =
     --	}
     let
         z80_core =
-            z80.core
+            z80.core |> debugLog "halt" ""
 
         interrupts =
             z80_core.interrupts
-
-        new_ints =
-            { interrupts | halted = True }
-
-        core_1 =
-            { z80_core | interrupts = new_ints }
 
         n =
             shiftRightBy 2 (c_TIME_LIMIT - z80_core.env.time.cpu_time + 3)
@@ -358,9 +353,9 @@ execute_0x76_halt z80 =
         new_core =
             if n > 0 then
                 -- turns out env.halt(n, r) just returns n...?
-                { core_1 | r = core_1.r + n } |> add_cpu_time (4 * n)
+                { z80_core | interrupts = { interrupts | halted = True, r = interrupts.r + n } } |> add_cpu_time (4 * n)
 
             else
-                core_1
+                { z80_core | interrupts = { interrupts | halted = True } }
     in
     { z80 | core = new_core }
