@@ -55,11 +55,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: | 
-            $HOME/.elm 
+            ${HOME}/.elm 
             elm-stuff
-          key: ${{ runner.os }}-qaop-elm-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-elm-${{ hashFiles('yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-qaop-elm-
+            ${{ runner.os }}-elm-
 
       - name: Yarn install
         run: yarn install
