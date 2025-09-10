@@ -21,7 +21,7 @@ import SimpleSingleByte exposing (singleByteMainRegs, singleByteMainRegsDD, sing
 import SingleByteWithEnv exposing (singleByteZ80Env)
 import SingleEnvWithMain exposing (singleEnvMainRegs, singleEnvMainRegsIX, singleEnvMainRegsIY)
 import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters, singleByteMainAndFlagRegistersIX, singleByteMainAndFlagRegistersIY)
-import SingleNoParams exposing (ex_af, exx, singleWithNoParam, singleWithNoParamDD, singleWithNoParamFD)
+import SingleNoParams exposing (ex_af, execute_0x76_halt, exx, singleWithNoParam, singleWithNoParamDD, singleWithNoParamFD)
 import SingleWith8BitParameter exposing (maybeRelativeJump, singleWith8BitParam)
 import TripleByte exposing (tripleByteWith16BitParam, tripleByteWith16BitParamDD, tripleByteWith16BitParamFD)
 import TripleWithFlags exposing (triple16WithFlags)
@@ -831,12 +831,16 @@ c_EXX =
     0xD9
 
 
+c_HALT =
+    0x76
+
+
 nonCoreFuncs : Dict Int (Z80 -> Z80)
 nonCoreFuncs =
-    -- 0x08 is EX AF,AF' and 0xD9 is EXX
     Dict.fromList
         [ ( c_EX_AF_AFDASH, ex_af )
         , ( c_EXX, exx )
+        , ( c_HALT, execute_0x76_halt )
         ]
 
 
@@ -848,7 +852,7 @@ nonCoreFuncs =
 isCoreOpCode : Int -> Bool
 isCoreOpCode value =
     --nonCoreOpCodes |> Set.member value |> not
-    value /= c_EX_AF_AFDASH && value /= c_EXX
+    value /= c_EX_AF_AFDASH && value /= c_EXX && value /= c_HALT
 
 
 stillLooping : Z80Core -> Bool

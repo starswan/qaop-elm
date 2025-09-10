@@ -1,10 +1,10 @@
 module SingleNoParams exposing (..)
 
-import Bitwise
-import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
+import Bitwise exposing (shiftRightBy)
+import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDuration(..))
 import Dict exposing (Dict)
-import Z80Core exposing (Z80, Z80Core, set_iff)
-import Z80Env exposing (z80_pop, z80_push)
+import Z80Core exposing (Z80, Z80Core, add_cpu_time, set_iff)
+import Z80Env exposing (c_TIME_LIMIT, z80_pop, z80_push)
 import Z80Flags exposing (set_af)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (set_bc_main, set_de_main)
@@ -325,3 +325,42 @@ exx z80 =
         | core = { core | main = { main | b = alt.b, c = alt.c, d = alt.d, e = alt.e, hl = alt.hl } }
         , alt_main = { alt | b = main.b, c = main.c, d = main.d, e = main.e, hl = main.hl }
     }
+
+
+execute_0x76_halt : Z80 -> Z80
+execute_0x76_halt z80 =
+    -- case 0x76: halt(); break;    --
+    --	private void halt()
+    --	{
+    --		halted = true;
+    --		int n = time_limit-time+3 >> 2;
+    --		if(n>0) {
+    --			n = env.halt(n, IR|R&0x7F);
+    --			R+=n; time+=4*n;
+    --		}
+    --	}
+    let
+        z80_core =
+            z80.core
+
+        interrupts =
+            z80_core.interrupts
+
+        new_ints =
+            { interrupts | halted = True }
+
+        core_1 =
+            { z80_core | interrupts = new_ints }
+
+        n =
+            shiftRightBy 2 (c_TIME_LIMIT - z80_core.env.time.cpu_time + 3)
+
+        new_core =
+            if n > 0 then
+                -- turns out env.halt(n, r) just returns n...?
+                { core_1 | r = core_1.r + n } |> add_cpu_time (4 * n)
+
+            else
+                core_1
+    in
+    { z80 | core = new_core }
