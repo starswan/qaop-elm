@@ -793,12 +793,12 @@ fetchInstruction : Z80ROM -> Int -> Z80Core -> CpuTimeAndValue
 fetchInstruction rom48k r_register z80 =
     let
         pc_value =
-            case romRoutineNames |> Dict.get z80.pc of
-                Just name ->
-                    debugLog "fetch PC " name z80.pc
-
-                Nothing ->
-                    z80.pc
+            --case romRoutineNames |> Dict.get z80.pc of
+            --    Just name ->
+            --        debugLog "fetch PC " name z80.pc
+            --
+            --    Nothing ->
+            z80.pc
     in
     z80.env |> m1 pc_value (Bitwise.or z80.interrupts.ir (Bitwise.and r_register 0x7F)) rom48k
 
@@ -860,9 +860,6 @@ executeCore rom48k z80 =
         z80_core =
             z80.core
 
-        interrupts =
-            z80_core.interrupts
-
         execute_f =
             \( core, ct, r_register ) ->
                 let
@@ -872,10 +869,13 @@ executeCore rom48k z80 =
                 ( core_1, fetchInstruction rom48k r_register core_1, r_register + 1 )
 
         ( core_2, ct1, new_r ) =
-            Loop.while coreLooping execute_f ( z80_core, fetchInstruction rom48k interrupts.r z80_core, interrupts.r )
+            Loop.while coreLooping execute_f ( z80_core, fetchInstruction rom48k z80_core.interrupts.r z80_core, z80_core.interrupts.r )
+
+        core_ints =
+            core_2.interrupts
 
         z80_1 =
-            { z80 | core = { core_2 | interrupts = { interrupts | r = new_r } } }
+            { z80 | core = { core_2 | interrupts = { core_ints | r = new_r } } }
     in
     case nonCoreFuncs |> Dict.get ct1.value of
         Just f ->
