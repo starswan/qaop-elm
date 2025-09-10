@@ -554,13 +554,13 @@ execute_ED70 rom48k z80 =
 
 
 group_ed : Z80ROM -> Z80Core -> Z80Delta
-group_ed rom48k z80_0 =
+group_ed rom48k z80_core =
     let
         ints =
-            z80_0.interrupts
+            z80_core.interrupts
 
         c =
-            z80_0.env |> m1 z80_0.pc (Bitwise.or z80_0.interrupts.ir (Bitwise.and ints.r 0x7F)) rom48k
+            z80_core.env |> m1 z80_core.pc (Bitwise.or z80_core.interrupts.ir (Bitwise.and ints.r 0x7F)) rom48k
 
         new_r =
             ints.r + 1
@@ -569,10 +569,10 @@ group_ed rom48k z80_0 =
             { ints | r = new_r }
 
         new_pc =
-            Bitwise.and (z80_0.pc + 1) 0xFFFF
+            Bitwise.and (z80_core.pc + 1) 0xFFFF
 
         z80 =
-            { z80_0 | pc = new_pc, interrupts = new_ints } |> add_cpu_time 4
+            { z80_core | pc = new_pc, interrupts = new_ints } |> add_cpu_time 4
 
         ed_func =
             group_ed_dict |> Dict.get c.value
@@ -808,14 +808,14 @@ ldir incOrDec repeat rom48k z80 =
 
 
 set_i : Int -> Z80Core -> InterruptRegisters
-set_i v z80 =
+set_i v z80_core =
     --  void i(int v) {IR = IR&0xFF | v<<8;}
     let
         ir =
-            Bitwise.or (Bitwise.and z80.interrupts.ir 0xFF) (shiftLeftBy8 v)
+            Bitwise.or (Bitwise.and z80_core.interrupts.ir 0xFF) (shiftLeftBy8 v)
 
         main =
-            z80.interrupts
+            z80_core.interrupts
     in
     --{ z80 | interrupts = { interrupts | ir = ir } }
     { main | ir = ir }
