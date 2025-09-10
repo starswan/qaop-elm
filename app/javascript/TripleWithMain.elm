@@ -74,7 +74,6 @@ applyTripleMainChange time pcInc z80changeData z80 =
             { z80
                 | pc = new_pc
                 , env = env1
-                , r = z80.r + 1
             }
 
         Store8BitValue address value ->
@@ -85,7 +84,6 @@ applyTripleMainChange time pcInc z80changeData z80 =
             { z80
                 | pc = new_pc
                 , env = env1
-                , r = z80.r + 1
             }
 
 

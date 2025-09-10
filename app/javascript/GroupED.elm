@@ -11,7 +11,7 @@ import CpuTimeCTime exposing (InstructionDuration(..), addCpuTimeTime)
 import Dict exposing (Dict)
 import Keyboard exposing (Keyboard)
 import PCIncrement exposing (PCIncrement(..))
-import RegisterChange exposing (RegisterChange(..))
+import RegisterChange exposing (InterruptChange(..), RegisterChange(..))
 import Utils exposing (char, shiftLeftBy8, shiftRightBy8)
 import Z80Change exposing (FlagChange(..), Z80Change(..))
 import Z80Core exposing (Z80Core, add_cpu_time, imm16, inc_pc)
@@ -214,7 +214,7 @@ execute_ED47 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED47 rom48k z80 =
     -- case 0x47: i(A); time++; break;
     --z80 |> set_i z80.flags.a |> add_cpu_time 1 |> Whole
-    MainRegsWithCpuTime (z80 |> set_i z80.flags.a) (z80.env.time |> addCpuTimeTime 1)
+    InterruptsWithCpuTime (z80 |> set_i z80.flags.a) (z80.env.time |> addCpuTimeTime 1)
 
 
 execute_ED4B : Z80ROM -> Z80Core -> Z80Delta
@@ -369,6 +369,7 @@ execute_ED73 rom48k z80 =
 
 ld_a_r : Z80ROM -> Z80Core -> Z80Delta
 ld_a_r rom48k z80 =
+    --int r() {return R&0x7F | IR&0x80;}
     -- case 0x5F: ld_a_ir(r()); break;
     NewAValue z80.r
 
@@ -565,7 +566,7 @@ group_ed rom48k z80_0 =
         --ints =
         --    z80_0.interrupts
         c =
-            z80.env |> m1 z80_0.pc (Bitwise.or z80_0.main.ir (Bitwise.and z80_0.r 0x7F)) rom48k
+            z80.env |> m1 z80_0.pc (Bitwise.or z80_0.interrupts.ir (Bitwise.and z80_0.r 0x7F)) rom48k
 
         new_r =
             z80_0.r + 1
@@ -812,18 +813,15 @@ ldir incOrDec repeat rom48k z80 =
     { z80_2 | main = z80_2.main |> set_bc_main a, pc = pc, env = env_2, flags = { flags | fr = fr, ff = ff, fa = v, fb = v } } |> WholeCore
 
 
-
---  void i(int v) {IR = IR&0xFF | v<<8;}
-
-
-set_i : Int -> Z80Core -> MainWithIndexRegisters
+set_i : Int -> Z80Core -> InterruptRegisters
 set_i v z80 =
+    --  void i(int v) {IR = IR&0xFF | v<<8;}
     let
         ir =
-            Bitwise.or (Bitwise.and z80.main.ir 0xFF) (shiftLeftBy8 v)
+            Bitwise.or (Bitwise.and z80.interrupts.ir 0xFF) (shiftLeftBy8 v)
 
         main =
-            z80.main
+            z80.interrupts
     in
     --{ z80 | interrupts = { interrupts | ir = ir } }
     { main | ir = ir }
@@ -1130,9 +1128,6 @@ singleByteMainRegsED =
 
         --, ( 0x7E, ( \_ -> RegChangeIm (0x7E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
         , ( 0x7E, ( \_ -> RegChangeIm IM2, EightTStates ) )
-
-        -- case 0x57: ld_a_ir(IR>>>8); break;
-        , ( 0x57, ( \z80_main -> LoadAFromIR (z80_main.ir |> shiftRightBy8), NineTStates ) )
         ]
 
 
@@ -1293,3 +1288,11 @@ ed_adc_hl b z80_main z80_flags =
 --		x = 0x4B3480 >> ((x^x>>>4)&15);
 --		Fb = (x^bc) & 0x80 | d>>>4 | (v & 0x80)<<2;
 --	}
+
+
+edWithInterrupts : Dict Int ( InterruptRegisters -> InterruptChange, InstructionDuration )
+edWithInterrupts =
+    Dict.fromList
+        [ -- case 0x57: ld_a_ir(IR>>>8); break;
+          ( 0x57, ( \z80_main -> LoadAFromIR (z80_main.ir |> shiftRightBy8), NineTStates ) )
+        ]
