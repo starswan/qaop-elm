@@ -124,14 +124,14 @@ im0 bus z80 =
 interrupt : Int -> Z80ROM -> Z80 -> Z80
 interrupt bus rom48k full_z80 =
     let
-        z80 =
+        z80_core =
             full_z80.core
 
         ints =
-            z80.interrupts
+            z80_core.interrupts
 
         main =
-            z80.main
+            z80_core.main
     in
     if Bitwise.and ints.iff 1 == 0 then
         full_z80
@@ -139,10 +139,8 @@ interrupt bus rom48k full_z80 =
     else
         let
             --z81 = debug_log "interrupt" "keyboard scan" z80
-            --new_ints =
-            --    { ints | iff = 0, halted = False }
             z80_1 =
-                { z80 | interrupts = { ints | halted = False, iff = 0 } }
+                { z80_core | interrupts = { ints | halted = False, iff = 0 } }
 
             pushed =
                 z80_1.env |> z80_push z80_1.pc
@@ -171,10 +169,10 @@ interrupt bus rom48k full_z80 =
                         Bitwise.or new_ir bus
 
                     env_and_pc =
-                        z80.env |> mem16 addr rom48k
+                        z80_core.env |> mem16 addr rom48k
 
                     env =
-                        z80.env
+                        z80_core.env
 
                     core_1 =
                         { new_core | env = { env | time = env_and_pc.time } |> addCpuTimeEnv 6, pc = env_and_pc.value16 }
