@@ -39,6 +39,7 @@ type alias InterruptRegisters =
     , halted : Bool
     , iff : Int
     , ir : Int
+    , r : Int
     }
 
 

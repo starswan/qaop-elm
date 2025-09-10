@@ -14,7 +14,6 @@ type alias Z80Core =
     , pc : Int
     , main : MainWithIndexRegisters
     , flags : FlagRegisters
-    , r : Int
     , interrupts : InterruptRegisters
     }
 
@@ -62,11 +61,6 @@ add_cpu_time value z80 =
             z80.env |> addCpuTimeEnv value
     in
     { z80 | env = env }
-
-
-inc_pc : Z80Core -> Int
-inc_pc z80 =
-    Bitwise.and (z80.pc + 1) 0xFFFF
 
 
 set_iff : Int -> Z80Core -> InterruptRegisters
@@ -237,28 +231,29 @@ get_ei z80 =
     Bitwise.and z80.interrupts.iff 1 /= 0
 
 
-z80_halt : Z80 -> Z80
-z80_halt z80 =
-    let
-        z80_core =
-            z80.core
 
-        interrupts =
-            z80_core.interrupts
-
-        --n = shiftRightBy 2 (z80.time_limit - z80.env.time.cpu_time + 3)
-        n =
-            shiftRightBy 2 (c_TIME_LIMIT - z80_core.env.time.cpu_time + 3)
-
-        z80_1 =
-            if n > 0 then
-                -- turns out env.halt(n, r) just returns n...?
-                { z80_core | r = z80_core.r + n } |> add_cpu_time (4 * n)
-
-            else
-                z80_core
-
-        core_2 =
-            { z80_1 | interrupts = { interrupts | halted = True } }
-    in
-    { z80 | core = core_2 }
+--z80_halt : Z80 -> Z80
+--z80_halt z80 =
+--    let
+--        z80_core =
+--            z80.core
+--
+--        interrupts =
+--            z80_core.interrupts
+--
+--        --n = shiftRightBy 2 (z80.time_limit - z80.env.time.cpu_time + 3)
+--        n =
+--            shiftRightBy 2 (c_TIME_LIMIT - z80_core.env.time.cpu_time + 3)
+--
+--        z80_1 =
+--            if n > 0 then
+--                -- turns out env.halt(n, r) just returns n...?
+--                { z80_core | interrupts = { interrupts | r = interrupts.r + n } } |> add_cpu_time (4 * n)
+--
+--            else
+--                z80_core
+--
+--        core_2 =
+--            { z80_1 | interrupts = { interrupts | halted = True } }
+--    in
+--    { z80 | core = core_2 }

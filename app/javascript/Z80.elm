@@ -26,7 +26,7 @@ import SingleWith8BitParameter exposing (maybeRelativeJump, singleWith8BitParam)
 import TripleByte exposing (tripleByteWith16BitParam, tripleByteWith16BitParamDD, tripleByteWith16BitParamFD)
 import TripleWithFlags exposing (triple16WithFlags)
 import TripleWithMain exposing (tripleMainRegs, tripleMainRegsIX, tripleMainRegsIY)
-import Z80Core exposing (Z80, Z80Core, add_cpu_time, z80_halt)
+import Z80Core exposing (Z80, Z80Core, add_cpu_time)
 import Z80Debug exposing (debugLog)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..))
 import Z80Env exposing (Z80Env, c_TIME_LIMIT, m1, mem, mem16, z80env_constructor)
@@ -52,10 +52,10 @@ constructor =
             FlagRegisters 0 0 0 0 0
 
         interrupts =
-            InterruptRegisters IM0 False 0 0
+            InterruptRegisters IM0 False 0 0 0
     in
     --Z80 z80env_constructor 0 main main_flags alternate alt_flags 0 interrupts
-    Z80 (Z80Core z80env_constructor 0 main main_flags 0 interrupts) alternate alt_flags
+    Z80 (Z80Core z80env_constructor 0 main main_flags interrupts) alternate alt_flags
 
 
 
@@ -807,7 +807,7 @@ executeCoreInstruction : Z80ROM -> Z80Core -> Z80Core
 executeCoreInstruction rom48k z80 =
     let
         ct =
-            fetchInstruction rom48k z80.r z80
+            fetchInstruction rom48k 0 z80
     in
     z80 |> execute_delta ct rom48k |> apply_delta z80 rom48k
 
@@ -860,6 +860,9 @@ executeCore rom48k z80 =
         z80_core =
             z80.core
 
+        interrupts =
+            z80_core.interrupts
+
         execute_f =
             \( core, ct, r_register ) ->
                 let
@@ -869,10 +872,10 @@ executeCore rom48k z80 =
                 ( core_1, fetchInstruction rom48k r_register core_1, r_register + 1 )
 
         ( core_2, ct1, new_r ) =
-            Loop.while coreLooping execute_f ( z80_core, fetchInstruction rom48k z80_core.r z80_core, z80_core.r )
+            Loop.while coreLooping execute_f ( z80_core, fetchInstruction rom48k interrupts.r z80_core, interrupts.r )
 
         z80_1 =
-            { z80 | core = { core_2 | r = new_r } }
+            { z80 | core = { core_2 | interrupts = { interrupts | r = new_r } } }
     in
     case nonCoreFuncs |> Dict.get ct1.value of
         Just f ->
@@ -883,10 +886,13 @@ executeCore rom48k z80 =
                 core =
                     z80_2.core
 
+                ints =
+                    core.interrupts
+
                 pc =
                     Bitwise.and (core.pc + 1) 0xFFFF
             in
-            { z80_2 | core = { core | pc = pc, r = core.r + 1 } }
+            { z80_2 | core = { core | pc = pc, interrupts = { ints | r = ints.r + 1 } } }
 
         Nothing ->
             z80_1
@@ -899,7 +905,7 @@ execute rom48k z80 =
             z80.core
     in
     if z80_core.interrupts.halted then
-        z80 |> z80_halt
+        z80 |> execute_0x76_halt
 
     else
         let

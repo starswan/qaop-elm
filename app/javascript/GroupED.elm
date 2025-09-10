@@ -14,7 +14,7 @@ import PCIncrement exposing (PCIncrement(..))
 import RegisterChange exposing (InterruptChange(..), RegisterChange(..))
 import Utils exposing (char, shiftLeftBy8, shiftRightBy8)
 import Z80Change exposing (FlagChange(..), Z80Change(..))
-import Z80Core exposing (Z80Core, add_cpu_time, imm16, inc_pc)
+import Z80Core exposing (Z80Core, add_cpu_time, imm16)
 import Z80Delta exposing (Z80Delta(..))
 import Z80Env exposing (Z80Env, addCpuTimeEnv, m1, mem, mem16, setMem, setMem16, z80_in)
 import Z80Flags exposing (FlagRegisters, c_F3, c_F5, c_F53, c_FC, c_FH, f_szh0n0p, z80_sub)
@@ -45,11 +45,6 @@ group_ed_dict =
         , ( 0x7A, adc_hl_sp )
 
         -- case 0x4F: r(A); time++; break;
-        -- case 0x57: ld_a_ir(IR>>>8); break;
-        --, ( 0x57, ld_a_i )
-        -- case 0x5F: ld_a_ir(r()); break;
-        , ( 0x5F, ld_a_r )
-
         -- case 0x67: rrd(); break;
         -- case 0x6F: rld(); break;
         , ( 0x78, execute_ED78 )
@@ -365,13 +360,11 @@ execute_ED73 rom48k z80 =
 --ld_a_i rom48k z80 =
 --     case 0x57: ld_a_ir(IR>>>8); break;
 --NewAValue (z80.main.ir |> shiftRightBy8)
-
-
-ld_a_r : Z80ROM -> Z80Core -> Z80Delta
-ld_a_r rom48k z80 =
-    --int r() {return R&0x7F | IR&0x80;}
-    -- case 0x5F: ld_a_ir(r()); break;
-    NewAValue z80.r
+--ld_a_r : Z80ROM -> Z80Core -> Z80Delta
+--ld_a_r rom48k z80 =
+--    --int r() {return R&0x7F | IR&0x80;}
+--    -- case 0x5F: ld_a_ir(r()); break;
+--    NewAValue z80.interrupts.r
 
 
 execute_ED78 : Z80ROM -> Z80Core -> Z80Delta
@@ -563,22 +556,23 @@ execute_ED70 rom48k z80 =
 group_ed : Z80ROM -> Z80Core -> Z80Delta
 group_ed rom48k z80_0 =
     let
-        --ints =
-        --    z80_0.interrupts
+        ints =
+            z80_0.interrupts
+
         c =
-            z80.env |> m1 z80_0.pc (Bitwise.or z80_0.interrupts.ir (Bitwise.and z80_0.r 0x7F)) rom48k
+            z80_0.env |> m1 z80_0.pc (Bitwise.or z80_0.interrupts.ir (Bitwise.and ints.r 0x7F)) rom48k
 
         new_r =
-            z80_0.r + 1
+            ints.r + 1
 
-        old_z80 =
-            { z80_0 | r = new_r }
+        new_ints =
+            { ints | r = new_r }
 
         new_pc =
-            old_z80 |> inc_pc
+            Bitwise.and (z80_0.pc + 1) 0xFFFF
 
         z80 =
-            { old_z80 | pc = new_pc } |> add_cpu_time 4
+            { z80_0 | pc = new_pc, interrupts = new_ints } |> add_cpu_time 4
 
         ed_func =
             group_ed_dict |> Dict.get c.value
@@ -1295,4 +1289,11 @@ edWithInterrupts =
     Dict.fromList
         [ -- case 0x57: ld_a_ir(IR>>>8); break;
           ( 0x57, ( \z80_main -> LoadAFromIR (z80_main.ir |> shiftRightBy8), NineTStates ) )
+
+        --ld_a_r : Z80ROM -> Z80Core -> Z80Delta
+        --ld_a_r rom48k z80 =
+        --    --int r() {return R&0x7F | IR&0x80;}
+        --    -- case 0x5F: ld_a_ir(r()); break;
+        --    NewAValue z80.interrupts.r
+        , ( 0x5F, ( \z80_main -> LoadAFromIR (Bitwise.or (z80_main.r |> Bitwise.and 0x7F) (z80_main.ir |> Bitwise.and 0x80)), NineTStates ) )
         ]
