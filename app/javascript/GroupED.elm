@@ -1132,7 +1132,7 @@ singleByteMainRegsED =
         , ( 0x7E, ( \_ -> RegChangeIm IM2, EightTStates ) )
 
         -- case 0x57: ld_a_ir(IR>>>8); break;
-        , ( 0x57, ( \_ -> LoadAFromI, NineTStates ) )
+        , ( 0x57, ( \z80_main -> LoadAFromIR (z80_main.ir |> shiftRightBy8), NineTStates ) )
         ]
 
 

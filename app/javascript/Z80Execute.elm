@@ -750,11 +750,10 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80 =
             in
             { z80 | pc = new_pc, main = new_main, env = env_2, r = z80.r + 1 }
 
-        LoadAFromI ->
+        LoadAFromIR value ->
             let
-                -- case 0x57: ld_a_ir(IR>>>8); break;
                 flags =
-                    z80.flags |> ld_a_ir (z80.interrupts.ir |> shiftRightBy8) z80.interrupts
+                    z80.flags |> ld_a_ir value z80.interrupts
             in
             { z80 | pc = new_pc, r = z80.r + 1, flags = flags }
 
