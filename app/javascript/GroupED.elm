@@ -215,7 +215,7 @@ execute_ED47 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED47 rom48k z80 =
     -- case 0x47: i(A); time++; break;
     --z80 |> set_i z80.flags.a |> add_cpu_time 1 |> Whole
-    InterruptsWithCpuTime (z80 |> set_i z80.flags.a) (z80.env.time |> addCpuTimeTime 1)
+    MainRegsWithCpuTime (z80 |> set_i z80.flags.a) (z80.env.time |> addCpuTimeTime 1)
 
 
 execute_ED4B : Z80ROM -> Z80Core -> Z80Delta
@@ -364,7 +364,7 @@ execute_ED73 rom48k z80 =
 ld_a_i : Z80ROM -> Z80Core -> Z80Delta
 ld_a_i rom48k z80 =
     -- case 0x57: ld_a_ir(IR>>>8); break;
-    NewAValue (z80.interrupts.ir |> shiftRightBy8)
+    NewAValue (z80.main.ir |> shiftRightBy8)
 
 
 ld_a_r : Z80ROM -> Z80Core -> Z80Delta
@@ -565,7 +565,7 @@ group_ed rom48k z80_0 =
         --ints =
         --    z80_0.interrupts
         c =
-            z80.env |> m1 z80_0.pc (Bitwise.or z80_0.interrupts.ir (Bitwise.and z80_0.r 0x7F)) rom48k
+            z80.env |> m1 z80_0.pc (Bitwise.or z80_0.main.ir (Bitwise.and z80_0.r 0x7F)) rom48k
 
         new_r =
             z80_0.r + 1
@@ -816,17 +816,17 @@ ldir incOrDec repeat rom48k z80 =
 --  void i(int v) {IR = IR&0xFF | v<<8;}
 
 
-set_i : Int -> Z80Core -> InterruptRegisters
+set_i : Int -> Z80Core -> MainWithIndexRegisters
 set_i v z80 =
     let
         ir =
-            Bitwise.or (Bitwise.and z80.interrupts.ir 0xFF) (shiftLeftBy8 v)
+            Bitwise.or (Bitwise.and z80.main.ir 0xFF) (shiftLeftBy8 v)
 
-        interrupts =
-            z80.interrupts
+        main =
+            z80.main
     in
     --{ z80 | interrupts = { interrupts | ir = ir } }
-    { interrupts | ir = ir }
+    { main | ir = ir }
 
 
 
