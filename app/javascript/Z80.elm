@@ -760,7 +760,7 @@ oldDelta c_value c_time interrupts tmp_z80 rom48k =
             tmp_z80.env
 
         old_z80 =
-            { tmp_z80 | env = { env | time = c_time }, r = tmp_z80.r + 1 }
+            { tmp_z80 | env = { env | time = c_time } }
 
         new_pc =
             Bitwise.and (old_z80.pc + 1) 0xFFFF
@@ -800,8 +800,8 @@ oldDelta c_value c_time interrupts tmp_z80 rom48k =
             OldDeltaWithChanges (DeltaWithChangesData delta interrupts new_pc new_time)
 
 
-fetchInstruction : Z80ROM -> Z80Core -> CpuTimeAndValue
-fetchInstruction rom48k z80 =
+fetchInstruction : Z80ROM -> Int -> Z80Core -> CpuTimeAndValue
+fetchInstruction rom48k r_register z80 =
     let
         pc_value =
             case romRoutineNames |> Dict.get z80.pc of
@@ -811,14 +811,14 @@ fetchInstruction rom48k z80 =
                 Nothing ->
                     z80.pc
     in
-    z80.env |> m1 pc_value (Bitwise.or z80.main.ir (Bitwise.and z80.r 0x7F)) rom48k
+    z80.env |> m1 pc_value (Bitwise.or z80.main.ir (Bitwise.and r_register 0x7F)) rom48k
 
 
 executeCoreInstruction : Z80ROM -> Z80Core -> Z80Core
 executeCoreInstruction rom48k z80 =
     let
         ct =
-            fetchInstruction rom48k z80
+            fetchInstruction rom48k z80.r z80
     in
     z80 |> execute_delta ct rom48k |> apply_delta z80 rom48k
 
@@ -873,11 +873,11 @@ executeCore rom48k z80 =
                     core_1 =
                         core |> execute_delta ct rom48k |> apply_delta core rom48k
                 in
-                ( core_1, fetchInstruction rom48k core_1 )
+                ( { core_1 | r = core_1.r + 1 }, fetchInstruction rom48k core_1.r core_1 )
 
         ( core_2, ct1 ) =
             --Loop.while (\( x, n ) -> c_TIME_LIMIT > x.env.time.cpu_time && (nonCoreCodes |> List.member n.value |> not)) execute_f ( z80_core, ct1 )
-            Loop.while coreLooping execute_f ( z80_core, fetchInstruction rom48k z80_core )
+            Loop.while coreLooping execute_f ( z80_core, fetchInstruction rom48k z80_core.r z80_core )
 
         z80_1 =
             { z80 | core = core_2 }

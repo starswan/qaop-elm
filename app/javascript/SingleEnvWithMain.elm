@@ -96,7 +96,6 @@ applySingleEnvMainChange pcInc duration z80changeData rom48k z80 =
                 | pc = new_pc
                 , flags = { flags | a = int }
                 , env = { env_1 | time = cpuTimeCTime }
-                , r = z80.r + 1
             }
 
         SingleEnv8BitMain eightBit int cpuTimeCTime ->
@@ -122,7 +121,6 @@ applySingleEnvMainChange pcInc duration z80changeData rom48k z80 =
                 | pc = new_pc
                 , main = main_1
                 , env = { env_1 | time = cpuTimeCTime }
-                , r = z80.r + 1
             }
 
         SingleEnvNewHLRegister int cpuTimeCTime ->
@@ -134,7 +132,6 @@ applySingleEnvMainChange pcInc duration z80changeData rom48k z80 =
                 | pc = new_pc
                 , main = { main | hl = int }
                 , env = { env_1 | time = cpuTimeCTime }
-                , r = z80.r + 1
             }
 
         IndirectBitTest bitTest mp_address ->
@@ -149,10 +146,7 @@ applySingleEnvMainChange pcInc duration z80changeData rom48k z80 =
             { z80
                 | pc = new_pc
                 , env = { env_1 | time = value.time }
-
-                --, flags = { new_flags | ff = new_flags.ff |> Bitwise.and (Bitwise.complement c_F53) }
                 , flags = { new_flags | ff = new_flags.ff |> Bitwise.and (Bitwise.complement c_F53) |> Bitwise.or (mp_address |> shiftRightBy8 |> Bitwise.and c_F53) }
-                , r = z80.r + 1
             }
 
         SingleEnvFlagFunc flagFunc int cpuTimeCTime ->
@@ -164,7 +158,6 @@ applySingleEnvMainChange pcInc duration z80changeData rom48k z80 =
                 | pc = new_pc
                 , flags = flags |> changeFlags flagFunc int
                 , env = { env_1 | time = cpuTimeCTime }
-                , r = z80.r + 1
             }
 
         SingleEnvNewHL16BitAdd ixiyhl hl sp ->
@@ -177,7 +170,6 @@ applySingleEnvMainChange pcInc duration z80changeData rom48k z80 =
                 , env = env_1
                 , flags = new_xy.flags
                 , main = z80.main |> set_xy new_xy.value ixiyhl
-                , r = z80.r + 1
             }
 
 

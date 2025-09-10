@@ -38,7 +38,6 @@ applyEnvChangeDelta cpu_time z80changeData z80 =
             { z80
                 | pc = new_pc
                 , env = { env | time = cpu_time, sp = int }
-                , r = z80.r + 1
             }
 
         AddToInterrupts int cpuTimeIncrement ->
