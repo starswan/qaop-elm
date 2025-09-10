@@ -9,7 +9,7 @@
     "elm": "^0.19.1-6",
     "esbuild": "^0.15.18",
     "esbuild-plugin-elm": "^0.0.12",
-    "sass": "^1.91.0"
+    "sass": "^1.92.1"
   },
   "overrides": {
     "cross-spawn": ">= 7.0.3"

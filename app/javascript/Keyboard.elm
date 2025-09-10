@@ -4,7 +4,6 @@ import Bitwise exposing (shiftLeftBy, shiftRightBy)
 import Char exposing (toUpper)
 import Dict
 import String
-import Utils exposing (toHexString2)
 import Vector5 exposing (Vector5)
 import Vector8 exposing (Vector8)
 import Z80Debug exposing (debugLog, debugTodo)

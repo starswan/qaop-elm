@@ -34,11 +34,12 @@ type InterruptMode
 
 
 type alias InterruptRegisters =
-    { ir : Int
-    , --mp:  Int, -- /* MEMPTR, the hidden register emulated according to memptr_eng.txt */
-      iff : Int
-    , iM : InterruptMode
+    { --mp:  Int, -- /* MEMPTR, the hidden register emulated according to memptr_eng.txt */
+      iM : InterruptMode
     , halted : Bool
+    , iff : Int
+    , ir : Int
+    , r : Int
     }
 
 
@@ -63,76 +64,6 @@ type IXIYHL
     | HL
 
 
-type IXIY
-    = IXIY_IX
-    | IXIY_IY
-
-
-
---	private void jp(boolean y)
---	{
---		int a = MP = imm16();
---		if(y) PC = a;
---	}
---jp_z80 : Bool -> Z80ROM -> Z80 -> Z80
---jp_z80 y rom48k z80 =
---    let
---        a =
---            z80 |> imm16 rom48k
---
---        env =
---            z80.env
---
---        z80_1 =
---            { z80 | pc = a.pc, env = { env | time = a.time } }
---    in
---    if y then
---        { z80_1 | pc = a.value }
---
---    else
---        z80_1
---	private void call(boolean y)
---	{
---		int a = MP = imm16();
---		if(y) {push(PC); PC = a;}
---	}
---call_if : Bool -> Z80ROM -> Z80 -> Z80EnvWithPC
---call_if y rom48k z80 =
---    let
---        a =
---            z80 |> imm16 rom48k
---
---        env =
---            z80.env
---
---        --z80_2 =
---        --    { z80 | pc = a.pc, env = { env | time = a.time } }
---        new_env =
---            { env | time = a.time }
---    in
---    if y then
---        let
---            --b = debug_log "call" (a.value |> subName) Nothing
---            --z80_1 = z80_2 |> push z80_2.pc |> set_pc a.value
---            pushed =
---                new_env |> z80_push a.pc
---
---            --z80_1 = { z80_2 | env = pushed, pc = a.value }
---        in
---        Z80EnvWithPC pushed a.value
---
---    else
---        Z80EnvWithPC new_env a.pc
---rst_z80 : Int -> Z80 -> Z80
---rst_z80 c z80 =
---    --z80 |> push z80.pc |> set_pc (c - 199)
---    let
---        pushed =
---            z80.env |> z80_push z80.pc
---    in
---    { z80 | env = pushed, pc = c - 199 }
-
-
 get_xy : IXIYHL -> MainWithIndexRegisters -> Int
 get_xy ixiyhl z80_main =
     case ixiyhl of
@@ -146,16 +77,6 @@ get_xy ixiyhl z80_main =
             z80_main.hl
 
 
-get_xy_ixiy : IXIY -> MainWithIndexRegisters -> Int
-get_xy_ixiy ixiyhl z80_main =
-    case ixiyhl of
-        IXIY_IX ->
-            z80_main.ix
-
-        IXIY_IY ->
-            z80_main.iy
-
-
 set_xy : Int -> IXIYHL -> MainWithIndexRegisters -> MainWithIndexRegisters
 set_xy value ixiyhl z80 =
     case ixiyhl of
@@ -167,26 +88,6 @@ set_xy value ixiyhl z80 =
 
         HL ->
             { z80 | hl = value }
-
-
-
---set_xy_ixiy : Int -> IXIY -> MainWithIndexRegisters -> MainWithIndexRegisters
---set_xy_ixiy value ixiyhl z80 =
---    case ixiyhl of
---        IXIY_IX ->
---            { z80 | ix = value }
---
---        IXIY_IY ->
---            { z80 | iy = value }
---
---
---	private int getd(int xy)
---	{
---		int d = env.mem(PC);
---		PC = (char)(PC+1);
---		time += 8;
---		return MP = (char)(xy + (byte)d);
---	}
 
 
 get_bc : MainWithIndexRegisters -> Int
@@ -207,53 +108,3 @@ set_bc_main v z80_main =
 set_de_main : Int -> MainWithIndexRegisters -> MainWithIndexRegisters
 set_de_main v z80_main =
     { z80_main | d = shiftRightBy8 v, e = Bitwise.and v 0xFF }
-
-
-
---	private void jr()
---	{
---		int pc = PC;
---		byte d = (byte)env.mem(pc); time += 8;
---		MP = PC = (char)(pc+d+1);
---	}
---jr : Z80ROM -> Z80 -> CpuTimeAndPc
---jr rom48k z80 =
---    let
---        mempc =
---            mem z80.pc z80.env.time rom48k z80.env.ram
---
---        d =
---            byte mempc.value
---
---        --x = Debug.log "jr" ((String.fromInt d.value) ++ " " ++ (String.fromInt (byte d.value)))
---    in
---    --z80 |> set_env mempc.env |> add_cpu_time 8 |> set_pc (z80.pc + d + 1)
---    CpuTimeAndPc (mempc.time |> addCpuTimeTime 8) (Bitwise.and (z80.pc + d + 1) 0xFFFF)
---get_h : IXIYHL -> MainWithIndexRegisters -> Int
---get_h ixiyhl z80 =
---    shiftRightBy8 (get_xy ixiyhl z80)
---
---
---get_h_ixiy : IXIY -> MainWithIndexRegisters -> Int
---get_h_ixiy ixiyhl z80 =
---    shiftRightBy8 (get_xy_ixiy ixiyhl z80)
---
---
---get_l : IXIYHL -> MainWithIndexRegisters -> Int
---get_l ixiyhl z80 =
---    Bitwise.and (get_xy ixiyhl z80) 0xFF
---
---
---get_l_ixiy : IXIY -> MainWithIndexRegisters -> Int
---get_l_ixiy ixiyhl z80 =
---    Bitwise.and (get_xy_ixiy ixiyhl z80) 0xFF
-
-
-get_ixiy_xy : IXIY -> MainWithIndexRegisters -> Int
-get_ixiy_xy ixiy z80_main =
-    case ixiy of
-        IXIY_IX ->
-            z80_main.ix
-
-        IXIY_IY ->
-            z80_main.iy

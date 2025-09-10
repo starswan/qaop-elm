@@ -26,7 +26,7 @@ jobs:
         ruby-version: ['3.4']
 
     env:
-      HZ: 46.343
+      HZ: 43.298
     steps:
       - uses: actions/checkout@v4
       - name: Set up Ruby
@@ -55,11 +55,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: | 
-            $HOME/.elm 
+            ${HOME}/.elm 
             elm-stuff
-          key: ${{ runner.os }}-qaop-elm-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-elm-${{ hashFiles('yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-qaop-elm-
+            ${{ runner.os }}-elm-
 
       - name: Yarn install
         run: yarn install

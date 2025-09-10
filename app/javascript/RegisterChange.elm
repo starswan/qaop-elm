@@ -64,3 +64,7 @@ type RegisterChange
     | RegisterIndirectWithShifter Shifter ChangeMainRegister Int
     | SetBitIndirectWithCopy BitTest ChangeMainRegister Int
     | ResetBitIndirectWithCopy BitTest ChangeMainRegister Int
+
+
+type InterruptChange
+    = LoadAFromIR Int

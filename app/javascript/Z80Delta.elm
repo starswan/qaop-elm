@@ -1,10 +1,10 @@
 module Z80Delta exposing (..)
 
-import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimeIncrement, InstructionDuration, addCpuTimeTime)
+import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimeIncrement, InstructionDuration)
 import Utils exposing (toHexString2)
 import Z80Core exposing (Z80, Z80Core, add_cpu_time, set408bitHL)
 import Z80Debug exposing (debugTodo)
-import Z80Env exposing (Z80Env, addCpuTimeEnv, setMem, z80_push)
+import Z80Env exposing (Z80Env, addCpuTimeEnv)
 import Z80Flags exposing (FlagRegisters, f_szh0n0p)
 import Z80Types exposing (InterruptRegisters, MainRegisters, MainWithIndexRegisters, set_bc_main)
 
@@ -22,6 +22,7 @@ type
       -- only used by ED78
     | CpuTimeWithSpAndPc CpuTimeCTime Int Int
     | InterruptsWithCpuTime InterruptRegisters CpuTimeCTime
+    | MainRegsWithCpuTime MainWithIndexRegisters CpuTimeCTime
       --| PushWithMainSpCpuTimeAndPc Int MainWithIndexRegisters Int CpuTimeCTime Int
       --| PushWithMainSpCpuTime Int MainWithIndexRegisters Int CpuTimeCTime
     | Fszh0n0pTimeDeltaSet408Bit Int Int Int
@@ -113,3 +114,6 @@ applyDeltaWithChanges z80delta z80 =
                     z80.flags
             in
             { z80 | pc = z80delta.pc, flags = { flags | a = int }, env = { z80_env | time = z80delta.time }, interrupts = z80delta.interrupts }
+
+        MainRegsWithCpuTime mainWithIndexRegisters cpuTimeCTime ->
+            { z80 | pc = z80delta.pc, env = { z80_env | time = cpuTimeCTime }, main = mainWithIndexRegisters, interrupts = z80delta.interrupts }

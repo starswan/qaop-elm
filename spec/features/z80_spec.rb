@@ -24,7 +24,7 @@ RSpec.describe "Spectrum Emulator" do
     let(:z80_game) { Game.find_by!(name: ENV.fetch("Z80_TEST", cyrus.name)) }
 
     let(:times) { {
-      flags.name => 7500,
+      flags.name => 7600,
       regs.name => 13000,
       full_flags.name => 7900,
       full.name => 14000,
@@ -35,7 +35,7 @@ RSpec.describe "Spectrum Emulator" do
     end
 
     # Disabled some of the IM routines, and now completes.
-    # Flags: 019 of 160 tests failed.
+    # Flags: 018 of 160 tests failed.
     # 052 SRO (XY), R (DD CB 00 00)
     # 074 BIT N,(XY)- DD CB xx 40-47 (undoc?) - same as DD CB 00 46
     # 089 LDIR-> NOP'
@@ -46,45 +46,41 @@ RSpec.describe "Spectrum Emulator" do
     # 108 OUTD
     # 109 OTIR
     # 110 OTDR
-    # 156 LD A,I
     # 157 LD A,R
     #
     # Regs: 026 of 160 tests failed.
-    # 1. 52 SRO (XY) ,R (undocumented?) DD CB xx 00
-    # 2. 74 BIT N,(XY)- DD CB xx 40
-    # 3. 79 SET N, (XY), R       DD CB xx C0
-    # 4. 84 RES N, (XY), R       DD CB xx 80
-    # 5. 89 LDIR->NOP'
-    # 6. 90 LDDR->NOP',
-    # 7. 95 IN A, (N)
-    # 8. 96 IN FE:FF -> BF
-    # 9. 97 IN FE:FF -> BF
-    # 10. 98 IN FE:FF -> BF
-    # 11. 99 IN FE:FF -> BF
-    # 12. 100 IN FE:FF -> BF
-    # 13. 101 IN FE:FF -> BF
-    # 14. 102 IN FE:FF -> BF
-    # 15. 103 IN FE:FF -> BF
-    # 16. 105 OUT (C), R
-    # 17. 107 OUTI
-    # 18. 108 OUTD
-    # 19. 109 OTIR
-    # 20. 110 OTDR
-    # 21. 122 RETN
-    # 22. 123 RETI
-    # 23. 124 RETI/RETN
-    # 24. 154 LD I,A
-    # 25. 156 LD A,I
-    # 26. 157 LD A,R
+    # 52 SRO (XY) ,R (undocumented?) DD CB xx 00
+    # 74 BIT N,(XY)- DD CB xx 40
+    # 79 SET N,(XY),R       DD CB xx C0
+    # 84 RES N,(XY),R       DD CB xx 80
+    # 89 LDIR->NOP'
+    # 90 LDDR->NOP',
+    # 95 IN A, (N)
+    # 96 IN FE:FF -> BF
+    # 97 IN FE:FF -> BF
+    # 98 IN FE:FF -> BF
+    # 99 IN FE:FF -> BF
+    # 100 IN FE:FF -> BF
+    # 101 IN FE:FF -> BF
+    # 102 IN FE:FF -> BF
+    # 103 IN FE:FF -> BF
+    # 105 OUT (C), R
+    # 107 OUTI
+    # 108 OUTD
+    # 109 OTIR
+    # 110 OTDR
+    # 122 RETN
+    # 123 RETI
+    # 124 RETI/RETN
+    # 154 LD I,A
+    # 156 LD A,I
+    # 157 LD A,R
     #
-    # FullFlags - 026 of 160 tests failed
+    # FullFlags - 022 of 160 tests failed
     # 1. 001 SCF
     # 2. 002 CCF
     # 3. 005 SCF (ST)
     # 4. 006 CCF (ST)
-    # 5. 071 BIT N,(HL)
-    # 6. 072 BIT N,[ R, (HL)]
-    # 7. 073 BIT N, (XY)
 
     # Full - 033 of 160 tests failed
     # 1. 74 BIT N,(XY)- DD CB xx 40

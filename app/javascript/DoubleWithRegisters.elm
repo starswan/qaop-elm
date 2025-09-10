@@ -353,7 +353,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 | main = main
                 , pc = pc
                 , env = { old_env | time = cpu_time |> addCpuTimeTime timeOffset }
-                , r = z80.r + 1
             }
 
         DoubleRegChangeStoreIndirect addr value ->
@@ -367,7 +366,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
             { z80
                 | pc = pc
                 , env = env_1
-                , r = z80.r + 1
             }
 
         NewHLRegisterValue int ->
@@ -385,7 +383,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 | pc = pc
                 , env = env_1
                 , main = { main | hl = int }
-                , r = z80.r + 1
             }
 
         NewIXRegisterValue int ->
@@ -403,7 +400,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 | pc = pc
                 , env = env_1
                 , main = { main | ix = int }
-                , r = z80.r + 1
             }
 
         NewIYRegisterValue int ->
@@ -421,7 +417,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 | pc = pc
                 , env = env_1
                 , main = { main | iy = int }
-                , r = z80.r + 1
             }
 
         NewBRegisterIndirect addr ->
@@ -442,7 +437,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 | pc = pc
                 , env = { env_1 | time = new_b.time }
                 , main = { main | b = new_b.value }
-                , r = z80.r + 1
             }
 
         NewARegisterIndirect addr ->
@@ -463,7 +457,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 | pc = pc
                 , env = { env_1 | time = new_a.time }
                 , flags = { flags | a = new_a.value }
-                , r = z80.r + 1
             }
 
         SetARegisterIndirect addr ->
@@ -477,7 +470,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
             { z80
                 | pc = pc
                 , env = env_1
-                , r = z80.r + 1
             }
 
         NewCRegisterIndirect addr ->
@@ -498,7 +490,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 | pc = pc
                 , env = { env_1 | time = new_b.time }
                 , main = { main | c = new_b.value }
-                , r = z80.r + 1
             }
 
         NewDRegisterIndirect addr ->
@@ -519,7 +510,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 | pc = pc
                 , env = { env_1 | time = new_b.time }
                 , main = { main | d = new_b.value }
-                , r = z80.r + 1
             }
 
         NewERegisterIndirect addr ->
@@ -540,7 +530,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 | pc = pc
                 , env = { env_1 | time = new_b.time }
                 , main = { main | e = new_b.value }
-                , r = z80.r + 1
             }
 
         NewHRegisterIndirect addr ->
@@ -561,7 +550,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 | pc = pc
                 , env = { env_1 | time = new_b.time }
                 , main = { main | hl = Bitwise.or (main.hl |> Bitwise.and 0xFF) (new_b.value |> shiftLeftBy8) }
-                , r = z80.r + 1
             }
 
         NewLRegisterIndirect addr ->
@@ -582,7 +570,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 | pc = pc
                 , env = { env_1 | time = new_b.time }
                 , main = { main | hl = Bitwise.or (main.hl |> Bitwise.and 0xFF00) (new_b.value |> Bitwise.and 0xFF) }
-                , r = z80.r + 1
             }
 
         FlagOpIndexedIndirect flagFunc addr offset ->
@@ -606,7 +593,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 | pc = pc
                 , flags = flags |> changeFlags flagFunc value.value
                 , env = { env_1 | time = value.time }
-                , r = z80.r + 1
             }
 
         --Just { pcIncrement = new_pc, time = cpu_time, timeIncrement = FifteenTStates, operation = ChangeFlagRegisters (z80.flags |> adc value.value) }
@@ -634,13 +620,11 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                     | pc = pc
                     , env = env_1
                     , flags = valueWithFlags.flags
-                    , r = z80.r + 1
                 }
 
             else
                 { z80
                     | pc = pc
-                    , r = z80.r + 1
                 }
 
         IndexedIndirectDecrement addr offset ->
@@ -667,11 +651,9 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                     | pc = pc
                     , env = env_1
                     , flags = valueWithFlags.flags
-                    , r = z80.r + 1
                 }
 
             else
                 { z80
                     | pc = pc
-                    , r = z80.r + 1
                 }
