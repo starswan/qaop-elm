@@ -16,7 +16,6 @@ import GroupCBIXIY exposing (singleByteMainRegsIXCB, singleByteMainRegsIYCB, sin
 import GroupED exposing (singleByteFlagsED, singleByteMainAndFlagsED, singleByteMainRegsED)
 import Loop
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
-import Set
 import SimpleFlagOps exposing (singleByteFlags, singleByteFlagsCB, singleByteFlagsDD, singleByteFlagsFD)
 import SimpleSingleByte exposing (singleByteMainRegs, singleByteMainRegsDD, singleByteMainRegsFD)
 import SingleByteWithEnv exposing (singleByteZ80Env)
@@ -41,7 +40,7 @@ constructor : Z80
 constructor =
     let
         main =
-            Z80Types.MainWithIndexRegisters 0 0 0 0 0 0 0
+            Z80Types.MainWithIndexRegisters 0 0 0 0 0 0 0 0
 
         alternate =
             MainRegisters 0 0 0 0 0
@@ -53,7 +52,7 @@ constructor =
             FlagRegisters 0 0 0 0 0
 
         interrupts =
-            InterruptRegisters 0 0 IM0 False
+            InterruptRegisters 0 IM0 False
     in
     --Z80 z80env_constructor 0 main main_flags alternate alt_flags 0 interrupts
     Z80 (Z80Core z80env_constructor 0 main main_flags 0 interrupts) alternate alt_flags

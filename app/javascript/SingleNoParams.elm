@@ -189,7 +189,7 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
             in
             { z80
                 | pc = Bitwise.and (z80.pc + 1) 0xFFFF
-                , interrupts = ints
+                , main = ints
                 , r = z80.r + 1
             }
 
@@ -201,7 +201,7 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
             in
             { z80
                 | pc = Bitwise.and (z80.pc + 1) 0xFFFF
-                , interrupts = ints
+                , main = ints
                 , r = z80.r + 1
             }
 

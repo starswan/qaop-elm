@@ -2,8 +2,8 @@ module Z80Core exposing (..)
 
 import Bitwise exposing (shiftRightBy)
 import CpuTimeCTime exposing (CpuTimePcAnd16BitValue, CpuTimePcAndValue, addCpuTimeTime)
-import Utils exposing (char, shiftLeftBy8, wordPlusOffset)
-import Z80Env exposing (Z80Env, addCpuTimeEnv, c_TIME_LIMIT, mem, mem16, setMem, z80_push)
+import Utils exposing (shiftLeftBy8)
+import Z80Env exposing (Z80Env, addCpuTimeEnv, c_TIME_LIMIT, mem16, setMem, z80_push)
 import Z80Flags exposing (FlagRegisters)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIY(..), InterruptMode(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
@@ -64,78 +64,17 @@ add_cpu_time value z80 =
     { z80 | env = env }
 
 
-hl_deref_with_z80_ixiy : IXIY -> Z80ROM -> Z80Core -> CpuTimePcAndValue
-hl_deref_with_z80_ixiy ixiyhl rom48k z80 =
-    let
-        a =
-            z80 |> env_mem_hl_ixiy ixiyhl rom48k
-
-        new_b =
-            mem a.value16 z80.env.time rom48k z80.env
-    in
-    CpuTimePcAndValue new_b.time a.pc new_b.value
-
-
-
---inc_pcr : Z80 -> Z80
---inc_pcr z80 =
---    let
---        core =
---            z80.core
---
---        pc =
---            Bitwise.and (core.pc + 1) 0xFFFF
---    in
---    { z80 | core = { core | pc = pc, r = core.r + 1 } }
-
-
 inc_pc : Z80Core -> Int
 inc_pc z80 =
     Bitwise.and (z80.pc + 1) 0xFFFF
 
 
-inc_pc2 : Z80Core -> Int
-inc_pc2 z80 =
-    Bitwise.and (z80.pc + 2) 0xFFFF
-
-
-
---getd_value: Int -> Z80 -> CpuTimePcAndValue
---getd_value xy z80 =
---   let
---      d = z80.env |> mem z80.pc
---   in
---      CpuTimePcAndValue (d.time |> add_cpu_time_time 8) (char (z80.pc + 1)) (char (xy + byte d.value))
-
-
-env_mem_hl_ixiy : IXIY -> Z80ROM -> Z80Core -> CpuTimePcAnd16BitValue
-env_mem_hl_ixiy ixiyhl rom48k z80 =
-    case ixiyhl of
-        IXIY_IX ->
-            let
-                dval =
-                    mem z80.pc z80.env.time rom48k z80.env
-            in
-            CpuTimePcAnd16BitValue dval.time (char (z80.pc + 1)) (z80.main.ix |> wordPlusOffset dval.value)
-
-        IXIY_IY ->
-            let
-                dval =
-                    mem z80.pc z80.env.time rom48k z80.env
-            in
-            CpuTimePcAnd16BitValue dval.time (char (z80.pc + 1)) (z80.main.iy |> wordPlusOffset dval.value)
-
-
-
---	void iff(int v) {IFF = v;}
-
-
-set_iff : Int -> Z80Core -> InterruptRegisters
+set_iff : Int -> Z80Core -> MainWithIndexRegisters
 set_iff value z80 =
     let
         --y = debug_log "set_iff" value Nothing
         interrupts =
-            z80.interrupts
+            z80.main
     in
     { interrupts | iff = value }
 
@@ -196,18 +135,20 @@ interrupt bus rom48k full_z80 =
 
         ints =
             z80.interrupts
+
+        main =
+            z80.main
     in
-    if Bitwise.and ints.iff 1 == 0 then
+    if Bitwise.and main.iff 1 == 0 then
         full_z80
 
     else
         let
             --z81 = debug_log "interrupt" "keyboard scan" z80
-            new_ints =
-                { ints | iff = 0, halted = False }
-
+            --new_ints =
+            --    { ints | iff = 0, halted = False }
             z80_1 =
-                { z80 | interrupts = new_ints }
+                { z80 | interrupts = { ints | halted = False }, main = { main | iff = 0 } }
 
             pushed =
                 z80_1.env |> z80_push z80_1.pc
@@ -296,7 +237,7 @@ set_pc pc z80 =
 
 get_ei : Z80Core -> Bool
 get_ei z80 =
-    Bitwise.and z80.interrupts.iff 1 /= 0
+    Bitwise.and z80.main.iff 1 /= 0
 
 
 z80_halt : Z80 -> Z80
