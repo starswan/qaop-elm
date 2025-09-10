@@ -1,9 +1,9 @@
 module Z80Core exposing (..)
 
-import Bitwise exposing (shiftRightBy)
+import Bitwise
 import CpuTimeCTime exposing (CpuTimePcAnd16BitValue, CpuTimePcAndValue, addCpuTimeTime)
 import Utils exposing (shiftLeftBy8)
-import Z80Env exposing (Z80Env, addCpuTimeEnv, c_TIME_LIMIT, mem16, setMem, z80_push)
+import Z80Env exposing (Z80Env, addCpuTimeEnv, mem16, setMem, z80_push)
 import Z80Flags exposing (FlagRegisters)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (InterruptMode(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
