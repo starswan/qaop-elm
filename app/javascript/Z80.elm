@@ -15,7 +15,7 @@ import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainAndFlag
 import GroupCBIXIY exposing (singleByteMainRegsIXCB, singleByteMainRegsIYCB, singleEnvMainRegsIXCB, singleEnvMainRegsIYCB)
 import GroupED exposing (edWithInterrupts, singleByteFlagsED, singleByteMainAndFlagsED, singleByteMainRegsED)
 import Loop
-import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
+import PCIncrement exposing (InterruptPCIncrement(..), MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
 import SimpleFlagOps exposing (singleByteFlags, singleByteFlagsCB, singleByteFlagsDD, singleByteFlagsFD)
 import SimpleSingleByte exposing (singleByteMainRegs, singleByteMainRegsDD, singleByteMainRegsFD)
 import SingleByteWithEnv exposing (singleByteZ80Env)
@@ -703,7 +703,7 @@ runSpecial specialType rom48k z80_core =
                                 Nothing ->
                                     case edWithInterrupts |> Dict.get param.value of
                                         Just ( f, duration ) ->
-                                            InterruptDelta IncrementByTwo duration (f z80_core.interrupts)
+                                            InterruptDelta AddTwoToPC duration (f z80_core.interrupts)
 
                                         Nothing ->
                                             oldDelta 0xED instrTime z80_core.interrupts z80_core rom48k
