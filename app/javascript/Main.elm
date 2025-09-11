@@ -15,8 +15,7 @@ import Html.Events exposing (onClick, preventDefaultOn)
 import Http exposing (Metadata)
 import Json.Decode as Decode exposing (Decoder)
 import Keyboard exposing (ctrlKeyDownEvent, ctrlKeyUpEvent, keyDownEvent, keyUpEvent)
-import Loader exposing (LoadAction(..), trimActionList)
-import MessageHandler exposing (bytesToRom, bytesToTap)
+import Loader exposing (LoadAction(..), Loader, Message(..), actionToCmd, trimActionList)
 import Qaop exposing (Qaop, pause)
 import ScreenStorage exposing (ScreenLine, Z80Screen)
 import Spectrum exposing (Spectrum, frames, new_tape)
@@ -29,7 +28,6 @@ import Time exposing (posixToMillis)
 import Utils exposing (speed_in_hz, time_display)
 import Vector24 exposing (Vector24)
 import Vector8 exposing (Vector8)
-import Z80Debug exposing (debugLog)
 import Z80Rom exposing (Z80ROM)
 import Z80Screen exposing (ScreenColourRun, mapScreenLine)
 
@@ -70,30 +68,21 @@ type AutoKey
     | AutoControl String
 
 
-type alias Model =
+type Model
+    = Initial Loader
+    | WithTime Loader Time.Posix
+    | Running QaopModel
+
+
+type alias QaopModel =
     { qaop : Qaop
     , -- This doesn't look like a variable, but think it might be useful to adjust it at runtime
       tickInterval : Int
     , count : Int
     , elapsed_millis : Int
-    , time : Maybe Time.Posix
+    , time : Time.Posix
     , loadPressed : Bool
     }
-
-
-type Message
-    = GotTAP (Result Http.Error (List Tapfile))
-    | GotRom (Result Http.Error (Maybe Z80ROM))
-    | Tick Time.Posix
-    | Pause
-    | Autoload
-    | CharacterKeyDown Char
-    | CharacterUnKey Char
-    | ControlKeyDown String
-    | ControlUnKey String
-    | KeyRepeat
-    | CharacterKeyUp Char
-    | ControlKeyUp String
 
 
 type alias Flags =
@@ -110,10 +99,14 @@ init data =
             , ( "tape", data.tape )
             ]
 
-        ( newQaop, cmd ) =
-            Qaop.new params |> run
+        loader =
+            params |> Loader.new
+
+        --( newQaop, cmd ) =
+        --    Qaop.new params |> run
     in
-    ( Model newQaop c_TICKTIME 0 0 Nothing False, cmd )
+    --( Model newQaop c_TICKTIME 0 0 Nothing False, cmd )
+    ( Initial loader, Cmd.none )
 
 
 mapLineToSvg : Int -> ( Int, ScreenColourRun ) -> Svg Message
@@ -197,55 +190,63 @@ svgNode screen =
 
 
 view : Model -> Html Message
-view model =
-    let
-        screen =
-            model.qaop.spectrum.rom48k.z80ram.screen
+view model_state =
+    case model_state of
+        Initial _ ->
+            div [] []
 
-        load_disabled =
-            case model.qaop.spectrum.tape of
-                Just tape ->
-                    model.loadPressed || model.count < 100 || tape.tapePos.tapfileNumber == (tape.tapfiles |> Dict.size)
+        WithTime _ _ ->
+            div [] []
 
-                Nothing ->
-                    True
+        Running model ->
+            let
+                screen =
+                    model.qaop.spectrum.rom48k.z80ram.screen
 
-        speed =
-            speed_in_hz model.elapsed_millis model.count
+                load_disabled =
+                    case model.qaop.spectrum.tape of
+                        Just tape ->
+                            model.loadPressed || model.count < 100 || tape.tapePos.tapfileNumber == (tape.tapfiles |> Dict.size)
 
-        time_disp =
-            time_display model.elapsed_millis model.count
-    in
-    -- The inline style is being used for example purposes in order to keep this example simple and
-    -- avoid loading additional resources. Use a proper stylesheet when building your own app.
-    div []
-        [ h2 [] [ text ("Refresh Interval " ++ (model.tickInterval |> String.fromInt) ++ "ms ") ]
-        , div [ style "display" "flex", style "justify-content" "center" ]
-            [ div [] [ span [ id "cyclecount" ] [ text (String.fromInt model.count) ], text " in ", text time_disp, span [ id "hz" ] [ text speed ], text " Hz" ]
-            , button [ onClick Pause ]
-                [ text
-                    (if model.qaop.spectrum.paused then
-                        "Unpause"
+                        Nothing ->
+                            True
 
-                     else
-                        "Pause"
-                    )
+                speed =
+                    speed_in_hz model.elapsed_millis model.count
+
+                time_disp =
+                    time_display model.elapsed_millis model.count
+            in
+            -- The inline style is being used for example purposes in order to keep this example simple and
+            -- avoid loading additional resources. Use a proper stylesheet when building your own app.
+            div []
+                [ h2 [] [ text ("Refresh Interval " ++ (model.tickInterval |> String.fromInt) ++ "ms ") ]
+                , div [ style "display" "flex", style "justify-content" "center" ]
+                    [ div [] [ span [ id "cyclecount" ] [ text (String.fromInt model.count) ], text " in ", text time_disp, span [ id "hz" ] [ text speed ], text " Hz" ]
+                    , button [ onClick Pause ]
+                        [ text
+                            (if model.qaop.spectrum.paused then
+                                "Unpause"
+
+                             else
+                                "Pause"
+                            )
+                        ]
+                    , button [ onClick Autoload, disabled load_disabled ]
+                        [ text "Load"
+                        ]
+                    ]
+                , div
+                    [ tabindex 0
+                    , id "spectrum"
+                    , preventDefaultOn "keydown" (Decode.map alwaysPreventDefault keyDownDecoder)
+                    , preventDefaultOn "keyup" (Decode.map alwaysPreventDefault keyUpDecoder)
+                    ]
+                    [ Svg.Lazy.lazy svgNode screen
+                    ]
+
+                --,svg [style "height" "192px", style "width" "256px"] (List.indexedMap lineListToSvg lines |> List.concat)
                 ]
-            , button [ onClick Autoload, disabled load_disabled ]
-                [ text "Load"
-                ]
-            ]
-        , div
-            [ tabindex 0
-            , id "spectrum"
-            , preventDefaultOn "keydown" (Decode.map alwaysPreventDefault keyDownDecoder)
-            , preventDefaultOn "keyup" (Decode.map alwaysPreventDefault keyUpDecoder)
-            ]
-            [ Svg.Lazy.lazy svgNode screen
-            ]
-
-        --,svg [style "height" "192px", style "width" "256px"] (List.indexedMap lineListToSvg lines |> List.concat)
-        ]
 
 
 alwaysPreventDefault : msg -> ( msg, Bool )
@@ -254,91 +255,148 @@ alwaysPreventDefault msg =
 
 
 update : Message -> Model -> ( Model, Cmd Message )
-update message model =
-    case message of
-        GotRom result ->
+update message model_state =
+    case model_state of
+        Initial loader ->
+            case message of
+                Tick posix ->
+                    let
+                        ( l, nextAction ) =
+                            loader |> Loader.run
+
+                        ( new_model, l_cmd ) =
+                            case nextAction of
+                                Just action ->
+                                    ( WithTime l posix, actionToCmd action )
+
+                                Nothing ->
+                                    ( model_state, Cmd.none )
+                    in
+                    ( new_model, l_cmd )
+
+                _ ->
+                    ( model_state, Cmd.none )
+
+        WithTime loader posix ->
+            case message of
+                GotRom result ->
+                    let
+                        ( l, nextAction ) =
+                            loader |> Loader.run
+
+                        ( new_model, l_cmd ) =
+                            case nextAction of
+                                Just action ->
+                                    let
+                                        newQaop =
+                                            Qaop.fromLoader loader
+
+                                        ( n_qaop, n_cmd ) =
+                                            gotRom newQaop result
+
+                                        qaop_model =
+                                            QaopModel n_qaop c_TICKTIME 0 0 posix False
+                                    in
+                                    ( Running qaop_model, n_cmd )
+
+                                Nothing ->
+                                    ( model_state, Cmd.none )
+                    in
+                    ( new_model, l_cmd )
+
+                _ ->
+                    ( model_state, Cmd.none )
+
+        Running model ->
             let
-                ( qaop, cmd ) =
-                    gotRom model.qaop result
+                ( qaopModel, qaopCmd ) =
+                    case message of
+                        GotRom result ->
+                            let
+                                ( qaop, cmd ) =
+                                    gotRom model.qaop result
+                            in
+                            ( { model | qaop = qaop, count = model.count + 1 }, cmd )
+
+                        GotTAP result ->
+                            let
+                                ( qaop, cmd ) =
+                                    gotTap model.qaop result
+
+                                --run_after_30_sec = delay 30000 LoadTape
+                            in
+                            ( { model | qaop = qaop, count = model.count + 1 }, cmd )
+
+                        Tick posix ->
+                            let
+                                state =
+                                    if model.qaop.spectrum.paused then
+                                        { qaop = model.qaop, cmd = Cmd.none, count = model.count, elapsed = 0 }
+
+                                    else
+                                        let
+                                            elapsed =
+                                                --case model.time of
+                                                --    Just time ->
+                                                posixToMillis posix - posixToMillis model.time
+
+                                            --Nothing ->
+                                            --    0
+                                            ( q, cmd ) =
+                                                model.qaop |> run
+                                        in
+                                        { qaop = q, cmd = cmd, count = model.count + 1, elapsed = elapsed }
+                            in
+                            --( { model | count = state.count, elapsed_millis = model.elapsed_millis + state.elapsed, time = Just posix, qaop = state.qaop }, state.cmd )
+                            ( { model | count = state.count, elapsed_millis = model.elapsed_millis + state.elapsed, time = posix, qaop = state.qaop }, state.cmd )
+
+                        Pause ->
+                            --( { model | time = Nothing, qaop = model.qaop |> pause (not model.qaop.spectrum.paused) }, Cmd.none )
+                            ( { model | qaop = model.qaop |> pause (not model.qaop.spectrum.paused) }, Cmd.none )
+
+                        CharacterKeyDown char ->
+                            let
+                                qaop =
+                                    model.qaop
+                            in
+                            ( { model | qaop = { qaop | keys = qaop.keys |> keyDownEvent char } }, Cmd.none )
+
+                        ControlKeyDown str ->
+                            let
+                                qaop =
+                                    model.qaop
+                            in
+                            ( { model | qaop = { qaop | keys = qaop.keys |> ctrlKeyDownEvent str } }, Cmd.none )
+
+                        CharacterUnKey char ->
+                            let
+                                qaop =
+                                    model.qaop
+                            in
+                            ( { model | qaop = { qaop | keys = qaop.keys |> keyUpEvent char } }, Cmd.none )
+
+                        ControlUnKey str ->
+                            let
+                                qaop =
+                                    model.qaop
+                            in
+                            ( { model | qaop = { qaop | keys = qaop.keys |> ctrlKeyUpEvent str } }, Cmd.none )
+
+                        KeyRepeat ->
+                            -- do nothing on repeating keys
+                            ( model, Cmd.none )
+
+                        -- This tiny sleep makes the keyboard work in capybara
+                        CharacterKeyUp char ->
+                            ( model, Delay.after 2 (CharacterUnKey char) )
+
+                        ControlKeyUp str ->
+                            ( model, Delay.after 2 (ControlUnKey str) )
+
+                        Autoload ->
+                            ( { model | loadPressed = True }, Cmd.batch loadingCommands )
             in
-            ( { model | qaop = qaop, count = model.count + 1 }, cmd )
-
-        GotTAP result ->
-            let
-                ( qaop, cmd ) =
-                    gotTap model.qaop result
-
-                --run_after_30_sec = delay 30000 LoadTape
-            in
-            ( { model | qaop = qaop, count = model.count + 1 }, cmd )
-
-        Tick posix ->
-            let
-                state =
-                    if model.qaop.spectrum.paused then
-                        { qaop = model.qaop, cmd = Cmd.none, count = model.count, elapsed = 0 }
-
-                    else
-                        let
-                            elapsed =
-                                case model.time of
-                                    Just time ->
-                                        posixToMillis posix - posixToMillis time
-
-                                    Nothing ->
-                                        0
-
-                            ( q, cmd ) =
-                                model.qaop |> run
-                        in
-                        { qaop = q, cmd = cmd, count = model.count + 1, elapsed = elapsed }
-            in
-            ( { model | count = state.count, elapsed_millis = model.elapsed_millis + state.elapsed, time = Just posix, qaop = state.qaop }, state.cmd )
-
-        Pause ->
-            ( { model | time = Nothing, qaop = model.qaop |> pause (not model.qaop.spectrum.paused) }, Cmd.none )
-
-        CharacterKeyDown char ->
-            let
-                qaop =
-                    model.qaop
-            in
-            ( { model | qaop = { qaop | keys = qaop.keys |> keyDownEvent char } }, Cmd.none )
-
-        ControlKeyDown str ->
-            let
-                qaop =
-                    model.qaop
-            in
-            ( { model | qaop = { qaop | keys = qaop.keys |> ctrlKeyDownEvent str } }, Cmd.none )
-
-        CharacterUnKey char ->
-            let
-                qaop =
-                    model.qaop
-            in
-            ( { model | qaop = { qaop | keys = qaop.keys |> keyUpEvent char } }, Cmd.none )
-
-        ControlUnKey str ->
-            let
-                qaop =
-                    model.qaop
-            in
-            ( { model | qaop = { qaop | keys = qaop.keys |> ctrlKeyUpEvent str } }, Cmd.none )
-
-        KeyRepeat ->
-            -- do nothing on repeating keys
-            ( model, Cmd.none )
-
-        -- This tiny sleep makes the keyboard work in capybara
-        CharacterKeyUp char ->
-            ( model, Delay.after 2 (CharacterUnKey char) )
-
-        ControlKeyUp str ->
-            ( model, Delay.after 2 (ControlUnKey str) )
-
-        Autoload ->
-            ( { model | loadPressed = True }, Cmd.batch loadingCommands )
+            ( Running qaopModel, qaopCmd )
 
 
 loadQuoteQuoteEnter =
@@ -373,12 +431,20 @@ loadingCommands =
 
 
 subscriptions : Model -> Sub Message
-subscriptions model =
-    if model.qaop.spectrum.paused || not (List.isEmpty model.qaop.loader.actions) then
-        Sub.none
+subscriptions model_state =
+    case model_state of
+        Initial _ ->
+            Time.every (c_TICKTIME |> toFloat) Tick
 
-    else
-        Time.every (model.tickInterval |> toFloat) Tick
+        WithTime _ _ ->
+            Sub.none
+
+        Running model ->
+            if model.qaop.spectrum.paused || not (List.isEmpty model.qaop.loader.actions) then
+                Sub.none
+
+            else
+                Time.every (model.tickInterval |> toFloat) Tick
 
 
 keyDownDecoder : Decode.Decoder Message
@@ -415,57 +481,15 @@ toUnKey keyValue =
             ControlKeyUp keyValue
 
 
-actionToCmd : LoadAction -> Cmd Message
-actionToCmd action =
-    case action of
-        LoadTAP url ->
-            -- Not sure if this is helping - we want to pick out 16384 from the metadata so we know how many bytes to consume
-            -- as TAP files will not always be the same size...
-            --Http.request { method = "GET",
-            --               headers = [],
-            --               body = emptyBody,
-            --               timeout = Nothing,
-            --               tracker = Nothing,
-            --               url = String.concat ["http://localhost:3000/", fileName],
-            --               expect = Http.expectBytesResponse GotTAP convertResponse
-            --          }
-            debugLog "loadTap"
-                url
-                Http.get
-                { url = url
-                , expect = Http.expectBytesResponse GotTAP bytesToTap
-                }
-
-        LoadROM url ->
-            --loadRom: String -> Cmd Message
-            --loadRom fileName =
-            --    Http.get { url = String.concat ["http://localhost:3000/", fileName],
-            --               expect = Http.expectBytes GotRom (list_decoder 16384 unsignedInt8)
-            --              }
-            debugLog "loadRom"
-                url
-                Http.get
-                { url = url
-
-                --, expect = Http.Detailed.expectBytes GotRom (array_decoder 16384 unsignedInt8)
-                , expect = Http.expectBytesResponse GotRom bytesToRom
-                }
-
-
-gotRom : Qaop -> Result Http.Error (Maybe Z80ROM) -> ( Qaop, Cmd Message )
+gotRom : Qaop -> Result Http.Error Z80ROM -> ( Qaop, Cmd Message )
 gotRom qaop result =
     case result of
         Ok value ->
-            case value of
-                Just a ->
-                    let
-                        speccy =
-                            qaop.spectrum
-                    in
-                    { qaop | spectrum = { speccy | rom48k = a } } |> run
-
-                Nothing ->
-                    ( qaop, Cmd.none )
+            let
+                speccy =
+                    qaop.spectrum
+            in
+            { qaop | spectrum = { speccy | rom48k = value } } |> run
 
         Err _ ->
             ( qaop, Cmd.none )

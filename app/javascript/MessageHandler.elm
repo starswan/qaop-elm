@@ -1,7 +1,7 @@
 module MessageHandler exposing (..)
 
 import Bytes exposing (Bytes, Endianness(..))
-import Http exposing (Error, Expect, Metadata, Response)
+import Http exposing (Error(..), Expect, Metadata, Response)
 import Tapfile exposing (Tapfile, parseTapFile)
 import Z80Rom exposing (Z80ROM, parseRomFile)
 
@@ -33,7 +33,7 @@ bytesToTap httpResponse =
             Ok (body |> parseTapFile)
 
 
-bytesToRom : Response Bytes -> Result Error (Maybe Z80ROM)
+bytesToRom : Response Bytes -> Result Error Z80ROM
 bytesToRom httpResponse =
     case httpResponse of
         Http.BadUrl_ url ->
@@ -57,16 +57,14 @@ bytesToRom httpResponse =
             -- This seems to be the gzip size which isn't that useful
             --z = debug_log "received bytes of size" (body |> width) Nothing
             --in
-            Ok (body |> parseRomFile)
+            --BadBody
+            let
+                maybeRom =
+                    body |> parseRomFile
+            in
+            case maybeRom of
+                Just arom ->
+                    Ok arom
 
-
-
---list_decoder : Int -> Decoder Int -> Decoder (List Int)
---list_decoder size decoder =
---   loop (size, []) (listStep decoder)
---listStep : Decoder Int -> (Int, List Int) -> Decoder (Step (Int, List Int) (List Int))
---listStep decoder (n, xs) =
---   if n <= 0 then
---     succeed (Done xs)
---   else
---     map (\x -> Loop (n - 1, x :: xs)) decoder
+                Nothing ->
+                    Err (Http.BadBody "failed to parse body")
