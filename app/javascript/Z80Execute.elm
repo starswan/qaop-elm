@@ -3,7 +3,7 @@ module Z80Execute exposing (..)
 import Bitwise exposing (shiftLeftBy)
 import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDuration(..), addCpuTimeTime, addDuration)
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
-import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
+import PCIncrement exposing (InterruptPCIncrement(..), MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
 import RegisterChange exposing (ChangeMainRegister(..), ChangeOneRegister(..), InterruptChange(..), RegisterChange(..), Shifter(..))
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
 import SingleEnvWithMain exposing (EightBitMain(..), SingleEnvMainChange, applySingleEnvMainChange)
@@ -26,7 +26,7 @@ import Z80Types exposing (InterruptRegisters, MainWithIndexRegisters, get_xy, se
 type DeltaWithChanges
     = OldDeltaWithChanges DeltaWithChangesData
     | PureDelta PCIncrement CpuTimeCTime Z80Change
-    | InterruptDelta PCIncrement InstructionDuration InterruptChange
+    | InterruptDelta InterruptPCIncrement InstructionDuration InterruptChange
     | FlagDelta PCIncrement InstructionDuration FlagChange
     | RegisterChangeDelta PCIncrement InstructionDuration RegisterChange
     | Simple8BitDelta MediumPCIncrement CpuTimeCTime Single8BitChange
@@ -151,19 +151,13 @@ applySimple8BitDelta pcInc cpu_time z80changeData z80 =
     { z80 | pc = new_pc, main = main, env = { z80_env | time = cpu_time } }
 
 
-applyInterruptChange : PCIncrement -> InstructionDuration -> InterruptChange -> Z80Core -> Z80Core
+applyInterruptChange : InterruptPCIncrement -> InstructionDuration -> InterruptChange -> Z80Core -> Z80Core
 applyInterruptChange pcInc duration chaange z80 =
     let
         new_pc =
             case pcInc of
-                IncrementByOne ->
-                    (z80.pc + 1) |> Bitwise.and 0xFFFF
-
-                IncrementByTwo ->
+                AddTwoToPC ->
                     (z80.pc + 2) |> Bitwise.and 0xFFFF
-
-                PCIncrementByFour ->
-                    Bitwise.and (z80.pc + 4) 0xFFFF
 
         env =
             z80.env
@@ -176,9 +170,32 @@ applyInterruptChange pcInc duration chaange z80 =
     in
     case chaange of
         LoadAFromIR value ->
+            --private void ld_a_ir(int v)
+            --{
+            --	Ff = Ff&~0xFF | (A = v);
+            --	Fr = v==0 ? 0 : 1;
+            --	Fa = Fb = IFF<<6 & 0x80;
+            --	time++;
+            --}
             let
+                z80_flags =
+                    z80.flags
+
+                ff =
+                    z80_flags.ff |> Bitwise.and (Bitwise.complement 0xFF) |> Bitwise.or value
+
+                fr =
+                    if value == 0 then
+                        0
+
+                    else
+                        1
+
+                fab =
+                    z80.interrupts.iff |> shiftLeftBy 6 |> Bitwise.and 0x80
+
                 flags =
-                    z80.flags |> ld_a_ir value z80.interrupts
+                    { z80_flags | a = value, ff = ff, fr = fr, fa = fab, fb = fab }
             in
             { z80 | pc = new_pc, flags = flags, env = env_1 }
 
@@ -761,32 +778,6 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80_core =
                     { env_1 | time = input.time } |> setMem addr value
             in
             { z80_core | pc = new_pc, main = new_main, env = env_2 }
-
-
-ld_a_ir : Int -> InterruptRegisters -> FlagRegisters -> FlagRegisters
-ld_a_ir v interrupts flags =
-    --private void ld_a_ir(int v)
-    --{
-    --	Ff = Ff&~0xFF | (A = v);
-    --	Fr = v==0 ? 0 : 1;
-    --	Fa = Fb = IFF<<6 & 0x80;
-    --	time++;
-    --}
-    let
-        ff =
-            flags.ff |> Bitwise.and (Bitwise.complement 0xFF) |> Bitwise.or v
-
-        fr =
-            if v == 0 then
-                0
-
-            else
-                1
-
-        fab =
-            interrupts.iff |> shiftLeftBy 6 |> Bitwise.and 0x80
-    in
-    { flags | a = v, ff = ff, fr = fr, fa = fab, fb = fab }
 
 
 applyShifter : Int -> Shifter -> Int -> CpuTimeCTime -> Z80ROM -> Z80Core -> Z80Core
