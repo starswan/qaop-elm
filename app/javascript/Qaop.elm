@@ -6,25 +6,23 @@
 module Qaop exposing (..)
 
 import Keyboard exposing (ControlKey(..), KeyEvent(..))
-import Loader exposing (LoadAction(..), Loader)
 import Spectrum exposing (Spectrum)
 
 
 type alias Qaop =
     { spectrum : Spectrum
-    , loader : Loader
     , state : Int
     , keys : List KeyEvent
     }
 
 
-fromLoader : Loader -> Qaop
-fromLoader loader =
+new : Qaop
+new =
     let
         spectrum =
             Spectrum.constructor
     in
-    Qaop spectrum loader 0 []
+    Qaop spectrum 0 []
 
 
 

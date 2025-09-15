@@ -18,11 +18,6 @@ type LoadAction
     | LoadTAP String
 
 
-type alias Loader =
-    { actions : List LoadAction
-    }
-
-
 type Message
     = Pause
     | GotTAP (Result Http.Error (List Tapfile))

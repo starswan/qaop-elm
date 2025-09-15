@@ -14,7 +14,7 @@ import Html.Attributes exposing (disabled, id, style, tabindex)
 import Html.Events exposing (onClick, preventDefaultOn)
 import Json.Decode as Decode exposing (Decoder)
 import Keyboard exposing (ctrlKeyDownEvent, ctrlKeyUpEvent, keyDownEvent, keyUpEvent)
-import Loader exposing (LoadAction(..), Loader, Message(..), actionToCmd)
+import Loader exposing (LoadAction(..), Message(..), actionToCmd)
 import Qaop exposing (Qaop, pause)
 import ScreenStorage exposing (ScreenLine, Z80Screen)
 import Spectrum exposing (Spectrum, frames, new_tape)
@@ -243,9 +243,6 @@ update message model_state =
             case message of
                 Tick posix ->
                     let
-                        dummyloader =
-                            Loader []
-
                         romtap =
                             Maybe.map2 (\justrom justtap -> ( justrom, justtap )) mayberom maybetap
 
@@ -254,7 +251,7 @@ update message model_state =
                                 Just ( justrom, justtap ) ->
                                     let
                                         qaop =
-                                            Qaop.fromLoader dummyloader
+                                            Qaop.new
 
                                         speccy =
                                             qaop.spectrum |> new_tape justtap
@@ -404,7 +401,8 @@ subscriptions model_state =
         --WithTime _ _ ->
         --    Sub.none
         Running model ->
-            if model.qaop.spectrum.paused || not (List.isEmpty model.qaop.loader.actions) then
+            --if model.qaop.spectrum.paused || not (List.isEmpty model.qaop.loader.actions) then
+            if model.qaop.spectrum.paused then
                 Sub.none
 
             else
