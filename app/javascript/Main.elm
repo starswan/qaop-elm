@@ -12,10 +12,9 @@ import Dict
 import Html exposing (Attribute, Html, button, div, h2, span, text)
 import Html.Attributes exposing (disabled, id, style, tabindex)
 import Html.Events exposing (onClick, preventDefaultOn)
-import Http exposing (Metadata)
 import Json.Decode as Decode exposing (Decoder)
 import Keyboard exposing (ctrlKeyDownEvent, ctrlKeyUpEvent, keyDownEvent, keyUpEvent)
-import Loader exposing (LoadAction(..), Loader, Message(..), actionToCmd, trimActionList)
+import Loader exposing (LoadAction(..), Loader, Message(..), actionToCmd)
 import Qaop exposing (Qaop, pause)
 import ScreenStorage exposing (ScreenLine, Z80Screen)
 import Spectrum exposing (Spectrum, frames, new_tape)
@@ -70,7 +69,6 @@ type AutoKey
 
 type Model
     = Initial (Maybe Time.Posix) (Maybe Z80ROM) (Maybe (List Tapfile)) String
-      --| WithTime Loader Time.Posix
     | Running QaopModel
 
 
@@ -261,8 +259,8 @@ update message model_state =
                                         speccy =
                                             qaop.spectrum |> new_tape justtap
 
-                                        ( qaop_2, ignored ) =
-                                            { qaop | spectrum = { speccy | rom48k = justrom } } |> run
+                                        qaop_2 =
+                                            { qaop | spectrum = { speccy | rom48k = justrom } } |> unpause
 
                                         qaop_model =
                                             QaopModel qaop_2 c_TICKTIME 0 0 posix False
@@ -309,7 +307,7 @@ update message model_state =
                                                 posixToMillis posix - posixToMillis model.time
 
                                             ( q, cmd ) =
-                                                model.qaop |> run
+                                                ( model.qaop |> qaop_frames, Cmd.none )
                                         in
                                         { qaop = q, cmd = cmd, count = model.count + 1, elapsed = elapsed }
                             in
@@ -470,39 +468,14 @@ toUnKey keyValue =
 --	}
 
 
-run : Qaop -> ( Qaop, Cmd Message )
-run qaop =
-    if qaop.spectrum.paused then
-        let
-            loader =
-                qaop.loader
-
-            nextAction =
-                List.head loader.actions
-
-            qaop_1 =
-                { qaop | loader = { loader | actions = List.tail loader.actions |> trimActionList } }
-        in
-        case nextAction of
-            Just action ->
-                ( qaop_1, actionToCmd action )
-
-            Nothing ->
-                ( { qaop_1 | state = Bitwise.and qaop.state (complement 2), spectrum = qaop_1.spectrum |> Spectrum.pause 0x08 }, Cmd.none )
-        --in
-        --( q2, cmd )
-
-    else
-        ( { qaop | spectrum = qaop.spectrum |> frames qaop.keys }, Cmd.none )
+unpause : Qaop -> Qaop
+unpause qaop =
+    { qaop | state = Bitwise.and qaop.state (complement 2), spectrum = qaop.spectrum |> Spectrum.pause 0x08 }
 
 
-
---else
---    case qaop.spectrum.tape of
---        Just tape ->
---            let
---                newenv = qaop.spectrum.cpu.env
---        Nothing -> ( { qaop | spectrum = qaop.spectrum |> frames qaop.keys }, Cmd.none )
+qaop_frames : Qaop -> Qaop
+qaop_frames qaop =
+    { qaop | spectrum = qaop.spectrum |> frames qaop.keys }
 
 
 main : Program Flags Model Message

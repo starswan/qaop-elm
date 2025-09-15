@@ -9,7 +9,6 @@ import Http
 import MessageHandler exposing (bytesToRom, bytesToTap)
 import Tapfile exposing (Tapfile)
 import Time
-import Utils exposing (compact)
 import Z80Debug exposing (debugLog)
 import Z80Rom exposing (Z80ROM)
 
@@ -37,40 +36,6 @@ type Message
     | KeyRepeat
     | CharacterKeyUp Char
     | ControlKeyUp String
-
-
-trimActionList : Maybe (List LoadAction) -> List LoadAction
-trimActionList tail =
-    case tail of
-        Just a ->
-            a
-
-        Nothing ->
-            []
-
-
-paramHandler : ( String, String ) -> Maybe LoadAction
-paramHandler ( first, second ) =
-    if first == "rom" then
-        Just (LoadROM second)
-
-    else if first == "tape" then
-        Just (LoadTAP second)
-
-    else
-        Nothing
-
-
-new : List ( String, String ) -> Loader
-new params =
-    let
-        paramlist =
-            List.map paramHandler params
-
-        compacted_params =
-            compact paramlist
-    in
-    Loader compacted_params
 
 
 actionToCmd : LoadAction -> Cmd Message
@@ -108,24 +73,3 @@ actionToCmd action =
                 --, expect = Http.Detailed.expectBytes GotRom (array_decoder 16384 unsignedInt8)
                 , expect = Http.expectBytesResponse GotRom bytesToRom
                 }
-
-
-run : Loader -> ( Loader, Maybe LoadAction )
-run loader =
-    let
-        nextAction =
-            List.head loader.actions
-
-        qaop_1 =
-            { loader | actions = List.tail loader.actions |> trimActionList }
-    in
-    ( qaop_1, nextAction )
-
-
-
---case nextAction of
---    Just action ->
---        ( qaop_1, actionToCmd action )
---
---    Nothing ->
---        ( qaop_1, Cmd.none )
