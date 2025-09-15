@@ -192,12 +192,6 @@ svgNode screen =
 view : Model -> Html Message
 view model_state =
     case model_state of
-        Initial _ ->
-            div [] []
-
-        WithTime _ _ ->
-            div [] []
-
         Running model ->
             let
                 screen =
@@ -247,6 +241,9 @@ view model_state =
 
                 --,svg [style "height" "192px", style "width" "256px"] (List.indexedMap lineListToSvg lines |> List.concat)
                 ]
+
+        _ ->
+            div [] []
 
 
 alwaysPreventDefault : msg -> ( msg, Bool )
@@ -311,13 +308,6 @@ update message model_state =
             let
                 ( qaopModel, qaopCmd ) =
                     case message of
-                        GotRom result ->
-                            let
-                                ( qaop, cmd ) =
-                                    gotRom model.qaop result
-                            in
-                            ( { model | qaop = qaop, count = model.count + 1 }, cmd )
-
                         GotTAP result ->
                             let
                                 ( qaop, cmd ) =
@@ -395,6 +385,9 @@ update message model_state =
 
                         Autoload ->
                             ( { model | loadPressed = True }, Cmd.batch loadingCommands )
+
+                        _ ->
+                            ( model, Cmd.none )
             in
             ( Running qaopModel, qaopCmd )
 
