@@ -67,8 +67,8 @@ type AutoKey
 
 
 type Model
-    = Initial (Maybe Time.Posix) (Maybe Z80ROM) (Maybe (List Tapfile)) String
-    | Running QaopModel
+    = InitialModel (Maybe Time.Posix) (Maybe Z80ROM) (Maybe (List Tapfile)) String
+    | RunningModel QaopModel
 
 
 type alias QaopModel =
@@ -90,7 +90,7 @@ type alias Flags =
 
 init : Flags -> ( Model, Cmd Message )
 init data =
-    ( Initial Nothing Nothing Nothing data.tape, actionToCmd (LoadROM data.rom) )
+    ( InitialModel Nothing Nothing Nothing data.tape, actionToCmd (LoadROM data.rom) )
 
 
 mapLineToSvg : Int -> ( Int, ScreenColourRun ) -> Svg Message
@@ -176,7 +176,7 @@ svgNode screen =
 view : Model -> Html Message
 view model_state =
     case model_state of
-        Running model ->
+        RunningModel model ->
             let
                 screen =
                     model.qaop.spectrum.rom48k.z80ram.screen
@@ -226,7 +226,7 @@ view model_state =
                 --,svg [style "height" "192px", style "width" "256px"] (List.indexedMap lineListToSvg lines |> List.concat)
                 ]
 
-        _ ->
+        InitialModel _ _ _ _ ->
             div [] []
 
 
@@ -238,7 +238,7 @@ alwaysPreventDefault msg =
 update : Message -> Model -> ( Model, Cmd Message )
 update message model_state =
     case model_state of
-        Initial time mayberom maybetap tapname ->
+        InitialModel time mayberom maybetap tapname ->
             case message of
                 Tick posix ->
                     let
@@ -261,7 +261,7 @@ update message model_state =
                                         qaop_model =
                                             QaopModel qaop_2 c_TICKTIME 0 0 posix False
                                     in
-                                    Running qaop_model
+                                    RunningModel qaop_model
 
                                 Nothing ->
                                     model_state
@@ -271,7 +271,7 @@ update message model_state =
                 GotRom result ->
                     case result of
                         Ok value ->
-                            ( Initial time (Just value) maybetap tapname, actionToCmd (LoadTAP tapname) )
+                            ( InitialModel time (Just value) maybetap tapname, actionToCmd (LoadTAP tapname) )
 
                         Err _ ->
                             ( model_state, Cmd.none )
@@ -279,7 +279,7 @@ update message model_state =
                 GotTAP result ->
                     case result of
                         Ok value ->
-                            ( Initial time mayberom (Just value) tapname, Cmd.none )
+                            ( InitialModel time mayberom (Just value) tapname, Cmd.none )
 
                         Err _ ->
                             ( model_state, Cmd.none )
@@ -287,7 +287,7 @@ update message model_state =
                 _ ->
                     ( model_state, Cmd.none )
 
-        Running model ->
+        RunningModel model ->
             let
                 ( qaopModel, qaopCmd ) =
                     case message of
@@ -295,19 +295,19 @@ update message model_state =
                             let
                                 state =
                                     if model.qaop.spectrum.paused then
-                                        { qaop = model.qaop, cmd = Cmd.none, count = model.count, elapsed = 0 }
+                                        { qaop = model.qaop, count = model.count, elapsed = 0 }
 
                                     else
                                         let
                                             elapsed =
                                                 posixToMillis posix - posixToMillis model.time
 
-                                            ( q, cmd ) =
-                                                ( model.qaop |> qaop_frames, Cmd.none )
+                                            q =
+                                                model.qaop |> qaop_frames
                                         in
-                                        { qaop = q, cmd = cmd, count = model.count + 1, elapsed = elapsed }
+                                        { qaop = q, count = model.count + 1, elapsed = elapsed }
                             in
-                            ( { model | count = state.count, elapsed_millis = model.elapsed_millis + state.elapsed, time = posix, qaop = state.qaop }, state.cmd )
+                            ( { model | count = state.count, elapsed_millis = model.elapsed_millis + state.elapsed, time = posix, qaop = state.qaop }, Cmd.none )
 
                         Pause ->
                             ( { model | qaop = model.qaop |> pause (not model.qaop.spectrum.paused) }, Cmd.none )
@@ -357,7 +357,7 @@ update message model_state =
                         _ ->
                             ( model, Cmd.none )
             in
-            ( Running qaopModel, qaopCmd )
+            ( RunningModel qaopModel, qaopCmd )
 
 
 loadQuoteQuoteEnter =
@@ -394,12 +394,12 @@ loadingCommands =
 subscriptions : Model -> Sub Message
 subscriptions model_state =
     case model_state of
-        Initial _ _ _ _ ->
+        InitialModel _ _ _ _ ->
             Time.every (c_TICKTIME |> toFloat) Tick
 
         --WithTime _ _ ->
         --    Sub.none
-        Running model ->
+        RunningModel model ->
             --if model.qaop.spectrum.paused || not (List.isEmpty model.qaop.loader.actions) then
             if model.qaop.spectrum.paused then
                 Sub.none
