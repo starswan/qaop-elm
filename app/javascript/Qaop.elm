@@ -11,7 +11,6 @@ import Spectrum exposing (Spectrum)
 
 type alias Qaop =
     { spectrum : Spectrum
-    , state : Int
     , keys : List KeyEvent
     }
 
@@ -22,7 +21,7 @@ new =
         spectrum =
             Spectrum.constructor
     in
-    Qaop spectrum 0 []
+    Qaop spectrum []
 
 
 

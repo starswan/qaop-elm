@@ -5,7 +5,6 @@
 
 module Main exposing (..)
 
-import Bitwise exposing (complement)
 import Browser
 import Delay
 import Dict
@@ -468,7 +467,7 @@ toUnKey keyValue =
 
 unpause : Qaop -> Qaop
 unpause qaop =
-    { qaop | state = Bitwise.and qaop.state (complement 2), spectrum = qaop.spectrum |> Spectrum.pause 0x08 }
+    { qaop | spectrum = qaop.spectrum |> Spectrum.pause 0x08 }
 
 
 qaop_frames : Qaop -> Qaop
