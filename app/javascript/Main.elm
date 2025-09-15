@@ -69,8 +69,8 @@ type AutoKey
 
 
 type Model
-    = Initial Loader
-    | WithTime Loader Time.Posix
+    = Initial (Maybe Time.Posix) (Maybe Z80ROM) (Maybe (List Tapfile)) String
+      --| WithTime Loader Time.Posix
     | Running QaopModel
 
 
@@ -93,20 +93,7 @@ type alias Flags =
 
 init : Flags -> ( Model, Cmd Message )
 init data =
-    let
-        params =
-            [ ( "rom", data.rom )
-            , ( "tape", data.tape )
-            ]
-
-        loader =
-            params |> Loader.new
-
-        --( newQaop, cmd ) =
-        --    Qaop.new params |> run
-    in
-    --( Model newQaop c_TICKTIME 0 0 Nothing False, cmd )
-    ( Initial loader, Cmd.none )
+    ( Initial Nothing Nothing Nothing data.tape, actionToCmd (LoadROM data.rom) )
 
 
 mapLineToSvg : Int -> ( Int, ScreenColourRun ) -> Svg Message
@@ -254,52 +241,54 @@ alwaysPreventDefault msg =
 update : Message -> Model -> ( Model, Cmd Message )
 update message model_state =
     case model_state of
-        Initial loader ->
+        Initial time mayberom maybetap tapname ->
             case message of
                 Tick posix ->
                     let
-                        ( l, nextAction ) =
-                            loader |> Loader.run
+                        dummyloader =
+                            Loader []
 
-                        ( new_model, l_cmd ) =
-                            case nextAction of
-                                Just action ->
-                                    ( WithTime l posix, actionToCmd action )
+                        romtap =
+                            Maybe.map2 (\justrom justtap -> ( justrom, justtap )) mayberom maybetap
 
-                                Nothing ->
-                                    ( model_state, Cmd.none )
-                    in
-                    ( new_model, l_cmd )
-
-                _ ->
-                    ( model_state, Cmd.none )
-
-        WithTime loader posix ->
-            case message of
-                GotRom result ->
-                    let
-                        ( l, nextAction ) =
-                            loader |> Loader.run
-
-                        ( new_model, l_cmd ) =
-                            case nextAction of
-                                Just action ->
+                        new_model =
+                            case romtap of
+                                Just ( justrom, justtap ) ->
                                     let
-                                        newQaop =
-                                            Qaop.fromLoader loader
+                                        qaop =
+                                            Qaop.fromLoader dummyloader
 
-                                        ( n_qaop, n_cmd ) =
-                                            gotRom newQaop result
+                                        speccy =
+                                            qaop.spectrum |> new_tape justtap
+
+                                        ( qaop_2, ignored ) =
+                                            { qaop | spectrum = { speccy | rom48k = justrom } } |> run
 
                                         qaop_model =
-                                            QaopModel n_qaop c_TICKTIME 0 0 posix False
+                                            QaopModel qaop_2 c_TICKTIME 0 0 posix False
                                     in
-                                    ( Running qaop_model, n_cmd )
+                                    Running qaop_model
 
                                 Nothing ->
-                                    ( model_state, Cmd.none )
+                                    model_state
                     in
-                    ( new_model, l_cmd )
+                    ( new_model, Cmd.none )
+
+                GotRom result ->
+                    case result of
+                        Ok value ->
+                            ( Initial time (Just value) maybetap tapname, actionToCmd (LoadTAP tapname) )
+
+                        Err _ ->
+                            ( model_state, Cmd.none )
+
+                GotTAP result ->
+                    case result of
+                        Ok value ->
+                            ( Initial time mayberom (Just value) tapname, Cmd.none )
+
+                        Err _ ->
+                            ( model_state, Cmd.none )
 
                 _ ->
                     ( model_state, Cmd.none )
@@ -308,15 +297,6 @@ update message model_state =
             let
                 ( qaopModel, qaopCmd ) =
                     case message of
-                        GotTAP result ->
-                            let
-                                ( qaop, cmd ) =
-                                    gotTap model.qaop result
-
-                                --run_after_30_sec = delay 30000 LoadTape
-                            in
-                            ( { model | qaop = qaop, count = model.count + 1 }, cmd )
-
                         Tick posix ->
                             let
                                 state =
@@ -326,22 +306,16 @@ update message model_state =
                                     else
                                         let
                                             elapsed =
-                                                --case model.time of
-                                                --    Just time ->
                                                 posixToMillis posix - posixToMillis model.time
 
-                                            --Nothing ->
-                                            --    0
                                             ( q, cmd ) =
                                                 model.qaop |> run
                                         in
                                         { qaop = q, cmd = cmd, count = model.count + 1, elapsed = elapsed }
                             in
-                            --( { model | count = state.count, elapsed_millis = model.elapsed_millis + state.elapsed, time = Just posix, qaop = state.qaop }, state.cmd )
                             ( { model | count = state.count, elapsed_millis = model.elapsed_millis + state.elapsed, time = posix, qaop = state.qaop }, state.cmd )
 
                         Pause ->
-                            --( { model | time = Nothing, qaop = model.qaop |> pause (not model.qaop.spectrum.paused) }, Cmd.none )
                             ( { model | qaop = model.qaop |> pause (not model.qaop.spectrum.paused) }, Cmd.none )
 
                         CharacterKeyDown char ->
@@ -426,12 +400,11 @@ loadingCommands =
 subscriptions : Model -> Sub Message
 subscriptions model_state =
     case model_state of
-        Initial _ ->
+        Initial _ _ _ _ ->
             Time.every (c_TICKTIME |> toFloat) Tick
 
-        WithTime _ _ ->
-            Sub.none
-
+        --WithTime _ _ ->
+        --    Sub.none
         Running model ->
             if model.qaop.spectrum.paused || not (List.isEmpty model.qaop.loader.actions) then
                 Sub.none
@@ -472,34 +445,6 @@ toUnKey keyValue =
 
         _ ->
             ControlKeyUp keyValue
-
-
-gotRom : Qaop -> Result Http.Error Z80ROM -> ( Qaop, Cmd Message )
-gotRom qaop result =
-    case result of
-        Ok value ->
-            let
-                speccy =
-                    qaop.spectrum
-            in
-            { qaop | spectrum = { speccy | rom48k = value } } |> run
-
-        Err _ ->
-            ( qaop, Cmd.none )
-
-
-gotTap : Qaop -> Result Http.Error (List Tapfile) -> ( Qaop, Cmd Message )
-gotTap qaop result =
-    case result of
-        Ok value ->
-            -- THe infinite recursion issue goes away if tape is a Dict rather than a List or Array
-            -- it only happens when the VM starts running - if this is replaced with Cmd.none
-            -- and we unpause manually, it crashes on the unpause - so something to do with Qaop.run
-            -- and copying the Array
-            { qaop | spectrum = qaop.spectrum |> new_tape value } |> run
-
-        Err _ ->
-            ( qaop, Cmd.none )
 
 
 
