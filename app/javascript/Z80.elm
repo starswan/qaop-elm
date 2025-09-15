@@ -843,14 +843,20 @@ nonCoreFuncs =
         ]
 
 
-nonCoreOpCodes =
-    nonCoreFuncs |> Dict.keys |> Set.fromList
+nonCoreOpCodeList =
+    nonCoreFuncs |> Dict.keys
+
+
+nonCoreOpCodeSet =
+    nonCoreOpCodeList |> Set.fromList
 
 
 isCoreOpCode : Int -> Bool
 isCoreOpCode value =
-    --nonCoreOpCodes |> Set.member value |> not
-    value /= c_EX_AF_AFDASH && value /= c_EXX && value /= c_HALT && value /= c_DI && value /= c_EI
+    --nonCoreOpCodeSet |> Set.member value |> not
+    --value /= c_EX_AF_AFDASH && value /= c_EXX && value /= c_HALT && value /= c_DI && value /= c_EI
+    -- This is still much faster than the set membership or the custom check
+    nonCoreOpCodeList |> List.member value |> not
 
 
 stillLooping : Z80Core -> Bool
