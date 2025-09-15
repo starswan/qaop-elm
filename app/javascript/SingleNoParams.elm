@@ -13,8 +13,8 @@ import Z80Types exposing (set_bc_main, set_de_main)
 
 type NoParamChange
     = NoOp
-    | DisableInterrupts
-    | EnableInterrupts
+      --| DisableInterrupts
+      --| EnableInterrupts
     | PopBC
     | PopDE
     | PopHL
@@ -74,9 +74,11 @@ singleWithNoParam =
         , ( 0xE7, ( Rst20, ElevenTStates ) )
         , ( 0xEF, ( Rst28, ElevenTStates ) )
         , ( 0xF1, ( PopAF, TenTStates ) )
-        , ( 0xF3, ( DisableInterrupts, FourTStates ) )
+
+        --, ( 0xF3, ( DisableInterrupts, FourTStates ) )
         , ( 0xF7, ( Rst30, ElevenTStates ) )
-        , ( 0xFB, ( EnableInterrupts, FourTStates ) )
+
+        --, ( 0xFB, ( EnableInterrupts, FourTStates ) )
         , ( 0xFF, ( Rst38, ElevenTStates ) )
         ]
 
@@ -177,28 +179,27 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
                 , env = { env1 | time = v.time, sp = v.sp }
             }
 
-        DisableInterrupts ->
-            -- case 0xF3: IFF=0; break;
-            let
-                ints =
-                    z80 |> set_iff 0
-            in
-            { z80
-                | pc = Bitwise.and (z80.pc + 1) 0xFFFF
-                , interrupts = ints
-            }
-
-        EnableInterrupts ->
-            -- case 0xFB: IFF=3; break;
-            let
-                ints =
-                    z80 |> set_iff 3
-            in
-            { z80
-                | pc = Bitwise.and (z80.pc + 1) 0xFFFF
-                , interrupts = ints
-            }
-
+        --DisableInterrupts ->
+        --    -- case 0xF3: IFF=0; break;
+        --    let
+        --        ints =
+        --            z80 |> set_iff 0
+        --    in
+        --    { z80
+        --        | pc = Bitwise.and (z80.pc + 1) 0xFFFF
+        --        , interrupts = ints
+        --    }
+        --
+        --EnableInterrupts ->
+        --    -- case 0xFB: IFF=3; break;
+        --    let
+        --        ints =
+        --            z80 |> set_iff 3
+        --    in
+        --    { z80
+        --        | pc = Bitwise.and (z80.pc + 1) 0xFFFF
+        --        , interrupts = ints
+        --    }
         PopAF ->
             -- case 0xF1: af(pop()); break;
             let

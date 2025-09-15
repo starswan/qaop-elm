@@ -16,6 +16,7 @@ import GroupCBIXIY exposing (singleByteMainRegsIXCB, singleByteMainRegsIYCB, sin
 import GroupED exposing (edWithInterrupts, singleByteFlagsED, singleByteMainAndFlagsED, singleByteMainRegsED)
 import Loop
 import PCIncrement exposing (InterruptPCIncrement(..), MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
+import Set
 import SimpleFlagOps exposing (singleByteFlags, singleByteFlagsCB, singleByteFlagsDD, singleByteFlagsFD)
 import SimpleSingleByte exposing (singleByteMainRegs, singleByteMainRegsDD, singleByteMainRegsFD)
 import SingleByteWithEnv exposing (singleByteZ80Env)
@@ -26,13 +27,12 @@ import SingleWith8BitParameter exposing (maybeRelativeJump, singleWith8BitParam)
 import TripleByte exposing (tripleByteWith16BitParam, tripleByteWith16BitParamDD, tripleByteWith16BitParamFD)
 import TripleWithFlags exposing (triple16WithFlags)
 import TripleWithMain exposing (tripleMainRegs, tripleMainRegsIX, tripleMainRegsIY)
-import Z80Core exposing (Z80, Z80Core, add_cpu_time)
-import Z80Debug exposing (debugLog)
+import Z80Core exposing (Z80, Z80Core, add_cpu_time, di_0xF3, ei_0xFB)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..))
 import Z80Env exposing (Z80Env, c_TIME_LIMIT, m1, mem, mem16, z80env_constructor)
 import Z80Execute exposing (DeltaWithChanges(..), apply_delta)
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
-import Z80Rom exposing (Z80ROM, romRoutineNames)
+import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IntWithFlagsTimeAndPC, InterruptMode(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
 
 
@@ -824,24 +824,33 @@ c_HALT =
     0x76
 
 
-nonCoreFuncs : Dict Int (Z80 -> Z80)
+c_DI =
+    0xF3
+
+
+c_EI =
+    0xFB
+
+
+nonCoreFuncs : Dict Int ( Z80 -> Z80, InstructionDuration )
 nonCoreFuncs =
     Dict.fromList
-        [ ( c_EX_AF_AFDASH, ex_af )
-        , ( c_EXX, exx )
-        , ( c_HALT, execute_0x76_halt )
+        [ ( c_EX_AF_AFDASH, ( ex_af, FourTStates ) )
+        , ( c_EXX, ( exx, FourTStates ) )
+        , ( c_HALT, ( execute_0x76_halt, FourTStates ) )
+        , ( c_DI, ( di_0xF3, FourTStates ) )
+        , ( c_EI, ( ei_0xFB, FourTStates ) )
         ]
 
 
-
---nonCoreOpCodes =
---    nonCoreFuncs |> Dict.keys |> Set.fromList
+nonCoreOpCodes =
+    nonCoreFuncs |> Dict.keys |> Set.fromList
 
 
 isCoreOpCode : Int -> Bool
 isCoreOpCode value =
     --nonCoreOpCodes |> Set.member value |> not
-    value /= c_EX_AF_AFDASH && value /= c_EXX && value /= c_HALT
+    value /= c_EX_AF_AFDASH && value /= c_EXX && value /= c_HALT && value /= c_DI && value /= c_EI
 
 
 stillLooping : Z80Core -> Bool
@@ -878,7 +887,7 @@ executeCore rom48k z80 =
             { z80 | core = { core_2 | interrupts = { core_ints | r = new_r } } }
     in
     case nonCoreFuncs |> Dict.get ct1.value of
-        Just f ->
+        Just ( f, duration ) ->
             let
                 z80_2 =
                     z80_1 |> f
@@ -886,13 +895,19 @@ executeCore rom48k z80 =
                 core =
                     z80_2.core
 
+                env =
+                    core.env
+
                 ints =
                     core.interrupts
+
+                env_1 =
+                    { env | time = env.time |> addDuration duration }
 
                 pc =
                     Bitwise.and (core.pc + 1) 0xFFFF
             in
-            { z80_2 | core = { core | pc = pc, interrupts = { ints | r = ints.r + 1 } } }
+            { z80_2 | core = { core | pc = pc, env = env_1, interrupts = { ints | r = ints.r + 1 } } }
 
         Nothing ->
             z80_1

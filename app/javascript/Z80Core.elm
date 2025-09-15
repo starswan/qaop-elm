@@ -3,6 +3,7 @@ module Z80Core exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimePcAnd16BitValue, CpuTimePcAndValue, addCpuTimeTime)
 import Utils exposing (shiftLeftBy8)
+import Z80Debug exposing (debugLog)
 import Z80Env exposing (Z80Env, addCpuTimeEnv, mem16, setMem, z80_push)
 import Z80Flags exposing (FlagRegisters)
 import Z80Rom exposing (Z80ROM)
@@ -66,9 +67,11 @@ add_cpu_time value z80 =
 set_iff : Int -> Z80Core -> InterruptRegisters
 set_iff value z80 =
     let
-        --y = debug_log "set_iff" value Nothing
         interrupts =
-            z80.interrupts
+            debugLog "set_iff" value z80.interrupts
+
+        --interrupts =
+        --    z80.interrupts
     in
     { interrupts | iff = value }
 
@@ -255,3 +258,43 @@ get_ei z80 =
 --            { z80_1 | interrupts = { interrupts | halted = True } }
 --    in
 --    { z80 | core = core_2 }
+
+
+di_0xF3 : Z80 -> Z80
+di_0xF3 full_z80 =
+    -- case 0xF3: IFF=0; break;
+    let
+        z80 =
+            full_z80.core
+
+        ints =
+            z80 |> set_iff 0
+
+        new_core =
+            { z80
+                | interrupts = ints
+            }
+    in
+    { full_z80
+        | core = new_core
+    }
+
+
+ei_0xFB : Z80 -> Z80
+ei_0xFB full_z80 =
+    --    -- case 0xFB: IFF=3; break;
+    let
+        z80 =
+            full_z80.core
+
+        ints =
+            z80 |> set_iff 3
+
+        new_core =
+            { z80
+                | interrupts = ints
+            }
+    in
+    { full_z80
+        | core = new_core
+    }
