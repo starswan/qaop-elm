@@ -1,6 +1,6 @@
 module Hexcode exposing (..)
 
-import Dict
+import Dict exposing (Dict)
 
 
 type Hexcode
@@ -1034,7 +1034,7 @@ toInt byte =
             0xFF
 
 
-byteDict : Dict Int Z80Byte
+byteDict : Dict Int Hexcode
 byteDict =
     Dict.fromList
         [ ( 0x00, Hex00 )

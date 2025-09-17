@@ -2,16 +2,18 @@ module Z80Rom exposing (..)
 
 import Array exposing (Array)
 import Bytes exposing (Bytes)
-import Bytes.Decode exposing (Decoder, Step(..), andThen, loop, map, succeed, unsignedInt8)
+import Bytes.Decode exposing (Decoder, Step(..), andThen, succeed, unsignedInt8)
+import Decoders exposing (array_decoder)
 import Dict exposing (Dict)
 import Keyboard exposing (Keyboard)
-import Utils exposing (listToDict, toHexString)
+import Utils exposing (toHexString)
+import Z80Byte exposing (Z80Byte)
 import Z80Debug exposing (debugTodo)
 import Z80Ram exposing (Z80Ram)
 
 
 type alias Z80ROM =
-    { rom48k : Dict Int Int
+    { rom48k : Dict Int Z80Byte
     , keyboard : Keyboard
     , z80ram : Z80Ram
     }
@@ -19,39 +21,25 @@ type alias Z80ROM =
 
 constructor : Z80ROM
 constructor =
-    let
-        rom48k =
-            List.range 0 16384
-
-        rom_list =
-            List.indexedMap Tuple.pair rom48k
-
-        rom_dict =
-            Dict.fromList rom_list
-    in
-    Z80ROM rom_dict Keyboard.constructor Z80Ram.constructor
+    --let
+    --rom48k =
+    --    List.range 0 16384
+    --rom_list =
+    --    List.indexedMap Tuple.pair rom48k
+    --rom_dict =
+    --    Dict.fromList rom_list
+    --in
+    Z80ROM Dict.empty Keyboard.constructor Z80Ram.constructor
 
 
 getROMValue : Int -> Z80ROM -> Int
 getROMValue addr z80rom =
-    --case z80rom of
-    --    Z80ROM z80dict _ ->
     case Dict.get addr z80rom.rom48k of
         Just a ->
-            a
+            a.value
 
         Nothing ->
             debugTodo "getROMValue" (String.fromInt addr) -1
-
-
-
---make_spectrum_rom : Array Int -> Z80ROM
---make_spectrum_rom romdata =
---    let
---        romDict =
---            listToDict (Array.toList romdata)
---    in
---    Z80ROM romDict
 
 
 parseRomFile : Bytes -> Maybe Z80ROM
@@ -66,21 +54,7 @@ romDecoder =
 
 grabRomDecoder : Array Int -> Decoder Z80ROM
 grabRomDecoder romData =
-    succeed (Z80ROM (romData |> Array.toList |> listToDict) Keyboard.constructor Z80Ram.constructor)
-
-
-array_decoder : Int -> Decoder Int -> Decoder (Array Int)
-array_decoder size decoder =
-    loop ( size, Array.empty ) (arrayStep decoder)
-
-
-arrayStep : Decoder Int -> ( Int, Array Int ) -> Decoder (Step ( Int, Array Int ) (Array Int))
-arrayStep decoder ( n, xs ) =
-    if n <= 0 then
-        succeed (Done xs)
-
-    else
-        map (\x -> Loop ( n - 1, Array.push x xs )) decoder
+    succeed (Z80ROM (romData |> Array.toList |> List.indexedMap (\index romValue -> ( index, romValue |> Z80Byte.fromInt )) |> Dict.fromList) Keyboard.constructor Z80Ram.constructor)
 
 
 romRoutineNames =
