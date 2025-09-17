@@ -2,9 +2,10 @@ module Tapfile exposing (..)
 
 import Bitwise
 import Bytes exposing (Bytes, Endianness(..), width)
-import Bytes.Decode exposing (Decoder, Step(..), andThen, fail, loop, map, map2, map3, map4, map5, string, succeed, unsignedInt16, unsignedInt8)
+import Bytes.Decode exposing (Decoder, Step(..), andThen, fail, loop, map, map3, map4, map5, string, succeed, unsignedInt16, unsignedInt8)
 import Char exposing (toCode)
-import String exposing (toList)
+import Decoders exposing (listWithLengthDecoder)
+import String
 import Utils exposing (shiftRightBy8, toHexString2, toPlainHexString2)
 import Z80Debug exposing (debugLog, debugTodo)
 
@@ -151,10 +152,10 @@ spectrumUnsigned16Bit =
 tapfileListDecoder : Int -> Decoder Tapfile -> Decoder (List Tapfile)
 tapfileListDecoder len decoder =
     let
-        y =
-            debugLog "TAP file size" len Nothing
+        listLength =
+            debugLog "TAP file size" len len
     in
-    loop ( len, [] ) (tapfileStepDecoder decoder)
+    loop ( listLength, [] ) (tapfileStepDecoder decoder)
 
 
 tapfileStepDecoder : Decoder Tapfile -> ( Int, List Tapfile ) -> Decoder (Step ( Int, List Tapfile ) (List Tapfile))
@@ -164,20 +165,6 @@ tapfileStepDecoder decoder ( n, xs ) =
 
     else
         map (\x -> Loop ( n - x.length - 2 - (x.block.data |> List.length) - 4, x :: xs )) decoder
-
-
-listWithLengthDecoder : Int -> Decoder a -> Decoder (List a)
-listWithLengthDecoder len decoder =
-    loop ( len, [] ) (listStep decoder)
-
-
-listStep : Decoder a -> ( Int, List a ) -> Decoder (Step ( Int, List a ) (List a))
-listStep decoder ( n, xs ) =
-    if n <= 0 then
-        succeed (Done (xs |> List.reverse))
-
-    else
-        map (\x -> Loop ( n - 1, x :: xs )) decoder
 
 
 tapFilename : TapfileData -> String
