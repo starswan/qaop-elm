@@ -23,38 +23,54 @@ import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (InterruptRegisters, MainWithIndexRegisters, get_xy, set_bc_main, set_de_main, set_xy)
 
 
-type DeltaWithChanges
+type DeltaVariant
     = OldDeltaWithChanges DeltaWithChangesData
     | PureDelta PCIncrement CpuTimeCTime Z80Change
-    | InterruptDelta InterruptPCIncrement InstructionDuration InterruptChange
-    | FlagDelta PCIncrement InstructionDuration FlagChange
-    | RegisterChangeDelta PCIncrement InstructionDuration RegisterChange
+    | InterruptDelta InterruptPCIncrement InterruptChange
+    | FlagDelta PCIncrement FlagChange
+    | RegisterChangeDelta PCIncrement RegisterChange
     | Simple8BitDelta MediumPCIncrement CpuTimeCTime Single8BitChange
     | DoubleWithRegistersDelta MediumPCIncrement CpuTimeCTime DoubleWithRegisterChange
     | JumpChangeDelta CpuTimeCTime JumpChange
     | NoParamsDelta CpuTimeCTime NoParamChange
     | SingleEnvDelta CpuTimeCTime SingleByteEnvChange
-    | MainWithEnvDelta PCIncrement InstructionDuration SingleEnvMainChange
+    | MainWithEnvDelta PCIncrement SingleEnvMainChange
     | TripleMainChangeDelta CpuTimeCTime TriplePCIncrement TripleMainChange
     | Triple16ParamDelta CpuTimeCTime TriplePCIncrement TripleByteChange
     | Triple16FlagsDelta CpuTimeCTime TripleWithFlagsChange
     | UnknownInstruction String Int
 
 
+type alias DeltaWithChanges =
+    { deltaVariant : DeltaVariant
+    , duration : InstructionDuration
+    }
+
+
 apply_delta : Z80Core -> Z80ROM -> DeltaWithChanges -> Z80Core
-apply_delta z80 rom48k z80delta =
-    case z80delta of
+apply_delta z80_core rom48k z80delta =
+    let
+        env =
+            z80_core.env
+
+        env_1 =
+            { env | time = env.time |> addDuration z80delta.duration }
+
+        z80 =
+            { z80_core | env = env_1 }
+    in
+    case z80delta.deltaVariant of
         OldDeltaWithChanges deltaWithChangesData ->
             z80 |> applyDeltaWithChanges deltaWithChangesData
 
         PureDelta cpuInc cpu_time z80ChangeData ->
             z80 |> applyPureDelta cpuInc cpu_time z80ChangeData
 
-        FlagDelta pcInc duration flagRegisters ->
-            z80 |> applyFlagDelta pcInc duration flagRegisters rom48k
+        FlagDelta pcInc flagRegisters ->
+            z80 |> applyFlagDelta pcInc flagRegisters rom48k
 
-        RegisterChangeDelta pcInc duration registerChange ->
-            z80 |> applyRegisterDelta pcInc duration registerChange rom48k
+        RegisterChangeDelta pcInc registerChange ->
+            z80 |> applyRegisterDelta pcInc registerChange rom48k
 
         Simple8BitDelta pcInc cpuTimeCTime single8BitChange ->
             z80 |> applySimple8BitDelta pcInc cpuTimeCTime single8BitChange
@@ -71,8 +87,8 @@ apply_delta z80 rom48k z80delta =
         SingleEnvDelta cpuTimeCTime singleByteEnvChange ->
             z80 |> applyEnvChangeDelta cpuTimeCTime singleByteEnvChange
 
-        MainWithEnvDelta pcInc duration singleEnvMainChange ->
-            z80 |> applySingleEnvMainChange pcInc duration singleEnvMainChange rom48k
+        MainWithEnvDelta pcInc singleEnvMainChange ->
+            z80 |> applySingleEnvMainChange pcInc z80delta.duration singleEnvMainChange rom48k
 
         TripleMainChangeDelta cpuTimeCTime triplePCIncrement tripleMainChange ->
             z80 |> applyTripleMainChange cpuTimeCTime triplePCIncrement tripleMainChange
@@ -86,8 +102,8 @@ apply_delta z80 rom48k z80delta =
         UnknownInstruction string int ->
             debugTodo string (int |> toHexString2) z80
 
-        InterruptDelta pCIncrement duration interruptChange ->
-            z80 |> applyInterruptChange pCIncrement duration interruptChange
+        InterruptDelta pCIncrement interruptChange ->
+            z80 |> applyInterruptChange pCIncrement interruptChange
 
 
 applyJumpChangeDelta : CpuTimeCTime -> JumpChange -> Z80Core -> Z80Core
@@ -142,18 +158,24 @@ applySimple8BitDelta pcInc cpu_time z80changeData z80 =
     { z80 | pc = new_pc, main = main, clockTime = cpu_time }
 
 
-applyInterruptChange : InterruptPCIncrement -> InstructionDuration -> InterruptChange -> Z80Core -> Z80Core
-applyInterruptChange pcInc duration chaange z80 =
+applyInterruptChange : InterruptPCIncrement -> InterruptChange -> Z80Core -> Z80Core
+applyInterruptChange pcInc change z80 =
     let
         new_pc =
             case pcInc of
                 AddTwoToPC ->
                     (z80.pc + 2) |> Bitwise.and 0xFFFF
 
-        newTime =
-            z80.clockTime |> addDuration duration
+        env_1 =
+            z80.env
+
+        --time =
+        --    env.time
+        --
+        --env_1 =
+        --    { env | time = time |> addDuration duration }
     in
-    case chaange of
+    case change of
         LoadAFromIR value ->
             --private void ld_a_ir(int v)
             --{
@@ -185,8 +207,8 @@ applyInterruptChange pcInc duration chaange z80 =
             { z80 | pc = new_pc, flags = flags, clockTime = newTime }
 
 
-applyFlagDelta : PCIncrement -> InstructionDuration -> FlagChange -> Z80ROM -> Z80Core -> Z80Core
-applyFlagDelta pcInc duration z80_flags rom48k z80_core =
+applyFlagDelta : PCIncrement -> FlagChange -> Z80ROM -> Z80Core -> Z80Core
+applyFlagDelta pcInc z80_flags rom48k z80_core =
     let
         new_pc =
             case pcInc of
@@ -245,8 +267,6 @@ applyFlagDelta pcInc duration z80_flags rom48k z80_core =
 
                 env1 =
                     z80_core.env
-
-                --x = debug_log "ret nz" (result.value |> subName) Nothing
             in
             { z80_core | pc = result.value16, clockTime = result.time, env = { env1 | sp = result.sp } }
 
@@ -281,10 +301,10 @@ applyPureDelta cpuInc cpu_time z80changeData z80 =
     { z80 | pc = new_pc, clockTime = cpu_time } |> applyZ80Change z80changeData
 
 
-applyRegisterDelta : PCIncrement -> InstructionDuration -> RegisterChange -> Z80ROM -> Z80Core -> Z80Core
-applyRegisterDelta pc_inc duration z80changeData rom48k z80_core =
+applyRegisterDelta : PCIncrement -> RegisterChange -> Z80ROM -> Z80Core -> Z80Core
+applyRegisterDelta pc_inc z80changeData rom48k z80_core =
     let
-        env =
+        env_1 =
             z80_core.env
 
         newTime =
