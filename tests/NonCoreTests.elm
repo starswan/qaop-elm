@@ -3,7 +3,7 @@ module NonCoreTests exposing (..)
 import Expect
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
-import Z80Env exposing (m1, setMem)
+import Z80Env exposing (m1, setMemIgnoringTime)
 import Z80Rom
 
 
@@ -45,9 +45,9 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0xD2
-                                |> setMem (addr + 1) 0x05
-                                |> setMem (addr + 2) 0x34
+                                |> setMemIgnoringTime addr 0xD2
+                                |> setMemIgnoringTime (addr + 1) 0x05
+                                |> setMemIgnoringTime (addr + 2) 0x34
 
                         new_z80 =
                             executeCoreInstruction z80rom
@@ -62,9 +62,9 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0xD2
-                                |> setMem (addr + 1) 0x05
-                                |> setMem (addr + 2) 0x34
+                                |> setMemIgnoringTime addr 0xD2
+                                |> setMemIgnoringTime (addr + 1) 0x05
+                                |> setMemIgnoringTime (addr + 2) 0x34
 
                         new_z80 =
                             executeCoreInstruction z80rom
@@ -101,9 +101,9 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xDF
-                            |> setMem 0xFF75 0x16
-                            |> setMem 0xFF76 0x56
+                            |> setMemIgnoringTime addr 0xDF
+                            |> setMemIgnoringTime 0xFF75 0x16
+                            |> setMemIgnoringTime 0xFF76 0x56
 
                     new_z80 =
                         executeCoreInstruction z80rom

@@ -3,7 +3,7 @@ module GroupF0Test exposing (..)
 import Expect
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
-import Z80Env exposing (m1, setMem)
+import Z80Env exposing (m1, setMemIgnoringTime)
 import Z80Rom
 
 
@@ -38,7 +38,7 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xF5
+                            |> setMemIgnoringTime addr 0xF5
 
                     new_z80 =
                         executeCoreInstruction z80rom
@@ -61,7 +61,7 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0xF9
+                                |> setMemIgnoringTime addr 0xF9
 
                         new_z80 =
                             executeCoreInstruction z80rom
@@ -76,8 +76,8 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0xDD
-                                |> setMem (addr + 1) 0xF9
+                                |> setMemIgnoringTime addr 0xDD
+                                |> setMemIgnoringTime (addr + 1) 0xF9
 
                         new_z80 =
                             executeCoreInstruction z80rom
@@ -92,8 +92,8 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0xFD
-                                |> setMem (addr + 1) 0xF9
+                                |> setMemIgnoringTime addr 0xFD
+                                |> setMemIgnoringTime (addr + 1) 0xF9
 
                         new_z80 =
                             executeCoreInstruction z80rom

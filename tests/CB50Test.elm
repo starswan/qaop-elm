@@ -3,7 +3,7 @@ module CB50Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
-import Z80Env exposing (setMem)
+import Z80Env exposing (setMemIgnoringTime)
 import Z80Rom
 
 
@@ -46,8 +46,8 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xCB
-                            |> setMem (addr + 1) 0x50
+                            |> setMemIgnoringTime addr 0xCB
+                            |> setMemIgnoringTime (addr + 1) 0x50
 
                     new_z80 =
                         executeCoreInstruction z80rom
@@ -63,8 +63,8 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xCB
-                            |> setMem (addr + 1) 0x50
+                            |> setMemIgnoringTime addr 0xCB
+                            |> setMemIgnoringTime (addr + 1) 0x50
 
                     new_z80 =
                         executeCoreInstruction z80rom
@@ -80,8 +80,8 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xCB
-                            |> setMem (addr + 1) 0x51
+                            |> setMemIgnoringTime addr 0xCB
+                            |> setMemIgnoringTime (addr + 1) 0x51
 
                     new_z80 =
                         executeCoreInstruction z80rom
@@ -97,8 +97,8 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xCB
-                            |> setMem (addr + 1) 0x51
+                            |> setMemIgnoringTime addr 0xCB
+                            |> setMemIgnoringTime (addr + 1) 0x51
 
                     new_z80 =
                         executeCoreInstruction z80rom
@@ -114,8 +114,8 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xCB
-                            |> setMem (addr + 1) 0x52
+                            |> setMemIgnoringTime addr 0xCB
+                            |> setMemIgnoringTime (addr + 1) 0x52
 
                     new_z80 =
                         executeCoreInstruction z80rom
@@ -131,8 +131,8 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xCB
-                            |> setMem (addr + 1) 0x52
+                            |> setMemIgnoringTime addr 0xCB
+                            |> setMemIgnoringTime (addr + 1) 0x52
 
                     new_z80 =
                         executeCoreInstruction z80rom
@@ -148,8 +148,8 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xCB
-                            |> setMem (addr + 1) 0x53
+                            |> setMemIgnoringTime addr 0xCB
+                            |> setMemIgnoringTime (addr + 1) 0x53
 
                     new_z80 =
                         executeCoreInstruction z80rom
@@ -165,8 +165,8 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xCB
-                            |> setMem (addr + 1) 0x53
+                            |> setMemIgnoringTime addr 0xCB
+                            |> setMemIgnoringTime (addr + 1) 0x53
 
                     new_z80 =
                         executeCoreInstruction z80rom
@@ -182,8 +182,8 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xCB
-                            |> setMem (addr + 1) 0x54
+                            |> setMemIgnoringTime addr 0xCB
+                            |> setMemIgnoringTime (addr + 1) 0x54
 
                     new_z80 =
                         executeCoreInstruction z80rom
@@ -198,8 +198,8 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xCB
-                            |> setMem (addr + 1) 0x54
+                            |> setMemIgnoringTime addr 0xCB
+                            |> setMemIgnoringTime (addr + 1) 0x54
 
                     new_z80 =
                         executeCoreInstruction z80rom
@@ -214,8 +214,8 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xCB
-                            |> setMem (addr + 1) 0x55
+                            |> setMemIgnoringTime addr 0xCB
+                            |> setMemIgnoringTime (addr + 1) 0x55
 
                     new_z80 =
                         executeCoreInstruction z80rom
@@ -230,8 +230,8 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xCB
-                            |> setMem (addr + 1) 0x55
+                            |> setMemIgnoringTime addr 0xCB
+                            |> setMemIgnoringTime (addr + 1) 0x55
 
                     new_z80 =
                         executeCoreInstruction z80rom
@@ -246,9 +246,9 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xCB
-                            |> setMem (addr + 1) 0x56
-                            |> setMem 0x6545 0x50
+                            |> setMemIgnoringTime addr 0xCB
+                            |> setMemIgnoringTime (addr + 1) 0x56
+                            |> setMemIgnoringTime 0x6545 0x50
 
                     new_z80 =
                         executeCoreInstruction z80rom
@@ -264,9 +264,9 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xCB
-                            |> setMem (addr + 1) 0x56
-                            |> setMem 0x6545 0x04
+                            |> setMemIgnoringTime addr 0xCB
+                            |> setMemIgnoringTime (addr + 1) 0x56
+                            |> setMemIgnoringTime 0x6545 0x04
 
                     new_z80 =
                         executeCoreInstruction z80rom
@@ -282,11 +282,11 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xDD
-                            |> setMem (addr + 1) 0xCB
-                            |> setMem (addr + 2) 0x05
-                            |> setMem (addr + 3) 0x56
-                            |> setMem 0x6545 0x50
+                            |> setMemIgnoringTime addr 0xDD
+                            |> setMemIgnoringTime (addr + 1) 0xCB
+                            |> setMemIgnoringTime (addr + 2) 0x05
+                            |> setMemIgnoringTime (addr + 3) 0x56
+                            |> setMemIgnoringTime 0x6545 0x50
 
                     new_z80 =
                         executeCoreInstruction z80rom
@@ -305,11 +305,11 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xDD
-                            |> setMem (addr + 1) 0xCB
-                            |> setMem (addr + 2) 0x05
-                            |> setMem (addr + 3) 0x56
-                            |> setMem 0x6545 0x04
+                            |> setMemIgnoringTime addr 0xDD
+                            |> setMemIgnoringTime (addr + 1) 0xCB
+                            |> setMemIgnoringTime (addr + 2) 0x05
+                            |> setMemIgnoringTime (addr + 3) 0x56
+                            |> setMemIgnoringTime 0x6545 0x04
 
                     new_z80 =
                         executeCoreInstruction z80rom
@@ -328,8 +328,8 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xCB
-                            |> setMem (addr + 1) 0x57
+                            |> setMemIgnoringTime addr 0xCB
+                            |> setMemIgnoringTime (addr + 1) 0x57
 
                     new_z80 =
                         executeCoreInstruction z80rom
@@ -345,8 +345,8 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xCB
-                            |> setMem (addr + 1) 0x57
+                            |> setMemIgnoringTime addr 0xCB
+                            |> setMemIgnoringTime (addr + 1) 0x57
 
                     new_z80 =
                         executeCoreInstruction z80rom

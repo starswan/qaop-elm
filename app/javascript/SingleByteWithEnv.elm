@@ -1,10 +1,10 @@
 module SingleByteWithEnv exposing (..)
 
-import Bitwise exposing (shiftRightBy)
-import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDuration(..), addCpuTimeTimeInc)
+import Bitwise
+import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDuration(..))
 import Dict exposing (Dict)
 import Z80Core exposing (Z80Core)
-import Z80Env exposing (Z80Env, c_TIME_LIMIT)
+import Z80Env exposing (Z80Env)
 
 
 type SingleByteEnvChange
@@ -32,7 +32,8 @@ applyEnvChangeDelta cpu_time z80changeData z80 =
         NewSPValue int ->
             { z80
                 | pc = new_pc
-                , env = { env | time = cpu_time, sp = int }
+                , clockTime = cpu_time
+                , env = { env | sp = int }
             }
 
 

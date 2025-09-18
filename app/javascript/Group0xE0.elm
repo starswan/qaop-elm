@@ -7,7 +7,7 @@ import GroupED exposing (group_ed)
 import Utils exposing (shiftLeftBy8)
 import Z80Core exposing (Z80Core)
 import Z80Delta exposing (Z80Delta(..))
-import Z80Env exposing (Z80Env, addCpuTimeEnv, mem, out, z80_in)
+import Z80Env exposing (Z80Env, mem, out, z80_in)
 import Z80Rom exposing (Z80ROM)
 
 
@@ -25,19 +25,16 @@ execute_0xD3 rom48k z80 =
     -- case 0xD3: env.out(v=imm8()|A<<8,A); MP=v+1&0xFF|v&0xFF00; time+=4; break;
     let
         value =
-            z80.env |> imm8 z80.pc z80.env.time rom48k
+            z80.env |> imm8 z80.pc z80.clockTime rom48k
 
         env_1 =
             z80.env
-
-        env_2 =
-            { env_1 | time = value.time }
 
         v =
             Bitwise.or value.value (shiftLeftBy8 z80.flags.a)
 
         env =
-            out v z80.flags.a env_2 |> addCpuTimeEnv 4
+            env_1 |> out v z80.flags.a (value.time |> addCpuTimeTime 4)
     in
     EnvWithPc env value.pc
 
@@ -47,19 +44,16 @@ execute_0xDB rom48k z80 =
     -- case 0xDB: MP=(v=imm8()|A<<8)+1; A=env.in(v); time+=4; break;
     let
         imm8val =
-            z80.env |> imm8 z80.pc z80.env.time rom48k
-
-        env_1 =
-            z80.env
+            z80.env |> imm8 z80.pc z80.clockTime rom48k
 
         z80_1 =
-            { z80 | env = { env_1 | time = imm8val.time }, pc = imm8val.pc }
+            { z80 | pc = imm8val.pc }
 
         v =
             Bitwise.or imm8val.value (shiftLeftBy8 z80_1.flags.a)
 
         a =
-            z80_1.env |> z80_in v rom48k.keyboard
+            z80_1.env |> z80_in v rom48k.keyboard imm8val.time
 
         flags =
             z80_1.flags

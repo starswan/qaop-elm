@@ -3,6 +3,18 @@ module CpuTimeCTime exposing (..)
 import Bitwise exposing (shiftLeftBy, shiftRightBy)
 
 
+c_FRSTART =
+    -14335
+
+
+c_FRTIME =
+    69888
+
+
+c_TIME_LIMIT =
+    c_FRSTART + c_FRTIME
+
+
 type InstructionDuration
     = FourTStates
     | FiveTStates
@@ -361,3 +373,8 @@ addDuration duration time =
                     19
     in
     { time | cpu_time = time.cpu_time + offset }
+
+
+reset_cpu_time : CpuTimeCTime
+reset_cpu_time =
+    CpuTimeCTime c_FRSTART NoCont

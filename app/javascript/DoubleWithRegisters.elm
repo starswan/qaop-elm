@@ -7,7 +7,7 @@ import PCIncrement exposing (MediumPCIncrement(..))
 import SingleWith8BitParameter exposing (Single8BitChange(..), applySimple8BitChange)
 import Utils exposing (byte, shiftLeftBy8)
 import Z80Core exposing (Z80Core)
-import Z80Env exposing (getRamValue, mem, setMem, setRam)
+import Z80Env exposing (getRamValue, mem, setMemIgnoringTime, setRam)
 import Z80Flags exposing (FlagFunc(..), changeFlags, dec, inc)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (MainWithIndexRegisters)
@@ -324,9 +324,6 @@ ld_e_indirect_iy z80_main param =
 applyDoubleWithRegistersDelta : MediumPCIncrement -> CpuTimeCTime -> DoubleWithRegisterChange -> Z80ROM -> Z80Core -> Z80Core
 applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
     let
-        old_env =
-            z80.env
-
         new_pc =
             case pc_inc of
                 IncreaseByTwo ->
@@ -352,7 +349,7 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
             { z80
                 | main = main
                 , pc = pc
-                , env = { old_env | time = cpu_time |> addCpuTimeTime timeOffset }
+                , clockTime = cpu_time |> addCpuTimeTime timeOffset
             }
 
         DoubleRegChangeStoreIndirect addr value ->
@@ -361,7 +358,7 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                     Bitwise.and new_pc 0xFFFF
 
                 env_1 =
-                    { old_env | time = cpu_time } |> setMem addr value
+                    z80.env |> setMemIgnoringTime addr value cpu_time
             in
             { z80
                 | pc = pc
@@ -373,15 +370,12 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 pc =
                     Bitwise.and new_pc 0xFFFF
 
-                env_1 =
-                    { old_env | time = cpu_time }
-
                 main =
                     z80.main
             in
             { z80
                 | pc = pc
-                , env = env_1
+                , clockTime = cpu_time
                 , main = { main | hl = int }
             }
 
@@ -390,15 +384,12 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 pc =
                     Bitwise.and new_pc 0xFFFF
 
-                env_1 =
-                    { old_env | time = cpu_time }
-
                 main =
                     z80.main
             in
             { z80
                 | pc = pc
-                , env = env_1
+                , clockTime = cpu_time
                 , main = { main | ix = int }
             }
 
@@ -407,15 +398,12 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 pc =
                     Bitwise.and new_pc 0xFFFF
 
-                env_1 =
-                    { old_env | time = cpu_time }
-
                 main =
                     z80.main
             in
             { z80
                 | pc = pc
-                , env = env_1
+                , clockTime = cpu_time
                 , main = { main | iy = int }
             }
 
@@ -424,18 +412,15 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 pc =
                     Bitwise.and new_pc 0xFFFF
 
-                env_1 =
-                    { old_env | time = cpu_time }
-
                 main =
                     z80.main
 
                 new_b =
-                    env_1 |> mem addr env_1.time rom48k
+                    z80.env |> mem addr cpu_time rom48k
             in
             { z80
                 | pc = pc
-                , env = { env_1 | time = new_b.time }
+                , clockTime = new_b.time
                 , main = { main | b = new_b.value }
             }
 
@@ -444,18 +429,15 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 pc =
                     Bitwise.and new_pc 0xFFFF
 
-                env_1 =
-                    { old_env | time = cpu_time }
-
                 flags =
                     z80.flags
 
                 new_a =
-                    env_1 |> mem addr env_1.time rom48k
+                    z80.env |> mem addr cpu_time rom48k
             in
             { z80
                 | pc = pc
-                , env = { env_1 | time = new_a.time }
+                , clockTime = new_a.time
                 , flags = { flags | a = new_a.value }
             }
 
@@ -465,7 +447,7 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                     Bitwise.and new_pc 0xFFFF
 
                 env_1 =
-                    { old_env | time = cpu_time } |> setMem addr z80.flags.a
+                    z80.env |> setMemIgnoringTime addr z80.flags.a cpu_time
             in
             { z80
                 | pc = pc
@@ -477,18 +459,15 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 pc =
                     Bitwise.and new_pc 0xFFFF
 
-                env_1 =
-                    { old_env | time = cpu_time }
-
                 main =
                     z80.main
 
                 new_b =
-                    env_1 |> mem addr env_1.time rom48k
+                    z80.env |> mem addr cpu_time rom48k
             in
             { z80
                 | pc = pc
-                , env = { env_1 | time = new_b.time }
+                , clockTime = new_b.time
                 , main = { main | c = new_b.value }
             }
 
@@ -497,18 +476,15 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 pc =
                     Bitwise.and new_pc 0xFFFF
 
-                env_1 =
-                    { old_env | time = cpu_time }
-
                 main =
                     z80.main
 
                 new_b =
-                    env_1 |> mem addr env_1.time rom48k
+                    z80.env |> mem addr cpu_time rom48k
             in
             { z80
                 | pc = pc
-                , env = { env_1 | time = new_b.time }
+                , clockTime = new_b.time
                 , main = { main | d = new_b.value }
             }
 
@@ -517,18 +493,17 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 pc =
                     Bitwise.and new_pc 0xFFFF
 
-                env_1 =
-                    { old_env | time = cpu_time }
-
+                --env_1 =
+                --    { old_env | time = cpu_time }
                 main =
                     z80.main
 
                 new_b =
-                    env_1 |> mem addr env_1.time rom48k
+                    z80.env |> mem addr cpu_time rom48k
             in
             { z80
                 | pc = pc
-                , env = { env_1 | time = new_b.time }
+                , clockTime = new_b.time
                 , main = { main | e = new_b.value }
             }
 
@@ -537,18 +512,15 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 pc =
                     Bitwise.and new_pc 0xFFFF
 
-                env_1 =
-                    { old_env | time = cpu_time }
-
                 main =
                     z80.main
 
                 new_b =
-                    env_1 |> mem addr env_1.time rom48k
+                    z80.env |> mem addr cpu_time rom48k
             in
             { z80
                 | pc = pc
-                , env = { env_1 | time = new_b.time }
+                , clockTime = new_b.time
                 , main = { main | hl = Bitwise.or (main.hl |> Bitwise.and 0xFF) (new_b.value |> shiftLeftBy8) }
             }
 
@@ -557,18 +529,15 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 pc =
                     Bitwise.and new_pc 0xFFFF
 
-                env_1 =
-                    { old_env | time = cpu_time }
-
                 main =
                     z80.main
 
                 new_b =
-                    env_1 |> mem addr env_1.time rom48k
+                    z80.env |> mem addr cpu_time rom48k
             in
             { z80
                 | pc = pc
-                , env = { env_1 | time = new_b.time }
+                , clockTime = new_b.time
                 , main = { main | hl = Bitwise.or (main.hl |> Bitwise.and 0xFF00) (new_b.value |> Bitwise.and 0xFF) }
             }
 
@@ -577,9 +546,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 flags =
                     z80.flags
 
-                env_1 =
-                    { old_env | time = cpu_time }
-
                 address =
                     addr + byte offset |> Bitwise.and 0xFFFF
 
@@ -587,12 +553,12 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                     Bitwise.and new_pc 0xFFFF
 
                 value =
-                    env_1 |> mem address env_1.time rom48k
+                    z80.env |> mem address cpu_time rom48k
             in
             { z80
                 | pc = pc
                 , flags = flags |> changeFlags flagFunc value.value
-                , env = { env_1 | time = value.time }
+                , clockTime = value.time
             }
 
         --Just { pcIncrement = new_pc, time = cpu_time, timeIncrement = FifteenTStates, operation = ChangeFlagRegisters (z80.flags |> adc value.value) }
@@ -607,14 +573,14 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
             if ramAddr >= 0 then
                 let
                     value =
-                        old_env |> getRamValue ramAddr rom48k
+                        z80.env |> getRamValue ramAddr rom48k
 
                     valueWithFlags =
                         z80.flags |> inc value
 
                     env_1 =
                         --{ old_env | ram = old_env.ram |> setRamValue ramAddr valueWithFlags.value }
-                        old_env |> setRam ramAddr valueWithFlags.value
+                        z80.env |> setRam ramAddr valueWithFlags.value
                 in
                 { z80
                     | pc = pc
@@ -638,14 +604,14 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
             if ramAddr >= 0 then
                 let
                     value =
-                        old_env |> getRamValue ramAddr rom48k
+                        z80.env |> getRamValue ramAddr rom48k
 
                     valueWithFlags =
                         z80.flags |> dec value
 
                     env_1 =
                         --{ old_env | ram = old_env.ram |> setRamValue ramAddr valueWithFlags.value }
-                        old_env |> setRam ramAddr valueWithFlags.value
+                        z80.env |> setRam ramAddr valueWithFlags.value
                 in
                 { z80
                     | pc = pc
