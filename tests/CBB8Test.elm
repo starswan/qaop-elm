@@ -3,7 +3,7 @@ module CBB8Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
-import Z80Env exposing (mem, setMem)
+import Z80Env exposing (mem, setMemIgnoringTime)
 import Z80Rom
 
 
@@ -43,11 +43,11 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xFD
-                            |> setMem (addr + 1) 0xCB
-                            |> setMem (addr + 2) 0xFE
-                            |> setMem (addr + 3) 0xBE
-                            |> setMem 0xA07E 0xFF
+                            |> setMemIgnoringTime addr 0xFD
+                            |> setMemIgnoringTime (addr + 1) 0xCB
+                            |> setMemIgnoringTime (addr + 2) 0xFE
+                            |> setMemIgnoringTime (addr + 3) 0xBE
+                            |> setMemIgnoringTime 0xA07E 0xFF
 
                     new_z80 =
                         executeCoreInstruction z80rom

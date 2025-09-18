@@ -1,11 +1,11 @@
 module SingleNoParams exposing (..)
 
 import Bitwise exposing (shiftRightBy)
-import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDuration(..))
+import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDuration(..), c_TIME_LIMIT)
 import Dict exposing (Dict)
-import Z80Core exposing (Z80, Z80Core, add_cpu_time, set_iff)
+import Z80Core exposing (Z80, Z80Core, add_cpu_time)
 import Z80Debug exposing (debugLog)
-import Z80Env exposing (c_TIME_LIMIT, z80_pop, z80_push)
+import Z80Env exposing (z80_pop, z80_push)
 import Z80Flags exposing (set_af)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (set_bc_main, set_de_main)
@@ -107,16 +107,13 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
         NoOp ->
             { z80
                 | pc = Bitwise.and (z80.pc + 1) 0xFFFF
-                , env = { old_env | time = cpu_time }
+                , clockTime = cpu_time
             }
 
         PopBC ->
             let
-                env1 =
-                    { old_env | time = cpu_time }
-
                 v =
-                    env1 |> z80_pop rom48k
+                    old_env |> z80_pop rom48k cpu_time
 
                 --env = z80.env
                 --z80_1 = { z80 | env = { env | time = v.time, sp = v.sp } }
@@ -125,16 +122,14 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
             { z80
                 | pc = Bitwise.and (z80.pc + 1) 0xFFFF
                 , main = z80.main |> set_bc_main v.value16
-                , env = { env1 | time = v.time, sp = v.sp }
+                , clockTime = v.time
+                , env = { old_env | sp = v.sp }
             }
 
         PopHL ->
             let
-                env1 =
-                    { old_env | time = cpu_time }
-
                 v =
-                    env1 |> z80_pop rom48k
+                    old_env |> z80_pop rom48k cpu_time
 
                 main =
                     z80.main
@@ -142,16 +137,14 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
             { z80
                 | pc = Bitwise.and (z80.pc + 1) 0xFFFF
                 , main = { main | hl = v.value16 }
-                , env = { env1 | time = v.time, sp = v.sp }
+                , clockTime = v.time
+                , env = { old_env | sp = v.sp }
             }
 
         PopIX ->
             let
-                env1 =
-                    { old_env | time = cpu_time }
-
                 v =
-                    env1 |> z80_pop rom48k
+                    old_env |> z80_pop rom48k cpu_time
 
                 main =
                     z80.main
@@ -159,16 +152,14 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
             { z80
                 | pc = Bitwise.and (z80.pc + 2) 0xFFFF
                 , main = { main | ix = v.value16 }
-                , env = { env1 | time = v.time, sp = v.sp }
+                , clockTime = v.time
+                , env = { old_env | sp = v.sp }
             }
 
         PopIY ->
             let
-                env1 =
-                    { old_env | time = cpu_time }
-
                 v =
-                    env1 |> z80_pop rom48k
+                    old_env |> z80_pop rom48k cpu_time
 
                 main =
                     z80.main
@@ -176,7 +167,8 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
             { z80
                 | pc = Bitwise.and (z80.pc + 2) 0xFFFF
                 , main = { main | iy = v.value16 }
-                , env = { env1 | time = v.time, sp = v.sp }
+                , clockTime = v.time
+                , env = { old_env | sp = v.sp }
             }
 
         --DisableInterrupts ->
@@ -203,31 +195,27 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
         PopAF ->
             -- case 0xF1: af(pop()); break;
             let
-                env1 =
-                    { old_env | time = cpu_time }
-
                 v =
-                    env1 |> z80_pop rom48k
+                    old_env |> z80_pop rom48k cpu_time
             in
             { z80
                 | pc = Bitwise.and (z80.pc + 1) 0xFFFF
                 , flags = set_af v.value16
-                , env = { env1 | time = v.time, sp = v.sp }
+                , clockTime = v.time
+                , env = { old_env | sp = v.sp }
             }
 
         PopDE ->
             -- case 0xD1: v=pop(); D=v>>>8; E=v&0xFF; break;
             let
-                env1 =
-                    { old_env | time = cpu_time }
-
                 v =
-                    env1 |> z80_pop rom48k
+                    old_env |> z80_pop rom48k cpu_time
             in
             { z80
                 | pc = Bitwise.and (z80.pc + 1) 0xFFFF
                 , main = z80.main |> set_de_main v.value16
-                , env = { env1 | time = v.time, sp = v.sp }
+                , clockTime = v.time
+                , env = { old_env | sp = v.sp }
             }
 
         Rst00 ->
@@ -268,14 +256,15 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
             -- case 0xC9: MP=PC=pop(); break;
             let
                 a =
-                    z80.env |> z80_pop rom48k
+                    z80.env |> z80_pop rom48k cpu_time
 
                 --b = debug_log "ret" (a.value |> subName) Nothing
                 --env = z80.env
                 --    CpuTimeWithSpAndPc a.time a.sp a.value
             in
             { z80
-                | env = { old_env | time = a.time, sp = a.sp }
+                | env = { old_env | sp = a.sp }
+                , clockTime = a.time
                 , pc = a.value16
             }
 
@@ -293,7 +282,8 @@ rst value cpu_time z80 =
     in
     { z80
         | pc = value - 199
-        , env = { old_env | time = cpu_time } |> z80_push pc
+        , clockTime = cpu_time
+        , env = old_env |> z80_push pc cpu_time
     }
 
 
@@ -349,7 +339,7 @@ execute_0x76_halt z80 =
             z80_core.interrupts
 
         n =
-            shiftRightBy 2 (c_TIME_LIMIT - z80_core.env.time.cpu_time + 3)
+            shiftRightBy 2 (c_TIME_LIMIT - z80_core.clockTime.cpu_time + 3)
 
         new_core =
             if n > 0 then
