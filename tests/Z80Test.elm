@@ -1,11 +1,9 @@
 module Z80Test exposing (..)
 
---import Expect exposing (Expectation)
-
 import Expect
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
-import Z80Env exposing (setMemIgnoringTime)
+import Z80Env exposing (setMemWithTime)
 import Z80Rom
 
 
@@ -27,6 +25,9 @@ suite =
         z80env =
             z80.env
 
+        envwithtime =
+            { z80env = z80env, time = z80.clockTime }
+
         z80main =
             z80.main
 
@@ -42,7 +43,7 @@ suite =
                         new_z80 =
                             executeCoreInstruction z80rom
                                 { z80
-                                    | env = z80env |> setMemIgnoringTime addr 0xBC
+                                    | env = envwithtime |> setMemWithTime addr 0xBC |> .z80env
                                     , main = { z80main | hl = 0x0245 }
                                     , flags = { flags | a = 0x06 }
                                 }
@@ -55,7 +56,7 @@ suite =
                         new_z80 =
                             executeCoreInstruction z80rom
                                 { z80
-                                    | env = z80env |> setMemIgnoringTime addr 0xBC
+                                    | env = envwithtime |> setMemWithTime addr 0xBC |> .z80env
                                     , main = { z80main | hl = 0x0645 }
                                     , flags = { flags | a = 0x02 }
                                 }
@@ -68,7 +69,7 @@ suite =
                         new_z80 =
                             executeCoreInstruction z80rom
                                 { z80
-                                    | env = z80env |> setMemIgnoringTime addr 0xBC
+                                    | env = envwithtime |> setMemWithTime addr 0xBC |> .z80env
                                     , main = { z80main | hl = 0x0645 }
                                     , flags = { flags | a = 0x06 }
                                 }

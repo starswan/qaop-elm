@@ -429,11 +429,7 @@ setMem z80_addr value time_input z80env =
 
 setMemIgnoringTime : Int -> Int -> CpuTimeCTime -> Z80Env -> Z80Env
 setMemIgnoringTime z80_addr value time_input z80env =
-    let
-        ( x, _ ) =
-            setMem z80_addr value time_input z80env
-    in
-    x
+    setMem z80_addr value time_input z80env |> Tuple.first
 
 
 
@@ -459,7 +455,27 @@ setMemIgnoringTime z80_addr value time_input z80env =
 --}
 
 
-setMem16 : Int -> Int -> CpuTimeCTime -> Z80Env -> Z80Env
+setMem16WithTime : Int -> Int -> Z80EnvWithTime -> Z80EnvWithTime
+setMem16WithTime z80_addr value z80env =
+    let
+        env =
+            z80env.z80env
+
+        cpu_time =
+            z80env.time
+
+        ( env2, time ) =
+            setMem16 z80_addr value cpu_time env
+    in
+    { z80env = env2, time = time }
+
+
+setMem16IgnoringTime : Int -> Int -> CpuTimeCTime -> Z80Env -> Z80Env
+setMem16IgnoringTime addr value time_input z80env =
+    setMem16 addr value time_input z80env |> Tuple.first
+
+
+setMem16 : Int -> Int -> CpuTimeCTime -> Z80Env -> ( Z80Env, CpuTimeCTime )
 setMem16 addr value time_input z80env =
     let
         addr1 =
@@ -487,22 +503,28 @@ setMem16 addr value time_input z80env =
                 { z80env_time | ctime = NoCont }
         in
         if addr1 < 0 then
-            z80env
+            ( z80env, newTime )
 
         else if addr1 >= 0x4000 then
-            z80env
+            ( z80env
                 |> setRam (addr1 - 1) (Bitwise.and value 0xFF)
                 |> setRam addr1 (shiftRightBy8 value)
+            , newTime
+            )
 
         else
-            z80env
-                |> setMemIgnoringTime addr (Bitwise.and value 0xFF) time_input
-                |> setMemIgnoringTime (addr + 1) (shiftRightBy8 value) time_input
+            ( z80env
+                |> setMemIgnoringTime addr (Bitwise.and value 0xFF) newTime
+                |> setMemIgnoringTime (addr + 1) (shiftRightBy8 value) newTime
+            , newTime
+            )
 
     else
-        z80env
+        ( z80env
             |> setMemIgnoringTime addr (Bitwise.and value 0xFF) time_input
             |> setMemIgnoringTime (addr + 1) (shiftRightBy8 value) time_input
+        , time_input
+        )
 
 
 

@@ -3,7 +3,7 @@ module CBD0Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
-import Z80Env exposing (mem, setMemIgnoringTime)
+import Z80Env exposing (mem, setMemWithTime)
 import Z80Rom
 
 
@@ -32,7 +32,7 @@ suite =
             { old_z80 | pc = addr, env = { old_z80env | sp = sp }, main = { z80main | hl = hl } }
 
         z80env =
-            z80.env
+            { z80env = z80.env, time = z80.clockTime }
 
         z80rom =
             Z80Rom.constructor
@@ -43,8 +43,9 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMemIgnoringTime addr 0xCB
-                            |> setMemIgnoringTime (addr + 1) 0xD0
+                            |> setMemWithTime addr 0xCB
+                            |> setMemWithTime (addr + 1) 0xD0
+                            |> .z80env
 
                     new_z80 =
                         executeCoreInstruction z80rom
@@ -59,11 +60,12 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMemIgnoringTime addr 0xDD
-                            |> setMemIgnoringTime (addr + 1) 0xCB
-                            |> setMemIgnoringTime (addr + 2) 0x06
-                            |> setMemIgnoringTime (addr + 3) 0xD6
-                            |> setMemIgnoringTime 0xA086 0x00
+                            |> setMemWithTime addr 0xDD
+                            |> setMemWithTime (addr + 1) 0xCB
+                            |> setMemWithTime (addr + 2) 0x06
+                            |> setMemWithTime (addr + 3) 0xD6
+                            |> setMemWithTime 0xA086 0x00
+                            |> .z80env
 
                     new_z80 =
                         executeCoreInstruction z80rom
@@ -73,7 +75,7 @@ suite =
                             }
 
                     mem_value =
-                        new_z80.env |> mem 0xA086 new_z80.env.time z80rom
+                        new_z80.env |> mem 0xA086 new_z80.clockTime z80rom
                 in
                 Expect.equal ( addr + 4, 0x04 ) ( new_z80.pc, mem_value.value )
         , test "0xCB D8 SET 3,B" <|
@@ -81,8 +83,9 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMemIgnoringTime addr 0xCB
-                            |> setMemIgnoringTime (addr + 1) 0xD8
+                            |> setMemWithTime addr 0xCB
+                            |> setMemWithTime (addr + 1) 0xD8
+                            |> .z80env
 
                     new_z80 =
                         executeCoreInstruction z80rom

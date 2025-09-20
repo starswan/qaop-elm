@@ -3,7 +3,7 @@ module CB00Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
-import Z80Env exposing (mem, setMemIgnoringTime, setMemWithTime)
+import Z80Env exposing (mem, setMem, setMemWithTime)
 import Z80Flags exposing (getFlags)
 import Z80Rom
 
@@ -33,7 +33,7 @@ suite =
             old_z80.main
 
         z80 =
-            { old_z80 | pc = addr, env = { old_z80env | sp = sp } |> setMemIgnoringTime addr 0xCB old_z80.clockTime, main = { z80main | hl = hl } }
+            { old_z80 | pc = addr, env = { old_z80env | sp = sp } |> setMem addr 0xCB old_z80.clockTime |> Tuple.first, main = { z80main | hl = hl } }
 
         flags =
             z80.flags
@@ -52,11 +52,12 @@ suite =
                         new_env =
                             z80env
                                 |> setMemWithTime addr_plus_1 0x00
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
                                 { z80
-                                    | env = new_env.z80env
+                                    | env = new_env
                                     , main = { z80main | b = 0x50 }
                                 }
                     in
@@ -67,11 +68,12 @@ suite =
                         new_env =
                             z80env
                                 |> setMemWithTime addr_plus_1 0x00
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
                                 { z80
-                                    | env = new_env.z80env
+                                    | env = new_env
                                     , main = { z80main | b = 0x80 }
                                 }
                     in
@@ -83,11 +85,12 @@ suite =
                         new_env =
                             z80env
                                 |> setMemWithTime addr_plus_1 0x00
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
                                 { z80
-                                    | env = new_env.z80env
+                                    | env = new_env
                                     , main = { z80main | b = 0xFE }
                                 }
                     in
@@ -102,11 +105,12 @@ suite =
                                 |> setMemWithTime (addr + 2) 0x45
                                 |> setMemWithTime (addr + 3) 0x00
                                 |> setMemWithTime 0x6545 0xFE
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
                                 { z80
-                                    | env = new_env.z80env
+                                    | env = new_env
                                     , main = { z80main | ix = 0x6500, b = 0x50 }
                                 }
 
@@ -125,11 +129,12 @@ suite =
                                 |> setMemWithTime (addr + 2) 0xFF
                                 |> setMemWithTime (addr + 3) 0x00
                                 |> setMemWithTime 0x6545 0xFE
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
                                 { z80
-                                    | env = new_env.z80env
+                                    | env = new_env
                                     , main = { z80main | iy = 0x6546, b = 0x50 }
                                 }
 
@@ -145,11 +150,12 @@ suite =
                         new_env =
                             z80env
                                 |> setMemWithTime addr_plus_1 0x01
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
                                 { z80
-                                    | env = new_env.z80env
+                                    | env = new_env
                                     , main = { z80main | c = 0x50 }
                                 }
                     in
@@ -164,11 +170,12 @@ suite =
                                 |> setMemWithTime (addr + 2) 0x45
                                 |> setMemWithTime (addr + 3) 0x01
                                 |> setMemWithTime 0x6545 0x50
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
                                 { z80
-                                    | env = new_env.z80env
+                                    | env = new_env
                                     , main = { z80main | ix = 0x6500, c = 0x50 }
                                 }
 
@@ -186,11 +193,12 @@ suite =
                                 |> setMemWithTime (addr + 2) 0xFF
                                 |> setMemWithTime (addr + 3) 0x01
                                 |> setMemWithTime 0x6545 0xFE
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
                                 { z80
-                                    | env = new_env.z80env
+                                    | env = new_env
                                     , main = { z80main | iy = 0x6546, b = 0x50 }
                                 }
 
@@ -206,11 +214,12 @@ suite =
                     new_env =
                         z80env
                             |> setMemWithTime addr_plus_1 0x02
+                            |> .z80env
 
                     new_z80 =
                         executeCoreInstruction z80rom
                             { z80
-                                | env = new_env.z80env
+                                | env = new_env
                                 , main = { z80main | d = 0x50 }
                             }
                 in
@@ -221,11 +230,12 @@ suite =
                     new_env =
                         z80env
                             |> setMemWithTime addr_plus_1 0x03
+                            |> .z80env
 
                     new_z80 =
                         executeCoreInstruction z80rom
                             { z80
-                                | env = new_env.z80env
+                                | env = new_env
                                 , main = { z80main | e = 0x50 }
                             }
                 in
@@ -236,14 +246,12 @@ suite =
                     new_env =
                         z80env
                             |> setMemWithTime addr_plus_1 0x04
-
-                    env2 =
-                        new_env.z80env
+                            |> .z80env
 
                     new_z80 =
                         executeCoreInstruction z80rom
                             { z80
-                                | env = { env2 | sp = 0x8765 }
+                                | env = { new_env | sp = 0x8765 }
                                 , main = { z80main | hl = 0x5045, d = 0x50 }
                                 , flags = { flags | a = 0x39 }
                             }
@@ -255,14 +263,12 @@ suite =
                     new_env =
                         z80env
                             |> setMemWithTime addr_plus_1 0x05
-
-                    env2 =
-                        new_env.z80env
+                            |> .z80env
 
                     new_z80 =
                         executeCoreInstruction z80rom
                             { z80
-                                | env = { env2 | sp = 0x8765 }
+                                | env = { new_env | sp = 0x8765 }
                                 , main = { z80main | hl = 0x5050, d = 0x50 }
                                 , flags = { flags | a = 0x39 }
                             }
@@ -276,11 +282,12 @@ suite =
                             z80env
                                 |> setMemWithTime addr_plus_1 0x06
                                 |> setMemWithTime hl 0x31
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
                                 { z80
-                                    | env = new_env.z80env
+                                    | env = new_env
                                 }
 
                         mem_value =
@@ -294,11 +301,12 @@ suite =
                             z80env
                                 |> setMemWithTime addr_plus_1 0x06
                                 |> setMemWithTime hl 0x80
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
                                 { z80
-                                    | env = new_env.z80env
+                                    | env = new_env
                                 }
 
                         mem_value =
@@ -315,11 +323,12 @@ suite =
                                 |> setMemWithTime (addr + 2) 0x45
                                 |> setMemWithTime (addr + 3) 0x06
                                 |> setMemWithTime 0x6545 0x31
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
                                 { z80
-                                    | env = new_env.z80env
+                                    | env = new_env
                                     , main = { z80main | ix = 0x6500, b = 0xA5 }
                                 }
 
@@ -337,11 +346,12 @@ suite =
                                 |> setMemWithTime (addr + 2) 0x45
                                 |> setMemWithTime (addr + 3) 0x06
                                 |> setMemWithTime 0x6545 0x80
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
                                 { z80
-                                    | env = new_env.z80env
+                                    | env = new_env
                                     , main = { z80main | ix = 0x6500 }
                                 }
 
@@ -359,11 +369,12 @@ suite =
                                 |> setMemWithTime (addr + 2) 0xFF
                                 |> setMemWithTime (addr + 3) 0x06
                                 |> setMemWithTime 0x6500 0x31
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
                                 { z80
-                                    | env = new_env.z80env
+                                    | env = new_env
                                     , main = { z80main | iy = 0x6501 }
                                 }
 
@@ -378,11 +389,12 @@ suite =
                     new_env =
                         z80env
                             |> setMemWithTime addr_plus_1 0x07
+                            |> .z80env
 
                     new_z80 =
                         executeCoreInstruction z80rom
                             { z80
-                                | env = new_env.z80env
+                                | env = new_env
                                 , main = { z80main | hl = 0x5050, d = 0x50 }
                                 , flags = { flags | a = 0x30 }
                             }
@@ -394,14 +406,12 @@ suite =
                     new_env =
                         z80env
                             |> setMemWithTime addr_plus_1 0x08
-
-                    env2 =
-                        new_env.z80env
+                            |> .z80env
 
                     new_z80 =
                         executeCoreInstruction z80rom
                             { z80
-                                | env = { env2 | sp = 0x8765 }
+                                | env = { new_env | sp = 0x8765 }
                                 , main = { z80main | hl = 0x6545, b = 0x50 }
                                 , flags = { flags | a = 0x39 }
                             }
@@ -413,14 +423,12 @@ suite =
                     new_env =
                         z80env
                             |> setMemWithTime addr_plus_1 0x09
-
-                    env2 =
-                        new_env.z80env
+                            |> .z80env
 
                     new_z80 =
                         executeCoreInstruction z80rom
                             { z80
-                                | env = { env2 | sp = 0x8765 }
+                                | env = { new_env | sp = 0x8765 }
                                 , main = { z80main | hl = 0x6545, c = 0x50 }
                                 , flags = { flags | a = 0x39 }
                             }
@@ -432,14 +440,12 @@ suite =
                     new_env =
                         z80env
                             |> setMemWithTime addr_plus_1 0x0A
-
-                    env2 =
-                        new_env.z80env
+                            |> .z80env
 
                     new_z80 =
                         executeCoreInstruction z80rom
                             { z80
-                                | env = { env2 | sp = 0x8765 }
+                                | env = { new_env | sp = 0x8765 }
                                 , main = { z80main | hl = 0x6545, d = 0x50 }
                                 , flags = { flags | a = 0x39 }
                             }
@@ -451,14 +457,12 @@ suite =
                     new_env =
                         z80env
                             |> setMemWithTime addr_plus_1 0x0B
-
-                    env2 =
-                        new_env.z80env
+                            |> .z80env
 
                     new_z80 =
                         executeCoreInstruction z80rom
                             { z80
-                                | env = { env2 | sp = 0x8765 }
+                                | env = { new_env | sp = 0x8765 }
                                 , main = { z80main | hl = 0x6545, e = 0x50 }
                                 , flags = { flags | a = 0x39 }
                             }
@@ -470,14 +474,12 @@ suite =
                     new_env =
                         z80env
                             |> setMemWithTime addr_plus_1 0x0C
-
-                    env2 =
-                        new_env.z80env
+                            |> .z80env
 
                     new_z80 =
                         executeCoreInstruction z80rom
                             { z80
-                                | env = { env2 | sp = 0x8765 }
+                                | env = { new_env | sp = 0x8765 }
                                 , main = { z80main | hl = 0x5045, d = 0x50 }
                                 , flags = { flags | a = 0x39 }
                             }
@@ -489,14 +491,12 @@ suite =
                     new_env =
                         z80env
                             |> setMemWithTime addr_plus_1 0x0D
-
-                    env2 =
-                        new_env.z80env
+                            |> .z80env
 
                     new_z80 =
                         executeCoreInstruction z80rom
                             { z80
-                                | env = { env2 | sp = 0x8765 }
+                                | env = { new_env | sp = 0x8765 }
                                 , main = { z80main | hl = 0x5050, d = 0x50 }
                                 , flags = { flags | a = 0x39 }
                             }
@@ -509,11 +509,12 @@ suite =
                         z80env
                             |> setMemWithTime addr_plus_1 0x0E
                             |> setMemWithTime 0x6545 0x31
+                            |> .z80env
 
                     new_z80 =
                         executeCoreInstruction z80rom
                             { z80
-                                | env = new_env.z80env
+                                | env = new_env
                                 , main = { z80main | hl = 0x6545, b = 0xA5 }
                                 , flags = { flags | a = 0x39 }
                             }
@@ -528,11 +529,12 @@ suite =
                     new_env =
                         z80env
                             |> setMemWithTime addr_plus_1 0x0F
+                            |> .z80env
 
                     new_z80 =
                         executeCoreInstruction z80rom
                             { z80
-                                | env = new_env.z80env
+                                | env = new_env
                                 , main = { z80main | hl = 0x5050, d = 0x50 }
                                 , flags = { flags | a = 0x30 }
                             }

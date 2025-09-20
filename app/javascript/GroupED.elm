@@ -16,7 +16,7 @@ import Utils exposing (char, shiftLeftBy8, shiftRightBy8)
 import Z80Change exposing (FlagChange(..), Z80Change(..))
 import Z80Core exposing (Z80Core, add_cpu_time, imm16)
 import Z80Delta exposing (Z80Delta(..))
-import Z80Env exposing (Z80Env, m1, mem, mem16, setMem16, setMemIgnoringTime, z80_in)
+import Z80Env exposing (Z80Env, m1, mem, mem16, setMem16IgnoringTime, setMemIgnoringTime, z80_in)
 import Z80Flags exposing (FlagRegisters, c_F3, c_F5, c_F53, c_FC, c_FH, f_szh0n0p, z80_sub)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (InterruptMode(..), InterruptRegisters, MainWithIndexRegisters, get_bc, get_de, set_bc_main, set_de_main)
@@ -187,7 +187,7 @@ execute_ED43 rom48k z80 =
             { z80 | pc = v.pc }
 
         env =
-            z80_2.env |> setMem16 v.value16 (Bitwise.or (shiftLeftBy8 z80.main.b) z80.main.c) z80.clockTime
+            z80_2.env |> setMem16IgnoringTime v.value16 (Bitwise.or (shiftLeftBy8 z80.main.b) z80.main.c) z80.clockTime
     in
     EnvWithPc env v.pc
 
@@ -258,7 +258,7 @@ execute_ED53 rom48k z80 =
             { z80 | pc = v.pc }
 
         env =
-            z80_1.env |> setMem16 v.value16 (Bitwise.or (shiftLeftBy8 z80.main.d) z80.main.e) z80.clockTime
+            z80_1.env |> setMem16IgnoringTime v.value16 (Bitwise.or (shiftLeftBy8 z80.main.d) z80.main.e) z80.clockTime
 
         --env = case (v.value |> fromInt) of
         --  Z80Address.ROMAddress int -> z80_1.env
@@ -280,7 +280,7 @@ execute_ED63 rom48k z80 =
             { z80 | pc = v.pc }
 
         env =
-            z80_1.env |> setMem16 v.value16 z80.main.hl z80.clockTime
+            z80_1.env |> setMem16IgnoringTime v.value16 z80.main.hl z80.clockTime
 
         --env = case (v.value |> fromInt) of
         --  Z80Address.ROMAddress int -> z80_1.env
@@ -349,7 +349,7 @@ execute_ED73 rom48k z80 =
             z80.env
 
         env2 =
-            env |> setMem16 v.value16 z80_1.env.sp v.time
+            env |> setMem16IgnoringTime v.value16 z80_1.env.sp v.time
     in
     --{ z80 | env = env2 } |> add_cpu_time 6 |> Whole
     EnvWithPcAndTimeOffset env2 v.pc 6
