@@ -814,10 +814,14 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
 
         CallImmediate int ->
             let
-                pcWithEnv =
-                    z80 |> z80_call int cpu_time
+                env_1 =
+                    z80.env |> z80_push new_pc cpu_time
+
+                --pcWithEnv =
+                --    z80 |> z80_call int cpu_time
             in
-            { z80 | clockTime = cpu_time |> addDuration SevenTStates, pc = pcWithEnv.pc, env = pcWithEnv.env }
+            --{ z80 | clockTime = cpu_time |> addDuration SevenTStates, pc = pcWithEnv.pc, env = pcWithEnv.env }
+            { z80 | clockTime = cpu_time |> addDuration SevenTStates, pc = int, env = env_1 }
 
         NewIXRegister int ->
             let
@@ -921,16 +925,17 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
             }
 
 
-z80_call : Int -> CpuTimeCTime -> Z80Core -> Z80EnvWithPC
-z80_call addr cpuTime z80 =
-    let
-        new_pc =
-            Bitwise.and (z80.pc + 3) 0xFFFF
 
-        env_1 =
-            z80.env |> z80_push new_pc cpuTime
-    in
-    { pc = addr, env = env_1 }
+--z80_call : Int -> CpuTimeCTime -> Z80Core -> Z80EnvWithPC
+--z80_call addr cpuTime z80 =
+--    let
+--        new_pc =
+--            Bitwise.and (z80.pc + 3) 0xFFFF
+--
+--        env_1 =
+--            z80.env |> z80_push new_pc cpuTime
+--    in
+--    { pc = addr, env = env_1 }
 
 
 applyTripleFlagChange : CpuTimeCTime -> TripleWithFlagsChange -> Z80Core -> Z80Core
@@ -972,7 +977,13 @@ applyTripleFlagChange cpu_time z80changeData z80 =
 
         AbsoluteCall address ->
             let
-                pcWithEnv =
-                    z80 |> z80_call address cpu_time
+                new_pc =
+                    Bitwise.and (z80.pc + 3) 0xFFFF
+
+                --pcWithEnv =
+                --    z80 |> z80_call address cpu_time
+                env_1 =
+                    z80.env |> z80_push new_pc cpu_time
             in
-            { z80 | clockTime = cpu_time |> addDuration SevenTStates, pc = pcWithEnv.pc, env = pcWithEnv.env }
+            --{ z80 | clockTime = cpu_time |> addDuration SevenTStates, pc = pcWithEnv.pc, env = pcWithEnv.env }
+            { z80 | clockTime = cpu_time |> addDuration SevenTStates, pc = address, env = env_1 }
