@@ -1,6 +1,6 @@
 module Z80Delta exposing (..)
 
-import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimeIncrement, InstructionDuration, addCpuTimeTime)
+import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimeIncrement, InstructionDuration, addCpuTimeTime, addDuration)
 import Utils exposing (toHexString2)
 import Z80Core exposing (Z80, Z80Core, add_cpu_time, set408bitHL)
 import Z80Debug exposing (debugTodo)
@@ -44,8 +44,8 @@ type alias DeltaWithChangesData =
     }
 
 
-applyDeltaWithChanges : DeltaWithChangesData -> Z80Core -> Z80Core
-applyDeltaWithChanges z80delta z80 =
+applyDeltaWithChanges : DeltaWithChangesData -> InstructionDuration -> Z80Core -> Z80Core
+applyDeltaWithChanges z80delta duration z80 =
     let
         z80_env =
             z80.env
@@ -59,19 +59,17 @@ applyDeltaWithChanges z80delta z80 =
                 main =
                     z80.main |> set_bc_main bc
             in
-            { z80 | pc = pc, flags = flags, main = { main | hl = hl }, env = z80_env, clockTime = z80delta.time }
+            { z80 | pc = pc, flags = flags, main = { main | hl = hl }, env = z80_env, clockTime = z80delta.time |> addDuration duration }
 
         MainRegsWithPcAndCpuTime mainRegisters pc cpu_time ->
             { z80 | pc = pc, env = z80_env, clockTime = cpu_time, main = mainRegisters, interrupts = z80delta.interrupts }
 
         EnvWithPc z80Env programCounter ->
-            { z80 | env = z80Env, pc = programCounter, interrupts = z80delta.interrupts, clockTime = z80delta.time }
+            { z80 | env = z80Env, pc = programCounter, interrupts = z80delta.interrupts, clockTime = z80delta.time |> addDuration duration }
 
         EnvWithPcAndTimeOffset z80Env programCounter timeoffset ->
-            { z80 | env = z80Env, pc = programCounter, interrupts = z80delta.interrupts, clockTime = z80delta.time |> addCpuTimeTime timeoffset }
+            { z80 | env = z80Env, pc = programCounter, interrupts = z80delta.interrupts, clockTime = z80delta.time |> addDuration duration |> addCpuTimeTime timeoffset }
 
-        --SpAndCpuTimeWithPc sp cpu_time pc ->
-        --    { z80 | pc = pc, env = { z80_env | time = z80delta.time |> addCpuTimeTime cpu_time, sp = sp }, interrupts = z80delta.interrupts }
         CpuTimeWithFlagsAndPc cpu_time flagRegisters pc ->
             { z80 | flags = flagRegisters, pc = pc, env = z80_env, clockTime = cpu_time, interrupts = z80delta.interrupts }
 
@@ -91,33 +89,21 @@ applyDeltaWithChanges z80delta z80 =
             in
             { z80 | flags = flags |> f_szh0n0p result, env = env, main = main } |> add_cpu_time timeDelta
 
-        --PushWithMainSpCpuTimeAndPc value mainWithIndexRegisters sp time pc ->
-        --    let
-        --        env =
-        --            z80.env
-        --    in
-        --    { z80 | main = mainWithIndexRegisters, pc = pc, env = { env | time = time, sp = sp } |> z80_push value, interrupts = z80delta.interrupts }
-        --PushWithMainSpCpuTime value mainWithIndexRegisters sp time ->
-        --    let
-        --        env =
-        --            z80.env
-        --    in
-        --    { z80 | main = mainWithIndexRegisters, pc = z80delta.pc, env = { env | time = time, sp = sp } |> z80_push value, interrupts = z80delta.interrupts }
         FlagsWithPcEnvAndCpuTime flagRegisters pc z80Env int ->
-            { z80 | flags = flagRegisters, pc = pc, env = z80Env, clockTime = z80.clockTime |> addCpuTimeTime int, interrupts = z80delta.interrupts }
+            { z80 | flags = flagRegisters, pc = pc, env = z80Env, clockTime = z80delta.time |> addDuration duration |> addCpuTimeTime int, interrupts = z80delta.interrupts }
 
         UnknownIntValue string int ->
             debugTodo string (int |> toHexString2) z80
 
         NoOp ->
-            { z80 | pc = z80delta.pc, env = z80_env, clockTime = z80delta.time, interrupts = z80delta.interrupts }
+            { z80 | pc = z80delta.pc, env = z80_env, clockTime = z80delta.time |> addDuration duration, interrupts = z80delta.interrupts }
 
         NewAValue int ->
             let
                 flags =
                     z80.flags
             in
-            { z80 | pc = z80delta.pc, flags = { flags | a = int }, env = z80_env, clockTime = z80delta.time, interrupts = z80delta.interrupts }
+            { z80 | pc = z80delta.pc, flags = { flags | a = int }, env = z80_env, clockTime = z80delta.time |> addDuration duration, interrupts = z80delta.interrupts }
 
         MainRegsWithCpuTime mainWithIndexRegisters cpuTimeCTime ->
             { z80 | pc = z80delta.pc, env = z80_env, clockTime = cpuTimeCTime, main = mainWithIndexRegisters, interrupts = z80delta.interrupts }

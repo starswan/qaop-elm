@@ -307,11 +307,12 @@ addCpuTimeTime value z80env =
     { z80env | cpu_time = z80env.cpu_time + value }
 
 
-addCpuTimeTimeInc : CpuTimeIncrement -> CpuTimeCTime -> CpuTimeCTime
-addCpuTimeTimeInc value z80env =
-    case value of
-        CpuTimeIncrement int ->
-            { z80env | cpu_time = z80env.cpu_time + int }
+
+--addCpuTimeTimeInc : CpuTimeIncrement -> CpuTimeCTime -> CpuTimeCTime
+--addCpuTimeTimeInc value z80env =
+--    case value of
+--        CpuTimeIncrement int ->
+--            { z80env | cpu_time = z80env.cpu_time + int }
 
 
 addDuration : InstructionDuration -> CpuTimeCTime -> CpuTimeCTime
