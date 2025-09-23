@@ -1,6 +1,7 @@
 module Spectrum exposing (..)
 
 import Bitwise exposing (complement, shiftRightBy)
+import CpuTimeCTime exposing (reset_cpu_time)
 import Dict exposing (Dict)
 import Keyboard exposing (KeyEvent, Keyboard, update_keyboard)
 import SingleNoParams exposing (ex_af)
@@ -10,7 +11,7 @@ import Vector8
 import Z80 exposing (execute)
 import Z80Core exposing (Z80, Z80Core, get_ei, interrupt)
 import Z80Debug exposing (debugLog)
-import Z80Env exposing (Z80Env, mem, mem16, reset_cpu_time, setMem, z80_pop)
+import Z80Env exposing (Z80Env, mem, mem16, setMemIgnoringTime, z80_pop)
 import Z80Flags exposing (c_FC, c_FZ, getFlags, setFlags)
 import Z80Ram exposing (setRamValue)
 import Z80Rom exposing (Z80ROM)
@@ -266,8 +267,8 @@ frames keys speccy =
         core =
             sz80.core
 
-        env =
-            core.env |> reset_cpu_time
+        core_1 =
+            { core | clockTime = reset_cpu_time }
 
         rom =
             speccy.rom48k
@@ -280,7 +281,7 @@ frames keys speccy =
               -- time_limit is a constant
               --| time_limit = c_FRSTART + c_FRTIME
               --  | core = { core | env = { env | keyboard = keys |> update_keyboard } }
-                | core = { core | env = env }
+                | core = core_1
             }
 
         loading_z80 =
@@ -1073,10 +1074,10 @@ checkLoad spectrum =
                 if pc1 >= 0x05E3 then
                     let
                         ( pc2, sp2 ) =
-                            ( cpu.core.env |> mem16 sp1 spectrum.rom48k |> .value16, char sp1 + 2 )
+                            ( cpu.core.env |> mem16 sp1 spectrum.rom48k cpu.core.clockTime |> .value16, char sp1 + 2 )
                     in
                     if pc2 == 0x05E6 then
-                        ( cpu.core.env |> mem16 sp2 spectrum.rom48k |> .value16, char sp2 + 2 )
+                        ( cpu.core.env |> mem16 sp2 spectrum.rom48k cpu.core.clockTime |> .value16, char sp2 + 2 )
 
                     else
                         ( pc2, sp2 )
@@ -1440,12 +1441,12 @@ doLoad2 full_cpu z80rom tape =
                                             data_a_rf_break =
                                                 if not a_rf_f_break_3.break && not a_rf_f_break_3.continue then
                                                     if Bitwise.and a_rf_f_break_3.f c_FC /= 0 then
-                                                        { a_rf_f_break_3 | z80_env = state.z80_env |> setMem state.ix l }
+                                                        { a_rf_f_break_3 | z80_env = state.z80_env |> setMemIgnoringTime state.ix l cpu.clockTime }
 
                                                     else
                                                         let
                                                             new_a =
-                                                                Bitwise.xor (mem state.ix cpu.env.time z80rom cpu.env |> .value) l
+                                                                Bitwise.xor (mem state.ix cpu.clockTime z80rom cpu.env |> .value) l
                                                         in
                                                         if new_a /= 0 then
                                                             { a_rf_f_break_3 | a = new_a, rf = Just 0, break = True }
@@ -1513,7 +1514,7 @@ doLoad2 full_cpu z80rom tape =
                         Just rf ->
                             let
                                 popped =
-                                    tapeData.z80_env |> z80_pop z80rom
+                                    tapeData.z80_env |> z80_pop z80rom cpu.clockTime
 
                                 logged =
                                     "rf " ++ (rf |> toHexString2) ++ " pc " ++ (popped.value16 |> toHexString2) ++ " a " ++ (tapeData.a |> toHexString2)

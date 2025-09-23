@@ -2,7 +2,7 @@ module Z80Change exposing (..)
 
 import SingleEnvWithMain exposing (EightBitMain)
 import Z80Core exposing (Z80Core)
-import Z80Env exposing (setMem)
+import Z80Env exposing (setMemIgnoringTime)
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
 
 
@@ -91,7 +91,7 @@ applyZ80Change change z80 =
         Z80ChangeSetIndirect addr int ->
             let
                 env =
-                    z80.env |> setMem addr int
+                    z80.env |> setMemIgnoringTime addr int z80.clockTime
             in
             { z80 | env = env }
 

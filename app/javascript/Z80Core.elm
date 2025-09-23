@@ -1,10 +1,10 @@
 module Z80Core exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimePcAnd16BitValue, CpuTimePcAndValue, addCpuTimeTime)
+import CpuTimeCTime exposing (CpuTimeCTime, CpuTimePcAnd16BitValue, CpuTimePcAndValue, addCpuTimeTime)
 import Utils exposing (shiftLeftBy8)
 import Z80Debug exposing (debugLog)
-import Z80Env exposing (Z80Env, addCpuTimeEnv, mem16, setMem, z80_push)
+import Z80Env exposing (Z80Env, mem16, setMemIgnoringTime, z80_push)
 import Z80Flags exposing (FlagRegisters)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (InterruptMode(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
@@ -16,6 +16,7 @@ type alias Z80Core =
     , main : MainWithIndexRegisters
     , flags : FlagRegisters
     , interrupts : InterruptRegisters
+    , clockTime : CpuTimeCTime
     }
 
 
@@ -40,11 +41,11 @@ type alias Z80 =
 --	}
 
 
-imm16 : Z80ROM -> Z80Core -> CpuTimePcAnd16BitValue
-imm16 rom48k z80 =
+imm16 : Z80ROM -> CpuTimeCTime -> Z80Core -> CpuTimePcAnd16BitValue
+imm16 rom48k clockTime z80 =
     let
         v =
-            z80.env |> mem16 z80.pc rom48k
+            z80.env |> mem16 z80.pc rom48k clockTime
 
         pc =
             Bitwise.and (z80.pc + 2) 0xFFFF
@@ -59,9 +60,10 @@ add_cpu_time : Int -> Z80Core -> Z80Core
 add_cpu_time value z80 =
     let
         env =
-            z80.env |> addCpuTimeEnv value
+            --z80.env |> addCpuTimeEnv value
+            z80.clockTime |> addCpuTimeTime value
     in
-    { z80 | env = env }
+    { z80 | clockTime = env }
 
 
 set_iff : Int -> Z80Core -> InterruptRegisters
@@ -83,8 +85,8 @@ set_iff value z80 =
 --    z80.flags |> get_af
 
 
-set408bitHL : Int -> Int -> ( MainWithIndexRegisters, FlagRegisters, Z80Env ) -> ( MainWithIndexRegisters, FlagRegisters, Z80Env )
-set408bitHL c value ( z80_main, z80_flags, z80_env ) =
+set408bitHL : Int -> Int -> CpuTimeCTime -> ( MainWithIndexRegisters, FlagRegisters, Z80Env ) -> ( MainWithIndexRegisters, FlagRegisters, Z80Env )
+set408bitHL c value clockTime ( z80_main, z80_flags, z80_env ) =
     case Bitwise.and c 0x07 of
         0 ->
             ( { z80_main | b = value }, z80_flags, z80_env )
@@ -105,7 +107,7 @@ set408bitHL c value ( z80_main, z80_flags, z80_env ) =
             ( { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) value }, z80_flags, z80_env )
 
         6 ->
-            ( z80_main, z80_flags, z80_env |> setMem z80_main.hl value )
+            ( z80_main, z80_flags, z80_env |> setMemIgnoringTime z80_main.hl value clockTime )
 
         _ ->
             ( z80_main, { z80_flags | a = value }, z80_env )
@@ -146,10 +148,10 @@ interrupt bus rom48k full_z80 =
                 { z80_core | interrupts = { ints | halted = False, iff = 0 } }
 
             pushed =
-                z80_1.env |> z80_push z80_1.pc
+                z80_1.env |> z80_push z80_1.pc z80_1.clockTime
 
             new_core =
-                { z80_1 | env = pushed |> addCpuTimeEnv 6 }
+                { z80_1 | env = pushed, clockTime = z80_1.clockTime |> addCpuTimeTime 6 }
 
             new_z80 =
                 { full_z80 | core = new_core }
@@ -172,13 +174,10 @@ interrupt bus rom48k full_z80 =
                         Bitwise.or new_ir bus
 
                     env_and_pc =
-                        z80_core.env |> mem16 addr rom48k
-
-                    env =
-                        z80_core.env
+                        z80_core.env |> mem16 addr rom48k z80_1.clockTime
 
                     core_1 =
-                        { new_core | env = { env | time = env_and_pc.time } |> addCpuTimeEnv 6, pc = env_and_pc.value16 }
+                        { new_core | clockTime = env_and_pc.time |> addCpuTimeTime 6, pc = env_and_pc.value16 }
                 in
                 { new_z80 | core = core_1 }
 

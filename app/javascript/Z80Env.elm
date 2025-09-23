@@ -14,26 +14,19 @@ import Z80Ram exposing (Z80Ram)
 import Z80Rom exposing (Z80ROM, getROMValue)
 
 
-c_FRSTART =
-    -14335
-
-
-c_FRTIME =
-    69888
-
-
-c_TIME_LIMIT =
-    c_FRSTART + c_FRTIME
-
-
 
 -- changing this to an array results in a recursion error in the browser :-(
 
 
 type alias Z80Env =
     { ram : Dict Int Int
-    , time : CpuTimeCTime
     , sp : Int
+    }
+
+
+type alias Z80EnvWithTime =
+    { z80env : Z80Env
+    , time : CpuTimeCTime
     }
 
 
@@ -56,7 +49,7 @@ type alias ValueWithTime =
 
 
 z80env_constructor =
-    Z80Env Dict.empty (CpuTimeCTime c_FRSTART NoCont) 0
+    Z80Env Dict.empty 0
 
 
 
@@ -91,24 +84,24 @@ z80env_constructor =
 --}
 
 
-m1 : Int -> Int -> Z80ROM -> Z80Env -> CpuTimeAndValue
-m1 addr ir rom48k z80env =
+m1 : Int -> Int -> Z80ROM -> CpuTimeCTime -> Z80Env -> CpuTimeAndValue
+m1 addr ir rom48k clockTime z80env =
     let
         z80env_time =
-            case z80env.time.ctime of
+            case clockTime.ctime of
                 NoCont ->
-                    z80env.time
+                    clockTime
 
                 ContUntil until ->
                     let
                         n =
-                            z80env.time.cpu_time - until
+                            clockTime.cpu_time - until
                     in
                     if n > 0 then
-                        z80env.time |> cont n
+                        clockTime |> cont n
 
                     else
-                        z80env.time
+                        clockTime
 
         ramAddr =
             addr - 0x4000
@@ -227,24 +220,24 @@ mem base_addr time rom48k ram =
 --	}
 
 
-mem16 : Int -> Z80ROM -> Z80Env -> CpuTimeAnd16BitValue
-mem16 addr rom48k z80env =
+mem16 : Int -> Z80ROM -> CpuTimeCTime -> Z80Env -> CpuTimeAnd16BitValue
+mem16 addr rom48k clockTime z80env =
     let
         z80env_time =
-            case z80env.time.ctime of
+            case clockTime.ctime of
                 NoCont ->
-                    z80env.time
+                    clockTime
 
                 ContUntil until ->
                     let
                         n =
-                            z80env.time.cpu_time - until
+                            clockTime.cpu_time - until
                     in
                     if n > 0 then
-                        z80env.time |> cont n
+                        clockTime |> cont n
 
                     else
-                        z80env.time
+                        clockTime
 
         addr1 =
             addr - 0x3FFF
@@ -363,16 +356,28 @@ setRam addr value z80env =
 --}
 
 
-setMem : Int -> Int -> Z80Env -> Z80Env
-setMem z80_addr value z80env =
+setMemWithTime : Int -> Int -> Z80EnvWithTime -> Z80EnvWithTime
+setMemWithTime z80_addr value z80env =
     let
-        time_input =
+        env =
+            z80env.z80env
+
+        cpu_time =
             z80env.time
 
+        ( env2, time ) =
+            setMem z80_addr value cpu_time env
+    in
+    { z80env = env2, time = time }
+
+
+setMem : Int -> Int -> CpuTimeCTime -> Z80Env -> ( Z80Env, CpuTimeCTime )
+setMem z80_addr value time_input z80env =
+    let
         z80env_time =
             case time_input.ctime of
                 NoCont ->
-                    z80env.time
+                    time_input
 
                 ContUntil until ->
                     let
@@ -415,7 +420,16 @@ setMem z80_addr value z80env =
                 --( z80env |> setRam addr value, NoCont )
                 ( { z80env | ram = z80env.ram |> Dict.insert addr value }, NoCont )
     in
-    { new_env | time = { z80env_time | ctime = ctime } }
+    ( new_env, { z80env_time | ctime = ctime } )
+
+
+
+-- discard the extta time field for now
+
+
+setMemIgnoringTime : Int -> Int -> CpuTimeCTime -> Z80Env -> Z80Env
+setMemIgnoringTime z80_addr value time_input z80env =
+    setMem z80_addr value time_input z80env |> Tuple.first
 
 
 
@@ -441,17 +455,34 @@ setMem z80_addr value z80env =
 --}
 
 
-setMem16 : Int -> Int -> Z80Env -> Z80Env
-setMem16 addr value z80env =
+setMem16WithTime : Int -> Int -> Z80EnvWithTime -> Z80EnvWithTime
+setMem16WithTime z80_addr value z80env =
+    let
+        env =
+            z80env.z80env
+
+        cpu_time =
+            z80env.time
+
+        ( env2, time ) =
+            setMem16 z80_addr value cpu_time env
+    in
+    { z80env = env2, time = time }
+
+
+setMem16IgnoringTime : Int -> Int -> CpuTimeCTime -> Z80Env -> Z80Env
+setMem16IgnoringTime addr value time_input z80env =
+    setMem16 addr value time_input z80env |> Tuple.first
+
+
+setMem16 : Int -> Int -> CpuTimeCTime -> Z80Env -> ( Z80Env, CpuTimeCTime )
+setMem16 addr value time_input z80env =
     let
         addr1 =
             addr - 0x3FFF
     in
     if Bitwise.and addr1 0x3FFF /= 0 then
         let
-            time_input =
-                z80env.time
-
             z80env_time =
                 case time_input.ctime of
                     NoCont ->
@@ -468,34 +499,38 @@ setMem16 addr value z80env =
                         else
                             time_input
 
-            env_1 =
-                { z80env | time = { z80env_time | ctime = NoCont } }
+            newTime =
+                { z80env_time | ctime = NoCont }
         in
         if addr1 < 0 then
-            env_1
+            ( z80env, newTime )
 
         else if addr1 >= 0x4000 then
-            env_1
+            ( z80env
                 |> setRam (addr1 - 1) (Bitwise.and value 0xFF)
                 |> setRam addr1 (shiftRightBy8 value)
+            , newTime
+            )
 
         else
-            env_1
-                |> setMem addr (Bitwise.and value 0xFF)
-                |> setMem (addr + 1) (shiftRightBy8 value)
+            ( z80env
+                |> setMemIgnoringTime addr (Bitwise.and value 0xFF) newTime
+                |> setMemIgnoringTime (addr + 1) (shiftRightBy8 value) newTime
+            , newTime
+            )
 
     else
-        z80env
-            |> setMem addr (Bitwise.and value 0xFF)
-            |> setMem (addr + 1) (shiftRightBy8 value)
-
-
-contPortEnv : Int -> Z80Env -> Z80Env
-contPortEnv portn z80env =
-    { z80env | time = z80env.time |> cont_port portn }
+        ( z80env
+            |> setMemIgnoringTime addr (Bitwise.and value 0xFF) time_input
+            |> setMemIgnoringTime (addr + 1) (shiftRightBy8 value) time_input
+        , time_input
+        )
 
 
 
+--contPortEnv : Int -> Z80Env -> Z80Env
+--contPortEnv portn z80env =
+--    { z80env | time = z80env.time |> cont_port portn }
 --	public void out(int port, int v)
 --	{
 --		cont_port(port);
@@ -524,20 +559,20 @@ contPortEnv portn z80env =
 --	}
 
 
-out : Int -> Int -> Z80Env -> Z80Env
-out portnum _ env_in =
+out : Int -> Int -> CpuTimeCTime -> Z80Env -> Z80Env
+out portnum value clockTime env_in =
     let
-        env =
-            env_in |> contPortEnv portnum
+        newTime =
+            clockTime |> cont_port portnum
     in
-    env
+    env_in
 
 
-z80_in : Int -> Keyboard -> Z80Env -> CpuTimeAndValue
-z80_in portnum keyboard env_in =
+z80_in : Int -> Keyboard -> CpuTimeCTime -> Z80Env -> CpuTimeAndValue
+z80_in portnum keyboard clockTime env_in =
     let
-        env =
-            env_in.time |> cont_port portnum
+        newTime =
+            clockTime |> cont_port portnum
 
         --x = debug_log "z80_in" (portnum |> toHexString) Nothing
         value =
@@ -550,17 +585,7 @@ z80_in portnum keyboard env_in =
         --    else
         --        value
     in
-    CpuTimeAndValue env value
-
-
-addCpuTimeEnv : Int -> Z80Env -> Z80Env
-addCpuTimeEnv value z80env =
-    { z80env | time = z80env.time |> addCpuTimeTime value }
-
-
-reset_cpu_time : Z80Env -> Z80Env
-reset_cpu_time z80env =
-    { z80env | time = CpuTimeCTime c_FRSTART NoCont }
+    CpuTimeAndValue newTime value
 
 
 
@@ -574,8 +599,8 @@ reset_cpu_time z80env =
 --}
 
 
-z80_push : Int -> Z80Env -> Z80Env
-z80_push v z80env =
+z80_push : Int -> CpuTimeCTime -> Z80Env -> Z80Env
+z80_push v clockTime z80env =
     let
         --a = debug_log "push" ((v |> toHexString) ++ " onto " ++ (z80.sp |> toHexString)) Nothing
         sp_minus_1 =
@@ -586,20 +611,21 @@ z80_push v z80env =
 
         env_2 =
             z80env
-                |> addCpuTimeEnv 1
-                |> setMem sp_minus_1 (shiftRightBy8 v)
-                |> addCpuTimeEnv 3
-                |> setMem new_sp (Bitwise.and v 0xFF)
-                |> addCpuTimeEnv 3
+                --|> addCpuTimeEnv 1
+                |> setMemIgnoringTime sp_minus_1 (shiftRightBy8 v) clockTime
+                --|> addCpuTimeEnv 3
+                |> setMemIgnoringTime new_sp (Bitwise.and v 0xFF) clockTime
+
+        --|> addCpuTimeEnv 3
     in
     { env_2 | sp = new_sp }
 
 
-z80_pop : Z80ROM -> Z80Env -> CpuTimeSpAnd16BitValue
-z80_pop z80rom z80_env =
+z80_pop : Z80ROM -> CpuTimeCTime -> Z80Env -> CpuTimeSpAnd16BitValue
+z80_pop z80rom clockTime z80_env =
     let
         v =
-            z80_env |> mem16 z80_env.sp z80rom
+            z80_env |> mem16 z80_env.sp z80rom clockTime
 
         time =
             v.time |> addCpuTimeTime 6

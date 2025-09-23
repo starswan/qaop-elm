@@ -3,7 +3,7 @@ module CB68Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
-import Z80Env exposing (setMem)
+import Z80Env exposing (setMem, setMemWithTime)
 import Z80Rom
 
 
@@ -38,7 +38,7 @@ suite =
             z80.flags
 
         z80env =
-            z80.env |> setMem addr 0xCB
+            { z80env = z80.env |> setMem addr 0xCB z80.clockTime |> Tuple.first, time = z80.clockTime }
 
         z80rom =
             Z80Rom.constructor
@@ -50,7 +50,8 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr_1 0x68
+                                |> setMemWithTime addr_1 0x68
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
@@ -65,7 +66,8 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr_1 0x68
+                                |> setMemWithTime addr_1 0x68
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
@@ -82,7 +84,8 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr_1 0x69
+                                |> setMemWithTime addr_1 0x69
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
@@ -97,7 +100,8 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr_1 0x69
+                                |> setMemWithTime addr_1 0x69
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
@@ -114,7 +118,8 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem (addr + 1) 0x6A
+                                |> setMemWithTime (addr + 1) 0x6A
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
@@ -129,7 +134,8 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem (addr + 1) 0x6A
+                                |> setMemWithTime (addr + 1) 0x6A
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
@@ -146,7 +152,8 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem (addr + 1) 0x6B
+                                |> setMemWithTime (addr + 1) 0x6B
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
@@ -161,7 +168,8 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem (addr + 1) 0x6B
+                                |> setMemWithTime (addr + 1) 0x6B
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
@@ -178,7 +186,8 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem (addr + 1) 0x6C
+                                |> setMemWithTime (addr + 1) 0x6C
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
@@ -193,7 +202,8 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem (addr + 1) 0x6C
+                                |> setMemWithTime (addr + 1) 0x6C
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
@@ -210,7 +220,8 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem (addr + 1) 0x6D
+                                |> setMemWithTime (addr + 1) 0x6D
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
@@ -225,7 +236,8 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem (addr + 1) 0x6D
+                                |> setMemWithTime (addr + 1) 0x6D
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
@@ -242,8 +254,9 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem (addr + 1) 0x6E
-                                |> setMem 0x6545 0x20
+                                |> setMemWithTime (addr + 1) 0x6E
+                                |> setMemWithTime 0x6545 0x20
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
@@ -258,11 +271,12 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0xDD
-                                |> setMem (addr + 1) 0xCB
-                                |> setMem (addr + 2) 0x05
-                                |> setMem (addr + 3) 0x6E
-                                |> setMem 0x6545 0x00
+                                |> setMemWithTime addr 0xDD
+                                |> setMemWithTime (addr + 1) 0xCB
+                                |> setMemWithTime (addr + 2) 0x05
+                                |> setMemWithTime (addr + 3) 0x6E
+                                |> setMemWithTime 0x6545 0x00
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
@@ -277,11 +291,12 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0xDD
-                                |> setMem (addr + 1) 0xCB
-                                |> setMem (addr + 2) 0x05
-                                |> setMem (addr + 3) 0x6E
-                                |> setMem 0x6545 0x20
+                                |> setMemWithTime addr 0xDD
+                                |> setMemWithTime (addr + 1) 0xCB
+                                |> setMemWithTime (addr + 2) 0x05
+                                |> setMemWithTime (addr + 3) 0x6E
+                                |> setMemWithTime 0x6545 0x20
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
@@ -298,7 +313,8 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem (addr + 1) 0x6F
+                                |> setMemWithTime (addr + 1) 0x6F
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
@@ -313,7 +329,8 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem (addr + 1) 0x6F
+                                |> setMemWithTime (addr + 1) 0x6F
+                                |> .z80env
 
                         new_z80 =
                             executeCoreInstruction z80rom
