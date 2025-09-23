@@ -447,7 +447,7 @@ runIndexIX param rom48k z80 =
                                         doubleParam =
                                             env_1 |> mem16 (Bitwise.and (z80.pc + paramOffset) 0xFFFF) rom48k instrTime
                                     in
-                                    ( Triple16ParamDelta doubleParam.time IncrementByFour (f doubleParam.value16), param.time |> addDuration duration )
+                                    ( Triple16ParamDelta IncrementByFour (f doubleParam.value16), doubleParam.time |> addDuration duration )
 
                                 Nothing ->
                                     case singleEnvMainRegsIX |> Dict.get param.value of
@@ -524,7 +524,7 @@ runIndexIY param rom48k z80 =
                                         doubleParam =
                                             env |> mem16 (Bitwise.and (z80.pc + paramOffset) 0xFFFF) rom48k param.time
                                     in
-                                    ( Triple16ParamDelta doubleParam.time pcInc (f doubleParam.value16), param.time |> addDuration duration )
+                                    ( Triple16ParamDelta pcInc (f doubleParam.value16), doubleParam.time |> addDuration duration )
 
                                 Nothing ->
                                     case singleEnvMainRegsIY |> Dict.get param.value of
