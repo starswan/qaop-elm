@@ -1,7 +1,7 @@
 module SingleEnvWithMain exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, CpuTimeSpAnd16BitValue, InstructionDuration(..), addDuration)
+import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, CpuTimeSpAnd16BitValue, InstructionDuration(..))
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
 import Utils exposing (BitTest(..), shiftLeftBy8, shiftRightBy8)
@@ -66,7 +66,7 @@ singleEnvMainRegsIY =
         ]
 
 
-applySingleEnvMainChange : PCIncrement -> InstructionDuration -> SingleEnvMainChange -> Z80ROM -> Z80Core -> Z80Core
+applySingleEnvMainChange : PCIncrement -> CpuTimeCTime -> SingleEnvMainChange -> Z80ROM -> Z80Core -> Z80Core
 applySingleEnvMainChange pcInc duration z80changeData rom48k z80 =
     let
         new_pc =
@@ -161,7 +161,7 @@ applySingleEnvMainChange pcInc duration z80changeData rom48k z80 =
             in
             { z80
                 | pc = new_pc
-                , clockTime = z80.clockTime |> addDuration duration
+                , clockTime = duration
                 , flags = new_xy.flags
                 , main = z80.main |> set_xy new_xy.value ixiyhl
             }
