@@ -32,6 +32,7 @@ import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..))
 import Z80Env exposing (Z80Env, m1, mem, mem16, z80env_constructor)
 import Z80Execute exposing (DeltaWithChanges(..), apply_delta)
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
+import Z80OpCode exposing (Z80OpCode(..))
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IntWithFlagsTimeAndPC, InterruptMode(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
 
@@ -229,6 +230,7 @@ type ExecutionType
     | IndexIX CpuTimeAndValue
     | IndexIY CpuTimeAndValue
     | Special SpecialExecutionType
+    | Direct
 
 
 type SpecialExecutionType
@@ -238,66 +240,71 @@ type SpecialExecutionType
     | EDMisc CpuTimeAndValue
 
 
-execute_delta : CpuTimeAndValue -> Z80ROM -> Z80Core -> DeltaWithChanges
-execute_delta ct rom48k z80 =
+execute_delta : Z80OpCode -> Z80ROM -> Z80Core -> DeltaWithChanges
+execute_delta opcode rom48k z80 =
     --int v, c = env.m1(PC, IR|R++&0x7F);
     --PC = (char)(PC+1); time += 4;
     --switch(c) {
     let
         executionType =
-            case ct.value of
-                0xCB ->
-                    let
-                        param =
-                            z80.env |> mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k
-                    in
-                    Special (BitManipCB param)
+            case opcode of
+                DirectExecute ->
+                    Direct
 
-                0xED ->
-                    let
-                        param =
-                            z80.env |> mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k
-                    in
-                    Special (EDMisc param)
+                TimeAndValue ct ->
+                    case ct.value of
+                        0xCB ->
+                            let
+                                param =
+                                    z80.env |> mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k
+                            in
+                            Special (BitManipCB param)
 
-                0xDD ->
-                    let
-                        param =
-                            z80.env |> mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k
-                    in
-                    if param.value == 0xCB then
-                        let
-                            ixcboffset =
-                                z80.env |> mem (Bitwise.and (z80.pc + 2) 0xFFFF) ct.time rom48k
+                        0xED ->
+                            let
+                                param =
+                                    z80.env |> mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k
+                            in
+                            Special (EDMisc param)
 
-                            ixcbparam =
-                                z80.env |> mem (Bitwise.and (z80.pc + 3) 0xFFFF) ct.time rom48k
-                        in
-                        Special (IXCB ixcboffset.value ixcbparam)
+                        0xDD ->
+                            let
+                                param =
+                                    z80.env |> mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k
+                            in
+                            if param.value == 0xCB then
+                                let
+                                    ixcboffset =
+                                        z80.env |> mem (Bitwise.and (z80.pc + 2) 0xFFFF) ct.time rom48k
 
-                    else
-                        IndexIX param
+                                    ixcbparam =
+                                        z80.env |> mem (Bitwise.and (z80.pc + 3) 0xFFFF) ct.time rom48k
+                                in
+                                Special (IXCB ixcboffset.value ixcbparam)
 
-                0xFD ->
-                    let
-                        param =
-                            z80.env |> mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k
-                    in
-                    if param.value == 0xCB then
-                        let
-                            iycboffset =
-                                z80.env |> mem (Bitwise.and (z80.pc + 2) 0xFFFF) ct.time rom48k
+                            else
+                                IndexIX param
 
-                            iycbparam =
-                                z80.env |> mem (Bitwise.and (z80.pc + 3) 0xFFFF) ct.time rom48k
-                        in
-                        Special (IYCB iycboffset.value iycbparam)
+                        0xFD ->
+                            let
+                                param =
+                                    z80.env |> mem (Bitwise.and (z80.pc + 1) 0xFFFF) ct.time rom48k
+                            in
+                            if param.value == 0xCB then
+                                let
+                                    iycboffset =
+                                        z80.env |> mem (Bitwise.and (z80.pc + 2) 0xFFFF) ct.time rom48k
 
-                    else
-                        IndexIY param
+                                    iycbparam =
+                                        z80.env |> mem (Bitwise.and (z80.pc + 3) 0xFFFF) ct.time rom48k
+                                in
+                                Special (IYCB iycboffset.value iycbparam)
 
-                _ ->
-                    Ordinary ct.value ct.time
+                            else
+                                IndexIY param
+
+                        _ ->
+                            Ordinary ct.value ct.time
     in
     case executionType of
         Ordinary int cpuTimeCTime ->
@@ -311,6 +318,9 @@ execute_delta ct rom48k z80 =
 
         Special specialExecutionType ->
             runSpecial specialExecutionType rom48k z80
+
+        Direct ->
+            UnknownInstruction "direct" 0
 
 
 runOrdinary : Int -> CpuTimeCTime -> Z80ROM -> Z80Core -> DeltaWithChanges
@@ -748,9 +758,6 @@ singleByte ctime instrCode tmp_z80 rom48k =
 oldDelta : Int -> CpuTimeCTime -> InterruptRegisters -> Z80Core -> Z80ROM -> DeltaWithChanges
 oldDelta c_value c_time interrupts tmp_z80 rom48k =
     let
-        env =
-            tmp_z80.env
-
         new_pc =
             Bitwise.and (tmp_z80.pc + 1) 0xFFFF
 
@@ -789,7 +796,7 @@ oldDelta c_value c_time interrupts tmp_z80 rom48k =
             OldDeltaWithChanges (DeltaWithChangesData delta interrupts new_pc new_time)
 
 
-fetchInstruction : Z80ROM -> Int -> Z80Core -> CpuTimeAndValue
+fetchInstruction : Z80ROM -> Int -> Z80Core -> Z80OpCode
 fetchInstruction rom48k r_register z80_core =
     let
         pc_value =
@@ -799,8 +806,11 @@ fetchInstruction rom48k r_register z80_core =
             --
             --    Nothing ->
             z80_core.pc
+
+        ct =
+            z80_core.env |> m1 pc_value (Bitwise.or z80_core.interrupts.ir (Bitwise.and r_register 0x7F)) rom48k z80_core.clockTime
     in
-    z80_core.env |> m1 pc_value (Bitwise.or z80_core.interrupts.ir (Bitwise.and r_register 0x7F)) rom48k z80_core.clockTime
+    TimeAndValue ct
 
 
 executeCoreInstruction : Z80ROM -> Z80Core -> Z80Core
@@ -864,9 +874,14 @@ stillLooping z80core =
     c_TIME_LIMIT > z80core.clockTime.cpu_time
 
 
-coreLooping : ( Z80Core, CpuTimeAndValue, Int ) -> Bool
-coreLooping ( z80core, timeAndValue, _ ) =
-    isCoreOpCode timeAndValue.value && (z80core |> stillLooping)
+coreLooping : ( Z80Core, Z80OpCode, Int ) -> Bool
+coreLooping ( z80core, z80opcode, _ ) =
+    case z80opcode of
+        TimeAndValue timeAndValue ->
+            isCoreOpCode timeAndValue.value && (z80core |> stillLooping)
+
+        DirectExecute ->
+            z80core |> stillLooping
 
 
 executeCore : Z80ROM -> Z80 -> Z80
@@ -892,27 +907,32 @@ executeCore rom48k z80 =
         z80_1 =
             { z80 | core = { core_2 | interrupts = { core_ints | r = new_r } } }
     in
-    case nonCoreFuncs |> Dict.get ct1.value of
-        Just ( f, duration ) ->
-            let
-                z80_2 =
-                    z80_1 |> f
+    case ct1 of
+        TimeAndValue cpuTimeAndValue ->
+            case nonCoreFuncs |> Dict.get cpuTimeAndValue.value of
+                Just ( f, duration ) ->
+                    let
+                        z80_2 =
+                            z80_1 |> f
 
-                core =
-                    z80_2.core
+                        core =
+                            z80_2.core
 
-                ints =
-                    core.interrupts
+                        ints =
+                            core.interrupts
 
-                newTime =
-                    core.clockTime |> addDuration duration
+                        newTime =
+                            core.clockTime |> addDuration duration
 
-                pc =
-                    Bitwise.and (core.pc + 1) 0xFFFF
-            in
-            { z80_2 | core = { core | pc = pc, clockTime = newTime, interrupts = { ints | r = ints.r + 1 } } }
+                        pc =
+                            Bitwise.and (core.pc + 1) 0xFFFF
+                    in
+                    { z80_2 | core = { core | pc = pc, clockTime = newTime, interrupts = { ints | r = ints.r + 1 } } }
 
-        Nothing ->
+                Nothing ->
+                    z80_1
+
+        DirectExecute ->
             z80_1
 
 
