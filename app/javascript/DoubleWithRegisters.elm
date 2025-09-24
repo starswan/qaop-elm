@@ -3,7 +3,7 @@ module DoubleWithRegisters exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), addCpuTimeTime)
 import Dict exposing (Dict)
-import PCIncrement exposing (MediumPCIncrement(..))
+import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..))
 import SingleWith8BitParameter exposing (applySimple8BitChange)
 import Utils exposing (byte, shiftLeftBy8)
 import Z80Core exposing (Z80Core)
@@ -36,7 +36,8 @@ type DoubleWithRegisterChange
 doubleWithRegisters : Dict Int ( MainWithIndexRegisters -> Int -> DoubleWithRegisterChange, InstructionDuration )
 doubleWithRegisters =
     Dict.fromList
-        [ ( 0x26, ( ld_h_n, SevenTStates ) )
+        [ --  another 5 if jump actually taken
+          ( 0x26, ( ld_h_n, SevenTStates ) )
         , ( 0x2E, ( ld_l_n, SevenTStates ) )
         , ( 0x36, ( ld_indirect_hl_n, TenTStates ) )
         ]
@@ -53,12 +54,8 @@ doubleWithRegistersIX =
         , ( 0x4E, ( ld_c_indirect_ix, SevenTStates ) )
         , ( 0x56, ( ld_d_indirect_ix, SevenTStates ) )
         , ( 0x5E, ( ld_e_indirect_ix, SevenTStates ) )
-
-        -- case 0x66: HL=HL&0xFF|env.mem(getd(xy))<<8; time+=3; break;
-        , ( 0x66, ( \z80_main param -> NewHRegisterIndirect (z80_main.ix + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
-
-        -- case 0x6E: HL=HL&0xFF00|env.mem(getd(xy)); time+=3; break;
-        , ( 0x6E, ( \z80_main param -> NewLRegisterIndirect (z80_main.ix + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
+        , ( 0x66, ( \z80_main param -> NewHRegisterIndirect (z80_main.ix + byte param), NineteenTStates ) )
+        , ( 0x6E, ( \z80_main param -> NewLRegisterIndirect (z80_main.ix + byte param), NineteenTStates ) )
         , ( 0x86, ( \z80_main param -> FlagOpIndexedIndirect AddA z80_main.ix param, NineteenTStates ) )
         , ( 0x8E, ( \z80_main param -> FlagOpIndexedIndirect AdcA z80_main.ix param, NineteenTStates ) )
         , ( 0x96, ( \z80_main param -> FlagOpIndexedIndirect SubA z80_main.ix param, NineteenTStates ) )
@@ -83,12 +80,8 @@ doubleWithRegistersIY =
         , ( 0x4E, ( ld_c_indirect_iy, SevenTStates ) )
         , ( 0x56, ( ld_d_indirect_iy, SevenTStates ) )
         , ( 0x5E, ( ld_e_indirect_iy, SevenTStates ) )
-
-        -- case 0x66: HL=HL&0xFF|env.mem(getd(xy))<<8; time+=3; break;
-        , ( 0x66, ( \z80_main param -> NewHRegisterIndirect (z80_main.iy + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
-
-        -- case 0x6E: HL=HL&0xFF00|env.mem(getd(xy)); time+=3; break;
-        , ( 0x6E, ( \z80_main param -> NewLRegisterIndirect (z80_main.iy + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
+        , ( 0x66, ( \z80_main param -> NewHRegisterIndirect (z80_main.iy + byte param), NineteenTStates ) )
+        , ( 0x6E, ( \z80_main param -> NewLRegisterIndirect (z80_main.iy + byte param), NineteenTStates ) )
         , ( 0x86, ( \z80_main param -> FlagOpIndexedIndirect AddA z80_main.iy param, NineteenTStates ) )
         , ( 0x8E, ( \z80_main param -> FlagOpIndexedIndirect AdcA z80_main.iy param, NineteenTStates ) )
         , ( 0x96, ( \z80_main param -> FlagOpIndexedIndirect SubA z80_main.iy param, NineteenTStates ) )

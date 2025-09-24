@@ -34,13 +34,11 @@ type DeltaWithChanges
     | EDChangeDelta PCIncrement InstructionDuration EDRegisterChange
     | Simple8BitDelta MediumPCIncrement CpuTimeCTime Single8BitChange
     | DoubleWithRegistersDelta MediumPCIncrement CpuTimeCTime DoubleWithRegisterChange
-    | JumpChangeDelta CpuTimeCTime JumpChange
     | NoParamsDelta CpuTimeCTime NoParamChange
     | SingleEnvDelta CpuTimeCTime SingleByteEnvChange
     | MainWithEnvDelta PCIncrement InstructionDuration SingleEnvMainChange
     | TripleMainChangeDelta CpuTimeCTime TriplePCIncrement TripleMainChange
     | Triple16ParamDelta CpuTimeCTime TriplePCIncrement TripleByteChange
-    | Triple16FlagsDelta CpuTimeCTime TripleWithFlagsChange
     | UnknownInstruction String Int
 
 
@@ -65,9 +63,6 @@ apply_delta z80 rom48k z80delta =
         DoubleWithRegistersDelta pcInc cpuTimeCTime doubleWithRegisterChange ->
             z80 |> applyDoubleWithRegistersDelta pcInc cpuTimeCTime doubleWithRegisterChange rom48k
 
-        JumpChangeDelta cpuTimeCTime jumpChange ->
-            z80 |> applyJumpChangeDelta cpuTimeCTime jumpChange
-
         NoParamsDelta cpuTimeCTime noParamChange ->
             z80 |> applyNoParamsDelta cpuTimeCTime noParamChange rom48k
 
@@ -82,9 +77,6 @@ apply_delta z80 rom48k z80delta =
 
         Triple16ParamDelta cpuTimeCTime triplePCIncrement tripleByteChange ->
             z80 |> applyTripleChangeDelta rom48k triplePCIncrement cpuTimeCTime tripleByteChange
-
-        Triple16FlagsDelta cpuTimeCTime tripleWithFlagsChange ->
-            z80 |> applyTripleFlagChange cpuTimeCTime tripleWithFlagsChange
 
         UnknownInstruction string int ->
             debugTodo string (int |> toHexString2) z80
