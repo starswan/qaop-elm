@@ -345,7 +345,7 @@ runIndexIX param rom48k z80 =
                                 doubleParam =
                                     env |> mem16 (Bitwise.and (z80.pc + paramOffset) 0xFFFF) rom48k env_1
                             in
-                            Triple16ParamDelta doubleParam.time IncrementByFour (f doubleParam.value16)
+                            Triple16ParamDelta doubleParam.time TripleIncrementByFour (f doubleParam.value16)
 
                         Nothing ->
                             case singleEnvMainRegsIX |> Dict.get param.value of
@@ -367,7 +367,7 @@ runIndexIX param rom48k z80 =
                                                         doubleParam =
                                                             z80.env |> mem (Bitwise.and (z80.pc + 2) 0xFFFF) time rom48k
                                                     in
-                                                    DoubleWithRegistersDelta IncrementByThree doubleParam.time (f z80.main doubleParam.value)
+                                                    DoubleWithRegistersDelta IncreaseByThree doubleParam.time (f z80.main doubleParam.value)
 
                                                 Nothing ->
                                                     case tripleMainRegsIX |> Dict.get param.value of
@@ -411,7 +411,7 @@ runIndexIY param rom48k z80 =
                             ( tripleByteWith16BitParamFD |> Dict.get param.value, param.time, 2 )
                     in
                     case triple16 of
-                        Just ( f, pcInc, duration ) ->
+                        Just ( f, duration ) ->
                             let
                                 env =
                                     z80.env
@@ -422,7 +422,7 @@ runIndexIY param rom48k z80 =
                                 doubleParam =
                                     env |> mem16 (Bitwise.and (z80.pc + paramOffset) 0xFFFF) rom48k env_1
                             in
-                            Triple16ParamDelta doubleParam.time pcInc (f doubleParam.value16)
+                            Triple16ParamDelta doubleParam.time TripleIncrementByFour (f doubleParam.value16)
 
                         Nothing ->
                             case singleEnvMainRegsIY |> Dict.get param.value of
@@ -444,7 +444,7 @@ runIndexIY param rom48k z80 =
                                                         doubleParam =
                                                             z80.env |> mem (Bitwise.and (z80.pc + 2) 0xFFFF) time rom48k
                                                     in
-                                                    DoubleWithRegistersDelta IncrementByThree doubleParam.time (f z80.main doubleParam.value)
+                                                    DoubleWithRegistersDelta IncreaseByThree doubleParam.time (f z80.main doubleParam.value)
 
                                                 Nothing ->
                                                     case tripleMainRegsIY |> Dict.get param.value of

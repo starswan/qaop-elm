@@ -22,35 +22,35 @@ tripleMainRegs =
         ]
 
 
-tripleMainRegsIX : Dict Int ( Int -> MainWithIndexRegisters -> TripleMainChange, PCIncrement, InstructionDuration )
+tripleMainRegsIX : Dict Int ( Int -> MainWithIndexRegisters -> TripleMainChange, TriplePCIncrement, InstructionDuration )
 tripleMainRegsIX =
     Dict.fromList
-        [ ( 0x22, ( ld_nn_indirect_ix, IncrementByFour, TwentyTStates ) )
-        , ( 0x36, ( ld_indirect_ix_n, IncrementByFour, TwentyTStates ) )
-        , ( 0x70, ( \param16 z80_main -> store_reg_indirect param16 z80_main.ix z80_main.b, IncrementByThree, NineteenTStates ) )
-        , ( 0x71, ( \param16 z80_main -> store_reg_indirect param16 z80_main.ix z80_main.c, IncrementByThree, NineteenTStates ) )
-        , ( 0x72, ( \param16 z80_main -> store_reg_indirect param16 z80_main.ix z80_main.d, IncrementByThree, NineteenTStates ) )
-        , ( 0x73, ( \param16 z80_main -> store_reg_indirect param16 z80_main.ix z80_main.e, IncrementByThree, NineteenTStates ) )
-        , ( 0x74, ( \param16 z80_main -> store_reg_indirect param16 z80_main.ix (z80_main.hl |> shiftRightBy8), IncrementByThree, NineteenTStates ) )
-        , ( 0x75, ( \param16 z80_main -> store_reg_indirect param16 z80_main.ix (z80_main.hl |> Bitwise.and 0xFF), IncrementByThree, NineteenTStates ) )
+        [ ( 0x22, ( ld_nn_indirect_ix, TripleIncrementByFour, TwentyTStates ) )
+        , ( 0x36, ( ld_indirect_ix_n, TripleIncrementByFour, TwentyTStates ) )
+        , ( 0x70, ( \param16 z80_main -> store_reg_indirect param16 z80_main.ix z80_main.b, TripleIncrementByThree, NineteenTStates ) )
+        , ( 0x71, ( \param16 z80_main -> store_reg_indirect param16 z80_main.ix z80_main.c, TripleIncrementByThree, NineteenTStates ) )
+        , ( 0x72, ( \param16 z80_main -> store_reg_indirect param16 z80_main.ix z80_main.d, TripleIncrementByThree, NineteenTStates ) )
+        , ( 0x73, ( \param16 z80_main -> store_reg_indirect param16 z80_main.ix z80_main.e, TripleIncrementByThree, NineteenTStates ) )
+        , ( 0x74, ( \param16 z80_main -> store_reg_indirect param16 z80_main.ix (z80_main.hl |> shiftRightBy8), TripleIncrementByThree, NineteenTStates ) )
+        , ( 0x75, ( \param16 z80_main -> store_reg_indirect param16 z80_main.ix (z80_main.hl |> Bitwise.and 0xFF), TripleIncrementByThree, NineteenTStates ) )
         ]
 
 
-tripleMainRegsIY : Dict Int ( Int -> MainWithIndexRegisters -> TripleMainChange, PCIncrement, InstructionDuration )
+tripleMainRegsIY : Dict Int ( Int -> MainWithIndexRegisters -> TripleMainChange, TriplePCIncrement, InstructionDuration )
 tripleMainRegsIY =
     Dict.fromList
-        [ ( 0x22, ( ld_nn_indirect_iy, IncrementByFour, TwentyTStates ) )
-        , ( 0x36, ( ld_indirect_iy_n, IncrementByFour, TwentyTStates ) )
-        , ( 0x70, ( \param16 z80_main -> store_reg_indirect param16 z80_main.iy z80_main.b, IncrementByThree, NineteenTStates ) )
-        , ( 0x71, ( \param16 z80_main -> store_reg_indirect param16 z80_main.iy z80_main.c, IncrementByThree, NineteenTStates ) )
-        , ( 0x72, ( \param16 z80_main -> store_reg_indirect param16 z80_main.iy z80_main.d, IncrementByThree, NineteenTStates ) )
-        , ( 0x73, ( \param16 z80_main -> store_reg_indirect param16 z80_main.iy z80_main.e, IncrementByThree, NineteenTStates ) )
-        , ( 0x74, ( \param16 z80_main -> store_reg_indirect param16 z80_main.iy (z80_main.hl |> shiftRightBy8), IncrementByThree, NineteenTStates ) )
-        , ( 0x75, ( \param16 z80_main -> store_reg_indirect param16 z80_main.iy (z80_main.hl |> Bitwise.and 0xFF), IncrementByThree, NineteenTStates ) )
+        [ ( 0x22, ( ld_nn_indirect_iy, TripleIncrementByFour, TwentyTStates ) )
+        , ( 0x36, ( ld_indirect_iy_n, TripleIncrementByFour, TwentyTStates ) )
+        , ( 0x70, ( \param16 z80_main -> store_reg_indirect param16 z80_main.iy z80_main.b, TripleIncrementByThree, NineteenTStates ) )
+        , ( 0x71, ( \param16 z80_main -> store_reg_indirect param16 z80_main.iy z80_main.c, TripleIncrementByThree, NineteenTStates ) )
+        , ( 0x72, ( \param16 z80_main -> store_reg_indirect param16 z80_main.iy z80_main.d, TripleIncrementByThree, NineteenTStates ) )
+        , ( 0x73, ( \param16 z80_main -> store_reg_indirect param16 z80_main.iy z80_main.e, TripleIncrementByThree, NineteenTStates ) )
+        , ( 0x74, ( \param16 z80_main -> store_reg_indirect param16 z80_main.iy (z80_main.hl |> shiftRightBy8), TripleIncrementByThree, NineteenTStates ) )
+        , ( 0x75, ( \param16 z80_main -> store_reg_indirect param16 z80_main.iy (z80_main.hl |> Bitwise.and 0xFF), TripleIncrementByThree, NineteenTStates ) )
         ]
 
 
-applyTripleMainChange : CpuTimeCTime -> PCIncrement -> TripleMainChange -> Z80Core -> Z80Core
+applyTripleMainChange : CpuTimeCTime -> TriplePCIncrement -> TripleMainChange -> Z80Core -> Z80Core
 applyTripleMainChange time pcInc z80changeData z80 =
     let
         env =
@@ -58,17 +58,11 @@ applyTripleMainChange time pcInc z80changeData z80 =
 
         new_pc =
             case pcInc of
-                IncrementByThree ->
+                TripleIncrementByThree ->
                     Bitwise.and (z80.pc + 3) 0xFFFF
 
-                IncrementByFour ->
+                TripleIncrementByFour ->
                     Bitwise.and (z80.pc + 4) 0xFFFF
-
-                IncrementByOne ->
-                    Bitwise.and (z80.pc + 1) 0xFFFF
-
-                IncrementByTwo ->
-                    Bitwise.and (z80.pc + 2) 0xFFFF
     in
     case z80changeData of
         Store16BitValue address value ->

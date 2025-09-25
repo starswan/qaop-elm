@@ -75,7 +75,7 @@ fetchInstruction rom48k r_register z80_core =
                             in
                             CoreFunction
                                 (\core ->
-                                    core |> applyTripleChangeDelta rom48k IncrementByThree doubleParam.time (f doubleParam.value16)
+                                    core |> applyTripleChangeDelta rom48k TripleIncrementByThree doubleParam.time (f doubleParam.value16)
                                 )
                                 IncrementByThree
                                 duration
@@ -149,7 +149,7 @@ fetchInstruction rom48k r_register z80_core =
                                                                     in
                                                                     CoreFunction
                                                                         (\core ->
-                                                                            core |> applyDoubleWithRegistersDelta IncrementByTwo param.time (f z80_core.main param.value) rom48k
+                                                                            core |> applyDoubleWithRegistersDelta IncreaseByTwo param.time (f z80_core.main param.value) rom48k
                                                                         )
                                                                         IncrementByTwo
                                                                         duration
@@ -169,7 +169,7 @@ fetchInstruction rom48k r_register z80_core =
                                                                             in
                                                                             CoreFunction
                                                                                 (\core ->
-                                                                                    core |> applyTripleMainChange doubleParam.time IncrementByThree (f doubleParam.value16 z80_core.main)
+                                                                                    core |> applyTripleMainChange doubleParam.time TripleIncrementByThree (f doubleParam.value16 z80_core.main)
                                                                                 )
                                                                                 IncrementByThree
                                                                                 duration

@@ -30,12 +30,12 @@ type DeltaWithChanges
     | FlagDelta PCIncrement InstructionDuration FlagChange
     | RegisterChangeDelta PCIncrement InstructionDuration RegisterChange
     | Simple8BitDelta MediumPCIncrement CpuTimeCTime Single8BitChange
-    | DoubleWithRegistersDelta PCIncrement CpuTimeCTime DoubleWithRegisterChange
+    | DoubleWithRegistersDelta MediumPCIncrement CpuTimeCTime DoubleWithRegisterChange
     | NoParamsDelta CpuTimeCTime NoParamChange
     | SingleEnvDelta CpuTimeCTime SingleByteEnvChange
     | MainWithEnvDelta PCIncrement InstructionDuration SingleEnvMainChange
-    | TripleMainChangeDelta CpuTimeCTime PCIncrement TripleMainChange
-    | Triple16ParamDelta CpuTimeCTime PCIncrement TripleByteChange
+    | TripleMainChangeDelta CpuTimeCTime TriplePCIncrement TripleMainChange
+    | Triple16ParamDelta CpuTimeCTime TriplePCIncrement TripleByteChange
     | UnknownInstruction String Int
 
 
@@ -785,22 +785,16 @@ applyShifter new_pc shifterFunc addr cpu_time rom48k z80 =
     { z80 | pc = new_pc, flags = result.flags, env = env_2, clockTime = newTime2 }
 
 
-applyTripleChangeDelta : Z80ROM -> PCIncrement -> CpuTimeCTime -> TripleByteChange -> Z80Core -> Z80Core
+applyTripleChangeDelta : Z80ROM -> TriplePCIncrement -> CpuTimeCTime -> TripleByteChange -> Z80Core -> Z80Core
 applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
     let
         new_pc =
             case pc_increment of
-                IncrementByThree ->
+                TripleIncrementByThree ->
                     Bitwise.and (z80.pc + 3) 0xFFFF
 
-                IncrementByFour ->
+                TripleIncrementByFour ->
                     Bitwise.and (z80.pc + 4) 0xFFFF
-
-                IncrementByOne ->
-                    Bitwise.and (z80.pc + 1) 0xFFFF
-
-                IncrementByTwo ->
-                    Bitwise.and (z80.pc + 2) 0xFFFF
 
         env =
             z80.env

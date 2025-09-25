@@ -321,22 +321,16 @@ ld_e_indirect_iy z80_main param =
     NewERegisterIndirect address
 
 
-applyDoubleWithRegistersDelta : PCIncrement -> CpuTimeCTime -> DoubleWithRegisterChange -> Z80ROM -> Z80Core -> Z80Core
+applyDoubleWithRegistersDelta : MediumPCIncrement -> CpuTimeCTime -> DoubleWithRegisterChange -> Z80ROM -> Z80Core -> Z80Core
 applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
     let
         new_pc =
             case pc_inc of
-                IncrementByOne ->
-                    z80.pc + 1
-
-                IncrementByTwo ->
+                IncreaseByTwo ->
                     z80.pc + 2
 
-                IncrementByThree ->
+                IncreaseByThree ->
                     z80.pc + 3
-
-                IncrementByFour ->
-                    z80.pc + 4
     in
     case z80changeData of
         RelativeJumpWithTimeOffset single8BitChange maybeInt timeOffset ->
