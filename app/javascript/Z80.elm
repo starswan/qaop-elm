@@ -418,20 +418,15 @@ runIndexIX param rom48k z80 =
 
                                         Nothing ->
                                             case doubleWithRegistersIX |> Dict.get param.value of
-                                                Just ( f, pcInc, duration ) ->
+                                                Just ( f, duration ) ->
                                                     let
                                                         time =
                                                             instrTime |> addDuration duration
 
                                                         doubleParam =
-                                                            case pcInc of
-                                                                IncreaseByTwo ->
-                                                                    z80.env |> mem (Bitwise.and (z80.pc + 1) 0xFFFF) time rom48k
-
-                                                                IncreaseByThree ->
-                                                                    z80.env |> mem (Bitwise.and (z80.pc + 2) 0xFFFF) time rom48k
+                                                            z80.env |> mem (Bitwise.and (z80.pc + 2) 0xFFFF) time rom48k
                                                     in
-                                                    DoubleWithRegistersDelta pcInc doubleParam.time (f z80.main doubleParam.value)
+                                                    DoubleWithRegistersDelta IncreaseByThree doubleParam.time (f z80.main doubleParam.value)
 
                                                 Nothing ->
                                                     case tripleMainRegsIX |> Dict.get param.value of
@@ -500,20 +495,15 @@ runIndexIY param rom48k z80 =
 
                                         Nothing ->
                                             case doubleWithRegistersIY |> Dict.get param.value of
-                                                Just ( f, pcInc, duration ) ->
+                                                Just ( f, duration ) ->
                                                     let
                                                         time =
                                                             instrTime |> addDuration duration
 
                                                         doubleParam =
-                                                            case pcInc of
-                                                                IncreaseByTwo ->
-                                                                    z80.env |> mem (Bitwise.and (z80.pc + 1) 0xFFFF) time rom48k
-
-                                                                IncreaseByThree ->
-                                                                    z80.env |> mem (Bitwise.and (z80.pc + 2) 0xFFFF) time rom48k
+                                                            z80.env |> mem (Bitwise.and (z80.pc + 2) 0xFFFF) time rom48k
                                                     in
-                                                    DoubleWithRegistersDelta pcInc doubleParam.time (f z80.main doubleParam.value)
+                                                    DoubleWithRegistersDelta IncreaseByThree doubleParam.time (f z80.main doubleParam.value)
 
                                                 Nothing ->
                                                     case tripleMainRegsIY |> Dict.get param.value of
