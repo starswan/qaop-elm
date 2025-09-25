@@ -7,7 +7,7 @@ module Z80 exposing (..)
 
 import Array exposing (Array)
 import Bitwise
-import CpuTimeCTime exposing (CTime(..), CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAndValue, InstructionDuration(..), addCpuTimeTime, addDuration, c_FRSTART, c_TIME_LIMIT)
+import CpuTimeCTime exposing (CTime(..), CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAndValue, InstructionDuration(..), addCpuTimeTime, addDuration, c_TIME_LIMIT, reset_cpu_time)
 import Dict exposing (Dict)
 import DoubleWithRegisters exposing (doubleWithRegistersIX, doubleWithRegistersIY)
 import Group0xE0 exposing (delta_dict_lite_E0)
@@ -19,13 +19,11 @@ import PCIncrement exposing (InterruptPCIncrement(..), MediumPCIncrement(..), PC
 import Set
 import SimpleFlagOps exposing (singleByteFlagsCB, singleByteFlagsDD, singleByteFlagsFD)
 import SimpleSingleByte exposing (singleByteMainRegsDD, singleByteMainRegsFD)
-import SingleByteWithEnv exposing (singleByteZ80Env)
 import SingleEnvWithMain exposing (singleEnvMainRegsIX, singleEnvMainRegsIY)
 import SingleMainWithFlags exposing (singleByteMainAndFlagRegistersIX, singleByteMainAndFlagRegistersIY)
-import SingleNoParams exposing (ex_af, execute_0x76_halt, exx, singleWithNoParam, singleWithNoParamDD, singleWithNoParamFD)
-import SingleWith8BitParameter exposing (singleWith8BitParam)
+import SingleNoParams exposing (ex_af, execute_0x76_halt, exx, singleWithNoParamDD, singleWithNoParamFD)
 import TripleByte exposing (tripleByteWith16BitParamDD, tripleByteWith16BitParamFD)
-import TripleWithMain exposing (tripleMainRegs, tripleMainRegsIX, tripleMainRegsIY)
+import TripleWithMain exposing (tripleMainRegsIX, tripleMainRegsIY)
 import Z80Core exposing (Z80, Z80Core, di_0xF3, ei_0xFB)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..))
 import Z80Env exposing (Z80Env, mem, mem16, z80env_constructor)
@@ -40,32 +38,28 @@ constructor : Z80
 constructor =
     let
         main =
-            Z80Types.MainWithIndexRegisters 0 0 0 0 0 0 0
+            MainWithIndexRegisters 0 0 0 0 0 0 0
 
         alternate =
             MainRegisters 0 0 0 0 0
 
-        main_flags =
+        flags =
             FlagRegisters 0 0 0 0 0
 
-        alt_flags =
-            FlagRegisters 0 0 0 0 0
-
+        --alt_flags =
+        --    FlagRegisters 0 0 0 0 0
         interrupts =
             InterruptRegisters IM0 False 0 0 0
 
         time =
-            CpuTimeCTime c_FRSTART NoCont
+            reset_cpu_time
     in
     --Z80 z80env_constructor 0 main main_flags alternate alt_flags 0 interrupts
-    Z80 (Z80Core z80env_constructor 0 main main_flags interrupts time) alternate alt_flags
+    Z80 (Z80Core z80env_constructor 0 main flags interrupts time) alternate flags
 
 
 
 --	int a() {return A;}
---get_a: Z80 -> Int
---get_a z80 =
---    z80.flags.a
 --	int f() {return flags();}
 --get_f: Z80 -> Int
 --get_f z80 =
@@ -244,8 +238,8 @@ executeAndApplyDelta opcode rom48k z80 =
         TimeAndValue ct ->
             z80 |> execute_delta ct rom48k |> apply_delta z80 rom48k
 
-        CoreFunction function increment duration ->
-            z80 |> function increment duration
+        CoreFunction function _ _ ->
+            z80 |> function
 
 
 execute_delta : CpuTimeAndValue -> Z80ROM -> Z80Core -> DeltaWithChanges
