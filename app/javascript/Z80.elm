@@ -326,7 +326,7 @@ execute_delta ct rom48k z80 =
 runOrdinary : Int -> CpuTimeCTime -> Z80ROM -> Z80Core -> DeltaWithChanges
 runOrdinary ct_value instrTime rom48k z80_core =
     case tripleMainRegs |> Dict.get ct_value of
-        Just ( f, pcInc, duration ) ->
+        Just ( f, duration ) ->
             let
                 time =
                     instrTime |> addDuration duration
@@ -337,7 +337,7 @@ runOrdinary ct_value instrTime rom48k z80_core =
                 doubleParam =
                     env |> mem16 (Bitwise.and (z80_core.pc + 1) 0xFFFF) rom48k time
             in
-            TripleMainChangeDelta doubleParam.time pcInc (f doubleParam.value16 z80_core.main)
+            TripleMainChangeDelta doubleParam.time TripleIncrementByThree (f doubleParam.value16 z80_core.main)
 
         Nothing ->
             case singleByteZ80Env |> Dict.get ct_value of

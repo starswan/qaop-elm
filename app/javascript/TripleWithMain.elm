@@ -15,10 +15,10 @@ type TripleMainChange
     | Store8BitValue Int Int
 
 
-tripleMainRegs : Dict Int ( Int -> MainWithIndexRegisters -> TripleMainChange, TriplePCIncrement, InstructionDuration )
+tripleMainRegs : Dict Int ( Int -> MainWithIndexRegisters -> TripleMainChange, InstructionDuration )
 tripleMainRegs =
     Dict.fromList
-        [ ( 0x22, ( ld_nn_indirect_hl, TripleIncrementByThree, SixteenTStates ) )
+        [ ( 0x22, ( ld_nn_indirect_hl, SixteenTStates ) )
         ]
 
 
