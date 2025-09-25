@@ -10,6 +10,7 @@ import SimpleSingleByte exposing (singleByteMainRegs)
 import SingleByteWithEnv exposing (applyEnvChangeDelta, singleByteZ80Env)
 import SingleEnvWithMain exposing (applySingleEnvMainChange, singleEnvMainRegs)
 import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters)
+import SingleNoParams exposing (applyNoParamsDelta, singleWithNoParam)
 import SingleWith8BitParameter exposing (maybeRelativeJump)
 import TripleByte exposing (tripleByteWith16BitParam)
 import TripleWithFlags exposing (triple16WithFlags)
@@ -184,4 +185,9 @@ fetchInstruction rom48k r_register z80_core =
                                                                                         duration
 
                                                                                 Nothing ->
-                                                                                    TimeAndValue ct
+                                                                                    case singleWithNoParam |> Dict.get ct.value of
+                                                                                        Just ( f, duration ) ->
+                                                                                            CoreFunction (\_ dur core -> core |> applyNoParamsDelta (ct.time |> addDuration dur) f rom48k) IncrementByOne duration
+
+                                                                                        Nothing ->
+                                                                                            TimeAndValue ct
