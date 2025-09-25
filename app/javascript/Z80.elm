@@ -404,7 +404,7 @@ runIndexIX param rom48k z80 =
                                 doubleParam =
                                     env |> mem16 (Bitwise.and (z80.pc + paramOffset) 0xFFFF) rom48k env_1
                             in
-                            Triple16ParamDelta doubleParam.time PCIncrementByFour (f doubleParam.value16)
+                            Triple16ParamDelta doubleParam.time IncrementByFour (f doubleParam.value16)
 
                         Nothing ->
                             case singleEnvMainRegsIX |> Dict.get param.value of
@@ -577,22 +577,22 @@ runSpecial specialType rom48k z80_core =
             in
             case singleByteMainRegsIXCB |> Dict.get param.value |> Maybe.map (\( f, d ) -> ( f offset, d )) of
                 Just ( mainRegFunc, duration ) ->
-                    RegisterChangeDelta PCIncrementByFour duration (mainRegFunc z80_core.main)
+                    RegisterChangeDelta IncrementByFour duration (mainRegFunc z80_core.main)
 
                 Nothing ->
                     case singleByteFlagsCB |> Dict.get param.value of
                         Just ( flagFunc, duration ) ->
-                            FlagDelta PCIncrementByFour duration (flagFunc z80_core.flags)
+                            FlagDelta IncrementByFour duration (flagFunc z80_core.flags)
 
                         Nothing ->
                             case singleEnvMainRegsIXCB |> Dict.get param.value of
                                 Just ( f, duration ) ->
-                                    MainWithEnvDelta PCIncrementByFour duration (f z80_core.main offset rom48k z80_core.env)
+                                    MainWithEnvDelta IncrementByFour duration (f z80_core.main offset rom48k z80_core.env)
 
                                 Nothing ->
                                     case singleByteMainAndFlagRegistersIXCB |> Dict.get param.value of
                                         Just ( f, duration ) ->
-                                            PureDelta PCIncrementByFour (instrTime |> addDuration duration) (f z80_core.main z80_core.flags)
+                                            PureDelta IncrementByFour (instrTime |> addDuration duration) (f z80_core.main z80_core.flags)
 
                                         Nothing ->
                                             -- This fails on DD CB 3D xx
@@ -607,22 +607,22 @@ runSpecial specialType rom48k z80_core =
             in
             case singleByteMainRegsIYCB |> Dict.get param.value |> Maybe.map (\( f, d ) -> ( f iycboffset, d )) of
                 Just ( mainRegFunc, duration ) ->
-                    RegisterChangeDelta PCIncrementByFour duration (mainRegFunc z80_core.main)
+                    RegisterChangeDelta IncrementByFour duration (mainRegFunc z80_core.main)
 
                 Nothing ->
                     case singleByteFlagsCB |> Dict.get param.value of
                         Just ( flagFunc, duration ) ->
-                            FlagDelta PCIncrementByFour duration (flagFunc z80_core.flags)
+                            FlagDelta IncrementByFour duration (flagFunc z80_core.flags)
 
                         Nothing ->
                             case singleEnvMainRegsIYCB |> Dict.get param.value of
                                 Just ( f, duration ) ->
-                                    MainWithEnvDelta PCIncrementByFour duration (f z80_core.main iycboffset rom48k z80_core.env)
+                                    MainWithEnvDelta IncrementByFour duration (f z80_core.main iycboffset rom48k z80_core.env)
 
                                 Nothing ->
                                     case singleByteMainAndFlagRegistersIYCB |> Dict.get param.value of
                                         Just ( f, duration ) ->
-                                            PureDelta PCIncrementByFour (instrTime |> addDuration duration) (f z80_core.main z80_core.flags)
+                                            PureDelta IncrementByFour (instrTime |> addDuration duration) (f z80_core.main z80_core.flags)
 
                                         Nothing ->
                                             -- This fails on FD CB 3D xx

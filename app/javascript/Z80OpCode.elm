@@ -59,7 +59,7 @@ fetchInstruction rom48k r_register z80_core =
                                 doubleParam =
                                     env |> mem16 (Bitwise.and (z80_core.pc + 1) 0xFFFF) rom48k newTime
                             in
-                            CoreFunction (\pcInc core -> core |> applyTripleChangeDelta rom48k pcInc doubleParam.time (f doubleParam.value16)) PCIncrementByThree
+                            CoreFunction (\pcInc core -> core |> applyTripleChangeDelta rom48k pcInc doubleParam.time (f doubleParam.value16)) IncrementByThree
 
                         Nothing ->
                             case maybeRelativeJump |> Dict.get ct.value of
@@ -91,7 +91,7 @@ fetchInstruction rom48k r_register z80_core =
                                                         doubleParam =
                                                             env |> mem16 (Bitwise.and (z80_core.pc + 1) 0xFFFF) rom48k env_1
                                                     in
-                                                    CoreFunction (\_ core -> core |> applyTripleFlagChange doubleParam.time (f doubleParam.value16 z80_core.flags)) PCIncrementByThree
+                                                    CoreFunction (\_ core -> core |> applyTripleFlagChange doubleParam.time (f doubleParam.value16 z80_core.flags)) IncrementByThree
 
                                                 Nothing ->
                                                     case singleByteMainAndFlagRegisters |> Dict.get ct.value of

@@ -188,10 +188,10 @@ applyFlagDelta pcInc duration z80_flags rom48k z80_core =
                 IncrementByTwo ->
                     (z80_core.pc + 2) |> Bitwise.and 0xFFFF
 
-                PCIncrementByThree ->
+                IncrementByThree ->
                     Bitwise.and (z80_core.pc + 3) 0xFFFF
 
-                PCIncrementByFour ->
+                IncrementByFour ->
                     Bitwise.and (z80_core.pc + 4) 0xFFFF
 
         newTime =
@@ -270,10 +270,10 @@ applyPureDelta cpuInc cpu_time z80changeData z80 =
                 IncrementByTwo ->
                     (z80.pc + 2) |> Bitwise.and 0xFFFF
 
-                PCIncrementByThree ->
+                IncrementByThree ->
                     Bitwise.and (z80.pc + 3) 0xFFFF
 
-                PCIncrementByFour ->
+                IncrementByFour ->
                     Bitwise.and (z80.pc + 4) 0xFFFF
     in
     { z80 | pc = new_pc, clockTime = cpu_time } |> applyZ80Change z80changeData
@@ -296,10 +296,10 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80_core =
                 IncrementByTwo ->
                     Bitwise.and (z80_core.pc + 2) 0xFFFF
 
-                PCIncrementByThree ->
+                IncrementByThree ->
                     Bitwise.and (z80_core.pc + 3) 0xFFFF
 
-                PCIncrementByFour ->
+                IncrementByFour ->
                     Bitwise.and (z80_core.pc + 4) 0xFFFF
     in
     case z80changeData of
@@ -790,10 +790,10 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
     let
         new_pc =
             case pc_increment of
-                PCIncrementByThree ->
+                IncrementByThree ->
                     Bitwise.and (z80.pc + 3) 0xFFFF
 
-                PCIncrementByFour ->
+                IncrementByFour ->
                     Bitwise.and (z80.pc + 4) 0xFFFF
 
                 IncrementByOne ->

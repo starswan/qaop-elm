@@ -77,10 +77,10 @@ applySingleEnvMainChange pcInc duration z80changeData rom48k z80 =
                 IncrementByTwo ->
                     Bitwise.and (z80.pc + 2) 0xFFFF
 
-                PCIncrementByThree ->
+                IncrementByThree ->
                     Bitwise.and (z80.pc + 3) 0xFFFF
 
-                PCIncrementByFour ->
+                IncrementByFour ->
                     Bitwise.and (z80.pc + 4) 0xFFFF
     in
     case z80changeData of
