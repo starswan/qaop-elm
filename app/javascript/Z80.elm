@@ -245,8 +245,8 @@ executeAndApplyDelta opcode rom48k z80 =
         TimeAndValue ct ->
             z80 |> execute_delta ct rom48k |> apply_delta z80 rom48k
 
-        CoreFunction function increment ->
-            z80 |> function increment
+        CoreFunction function increment duration ->
+            z80 |> function increment duration
 
 
 execute_delta : CpuTimeAndValue -> Z80ROM -> Z80Core -> DeltaWithChanges
@@ -798,7 +798,7 @@ coreLooping ( z80core, z80opcode, _ ) =
         TimeAndValue timeAndValue ->
             isCoreOpCode timeAndValue.value && (z80core |> stillLooping)
 
-        CoreFunction _ _ ->
+        CoreFunction _ _ _ ->
             z80core |> stillLooping
 
 
@@ -850,7 +850,7 @@ executeCore rom48k z80 =
                 Nothing ->
                     z80_1
 
-        CoreFunction _ _ ->
+        CoreFunction _ _ _ ->
             z80_1
 
 
