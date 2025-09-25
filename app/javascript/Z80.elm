@@ -310,8 +310,8 @@ execute_delta ct rom48k z80 =
                     Ordinary ct.value ct.time
     in
     case executionType of
-        Ordinary int cpuTimeCTime ->
-            runOrdinary int cpuTimeCTime rom48k z80
+        Ordinary ct_value instrTime ->
+            oldDelta ct_value instrTime z80.interrupts z80 rom48k
 
         IndexIX cpuTimeAndValue ->
             runIndexIX cpuTimeAndValue rom48k z80
@@ -321,33 +321,6 @@ execute_delta ct rom48k z80 =
 
         Special specialExecutionType ->
             runSpecial specialExecutionType rom48k z80
-
-
-runOrdinary : Int -> CpuTimeCTime -> Z80ROM -> Z80Core -> DeltaWithChanges
-runOrdinary ct_value instrTime rom48k z80_core =
-    --case singleWithNoParam |> Dict.get ct_value of
-    --    Just ( f, duration ) ->
-    --        NoParamsDelta (instrTime |> addDuration duration) f
-    --
-    --    Nothing ->
-    case singleWith8BitParam |> Dict.get ct_value of
-        Just ( f, pcInc, duration ) ->
-            let
-                newTime =
-                    instrTime |> addDuration duration
-
-                param =
-                    case pcInc of
-                        IncreaseByTwo ->
-                            z80_core.env |> mem (Bitwise.and (z80_core.pc + 1) 0xFFFF) newTime rom48k
-
-                        IncreaseByThree ->
-                            z80_core.env |> mem (Bitwise.and (z80_core.pc + 2) 0xFFFF) newTime rom48k
-            in
-            Simple8BitDelta pcInc param.time (f param.value)
-
-        Nothing ->
-            oldDelta ct_value instrTime z80_core.interrupts z80_core rom48k
 
 
 runIndexIX : CpuTimeAndValue -> Z80ROM -> Z80Core -> DeltaWithChanges

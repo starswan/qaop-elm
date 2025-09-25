@@ -4,20 +4,20 @@ import Bitwise
 import CpuTimeCTime exposing (CpuTimeAndValue, InstructionDuration, addDuration)
 import Dict
 import DoubleWithRegisters exposing (applyDoubleWithRegistersDelta, doubleWithRegisters)
-import PCIncrement exposing (PCIncrement(..), TriplePCIncrement(..))
+import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
 import SimpleFlagOps exposing (singleByteFlags)
 import SimpleSingleByte exposing (singleByteMainRegs)
 import SingleByteWithEnv exposing (applyEnvChangeDelta, singleByteZ80Env)
 import SingleEnvWithMain exposing (applySingleEnvMainChange, singleEnvMainRegs)
 import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters)
 import SingleNoParams exposing (applyNoParamsDelta, singleWithNoParam)
-import SingleWith8BitParameter exposing (maybeRelativeJump)
+import SingleWith8BitParameter exposing (maybeRelativeJump, singleWith8BitParam)
 import TripleByte exposing (tripleByteWith16BitParam)
 import TripleWithFlags exposing (triple16WithFlags)
 import TripleWithMain exposing (applyTripleMainChange, tripleMainRegs)
 import Z80Core exposing (Z80Core)
 import Z80Env exposing (m1, mem, mem16)
-import Z80Execute exposing (DeltaWithChanges(..), applyFlagDelta, applyJumpChangeDelta, applyPureDelta, applyRegisterDelta, applyTripleChangeDelta, applyTripleFlagChange)
+import Z80Execute exposing (DeltaWithChanges(..), applyFlagDelta, applyJumpChangeDelta, applyPureDelta, applyRegisterDelta, applySimple8BitDelta, applyTripleChangeDelta, applyTripleFlagChange)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (MainWithIndexRegisters)
 
@@ -190,4 +190,16 @@ fetchInstruction rom48k r_register z80_core =
                                                                                             CoreFunction (\_ dur core -> core |> applyNoParamsDelta (ct.time |> addDuration dur) f rom48k) IncrementByOne duration
 
                                                                                         Nothing ->
-                                                                                            TimeAndValue ct
+                                                                                            case singleWith8BitParam |> Dict.get ct.value of
+                                                                                                Just ( f, duration ) ->
+                                                                                                    let
+                                                                                                        newTime =
+                                                                                                            ct.time |> addDuration duration
+
+                                                                                                        param =
+                                                                                                            z80_core.env |> mem (Bitwise.and (z80_core.pc + 1) 0xFFFF) newTime rom48k
+                                                                                                    in
+                                                                                                    CoreFunction (\_ dur core -> core |> applySimple8BitDelta IncreaseByTwo param.time (f param.value)) IncrementByTwo duration
+
+                                                                                                Nothing ->
+                                                                                                    TimeAndValue ct
