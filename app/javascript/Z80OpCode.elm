@@ -3,6 +3,7 @@ module Z80OpCode exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeAndValue, InstructionDuration, addDuration)
 import Dict
+import DoubleWithRegisters exposing (applyDoubleWithRegistersDelta, doubleWithRegisters)
 import PCIncrement exposing (PCIncrement(..), TriplePCIncrement(..))
 import SimpleFlagOps exposing (singleByteFlags)
 import SimpleSingleByte exposing (singleByteMainRegs)
@@ -99,4 +100,19 @@ fetchInstruction rom48k r_register z80_core =
                                                             CoreFunction (\pcInc dur core -> core |> applyPureDelta pcInc (ct.time |> addDuration dur) (f z80_core.main z80_core.flags)) IncrementByOne duration
 
                                                         Nothing ->
-                                                            TimeAndValue ct
+                                                            case doubleWithRegisters |> Dict.get ct.value of
+                                                                Just ( f, duration ) ->
+                                                                    let
+                                                                        time =
+                                                                            ct.time |> addDuration duration
+
+                                                                        param =
+                                                                            z80_core.env |> mem (Bitwise.and (z80_core.pc + 1) 0xFFFF) time rom48k
+                                                                    in
+                                                                    --DoubleWithRegistersDelta IncrementByTwo param.time (f z80_core.main param.value)
+                                                                    --DoubleWithRegistersDelta pcInc cpuTimeCTime doubleWithRegisterChange ->
+                                                                    --    z80 |> applyDoubleWithRegistersDelta pcInc cpuTimeCTime doubleWithRegisterChange rom48k
+                                                                    CoreFunction (\pcInc dur core -> core |> applyDoubleWithRegistersDelta pcInc param.time (f z80_core.main param.value) rom48k) IncrementByTwo duration
+
+                                                                Nothing ->
+                                                                    TimeAndValue ct
