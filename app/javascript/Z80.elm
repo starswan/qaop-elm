@@ -325,37 +325,22 @@ execute_delta ct rom48k z80 =
 
 runOrdinary : Int -> CpuTimeCTime -> Z80ROM -> Z80Core -> DeltaWithChanges
 runOrdinary ct_value instrTime rom48k z80_core =
-    case tripleMainRegs |> Dict.get ct_value of
+    --case singleByteZ80Env |> Dict.get ct_value of
+    --    Just ( f, duration ) ->
+    --        SingleEnvDelta (instrTime |> addDuration duration) (f z80_core.env)
+    --
+    --    Nothing ->
+    case singleWithNoParam |> Dict.get ct_value of
         Just ( f, duration ) ->
-            let
-                time =
-                    instrTime |> addDuration duration
-
-                env =
-                    z80_core.env
-
-                doubleParam =
-                    env |> mem16 (Bitwise.and (z80_core.pc + 1) 0xFFFF) rom48k time
-            in
-            TripleMainChangeDelta doubleParam.time IncrementByThree (f doubleParam.value16 z80_core.main)
+            NoParamsDelta (instrTime |> addDuration duration) f
 
         Nothing ->
-            case singleByteZ80Env |> Dict.get ct_value of
-                Just ( f, duration ) ->
-                    SingleEnvDelta (instrTime |> addDuration duration) (f z80_core.env)
+            case singleByte instrTime ct_value z80_core rom48k of
+                Just deltaThing ->
+                    deltaThing
 
                 Nothing ->
-                    case singleWithNoParam |> Dict.get ct_value of
-                        Just ( f, duration ) ->
-                            NoParamsDelta (instrTime |> addDuration duration) f
-
-                        Nothing ->
-                            case singleByte instrTime ct_value z80_core rom48k of
-                                Just deltaThing ->
-                                    deltaThing
-
-                                Nothing ->
-                                    oldDelta ct_value instrTime z80_core.interrupts z80_core rom48k
+                    oldDelta ct_value instrTime z80_core.interrupts z80_core rom48k
 
 
 runIndexIX : CpuTimeAndValue -> Z80ROM -> Z80Core -> DeltaWithChanges
