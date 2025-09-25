@@ -7,12 +7,13 @@ import PCIncrement exposing (PCIncrement(..), TriplePCIncrement(..))
 import SimpleFlagOps exposing (singleByteFlags)
 import SimpleSingleByte exposing (singleByteMainRegs)
 import SingleEnvWithMain exposing (applySingleEnvMainChange, singleEnvMainRegs)
+import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters)
 import SingleWith8BitParameter exposing (maybeRelativeJump)
 import TripleByte exposing (tripleByteWith16BitParam)
 import TripleWithFlags exposing (triple16WithFlags)
 import Z80Core exposing (Z80Core)
 import Z80Env exposing (m1, mem, mem16)
-import Z80Execute exposing (DeltaWithChanges(..), applyFlagDelta, applyJumpChangeDelta, applyRegisterDelta, applyTripleChangeDelta, applyTripleFlagChange)
+import Z80Execute exposing (DeltaWithChanges(..), applyFlagDelta, applyJumpChangeDelta, applyPureDelta, applyRegisterDelta, applyTripleChangeDelta, applyTripleFlagChange)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (MainWithIndexRegisters)
 
@@ -74,8 +75,8 @@ fetchInstruction rom48k r_register z80_core =
 
                                 Nothing ->
                                     case singleEnvMainRegs |> Dict.get ct.value of
-                                        Just ( f, pcInc, duration ) ->
-                                            CoreFunction (\core -> core |> applySingleEnvMainChange pcInc duration (f z80_core.main rom48k ct.time z80_core.env) rom48k)
+                                        Just ( f, duration ) ->
+                                            CoreFunction (\core -> core |> applySingleEnvMainChange IncrementByOne duration (f z80_core.main rom48k ct.time z80_core.env) rom48k)
 
                                         Nothing ->
                                             case triple16WithFlags |> Dict.get ct.value of
@@ -94,4 +95,10 @@ fetchInstruction rom48k r_register z80_core =
                                                     CoreFunction (\core -> core |> applyTripleFlagChange doubleParam.time (f doubleParam.value16 z80_core.flags))
 
                                                 Nothing ->
-                                                    TimeAndValue ct
+                                                    case singleByteMainAndFlagRegisters |> Dict.get ct.value of
+                                                        Just ( f, duration ) ->
+                                                            --PureDelta pcInc (instrTime |> addDuration duration) (f z80_core.main z80_core.flags)
+                                                            CoreFunction (\core -> core |> applyPureDelta IncrementByOne (ct.time |> addDuration duration) (f z80_core.main z80_core.flags))
+
+                                                        Nothing ->
+                                                            TimeAndValue ct
