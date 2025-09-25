@@ -20,7 +20,7 @@ import Z80Types exposing (MainWithIndexRegisters)
 
 type Z80OpCode
     = TimeAndValue CpuTimeAndValue
-    | CoreFunction (Z80Core -> Z80Core)
+    | CoreFunction (PCIncrement -> Z80Core -> Z80Core) PCIncrement
 
 
 fetchInstruction : Z80ROM -> Int -> Z80Core -> Z80OpCode
@@ -39,12 +39,12 @@ fetchInstruction rom48k r_register z80_core =
     in
     case singleByteMainRegs |> Dict.get ct.value of
         Just ( mainRegFunc, duration ) ->
-            CoreFunction (\core -> core |> applyRegisterDelta IncrementByOne duration (mainRegFunc core.main) rom48k)
+            CoreFunction (\pcInc core -> core |> applyRegisterDelta pcInc duration (mainRegFunc core.main) rom48k) IncrementByOne
 
         Nothing ->
             case singleByteFlags |> Dict.get ct.value of
                 Just ( flagFunc, duration ) ->
-                    CoreFunction (\core -> core |> applyFlagDelta IncrementByOne duration (flagFunc core.flags) rom48k)
+                    CoreFunction (\pcInc core -> core |> applyFlagDelta pcInc duration (flagFunc core.flags) rom48k) IncrementByOne
 
                 Nothing ->
                     case tripleByteWith16BitParam |> Dict.get ct.value of
@@ -59,7 +59,7 @@ fetchInstruction rom48k r_register z80_core =
                                 doubleParam =
                                     env |> mem16 (Bitwise.and (z80_core.pc + 1) 0xFFFF) rom48k newTime
                             in
-                            CoreFunction (\core -> core |> applyTripleChangeDelta rom48k IncrementByThree doubleParam.time (f doubleParam.value16))
+                            CoreFunction (\pcInc core -> core |> applyTripleChangeDelta rom48k pcInc doubleParam.time (f doubleParam.value16)) PCIncrementByThree
 
                         Nothing ->
                             case maybeRelativeJump |> Dict.get ct.value of
@@ -71,12 +71,12 @@ fetchInstruction rom48k r_register z80_core =
                                         param =
                                             z80_core.env |> mem (Bitwise.and (z80_core.pc + 1) 0xFFFF) newTime rom48k
                                     in
-                                    CoreFunction (\core -> core |> applyJumpChangeDelta param.time (f param.value z80_core.flags))
+                                    CoreFunction (\_ core -> core |> applyJumpChangeDelta param.time (f param.value z80_core.flags)) IncrementByTwo
 
                                 Nothing ->
                                     case singleEnvMainRegs |> Dict.get ct.value of
                                         Just ( f, duration ) ->
-                                            CoreFunction (\core -> core |> applySingleEnvMainChange IncrementByOne duration (f z80_core.main rom48k ct.time z80_core.env) rom48k)
+                                            CoreFunction (\inc core -> core |> applySingleEnvMainChange inc duration (f z80_core.main rom48k ct.time z80_core.env) rom48k) IncrementByOne
 
                                         Nothing ->
                                             case triple16WithFlags |> Dict.get ct.value of
@@ -91,14 +91,12 @@ fetchInstruction rom48k r_register z80_core =
                                                         doubleParam =
                                                             env |> mem16 (Bitwise.and (z80_core.pc + 1) 0xFFFF) rom48k env_1
                                                     in
-                                                    --Triple16FlagsDelta doubleParam.time (f doubleParam.value16 z80_core.flags)
-                                                    CoreFunction (\core -> core |> applyTripleFlagChange doubleParam.time (f doubleParam.value16 z80_core.flags))
+                                                    CoreFunction (\_ core -> core |> applyTripleFlagChange doubleParam.time (f doubleParam.value16 z80_core.flags)) PCIncrementByThree
 
                                                 Nothing ->
                                                     case singleByteMainAndFlagRegisters |> Dict.get ct.value of
                                                         Just ( f, duration ) ->
-                                                            --PureDelta pcInc (instrTime |> addDuration duration) (f z80_core.main z80_core.flags)
-                                                            CoreFunction (\core -> core |> applyPureDelta IncrementByOne (ct.time |> addDuration duration) (f z80_core.main z80_core.flags))
+                                                            CoreFunction (\pcInc core -> core |> applyPureDelta pcInc (ct.time |> addDuration duration) (f z80_core.main z80_core.flags)) IncrementByOne
 
                                                         Nothing ->
                                                             TimeAndValue ct

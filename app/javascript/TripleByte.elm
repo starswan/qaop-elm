@@ -46,11 +46,11 @@ tripleByteWith16BitParamDD =
         ]
 
 
-tripleByteWith16BitParamFD : Dict Int ( Int -> TripleByteChange, TriplePCIncrement, InstructionDuration )
+tripleByteWith16BitParamFD : Dict Int ( Int -> TripleByteChange, PCIncrement, InstructionDuration )
 tripleByteWith16BitParamFD =
     Dict.fromList
-        [ ( 0x21, ( ld_iy_nn, IncrementByFour, TwentyTStates ) )
-        , ( 0x2A, ( ld_iy_indirect_nn, IncrementByFour, TwentyTStates ) )
+        [ ( 0x21, ( ld_iy_nn, PCIncrementByFour, TwentyTStates ) )
+        , ( 0x2A, ( ld_iy_indirect_nn, PCIncrementByFour, TwentyTStates ) )
         ]
 
 

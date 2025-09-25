@@ -245,8 +245,8 @@ executeAndApplyDelta opcode rom48k z80 =
         TimeAndValue ct ->
             z80 |> execute_delta ct rom48k |> apply_delta z80 rom48k
 
-        CoreFunction function ->
-            z80 |> function
+        CoreFunction function increment ->
+            z80 |> function increment
 
 
 execute_delta : CpuTimeAndValue -> Z80ROM -> Z80Core -> DeltaWithChanges
@@ -404,7 +404,7 @@ runIndexIX param rom48k z80 =
                                 doubleParam =
                                     env |> mem16 (Bitwise.and (z80.pc + paramOffset) 0xFFFF) rom48k env_1
                             in
-                            Triple16ParamDelta doubleParam.time IncrementByFour (f doubleParam.value16)
+                            Triple16ParamDelta doubleParam.time PCIncrementByFour (f doubleParam.value16)
 
                         Nothing ->
                             case singleEnvMainRegsIX |> Dict.get param.value of
@@ -798,7 +798,7 @@ coreLooping ( z80core, z80opcode, _ ) =
         TimeAndValue timeAndValue ->
             isCoreOpCode timeAndValue.value && (z80core |> stillLooping)
 
-        CoreFunction _ ->
+        CoreFunction _ _ ->
             z80core |> stillLooping
 
 
@@ -850,7 +850,7 @@ executeCore rom48k z80 =
                 Nothing ->
                     z80_1
 
-        CoreFunction f ->
+        CoreFunction _ _ ->
             z80_1
 
 
