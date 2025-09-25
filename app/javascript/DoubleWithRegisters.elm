@@ -3,7 +3,7 @@ module DoubleWithRegisters exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), addCpuTimeTime)
 import Dict exposing (Dict)
-import PCIncrement exposing (MediumPCIncrement(..))
+import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..))
 import SingleWith8BitParameter exposing (Single8BitChange(..), applySimple8BitChange)
 import Utils exposing (byte, shiftLeftBy8)
 import Z80Core exposing (Z80Core)
@@ -32,14 +32,14 @@ type DoubleWithRegisterChange
     | FlagOpIndexedIndirect FlagFunc Int Int
 
 
-doubleWithRegisters : Dict Int ( MainWithIndexRegisters -> Int -> DoubleWithRegisterChange, MediumPCIncrement, InstructionDuration )
+doubleWithRegisters : Dict Int ( MainWithIndexRegisters -> Int -> DoubleWithRegisterChange, InstructionDuration )
 doubleWithRegisters =
     Dict.fromList
         [ --  another 5 if jump actually taken
-          ( 0x10, ( djnz, IncreaseByTwo, EightTStates ) )
-        , ( 0x26, ( ld_h_n, IncreaseByTwo, SevenTStates ) )
-        , ( 0x2E, ( ld_l_n, IncreaseByTwo, SevenTStates ) )
-        , ( 0x36, ( ld_indirect_hl_n, IncreaseByTwo, TenTStates ) )
+          ( 0x10, ( djnz, EightTStates ) )
+        , ( 0x26, ( ld_h_n, SevenTStates ) )
+        , ( 0x2E, ( ld_l_n, SevenTStates ) )
+        , ( 0x36, ( ld_indirect_hl_n, TenTStates ) )
         ]
 
 
@@ -321,16 +321,22 @@ ld_e_indirect_iy z80_main param =
     NewERegisterIndirect address
 
 
-applyDoubleWithRegistersDelta : MediumPCIncrement -> CpuTimeCTime -> DoubleWithRegisterChange -> Z80ROM -> Z80Core -> Z80Core
+applyDoubleWithRegistersDelta : PCIncrement -> CpuTimeCTime -> DoubleWithRegisterChange -> Z80ROM -> Z80Core -> Z80Core
 applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
     let
         new_pc =
             case pc_inc of
-                IncreaseByTwo ->
+                IncrementByOne ->
+                    z80.pc + 1
+
+                IncrementByTwo ->
                     z80.pc + 2
 
-                IncreaseByThree ->
+                IncrementByThree ->
                     z80.pc + 3
+
+                IncrementByFour ->
+                    z80.pc + 4
     in
     case z80changeData of
         RelativeJumpWithTimeOffset single8BitChange maybeInt timeOffset ->
