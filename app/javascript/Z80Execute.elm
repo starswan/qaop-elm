@@ -34,7 +34,7 @@ type DeltaWithChanges
     | NoParamsDelta CpuTimeCTime NoParamChange
     | SingleEnvDelta CpuTimeCTime SingleByteEnvChange
     | MainWithEnvDelta PCIncrement InstructionDuration SingleEnvMainChange
-    | TripleMainChangeDelta CpuTimeCTime TriplePCIncrement TripleMainChange
+    | TripleMainChangeDelta CpuTimeCTime PCIncrement TripleMainChange
     | Triple16ParamDelta CpuTimeCTime PCIncrement TripleByteChange
     | UnknownInstruction String Int
 

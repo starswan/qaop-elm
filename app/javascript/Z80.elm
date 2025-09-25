@@ -9,7 +9,7 @@ import Array exposing (Array)
 import Bitwise
 import CpuTimeCTime exposing (CTime(..), CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAndValue, InstructionDuration(..), addCpuTimeTime, addDuration, c_FRSTART, c_TIME_LIMIT)
 import Dict exposing (Dict)
-import DoubleWithRegisters exposing (doubleWithRegisters, doubleWithRegistersIX, doubleWithRegistersIY)
+import DoubleWithRegisters exposing (doubleWithRegistersIX, doubleWithRegistersIY)
 import Group0xE0 exposing (delta_dict_lite_E0)
 import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainAndFlagRegistersIXCB, singleByteMainAndFlagRegistersIYCB, singleByteMainRegsCB, singleEnvMainRegsCB)
 import GroupCBIXIY exposing (singleByteMainRegsIXCB, singleByteMainRegsIYCB, singleEnvMainRegsIXCB, singleEnvMainRegsIYCB)
@@ -337,7 +337,7 @@ runOrdinary ct_value instrTime rom48k z80_core =
                 doubleParam =
                     env |> mem16 (Bitwise.and (z80_core.pc + 1) 0xFFFF) rom48k time
             in
-            TripleMainChangeDelta doubleParam.time TripleIncrementByThree (f doubleParam.value16 z80_core.main)
+            TripleMainChangeDelta doubleParam.time IncrementByThree (f doubleParam.value16 z80_core.main)
 
         Nothing ->
             case singleByteZ80Env |> Dict.get ct_value of
