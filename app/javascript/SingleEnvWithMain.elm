@@ -28,27 +28,27 @@ type SingleEnvMainChange
     | SingleEnvNewHL16BitAdd IXIYHL Int Int
 
 
-singleEnvMainRegs : Dict Int ( MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange, PCIncrement, InstructionDuration )
+singleEnvMainRegs : Dict Int ( MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange, InstructionDuration )
 singleEnvMainRegs =
     Dict.fromList
-        [ ( 0x0A, ( ld_a_indirect_bc, IncrementByOne, SevenTStates ) )
-        , ( 0x1A, ( ld_a_indirect_de, IncrementByOne, SevenTStates ) )
-        , ( 0x39, ( add_hl_sp, IncrementByOne, ElevenTStates ) )
-        , ( 0x46, ( ld_b_indirect_hl, IncrementByOne, SevenTStates ) )
-        , ( 0x4E, ( ld_c_indirect_hl, IncrementByOne, SevenTStates ) )
-        , ( 0x56, ( ld_d_indirect_hl, IncrementByOne, SevenTStates ) )
-        , ( 0x5E, ( ld_e_indirect_hl, IncrementByOne, SevenTStates ) )
-        , ( 0x66, ( ld_h_indirect_hl, IncrementByOne, SevenTStates ) )
-        , ( 0x6E, ( ld_l_indirect_hl, IncrementByOne, SevenTStates ) )
-        , ( 0x7E, ( ld_a_indirect_hl, IncrementByOne, SevenTStates ) )
-        , ( 0x86, ( add_a_indirect_hl, IncrementByOne, SevenTStates ) )
-        , ( 0x8E, ( adc_a_indirect_hl, IncrementByOne, SevenTStates ) )
-        , ( 0x96, ( sub_indirect_hl, IncrementByOne, SevenTStates ) )
-        , ( 0x9E, ( sbc_indirect_hl, IncrementByOne, SevenTStates ) )
-        , ( 0xA6, ( and_indirect_hl, IncrementByOne, SevenTStates ) )
-        , ( 0xAE, ( xor_indirect_hl, IncrementByOne, SevenTStates ) )
-        , ( 0xB6, ( or_indirect_hl, IncrementByOne, SevenTStates ) )
-        , ( 0xBE, ( cp_indirect_hl, IncrementByOne, SevenTStates ) )
+        [ ( 0x0A, ( ld_a_indirect_bc, SevenTStates ) )
+        , ( 0x1A, ( ld_a_indirect_de, SevenTStates ) )
+        , ( 0x39, ( add_hl_sp, ElevenTStates ) )
+        , ( 0x46, ( ld_b_indirect_hl, SevenTStates ) )
+        , ( 0x4E, ( ld_c_indirect_hl, SevenTStates ) )
+        , ( 0x56, ( ld_d_indirect_hl, SevenTStates ) )
+        , ( 0x5E, ( ld_e_indirect_hl, SevenTStates ) )
+        , ( 0x66, ( ld_h_indirect_hl, SevenTStates ) )
+        , ( 0x6E, ( ld_l_indirect_hl, SevenTStates ) )
+        , ( 0x7E, ( ld_a_indirect_hl, SevenTStates ) )
+        , ( 0x86, ( add_a_indirect_hl, SevenTStates ) )
+        , ( 0x8E, ( adc_a_indirect_hl, SevenTStates ) )
+        , ( 0x96, ( sub_indirect_hl, SevenTStates ) )
+        , ( 0x9E, ( sbc_indirect_hl, SevenTStates ) )
+        , ( 0xA6, ( and_indirect_hl, SevenTStates ) )
+        , ( 0xAE, ( xor_indirect_hl, SevenTStates ) )
+        , ( 0xB6, ( or_indirect_hl, SevenTStates ) )
+        , ( 0xBE, ( cp_indirect_hl, SevenTStates ) )
         ]
 
 
@@ -77,7 +77,10 @@ applySingleEnvMainChange pcInc duration z80changeData rom48k z80 =
                 IncrementByTwo ->
                     Bitwise.and (z80.pc + 2) 0xFFFF
 
-                PCIncrementByFour ->
+                IncrementByThree ->
+                    Bitwise.and (z80.pc + 3) 0xFFFF
+
+                IncrementByFour ->
                     Bitwise.and (z80.pc + 4) 0xFFFF
     in
     case z80changeData of
