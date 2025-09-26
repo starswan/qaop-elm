@@ -4,8 +4,9 @@ import Bitwise
 import CpuTimeCTime exposing (CpuTimeAndValue, InstructionDuration, addDuration)
 import Dict
 import DoubleWithRegisters exposing (applyDoubleWithRegistersDelta, doubleWithRegisters)
+import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainRegsCB, singleEnvMainRegsCB)
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
-import SimpleFlagOps exposing (singleByteFlags)
+import SimpleFlagOps exposing (singleByteFlags, singleByteFlagsCB)
 import SimpleSingleByte exposing (singleByteMainRegs)
 import SingleByteWithEnv exposing (applyEnvChangeDelta, singleByteZ80Env)
 import SingleEnvWithMain exposing (applySingleEnvMainChange, singleEnvMainRegs)
@@ -202,4 +203,62 @@ fetchInstruction rom48k r_register z80_core =
                                                                                                     CoreFunction (\core -> core |> applySimple8BitDelta IncreaseByTwo param.time (f param.value)) IncrementByTwo duration
 
                                                                                                 Nothing ->
-                                                                                                    TimeAndValue ct
+                                                                                                    case ct.value of
+                                                                                                        0xCB ->
+                                                                                                            let
+                                                                                                                param =
+                                                                                                                    z80_core.env |> mem (Bitwise.and (z80_core.pc + 1) 0xFFFF) ct.time rom48k
+                                                                                                            in
+                                                                                                            --Special (BitManipCB param)
+                                                                                                            z80_core |> fetchBitManipCB rom48k param
+
+                                                                                                        _ ->
+                                                                                                            TimeAndValue ct
+
+
+fetchBitManipCB : Z80ROM -> CpuTimeAndValue -> Z80Core -> Z80OpCode
+fetchBitManipCB rom48k param z80_core =
+    let
+        instrTime =
+            param.time
+    in
+    case singleByteMainRegsCB |> Dict.get param.value of
+        Just ( mainRegFunc, duration ) ->
+            --RegisterChangeDelta IncrementByTwo duration (mainRegFunc z80_core.main)
+            CoreFunction (\core -> core |> applyRegisterDelta IncrementByTwo duration (mainRegFunc z80_core.main) rom48k) IncrementByTwo duration
+
+        Nothing ->
+            case singleByteFlagsCB |> Dict.get param.value of
+                Just ( flagFunc, duration ) ->
+                    --FlagDelta IncrementByTwo duration (flagFunc z80_core.flags)
+                    CoreFunction
+                        (\core ->
+                            core |> applyFlagDelta IncrementByTwo duration (flagFunc core.flags) rom48k
+                        )
+                        IncrementByTwo
+                        duration
+
+                Nothing ->
+                    case singleEnvMainRegsCB |> Dict.get param.value of
+                        Just ( f, duration ) ->
+                            --MainWithEnvDelta IncrementByTwo duration (f z80_core.main rom48k z80_core.env)
+                            CoreFunction
+                                (\core ->
+                                    core |> applySingleEnvMainChange IncrementByTwo duration (f z80_core.main rom48k z80_core.env) rom48k
+                                )
+                                IncrementByTwo
+                                duration
+
+                        Nothing ->
+                            case singleByteMainAndFlagRegistersCB |> Dict.get param.value of
+                                Just ( f, duration ) ->
+                                    --PureDelta IncrementByTwo (instrTime |> addDuration duration) (f z80_core.main z80_core.flags)
+                                    CoreFunction
+                                        (\core ->
+                                            core |> applyPureDelta IncrementByTwo (instrTime |> addDuration duration) (f z80_core.main z80_core.flags)
+                                        )
+                                        IncrementByOne
+                                        duration
+
+                                Nothing ->
+                                    TimeAndValue param
