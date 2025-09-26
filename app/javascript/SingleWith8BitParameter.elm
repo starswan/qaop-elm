@@ -4,18 +4,18 @@ import Bitwise
 import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..))
-import Utils exposing (byte, shiftLeftBy8)
+import Utils exposing (byte)
 import Z80Flags exposing (FlagFunc(..), FlagRegisters, adc, sbc, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
 import Z80Types exposing (MainWithIndexRegisters)
 
 
-singleWith8BitParam : Dict Int ( Int -> Single8BitChange, MediumPCIncrement, InstructionDuration )
+singleWith8BitParam : Dict Int ( Int -> Single8BitChange, InstructionDuration )
 singleWith8BitParam =
     Dict.fromList
-        [ ( 0x06, ( ld_b_n, IncreaseByTwo, SevenTStates ) )
-        , ( 0x0E, ( ld_c_n, IncreaseByTwo, SevenTStates ) )
-        , ( 0x16, ( ld_d_n, IncreaseByTwo, SevenTStates ) )
-        , ( 0x1E, ( ld_e_n, IncreaseByTwo, SevenTStates ) )
+        [ ( 0x06, ( ld_b_n, SevenTStates ) )
+        , ( 0x0E, ( ld_c_n, SevenTStates ) )
+        , ( 0x16, ( ld_d_n, SevenTStates ) )
+        , ( 0x1E, ( ld_e_n, SevenTStates ) )
         ]
 
 
