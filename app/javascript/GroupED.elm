@@ -559,8 +559,10 @@ group_ed rom48k z80_core =
         ints =
             z80_core.interrupts
 
+        --c =
+        --    z80_core.env |> m1 z80_core.pc (Bitwise.or z80_core.interrupts.ir (Bitwise.and ints.r 0x7F)) rom48k z80_core.clockTime
         c =
-            z80_core.env |> m1 z80_core.pc (Bitwise.or z80_core.interrupts.ir (Bitwise.and ints.r 0x7F)) rom48k z80_core.clockTime
+            z80_core.env |> mem z80_core.pc z80_core.clockTime rom48k
 
         new_r =
             ints.r + 1
