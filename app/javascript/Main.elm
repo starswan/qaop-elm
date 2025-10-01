@@ -78,6 +78,7 @@ type alias Model =
     , elapsed_millis : Int
     , time : Maybe Time.Posix
     , loadPressed : Bool
+    , globalFlash : Bool
     }
 
 
@@ -85,6 +86,7 @@ type Message
     = GotTAP (Result Http.Error (List Tapfile))
     | GotRom (Result Http.Error (Maybe Z80ROM))
     | Tick Time.Posix
+    | FlipFlash Time.Posix
     | Pause
     | Autoload
     | CharacterKeyDown Char
@@ -113,7 +115,7 @@ init data =
         ( newQaop, cmd ) =
             Qaop.new params |> run
     in
-    ( Model newQaop c_TICKTIME 0 0 Nothing False, cmd )
+    ( Model newQaop c_TICKTIME 0 0 Nothing False False, cmd )
 
 
 mapLineToSvg : Int -> ( Int, ScreenColourRun ) -> Svg Message
@@ -174,11 +176,11 @@ screenDataNodeList flash screenLines =
     screenLines |> Vector24.indexedMap (\index line -> line |> Svg.Lazy.lazy3 mapScreenLineToSvg flash index)
 
 
-svgNode : Z80Screen -> Html Message
-svgNode screen =
+svgNode : Z80Screen -> Bool -> Html Message
+svgNode screen flash =
     let
         nodelist =
-            screenDataNodeList screen.flash
+            screenDataNodeList flash
 
         screenLines =
             screen.lines |> nodelist |> Vector24.toList
@@ -241,7 +243,7 @@ view model =
             , preventDefaultOn "keydown" (Decode.map alwaysPreventDefault keyDownDecoder)
             , preventDefaultOn "keyup" (Decode.map alwaysPreventDefault keyUpDecoder)
             ]
-            [ Svg.Lazy.lazy svgNode screen
+            [ Svg.Lazy.lazy2 svgNode screen model.globalFlash
             ]
 
         --,svg [style "height" "192px", style "width" "256px"] (List.indexedMap lineListToSvg lines |> List.concat)
@@ -340,6 +342,9 @@ update message model =
         Autoload ->
             ( { model | loadPressed = True }, Cmd.batch loadingCommands )
 
+        FlipFlash _ ->
+            ( { model | globalFlash = not model.globalFlash }, Cmd.none )
+
 
 loadQuoteQuoteEnter =
     [ AutoChar 'j', AutoChar '"', AutoChar '"', AutoControl "Enter" ]
@@ -378,7 +383,14 @@ subscriptions model =
         Sub.none
 
     else
-        Time.every (model.tickInterval |> toFloat) Tick
+        let
+            ticker =
+                Time.every (model.tickInterval |> toFloat) Tick
+
+            flasher =
+                Time.every (model.tickInterval * 16 |> toFloat) FlipFlash
+        in
+        Sub.batch [ ticker, flasher ]
 
 
 keyDownDecoder : Decode.Decoder Message
