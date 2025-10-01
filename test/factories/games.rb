@@ -8,7 +8,7 @@ FactoryBot.define do
     end
 
     trait :cyrus do
-      name { 'Cyrus IS Chess' }
+      name { 'CyrusChess' }
       download_url { "https://www.worldofspectrum.org/pub/sinclair/games/c/CyrusISChess.tap.zip" }
       # picture_url { "https://worldofspectrum.org/pub/sinclair/screens/in-game/c/CyrusISChess.gif" }
       filetype {  "tap" }

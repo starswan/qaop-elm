@@ -20,8 +20,9 @@ RSpec.describe "Spectrum Emulator" do
     let!(:full_flags) { create(:game, :z80_full_flags) }
     let!(:full) { create(:game, :z80_test_full) }
     let!(:cyrus) { create(:game, :cyrus) }
+    let!(:football_manager) { create(:game, :football_manager) }
 
-    let(:z80_game) { Game.find_by!(name: ENV.fetch("Z80_TEST", cyrus.name)) }
+    let(:z80_game) { Game.find_by!(name: ENV.fetch("Z80_TEST", football_manager.name)) }
 
     let(:times) { {
       flags.name => 7600,
@@ -129,6 +130,26 @@ RSpec.describe "Spectrum Emulator" do
           spectrum.send_keys k
         end
         speed = measure_speed_in_hz
+      elsif z80_game == football_manager
+        delay_and_send(spectrum, 480, "robot")
+        # select Norwich City
+        delay_and_send(spectrum, 1045, "11")
+        # select beginner
+        delay_and_send(spectrum, 1210, "1")
+        # select white team colours
+        delay_and_send(spectrum, 1340, "7")
+        # continue from main menu
+        delay_and_send(spectrum, 1790, "99")
+        #  Hit ENTER to start first match
+        delay_and_send(spectrum, 1995, "")
+        # continue into match
+        delay_and_send(spectrum, 2385, "99")
+
+        measure_speed_in_hz do
+          spectrum.send_keys :enter
+        end
+        spectrum.send_keys :enter
+        speed = measure_speed_in_hz
       else
         speed = measure_speed_in_hz do
           spectrum.send_keys 'y'
@@ -142,6 +163,18 @@ RSpec.describe "Spectrum Emulator" do
       expect(speed).to be > expected_hz
       puts "Speed #{speed} Hz"
     end
+  end
+
+  def delay_and_send(spectrum, time_until, keys)
+    cpu_count = find("#cyclecount")
+
+    while cpu_count.text.to_i < time_until
+      sleep 0.5
+    end
+    keys.each_char do |k|
+      spectrum.send_keys k
+    end
+    spectrum.send_keys [:enter]
   end
 
   def measure_speed_in_hz
