@@ -16,7 +16,6 @@ type alias InterruptRegisters =
     { --mp:  Int, -- /* MEMPTR, the hidden register emulated according to memptr_eng.txt */
       iM : InterruptMode
     , halted : Bool
-    , iff : IFFValue
     , ir : Int
     , r : Int
     }

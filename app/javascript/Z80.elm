@@ -40,13 +40,13 @@ constructor =
             FlagRegisters 0 0 0 0 0
 
         interrupts =
-            Interrupts.InterruptRegisters IM0 False IFF_0 0 0
+            Interrupts.InterruptRegisters IM0 False 0 0
 
         time =
             reset_cpu_time
     in
     --Z80 z80env_constructor 0 main main_flags alternate alt_flags 0 interrupts
-    Z80 (Z80CoreWithClockTime.Z80CoreWithClockTime (Z80Core z80env_constructor main flags interrupts) time 0) alternate flags
+    Z80 (Z80CoreWithClockTime.Z80CoreWithClockTime (Z80Core z80env_constructor main flags interrupts) time 0) alternate flags IFF_0
 
 
 
@@ -197,8 +197,8 @@ type SpecialExecutionType
     | EDMisc CpuTimeAndValue
 
 
-executeAndApplyDelta : CpuTimeAndValue -> Z80ROM -> Z80CoreWithClockTime -> Z80CoreWithClockTime
-executeAndApplyDelta ct rom48k z80clock =
+executeAndApplyDelta : CpuTimeAndValue -> IFFValue -> Z80ROM -> Z80CoreWithClockTime -> Z80CoreWithClockTime
+executeAndApplyDelta ct iff rom48k z80clock =
     let
         z80_core =
             z80clock.core
@@ -224,7 +224,7 @@ executeAndApplyDelta ct rom48k z80clock =
         --    delta |> apply_delta z80_core rom48k clockTime
     in
     --{ z80clock | core = new_core, clockTime = clockTime }
-    case delta |> apply_delta z80_core rom48k clockTime of
+    case delta |> apply_delta z80_core iff rom48k clockTime of
         CoreOnly z80Core ->
             { z80clock | core = z80Core, clockTime = clockTime, pc = pcAfter }
 
@@ -644,7 +644,7 @@ executeCore rom48k z80 =
             \( clock, ct, r_register ) ->
                 let
                     core_1_clock =
-                        clock |> executeAndApplyDelta ct rom48k
+                        clock |> executeAndApplyDelta ct z80.iff rom48k
                 in
                 ( core_1_clock, fetchInstruction core_1_clock.pc rom48k core_1_clock.clockTime r_register core_1_clock.core, r_register + 1 )
 

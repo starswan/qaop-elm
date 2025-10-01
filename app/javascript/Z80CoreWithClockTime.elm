@@ -3,7 +3,7 @@ module Z80CoreWithClockTime exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, addCpuTimeTime, reset_cpu_time)
 import Interrupts exposing (IFFValue(..), InterruptMode(..))
-import Z80Core exposing (Z80Core, set_iff)
+import Z80Core exposing (Z80Core)
 import Z80Env exposing (z80_push, z80env_constructor)
 import Z80Flags exposing (FlagRegisters)
 import Z80Mem exposing (mem16)
@@ -30,7 +30,7 @@ constructor =
         --alt_flags =
         --    FlagRegisters 0 0 0 0 0
         interrupts =
-            Interrupts.InterruptRegisters IM0 False IFF_0 0 0
+            Interrupts.InterruptRegisters IM0 False 0 0
 
         time =
             reset_cpu_time
@@ -43,6 +43,7 @@ type alias Z80 =
     { coreWithClock : Z80CoreWithClockTime
     , alt_main : MainRegisters
     , alt_flags : FlagRegisters
+    , iff : IFFValue
     }
 
 
@@ -88,7 +89,7 @@ interrupt bus rom48k full_z80 =
         let
             --z81 = debug_log "interrupt" "keyboard scan" z80
             z80_1 =
-                { z80_core | interrupts = { ints | halted = False, iff = IFF_0 } }
+                { z80_core | interrupts = { ints | halted = False } }
 
             pushed =
                 z80_1.env |> z80_push z80Clock.pc z80Clock.clockTime
@@ -100,7 +101,7 @@ interrupt bus rom48k full_z80 =
                 { z80Clock | core = new_core, clockTime = z80Clock.clockTime |> addCpuTimeTime 6 }
 
             new_z80 =
-                { full_z80 | coreWithClock = newClock }
+                { full_z80 | coreWithClock = newClock, iff = IFF_0 }
         in
         case ints.iM of
             IM0 ->
@@ -180,42 +181,16 @@ set_pc pc z80 =
 get_ei : Z80 -> Bool
 get_ei z80 =
     --	boolean ei() {return (IFF&1)!=0;}
-    z80.coreWithClock.core.interrupts.iff == IFF_3
+    z80.iff == IFF_3
 
 
 di_0xF3 : Z80 -> Z80
 di_0xF3 full_z80 =
     -- case 0xF3: IFF=0; break;
-    let
-        clock =
-            full_z80.coreWithClock
-
-        z80_core =
-            clock.core
-
-        ints =
-            z80_core |> set_iff IFF_0
-
-        new_core =
-            { z80_core | interrupts = ints }
-    in
-    { full_z80 | coreWithClock = { clock | core = new_core } }
+    { full_z80 | iff = IFF_0 }
 
 
 ei_0xFB : Z80 -> Z80
 ei_0xFB full_z80 =
     --    -- case 0xFB: IFF=3; break;
-    let
-        clock =
-            full_z80.coreWithClock
-
-        z80 =
-            clock.core
-
-        ints =
-            z80 |> set_iff IFF_3
-
-        new_core =
-            { z80 | interrupts = ints }
-    in
-    { full_z80 | coreWithClock = { clock | core = new_core } }
+    { full_z80 | iff = IFF_3 }

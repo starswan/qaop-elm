@@ -63,21 +63,13 @@ type DirectionForLDIR
 --            v.time |> addCpuTimeTime 6
 --    in
 --    CpuTimePcAnd16BitValue env pc v.value16
-
-
-set_iff : IFFValue -> Z80Core -> InterruptRegisters
-set_iff value z80 =
-    let
-        --logging this can be noisy
-        --interrupts =
-        --    debugLog "set_iff" value z80.interrupts
-        interrupts =
-            z80.interrupts
-    in
-    { interrupts | iff = value }
-
-
-
+--set_iff : IFFValue -> Z80Core -> InterruptRegisters
+--set_iff value z80 =
+--    let
+--        interrupts =
+--            debugLog "set_iff" value z80.interrupts
+--    in
+--    { interrupts | iff = value }
 --	int af() {return A<<8 | flags();}
 --get_af_z80 : Z80 -> Int
 --get_af_z80 z80 =

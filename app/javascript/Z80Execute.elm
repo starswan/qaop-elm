@@ -38,8 +38,8 @@ type DeltaWithChanges
     | UnknownInstruction String Int
 
 
-apply_delta : Z80Core -> Z80ROM -> CpuTimeCTime -> DeltaWithChanges -> CoreChange
-apply_delta z80 rom48k clockTime z80delta =
+apply_delta : Z80Core -> IFFValue -> Z80ROM -> CpuTimeCTime -> DeltaWithChanges -> CoreChange
+apply_delta z80 iff rom48k clockTime z80delta =
     case z80delta of
         PureDelta z80ChangeData ->
             z80 |> applyPureDelta clockTime z80ChangeData |> CoreOnly
@@ -71,7 +71,7 @@ apply_delta z80 rom48k clockTime z80delta =
             debugTodo string (int |> toHexString2) z80 |> CoreOnly
 
         InterruptDelta interruptChange ->
-            z80 |> applyInterruptChange interruptChange |> CoreOnly
+            z80 |> applyInterruptChange interruptChange iff |> CoreOnly
 
         EDChangeDelta eDRegisterChange ->
             z80 |> applyEdRegisterDelta clockTime eDRegisterChange rom48k
@@ -201,8 +201,8 @@ applySimple8BitDelta cpu_time z80changeData rom48k z80 =
             { z80 | env = env }
 
 
-applyInterruptChange : InterruptChange -> Z80Core -> Z80Core
-applyInterruptChange chaange z80 =
+applyInterruptChange : InterruptChange -> IFFValue -> Z80Core -> Z80Core
+applyInterruptChange chaange iff z80 =
     case chaange of
         LoadAFromIR value ->
             --private void ld_a_ir(int v)
@@ -227,7 +227,8 @@ applyInterruptChange chaange z80 =
                         1
 
                 fab =
-                    case z80.interrupts.iff of
+                    --iff |> shiftLeftBy 6 |> Bitwise.and 0x80
+                    case iff of
                         IFF_0 ->
                             0
 
