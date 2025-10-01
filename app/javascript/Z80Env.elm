@@ -559,8 +559,8 @@ setMem16 addr value time_input z80env =
 --	}
 
 
-out : Int -> Int -> CpuTimeCTime -> Z80Env -> Z80Env
-out portnum value clockTime env_in =
+z80_out : Int -> Int -> CpuTimeCTime -> Z80Env -> Z80Env
+z80_out portnum value clockTime env_in =
     let
         newTime =
             clockTime |> cont_port portnum

@@ -7,7 +7,7 @@ import GroupED exposing (group_ed)
 import Utils exposing (shiftLeftBy8)
 import Z80Core exposing (Z80Core)
 import Z80Delta exposing (Z80Delta(..))
-import Z80Env exposing (Z80Env, mem, out, z80_in)
+import Z80Env exposing (Z80Env, mem, z80_in, z80_out)
 import Z80Rom exposing (Z80ROM)
 
 
@@ -34,7 +34,7 @@ execute_0xD3 rom48k z80 =
             Bitwise.or value.value (shiftLeftBy8 z80.flags.a)
 
         env =
-            env_1 |> out v z80.flags.a (value.time |> addCpuTimeTime 4)
+            env_1 |> z80_out v z80.flags.a (value.time |> addCpuTimeTime 4)
     in
     EnvWithPc env value.pc
 
