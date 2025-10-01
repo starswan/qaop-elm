@@ -4,7 +4,8 @@ import Bitwise
 import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..))
-import Utils exposing (byte)
+import Utils exposing (byte, shiftLeftBy8)
+import Z80Env exposing (z80_out)
 import Z80Flags exposing (FlagFunc(..), FlagRegisters, adc, sbc, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
 import Z80Types exposing (MainWithIndexRegisters)
 
@@ -36,6 +37,7 @@ maybeRelativeJump =
         , ( 0xEE, ( xor_n, SevenTStates ) )
         , ( 0xF6, ( or_n, SevenTStates ) )
         , ( 0xFE, ( cp_n, SevenTStates ) )
+        , ( 0xD3, ( out_n_a, ElevenTStates ) )
         ]
 
 
@@ -50,6 +52,7 @@ type JumpChange
     = ActualJump Int
     | NoJump
     | FlagJump FlagRegisters
+    | Z80Out Int Int
 
 
 applySimple8BitChange : Single8BitChange -> MainWithIndexRegisters -> MainWithIndexRegisters
@@ -244,15 +247,9 @@ cp_n : Int -> FlagRegisters -> JumpChange
 cp_n param z80_flags =
     -- case 0xFE: cp(imm8()); break;
     let
-        --v =
-        --    imm8 z80.pc z80.env.time rom48k z80.env.ram
         flags =
             z80_flags |> z80_cp param
-
-        --env_1 =
-        --    z80.env
     in
-    --{ z80 | flags = flags, env = { env_1 | time = v.time }, pc = v.pc }
     FlagJump flags
 
 
@@ -267,3 +264,13 @@ ld_a_n param z80_flags =
     --{ new_z80 | flags = { z80_flags | a = v.value } }
     --CpuTimeWithFlagsAndPc v.time { z80_flags | a = v.value } v.pc
     FlagJump { z80_flags | a = param }
+
+
+out_n_a : Int -> FlagRegisters -> JumpChange
+out_n_a param z80_flags =
+    -- case 0xD3: env.out(v=imm8()|A<<8,A); MP=v+1&0xFF|v&0xFF00; time+=4; break;
+    let
+        portNum =
+            Bitwise.or param (shiftLeftBy8 z80_flags.a)
+    in
+    Z80Out portNum z80_flags.a
