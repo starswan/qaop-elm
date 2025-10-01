@@ -10,7 +10,7 @@ RSpec.describe GamesController, type: :controller do
   it "should get index" do
     get :index
     assert_response :success
-    expect( assigns(:games)).not_to be_nil
+    expect(assigns(:games)).not_to be_nil
   end
 
   it "should show game" do

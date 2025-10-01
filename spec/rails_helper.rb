@@ -22,7 +22,6 @@ Capybara.register_driver(:cuprite) do |app|
   Capybara::Cuprite::Driver.new(app, headless: false, process_timeout: 40, window_size: [1024, 1280])
   # 3 scale size
   # Capybara::Cuprite::Driver.new(app, headless: false, process_timeout: 40, window_size: [1152, 1460])
-
 end
 Capybara.javascript_driver = :cuprite
 

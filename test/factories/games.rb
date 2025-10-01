@@ -11,14 +11,14 @@ FactoryBot.define do
       name { 'CyrusChess' }
       download_url { "https://www.worldofspectrum.org/pub/sinclair/games/c/CyrusISChess.tap.zip" }
       # picture_url { "https://worldofspectrum.org/pub/sinclair/screens/in-game/c/CyrusISChess.gif" }
-      filetype {  "tap" }
+      filetype { "tap" }
       filename { 'CYRCHESS.TAP' }
     end
 
     trait :z80_test_flags do
       name { 'Flags' }
       download_url { "https://github.com/raxoft/z80test/releases/download/v1.2a/z80test-1.2a.zip" }
-      filetype {  "tap" }
+      filetype { "tap" }
       filename { 'z80docflags.tap' }
     end
 
@@ -41,7 +41,7 @@ FactoryBot.define do
     end
 
     trait :football_manager do
-      name {  'Football Manager' }
+      name { 'Football Manager' }
       filename { 'FOOTMANG.TAP' }
       picture_url { "https://worldofspectrum.net/pub/sinclair/screens/in-game/f/FootballManager.gif" }
       download_url { "https://worldofspectrum.net/pub/sinclair/games/f/FootballManager.tap.zip" }

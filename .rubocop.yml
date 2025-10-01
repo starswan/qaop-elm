@@ -1,0 +1,77 @@
+inherit_from: .rubocop_todo.yml
+
+inherit_gem:
+  rubocop-govuk:
+    - config/default.yml
+    - config/rails.yml
+
+plugins:
+  - rubocop-performance
+  - rubocop-rails
+  - rubocop-rspec
+
+AllCops:
+  # Exclude anything that isn't really part of our code.
+  # Exclude ancient migrations as they need deleting
+  Exclude:
+    - 'vendor/bundle/**/*'
+    - 'node_modules/**/*'
+    - 'db/schema.rb'
+    - 'db/migrate/2013*'
+    - 'db/migrate/2014*'
+    - 'db/migrate/2015*'
+    - 'db/migrate/2016*'
+    - 'db/migrate/2017*'
+    - 'db/migrate/2018*'
+    - 'db/migrate/2019*'
+    - 'db/migrate/2020*'
+    - 'db/migrate/2021*'
+    - 'config/application.rb'
+    - 'config/initializers/*.rb'
+    - 'config/spring.rb'
+    - 'config/environments/*.rb'
+    - 'config/environment.rb'
+    - 'config/boot.rb'
+    - 'config/routes.rb'
+    - 'bin/*'
+    - 'config.ru'
+    - 'Rakefile'
+
+Bundler/OrderedGems:
+  Exclude:
+    - 'Gemfile'
+
+# These 2 files cause 'infinite loop detected' with Rubocop 0.87
+Layout/EmptyLinesAroundAccessModifier:
+  Exclude:
+    - 'spec/models/match_spec.rb'
+    - 'db/migrate/20140603180320_remove_basket_orphans.rb'
+
+# This is ok in this one case - reading a ZIP file
+Lint/AssignmentInCondition:
+  Exclude:
+    - 'app/jobs/load_football_data_job.rb'
+
+# This is tricky, as it is an Integer enhancement
+RSpec/DescribeClass:
+  Exclude:
+    - 'spec/valuers/factorial_spec.rb'
+
+RSpec/ExampleLength:
+  Max: 20
+
+RSpec/MultipleExpectations:
+  Max: 4
+
+RSpec/MultipleMemoizedHelpers:
+  Max: 14
+
+Style/HashSyntax:
+  EnforcedShorthandSyntax: either
+
+Rails/CreateTableWithTimestamps:
+  Exclude:
+    - 'db/migrate/20121206201500_initial_load2012.rb'
+    - 'db/migrate/20140729201636_remove_bdrb_job_queues_table.rb'
+    - 'db/migrate/20221026161134_create_season_calendar.rb'
+
