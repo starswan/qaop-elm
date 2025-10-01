@@ -7,36 +7,16 @@ import GroupED exposing (group_ed)
 import Utils exposing (shiftLeftBy8)
 import Z80Core exposing (Z80Core)
 import Z80Delta exposing (Z80Delta(..))
-import Z80Env exposing (Z80Env, mem, out, z80_in)
+import Z80Env exposing (Z80Env, mem, z80_in, z80_out)
 import Z80Rom exposing (Z80ROM)
 
 
 delta_dict_lite_E0 : Dict Int (Z80ROM -> Z80Core -> Z80Delta)
 delta_dict_lite_E0 =
     Dict.fromList
-        [ ( 0xD3, execute_0xD3 )
-        , ( 0xDB, execute_0xDB )
+        [ ( 0xDB, execute_0xDB )
         , ( 0xED, group_ed )
         ]
-
-
-execute_0xD3 : Z80ROM -> Z80Core -> Z80Delta
-execute_0xD3 rom48k z80 =
-    -- case 0xD3: env.out(v=imm8()|A<<8,A); MP=v+1&0xFF|v&0xFF00; time+=4; break;
-    let
-        value =
-            z80.env |> imm8 z80.pc z80.clockTime rom48k
-
-        env_1 =
-            z80.env
-
-        v =
-            Bitwise.or value.value (shiftLeftBy8 z80.flags.a)
-
-        env =
-            env_1 |> out v z80.flags.a (value.time |> addCpuTimeTime 4)
-    in
-    EnvWithPc env value.pc
 
 
 execute_0xDB : Z80ROM -> Z80Core -> Z80Delta

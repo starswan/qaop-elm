@@ -84,6 +84,9 @@ group :development do
   gem 'ed25519'
   # required for passenger support
   gem 'rexml'
+
+  gem "rubocop-govuk"
+  gem "rubocop-performance"
 end
 
 group :test do

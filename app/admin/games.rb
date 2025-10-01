@@ -1,5 +1,4 @@
 ActiveAdmin.register Game do
-
   index do
     selectable_column
     column :name
@@ -25,5 +24,4 @@ ActiveAdmin.register Game do
   #   permitted << :other if params[:action] == 'create' && current_user.admin?
   #   permitted
   # end
-  
 end

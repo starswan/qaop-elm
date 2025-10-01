@@ -3,7 +3,7 @@ require "rails_helper"
 # require "open-uri"
 require "zip"
 
-RSpec.describe "Spectrum Emulator" do
+RSpec.describe "Game" do
   let(:expected_hz) { (ENV['HZ'] || "9.8").to_f }
 
   context "with documented Z80 test" do
@@ -15,23 +15,37 @@ RSpec.describe "Spectrum Emulator" do
         f.adapter Faraday.default_adapter
       end
     }
-    let!(:flags) { create(:game, :z80_test_flags) }
-    let!(:regs) { create(:game, :z80_test_doc) }
-    let!(:full_flags) { create(:game, :z80_full_flags) }
-    let!(:full) { create(:game, :z80_test_full) }
-    let!(:cyrus) { create(:game, :cyrus) }
-    let!(:football_manager) { create(:game, :football_manager) }
+    let(:cyrus) { build(:game, :cyrus) }
+    let(:football_manager) { build(:game, :football_manager) }
+    let(:flags) { build(:game, :z80_test_flags) }
+    let(:regs) { build(:game, :z80_test_doc) }
+    let(:full_flags) { build(:game, :z80_full_flags) }
+    let(:full) { build(:game, :z80_test_full) }
+    let(:programs) {
+      [
+        flags,
+        regs,
+        full_flags,
+        full,
+        cyrus,
+        football_manager,
+      ]
+    }
 
-    let(:z80_game) { Game.find_by!(name: ENV.fetch("Z80_TEST", football_manager.name)) }
+    let(:z80_game) { programs.detect { |p| p.name == ENV.fetch("Z80_TEST", football_manager.name) } }
+    # let(:z80_game) { programs.detect { |p| p.name == ENV.fetch("Z80_TEST", cyrus.name) } }
 
-    let(:times) { {
-      flags.name => 7600,
-      regs.name => 13000,
-      full_flags.name => 7900,
-      full.name => 14000,
-    }}
+    let(:times) {
+      {
+        flags.name => 7600,
+        regs.name => 13000,
+        full_flags.name => 7900,
+        full.name => 14000,
+      }
+    }
 
     before do
+      z80_game.save!
       visit '/'
     end
 
@@ -111,29 +125,18 @@ RSpec.describe "Spectrum Emulator" do
       end
       spectrum.send_keys [:enter]
 
-      if z80_game == cyrus
-        # Wait for cyrus chess to initialise before
-        # sending 'd' for demo mode
-        while cpu_count.text.to_i < 300
-          sleep 0.5
-        end
+      if z80_game.name == cyrus.name
         # square colours
-        cycles = cpu_count.text.to_i
-        "a0724".each_char do |k|
-          spectrum.send_keys k
-        end
-        while cpu_count.text.to_i - cycles < 150
-          sleep 0.5
-        end
+        delay_and_send(spectrum, 300, "a0724")
         # Level 3 demo mode Cyrus vs Cyrus
-        "ld".each_char do |k|
-          spectrum.send_keys k
-        end
+        delay_and_send(spectrum, 450, "ld")
+
         speed = measure_speed_in_hz
-      elsif z80_game == football_manager
+      elsif z80_game.name == football_manager.name
+        # Player name
         delay_and_send(spectrum, 480, "robot")
         # select Norwich City
-        delay_and_send(spectrum, 1045, "11")
+        delay_and_send(spectrum, 960, "11")
         # select beginner
         delay_and_send(spectrum, 1210, "1")
         # select white team colours
@@ -141,9 +144,9 @@ RSpec.describe "Spectrum Emulator" do
         # continue from main menu
         delay_and_send(spectrum, 1790, "99")
         #  Hit ENTER to start first match
-        delay_and_send(spectrum, 1995, "")
+        delay_and_send(spectrum, 1975, "")
         # continue into match
-        delay_and_send(spectrum, 2385, "99")
+        delay_and_send(spectrum, 2295, "99")
 
         measure_speed_in_hz do
           spectrum.send_keys :enter

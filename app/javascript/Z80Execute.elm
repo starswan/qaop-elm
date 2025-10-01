@@ -17,7 +17,7 @@ import Z80Change exposing (FlagChange(..), Z80Change, applyZ80Change)
 import Z80Core exposing (Z80Core)
 import Z80Debug exposing (debugLog, debugTodo)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..), applyDeltaWithChanges)
-import Z80Env exposing (Z80Env, Z80EnvWithPC, mem, mem16, setMem, setMemIgnoringTime, z80_pop, z80_push)
+import Z80Env exposing (Z80Env, Z80EnvWithPC, mem, mem16, setMem, setMemIgnoringTime, z80_out, z80_pop, z80_push)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, inc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (InterruptRegisters, MainWithIndexRegisters, get_xy, set_bc_main, set_de_main, set_xy)
@@ -122,6 +122,20 @@ applyJumpChangeDelta cpu_time z80changeData z80 =
                 | pc = pc
                 , flags = flags
                 , clockTime = cpu_time
+            }
+
+        Z80Out portNum value ->
+            let
+                pc =
+                    Bitwise.and (z80.pc + 2) 0xFFFF
+
+                ( env, newTime ) =
+                    z80.env |> z80_out portNum value cpu_time
+            in
+            { z80
+                | pc = pc
+                , env = env
+                , clockTime = newTime
             }
 
 
