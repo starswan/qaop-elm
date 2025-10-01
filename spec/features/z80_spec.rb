@@ -23,6 +23,7 @@ RSpec.describe "Spectrum Emulator" do
     let!(:football_manager) { create(:game, :football_manager) }
 
     let(:z80_game) { Game.find_by!(name: ENV.fetch("Z80_TEST", football_manager.name)) }
+    # let(:z80_game) { Game.find_by!(name: ENV.fetch("Z80_TEST", cyrus.name)) }
 
     let(:times) { {
       flags.name => 7600,
@@ -112,23 +113,11 @@ RSpec.describe "Spectrum Emulator" do
       spectrum.send_keys [:enter]
 
       if z80_game == cyrus
-        # Wait for cyrus chess to initialise before
-        # sending 'd' for demo mode
-        while cpu_count.text.to_i < 300
-          sleep 0.5
-        end
         # square colours
-        cycles = cpu_count.text.to_i
-        "a0724".each_char do |k|
-          spectrum.send_keys k
-        end
-        while cpu_count.text.to_i - cycles < 150
-          sleep 0.5
-        end
+        delay_and_send(spectrum, 300, "a0724")
         # Level 3 demo mode Cyrus vs Cyrus
-        "ld".each_char do |k|
-          spectrum.send_keys k
-        end
+        delay_and_send(spectrum, 450, "ld")
+
         speed = measure_speed_in_hz
       elsif z80_game == football_manager
         delay_and_send(spectrum, 480, "robot")
@@ -143,7 +132,7 @@ RSpec.describe "Spectrum Emulator" do
         #  Hit ENTER to start first match
         delay_and_send(spectrum, 1995, "")
         # continue into match
-        delay_and_send(spectrum, 2385, "99")
+        delay_and_send(spectrum, 2350, "99")
 
         measure_speed_in_hz do
           spectrum.send_keys :enter
