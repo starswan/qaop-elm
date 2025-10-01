@@ -130,66 +130,25 @@ RSpec.describe "Spectrum Emulator" do
           spectrum.send_keys k
         end
         speed = measure_speed_in_hz
-      elsif  z80_game == football_manager
-        while cpu_count.text.to_i < 490
-          sleep 0.5
-        end
-        "Test Robot".each_char do |k|
-          spectrum.send_keys k
-        end
-        spectrum.send_keys [:enter]
-
-        while cpu_count.text.to_i < 1050
-          sleep 0.5
-        end
+      elsif z80_game == football_manager
+        delay_and_send(spectrum, 480, "robot")
         # select Norwich City
-        "11".each_char do |k|
-          spectrum.send_keys k
-        end
-        spectrum.send_keys [:enter]
-
-        while cpu_count.text.to_i < 1250
-          sleep 0.5
-        end
+        delay_and_send(spectrum, 1045, "11")
         # select beginner
-        "1".each_char do |k|
-          spectrum.send_keys k
-        end
-        spectrum.send_keys [:enter]
-
-        while cpu_count.text.to_i < 1370
-          sleep 0.5
-        end
+        delay_and_send(spectrum, 1210, "1")
         # select white team colours
-        "7".each_char do |k|
-          spectrum.send_keys k
-        end
-        spectrum.send_keys [:enter]
-
-        while cpu_count.text.to_i < 1880
-          sleep 0.5
-        end
+        delay_and_send(spectrum, 1340, "7")
         # continue from main menu
-        "99".each_char do |k|
-          spectrum.send_keys k
-        end
-        spectrum.send_keys [:enter]
-
+        delay_and_send(spectrum, 1790, "99")
         #  Hit ENTER to start first match
-        while cpu_count.text.to_i < 2100
-          sleep 0.5
-        end
-        spectrum.send_keys [:enter]
-
-        while cpu_count.text.to_i < 2450
-          sleep 0.5
-        end
+        delay_and_send(spectrum, 1995, "")
         # continue into match
-        "99".each_char do |k|
-          spectrum.send_keys k
-        end
-        spectrum.send_keys [:enter]
+        delay_and_send(spectrum, 2385, "99")
 
+        measure_speed_in_hz do
+          spectrum.send_keys :enter
+        end
+        spectrum.send_keys :enter
         speed = measure_speed_in_hz
       else
         speed = measure_speed_in_hz do
@@ -204,6 +163,18 @@ RSpec.describe "Spectrum Emulator" do
       expect(speed).to be > expected_hz
       puts "Speed #{speed} Hz"
     end
+  end
+
+  def delay_and_send(spectrum, time_until, keys)
+    cpu_count = find("#cyclecount")
+
+    while cpu_count.text.to_i < time_until
+      sleep 0.5
+    end
+    keys.each_char do |k|
+      spectrum.send_keys k
+    end
+    spectrum.send_keys [:enter]
   end
 
   def measure_speed_in_hz
