@@ -136,17 +136,17 @@ RSpec.describe "Game" do
         # Player name
         delay_and_send(spectrum, 480, "robot")
         # select Norwich City
-        delay_and_send(spectrum, 960, "11")
+        delay_and_send(spectrum, 950, "11")
         # select beginner
-        delay_and_send(spectrum, 1210, "1")
+        delay_and_send(spectrum, 1180, "1")
         # select white team colours
-        delay_and_send(spectrum, 1340, "7")
+        delay_and_send(spectrum, 1300, "7")
         # continue from main menu
-        delay_and_send(spectrum, 1790, "99")
+        delay_and_send(spectrum, 1755, "99")
         #  Hit ENTER to start first match
-        delay_and_send(spectrum, 1975, "")
+        delay_and_send(spectrum, 1955, "")
         # continue into match
-        delay_and_send(spectrum, 2295, "99")
+        delay_and_send(spectrum, 2270, "99")
 
         measure_speed_in_hz do
           spectrum.send_keys :enter
