@@ -20,8 +20,9 @@ RSpec.describe "Spectrum Emulator" do
     let!(:full_flags) { create(:game, :z80_full_flags) }
     let!(:full) { create(:game, :z80_test_full) }
     let!(:cyrus) { create(:game, :cyrus) }
+    let!(:football_manager) { create(:game, :football_manager) }
 
-    let(:z80_game) { Game.find_by!(name: ENV.fetch("Z80_TEST", cyrus.name)) }
+    let(:z80_game) { Game.find_by!(name: ENV.fetch("Z80_TEST", football_manager.name)) }
 
     let(:times) { {
       flags.name => 7600,
@@ -128,6 +129,67 @@ RSpec.describe "Spectrum Emulator" do
         "ld".each_char do |k|
           spectrum.send_keys k
         end
+        speed = measure_speed_in_hz
+      elsif  z80_game == football_manager
+        while cpu_count.text.to_i < 490
+          sleep 0.5
+        end
+        "Test Robot".each_char do |k|
+          spectrum.send_keys k
+        end
+        spectrum.send_keys [:enter]
+
+        while cpu_count.text.to_i < 1050
+          sleep 0.5
+        end
+        # select Norwich City
+        "11".each_char do |k|
+          spectrum.send_keys k
+        end
+        spectrum.send_keys [:enter]
+
+        while cpu_count.text.to_i < 1250
+          sleep 0.5
+        end
+        # select beginner
+        "1".each_char do |k|
+          spectrum.send_keys k
+        end
+        spectrum.send_keys [:enter]
+
+        while cpu_count.text.to_i < 1370
+          sleep 0.5
+        end
+        # select white team colours
+        "7".each_char do |k|
+          spectrum.send_keys k
+        end
+        spectrum.send_keys [:enter]
+
+        while cpu_count.text.to_i < 1880
+          sleep 0.5
+        end
+        # continue from main menu
+        "99".each_char do |k|
+          spectrum.send_keys k
+        end
+        spectrum.send_keys [:enter]
+
+        #  Hit ENTER to start first match
+        while cpu_count.text.to_i < 2100
+          sleep 0.5
+        end
+        spectrum.send_keys [:enter]
+
+        while cpu_count.text.to_i < 2450
+          sleep 0.5
+        end
+        # continue into match
+        "99".each_char do |k|
+          spectrum.send_keys k
+        end
+        spectrum.send_keys [:enter]
+
         speed = measure_speed_in_hz
       else
         speed = measure_speed_in_hz do
