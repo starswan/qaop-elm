@@ -17,8 +17,8 @@ type alias ScreenLine =
 type alias Z80Screen =
     { lines : Vector24 ScreenLine
     , border : BorderColour
-    , flash : Bool
 
+    --, flash : Bool
     --refrs_a: Int,
     --refrs_b: Int,
     --refrs_t: Int,
@@ -49,7 +49,8 @@ constructor =
         line =
             { attrs = attr_line, data = screen_line }
     in
-    Z80Screen (Vector24.repeat line) BorderWhite False
+    --Z80Screen (Vector24.repeat line) BorderWhite False
+    Z80Screen (Vector24.repeat line) BorderWhite
 
 
 calcDataOffset : Int -> Int
