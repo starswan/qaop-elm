@@ -1,7 +1,7 @@
 module GroupCB exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimePcAnd16BitValue, CpuTimePcAndValue, InstructionDuration(..))
+import CpuTimeCTime exposing (CpuTimePcAnd16BitValue, InstructionDuration(..))
 import Dict exposing (Dict)
 import RegisterChange exposing (ChangeMainRegister(..), ChangeOneRegister(..), RegisterChange(..), Shifter(..))
 import SingleEnvWithMain exposing (EightBitMain(..), SingleEnvMainChange(..))

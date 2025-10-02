@@ -16,10 +16,19 @@ import Utils exposing (char, shiftLeftBy8, shiftRightBy8)
 import Z80Change exposing (FlagChange(..), Z80Change(..))
 import Z80Core exposing (Z80Core, add_cpu_time, imm16)
 import Z80Delta exposing (Z80Delta(..))
-import Z80Env exposing (Z80Env, m1, mem, mem16, setMem16IgnoringTime, setMemIgnoringTime, z80_in)
+import Z80Env exposing (Z80Env, mem, mem16, setMem16IgnoringTime, setMemIgnoringTime, z80_in)
 import Z80Flags exposing (FlagRegisters, c_F3, c_F5, c_F53, c_FC, c_FH, f_szh0n0p, z80_sub)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (InterruptMode(..), InterruptRegisters, MainWithIndexRegisters, get_bc, get_de, set_bc_main, set_de_main)
+
+
+delta_dict_lite_E0 : Dict Int (Z80ROM -> Z80Core -> Z80Delta)
+delta_dict_lite_E0 =
+    Dict.fromList
+        [ -- ( 0xDB, execute_0xDB )
+          --,
+          ( 0xED, group_ed )
+        ]
 
 
 group_ed_dict : Dict Int (Z80ROM -> Z80Core -> Z80Delta)
