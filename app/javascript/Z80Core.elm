@@ -1,7 +1,7 @@
 module Z80Core exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeCTime, CpuTimePcAnd16BitValue, CpuTimePcAndValue, addCpuTimeTime)
+import CpuTimeCTime exposing (CpuTimeCTime, CpuTimePcAnd16BitValue, addCpuTimeTime)
 import Utils exposing (shiftLeftBy8)
 import Z80Debug exposing (debugLog)
 import Z80Env exposing (Z80Env, mem16, setMemIgnoringTime, z80_push)

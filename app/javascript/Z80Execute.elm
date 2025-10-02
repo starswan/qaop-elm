@@ -17,7 +17,7 @@ import Z80Change exposing (FlagChange(..), Z80Change, applyZ80Change)
 import Z80Core exposing (Z80Core)
 import Z80Debug exposing (debugLog, debugTodo)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..), applyDeltaWithChanges)
-import Z80Env exposing (Z80Env, Z80EnvWithPC, mem, mem16, setMem, setMemIgnoringTime, z80_out, z80_pop, z80_push)
+import Z80Env exposing (Z80Env, Z80EnvWithPC, mem, mem16, setMem, setMemIgnoringTime, z80_in, z80_out, z80_pop, z80_push)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, inc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (InterruptRegisters, MainWithIndexRegisters, get_xy, set_bc_main, set_de_main, set_xy)
@@ -63,7 +63,7 @@ apply_delta z80 rom48k z80delta =
             z80 |> applyDoubleWithRegistersDelta pcInc cpuTimeCTime doubleWithRegisterChange rom48k
 
         JumpChangeDelta cpuTimeCTime jumpChange ->
-            z80 |> applyJumpChangeDelta cpuTimeCTime jumpChange
+            z80 |> applyJumpChangeDelta cpuTimeCTime jumpChange rom48k
 
         NoParamsDelta cpuTimeCTime noParamChange ->
             z80 |> applyNoParamsDelta cpuTimeCTime noParamChange rom48k
@@ -90,8 +90,8 @@ apply_delta z80 rom48k z80delta =
             z80 |> applyInterruptChange pCIncrement duration interruptChange
 
 
-applyJumpChangeDelta : CpuTimeCTime -> JumpChange -> Z80Core -> Z80Core
-applyJumpChangeDelta cpu_time z80changeData z80 =
+applyJumpChangeDelta : CpuTimeCTime -> JumpChange -> Z80ROM -> Z80Core -> Z80Core
+applyJumpChangeDelta cpu_time z80changeData rom48k z80 =
     case z80changeData of
         ActualJump jump ->
             let
@@ -136,6 +136,23 @@ applyJumpChangeDelta cpu_time z80changeData z80 =
                 | pc = pc
                 , env = env
                 , clockTime = newTime
+            }
+
+        Z80In portNum ->
+            let
+                pc =
+                    Bitwise.and (z80.pc + 2) 0xFFFF
+
+                new_a =
+                    z80.env |> z80_in portNum rom48k.keyboard cpu_time
+
+                flags =
+                    z80.flags
+            in
+            { z80
+                | pc = pc
+                , flags = { flags | a = new_a.value }
+                , clockTime = new_a.time
             }
 
 

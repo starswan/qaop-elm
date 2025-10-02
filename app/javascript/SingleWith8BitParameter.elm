@@ -3,9 +3,7 @@ module SingleWith8BitParameter exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
-import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..))
 import Utils exposing (byte, shiftLeftBy8)
-import Z80Env exposing (z80_out)
 import Z80Flags exposing (FlagFunc(..), FlagRegisters, adc, sbc, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
 import Z80Types exposing (MainWithIndexRegisters)
 
@@ -38,6 +36,7 @@ maybeRelativeJump =
         , ( 0xF6, ( or_n, SevenTStates ) )
         , ( 0xFE, ( cp_n, SevenTStates ) )
         , ( 0xD3, ( out_n_a, ElevenTStates ) )
+        , ( 0xDB, ( in_a_n, ElevenTStates ) )
         ]
 
 
@@ -53,6 +52,7 @@ type JumpChange
     | NoJump
     | FlagJump FlagRegisters
     | Z80Out Int Int
+    | Z80In Int
 
 
 applySimple8BitChange : Single8BitChange -> MainWithIndexRegisters -> MainWithIndexRegisters
@@ -274,3 +274,13 @@ out_n_a param z80_flags =
             Bitwise.or param (shiftLeftBy8 z80_flags.a)
     in
     Z80Out portNum z80_flags.a
+
+
+in_a_n : Int -> FlagRegisters -> JumpChange
+in_a_n param z80_flags =
+    -- case 0xDB: MP=(v=imm8()|A<<8)+1; A=env.in(v); time+=4; break;
+    let
+        portNum =
+            Bitwise.or param (shiftLeftBy8 z80_flags.a)
+    in
+    Z80In portNum
