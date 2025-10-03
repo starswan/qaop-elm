@@ -9,6 +9,7 @@ import Z80Rom
 
 suite : Test
 suite =
+    -- complete 0x40 - 0x4F
     let
         addr =
             30000
@@ -32,8 +33,22 @@ suite =
             Z80Rom.constructor
     in
     describe "Z80.execute_instruction"
-        -- 0x40 is a NO-OP
-        [ test "0x41 LD B,C" <|
+        [ test "0x40 LD B,B (NOOP)" <|
+            \_ ->
+                let
+                    new_env =
+                        z80env
+                            |> setMemWithTime addr 0x40
+                            |> .z80env
+
+                    z80inc =
+                        executeCoreInstruction z80rom
+                            { z80
+                                | env = new_env
+                            }
+                in
+                Expect.equal ( addr + 1, 4 ) ( z80inc.pc, z80inc.clockTime.cpu_time - z80.clockTime.cpu_time )
+        , test "0x41 LD B,C" <|
             \_ ->
                 let
                     new_env =
@@ -275,6 +290,22 @@ suite =
                             }
                 in
                 Expect.equal ( addr + 1, 0x76 ) ( new_z80.pc, new_z80.main.c )
+        , test "0x49 LD C,C (NOOP)" <|
+            \_ ->
+                let
+                    new_env =
+                        z80env
+                            |> setMemWithTime addr 0x49
+                            |> .z80env
+
+                    z80inc =
+                        executeCoreInstruction z80rom
+                            { z80
+                                | env = new_env
+                                , main = { z80main | hl = 0x6545, b = 0x76 }
+                            }
+                in
+                Expect.equal ( addr + 1, 4 ) ( z80inc.pc, z80inc.clockTime.cpu_time - z80.clockTime.cpu_time )
         , test "0x4A LD C,D" <|
             \_ ->
                 let
