@@ -97,25 +97,23 @@ suite =
                     in
                     Expect.equal 0x3405 new_z80.pc
             ]
-        , describe "0xD3 - OUT (N), A"
-            [ test "OUT" <|
-                \_ ->
-                    let
-                        new_env =
-                            z80env
-                                |> setMemWithTime addr 0xD3
-                                |> setMemWithTime (addr + 1) 0x05
-                                |> .z80env
+        , test "0xD3 - OUT (N), A" <|
+            \_ ->
+                let
+                    new_env =
+                        z80env
+                            |> setMemWithTime addr 0xD3
+                            |> setMemWithTime (addr + 1) 0x05
+                            |> .z80env
 
-                        new_z80 =
-                            executeCoreInstruction z80rom
-                                { z80
-                                    | env = new_env
-                                    , flags = { flags | a = 0x39, ff = 0x0200 }
-                                }
-                    in
-                    Expect.equal (addr + 2) new_z80.pc
-            ]
+                    new_z80 =
+                        executeCoreInstruction z80rom
+                            { z80
+                                | env = new_env
+                                , flags = { flags | a = 0x39, ff = 0x0200 }
+                            }
+                in
+                Expect.equal (addr + 2) new_z80.pc
         , describe "0xD4 CALL NC"
             [ test "Dont jump" <|
                 \_ ->
@@ -210,6 +208,23 @@ suite =
                     in
                     Expect.equal ( 0x3405, 0xF763 ) ( new_z80.pc, new_z80.env.sp )
             ]
+        , test "0xDB - IN A, (N)" <|
+            \_ ->
+                let
+                    new_env =
+                        z80env
+                            |> setMemWithTime addr 0xDB
+                            |> setMemWithTime (addr + 1) 0x05
+                            |> .z80env
+
+                    new_z80 =
+                        executeCoreInstruction z80rom
+                            { z80
+                                | env = new_env
+                                , flags = { flags | a = 0x39, ff = 0x0200 }
+                            }
+                in
+                Expect.equal ( addr + 2, 0xFF ) ( new_z80.pc, new_z80.flags.a )
 
         --, test "0xD9 EXX" <|
         --    \_ ->
