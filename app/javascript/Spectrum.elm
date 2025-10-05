@@ -13,7 +13,7 @@ import Z80Core exposing (Z80, Z80Core, get_ei, interrupt)
 import Z80Debug exposing (debugLog)
 import Z80Env exposing (Z80Env, mem, mem16, setMemIgnoringTime, z80_pop)
 import Z80Flags exposing (c_FC, c_FZ, getFlags, setFlags)
-import Z80Ram exposing (setRamValue)
+import Z80Ram exposing (foldDictIntoRam)
 import Z80Rom exposing (Z80ROM)
 import Z80Tape exposing (TapePosition, Z80Tape)
 import Z80Types exposing (get_de)
@@ -312,7 +312,7 @@ frames keys speccy =
                                     core_2.env
 
                                 newRam =
-                                    env_2.ram |> Dict.foldl (\key value z80ram -> z80ram |> setRamValue key value) rom.z80ram
+                                    rom.z80ram |> foldDictIntoRam env_2.ram
 
                                 rom_2 =
                                     { new_rom | z80ram = newRam }
@@ -336,7 +336,7 @@ frames keys speccy =
                             core_2.env
 
                         newRam =
-                            env_2.ram |> Dict.foldl (\key value z80ram -> z80ram |> setRamValue key value) rom.z80ram
+                            rom.z80ram |> foldDictIntoRam env_2.ram
 
                         rom_2 =
                             { new_rom | z80ram = newRam }

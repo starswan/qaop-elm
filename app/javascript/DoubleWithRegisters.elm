@@ -7,7 +7,7 @@ import PCIncrement exposing (MediumPCIncrement(..))
 import SingleWith8BitParameter exposing (Single8BitChange(..), applySimple8BitChange)
 import Utils exposing (byte, shiftLeftBy8)
 import Z80Core exposing (Z80Core)
-import Z80Env exposing (getRamValue, mem, setMemIgnoringTime, setRam)
+import Z80Env exposing (mem, setMem)
 import Z80Flags exposing (FlagFunc(..), changeFlags, dec, inc)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (MainWithIndexRegisters)
@@ -54,8 +54,12 @@ doubleWithRegistersIX =
         , ( 0x4E, ( ld_c_indirect_ix, SevenTStates ) )
         , ( 0x56, ( ld_d_indirect_ix, SevenTStates ) )
         , ( 0x5E, ( ld_e_indirect_ix, SevenTStates ) )
-        , ( 0x66, ( \z80_main param -> NewHRegisterIndirect (z80_main.ix + byte param), NineteenTStates ) )
-        , ( 0x6E, ( \z80_main param -> NewLRegisterIndirect (z80_main.ix + byte param), NineteenTStates ) )
+
+        -- case 0x66: HL=HL&0xFF|env.mem(getd(xy))<<8; time+=3; break;
+        , ( 0x66, ( \z80_main param -> NewHRegisterIndirect (z80_main.ix + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
+
+        -- case 0x6E: HL=HL&0xFF00|env.mem(getd(xy)); time+=3; break;
+        , ( 0x6E, ( \z80_main param -> NewLRegisterIndirect (z80_main.ix + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
         , ( 0x86, ( \z80_main param -> FlagOpIndexedIndirect AddA z80_main.ix param, NineteenTStates ) )
         , ( 0x8E, ( \z80_main param -> FlagOpIndexedIndirect AdcA z80_main.ix param, NineteenTStates ) )
         , ( 0x96, ( \z80_main param -> FlagOpIndexedIndirect SubA z80_main.ix param, NineteenTStates ) )
@@ -80,8 +84,12 @@ doubleWithRegistersIY =
         , ( 0x4E, ( ld_c_indirect_iy, SevenTStates ) )
         , ( 0x56, ( ld_d_indirect_iy, SevenTStates ) )
         , ( 0x5E, ( ld_e_indirect_iy, SevenTStates ) )
-        , ( 0x66, ( \z80_main param -> NewHRegisterIndirect (z80_main.iy + byte param), NineteenTStates ) )
-        , ( 0x6E, ( \z80_main param -> NewLRegisterIndirect (z80_main.iy + byte param), NineteenTStates ) )
+
+        -- case 0x66: HL=HL&0xFF|env.mem(getd(xy))<<8; time+=3; break;
+        , ( 0x66, ( \z80_main param -> NewHRegisterIndirect (z80_main.iy + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
+
+        -- case 0x6E: HL=HL&0xFF00|env.mem(getd(xy)); time+=3; break;
+        , ( 0x6E, ( \z80_main param -> NewLRegisterIndirect (z80_main.iy + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
         , ( 0x86, ( \z80_main param -> FlagOpIndexedIndirect AddA z80_main.iy param, NineteenTStates ) )
         , ( 0x8E, ( \z80_main param -> FlagOpIndexedIndirect AdcA z80_main.iy param, NineteenTStates ) )
         , ( 0x96, ( \z80_main param -> FlagOpIndexedIndirect SubA z80_main.iy param, NineteenTStates ) )
@@ -357,11 +365,12 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 pc =
                     Bitwise.and new_pc 0xFFFF
 
-                env_1 =
-                    z80.env |> setMemIgnoringTime addr value cpu_time
+                ( env_1, newTime ) =
+                    z80.env |> setMem addr value cpu_time
             in
             { z80
                 | pc = pc
+                , clockTime = newTime
                 , env = env_1
             }
 
@@ -446,11 +455,12 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 pc =
                     Bitwise.and new_pc 0xFFFF
 
-                env_1 =
-                    z80.env |> setMemIgnoringTime addr z80.flags.a cpu_time
+                ( env_1, newTime ) =
+                    z80.env |> setMem addr z80.flags.a cpu_time
             in
             { z80
                 | pc = pc
+                , clockTime = newTime
                 , env = env_1
             }
 
@@ -561,11 +571,13 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 , clockTime = value.time
             }
 
-        --Just { pcIncrement = new_pc, time = cpu_time, timeIncrement = FifteenTStates, operation = ChangeFlagRegisters (z80.flags |> adc value.value) }
-        IndexedIndirectIncrement addr offset ->
+        IndexedIndirectIncrement inAddr offset ->
             let
+                base_addr =
+                    inAddr + byte offset |> Bitwise.and 0xFFFF
+
                 ramAddr =
-                    (addr + byte offset |> Bitwise.and 0xFFFF) - 0x4000
+                    base_addr - 0x4000
 
                 pc =
                     Bitwise.and new_pc 0xFFFF
@@ -573,30 +585,34 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
             if ramAddr >= 0 then
                 let
                     value =
-                        z80.env |> getRamValue ramAddr rom48k
+                        z80.env |> mem base_addr cpu_time rom48k
 
                     valueWithFlags =
-                        z80.flags |> inc value
+                        z80.flags |> inc value.value
 
-                    env_1 =
-                        --{ old_env | ram = old_env.ram |> setRamValue ramAddr valueWithFlags.value }
-                        z80.env |> setRam ramAddr valueWithFlags.value
+                    ( env_1, newTime ) =
+                        z80.env |> setMem base_addr valueWithFlags.value value.time
                 in
                 { z80
                     | pc = pc
                     , env = env_1
+                    , clockTime = newTime
                     , flags = valueWithFlags.flags
                 }
 
             else
                 { z80
                     | pc = pc
+                    , clockTime = cpu_time
                 }
 
-        IndexedIndirectDecrement addr offset ->
+        IndexedIndirectDecrement inAddr offset ->
             let
+                base_addr =
+                    inAddr + byte offset |> Bitwise.and 0xFFFF
+
                 ramAddr =
-                    (addr + byte offset |> Bitwise.and 0xFFFF) - 0x4000
+                    base_addr - 0x4000
 
                 pc =
                     Bitwise.and new_pc 0xFFFF
@@ -604,17 +620,17 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
             if ramAddr >= 0 then
                 let
                     value =
-                        z80.env |> getRamValue ramAddr rom48k
+                        z80.env |> mem base_addr cpu_time rom48k
 
                     valueWithFlags =
-                        z80.flags |> dec value
+                        z80.flags |> dec value.value
 
-                    env_1 =
-                        --{ old_env | ram = old_env.ram |> setRamValue ramAddr valueWithFlags.value }
-                        z80.env |> setRam ramAddr valueWithFlags.value
+                    ( env_1, newTime ) =
+                        z80.env |> setMem base_addr valueWithFlags.value value.time
                 in
                 { z80
                     | pc = pc
+                    , clockTime = newTime
                     , env = env_1
                     , flags = valueWithFlags.flags
                 }
@@ -622,4 +638,5 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
             else
                 { z80
                     | pc = pc
+                    , clockTime = cpu_time
                 }
