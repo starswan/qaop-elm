@@ -1,8 +1,8 @@
 module Z80Ram exposing (..)
 
 import Dict exposing (Dict)
-import ScreenStorage exposing (Z80Screen, getScreenValue, setScreenValue)
-import Z80MemoryDict exposing (Z80MemoryDict, getMemValue, setMemValue)
+import ScreenStorage exposing (Z80Screen, setScreenValue)
+import Z80MemoryDict exposing (Z80MemoryDict, setMemValue)
 
 
 type alias Z80Ram =
@@ -20,20 +20,18 @@ constructor =
     Z80Ram ScreenStorage.constructor (Z80MemoryDict.constructor ram)
 
 
-getRamValue : Int -> Z80Ram -> Int
-getRamValue addr z80ram =
-    let
-        ram_addr =
-            addr - 6912
-    in
-    if ram_addr >= 0 then
-        z80ram.non_screen |> getMemValue ram_addr
 
-    else
-        z80ram.screen |> getScreenValue addr
-
-
-
+--getRamValue : Int -> Z80Ram -> Int
+--getRamValue addr z80ram =
+--    let
+--        ram_addr =
+--            addr - 6912
+--    in
+--    if ram_addr >= 0 then
+--        z80ram.non_screen |> getMemValue ram_addr
+--
+--    else
+--        z80ram.screen |> getScreenValue addr
 --getRam16Value : Int -> Z80Ram -> Int
 --getRam16Value addr z80ram =
 --    let

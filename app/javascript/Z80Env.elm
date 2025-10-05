@@ -9,7 +9,12 @@ import Bitwise
 import CpuTimeCTime exposing (CTime(..), CpuTimeAnd16BitValue, CpuTimeAndValue, CpuTimeCTime, CpuTimeSpAnd16BitValue, cont, cont1, cont_port)
 import Dict exposing (Dict)
 import Keyboard exposing (Keyboard, z80_keyboard_input)
+import MemoryAddress exposing (HimemType(..), MemoryAddress(..), RamAddress(..), ScreenType(..))
+import ScreenStorage exposing (getScreenValue)
 import Utils exposing (shiftRightBy8)
+import Z80MemoryDict exposing (getMemValue)
+import Z80Ram exposing (Z80Ram)
+import Z80Rom exposing (Z80ROM)
 
 
 type alias Z80Env =
@@ -34,39 +39,6 @@ type alias EnvWithPCAndValue =
 
 z80env_constructor =
     Z80Env Dict.empty 0
-
-
-setRam : Int -> Int -> Z80Env -> Z80Env
-setRam addr value z80env =
-    --    --let
-    --    --ram_value = getValue addr z80env.ram
-    --    --n = if addr == 0x1CB6 || addr == 0x1CB7 then
-    --    --       debug_log "Alert!" ("setting " ++ (addr |> toHexString) ++ " from " ++ (ram_value |> toHexString2) ++ " to " ++ (value |> toHexString2)) Nothing
-    --    --    else
-    --    --       Nothing
-    --    --in
-    { z80env | ram = z80env.ram |> Dict.insert addr value }
-
-
-
---
---public final void mem(int addr, int v) {
---	int n = cpu.time - ctime;
---	if(n>0) cont(n);
---	ctime = NOCONT;
---
---	addr -= 0x4000;
---	if(addr < 0x4000) {
---		if(addr < 0) return;
---		cont1(0);
---		ctime = cpu.time + 3;
---		if(ram[addr]==v)
---			return;
---		if(addr<6912)
---			refresh_screen();
---	}
---	ram[addr] = v;
---}
 
 
 setMemWithTime : Int -> Int -> Z80EnvWithTime -> Z80EnvWithTime
@@ -103,35 +75,46 @@ setMem z80_addr value time_input z80env =
                     else
                         { time_input | ctime = NoCont }
 
-        addr =
-            z80_addr - 0x4000
+        --addr =
+        --    z80_addr - 0x4000
+        memAddress =
+            z80_addr |> MemoryAddress.fromInt
 
         ( new_env, ctime ) =
-            if addr < 0x4000 then
-                if addr < 0 then
+            --if addr < 0x4000 then
+            --    if addr < 0 then
+            --        ( z80env, NoCont )
+            --
+            --    else
+            --        let
+            --            z80env_1_time =
+            --                z80env_time |> cont1 0
+            --
+            --            new_time =
+            --                ContUntil (z80env_1_time.cpu_time + 3)
+            --        in
+            --        ( z80env |> setRam addr value, new_time )
+            --
+            --else
+            --    ( z80env |> setRam addr value, NoCont )
+            case memAddress of
+                ROM _ ->
                     ( z80env, NoCont )
 
-                else
-                    let
-                        z80env_1_time =
-                            z80env_time |> cont1 0
+                RAM ramaddress ->
+                    case ramaddress of
+                        ULAMem _ _ ->
+                            let
+                                z80env_1_time =
+                                    z80env_time |> cont1 0
 
-                        new_time =
-                            ContUntil (z80env_1_time.cpu_time + 3)
+                                new_time =
+                                    ContUntil (z80env_1_time.cpu_time + 3)
+                            in
+                            ( z80env |> setRamMemoryValue ramaddress value, new_time )
 
-                        -- maybe this code is all about refreshing the screen only if it changes...?
-                        --ram_value =
-                        --    z80env |> getRamValue addr z80_rom
-                    in
-                    --if ram_value == value then
-                    --    ( z80env, new_time )
-                    --else
-                    --( z80env |> setRam addr value, new_time )
-                    ( { z80env | ram = z80env.ram |> Dict.insert addr value }, new_time )
-
-            else
-                --( z80env |> setRam addr value, NoCont )
-                ( { z80env | ram = z80env.ram |> Dict.insert addr value }, NoCont )
+                        Himem _ _ ->
+                            ( z80env |> setRamMemoryValue ramaddress value, NoCont )
     in
     ( new_env, { z80env_time | ctime = ctime } )
 
@@ -188,56 +171,98 @@ setMem16IgnoringTime addr value time_input z80env =
 setMem16 : Int -> Int -> CpuTimeCTime -> Z80Env -> ( Z80Env, CpuTimeCTime )
 setMem16 addr value time_input z80env =
     let
-        addr1 =
-            addr - 0x3FFF
+        --addr1 =
+        --    addr - 0x3FFF
+        ( memAddress, memAddr1 ) =
+            addr |> MemoryAddress.fromInt16
     in
-    if Bitwise.and addr1 0x3FFF /= 0 then
-        let
-            z80env_time =
-                case time_input.ctime of
-                    NoCont ->
+    --if Bitwise.and addr1 0x3FFF /= 0 then
+    let
+        z80env_time =
+            case time_input.ctime of
+                NoCont ->
+                    time_input
+
+                ContUntil until ->
+                    let
+                        n =
+                            time_input.cpu_time - until
+                    in
+                    if n > 0 then
+                        cont n time_input
+
+                    else
                         time_input
 
-                    ContUntil until ->
-                        let
-                            n =
-                                time_input.cpu_time - until
-                        in
-                        if n > 0 then
-                            cont n time_input
-
-                        else
-                            time_input
-
-            newTime =
-                { z80env_time | ctime = NoCont }
-        in
-        if addr1 < 0 then
+        newTime =
+            { z80env_time | ctime = NoCont }
+    in
+    --if addr1 < 0 then
+    --    ( z80env, newTime )
+    --
+    --else if addr1 >= 0x4000 then
+    --    ( z80env
+    --        |> setRam (addr1 - 1) (Bitwise.and value 0xFF)
+    --        |> setRam addr1 (shiftRightBy8 value)
+    --    , newTime
+    --    )
+    --
+    --else
+    --    ( z80env
+    --        |> setMemIgnoringTime addr (Bitwise.and value 0xFF) newTime
+    --        |> setMemIgnoringTime (addr + 1) (shiftRightBy8 value) newTime
+    --    , newTime
+    --    )
+    case memAddress of
+        ROM _ ->
             ( z80env, newTime )
 
-        else if addr1 >= 0x4000 then
-            ( z80env
-                |> setRam (addr1 - 1) (Bitwise.and value 0xFF)
-                |> setRam addr1 (shiftRightBy8 value)
-            , newTime
-            )
+        RAM ramaddress ->
+            let
+                ( lowenv, time ) =
+                    ( z80env |> setRamMemoryValue ramaddress (Bitwise.and value 0xFF), newTime )
 
-        else
-            ( z80env
-                |> setMemIgnoringTime addr (Bitwise.and value 0xFF) newTime
-                |> setMemIgnoringTime (addr + 1) (shiftRightBy8 value) newTime
-            , newTime
-            )
+                ( high, time2 ) =
+                    case memAddr1 of
+                        ROM _ ->
+                            ( lowenv, time )
 
-    else
-        ( z80env
-            |> setMemIgnoringTime addr (Bitwise.and value 0xFF) time_input
-            |> setMemIgnoringTime (addr + 1) (shiftRightBy8 value) time_input
-        , time_input
-        )
+                        RAM ramaddress1 ->
+                            ( lowenv |> setRamMemoryValue ramaddress1 (shiftRightBy8 value), time )
+            in
+            ( high, time2 )
 
 
 
+--case ramaddress of
+--    ULAMem _ _ ->
+--        let
+--            ( env_1, time1 ) =
+--                z80env |> setMem addr (Bitwise.and value 0xFF) newTime
+--        in
+--        env_1 |> setMem (addr + 1) (shiftRightBy8 value) time1
+--
+--    --( z80env
+--    --    |> setMemIgnoringTime addr (Bitwise.and value 0xFF) newTime
+--    --    |> setMemIgnoringTime (addr + 1) (shiftRightBy8 value) newTime
+--    --, newTime
+--    --)
+--    Himem _ _ ->
+--        --
+--        ( z80env
+--            |> setRam (addr1 - 1) (Bitwise.and value 0xFF)
+--            |> setRam addr1 (shiftRightBy8 value)
+--        , newTime
+--        )
+--else
+--    ( z80env
+--        |> setMemIgnoringTime addr (Bitwise.and value 0xFF) time_input
+--        |> setMemIgnoringTime (addr + 1) (shiftRightBy8 value) time_input
+--    , time_input
+--    )
+--contPortEnv : Int -> Z80Env -> Z80Env
+--contPortEnv portn z80env =
+--    { z80env | time = z80env.time |> cont_port portn }
 --	public void out(int port, int v)
 --	{
 --		cont_port(port);
@@ -329,3 +354,99 @@ z80_push v clockTime z80env =
         --|> addCpuTimeEnv 3
     in
     { env_2 | sp = new_sp }
+
+
+
+--setRam : Int -> Int -> Z80Env -> Z80Env
+--setRam addr value z80env =
+--    --let
+--    --ram_value = getValue addr z80env.ram
+--    --n = if addr == 0x1CB6 || addr == 0x1CB7 then
+--    --       debug_log "Alert!" ("setting " ++ (addr |> toHexString) ++ " from " ++ (ram_value |> toHexString2) ++ " to " ++ (value |> toHexString2)) Nothing
+--    --    else
+--    --       Nothing
+--    --in
+--    -- addr is in range 0 - 0xBFFF
+--    { z80env | ram = z80env.ram |> Dict.insert addr value }
+
+
+setRamMemoryValue : RamAddress -> Int -> Z80Env -> Z80Env
+setRamMemoryValue ramAddress value z80env =
+    case ramAddress of
+        ULAMem screenType addr ->
+            case screenType of
+                Screen ->
+                    { z80env | ram = z80env.ram |> Dict.insert addr value }
+
+                ULA ->
+                    { z80env | ram = z80env.ram |> Dict.insert (addr + 6912) value }
+
+        Himem himemType addr ->
+            case himemType of
+                HimemLow ->
+                    { z80env | ram = z80env.ram |> Dict.insert (addr + 0x4000) value }
+
+                HimemHigh ->
+                    { z80env | ram = z80env.ram |> Dict.insert (addr + 0x8000) value }
+
+
+
+--getRamValue : Int -> Z80ROM -> Z80Env -> Int
+--getRamValue addr z80rom z80env =
+--    case z80env.ram |> Dict.get addr of
+--        Just a ->
+--            a
+--
+--        Nothing ->
+--            z80rom.z80ram |> Z80Ram.getRamValue addr
+
+
+getRamMemoryValue : RamAddress -> CpuTimeCTime -> Z80ROM -> Z80Env -> ( Int, CpuTimeCTime )
+getRamMemoryValue ramAddress clockTime z80rom z80env =
+    let
+        ( addressInt, time ) =
+            case ramAddress of
+                ULAMem screenType addr ->
+                    let
+                        newTime =
+                            clockTime |> cont1 0
+
+                        newNewTime =
+                            { newTime | ctime = ContUntil (newTime.cpu_time + 3) }
+                    in
+                    case screenType of
+                        Screen ->
+                            ( addr, newNewTime )
+
+                        ULA ->
+                            ( addr + 6912, newNewTime )
+
+                Himem himemType addr ->
+                    let
+                        newTime =
+                            { clockTime | ctime = NoCont }
+                    in
+                    case himemType of
+                        HimemLow ->
+                            ( addr + 0x4000, newTime )
+
+                        HimemHigh ->
+                            ( addr + 0x8000, newTime )
+    in
+    case z80env.ram |> Dict.get addressInt of
+        Just a ->
+            ( a, time )
+
+        Nothing ->
+            let
+                ram_addr =
+                    addressInt - 6912
+
+                z80ram =
+                    z80rom.z80ram
+            in
+            if ram_addr >= 0 then
+                ( z80ram.non_screen |> getMemValue ram_addr, time )
+
+            else
+                ( z80ram.screen |> getScreenValue addressInt, time )
