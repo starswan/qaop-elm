@@ -12,12 +12,12 @@ import Dict exposing (Dict)
 import Keyboard exposing (Keyboard)
 import PCIncrement exposing (PCIncrement(..))
 import RegisterChange exposing (ChangeMainRegister(..), EDRegisterChange(..), InterruptChange(..), RegisterChange(..))
-import Utils exposing (char, shiftLeftBy8, shiftRightBy8, toHexString2)
+import Utils exposing (char, shiftLeftBy8, shiftRightBy8, toHexString, toHexString2)
 import Z80Change exposing (FlagChange(..), Z80Change(..))
 import Z80Core exposing (DirectionForLDIR(..), Z80Core, add_cpu_time, imm16)
 import Z80Debug exposing (debugLog)
 import Z80Delta exposing (Z80Delta(..))
-import Z80Env exposing (Z80Env, mem, mem16, setMem16, setMem16IgnoringTime, setMemIgnoringTime, z80_in)
+import Z80Env exposing (Z80Env, mem, mem16, setMem16, setMem16IgnoringTime, setMemIgnoringTime, z80_in, z80_out)
 import Z80Flags exposing (FlagRegisters, c_F3, c_F5, c_F53, c_FC, c_FH, f_szh0n0p, z80_sub)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (InterruptMode(..), InterruptRegisters, MainWithIndexRegisters, get_bc, get_de, set_bc_main, set_de_main)
@@ -142,12 +142,6 @@ group_ed_dict =
         -- case 0xB3:
         -- case 0xBA:
         -- case 0xBB: inir_otir(c); break;
-        -- TODO: implement outi etc
-        , ( 0xA3, \rom48k z80 -> NoOp )
-        , ( 0xAB, \rom48k z80 -> NoOp )
-        , ( 0xB3, \rom48k z80 -> NoOp )
-        , ( 0xBB, \rom48k z80 -> NoOp )
-
         -- RETN - end of NMI. NMIs aren't enabled on the Spectrum?
         , ( 0x45, \rom48k z80 -> NoOp )
 
@@ -167,7 +161,7 @@ group_ed_dict =
 
 execute_ED40 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED40 rom48k z80 =
-    z80 |> execute_ED40485058606870 ChangeMainB rom48k.keyboard
+    z80 |> execute_ED_IN_R_C ChangeMainB rom48k.keyboard
 
 
 execute_ED42 : Z80ROM -> Z80Core -> Z80Delta
@@ -390,10 +384,11 @@ execute_ED78 rom48k z80 =
         flags =
             z80.flags
 
+        -- can't really log this is as it's the keyboard scanner run every 20ms
+        --new_flags =
+        --    debugLog "ED78 - IN A,(C)" ( new_a.value |> toHexString2, z80.main.b |> toHexString2, z80.main.c |> toHexString2 ) { flags | a = new_a.value } |> f_szh0n0p new_a.value
         new_flags =
             { flags | a = new_a.value } |> f_szh0n0p new_a.value
-
-        --env = z80.env
     in
     --{ z80 | env = { env | time = new_a.time |> add_cpu_time_time 4 } , flags = new_flags } |> Whole
     CpuTimeWithFlagsAndPc (new_a.time |> addCpuTimeTime 4) new_flags z80.pc
@@ -491,9 +486,11 @@ ed_cpdr rom48k z80 =
 --    NoOp
 
 
-execute_ED40485058606870 : ChangeMainRegister -> Keyboard -> Z80Core -> Z80Delta
-execute_ED40485058606870 value keyboard z80 =
+execute_ED_IN_R_C : ChangeMainRegister -> Keyboard -> Z80Core -> Z80Delta
+execute_ED_IN_R_C value keyboard z80 =
     let
+        --bc =
+        --    debugLog "IN R, (C)" ( value, z80.main.b |> toHexString2, z80.main.c |> toHexString2 ) z80.main |> get_bc
         bc =
             z80.main |> get_bc
 
@@ -509,7 +506,7 @@ execute_ED40485058606870 value keyboard z80 =
 
 execute_ED48 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED48 rom48k z80 =
-    z80 |> execute_ED40485058606870 ChangeMainC rom48k.keyboard
+    z80 |> execute_ED_IN_R_C ChangeMainC rom48k.keyboard
 
 
 
@@ -540,22 +537,22 @@ adc_hl_sp _ z80 =
 
 execute_ED50 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED50 rom48k z80 =
-    z80 |> execute_ED40485058606870 ChangeMainD rom48k.keyboard
+    z80 |> execute_ED_IN_R_C ChangeMainD rom48k.keyboard
 
 
 execute_ED58 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED58 rom48k z80 =
-    z80 |> execute_ED40485058606870 ChangeMainE rom48k.keyboard
+    z80 |> execute_ED_IN_R_C ChangeMainE rom48k.keyboard
 
 
 execute_ED60 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED60 rom48k z80 =
-    z80 |> execute_ED40485058606870 ChangeMainH rom48k.keyboard
+    z80 |> execute_ED_IN_R_C ChangeMainH rom48k.keyboard
 
 
 execute_ED68 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED68 rom48k z80 =
-    z80 |> execute_ED40485058606870 ChangeMainL rom48k.keyboard
+    z80 |> execute_ED_IN_R_C ChangeMainL rom48k.keyboard
 
 
 execute_ED70 : Z80ROM -> Z80Core -> Z80Delta
@@ -732,17 +729,19 @@ ldir incOrDec repeat rom48k z80 =
         main =
             z80.main
 
-        a1 =
-            z80.main.hl
+        ( hl, de, bc1 ) =
+            ( z80.main.hl, main |> get_de, main |> get_bc )
+
+        ( a1, a2, bc ) =
+            --if incOrDec == Backwards && repeat then
+            --    debugLog "HL, DE, BC" ( hl |> toHexString, de |> toHexString, bc1 |> toHexString2 ) ( hl, de, bc1 )
+            --
+            --else
+            ( hl, de, bc1 )
 
         v1 =
             z80.env |> mem z80.main.hl z80.clockTime rom48k
 
-        z80_env =
-            z80.env
-
-        --env_0 =
-        --    { z80_env | time = v1.time }
         new_hl =
             case incOrDec of
                 Forwards ->
@@ -752,25 +751,18 @@ ldir incOrDec repeat rom48k z80 =
                     a1 - 1 |> Bitwise.and 0xFFFF
 
         z80_1 =
-            { z80 | env = z80_env, main = { main | hl = new_hl } } |> add_cpu_time 3
+            { z80 | main = { main | hl = new_hl } } |> add_cpu_time 3
 
-        a2 =
-            main |> get_de
-
-        --env_1 = case a2 |> fromInt of
-        --  ROMAddress int -> z80_1.env
-        --  RAMAddress ramAddress ->
-        --    z80_1.env |> setMem a2 v1.value
         env_1 =
-            z80_env |> setMemIgnoringTime a2 v1.value v1.time
+            z80.env |> setMemIgnoringTime a2 v1.value v1.time
 
         new_de =
             case incOrDec of
                 Forwards ->
-                    a2 + 1 |> char
+                    a2 + 1 |> Bitwise.and 0xFFFF
 
                 Backwards ->
-                    a2 - 1 |> char
+                    a2 - 1 |> Bitwise.and 0xFFFF
 
         z80_2 =
             { z80_1 | env = env_1, main = z80_1.main |> set_de_main new_de } |> add_cpu_time 5
@@ -802,7 +794,7 @@ ldir incOrDec repeat rom48k z80 =
         --    }
         --    Fa = Fb = v;
         a =
-            Bitwise.and ((z80_2.main |> get_bc) - 1) 0xFFFF
+            Bitwise.and (bc - 1) 0xFFFF
 
         ( v, pc, time ) =
             if a /= 0 then
@@ -817,9 +809,6 @@ ldir incOrDec repeat rom48k z80 =
 
         flags =
             z80_2.flags
-
-        --env_2 =
-        --    z80_2.env |> addCpuTimeEnv time
     in
     { z80_2 | clockTime = z80.clockTime |> addCpuTimeTime time, main = z80_2.main |> set_bc_main a, pc = pc, flags = { flags | fr = fr, ff = ff, fa = v, fb = v } } |> WholeCore
 
@@ -1311,6 +1300,88 @@ ed_adc_hl b z80_main z80_flags =
 --		x = 0x4B3480 >> ((x^x>>>4)&15);
 --		Fb = (x^bc) & 0x80 | d>>>4 | (v & 0x80)<<2;
 --	}
+
+
+type alias Z80IniOuti =
+    { flags : FlagRegisters
+    , hl : Int
+    , bc : Int
+    }
+
+
+inir : DirectionForLDIR -> Bool -> Z80ROM -> Z80Core -> Z80IniOuti
+inir direction repeat rom48k z80_core =
+    let
+        d_original =
+            case direction of
+                Forwards ->
+                    1
+
+                Backwards ->
+                    -1
+
+        hl =
+            z80_core.main.hl + d_original |> Bitwise.and 0xFFFF
+
+        bc =
+            z80_core.main |> get_bc
+
+        flags =
+            z80_core.flags
+
+        new_bc =
+            bc - 256 |> Bitwise.and 0xFFFF
+
+        v =
+            z80_core.env |> z80_in bc rom48k.keyboard z80_core.clockTime
+
+        d =
+            (d_original + new_bc |> Bitwise.and 0xFFFF) + v.value
+
+        pc =
+            if repeat && (new_bc > 0) then
+                z80_core.pc
+
+            else
+                z80_core.pc + 2
+    in
+    { flags = flags |> inirOtirFlags d new_bc v.value, hl = hl, bc = new_bc }
+
+
+otir : DirectionForLDIR -> Bool -> Z80ROM -> Z80Core -> Z80IniOuti
+otir direction repeat rom48k z80_core =
+    let
+        hl =
+            case direction of
+                Forwards ->
+                    z80_core.main.hl + 1 |> Bitwise.and 0xFFFF
+
+                Backwards ->
+                    z80_core.main.hl - 1 |> Bitwise.and 0xFFFF
+
+        in_bc =
+            z80_core.main |> get_bc
+
+        flags =
+            z80_core.flags
+
+        v =
+            z80_core.env |> mem hl z80_core.clockTime rom48k
+
+        new_bc =
+            in_bc - 256 |> Bitwise.and 0xFFFF
+
+        ( env_1, time ) =
+            z80_core.env |> z80_out new_bc v.value z80_core.clockTime
+
+        pc =
+            if repeat && (new_bc > 0) then
+                z80_core.pc
+
+            else
+                z80_core.pc + 2
+    in
+    { flags = flags |> inirOtirFlags hl new_bc v.value, hl = hl, bc = new_bc }
 
 
 inirOtirFlags : Int -> Int -> Int -> FlagRegisters -> FlagRegisters
