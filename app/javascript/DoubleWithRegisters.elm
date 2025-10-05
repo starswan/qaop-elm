@@ -3,11 +3,12 @@ module DoubleWithRegisters exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), addCpuTimeTime)
 import Dict exposing (Dict)
+import MemoryAddress exposing (MemoryAddress(..))
 import PCIncrement exposing (MediumPCIncrement(..))
 import SingleWith8BitParameter exposing (applySimple8BitChange)
 import Utils exposing (byte, shiftLeftBy8)
 import Z80Core exposing (Z80Core)
-import Z80Env exposing (mem, setMem)
+import Z80Env exposing (getRamValue, mem, setMem, setRam)
 import Z80Flags exposing (FlagFunc(..), changeFlags, dec, inc)
 import Z80Registers exposing (CoreRegister)
 import Z80Rom exposing (Z80ROM)
@@ -556,32 +557,60 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 ramAddr =
                     base_addr - 0x4000
 
+                memAddress =
+                    base_addr |> MemoryAddress.fromInt
+
                 pc =
                     Bitwise.and new_pc 0xFFFF
             in
-            if ramAddr >= 0 then
-                let
-                    value =
-                        z80.env |> mem base_addr cpu_time rom48k
+            case memAddress of
+                ROM _ ->
+                    { z80
+                        | pc = pc
+                    }
 
-                    valueWithFlags =
-                        z80.flags |> inc value.value
+                ULAMem _ _ ->
+                    let
+                        value =
+                            --z80.env |> getRamValue ramAddr rom48k
+                            z80.env |> mem base_addr cpu_time rom48k
 
-                    ( env_1, newTime ) =
-                        z80.env |> setMem base_addr valueWithFlags.value value.time
-                in
-                { z80
-                    | pc = pc
-                    , env = env_1
-                    , clockTime = newTime
-                    , flags = valueWithFlags.flags
-                }
+                        valueWithFlags =
+                            --z80.flags |> inc value
+                            z80.flags |> inc value.value
 
-            else
-                { z80
-                    | pc = pc
-                    , clockTime = cpu_time
-                }
+                        ( env_1, newTime ) =
+                            --z80.env |> setRam ramAddr valueWithFlags.value
+                            z80.env |> setMem base_addr valueWithFlags.value value.time
+
+                        --z80.env |> setRamMemoryValue memAddress valueWithFlags.value
+                    in
+                    { z80
+                        | pc = pc
+                        , env = env_1
+                        , clockTime = newTime
+                        , flags = valueWithFlags.flags
+                    }
+
+                Himem _ _ ->
+                    let
+                        value =
+                            --    z80.env |> getRamMemoryValue memAddress rom48k
+                            z80.env |> getRamValue ramAddr rom48k
+
+                        valueWithFlags =
+                            z80.flags |> inc value
+
+                        env_1 =
+                            z80.env |> setRam ramAddr valueWithFlags.value
+
+                        --z80.env |> setRamMemoryValue memAddress valueWithFlags.value
+                    in
+                    { z80
+                        | pc = pc
+                        , env = env_1
+                        , flags = valueWithFlags.flags
+                    }
 
         IndexedIndirectDecrement inAddr offset ->
             let
@@ -591,29 +620,57 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 ramAddr =
                     base_addr - 0x4000
 
+                memAddress =
+                    base_addr |> MemoryAddress.fromInt
+
                 pc =
                     Bitwise.and new_pc 0xFFFF
             in
-            if ramAddr >= 0 then
-                let
-                    value =
-                        z80.env |> mem base_addr cpu_time rom48k
+            case memAddress of
+                ROM _ ->
+                    { z80
+                        | pc = pc
+                    }
 
-                    valueWithFlags =
-                        z80.flags |> dec value.value
+                ULAMem _ _ ->
+                    let
+                        value =
+                            z80.env |> mem base_addr cpu_time rom48k
 
-                    ( env_1, newTime ) =
-                        z80.env |> setMem base_addr valueWithFlags.value value.time
-                in
-                { z80
-                    | pc = pc
-                    , clockTime = newTime
-                    , env = env_1
-                    , flags = valueWithFlags.flags
-                }
+                        --z80.env |> getRamMemoryValue memAddress rom48k
+                        --z80.env |> getRamValue memAddress rom48k
+                        valueWithFlags =
+                            z80.flags |> dec value.value
 
-            else
-                { z80
-                    | pc = pc
-                    , clockTime = cpu_time
-                }
+                        env_1 =
+                            z80.env |> setRam ramAddr valueWithFlags.value
+
+                        --z80.env |> setRamMemoryValue memAddress valueWithFlags.value
+                    in
+                    { z80
+                        | pc = pc
+                        , clockTime = value.time
+                        , env = env_1
+                        , flags = valueWithFlags.flags
+                    }
+
+                Himem _ _ ->
+                    let
+                        value =
+                            z80.env |> getRamValue ramAddr rom48k
+
+                        --z80.env |> getRamMemoryValue memAddress rom48k
+                        --z80.env |> getRamValue memAddress rom48k
+                        valueWithFlags =
+                            z80.flags |> dec value
+
+                        env_1 =
+                            z80.env |> setRam ramAddr valueWithFlags.value
+
+                        --z80.env |> setRamMemoryValue memAddress valueWithFlags.value
+                    in
+                    { z80
+                        | pc = pc
+                        , env = env_1
+                        , flags = valueWithFlags.flags
+                    }
