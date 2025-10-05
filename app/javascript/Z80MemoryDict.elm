@@ -1,32 +1,32 @@
-module Z80Memory exposing (..)
+module Z80MemoryDict exposing (..)
 
 import Dict exposing (Dict)
 import Utils exposing (toHexString)
 import Z80Debug exposing (debugTodo)
 
 
-type Z80Memory
-    = Z80Memory (Dict Int Int)
+type Z80MemoryDict
+    = Z80MemoryDict (Dict Int Int)
 
 
-constructor : List Int -> Z80Memory
+constructor : List Int -> Z80MemoryDict
 constructor list =
-    Z80Memory (ramListToDict list)
+    Z80MemoryDict (ramListToDict list)
 
 
 ramListToDict : List Int -> Dict Int Int
 ramListToDict list =
     let
         ramarray =
-            List.indexedMap Tuple.pair list
+            list |> List.indexedMap Tuple.pair
     in
     Dict.fromList ramarray
 
 
-getMemValue : Int -> Z80Memory -> Int
+getMemValue : Int -> Z80MemoryDict -> Int
 getMemValue addr z80mem =
     case z80mem of
-        Z80Memory z80dict ->
+        Z80MemoryDict z80dict ->
             case Dict.get addr z80dict of
                 Just a ->
                     a
@@ -35,19 +35,17 @@ getMemValue addr z80mem =
                     debugTodo ("Z80Memory:getValue " ++ (addr |> toHexString)) (Dict.size z80dict |> toHexString) -1
 
 
-setMemValue : Int -> Int -> Z80Memory -> Z80Memory
+setMemValue : Int -> Int -> Z80MemoryDict -> Z80MemoryDict
 setMemValue addr value z80mem =
     case z80mem of
-        Z80Memory dict ->
-            dict |> Dict.insert addr value |> Z80Memory
+        Z80MemoryDict dict ->
+            dict |> Dict.insert addr value |> Z80MemoryDict
 
 
 
 -- This delivers the values in the order of the keys
-
-
-getDataItems : Z80Memory -> List Int
-getDataItems z80mem =
-    case z80mem of
-        Z80Memory dict ->
-            dict |> Dict.values
+--getDataItems : Z80Memory -> List Int
+--getDataItems z80mem =
+--    case z80mem of
+--        Z80Memory dict ->
+--            dict |> Dict.values

@@ -331,7 +331,6 @@ setRam addr value z80env =
     --    --    else
     --    --       Nothing
     --    --in
-    --    { z80env | ram = z80env.ram |> Z80Ram.setRamValue addr value }
     { z80env | ram = z80env.ram |> Dict.insert addr value }
 
 
@@ -423,12 +422,9 @@ setMem z80_addr value time_input z80env =
     ( new_env, { z80env_time | ctime = ctime } )
 
 
-
--- discard the extta time field for now
-
-
 setMemIgnoringTime : Int -> Int -> CpuTimeCTime -> Z80Env -> Z80Env
 setMemIgnoringTime z80_addr value time_input z80env =
+    -- discard the extra time field mostly for tests
     setMem z80_addr value time_input z80env |> Tuple.first
 
 
@@ -560,7 +556,7 @@ setMem16 addr value time_input z80env =
 
 
 z80_out : Int -> Int -> CpuTimeCTime -> Z80Env -> ( Z80Env, CpuTimeCTime )
-z80_out portnum value clockTime env_in =
+z80_out portnum _ clockTime env_in =
     let
         newTime =
             clockTime |> cont_port portnum
@@ -569,7 +565,7 @@ z80_out portnum value clockTime env_in =
 
 
 z80_in : Int -> Keyboard -> CpuTimeCTime -> Z80Env -> CpuTimeAndValue
-z80_in portnum keyboard clockTime env_in =
+z80_in portnum keyboard clockTime _ =
     let
         newTime =
             clockTime |> cont_port portnum

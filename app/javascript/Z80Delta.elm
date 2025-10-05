@@ -18,8 +18,8 @@ type
     | CpuTimeWithFlagsAndPc CpuTimeCTime FlagRegisters Int
       -- only used by 0xF9
       --| SpAndCpuTimeWithPc Int Int Int
-    | EnvWithPc Z80Env Int
-    | EnvWithPcAndTimeOffset Z80Env Int Int
+      --| EnvWithPc Z80Env Int
+    | EnvWithPcAndTime Z80Env Int CpuTimeCTime
       -- only used by ED78
     | CpuTimeWithSpAndPc CpuTimeCTime Int Int
     | InterruptsWithCpuTime InterruptRegisters CpuTimeCTime
@@ -64,11 +64,10 @@ applyDeltaWithChanges z80delta z80 =
         MainRegsWithPcAndCpuTime mainRegisters pc cpu_time ->
             { z80 | pc = pc, env = z80_env, clockTime = cpu_time, main = mainRegisters, interrupts = z80delta.interrupts }
 
-        EnvWithPc z80Env programCounter ->
-            { z80 | env = z80Env, pc = programCounter, interrupts = z80delta.interrupts, clockTime = z80delta.time }
-
-        EnvWithPcAndTimeOffset z80Env programCounter timeoffset ->
-            { z80 | env = z80Env, pc = programCounter, interrupts = z80delta.interrupts, clockTime = z80delta.time |> addCpuTimeTime timeoffset }
+        --EnvWithPc z80Env programCounter ->
+        --    { z80 | env = z80Env, pc = programCounter, interrupts = z80delta.interrupts, clockTime = z80delta.time }
+        EnvWithPcAndTime z80Env programCounter clockTime ->
+            { z80 | env = z80Env, pc = programCounter, interrupts = z80delta.interrupts, clockTime = clockTime }
 
         --SpAndCpuTimeWithPc sp cpu_time pc ->
         --    { z80 | pc = pc, env = { z80_env | time = z80delta.time |> addCpuTimeTime cpu_time, sp = sp }, interrupts = z80delta.interrupts }
