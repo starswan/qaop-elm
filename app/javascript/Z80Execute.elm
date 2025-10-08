@@ -14,7 +14,7 @@ import TripleByte exposing (TripleByteChange(..), TripleByteRegister(..))
 import TripleWithFlags exposing (TripleWithFlagsChange(..))
 import TripleWithMain exposing (TripleMainChange, applyTripleMainChange)
 import Utils exposing (bitMaskFromBit, clearBit, inverseBitMaskFromBit, setBit, shiftLeftBy8, toHexString2)
-import Z80Change exposing (FlagChange(..), Z80Change, applyZ80Change)
+import Z80Change exposing (FlagChange(..), Z80Change(..))
 import Z80Core exposing (DirectionForLDIR(..), Z80Core)
 import Z80Debug exposing (debugLog, debugTodo)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..), applyDeltaWithChanges)
@@ -320,7 +320,78 @@ applyPureDelta cpuInc cpu_time z80changeData z80 =
                 IncrementByFour ->
                     Bitwise.and (z80.pc + 4) 0xFFFF
     in
-    { z80 | pc = new_pc, clockTime = cpu_time } |> applyZ80Change z80changeData
+    case z80changeData of
+        FlagsWithHLRegister flagRegisters int ->
+            let
+                main =
+                    z80.main
+            in
+            { z80 | pc = new_pc, clockTime = cpu_time, flags = flagRegisters, main = { main | hl = int } }
+
+        Z80ChangeFlags flagRegisters ->
+            { z80 | pc = new_pc, clockTime = cpu_time, flags = flagRegisters }
+
+        Z80ChangeSetIndirect addr int ->
+            let
+                ( env, clockTime ) =
+                    z80.env |> setMem addr int cpu_time
+            in
+            { z80 | pc = new_pc, env = env, clockTime = clockTime }
+
+        FlagsWithIXRegister flagRegisters int ->
+            let
+                main =
+                    z80.main
+            in
+            { z80 | pc = new_pc, clockTime = cpu_time, flags = flagRegisters, main = { main | ix = int } }
+
+        FlagsWithIYRegister flagRegisters int ->
+            let
+                main =
+                    z80.main
+            in
+            { z80 | pc = new_pc, clockTime = cpu_time, flags = flagRegisters, main = { main | iy = int } }
+
+        JustIXRegister int ->
+            let
+                main =
+                    z80.main
+            in
+            { z80 | pc = new_pc, clockTime = cpu_time, main = { main | ix = int } }
+
+        JustIYRegister int ->
+            let
+                main =
+                    z80.main
+            in
+            { z80 | pc = new_pc, clockTime = cpu_time, main = { main | iy = int } }
+
+        FlagsWithRegisterChange changeMainRegister intWithFlags ->
+            let
+                z80_main =
+                    z80.main
+
+                new_main =
+                    case changeMainRegister of
+                        ChangeMainB ->
+                            { z80_main | b = intWithFlags.value }
+
+                        ChangeMainC ->
+                            { z80_main | c = intWithFlags.value }
+
+                        ChangeMainD ->
+                            { z80_main | d = intWithFlags.value }
+
+                        ChangeMainE ->
+                            { z80_main | e = intWithFlags.value }
+
+                        ChangeMainH ->
+                            { z80_main | hl = Bitwise.or (intWithFlags.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF) }
+
+                        ChangeMainL ->
+                            { z80_main | hl = Bitwise.or intWithFlags.value (Bitwise.and z80_main.hl 0xFF00) }
+            in
+            { z80 | pc = new_pc, clockTime = cpu_time, flags = intWithFlags.flags, main = new_main }
 
 
 applyRegisterDelta : PCIncrement -> InstructionDuration -> RegisterChange -> Z80ROM -> Z80Core -> Z80Core
@@ -496,10 +567,10 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80_core =
 
         SetIndirect addr value ->
             let
-                env_2 =
-                    env |> setMemIgnoringTime addr value newTime
+                ( env_2, clockTime ) =
+                    env |> setMem addr value newTime
             in
-            { z80_core | pc = new_pc, env = env_2, clockTime = newTime }
+            { z80_core | pc = new_pc, env = env_2, clockTime = clockTime }
 
         ChangeRegisterDEAndHL de hl ->
             let

@@ -1163,12 +1163,8 @@ ed_adc_hl b z80_main z80_flags =
 
         fr =
             Bitwise.or (r |> shiftRightBy8) (r |> shiftLeftBy8)
-
-        flags =
-            z80_flags
     in
-    --FlagsWithHLRegister { flags | ff = ff, fa = fa, fb = fb, fr = fr } r
-    ( { flags | ff = ff, fa = fa, fb = fb, fr = fr }, r )
+    ( { z80_flags | ff = ff, fa = fa, fb = fb, fr = fr }, r )
 
 
 
