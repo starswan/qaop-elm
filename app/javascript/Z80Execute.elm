@@ -321,12 +321,54 @@ applyPureDelta cpuInc cpu_time z80changeData z80 =
                     Bitwise.and (z80.pc + 4) 0xFFFF
     in
     case z80changeData of
+        FlagsWithBRegister intWithFlags ->
+            let
+                main =
+                    z80.main
+            in
+            { z80 | pc = new_pc, clockTime = cpu_time, flags = intWithFlags.flags, main = { main | b = intWithFlags.value } }
+
+        FlagsWithCRegister intWithFlags ->
+            let
+                main =
+                    z80.main
+            in
+            { z80 | pc = new_pc, clockTime = cpu_time, flags = intWithFlags.flags, main = { main | c = intWithFlags.value } }
+
+        FlagsWithDRegister intWithFlags ->
+            let
+                main =
+                    z80.main
+            in
+            { z80 | pc = new_pc, clockTime = cpu_time, flags = intWithFlags.flags, main = { main | d = intWithFlags.value } }
+
+        FlagsWithERegister flagRegisters int ->
+            let
+                main =
+                    z80.main
+            in
+            { z80 | pc = new_pc, clockTime = cpu_time, flags = flagRegisters, main = { main | e = int } }
+
         FlagsWithHLRegister flagRegisters int ->
             let
                 main =
                     z80.main
             in
             { z80 | pc = new_pc, clockTime = cpu_time, flags = flagRegisters, main = { main | hl = int } }
+
+        Z80RegisterB int ->
+            let
+                main =
+                    z80.main
+            in
+            { z80 | pc = new_pc, clockTime = cpu_time, main = { main | b = int } }
+
+        Z80RegisterC int ->
+            let
+                main =
+                    z80.main
+            in
+            { z80 | pc = new_pc, clockTime = cpu_time, main = { main | c = int } }
 
         Z80ChangeFlags flagRegisters ->
             { z80 | pc = new_pc, clockTime = cpu_time, flags = flagRegisters }
@@ -365,33 +407,6 @@ applyPureDelta cpuInc cpu_time z80changeData z80 =
                     z80.main
             in
             { z80 | pc = new_pc, clockTime = cpu_time, main = { main | iy = int } }
-
-        FlagsWithRegisterChange changeMainRegister intWithFlags ->
-            let
-                main =
-                    z80.main
-
-                main2 =
-                    case changeMainRegister of
-                        ChangeMainB ->
-                            { main | b = intWithFlags.value }
-
-                        ChangeMainC ->
-                            { main | c = intWithFlags.value }
-
-                        ChangeMainD ->
-                            { main | d = intWithFlags.value }
-
-                        ChangeMainE ->
-                            { main | e = intWithFlags.value }
-
-                        ChangeMainH ->
-                            { main | hl = Bitwise.or (intWithFlags.value |> shiftLeftBy8) (Bitwise.and main.hl 0xFF) }
-
-                        ChangeMainL ->
-                            { main | hl = Bitwise.or intWithFlags.value (Bitwise.and main.hl 0xFF00) }
-            in
-            { z80 | pc = new_pc, clockTime = cpu_time, flags = intWithFlags.flags, main = main2 }
 
 
 applyRegisterDelta : PCIncrement -> InstructionDuration -> RegisterChange -> Z80ROM -> Z80Core -> Z80Core
