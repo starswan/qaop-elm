@@ -6,10 +6,8 @@ import Z80Flags exposing (FlagRegisters, IntWithFlags)
 
 
 type Z80Change
-    = --FlagsWithBRegister IntWithFlags
-      --FlagsWithCRegister IntWithFlags
-      FlagsWithDRegister IntWithFlags
-    | FlagsWithERegister FlagRegisters Int
+    = FlagsWithRegisterChange ChangeMainRegister IntWithFlags
+      --| FlagsWithERegister FlagRegisters Int
     | FlagsWithHLRegister FlagRegisters Int
     | FlagsWithIXRegister FlagRegisters Int
     | FlagsWithIYRegister FlagRegisters Int
@@ -17,7 +15,6 @@ type Z80Change
     | Z80ChangeSetIndirect Int Int
     | JustIXRegister Int
     | JustIYRegister Int
-    | FlagsWithRegisterChange ChangeMainRegister IntWithFlags
 
 
 type FlagChange

@@ -141,34 +141,29 @@ dec_c z80_main z80_flags =
 inc_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 inc_d z80_main z80_flags =
     -- case 0x14: D=inc(D); break;
-    z80_flags |> inc z80_main.d |> FlagsWithDRegister
+    z80_flags |> inc z80_main.d |> FlagsWithRegisterChange ChangeMainD
 
 
 dec_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 dec_d z80_main z80_flags =
     -- case 0x15: D=dec(D); break;
-    z80_flags |> dec z80_main.d |> FlagsWithDRegister
+    z80_flags |> dec z80_main.d |> FlagsWithRegisterChange ChangeMainD
 
 
 inc_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 inc_e z80_main z80_flags =
     -- case 0x1C: E=inc(E); break;
-    let
-        new_e =
-            inc z80_main.e z80_flags
-    in
-    --{ z80 | flags = new_e.flags, main = { z80_main | e = new_e.value } }
-    FlagsWithERegister new_e.flags new_e.value
+    z80_flags
+        |> inc z80_main.e
+        |> FlagsWithRegisterChange ChangeMainE
 
 
 dec_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 dec_e z80_main z80_flags =
     -- case 0x1D: E=dec(E); break;
-    let
-        new_e =
-            dec z80_main.e z80_flags
-    in
-    FlagsWithERegister new_e.flags new_e.value
+    z80_flags
+        |> dec z80_main.e
+        |> FlagsWithRegisterChange ChangeMainE
 
 
 inc_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
