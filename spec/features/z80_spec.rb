@@ -94,11 +94,11 @@ RSpec.describe "Game" do
     # 156 LD A,I
     # 157 LD A,R
     #
-    # FullFlags - 022 of 160 tests failed
-    # 1. 001 SCF
-    # 2. 002 CCF
-    # 3. 005 SCF (ST)
-    # 4. 006 CCF (ST)
+    # FullFlags - 019 of 160 tests failed
+    # 1. 001 SCF 958E3E1E expected 3EC05634
+    # 2. 002 CCF F06C5F84 expected 5B2237AE
+    # 3. 005 SCF (ST) 958E3E1E expected C62AF5EE
+    # 4. 006 CCF (ST) F06C5F84 expected A3C89474
 
     # Full - 033 of 160 tests failed
     # 1. 74 BIT N,(XY)- DD CB xx 40
