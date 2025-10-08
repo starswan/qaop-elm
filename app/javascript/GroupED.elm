@@ -11,7 +11,7 @@ import CpuTimeCTime exposing (InstructionDuration(..), addCpuTimeTime)
 import Dict exposing (Dict)
 import Keyboard exposing (Keyboard)
 import PCIncrement exposing (PCIncrement(..))
-import RegisterChange exposing (InterruptChange(..), RegisterChange(..))
+import RegisterChange exposing (ChangeMainRegister(..), InterruptChange(..), RegisterChange(..))
 import Utils exposing (char, shiftLeftBy8, shiftRightBy8)
 import Z80Change exposing (FlagChange(..), Z80Change(..))
 import Z80Core exposing (Z80Core, add_cpu_time, imm16)
@@ -166,7 +166,7 @@ group_ed_dict =
 
 execute_ED40 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED40 rom48k z80 =
-    z80 |> execute_ED40485058606870 0x40 rom48k.keyboard
+    z80 |> execute_ED40485058606870 ChangeMainB rom48k.keyboard
 
 
 execute_ED42 : Z80ROM -> Z80Core -> Z80Delta
@@ -490,7 +490,7 @@ ed_cpdr rom48k z80 =
 --    NoOp
 
 
-execute_ED40485058606870 : Int -> Keyboard -> Z80Core -> Z80Delta
+execute_ED40485058606870 : ChangeMainRegister -> Keyboard -> Z80Core -> Z80Delta
 execute_ED40485058606870 value keyboard z80 =
     let
         bc =
@@ -503,12 +503,12 @@ execute_ED40485058606870 value keyboard z80 =
         --    z80 |> set408bit (shiftRightBy 3 (value - 0x40)) inval.value HL
     in
     --{ z80_1 | flags = z80_1.flags |> f_szh0n0p inval.value } |> add_cpu_time 4 |> Whole
-    Fszh0n0pTimeDeltaSet408Bit 4 (shiftRightBy 3 (value - 0x40)) inval.value
+    Fszh0n0pTimeDeltaSet408Bit 4 value inval.value
 
 
 execute_ED48 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED48 rom48k z80 =
-    z80 |> execute_ED40485058606870 0x48 rom48k.keyboard
+    z80 |> execute_ED40485058606870 ChangeMainC rom48k.keyboard
 
 
 
@@ -539,22 +539,22 @@ adc_hl_sp _ z80 =
 
 execute_ED50 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED50 rom48k z80 =
-    z80 |> execute_ED40485058606870 0x50 rom48k.keyboard
+    z80 |> execute_ED40485058606870 ChangeMainD rom48k.keyboard
 
 
 execute_ED58 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED58 rom48k z80 =
-    z80 |> execute_ED40485058606870 0x58 rom48k.keyboard
+    z80 |> execute_ED40485058606870 ChangeMainE rom48k.keyboard
 
 
 execute_ED60 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED60 rom48k z80 =
-    z80 |> execute_ED40485058606870 0x60 rom48k.keyboard
+    z80 |> execute_ED40485058606870 ChangeMainH rom48k.keyboard
 
 
 execute_ED68 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED68 rom48k z80 =
-    z80 |> execute_ED40485058606870 0x68 rom48k.keyboard
+    z80 |> execute_ED40485058606870 ChangeMainL rom48k.keyboard
 
 
 execute_ED70 : Z80ROM -> Z80Core -> Z80Delta
