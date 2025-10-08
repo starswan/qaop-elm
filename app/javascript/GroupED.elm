@@ -11,10 +11,11 @@ import CpuTimeCTime exposing (InstructionDuration(..), addCpuTimeTime)
 import Dict exposing (Dict)
 import Keyboard exposing (Keyboard)
 import PCIncrement exposing (PCIncrement(..))
-import RegisterChange exposing (InterruptChange(..), RegisterChange(..))
-import Utils exposing (char, shiftLeftBy8, shiftRightBy8)
+import RegisterChange exposing (ChangeMainRegister(..), EDRegisterChange(..), InterruptChange(..), RegisterChange(..))
+import Utils exposing (char, shiftLeftBy8, shiftRightBy8, toHexString2)
 import Z80Change exposing (FlagChange(..), Z80Change(..))
-import Z80Core exposing (Z80Core, add_cpu_time, imm16)
+import Z80Core exposing (DirectionForLDIR(..), Z80Core, add_cpu_time, imm16)
+import Z80Debug exposing (debugLog)
 import Z80Delta exposing (Z80Delta(..))
 import Z80Env exposing (Z80Env, mem, mem16, setMem16, setMem16IgnoringTime, setMemIgnoringTime, z80_in)
 import Z80Flags exposing (FlagRegisters, c_F3, c_F5, c_F53, c_FC, c_FH, f_szh0n0p, z80_sub)
@@ -166,7 +167,7 @@ group_ed_dict =
 
 execute_ED40 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED40 rom48k z80 =
-    z80 |> execute_ED40485058606870 0x40 rom48k.keyboard
+    z80 |> execute_ED40485058606870 ChangeMainB rom48k.keyboard
 
 
 execute_ED42 : Z80ROM -> Z80Core -> Z80Delta
@@ -490,7 +491,7 @@ ed_cpdr rom48k z80 =
 --    NoOp
 
 
-execute_ED40485058606870 : Int -> Keyboard -> Z80Core -> Z80Delta
+execute_ED40485058606870 : ChangeMainRegister -> Keyboard -> Z80Core -> Z80Delta
 execute_ED40485058606870 value keyboard z80 =
     let
         bc =
@@ -503,12 +504,12 @@ execute_ED40485058606870 value keyboard z80 =
         --    z80 |> set408bit (shiftRightBy 3 (value - 0x40)) inval.value HL
     in
     --{ z80_1 | flags = z80_1.flags |> f_szh0n0p inval.value } |> add_cpu_time 4 |> Whole
-    Fszh0n0pTimeDeltaSet408Bit 4 (shiftRightBy 3 (value - 0x40)) inval.value
+    Fszh0n0pTimeDeltaSet408Bit 4 value inval.value
 
 
 execute_ED48 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED48 rom48k z80 =
-    z80 |> execute_ED40485058606870 0x48 rom48k.keyboard
+    z80 |> execute_ED40485058606870 ChangeMainC rom48k.keyboard
 
 
 
@@ -539,27 +540,38 @@ adc_hl_sp _ z80 =
 
 execute_ED50 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED50 rom48k z80 =
-    z80 |> execute_ED40485058606870 0x50 rom48k.keyboard
+    z80 |> execute_ED40485058606870 ChangeMainD rom48k.keyboard
 
 
 execute_ED58 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED58 rom48k z80 =
-    z80 |> execute_ED40485058606870 0x58 rom48k.keyboard
+    z80 |> execute_ED40485058606870 ChangeMainE rom48k.keyboard
 
 
 execute_ED60 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED60 rom48k z80 =
-    z80 |> execute_ED40485058606870 0x60 rom48k.keyboard
+    z80 |> execute_ED40485058606870 ChangeMainH rom48k.keyboard
 
 
 execute_ED68 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED68 rom48k z80 =
-    z80 |> execute_ED40485058606870 0x68 rom48k.keyboard
+    z80 |> execute_ED40485058606870 ChangeMainL rom48k.keyboard
 
 
 execute_ED70 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED70 rom48k z80 =
-    z80 |> execute_ED40485058606870 0x70 rom48k.keyboard
+    let
+        v =
+            z80.main |> get_bc
+
+        new_a =
+            z80.env |> z80_in v rom48k.keyboard z80.clockTime
+
+        new_flags =
+            debugLog "ED70 - IN (C)" ( new_a.value, z80.main.b |> toHexString2, z80.main.c |> toHexString2 ) z80.flags |> f_szh0n0p new_a.value
+    in
+    --{ z80 | env = { env | time = new_a.time |> add_cpu_time_time 4 } , flags = new_flags } |> Whole
+    CpuTimeWithFlagsAndPc (new_a.time |> addCpuTimeTime 4) new_flags z80.pc
 
 
 group_ed : Z80ROM -> Z80Core -> Z80Delta
@@ -709,11 +721,6 @@ sbc_hl b z80 =
 --set_im_direct value z80 =
 --    --{ z80 | interrupts = { ints | iM = value } } |> Whole
 --    SetImValue value
-
-
-type DirectionForLDIR
-    = Forwards
-    | Backwards
 
 
 ldir : DirectionForLDIR -> Bool -> Z80ROM -> Z80Core -> Z80Delta
@@ -1089,7 +1096,7 @@ ed_cpir rom48k z80 =
     z80 |> cpir Forwards True rom48k
 
 
-singleByteMainRegsED : Dict Int ( MainWithIndexRegisters -> RegisterChange, InstructionDuration )
+singleByteMainRegsED : Dict Int ( MainWithIndexRegisters -> EDRegisterChange, InstructionDuration )
 singleByteMainRegsED =
     Dict.fromList
         [ --case 0x46:
@@ -1107,11 +1114,11 @@ singleByteMainRegsED =
           --      new_z80 |> im0 bus
           -- iM == 0 (which has the same code) appears to be impossible as there is no IM3 instruction
           --( 0x46, ( \_ -> RegChangeIm 0, EightTStates ) )
-          ( 0x46, ( \_ -> RegChangeNoOp, EightTStates ) )
+          ( 0x46, ( \_ -> EDNoOp, EightTStates ) )
 
         --( 0x4E, ( \_ -> RegChangeIm (0x4E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
         --, ( 0x4E, ( \_ -> RegChangeIm 0, EightTStates ) )
-        , ( 0x4E, ( \_ -> RegChangeNoOp, EightTStates ) )
+        , ( 0x4E, ( \_ -> EDNoOp, EightTStates ) )
 
         --, ( 0x56, ( \_ -> RegChangeIm (0x56 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
         , ( 0x56, ( \_ -> RegChangeIm IM1, EightTStates ) )
@@ -1121,17 +1128,29 @@ singleByteMainRegsED =
 
         --, ( 0x66, ( \_ -> RegChangeIm (0x66 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
         --, ( 0x66, ( \_ -> RegChangeIm 0, EightTStates ) )
-        , ( 0x66, ( \_ -> RegChangeNoOp, EightTStates ) )
+        , ( 0x66, ( \_ -> EDNoOp, EightTStates ) )
 
         --, ( 0x6E, ( \_ -> RegChangeIm (0x6E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
         --, ( 0x6E, ( \_ -> RegChangeIm 0, EightTStates ) )
-        , ( 0x6E, ( \_ -> RegChangeNoOp, EightTStates ) )
+        , ( 0x6E, ( \_ -> EDNoOp, EightTStates ) )
 
         --, ( 0x76, ( \_ -> RegChangeIm (0x76 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
         , ( 0x76, ( \_ -> RegChangeIm IM1, EightTStates ) )
 
         --, ( 0x7E, ( \_ -> RegChangeIm (0x7E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
         , ( 0x7E, ( \_ -> RegChangeIm IM2, EightTStates ) )
+        , ( 0xA2, ( \z80_main -> Z80InI Forwards False, SixteenTStates ) )
+        , ( 0xA3, ( \z80_main -> Z80OutI Forwards False, SixteenTStates ) )
+        , ( 0xAA, ( \z80_main -> Z80InI Backwards False, SixteenTStates ) )
+        , ( 0xAB, ( \z80_main -> Z80OutI Backwards False, SixteenTStates ) )
+        , ( 0xB2, ( \z80_main -> Z80InI Forwards True, SixteenTStates ) )
+        , ( 0xB3, ( \z80_main -> Z80OutI Forwards True, SixteenTStates ) )
+        , ( 0xBA, ( \z80_main -> Z80InI Backwards True, SixteenTStates ) )
+        , ( 0xBB, ( \z80_main -> Z80OutI Backwards True, SixteenTStates ) )
+
+        --The ED opcodes in the range 00-3F and 80-FF (except for the block instructions of course) do nothing at all but taking up 8 T states
+        -- and incrementing the R register by 2. Most of the unlisted opcodes in the range 0x40 to 0x7f do have an effect, however
+        , ( 0xBF, ( \_ -> EDNoOp, EightTStates ) )
         ]
 
 
@@ -1292,6 +1311,30 @@ ed_adc_hl b z80_main z80_flags =
 --		x = 0x4B3480 >> ((x^x>>>4)&15);
 --		Fb = (x^bc) & 0x80 | d>>>4 | (v & 0x80)<<2;
 --	}
+
+
+inirOtirFlags : Int -> Int -> Int -> FlagRegisters -> FlagRegisters
+inirOtirFlags d bc v flags =
+    let
+        x_orig =
+            d |> Bitwise.and 0x07 |> Bitwise.xor bc
+
+        ff =
+            bc |> Bitwise.or (d |> Bitwise.and 0x0100)
+
+        fr =
+            bc
+
+        fa =
+            fr |> Bitwise.xor 0x80
+
+        x =
+            0x004B3480 |> shiftRightBy (x_orig |> Bitwise.xor (x_orig |> shiftRightBy 4) |> Bitwise.and 0x0F)
+
+        fb =
+            ((x |> Bitwise.xor bc) |> Bitwise.and 0x80) |> Bitwise.or (d |> shiftRightBy 4) |> Bitwise.or (v |> Bitwise.and 0x80 |> shiftLeftBy 2)
+    in
+    { flags | ff = ff, fr = fr, fa = fa, fb = fb }
 
 
 edWithInterrupts : Dict Int ( InterruptRegisters -> InterruptChange, InstructionDuration )

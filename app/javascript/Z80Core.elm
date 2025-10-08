@@ -27,6 +27,11 @@ type alias Z80 =
     }
 
 
+type DirectionForLDIR
+    = Forwards
+    | Backwards
+
+
 
 -- would need the side-effect of mem call as well
 --imm8_discard: Z80 -> Z80
@@ -69,11 +74,10 @@ add_cpu_time value z80 =
 set_iff : Int -> Z80Core -> InterruptRegisters
 set_iff value z80 =
     let
-        interrupts =
-            debugLog "set_iff" value z80.interrupts
-
         --interrupts =
-        --    z80.interrupts
+        --    debugLog "set_iff" value z80.interrupts
+        interrupts =
+            z80.interrupts
     in
     { interrupts | iff = value }
 

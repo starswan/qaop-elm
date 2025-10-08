@@ -3,8 +3,9 @@ module Z80Execute exposing (..)
 import Bitwise exposing (shiftLeftBy)
 import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDuration(..), addCpuTimeTime, addDuration)
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
+import GroupED exposing (inirOtirFlags)
 import PCIncrement exposing (InterruptPCIncrement(..), MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
-import RegisterChange exposing (ChangeMainRegister(..), ChangeOneRegister(..), InterruptChange(..), RegisterChange(..), Shifter(..))
+import RegisterChange exposing (ChangeMainRegister(..), ChangeOneRegister(..), EDRegisterChange(..), InterruptChange(..), RegisterChange(..), Shifter(..))
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
 import SingleEnvWithMain exposing (EightBitMain(..), SingleEnvMainChange, applySingleEnvMainChange)
 import SingleNoParams exposing (NoParamChange(..), applyNoParamsDelta)
@@ -14,13 +15,13 @@ import TripleWithFlags exposing (TripleWithFlagsChange(..))
 import TripleWithMain exposing (TripleMainChange, applyTripleMainChange)
 import Utils exposing (bitMaskFromBit, clearBit, inverseBitMaskFromBit, setBit, shiftLeftBy8, toHexString2)
 import Z80Change exposing (FlagChange(..), Z80Change, applyZ80Change)
-import Z80Core exposing (Z80Core)
+import Z80Core exposing (DirectionForLDIR(..), Z80Core)
 import Z80Debug exposing (debugLog, debugTodo)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..), applyDeltaWithChanges)
 import Z80Env exposing (Z80Env, Z80EnvWithPC, mem, mem16, setMem, setMemIgnoringTime, z80_in, z80_out, z80_pop, z80_push)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, inc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (InterruptRegisters, MainWithIndexRegisters, get_xy, set_bc_main, set_de_main, set_xy)
+import Z80Types exposing (InterruptRegisters, MainWithIndexRegisters, get_bc, get_xy, set_bc_main, set_de_main, set_xy)
 
 
 type DeltaWithChanges
@@ -29,6 +30,7 @@ type DeltaWithChanges
     | InterruptDelta InterruptPCIncrement InstructionDuration InterruptChange
     | FlagDelta PCIncrement InstructionDuration FlagChange
     | RegisterChangeDelta PCIncrement InstructionDuration RegisterChange
+    | EDChangeDelta PCIncrement InstructionDuration EDRegisterChange
     | Simple8BitDelta MediumPCIncrement CpuTimeCTime Single8BitChange
     | DoubleWithRegistersDelta MediumPCIncrement CpuTimeCTime DoubleWithRegisterChange
     | JumpChangeDelta CpuTimeCTime JumpChange
@@ -88,6 +90,9 @@ apply_delta z80 rom48k z80delta =
 
         InterruptDelta pCIncrement duration interruptChange ->
             z80 |> applyInterruptChange pCIncrement duration interruptChange
+
+        EDChangeDelta pCIncrement instructionDuration eDRegisterChange ->
+            z80 |> applyEdRegisterDelta pCIncrement instructionDuration eDRegisterChange rom48k
 
 
 applyJumpChangeDelta : CpuTimeCTime -> JumpChange -> Z80ROM -> Z80Core -> Z80Core
@@ -556,17 +561,6 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80_core =
                 , clockTime = newTime
             }
 
-        RegChangeIm intMode ->
-            let
-                interrupts =
-                    debugLog "SetInterruptMode" intMode z80_core.interrupts
-            in
-            { z80_core
-                | pc = new_pc
-                , clockTime = newTime
-                , interrupts = { interrupts | iM = intMode }
-            }
-
         ExchangeTopOfStackWith ixiyhl ->
             let
                 popped =
@@ -1007,3 +1001,127 @@ applyTripleFlagChange cpu_time z80changeData z80 =
                     z80.env |> z80_push new_pc cpu_time
             in
             { z80 | clockTime = cpu_time |> addDuration SevenTStates, pc = address, env = env_1 }
+
+
+applyEdRegisterDelta : PCIncrement -> InstructionDuration -> EDRegisterChange -> Z80ROM -> Z80Core -> Z80Core
+applyEdRegisterDelta pc_inc duration z80changeData rom48k z80_core =
+    let
+        env =
+            z80_core.env
+
+        newTime =
+            z80_core.clockTime |> addDuration duration
+
+        new_pc =
+            case pc_inc of
+                IncrementByOne ->
+                    Bitwise.and (z80_core.pc + 1) 0xFFFF
+
+                IncrementByTwo ->
+                    Bitwise.and (z80_core.pc + 2) 0xFFFF
+
+                IncrementByThree ->
+                    Bitwise.and (z80_core.pc + 3) 0xFFFF
+
+                IncrementByFour ->
+                    Bitwise.and (z80_core.pc + 4) 0xFFFF
+    in
+    case z80changeData of
+        EDNoOp ->
+            { z80_core | pc = new_pc, clockTime = newTime }
+
+        RegChangeIm intMode ->
+            let
+                interrupts =
+                    debugLog "SetInterruptMode" intMode z80_core.interrupts
+            in
+            { z80_core
+                | pc = new_pc
+                , clockTime = newTime
+                , interrupts = { interrupts | iM = intMode }
+            }
+
+        Z80InI direction repeat ->
+            let
+                main =
+                    z80_core.main
+
+                new_b =
+                    main.b - 1 |> Bitwise.and 0xFF
+
+                new_hl =
+                    case direction of
+                        Forwards ->
+                            main.hl + 1 |> Bitwise.and 0xFFFF
+
+                        Backwards ->
+                            main.hl - 1 |> Bitwise.and 0xFFFF
+
+                in_value =
+                    z80_core.env |> z80_in (main |> get_bc) rom48k.keyboard newTime
+
+                ( env_2, newTme2 ) =
+                    env |> setMem main.hl in_value.value in_value.time
+
+                pc2 =
+                    if repeat && new_b /= 0 then
+                        z80_core.pc
+
+                    else
+                        new_pc
+
+                new_main =
+                    { main | hl = new_hl, b = new_b }
+
+                d_flag =
+                    case direction of
+                        Forwards ->
+                            (new_main |> get_bc) + 1 |> Bitwise.and 0xFFFF
+
+                        Backwards ->
+                            (new_main |> get_bc) - 1 |> Bitwise.and 0xFFFF
+
+                flags =
+                    z80_core.flags |> inirOtirFlags d_flag (new_main |> get_bc) in_value.value
+            in
+            { z80_core | env = env_2, pc = pc2, flags = flags, main = new_main, clockTime = newTme2 }
+
+        Z80OutI direction repeat ->
+            let
+                main =
+                    z80_core.main
+
+                new_b =
+                    main.b - 1 |> Bitwise.and 0xFF
+
+                new_hl =
+                    case direction of
+                        Forwards ->
+                            main.hl + 1 |> Bitwise.and 0xFFFF
+
+                        Backwards ->
+                            main.hl - 1 |> Bitwise.and 0xFFFF
+
+                main_2 =
+                    { main | b = new_b }
+
+                outvalue =
+                    z80_core.env |> mem main.hl newTime rom48k
+
+                new_bc =
+                    main_2 |> get_bc
+
+                ( env2, newTime2 ) =
+                    z80_core.env |> z80_out new_bc outvalue.value outvalue.time
+
+                pc2 =
+                    if repeat && new_b /= 0 then
+                        z80_core.pc
+
+                    else
+                        new_pc
+
+                flags =
+                    z80_core.flags |> inirOtirFlags new_hl new_bc outvalue.value
+            in
+            { z80_core | env = env2, flags = flags, pc = pc2, main = { main_2 | hl = new_hl }, clockTime = newTime2 }

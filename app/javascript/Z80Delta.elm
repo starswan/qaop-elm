@@ -1,7 +1,9 @@
 module Z80Delta exposing (..)
 
+import Bitwise
 import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimeIncrement, InstructionDuration, addCpuTimeTime)
-import Utils exposing (toHexString2)
+import RegisterChange exposing (ChangeMainRegister(..))
+import Utils exposing (shiftLeftBy8, toHexString2)
 import Z80Core exposing (Z80, Z80Core, add_cpu_time, set408bitHL)
 import Z80Debug exposing (debugTodo)
 import Z80Env exposing (Z80Env)
@@ -26,7 +28,7 @@ type
     | MainRegsWithCpuTime MainWithIndexRegisters CpuTimeCTime
       --| PushWithMainSpCpuTimeAndPc Int MainWithIndexRegisters Int CpuTimeCTime Int
       --| PushWithMainSpCpuTime Int MainWithIndexRegisters Int CpuTimeCTime
-    | Fszh0n0pTimeDeltaSet408Bit Int Int Int
+    | Fszh0n0pTimeDeltaSet408Bit Int ChangeMainRegister Int
       -- only used by RLD
     | FlagsWithPcEnvAndCpuTime FlagRegisters Int Z80Env Int
     | UnknownIntValue String Int
@@ -83,12 +85,35 @@ applyDeltaWithChanges z80delta z80 =
         FlagsWithPCMainAndCpuTime flagRegisters pc mainWithIndexRegisters time ->
             { z80 | flags = flagRegisters, pc = pc, env = z80_env, clockTime = time, main = mainWithIndexRegisters, interrupts = z80delta.interrupts }
 
-        Fszh0n0pTimeDeltaSet408Bit timeDelta caseval result ->
+        Fszh0n0pTimeDeltaSet408Bit timeDelta caseval value ->
             let
+                z80_main =
+                    z80.main
+
+                z80_flags =
+                    z80.flags
+
                 ( main, flags, env ) =
-                    set408bitHL caseval result z80.clockTime ( z80.main, z80.flags, z80_env )
+                    case caseval of
+                        ChangeMainB ->
+                            ( { z80_main | b = value }, z80_flags, z80_env )
+
+                        ChangeMainC ->
+                            ( { z80_main | c = value }, z80_flags, z80_env )
+
+                        ChangeMainD ->
+                            ( { z80_main | d = value }, z80_flags, z80_env )
+
+                        ChangeMainE ->
+                            ( { z80_main | e = value }, z80_flags, z80_env )
+
+                        ChangeMainH ->
+                            ( { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 value) }, z80_flags, z80_env )
+
+                        ChangeMainL ->
+                            ( { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) value }, z80_flags, z80_env )
             in
-            { z80 | flags = flags |> f_szh0n0p result, env = env, main = main } |> add_cpu_time timeDelta
+            { z80 | pc = z80delta.pc, flags = flags |> f_szh0n0p value, env = env, main = main } |> add_cpu_time timeDelta
 
         --PushWithMainSpCpuTimeAndPc value mainWithIndexRegisters sp time pc ->
         --    let
