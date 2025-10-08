@@ -682,7 +682,7 @@ runSpecial specialType rom48k z80_core =
             in
             case singleByteMainRegsED |> Dict.get param.value of
                 Just ( mainRegFunc, duration ) ->
-                    RegisterChangeDelta IncrementByTwo duration (mainRegFunc z80_core.main)
+                    EDChangeDelta IncrementByTwo duration (mainRegFunc z80_core.main)
 
                 Nothing ->
                     case singleByteFlagsED |> Dict.get param.value of
