@@ -2,9 +2,7 @@ module Z80Core exposing (..)
 
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, CpuTimePcAnd16BitValue, addCpuTimeTime)
-import Utils exposing (shiftLeftBy8)
-import Z80Debug exposing (debugLog)
-import Z80Env exposing (Z80Env, mem16, setMemIgnoringTime, z80_push)
+import Z80Env exposing (Z80Env, mem16, z80_push)
 import Z80Flags exposing (FlagRegisters)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (InterruptMode(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
@@ -33,10 +31,6 @@ type DirectionForLDIR
 
 
 
--- would need the side-effect of mem call as well
---imm8_discard: Z80 -> Z80
---imm8_discard z80 =
---    z80 |> inc_pc |> add_cpu_time 3
 --	private int imm16()
 --	{
 --		int v = env.mem16(PC);
@@ -74,6 +68,7 @@ add_cpu_time value z80 =
 set_iff : Int -> Z80Core -> InterruptRegisters
 set_iff value z80 =
     let
+        --logging this can be noisy
         --interrupts =
         --    debugLog "set_iff" value z80.interrupts
         interrupts =
@@ -87,34 +82,35 @@ set_iff value z80 =
 --get_af_z80 : Z80 -> Int
 --get_af_z80 z80 =
 --    z80.flags |> get_af
-
-
-set408bitHL : Int -> Int -> CpuTimeCTime -> ( MainWithIndexRegisters, FlagRegisters, Z80Env ) -> ( MainWithIndexRegisters, FlagRegisters, Z80Env )
-set408bitHL c value clockTime ( z80_main, z80_flags, z80_env ) =
-    case Bitwise.and c 0x07 of
-        0 ->
-            ( { z80_main | b = value }, z80_flags, z80_env )
-
-        1 ->
-            ( { z80_main | c = value }, z80_flags, z80_env )
-
-        2 ->
-            ( { z80_main | d = value }, z80_flags, z80_env )
-
-        3 ->
-            ( { z80_main | e = value }, z80_flags, z80_env )
-
-        4 ->
-            ( { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 value) }, z80_flags, z80_env )
-
-        5 ->
-            ( { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) value }, z80_flags, z80_env )
-
-        6 ->
-            ( z80_main, z80_flags, z80_env |> setMemIgnoringTime z80_main.hl value clockTime )
-
-        _ ->
-            ( z80_main, { z80_flags | a = value }, z80_env )
+--set408bitHL : Int -> Int -> CpuTimeCTime -> ( MainWithIndexRegisters, FlagRegisters, Z80Env ) -> ( MainWithIndexRegisters, FlagRegisters, Z80Env )
+--set408bitHL c value clockTime ( z80_main, z80_flags, z80_env ) =
+--    case Bitwise.and c 0x07 of
+--        0 ->
+--            ( { z80_main | b = value }, z80_flags, z80_env )
+--
+--        1 ->
+--            ( { z80_main | c = value }, z80_flags, z80_env )
+--
+--        2 ->
+--            ( { z80_main | d = value }, z80_flags, z80_env )
+--
+--        3 ->
+--            ( { z80_main | e = value }, z80_flags, z80_env )
+--
+--        4 ->
+--            ( { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 value) }, z80_flags, z80_env )
+--
+--        5 ->
+--            ( { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) value }, z80_flags, z80_env )
+--
+--        -- This is only used by ED40-ED78, and ED70 is supposed to throw away the result
+--        --6 ->
+--        --    ( z80_main, z80_flags, z80_env |> setMemIgnoringTime z80_main.hl value clockTime )
+--        7 ->
+--            ( z80_main, { z80_flags | a = value }, z80_env )
+--
+--        _ ->
+--            ( z80_main, z80_flags, z80_env )
 
 
 im0 : Int -> Z80 -> Z80
@@ -235,52 +231,20 @@ get_ei z80 =
     Bitwise.and z80.core.interrupts.iff 1 /= 0
 
 
-
---z80_halt : Z80 -> Z80
---z80_halt z80 =
---    let
---        z80_core =
---            z80.core
---
---        interrupts =
---            z80_core.interrupts
---
---        --n = shiftRightBy 2 (z80.time_limit - z80.env.time.cpu_time + 3)
---        n =
---            shiftRightBy 2 (c_TIME_LIMIT - z80_core.env.time.cpu_time + 3)
---
---        z80_1 =
---            if n > 0 then
---                -- turns out env.halt(n, r) just returns n...?
---                { z80_core | interrupts = { interrupts | r = interrupts.r + n } } |> add_cpu_time (4 * n)
---
---            else
---                z80_core
---
---        core_2 =
---            { z80_1 | interrupts = { interrupts | halted = True } }
---    in
---    { z80 | core = core_2 }
-
-
 di_0xF3 : Z80 -> Z80
 di_0xF3 full_z80 =
     -- case 0xF3: IFF=0; break;
     let
-        z80 =
+        z80_core =
             full_z80.core
 
         ints =
-            z80 |> set_iff 0
+            z80_core |> set_iff 0
 
         new_core =
-            { z80
-                | interrupts = ints
-            }
+            { z80_core | interrupts = ints }
     in
-    { full_z80
-        | core = new_core
-    }
+    { full_z80 | core = new_core }
 
 
 ei_0xFB : Z80 -> Z80
@@ -294,10 +258,6 @@ ei_0xFB full_z80 =
             z80 |> set_iff 3
 
         new_core =
-            { z80
-                | interrupts = ints
-            }
+            { z80 | interrupts = ints }
     in
-    { full_z80
-        | core = new_core
-    }
+    { full_z80 | core = new_core }

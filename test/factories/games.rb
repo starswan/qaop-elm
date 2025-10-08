@@ -7,6 +7,13 @@ FactoryBot.define do
       tapfile { 'MATCHDAY.tap' }
     end
 
+    trait :manic_miner do
+      name { 'ManicMiner' }
+      download_url { 'https://www.worldofspectrum.org/pub/sinclair/games/m/ManicMiner.tap.zip' }
+      filetype { 'TAP' }
+      filename { 'MANIC.TAP' }
+    end
+
     trait :cyrus do
       name { 'CyrusChess' }
       download_url { "https://www.worldofspectrum.org/pub/sinclair/games/c/CyrusISChess.tap.zip" }

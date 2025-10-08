@@ -71,6 +71,7 @@ type EDRegisterChange
     | RegChangeIm InterruptMode
     | Z80InI DirectionForLDIR Bool
     | Z80OutI DirectionForLDIR Bool
+    | InRC ChangeMainRegister
 
 
 type InterruptChange

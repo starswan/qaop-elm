@@ -6,7 +6,7 @@ import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..), TriplePCIncrement(..))
 import Utils exposing (byte, shiftRightBy8)
 import Z80Core exposing (Z80Core)
-import Z80Env exposing (Z80Env, setMem16IgnoringTime, setMemIgnoringTime)
+import Z80Env exposing (Z80Env, setMem, setMem16)
 import Z80Types exposing (MainWithIndexRegisters)
 
 
@@ -67,21 +67,23 @@ applyTripleMainChange time pcInc z80changeData z80 =
     case z80changeData of
         Store16BitValue address value ->
             let
-                env1 =
-                    env |> setMem16IgnoringTime address value time
+                ( env1, clockTime ) =
+                    env |> setMem16 address value time
             in
             { z80
                 | pc = new_pc
                 , env = env1
+                , clockTime = clockTime
             }
 
         Store8BitValue address value ->
             let
-                env1 =
-                    env |> setMemIgnoringTime address value time
+                ( env1, clockTime ) =
+                    env |> setMem address value time
             in
             { z80
                 | pc = new_pc
+                , clockTime = clockTime
                 , env = env1
             }
 

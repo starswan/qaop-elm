@@ -4,7 +4,7 @@ import Bitwise
 import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimeIncrement, InstructionDuration, addCpuTimeTime)
 import RegisterChange exposing (ChangeMainRegister(..))
 import Utils exposing (shiftLeftBy8, toHexString2)
-import Z80Core exposing (Z80, Z80Core, add_cpu_time, set408bitHL)
+import Z80Core exposing (Z80, Z80Core, add_cpu_time)
 import Z80Debug exposing (debugTodo)
 import Z80Env exposing (Z80Env)
 import Z80Flags exposing (FlagRegisters, f_szh0n0p)
@@ -18,17 +18,12 @@ type
     | MainRegsWithPcAndCpuTime MainWithIndexRegisters Int CpuTimeCTime
     | FlagsWithPCMainAndCpuTime FlagRegisters Int MainWithIndexRegisters CpuTimeCTime
     | CpuTimeWithFlagsAndPc CpuTimeCTime FlagRegisters Int
-      -- only used by 0xF9
-      --| SpAndCpuTimeWithPc Int Int Int
-      --| EnvWithPc Z80Env Int
     | EnvWithPcAndTime Z80Env Int CpuTimeCTime
       -- only used by ED78
     | CpuTimeWithSpAndPc CpuTimeCTime Int Int
     | InterruptsWithCpuTime InterruptRegisters CpuTimeCTime
     | MainRegsWithCpuTime MainWithIndexRegisters CpuTimeCTime
-      --| PushWithMainSpCpuTimeAndPc Int MainWithIndexRegisters Int CpuTimeCTime Int
-      --| PushWithMainSpCpuTime Int MainWithIndexRegisters Int CpuTimeCTime
-    | Fszh0n0pTimeDeltaSet408Bit Int ChangeMainRegister Int
+      --| Fszh0n0pTimeDeltaSet408Bit Int ChangeMainRegister Int
       -- only used by RLD
     | FlagsWithPcEnvAndCpuTime FlagRegisters Int Z80Env Int
     | UnknownIntValue String Int
@@ -66,13 +61,9 @@ applyDeltaWithChanges z80delta z80 =
         MainRegsWithPcAndCpuTime mainRegisters pc cpu_time ->
             { z80 | pc = pc, env = z80_env, clockTime = cpu_time, main = mainRegisters, interrupts = z80delta.interrupts }
 
-        --EnvWithPc z80Env programCounter ->
-        --    { z80 | env = z80Env, pc = programCounter, interrupts = z80delta.interrupts, clockTime = z80delta.time }
         EnvWithPcAndTime z80Env programCounter clockTime ->
             { z80 | env = z80Env, pc = programCounter, interrupts = z80delta.interrupts, clockTime = clockTime }
 
-        --SpAndCpuTimeWithPc sp cpu_time pc ->
-        --    { z80 | pc = pc, env = { z80_env | time = z80delta.time |> addCpuTimeTime cpu_time, sp = sp }, interrupts = z80delta.interrupts }
         CpuTimeWithFlagsAndPc cpu_time flagRegisters pc ->
             { z80 | flags = flagRegisters, pc = pc, env = z80_env, clockTime = cpu_time, interrupts = z80delta.interrupts }
 
@@ -85,48 +76,35 @@ applyDeltaWithChanges z80delta z80 =
         FlagsWithPCMainAndCpuTime flagRegisters pc mainWithIndexRegisters time ->
             { z80 | flags = flagRegisters, pc = pc, env = z80_env, clockTime = time, main = mainWithIndexRegisters, interrupts = z80delta.interrupts }
 
-        Fszh0n0pTimeDeltaSet408Bit timeDelta caseval value ->
-            let
-                z80_main =
-                    z80.main
-
-                z80_flags =
-                    z80.flags
-
-                ( main, flags, env ) =
-                    case caseval of
-                        ChangeMainB ->
-                            ( { z80_main | b = value }, z80_flags, z80_env )
-
-                        ChangeMainC ->
-                            ( { z80_main | c = value }, z80_flags, z80_env )
-
-                        ChangeMainD ->
-                            ( { z80_main | d = value }, z80_flags, z80_env )
-
-                        ChangeMainE ->
-                            ( { z80_main | e = value }, z80_flags, z80_env )
-
-                        ChangeMainH ->
-                            ( { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 value) }, z80_flags, z80_env )
-
-                        ChangeMainL ->
-                            ( { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) value }, z80_flags, z80_env )
-            in
-            { z80 | pc = z80delta.pc, flags = flags |> f_szh0n0p value, env = env, main = main } |> add_cpu_time timeDelta
-
-        --PushWithMainSpCpuTimeAndPc value mainWithIndexRegisters sp time pc ->
+        --Fszh0n0pTimeDeltaSet408Bit timeDelta caseval value ->
         --    let
-        --        env =
-        --            z80.env
+        --        z80_main =
+        --            z80.main
+        --
+        --        z80_flags =
+        --            z80.flags
+        --
+        --        ( main, flags, env ) =
+        --            case caseval of
+        --                ChangeMainB ->
+        --                    ( { z80_main | b = value }, z80_flags, z80_env )
+        --
+        --                ChangeMainC ->
+        --                    ( { z80_main | c = value }, z80_flags, z80_env )
+        --
+        --                ChangeMainD ->
+        --                    ( { z80_main | d = value }, z80_flags, z80_env )
+        --
+        --                ChangeMainE ->
+        --                    ( { z80_main | e = value }, z80_flags, z80_env )
+        --
+        --                ChangeMainH ->
+        --                    ( { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 value) }, z80_flags, z80_env )
+        --
+        --                ChangeMainL ->
+        --                    ( { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) value }, z80_flags, z80_env )
         --    in
-        --    { z80 | main = mainWithIndexRegisters, pc = pc, env = { env | time = time, sp = sp } |> z80_push value, interrupts = z80delta.interrupts }
-        --PushWithMainSpCpuTime value mainWithIndexRegisters sp time ->
-        --    let
-        --        env =
-        --            z80.env
-        --    in
-        --    { z80 | main = mainWithIndexRegisters, pc = z80delta.pc, env = { env | time = time, sp = sp } |> z80_push value, interrupts = z80delta.interrupts }
+        --    { z80 | pc = z80delta.pc, flags = flags |> f_szh0n0p value, env = env, main = main } |> add_cpu_time timeDelta
         FlagsWithPcEnvAndCpuTime flagRegisters pc z80Env int ->
             { z80 | flags = flagRegisters, pc = pc, env = z80Env, clockTime = z80.clockTime |> addCpuTimeTime int, interrupts = z80delta.interrupts }
 
