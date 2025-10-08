@@ -27,6 +27,11 @@ type alias Z80 =
     }
 
 
+type DirectionForLDIR
+    = Forwards
+    | Backwards
+
+
 
 -- would need the side-effect of mem call as well
 --imm8_discard: Z80 -> Z80
