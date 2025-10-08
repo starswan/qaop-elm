@@ -864,14 +864,9 @@ rlc_h z80_main z80_flags =
 rlc_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rlc_l z80_main z80_flags =
     -- case 0x05: HL=HL&0xFF00|shifter(o,HL&0xFF); break;
-    let
-        value =
-            shifter0 (Bitwise.and z80_main.hl 0xFF) z80_flags
-
-        new_hl =
-            Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
-    in
-    FlagsWithHLRegister value.flags new_hl
+    z80_flags
+        |> shifter0 (Bitwise.and z80_main.hl 0xFF)
+        |> FlagsWithRegisterChange ChangeMainL
 
 
 rrc_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -906,14 +901,9 @@ rrc_h z80_main z80_flags =
 rrc_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rrc_l z80_main z80_flags =
     -- case 0x05: HL=HL&0xFF00|shifter(o,HL&0xFF); break;
-    let
-        value =
-            shifter1 (Bitwise.and z80_main.hl 0xFF) z80_flags
-
-        new_hl =
-            Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
-    in
-    FlagsWithHLRegister value.flags new_hl
+    z80_flags
+        |> shifter1 (Bitwise.and z80_main.hl 0xFF)
+        |> FlagsWithRegisterChange ChangeMainL
 
 
 rl_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -953,14 +943,9 @@ rl_h z80_main z80_flags =
 rl_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rl_l z80_main z80_flags =
     -- case 0x05: HL=HL&0xFF00|shifter(o,HL&0xFF); break;
-    let
-        value =
-            shifter2 (Bitwise.and z80_main.hl 0xFF) z80_flags
-
-        new_hl =
-            Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
-    in
-    FlagsWithHLRegister value.flags new_hl
+    z80_flags
+        |> shifter2 (Bitwise.and z80_main.hl 0xFF)
+        |> FlagsWithRegisterChange ChangeMainL
 
 
 rr_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -984,30 +969,21 @@ rr_d z80_main z80_flags =
 rr_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rr_e z80_main z80_flags =
     -- case 0x03: E=shifter(o,E); break;
-    z80_flags
-        |> shifter3 z80_main.e
-        |> FlagsWithRegisterChange ChangeMainE
+    z80_flags |> shifter3 z80_main.e |> FlagsWithRegisterChange ChangeMainE
 
 
 rr_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rr_h z80_main z80_flags =
     --case 0x04: HL=HL&0xFF|shifter(o,HL>>>8)<<8; break
-    z80_flags
-        |> shifter3 (z80_main.hl |> shiftRightBy8)
-        |> FlagsWithRegisterChange ChangeMainH
+    z80_flags |> shifter3 (z80_main.hl |> shiftRightBy8) |> FlagsWithRegisterChange ChangeMainH
 
 
 rr_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rr_l z80_main z80_flags =
     -- case 0x05: HL=HL&0xFF00|shifter(o,HL&0xFF); break;
-    let
-        value =
-            shifter3 (Bitwise.and z80_main.hl 0xFF) z80_flags
-
-        new_hl =
-            Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
-    in
-    FlagsWithHLRegister value.flags new_hl
+    z80_flags
+        |> shifter3 (Bitwise.and z80_main.hl 0xFF)
+        |> FlagsWithRegisterChange ChangeMainL
 
 
 sla_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1045,14 +1021,9 @@ sla_h z80_main z80_flags =
 sla_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sla_l z80_main z80_flags =
     -- case 0x05: HL=HL&0xFF00|shifter(o,HL&0xFF); break;
-    let
-        value =
-            shifter4 (Bitwise.and z80_main.hl 0xFF) z80_flags
-
-        new_hl =
-            Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
-    in
-    FlagsWithHLRegister value.flags new_hl
+    z80_flags
+        |> shifter4 (Bitwise.and z80_main.hl 0xFF)
+        |> FlagsWithRegisterChange ChangeMainL
 
 
 sra_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1092,14 +1063,9 @@ sra_h z80_main z80_flags =
 sra_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sra_l z80_main z80_flags =
     -- case 0x05: HL=HL&0xFF00|shifter(o,HL&0xFF); break;
-    let
-        value =
-            shifter5 (Bitwise.and z80_main.hl 0xFF) z80_flags
-
-        new_hl =
-            Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
-    in
-    FlagsWithHLRegister value.flags new_hl
+    z80_flags
+        |> shifter5 (Bitwise.and z80_main.hl 0xFF)
+        |> FlagsWithRegisterChange ChangeMainL
 
 
 sll_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1139,14 +1105,9 @@ sll_h z80_main z80_flags =
 sll_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sll_l z80_main z80_flags =
     -- case 0x05: HL=HL&0xFF00|shifter(o,HL&0xFF); break;
-    let
-        value =
-            shifter6 (Bitwise.and z80_main.hl 0xFF) z80_flags
-
-        new_hl =
-            Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
-    in
-    FlagsWithHLRegister value.flags new_hl
+    z80_flags
+        |> shifter6 (Bitwise.and z80_main.hl 0xFF)
+        |> FlagsWithRegisterChange ChangeMainL
 
 
 srl_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1186,14 +1147,9 @@ srl_h z80_main z80_flags =
 srl_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 srl_l z80_main z80_flags =
     -- case 0x05: HL=HL&0xFF00|shifter(o,HL&0xFF); break;
-    let
-        value =
-            shifter7 (Bitwise.and z80_main.hl 0xFF) z80_flags
-
-        new_hl =
-            Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
-    in
-    FlagsWithHLRegister value.flags new_hl
+    z80_flags
+        |> shifter7 (Bitwise.and z80_main.hl 0xFF)
+        |> FlagsWithRegisterChange ChangeMainL
 
 
 bit_1_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
