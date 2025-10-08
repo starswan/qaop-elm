@@ -570,9 +570,12 @@ z80_in portnum keyboard clockTime _ =
         newTime =
             clockTime |> cont_port portnum
 
-        --x = debug_log "z80_in" (portnum |> toHexString) Nothing
         value =
-            keyboard |> z80_keyboard_input portnum
+            if (portnum |> Bitwise.and 0x01) == 0 then
+                keyboard |> z80_keyboard_input portnum |> Bitwise.and 0xBF
+
+            else
+                0xFF
 
         --x =
         --    if value /= 0xFF then
