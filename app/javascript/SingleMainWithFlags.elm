@@ -4,6 +4,7 @@ import Bitwise
 import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
+import RegisterChange exposing (ChangeMainRegister(..))
 import Utils exposing (BitTest(..), shiftLeftBy8, shiftRightBy8)
 import Z80Change exposing (Z80Change(..))
 import Z80Flags exposing (FlagRegisters, IntWithFlags, adc, add16, dec, inc, sbc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
@@ -116,25 +117,25 @@ inc_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 inc_b z80_main z80_flags =
     -- case 0x04: B=inc(B); break;
     --z80 |> set_flag_regs new_b.flags |> set_b new_b.value
-    z80_flags |> inc z80_main.b |> FlagsWithBRegister
+    z80_flags |> inc z80_main.b |> FlagsWithRegisterChange ChangeMainB
 
 
 dec_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 dec_b z80_main z80_flags =
     -- case 0x05: B=dec(B); break;
-    z80_flags |> dec z80_main.b |> FlagsWithBRegister
+    z80_flags |> dec z80_main.b |> FlagsWithRegisterChange ChangeMainB
 
 
 inc_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 inc_c z80_main z80_flags =
     -- case 0x0C: C=inc(C); break;
-    z80_flags |> inc z80_main.c |> FlagsWithCRegister
+    z80_flags |> inc z80_main.c |> FlagsWithRegisterChange ChangeMainC
 
 
 dec_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 dec_c z80_main z80_flags =
     -- case 0x0D: C=dec(C); break;
-    z80_flags |> dec z80_main.c |> FlagsWithCRegister
+    z80_flags |> dec z80_main.c |> FlagsWithRegisterChange ChangeMainC
 
 
 inc_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
