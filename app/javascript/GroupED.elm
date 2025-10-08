@@ -12,9 +12,10 @@ import Dict exposing (Dict)
 import Keyboard exposing (Keyboard)
 import PCIncrement exposing (PCIncrement(..))
 import RegisterChange exposing (ChangeMainRegister(..), InterruptChange(..), RegisterChange(..))
-import Utils exposing (char, shiftLeftBy8, shiftRightBy8)
+import Utils exposing (char, shiftLeftBy8, shiftRightBy8, toHexString2)
 import Z80Change exposing (FlagChange(..), Z80Change(..))
 import Z80Core exposing (Z80Core, add_cpu_time, imm16)
+import Z80Debug exposing (debugLog)
 import Z80Delta exposing (Z80Delta(..))
 import Z80Env exposing (Z80Env, mem, mem16, setMem16, setMem16IgnoringTime, setMemIgnoringTime, z80_in)
 import Z80Flags exposing (FlagRegisters, c_F3, c_F5, c_F53, c_FC, c_FH, f_szh0n0p, z80_sub)
@@ -559,7 +560,18 @@ execute_ED68 rom48k z80 =
 
 execute_ED70 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED70 rom48k z80 =
-    z80 |> execute_ED40485058606870 0x70 rom48k.keyboard
+    let
+        v =
+            z80.main |> get_bc
+
+        new_a =
+            z80.env |> z80_in v rom48k.keyboard z80.clockTime
+
+        new_flags =
+            debugLog "ED70 - IN (C)" ( new_a.value, z80.main.b |> toHexString2, z80.main.c |> toHexString2 ) z80.flags |> f_szh0n0p new_a.value
+    in
+    --{ z80 | env = { env | time = new_a.time |> add_cpu_time_time 4 } , flags = new_flags } |> Whole
+    CpuTimeWithFlagsAndPc (new_a.time |> addCpuTimeTime 4) new_flags z80.pc
 
 
 group_ed : Z80ROM -> Z80Core -> Z80Delta
