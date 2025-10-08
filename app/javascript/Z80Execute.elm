@@ -19,7 +19,7 @@ import Z80Core exposing (DirectionForLDIR(..), Z80Core)
 import Z80Debug exposing (debugLog, debugTodo)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..), applyDeltaWithChanges)
 import Z80Env exposing (Z80Env, Z80EnvWithPC, mem, mem16, setMem, setMemIgnoringTime, z80_in, z80_out, z80_pop, z80_push)
-import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, inc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
+import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, f_szh0n0p, inc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (InterruptRegisters, MainWithIndexRegisters, get_bc, get_xy, set_bc_main, set_de_main, set_xy)
 
@@ -1125,3 +1125,36 @@ applyEdRegisterDelta pc_inc duration z80changeData rom48k z80_core =
                     z80_core.flags |> inirOtirFlags new_hl new_bc outvalue.value
             in
             { z80_core | env = env2, flags = flags, pc = pc2, main = { main_2 | hl = new_hl }, clockTime = newTime2 }
+
+        InRC changeMainRegister ->
+            let
+                z80_main =
+                    z80_core.main
+
+                z80_flags =
+                    z80_core.flags
+
+                in_value =
+                    z80_core.env |> z80_in (z80_main |> get_bc) rom48k.keyboard newTime
+
+                main =
+                    case changeMainRegister of
+                        ChangeMainB ->
+                            { z80_main | b = in_value.value }
+
+                        ChangeMainC ->
+                            { z80_main | c = in_value.value }
+
+                        ChangeMainD ->
+                            { z80_main | d = in_value.value }
+
+                        ChangeMainE ->
+                            { z80_main | e = in_value.value }
+
+                        ChangeMainH ->
+                            { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 in_value.value) }
+
+                        ChangeMainL ->
+                            { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) in_value.value }
+            in
+            { z80_core | pc = new_pc, flags = z80_flags |> f_szh0n0p in_value.value, main = main, clockTime = in_value.time }

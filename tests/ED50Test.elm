@@ -43,7 +43,43 @@ suite =
     describe "0xEn instructions"
         -- Nest as many descriptions as you like.
         [ describe "ED instructions"
-            [ test "0xED 0x5B LD DE,(NN)" <|
+            [ test "0xED 0x50 IN D, (C)" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMemWithTime addr 0xED
+                                |> setMemWithTime (addr + 1) 0x50
+                                |> .z80env
+
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | hl = 0x6545, d = 0x01, c = 0x02 }
+                                    , flags = { flags | a = 0x47 }
+                                }
+                    in
+                    Expect.equal ( addr + 2, 0xBF ) ( new_z80.pc, new_z80.main.d )
+            , test "0xED 0x58 IN E, (C)" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMemWithTime addr 0xED
+                                |> setMemWithTime (addr + 1) 0x58
+                                |> .z80env
+
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | hl = 0x6545, e = 0x01, c = 0x02 }
+                                    , flags = { flags | a = 0x47 }
+                                }
+                    in
+                    Expect.equal ( addr + 2, 0xBF ) ( new_z80.pc, new_z80.main.e )
+            , test "0xED 0x5B LD DE,(NN)" <|
                 \_ ->
                     let
                         new_env =

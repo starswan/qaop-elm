@@ -56,11 +56,11 @@ suite =
                             executeCoreInstruction z80rom
                                 { z80
                                     | env = new_env
-                                    , main = { z80main | hl = 0x6545, b = 0xA5, c = 0x5F }
+                                    , main = { z80main | hl = 0x6545, b = 0xA5, c = 0x5E }
                                     , flags = { flags | a = 0x39 }
                                 }
                     in
-                    Expect.equal { pc = addr + 2, fr = 0xFF, a = 0xFF } { pc = new_z80.pc, fr = new_z80.flags.fr, a = new_z80.flags.a }
+                    Expect.equal { pc = addr + 2, fr = 0xBF, a = 0xBF } { pc = new_z80.pc, fr = new_z80.flags.fr, a = new_z80.flags.a }
             , test "0xED 0x7B LD SP,(nn)" <|
                 \_ ->
                     let
