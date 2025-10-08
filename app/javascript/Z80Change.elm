@@ -14,8 +14,6 @@ type Z80Change
     | FlagsWithHLRegister FlagRegisters Int
     | FlagsWithIXRegister FlagRegisters Int
     | FlagsWithIYRegister FlagRegisters Int
-    | Z80RegisterB Int
-    | Z80RegisterC Int
     | Z80ChangeFlags FlagRegisters
     | Z80ChangeSetIndirect Int Int
     | JustIXRegister Int
@@ -70,20 +68,6 @@ applyZ80Change change z80 =
                     z80.main
             in
             { z80 | flags = flagRegisters, main = { main | hl = int } }
-
-        Z80RegisterB int ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | main = { main | b = int } }
-
-        Z80RegisterC int ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | main = { main | c = int } }
 
         Z80ChangeFlags flagRegisters ->
             { z80 | flags = flagRegisters }
