@@ -704,12 +704,7 @@ singleByte ctime instrCode tmp_z80 rom48k =
                     ctime |> addDuration duration
 
                 param =
-                    --case pcInc of
-                    --    IncreaseByTwo ->
                     tmp_z80.env |> mem (Bitwise.and (tmp_z80.pc + 1) 0xFFFF) instrTime rom48k
-
-                --IncreaseByThree ->
-                --    tmp_z80.env |> mem (Bitwise.and (tmp_z80.pc + 2) 0xFFFF) instrTime rom48k
             in
             Just (Simple8BitDelta IncreaseByTwo param.time (f param.value))
 
