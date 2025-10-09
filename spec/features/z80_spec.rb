@@ -25,8 +25,8 @@ RSpec.describe "Game" do
     let(:miner) { build(:game, :manic_miner) }
     # ideally speed test should be BASIC so we see if compiling helps
     # but matchday is interesting because it only manages 20Hz in optimised mode
-    let(:z80_game) { ENV.fetch("Z80_TEST", football_manager.name) }
-    # let(:z80_game) { ENV.fetch("Z80_TEST", matchday.name) }
+    let(:z80_game) { ENV.fetch("Z80TEST", football_manager.name) }
+    # let(:z80_game) { ENV.fetch("Z80TEST", matchday.name) }
 
     let(:programs_by_name) {
       [flags, regs, miner, matchday, full_flags, full, cyrus, football_manager].index_by(&:name)

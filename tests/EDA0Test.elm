@@ -3,7 +3,8 @@ module EDA0Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
-import Z80Env exposing (mem, setMemWithTime)
+import Z80Env exposing (setMemWithTime)
+import Z80Mem exposing (mem)
 import Z80Rom
 
 
@@ -30,9 +31,6 @@ suite =
 
         z80 =
             { old_z80 | pc = addr, env = { old_z80env | sp = sp }, main = { z80main | hl = hl } }
-
-        flags =
-            z80.flags
 
         z80env =
             { z80env = z80.env, time = z80.clockTime }
