@@ -831,433 +831,325 @@ singleByteMainAndFlagRegistersIYCB =
 
 rlc_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rlc_b z80_main z80_flags =
-    z80_flags |> shifter0 z80_main.b |> FlagsWithBRegister
+    z80_flags |> shifter0 z80_main.b |> FlagsWithRegisterChange ChangeMainB
 
 
 rlc_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rlc_c z80_main z80_flags =
     -- case 0x01: C=shifter(o,C); break;
     --z80_flags |> shifter_c shifter0 z80_main.c
-    z80_flags |> shifter0 z80_main.c |> FlagsWithCRegister
+    z80_flags |> shifter0 z80_main.c |> FlagsWithRegisterChange ChangeMainC
 
 
 rlc_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rlc_d z80_main z80_flags =
     -- case 0x02: D=shifter(o,D); break;
-    z80_flags |> shifter0 z80_main.d |> FlagsWithDRegister
+    z80_flags |> shifter0 z80_main.d |> FlagsWithRegisterChange ChangeMainD
 
 
 rlc_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rlc_e z80_main z80_flags =
     -- case 0x03: E=shifter(o,E); break;
-    let
-        value =
-            shifter0 z80_main.e z80_flags
-    in
-    FlagsWithERegister value.flags value.value
+    z80_flags |> shifter0 z80_main.e |> FlagsWithRegisterChange ChangeMainE
 
 
 rlc_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rlc_h z80_main z80_flags =
     --case 0x04: HL=HL&0xFF|shifter(o,HL>>>8)<<8; break
-    let
-        value =
-            shifter0 (z80_main.hl |> shiftRightBy8) z80_flags
-
-        new_hl =
-            Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
-    in
-    FlagsWithHLRegister value.flags new_hl
+    z80_flags
+        |> shifter0 (z80_main.hl |> shiftRightBy8)
+        |> FlagsWithRegisterChange ChangeMainH
 
 
 rlc_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rlc_l z80_main z80_flags =
     -- case 0x05: HL=HL&0xFF00|shifter(o,HL&0xFF); break;
-    let
-        value =
-            shifter0 (Bitwise.and z80_main.hl 0xFF) z80_flags
-
-        new_hl =
-            Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
-    in
-    FlagsWithHLRegister value.flags new_hl
+    z80_flags
+        |> shifter0 (Bitwise.and z80_main.hl 0xFF)
+        |> FlagsWithRegisterChange ChangeMainL
 
 
 rrc_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rrc_b z80_main z80_flags =
-    z80_flags |> shifter1 z80_main.b |> FlagsWithBRegister
+    z80_flags |> shifter1 z80_main.b |> FlagsWithRegisterChange ChangeMainB
 
 
 rrc_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rrc_c z80_main z80_flags =
     -- case 0x01: C=shifter(o,C); break;
-    z80_flags |> shifter1 z80_main.c |> FlagsWithCRegister
+    z80_flags |> shifter1 z80_main.c |> FlagsWithRegisterChange ChangeMainC
 
 
 rrc_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rrc_d z80_main z80_flags =
     -- case 0x02: D=shifter(o,D); break;
-    z80_flags |> shifter1 z80_main.d |> FlagsWithDRegister
+    z80_flags |> shifter1 z80_main.d |> FlagsWithRegisterChange ChangeMainD
 
 
 rrc_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rrc_e z80_main z80_flags =
     -- case 0x03: E=shifter(o,E); break;
-    let
-        value =
-            shifter1 z80_main.e z80_flags
-    in
-    FlagsWithERegister value.flags value.value
+    z80_flags |> shifter1 z80_main.e |> FlagsWithRegisterChange ChangeMainE
 
 
 rrc_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rrc_h z80_main z80_flags =
     --case 0x04: HL=HL&0xFF|shifter(o,HL>>>8)<<8; break
-    let
-        value =
-            shifter1 (z80_main.hl |> shiftRightBy8) z80_flags
-
-        new_hl =
-            Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
-    in
-    FlagsWithHLRegister value.flags new_hl
+    z80_flags |> shifter1 (z80_main.hl |> shiftRightBy8) |> FlagsWithRegisterChange ChangeMainH
 
 
 rrc_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rrc_l z80_main z80_flags =
     -- case 0x05: HL=HL&0xFF00|shifter(o,HL&0xFF); break;
-    let
-        value =
-            shifter1 (Bitwise.and z80_main.hl 0xFF) z80_flags
-
-        new_hl =
-            Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
-    in
-    FlagsWithHLRegister value.flags new_hl
+    z80_flags
+        |> shifter1 (Bitwise.and z80_main.hl 0xFF)
+        |> FlagsWithRegisterChange ChangeMainL
 
 
 rl_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rl_b z80_main z80_flags =
     -- case 0x00: B=shifter(o,B); break;
-    z80_flags |> shifter2 z80_main.b |> FlagsWithBRegister
+    z80_flags |> shifter2 z80_main.b |> FlagsWithRegisterChange ChangeMainB
 
 
 rl_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rl_c z80_main z80_flags =
     -- case 0x01: C=shifter(o,C); break;
-    z80_flags |> shifter2 z80_main.c |> FlagsWithCRegister
+    z80_flags |> shifter2 z80_main.c |> FlagsWithRegisterChange ChangeMainC
 
 
 rl_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rl_d z80_main z80_flags =
     -- case 0x02: D=shifter(o,D); break;
-    z80_flags |> shifter2 z80_main.d |> FlagsWithDRegister
+    z80_flags |> shifter2 z80_main.d |> FlagsWithRegisterChange ChangeMainD
 
 
 rl_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rl_e z80_main z80_flags =
     -- case 0x03: E=shifter(o,E); break;
-    let
-        value =
-            shifter2 z80_main.e z80_flags
-    in
-    FlagsWithERegister value.flags value.value
+    z80_flags
+        |> shifter2 z80_main.e
+        |> FlagsWithRegisterChange ChangeMainE
 
 
 rl_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rl_h z80_main z80_flags =
     --case 0x04: HL=HL&0xFF|shifter(o,HL>>>8)<<8; break
-    let
-        value =
-            shifter2 (z80_main.hl |> shiftRightBy8) z80_flags
-
-        new_hl =
-            Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
-    in
-    FlagsWithHLRegister value.flags new_hl
+    z80_flags
+        |> shifter2 (z80_main.hl |> shiftRightBy8)
+        |> FlagsWithRegisterChange ChangeMainH
 
 
 rl_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rl_l z80_main z80_flags =
     -- case 0x05: HL=HL&0xFF00|shifter(o,HL&0xFF); break;
-    let
-        value =
-            shifter2 (Bitwise.and z80_main.hl 0xFF) z80_flags
-
-        new_hl =
-            Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
-    in
-    FlagsWithHLRegister value.flags new_hl
+    z80_flags
+        |> shifter2 (Bitwise.and z80_main.hl 0xFF)
+        |> FlagsWithRegisterChange ChangeMainL
 
 
 rr_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rr_b z80_main z80_flags =
     -- case 0x00: B=shifter(o,B); break;
-    z80_flags |> shifter3 z80_main.b |> FlagsWithBRegister
+    z80_flags |> shifter3 z80_main.b |> FlagsWithRegisterChange ChangeMainB
 
 
 rr_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rr_c z80_main z80_flags =
     -- case 0x01: C=shifter(o,C); break;
-    z80_flags |> shifter3 z80_main.c |> FlagsWithCRegister
+    z80_flags |> shifter3 z80_main.c |> FlagsWithRegisterChange ChangeMainC
 
 
 rr_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rr_d z80_main z80_flags =
     -- case 0x02: D=shifter(o,D); break;
-    z80_flags |> shifter3 z80_main.d |> FlagsWithDRegister
+    z80_flags |> shifter3 z80_main.d |> FlagsWithRegisterChange ChangeMainD
 
 
 rr_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rr_e z80_main z80_flags =
     -- case 0x03: E=shifter(o,E); break;
-    let
-        value =
-            shifter3 z80_main.e z80_flags
-    in
-    FlagsWithERegister value.flags value.value
+    z80_flags |> shifter3 z80_main.e |> FlagsWithRegisterChange ChangeMainE
 
 
 rr_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rr_h z80_main z80_flags =
     --case 0x04: HL=HL&0xFF|shifter(o,HL>>>8)<<8; break
-    let
-        value =
-            shifter3 (z80_main.hl |> shiftRightBy8) z80_flags
-
-        new_hl =
-            Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
-    in
-    FlagsWithHLRegister value.flags new_hl
+    z80_flags |> shifter3 (z80_main.hl |> shiftRightBy8) |> FlagsWithRegisterChange ChangeMainH
 
 
 rr_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rr_l z80_main z80_flags =
     -- case 0x05: HL=HL&0xFF00|shifter(o,HL&0xFF); break;
-    let
-        value =
-            shifter3 (Bitwise.and z80_main.hl 0xFF) z80_flags
-
-        new_hl =
-            Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
-    in
-    FlagsWithHLRegister value.flags new_hl
+    z80_flags
+        |> shifter3 (Bitwise.and z80_main.hl 0xFF)
+        |> FlagsWithRegisterChange ChangeMainL
 
 
 sla_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sla_b z80_main z80_flags =
     -- case 0x00: B=shifter(o,B); break;
-    z80_flags |> shifter4 z80_main.b |> FlagsWithBRegister
+    z80_flags |> shifter4 z80_main.b |> FlagsWithRegisterChange ChangeMainB
 
 
 sla_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sla_c z80_main z80_flags =
     -- case 0x01: C=shifter(o,C); break;
-    z80_flags |> shifter4 z80_main.c |> FlagsWithCRegister
+    z80_flags |> shifter4 z80_main.c |> FlagsWithRegisterChange ChangeMainC
 
 
 sla_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sla_d z80_main z80_flags =
     -- case 0x02: D=shifter(o,D); break;
-    z80_flags |> shifter4 z80_main.d |> FlagsWithDRegister
+    z80_flags |> shifter4 z80_main.d |> FlagsWithRegisterChange ChangeMainD
 
 
 sla_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sla_e z80_main z80_flags =
     -- case 0x03: E=shifter(o,E); break;
-    let
-        value =
-            shifter4 z80_main.e z80_flags
-    in
-    FlagsWithERegister value.flags value.value
+    z80_flags
+        |> shifter4 z80_main.e
+        |> FlagsWithRegisterChange ChangeMainE
 
 
 sla_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sla_h z80_main z80_flags =
     --case 0x04: HL=HL&0xFF|shifter(o,HL>>>8)<<8; break
-    let
-        value =
-            shifter4 (z80_main.hl |> shiftRightBy8) z80_flags
-
-        new_hl =
-            Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
-    in
-    FlagsWithHLRegister value.flags new_hl
+    z80_flags |> shifter4 (z80_main.hl |> shiftRightBy8) |> FlagsWithRegisterChange ChangeMainH
 
 
 sla_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sla_l z80_main z80_flags =
     -- case 0x05: HL=HL&0xFF00|shifter(o,HL&0xFF); break;
-    let
-        value =
-            shifter4 (Bitwise.and z80_main.hl 0xFF) z80_flags
-
-        new_hl =
-            Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
-    in
-    FlagsWithHLRegister value.flags new_hl
+    z80_flags
+        |> shifter4 (Bitwise.and z80_main.hl 0xFF)
+        |> FlagsWithRegisterChange ChangeMainL
 
 
 sra_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sra_b z80_main z80_flags =
     -- case 0x00: B=shifter(o,B); break;
-    z80_flags |> shifter5 z80_main.b |> FlagsWithBRegister
+    z80_flags |> shifter5 z80_main.b |> FlagsWithRegisterChange ChangeMainB
 
 
 sra_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sra_c z80_main z80_flags =
     -- case 0x01: C=shifter(o,C); break;
-    z80_flags |> shifter5 z80_main.c |> FlagsWithCRegister
+    z80_flags |> shifter5 z80_main.c |> FlagsWithRegisterChange ChangeMainC
 
 
 sra_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sra_d z80_main z80_flags =
     -- case 0x02: D=shifter(o,D); break;
-    z80_flags |> shifter5 z80_main.d |> FlagsWithDRegister
+    z80_flags |> shifter5 z80_main.d |> FlagsWithRegisterChange ChangeMainD
 
 
 sra_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sra_e z80_main z80_flags =
     -- case 0x03: E=shifter(o,E); break;
-    let
-        value =
-            shifter5 z80_main.e z80_flags
-    in
-    FlagsWithERegister value.flags value.value
+    z80_flags
+        |> shifter5 z80_main.e
+        |> FlagsWithRegisterChange ChangeMainE
 
 
 sra_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sra_h z80_main z80_flags =
     --case 0x04: HL=HL&0xFF|shifter(o,HL>>>8)<<8; break
-    let
-        value =
-            shifter5 (z80_main.hl |> shiftRightBy8) z80_flags
-
-        new_hl =
-            Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
-    in
-    FlagsWithHLRegister value.flags new_hl
+    z80_flags
+        |> shifter5 (z80_main.hl |> shiftRightBy8)
+        |> FlagsWithRegisterChange ChangeMainH
 
 
 sra_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sra_l z80_main z80_flags =
     -- case 0x05: HL=HL&0xFF00|shifter(o,HL&0xFF); break;
-    let
-        value =
-            shifter5 (Bitwise.and z80_main.hl 0xFF) z80_flags
-
-        new_hl =
-            Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
-    in
-    FlagsWithHLRegister value.flags new_hl
+    z80_flags
+        |> shifter5 (Bitwise.and z80_main.hl 0xFF)
+        |> FlagsWithRegisterChange ChangeMainL
 
 
 sll_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sll_b z80_main z80_flags =
     -- case 0x00: B=shifter(o,B); break;
-    z80_flags |> shifter6 z80_main.b |> FlagsWithBRegister
+    z80_flags |> shifter6 z80_main.b |> FlagsWithRegisterChange ChangeMainB
 
 
 sll_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sll_c z80_main z80_flags =
     -- case 0x01: C=shifter(o,C); break;
-    z80_flags |> shifter6 z80_main.c |> FlagsWithCRegister
+    z80_flags |> shifter6 z80_main.c |> FlagsWithRegisterChange ChangeMainC
 
 
 sll_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sll_d z80_main z80_flags =
     -- case 0x02: D=shifter(o,D); break;
-    z80_flags |> shifter6 z80_main.d |> FlagsWithDRegister
+    z80_flags |> shifter6 z80_main.d |> FlagsWithRegisterChange ChangeMainD
 
 
 sll_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sll_e z80_main z80_flags =
     -- case 0x03: E=shifter(o,E); break;
-    let
-        value =
-            shifter6 z80_main.e z80_flags
-    in
-    FlagsWithERegister value.flags value.value
+    z80_flags
+        |> shifter6 z80_main.e
+        |> FlagsWithRegisterChange ChangeMainE
 
 
 sll_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sll_h z80_main z80_flags =
     --case 0x04: HL=HL&0xFF|shifter(o,HL>>>8)<<8; break
-    let
-        value =
-            shifter6 (z80_main.hl |> shiftRightBy8) z80_flags
-
-        new_hl =
-            Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
-    in
-    FlagsWithHLRegister value.flags new_hl
+    z80_flags
+        |> shifter6 (z80_main.hl |> shiftRightBy8)
+        |> FlagsWithRegisterChange ChangeMainH
 
 
 sll_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sll_l z80_main z80_flags =
     -- case 0x05: HL=HL&0xFF00|shifter(o,HL&0xFF); break;
-    let
-        value =
-            shifter6 (Bitwise.and z80_main.hl 0xFF) z80_flags
-
-        new_hl =
-            Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
-    in
-    FlagsWithHLRegister value.flags new_hl
+    z80_flags
+        |> shifter6 (Bitwise.and z80_main.hl 0xFF)
+        |> FlagsWithRegisterChange ChangeMainL
 
 
 srl_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 srl_b z80_main z80_flags =
     -- case 0x00: B=shifter(o,B); break;
-    z80_flags |> shifter7 z80_main.b |> FlagsWithBRegister
+    z80_flags |> shifter7 z80_main.b |> FlagsWithRegisterChange ChangeMainB
 
 
 srl_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 srl_c z80_main z80_flags =
     -- case 0x01: C=shifter(o,C); break;
-    z80_flags |> shifter7 z80_main.c |> FlagsWithCRegister
+    z80_flags |> shifter7 z80_main.c |> FlagsWithRegisterChange ChangeMainC
 
 
 srl_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 srl_d z80_main z80_flags =
     -- case 0x02: D=shifter(o,D); break;
-    z80_flags |> shifter7 z80_main.d |> FlagsWithDRegister
+    z80_flags |> shifter7 z80_main.d |> FlagsWithRegisterChange ChangeMainD
 
 
 srl_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 srl_e z80_main z80_flags =
     -- case 0x03: E=shifter(o,E); break;
-    let
-        value =
-            shifter7 z80_main.e z80_flags
-    in
-    FlagsWithERegister value.flags value.value
+    z80_flags
+        |> shifter7 z80_main.e
+        |> FlagsWithRegisterChange ChangeMainE
 
 
 srl_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 srl_h z80_main z80_flags =
     --case 0x04: HL=HL&0xFF|shifter(o,HL>>>8)<<8; break
-    let
-        value =
-            shifter7 (z80_main.hl |> shiftRightBy8) z80_flags
-
-        new_hl =
-            Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
-    in
-    FlagsWithHLRegister value.flags new_hl
+    z80_flags
+        |> shifter7 (z80_main.hl |> shiftRightBy8)
+        |> FlagsWithRegisterChange ChangeMainH
 
 
 srl_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 srl_l z80_main z80_flags =
     -- case 0x05: HL=HL&0xFF00|shifter(o,HL&0xFF); break;
-    let
-        value =
-            shifter7 (Bitwise.and z80_main.hl 0xFF) z80_flags
-
-        new_hl =
-            Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
-    in
-    FlagsWithHLRegister value.flags new_hl
+    z80_flags
+        |> shifter7 (Bitwise.and z80_main.hl 0xFF)
+        |> FlagsWithRegisterChange ChangeMainL
 
 
 bit_1_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change

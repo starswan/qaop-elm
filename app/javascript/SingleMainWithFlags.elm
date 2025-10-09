@@ -4,6 +4,7 @@ import Bitwise
 import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
+import RegisterChange exposing (ChangeMainRegister(..))
 import Utils exposing (BitTest(..), shiftLeftBy8, shiftRightBy8)
 import Z80Change exposing (Z80Change(..))
 import Z80Flags exposing (FlagRegisters, IntWithFlags, adc, add16, dec, inc, sbc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
@@ -116,72 +117,62 @@ inc_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 inc_b z80_main z80_flags =
     -- case 0x04: B=inc(B); break;
     --z80 |> set_flag_regs new_b.flags |> set_b new_b.value
-    z80_flags |> inc z80_main.b |> FlagsWithBRegister
+    z80_flags |> inc z80_main.b |> FlagsWithRegisterChange ChangeMainB
 
 
 dec_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 dec_b z80_main z80_flags =
     -- case 0x05: B=dec(B); break;
-    z80_flags |> dec z80_main.b |> FlagsWithBRegister
+    z80_flags |> dec z80_main.b |> FlagsWithRegisterChange ChangeMainB
 
 
 inc_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 inc_c z80_main z80_flags =
     -- case 0x0C: C=inc(C); break;
-    z80_flags |> inc z80_main.c |> FlagsWithCRegister
+    z80_flags |> inc z80_main.c |> FlagsWithRegisterChange ChangeMainC
 
 
 dec_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 dec_c z80_main z80_flags =
     -- case 0x0D: C=dec(C); break;
-    z80_flags |> dec z80_main.c |> FlagsWithCRegister
+    z80_flags |> dec z80_main.c |> FlagsWithRegisterChange ChangeMainC
 
 
 inc_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 inc_d z80_main z80_flags =
     -- case 0x14: D=inc(D); break;
-    z80_flags |> inc z80_main.d |> FlagsWithDRegister
+    z80_flags |> inc z80_main.d |> FlagsWithRegisterChange ChangeMainD
 
 
 dec_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 dec_d z80_main z80_flags =
     -- case 0x15: D=dec(D); break;
-    z80_flags |> dec z80_main.d |> FlagsWithDRegister
+    z80_flags |> dec z80_main.d |> FlagsWithRegisterChange ChangeMainD
 
 
 inc_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 inc_e z80_main z80_flags =
     -- case 0x1C: E=inc(E); break;
-    let
-        new_e =
-            inc z80_main.e z80_flags
-    in
-    --{ z80 | flags = new_e.flags, main = { z80_main | e = new_e.value } }
-    FlagsWithERegister new_e.flags new_e.value
+    z80_flags
+        |> inc z80_main.e
+        |> FlagsWithRegisterChange ChangeMainE
 
 
 dec_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 dec_e z80_main z80_flags =
     -- case 0x1D: E=dec(E); break;
-    let
-        new_e =
-            dec z80_main.e z80_flags
-    in
-    FlagsWithERegister new_e.flags new_e.value
+    z80_flags
+        |> dec z80_main.e
+        |> FlagsWithRegisterChange ChangeMainE
 
 
 inc_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 inc_h z80_main z80_flags =
     -- case 0x24: HL=HL&0xFF|inc(HL>>>8)<<8; break;
     -- case 0x24: xy=xy&0xFF|inc(xy>>>8)<<8; break;
-    let
-        value =
-            inc (shiftRightBy8 z80_main.hl) z80_flags
-
-        new_xy =
-            Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 value.value)
-    in
-    FlagsWithHLRegister value.flags new_xy
+    z80_flags
+        |> inc (shiftRightBy8 z80_main.hl)
+        |> FlagsWithRegisterChange ChangeMainH
 
 
 inc_h_ix : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -216,14 +207,7 @@ dec_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 dec_h z80_main z80_flags =
     -- case 0x25: HL=HL&0xFF|dec(HL>>>8)<<8; break;
     -- case 0x25: xy=xy&0xFF|dec(xy>>>8)<<8; break;
-    let
-        value =
-            dec (shiftRightBy8 z80_main.hl) z80_flags
-
-        new_xy =
-            Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 value.value)
-    in
-    FlagsWithHLRegister value.flags new_xy
+    z80_flags |> dec (shiftRightBy8 z80_main.hl) |> FlagsWithRegisterChange ChangeMainH
 
 
 dec_h_ix : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -258,17 +242,9 @@ inc_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 inc_l z80_main z80_flags =
     -- case 0x2C: HL=HL&0xFF00|inc(HL&0xFF); break;
     -- case 0x2C: xy=xy&0xFF00|inc(xy&0xFF); break;
-    let
-        h =
-            Bitwise.and z80_main.hl 0xFF00
-
-        l =
-            inc (Bitwise.and z80_main.hl 0xFF) z80_flags
-
-        new_xy =
-            Bitwise.or h l.value
-    in
-    FlagsWithHLRegister l.flags new_xy
+    z80_flags
+        |> inc (Bitwise.and z80_main.hl 0xFF)
+        |> FlagsWithRegisterChange ChangeMainL
 
 
 inc_ix_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -309,17 +285,9 @@ dec_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 dec_l z80_main z80_flags =
     -- case 0x2D: HL=HL&0xFF00|dec(HL&0xFF); break;
     -- case 0x2D: xy=xy&0xFF00|dec(xy&0xFF); break;
-    let
-        h =
-            Bitwise.and z80_main.hl 0xFF00
-
-        l =
-            dec (Bitwise.and z80_main.hl 0xFF) z80_flags
-
-        new_xy =
-            Bitwise.or h l.value
-    in
-    FlagsWithHLRegister l.flags new_xy
+    z80_flags
+        |> dec (Bitwise.and z80_main.hl 0xFF)
+        |> FlagsWithRegisterChange ChangeMainL
 
 
 dec_ix_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
