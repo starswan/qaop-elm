@@ -3,7 +3,6 @@ module Z80Types exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimePcAnd16BitValue)
 import Utils exposing (shiftLeftBy8, shiftRightBy8)
-import Z80Env exposing (Z80Env)
 import Z80Flags exposing (FlagRegisters)
 
 
@@ -40,13 +39,6 @@ type alias InterruptRegisters =
     , iff : Int
     , ir : Int
     , r : Int
-    }
-
-
-type alias EnvWithPCAndValue =
-    { env : Z80Env
-    , pc : Int
-    , value : Int
     }
 
 

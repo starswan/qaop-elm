@@ -3,7 +3,8 @@ module GroupE0Test exposing (..)
 import Expect
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
-import Z80Env exposing (m1, mem, mem16, setMemWithTime)
+import Z80Env exposing (setMemWithTime)
+import Z80Mem exposing (m1, mem, mem16)
 import Z80Rom
 
 
@@ -119,10 +120,10 @@ suite =
                                 }
 
                         top_lo =
-                            (new_z80.env |> mem sp z80.clockTime z80rom).value
+                            (new_z80.env |> mem sp z80.clockTime z80rom.z80rom).value
 
                         top_hi =
-                            (new_z80.env |> mem (sp + 1) z80.clockTime z80rom).value
+                            (new_z80.env |> mem (sp + 1) z80.clockTime z80rom.z80rom).value
                     in
                     Expect.equal
                         { pc = new_z80.pc, sp = new_z80.env.sp, hl = new_z80.main.hl, top_lo = top_lo, top_hi = top_hi }
@@ -146,7 +147,7 @@ suite =
                                 }
                     in
                     Expect.equal
-                        { pc = new_z80.pc, sp = new_z80.env.sp, ix = new_z80.main.ix, top = (new_z80.env |> mem16 sp z80rom z80.clockTime).value16 }
+                        { pc = new_z80.pc, sp = new_z80.env.sp, ix = new_z80.main.ix, top = (new_z80.env |> mem16 sp z80rom.z80rom z80.clockTime).value16 }
                         { pc = addr + 2, sp = sp, ix = 0x3445, top = 0xA000 }
             , test "0xFD 0xE3 EX (SP),IY" <|
                 \_ ->
@@ -167,7 +168,7 @@ suite =
                                 }
                     in
                     Expect.equal
-                        { pc = new_z80.pc, sp = new_z80.env.sp, iy = new_z80.main.iy, top = (new_z80.env |> mem16 sp z80rom z80.clockTime).value16 }
+                        { pc = new_z80.pc, sp = new_z80.env.sp, iy = new_z80.main.iy, top = (new_z80.env |> mem16 sp z80rom.z80rom z80.clockTime).value16 }
                         { pc = addr + 2, sp = sp, iy = 0x3445, top = 0xA000 }
             ]
         , test "0xE5 PUSH HL" <|
@@ -186,7 +187,7 @@ suite =
                             }
                 in
                 Expect.equal
-                    { pc = new_z80.pc, sp = new_z80.env.sp, top = (new_z80.env |> mem16 (sp - 2) z80rom z80.clockTime).value16 }
+                    { pc = new_z80.pc, sp = new_z80.env.sp, top = (new_z80.env |> mem16 (sp - 2) z80rom.z80rom z80.clockTime).value16 }
                     { pc = addr + 1, sp = sp - 2, top = 0xA000 }
         , test "0xFD 0xE5 PUSH IY" <|
             \_ ->
@@ -205,7 +206,7 @@ suite =
                             }
                 in
                 Expect.equal
-                    { pc = new_z80.pc, sp = new_z80.env.sp, top = (new_z80.env |> mem16 (sp - 2) z80rom z80.clockTime).value16 }
+                    { pc = new_z80.pc, sp = new_z80.env.sp, top = (new_z80.env |> mem16 (sp - 2) z80rom.z80rom z80.clockTime).value16 }
                     { pc = addr + 2, sp = sp - 2, top = 0xA000 }
         , test "0xEB (EX DE, HL)" <|
             \_ ->
