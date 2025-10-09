@@ -7,7 +7,6 @@ import Z80Flags exposing (FlagRegisters, IntWithFlags)
 
 type Z80Change
     = FlagsWithRegisterChange ChangeMainRegister IntWithFlags
-      --| FlagsWithERegister FlagRegisters Int
     | FlagsWithHLRegister FlagRegisters Int
     | FlagsWithIXRegister FlagRegisters Int
     | FlagsWithIYRegister FlagRegisters Int
