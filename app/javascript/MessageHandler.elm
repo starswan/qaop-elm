@@ -1,6 +1,7 @@
 module MessageHandler exposing (..)
 
 import Bytes exposing (Bytes)
+import Dict exposing (Dict)
 import Http exposing (Error(..), Expect, Metadata, Response)
 import Tapfile exposing (Tapfile, parseTapFile)
 import Z80Rom exposing (Z80ROM, parseRomFile)
@@ -33,7 +34,7 @@ bytesToTap httpResponse =
             Ok (body |> parseTapFile)
 
 
-bytesToRom : Response Bytes -> Result Error Z80ROM
+bytesToRom : Response Bytes -> Result Error (Dict Int Int)
 bytesToRom httpResponse =
     case httpResponse of
         Http.BadUrl_ url ->

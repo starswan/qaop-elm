@@ -5,8 +5,9 @@ import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), c_TIME_LIMI
 import Dict exposing (Dict)
 import Z80Core exposing (Z80, Z80Core, add_cpu_time)
 import Z80Debug exposing (debugLog)
-import Z80Env exposing (z80_pop, z80_push)
+import Z80Env exposing (z80_push)
 import Z80Flags exposing (set_af)
+import Z80Mem exposing (z80_pop)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (set_bc_main, set_de_main)
 
@@ -358,7 +359,11 @@ rst new_pc cpu_time z80 =
 
 
 applyRstDelta : CpuTimeCTime -> RstChange -> Z80ROM -> Z80Core -> Z80Core
-applyRstDelta cpu_time z80changeData _ z80 =
+applyRstDelta cpu_time z80changeData rom48k z80 =
+    --let
+    --    old_env =
+    --        z80.env
+    --in
     case z80changeData of
         Rst int ->
             --case 0xC7:push(PC); PC=c-199; break;

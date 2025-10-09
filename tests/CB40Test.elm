@@ -2,9 +2,8 @@ module CB40Test exposing (..)
 
 import Expect exposing (Expectation)
 import Test exposing (..)
-import Utils exposing (toHexString2)
 import Z80 exposing (executeCoreInstruction)
-import Z80Env exposing (mem, setMemWithTime)
+import Z80Env exposing (setMemWithTime)
 import Z80Flags exposing (getFlags)
 import Z80Rom
 

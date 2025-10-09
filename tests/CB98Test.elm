@@ -3,7 +3,8 @@ module CB98Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
-import Z80Env exposing (mem, setMemWithTime)
+import Z80Env exposing (setMemWithTime)
+import Z80Mem exposing (mem)
 import Z80Rom
 
 

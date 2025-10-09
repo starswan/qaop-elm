@@ -3,7 +3,8 @@ module Group20Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
-import Z80Env exposing (m1, mem, setMem16WithTime, setMemWithTime)
+import Z80Env exposing (setMem16WithTime, setMemWithTime)
+import Z80Mem exposing (m1, mem)
 import Z80Rom
 
 
