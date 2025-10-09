@@ -25,8 +25,8 @@ RSpec.describe "Game" do
     let(:miner) { build(:game, :manic_miner) }
     # ideally speed test should be BASIC so we see if compiling helps
     # but matchday is interesting because it only manages 20Hz in optimised mode
-    let(:z80_game) { ENV.fetch("Z80_TEST", football_manager.name) }
-    # let(:z80_game) { ENV.fetch("Z80_TEST", matchday.name) }
+    let(:z80_game) { ENV.fetch("Z80TEST", football_manager.name) }
+    # let(:z80_game) { ENV.fetch("Z80TEST", matchday.name) }
 
     let(:programs_by_name) {
       [flags, regs, miner, matchday, full_flags, full, cyrus, football_manager].index_by(&:name)
@@ -51,19 +51,19 @@ RSpec.describe "Game" do
         },
         football_manager.name => ->(spectrum) {
           # Player name
-          delay_and_send(spectrum, 480, "robot")
+          delay_and_send(spectrum, 175, "robot")
           # select Norwich City
-          delay_and_send(spectrum, 920, "11")
+          delay_and_send(spectrum, 680, "11")
           # select beginner
-          delay_and_send(spectrum, 1040, "1")
+          delay_and_send(spectrum, 795, "1")
           # select white team colours
-          delay_and_send(spectrum, 1200, "7")
+          delay_and_send(spectrum, 870, "7")
           # continue from main menu
-          delay_and_send(spectrum, 1700, "99")
+          delay_and_send(spectrum, 1320, "99")
           #  Hit ENTER to start first match
-          delay_and_send(spectrum, 1900, "")
+          delay_and_send(spectrum, 1490, "")
           # continue into match
-          delay_and_send(spectrum, 2220, "99")
+          delay_and_send(spectrum, 1800, "99")
 
           measure_speed_in_hz do
             spectrum.send_keys :enter
