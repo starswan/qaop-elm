@@ -366,6 +366,33 @@ applyPureDelta cpuInc cpu_time z80changeData z80 =
             in
             { z80 | pc = new_pc, clockTime = cpu_time, main = { main | iy = int } }
 
+        FlagsWithRegisterChange changeMainRegister intWithFlags ->
+            let
+                main =
+                    z80.main
+
+                main2 =
+                    case changeMainRegister of
+                        ChangeMainB ->
+                            { main | b = intWithFlags.value }
+
+                        ChangeMainC ->
+                            { main | c = intWithFlags.value }
+
+                        ChangeMainD ->
+                            { main | d = intWithFlags.value }
+
+                        ChangeMainE ->
+                            { main | e = intWithFlags.value }
+
+                        ChangeMainH ->
+                            { main | hl = Bitwise.or (intWithFlags.value |> shiftLeftBy8) (Bitwise.and main.hl 0xFF) }
+
+                        ChangeMainL ->
+                            { main | hl = Bitwise.or intWithFlags.value (Bitwise.and main.hl 0xFF00) }
+            in
+            { z80 | pc = new_pc, clockTime = cpu_time, flags = intWithFlags.flags, main = main2 }
+
 
 applyRegisterDelta : PCIncrement -> InstructionDuration -> RegisterChange -> Z80ROM -> Z80Core -> Z80Core
 applyRegisterDelta pc_inc duration z80changeData rom48k z80_core =
