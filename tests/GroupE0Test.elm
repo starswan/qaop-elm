@@ -6,7 +6,7 @@ import Triple
 import Z80 exposing (executeCoreInstruction)
 import Z80CoreWithClockTime
 import Z80Env exposing (setMemWithTime)
-import Z80Mem exposing (mem, mem16)
+import Z80Mem exposing (m1, mem, mem16)
 import Z80Rom
 
 
@@ -133,10 +133,10 @@ suite =
                                 |> Triple.dropSecond
 
                         top_lo =
-                            (new_z80.env |> mem sp clock.clockTime z80rom).value
+                            (new_z80.env |> mem sp clock.clockTime z80rom.z80rom).value
 
                         top_hi =
-                            (new_z80.env |> mem (sp + 1) clock.clockTime z80rom).value
+                            (new_z80.env |> mem (sp + 1) clock.clockTime z80rom.z80rom).value
                     in
                     Expect.equal
                         { pc = new_pc, sp = new_z80.env.sp, hl = new_z80.main.hl, top_lo = top_lo, top_hi = top_hi }
