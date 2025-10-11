@@ -40,6 +40,8 @@ RSpec.describe "Game" do
           delay_and_send(spectrum, 300, "a0724")
           # Level 3 demo mode Cyrus vs Cyrus
           delay_and_send(spectrum, 450, "ld")
+
+          measure_speed_in_hz
         },
         football_manager.name => ->(spectrum) {
           # Player name
@@ -56,6 +58,12 @@ RSpec.describe "Game" do
           delay_and_send(spectrum, 1955, "")
           # continue into match
           delay_and_send(spectrum, 2270, "99")
+
+          measure_speed_in_hz do
+            spectrum.send_keys :enter
+          end
+          spectrum.send_keys :enter
+          measure_speed_in_hz
         }
       }
     }
@@ -153,45 +161,21 @@ RSpec.describe "Game" do
       end
       spectrum.send_keys [:enter]
 
-      if z80_game == cyrus.name
-        # square colours
-        delay_and_send(spectrum, 300, "a0724")
-        # Level 3 demo mode Cyrus vs Cyrus
-        delay_and_send(spectrum, 450, "ld")
-
-        speed = measure_speed_in_hz
-      elsif z80_game == football_manager.name
-        # Player name
-        delay_and_send(spectrum, 480, "robot")
-        # select Norwich City
-        delay_and_send(spectrum, 950, "11")
-        # select beginner
-        delay_and_send(spectrum, 1180, "1")
-        # select white team colours
-        delay_and_send(spectrum, 1300, "7")
-        # continue from main menu
-        delay_and_send(spectrum, 1755, "99")
-        #  Hit ENTER to start first match
-        delay_and_send(spectrum, 1955, "")
-        # continue into match
-        delay_and_send(spectrum, 2270, "99")
-
-        measure_speed_in_hz do
-          spectrum.send_keys :enter
-        end
-        spectrum.send_keys :enter
-        speed = measure_speed_in_hz
-      else
-        speed = measure_speed_in_hz do
+      script = scripts.fetch(z80_game, -> (spectrum) {
+         measure_speed_in_hz do
           spectrum.send_keys 'y'
-        end
-        if times.key? z80_game
-          while cpu_count.text.to_i < times.fetch(z80_game)
-            sleep 10
-            spectrum.send_keys 'y'
+        end.tap do
+          if times.key? z80_game
+            while cpu_count.text.to_i < times.fetch(z80_game)
+              sleep 10
+              # response to 'scroll?' question if required
+              spectrum.send_keys 'y'
+            end
           end
         end
-      end
+      })
+
+      speed = script.call(spectrum)
 
       expect(speed).to be > expected_hz
       puts "Speed #{speed} Hz"
@@ -222,33 +206,8 @@ RSpec.describe "Game" do
       end
       low = times.min
       high = times.max
-      # response to 'scroll?' question if required
-      # spectrum.send_keys 'y'
       yield if block_given?
     end
     high
   end
-
-  # def load_tapfile input_url, output_directory
-  #   zip_data = []
-  #   faraday.get(input_url) do |req|
-  #     req.options.on_data = Proc.new do |chunk, size|
-  #       zip_data  << chunk
-  #     end
-  #   end
-  #   zipdata = zip_data.join
-  #   zipfile = StringIO.new zipdata
-  #   Dir.mkdir output_directory
-  #   Zip::InputStream.open(zipfile) do |zip_stream|
-  #     while (entry = zip_stream.get_next_entry)
-  #       entry_filename = entry.name.split("/").last
-  #       if entry.name.ends_with?(".tap")
-  #         data = entry.get_input_stream.read
-  #         File.open("#{output_directory}/#{entry_filename}", "wb+") do |file|
-  #           file.write(data)
-  #         end
-  #       end
-  #     end
-  #   end
-  # end
 end
