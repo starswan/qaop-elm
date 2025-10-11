@@ -9,16 +9,16 @@ module GroupED exposing (..)
 import Bitwise exposing (complement, shiftLeftBy, shiftRightBy)
 import CpuTimeCTime exposing (InstructionDuration(..), addCpuTimeTime)
 import Dict exposing (Dict)
-import Keyboard exposing (Keyboard)
 import PCIncrement exposing (PCIncrement(..))
-import RegisterChange exposing (ChangeMainRegister(..), EDRegisterChange(..), InterruptChange(..), RegisterChange(..))
-import Utils exposing (char, shiftLeftBy8, shiftRightBy8, toHexString, toHexString2)
+import RegisterChange exposing (EDRegisterChange(..), InterruptChange(..), RegisterChange(..))
+import Utils exposing (char, shiftLeftBy8, shiftRightBy8, toHexString2)
 import Z80Change exposing (FlagChange(..), Z80Change(..))
 import Z80Core exposing (DirectionForLDIR(..), Z80Core, add_cpu_time, imm16)
 import Z80Debug exposing (debugLog)
 import Z80Delta exposing (Z80Delta(..))
 import Z80Env exposing (Z80Env, mem, mem16, setMem16, setMem16IgnoringTime, setMemIgnoringTime, z80_in, z80_out)
 import Z80Flags exposing (FlagRegisters, c_F3, c_F5, c_F53, c_FC, c_FH, f_szh0n0p, z80_sub)
+import Z80Registers exposing (ChangeMainRegister(..))
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (InterruptMode(..), InterruptRegisters, MainWithIndexRegisters, get_bc, get_de, set_bc_main, set_de_main)
 
@@ -1163,12 +1163,8 @@ ed_adc_hl b z80_main z80_flags =
 
         fr =
             Bitwise.or (r |> shiftRightBy8) (r |> shiftLeftBy8)
-
-        flags =
-            z80_flags
     in
-    --FlagsWithHLRegister { flags | ff = ff, fa = fa, fb = fb, fr = fr } r
-    ( { flags | ff = ff, fa = fa, fb = fb, fr = fr }, r )
+    ( { z80_flags | ff = ff, fa = fa, fb = fb, fr = fr }, r )
 
 
 

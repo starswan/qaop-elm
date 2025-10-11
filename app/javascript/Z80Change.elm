@@ -1,16 +1,12 @@
 module Z80Change exposing (..)
 
 import SingleEnvWithMain exposing (EightBitMain)
-import Z80Core exposing (Z80Core)
-import Z80Env exposing (setMemIgnoringTime)
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
+import Z80Registers exposing (ChangeMainRegister, CoreRegister)
 
 
 type Z80Change
-    = FlagsWithBRegister IntWithFlags
-    | FlagsWithCRegister IntWithFlags
-    | FlagsWithDRegister IntWithFlags
-    | FlagsWithERegister FlagRegisters Int
+    = FlagsWithRegisterChange CoreRegister IntWithFlags
     | FlagsWithHLRegister FlagRegisters Int
     | FlagsWithIXRegister FlagRegisters Int
     | FlagsWithIYRegister FlagRegisters Int
@@ -29,80 +25,3 @@ type FlagChange
     | EmptyFlagChange
     | FlagChangePush Int
     | FlagNewRValue Int
-
-
-applyZ80Change : Z80Change -> Z80Core -> Z80Core
-applyZ80Change change z80 =
-    case change of
-        FlagsWithBRegister intWithFlags ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | flags = intWithFlags.flags, main = { main | b = intWithFlags.value } }
-
-        FlagsWithCRegister intWithFlags ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | flags = intWithFlags.flags, main = { main | c = intWithFlags.value } }
-
-        FlagsWithDRegister intWithFlags ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | flags = intWithFlags.flags, main = { main | d = intWithFlags.value } }
-
-        FlagsWithERegister flagRegisters int ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | flags = flagRegisters, main = { main | e = int } }
-
-        FlagsWithHLRegister flagRegisters int ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | flags = flagRegisters, main = { main | hl = int } }
-
-        Z80ChangeFlags flagRegisters ->
-            { z80 | flags = flagRegisters }
-
-        Z80ChangeSetIndirect addr int ->
-            let
-                env =
-                    z80.env |> setMemIgnoringTime addr int z80.clockTime
-            in
-            { z80 | env = env }
-
-        FlagsWithIXRegister flagRegisters int ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | flags = flagRegisters, main = { main | ix = int } }
-
-        FlagsWithIYRegister flagRegisters int ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | flags = flagRegisters, main = { main | iy = int } }
-
-        JustIXRegister int ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | main = { main | ix = int } }
-
-        JustIYRegister int ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | main = { main | iy = int } }

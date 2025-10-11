@@ -3,6 +3,7 @@ module RegisterChange exposing (..)
 import Utils exposing (BitTest)
 import Z80Core exposing (DirectionForLDIR)
 import Z80Flags exposing (FlagFunc, FlagRegisters)
+import Z80Registers exposing (ChangeMainRegister, ChangeOneRegister)
 import Z80Types exposing (IXIYHL, InterruptMode, MainWithIndexRegisters)
 
 
@@ -15,25 +16,6 @@ type Shifter
     | Shifter5
     | Shifter6
     | Shifter7
-
-
-type ChangeOneRegister
-    = ChangeARegister
-    | ChangeBRegister
-    | ChangeCRegister
-    | ChangeDRegister
-    | ChangeERegister
-    | ChangeHRegister
-    | ChangeLRegister
-
-
-type ChangeMainRegister
-    = ChangeMainB
-    | ChangeMainC
-    | ChangeMainD
-    | ChangeMainE
-    | ChangeMainH
-    | ChangeMainL
 
 
 type RegisterChange
