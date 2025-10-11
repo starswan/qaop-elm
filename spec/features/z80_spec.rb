@@ -21,12 +21,13 @@ RSpec.describe "Game" do
     let(:regs) { build(:game, :z80_test_doc) }
     let(:full_flags) { build(:game, :z80_full_flags) }
     let(:full) { build(:game, :z80_test_full) }
+    let(:matchday) { build(:game, :match_day) }
     let(:programs_by_name) {
       [
         flags,
         regs,
         build(:game, :manic_miner),
-        build(:game, :match_day),
+        matchday,
         full_flags,
         full,
         cyrus,
@@ -35,6 +36,14 @@ RSpec.describe "Game" do
     }
     let(:scripts) {
       {
+        matchday.name => ->(spectrum) {
+          delay_and_send(spectrum, 200, "")
+          delay_and_send(spectrum, 1050, "")
+          # Start 1 player match day (with kempston, so kicks all the time)
+          delay_and_send(spectrum, 1300, "")
+
+          measure_speed_in_hz
+        },
         cyrus.name => ->(spectrum) {
           # square colours
           delay_and_send(spectrum, 300, "a0724")
