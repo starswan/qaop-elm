@@ -3,7 +3,7 @@ module Keyboard exposing (..)
 import Bitwise exposing (shiftLeftBy, shiftRightBy)
 import Char exposing (toUpper)
 import Dict
-import String
+import String exposing (fromChar)
 import Vector5 exposing (Vector5)
 import Vector8 exposing (Vector8)
 import Z80Debug exposing (debugLog, debugTodo)
@@ -598,8 +598,8 @@ keyDownEvent character keys =
         newkeys =
             event :: keys
     in
-    --debugLog ("key down " ++ (character |> fromChar) ++ " newkeys ") newkeys newkeys
-    newkeys
+    --newkeys
+    debugLog ("key down " ++ (character |> fromChar) ++ " newkeys ") newkeys newkeys
 
 
 keyUpEvent : Char -> List KeyEvent -> List KeyEvent
@@ -611,8 +611,8 @@ keyUpEvent character keys =
         newkeys =
             keys |> List.filter (\item -> keyNotEqual item upperchar)
     in
-    --debugLog ("key up " ++ (character |> fromChar) ++ " newkeys ") newkeys newkeys
-    newkeys
+    --newkeys
+    debugLog ("key up " ++ (character |> fromChar) ++ " newkeys ") newkeys newkeys
 
 
 ctrlKeyNotEqual : KeyEvent -> ControlKey -> Bool

@@ -3,8 +3,31 @@ FactoryBot.define do
     filetype {  "tap" }
 
     trait :match_day do
-      name { 'Match Day' }
-      tapfile { 'MATCHDAY.tap' }
+      name { 'MatchDay' }
+      download_url { "https://www.worldofspectrum.org/pub/sinclair/games/m/MatchDay.tap.zip"}
+      filename { 'MATCHDAY.TAP' }
+    end
+
+    # Sadly this TAP file appears to be broken
+    # trait :chuckie_egg do
+    #   name { "ChuckieEgg" }
+    #   download_url { "https://www.worldofspectrum.org/pub/sinclair/games/c/ChuckieEgg.tap.zip" }
+    #   filetype { "tap" }
+    #   filename { "Chuckie Egg.tap" }
+    # end
+
+    trait :colossus do
+      name { "ColossusChess" }
+      download_url { "https://www.worldofspectrum.org/pub/sinclair/games/c/ColossusChess4.tap.zip" }
+      filetype { "TAP" }
+      filename { "COLOSSUS.TAP" }
+    end
+
+    trait :checkers do
+      name { "Checkers" }
+      download_url { "https://www.worldofspectrum.org/pub/sinclair/games/c/Checkers.tap.zip" }
+      filetype { "tap" }
+      filename { "checkers.tap" }
     end
 
     trait :manic_miner do

@@ -16,7 +16,6 @@ RSpec.describe "Game" do
       end
     }
     let(:cyrus) { build(:game, :cyrus) }
-    let(:miner) { build(:game, :manic_miner) }
     let(:football_manager) { build(:game, :football_manager) }
     let(:flags) { build(:game, :z80_test_flags) }
     let(:regs) { build(:game, :z80_test_doc) }
@@ -26,7 +25,8 @@ RSpec.describe "Game" do
       [
         flags,
         regs,
-        miner,
+        build(:game, :manic_miner),
+        build(:game, :match_day),
         full_flags,
         full,
         cyrus,
