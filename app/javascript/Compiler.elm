@@ -99,47 +99,45 @@ compileRunning rom48k z80env key value input =
     else
         let
             running =
-                case value of
-                    0xC9 ->
-                        -- C9 == RET - need to stop on vectored jumps like JP (HL)
-                        { input | stop = True }
+                if [ 0xC9, 0xE9 ] |> List.member value then
+                    -- C9 == RET , E9 = JP (HL)
+                    { input | stop = True }
 
-                    0x18 ->
-                        -- 18 == JR
-                        rom48k.rom48k
-                            |> Dict.get (key + 1)
-                            |> Maybe.map
-                                (\jr ->
-                                    if jr < 0x80 then
-                                        { input | skip = 1 + jr }
+                else if value == 0x18 then
+                    -- 18 == JR
+                    rom48k.rom48k
+                        |> Dict.get (key + 1)
+                        |> Maybe.map
+                            (\jr ->
+                                if jr < 0x80 then
+                                    { input | skip = 1 + jr }
 
-                                    else
-                                        { input | stop = True }
-                                )
-                            |> Maybe.withDefault input
+                                else
+                                    { input | stop = True }
+                            )
+                        |> Maybe.withDefault input
 
-                    0xC3 ->
-                        -- C3 == JP
-                        rom48k.rom48k
-                            |> Dict.get (key + 1)
-                            |> Maybe.map
-                                (\jp_low ->
-                                    rom48k.rom48k
-                                        |> Dict.get (key + 2)
-                                        |> Maybe.map (\jp_high -> (jp_low |> shiftLeftBy8) + jp_high)
-                                        |> Maybe.map
-                                            (\addr ->
-                                                if addr > key then
-                                                    { input | skip = addr - key }
+                else if value == 0xC3 then
+                    -- C3 == JP
+                    rom48k.rom48k
+                        |> Dict.get (key + 1)
+                        |> Maybe.map
+                            (\jp_low ->
+                                rom48k.rom48k
+                                    |> Dict.get (key + 2)
+                                    |> Maybe.map (\jp_high -> (jp_low |> shiftLeftBy8) + jp_high)
+                                    |> Maybe.map
+                                        (\addr ->
+                                            if addr > key then
+                                                { input | skip = addr - key }
 
-                                                else
-                                                    { input | stop = True }
-                                            )
-                                )
-                            -- convert Maybe Maybe y into Maybe y
-                            |> MaybeExtra.join
-                            |> Maybe.withDefault input
-
+                                            else
+                                                { input | stop = True }
+                                        )
+                            )
+                        -- convert Maybe Maybe y into Maybe y
+                        |> MaybeExtra.join
+                        |> Maybe.withDefault input
                     -- all conditional jumps are recursed
                     -- all calls are recursed.
                     --else if [ 0x18, 0xC3, 0xCD, 0xC7, 0xCF, 0xD7, 0xDF, 0xE7, 0xEF, 0xF7, 0xFF ] |> List.member value then
@@ -150,8 +148,9 @@ compileRunning rom48k z80env key value input =
                     --                |> Dict.foldl (compileRunning rom48k z80env) { seen = input.seen, compiled = input.compiled, skip = 0, stop = False }
                     --    in
                     --    { input | seen = call.seen, compiled = call.compiled }
-                    _ ->
-                        input
+
+                else
+                    input
         in
         case lengthAndDuration value rom48k z80env of
             Just ( length, duration, f ) ->
