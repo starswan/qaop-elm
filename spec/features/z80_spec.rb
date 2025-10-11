@@ -21,7 +21,7 @@ RSpec.describe "Game" do
     let(:regs) { build(:game, :z80_test_doc) }
     let(:full_flags) { build(:game, :z80_full_flags) }
     let(:full) { build(:game, :z80_test_full) }
-    let(:programs) {
+    let(:programs_by_name) {
       [
         flags,
         regs,
@@ -31,11 +31,36 @@ RSpec.describe "Game" do
         full,
         cyrus,
         football_manager,
-      ]
+      ].index_by(&:name)
+    }
+    let(:scripts) {
+      {
+        cyrus.name => ->(spectrum) {
+          # square colours
+          delay_and_send(spectrum, 300, "a0724")
+          # Level 3 demo mode Cyrus vs Cyrus
+          delay_and_send(spectrum, 450, "ld")
+        },
+        football_manager.name => ->(spectrum) {
+          # Player name
+          delay_and_send(spectrum, 480, "robot")
+          # select Norwich City
+          delay_and_send(spectrum, 950, "11")
+          # select beginner
+          delay_and_send(spectrum, 1180, "1")
+          # select white team colours
+          delay_and_send(spectrum, 1300, "7")
+          # continue from main menu
+          delay_and_send(spectrum, 1755, "99")
+          #  Hit ENTER to start first match
+          delay_and_send(spectrum, 1955, "")
+          # continue into match
+          delay_and_send(spectrum, 2270, "99")
+        }
+      }
     }
 
-    let(:z80_game) { programs.detect { |p| p.name == ENV.fetch("Z80_TEST", football_manager.name) } }
-    # let(:z80_game) { programs.detect { |p| p.name == ENV.fetch("Z80_TEST", cyrus.name) } }
+    let(:z80_game) { ENV.fetch("Z80_TEST", football_manager.name) }
 
     let(:times) {
       {
@@ -47,7 +72,7 @@ RSpec.describe "Game" do
     }
 
     before do
-      z80_game.save!
+      programs_by_name.fetch(z80_game).save!
       visit '/'
     end
 
@@ -106,7 +131,7 @@ RSpec.describe "Game" do
     # 3. 84 RES N, (XY), R       DD CB xx 80
 
     it "loads the emulator", :js do
-      click_on z80_game.name
+      click_on z80_game
       # check that Elm is running
       expect(page).to have_content 'Refresh Interval'
 
@@ -128,14 +153,14 @@ RSpec.describe "Game" do
       end
       spectrum.send_keys [:enter]
 
-      if z80_game.name == cyrus.name
+      if z80_game == cyrus.name
         # square colours
         delay_and_send(spectrum, 300, "a0724")
         # Level 3 demo mode Cyrus vs Cyrus
         delay_and_send(spectrum, 450, "ld")
 
         speed = measure_speed_in_hz
-      elsif z80_game.name == football_manager.name
+      elsif z80_game == football_manager.name
         # Player name
         delay_and_send(spectrum, 480, "robot")
         # select Norwich City
@@ -160,9 +185,9 @@ RSpec.describe "Game" do
         speed = measure_speed_in_hz do
           spectrum.send_keys 'y'
         end
-        if times.key? z80_game.name
-          while cpu_count.text.to_i < times.fetch(z80_game.name)
-            sleep 5
+        if times.key? z80_game
+          while cpu_count.text.to_i < times.fetch(z80_game)
+            sleep 10
             spectrum.send_keys 'y'
           end
         end
