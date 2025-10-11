@@ -18,3 +18,10 @@ type ChangeMainRegister
     | ChangeMainE
     | ChangeMainH
     | ChangeMainL
+
+
+type CoreRegister
+    = CoreRegisterB
+    | CoreRegisterC
+    | CoreRegisterD
+    | CoreRegisterE
