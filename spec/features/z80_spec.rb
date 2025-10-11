@@ -22,6 +22,11 @@ RSpec.describe "Game" do
     let(:full_flags) { build(:game, :z80_full_flags) }
     let(:full) { build(:game, :z80_test_full) }
     let(:matchday) { build(:game, :match_day) }
+    # ideally speed test should be BASIC so we see if compiling helps
+    # but matchday is interestig because it only manages 20Hz in optimised mode
+    let(:z80_game) { ENV.fetch("Z80_TEST", football_manager.name) }
+    # let(:z80_game) { ENV.fetch("Z80_TEST", matchday.name) }
+
     let(:programs_by_name) {
       [
         flags,
@@ -40,7 +45,7 @@ RSpec.describe "Game" do
           delay_and_send(spectrum, 200, "")
           delay_and_send(spectrum, 1050, "")
           # Start 1 player match day (with kempston, so kicks all the time)
-          delay_and_send(spectrum, 1300, "")
+          delay_and_send(spectrum, 1150, "")
 
           measure_speed_in_hz
         },
@@ -76,8 +81,6 @@ RSpec.describe "Game" do
         }
       }
     }
-
-    let(:z80_game) { ENV.fetch("Z80_TEST", football_manager.name) }
 
     let(:times) {
       {
