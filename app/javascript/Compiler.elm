@@ -3,7 +3,7 @@ module Compiler exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (InstructionDuration(..), addDuration, reset_cpu_time)
 import Dict exposing (Dict)
-import Maybe.Extra as MaybeExtra exposing (combine, oneOf)
+import Maybe.Extra as MaybeExtra exposing (oneOf)
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
 import Set exposing (Set)
 import SimpleSingleByte exposing (singleByteMainRegs)
@@ -169,7 +169,7 @@ compileRunning rom48k z80env key value input =
                             IncrementByFour ->
                                 3
                 in
-                { running | compiled = running.compiled |> Dict.insert key (f duration), skip = running.skp + skip }
+                { running | compiled = running.compiled |> Dict.insert key (f duration), skip = running.skip + skip }
 
             Nothing ->
                 { running | seen = running.seen |> Set.insert key }
