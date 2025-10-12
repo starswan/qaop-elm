@@ -3,9 +3,10 @@ module SimpleSingleByte exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeIncrement(..), InstructionDuration(..))
 import Dict exposing (Dict)
-import RegisterChange exposing (ChangeOneRegister(..), RegisterChange(..), Shifter(..))
+import RegisterChange exposing (RegisterChange(..), Shifter(..))
 import Utils exposing (BitTest(..), shiftRightBy8)
 import Z80Flags exposing (FlagFunc(..))
+import Z80Registers exposing (ChangeOneRegister(..))
 import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, get_bc, get_de)
 
 
@@ -594,11 +595,12 @@ push_de z80_main =
     z80_main |> get_de |> PushedValue
 
 
-push_hl : MainWithIndexRegisters -> RegisterChange
-push_hl z80_main =
-    -- case 0xE5: push(HL); break;
-    -- case 0xE5: push(xy); break;
-    PushedValue z80_main.hl
+
+--push_hl : MainWithIndexRegisters -> RegisterChange
+--push_hl z80_main =
+--    -- case 0xE5: push(HL); break;
+--    -- case 0xE5: push(xy); break;
+--    PushedValue z80_main.hl
 
 
 inc_indirect_hl : MainWithIndexRegisters -> RegisterChange
