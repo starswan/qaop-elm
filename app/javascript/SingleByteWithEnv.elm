@@ -32,7 +32,6 @@ applyEnvChangeDelta cpu_time z80changeData z80 =
             in
             { z80
                 | pc = new_pc
-                , clockTime = cpu_time
                 , env = { env | sp = int }
             }
 
