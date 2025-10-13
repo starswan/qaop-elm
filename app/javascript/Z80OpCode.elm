@@ -1,7 +1,7 @@
 module Z80OpCode exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeAndValue, InstructionDuration, addDuration)
+import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, InstructionDuration, addDuration)
 import Dict
 import DoubleWithRegisters exposing (applyDoubleWithRegistersDelta, doubleWithRegisters)
 import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainRegsCB, singleEnvMainRegsCB)
@@ -23,8 +23,8 @@ import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (MainWithIndexRegisters)
 
 
-fetchInstruction : Z80ROM -> Int -> Z80Core -> CpuTimeAndValue
-fetchInstruction rom48k r_register z80_core =
+fetchInstruction : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> CpuTimeAndValue
+fetchInstruction rom48k clockTime r_register z80_core =
     let
         pc_value =
             --case romRoutineNames |> Dict.get z80.pc of
@@ -34,4 +34,4 @@ fetchInstruction rom48k r_register z80_core =
             --    Nothing ->
             z80_core.pc
     in
-    z80_core.env |> m1 pc_value (Bitwise.or z80_core.interrupts.ir (Bitwise.and r_register 0x7F)) rom48k z80_core.clockTime
+    z80_core.env |> m1 pc_value (Bitwise.or z80_core.interrupts.ir (Bitwise.and r_register 0x7F)) rom48k clockTime

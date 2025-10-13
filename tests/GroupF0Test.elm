@@ -3,6 +3,7 @@ module GroupF0Test exposing (..)
 import Expect
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
+import Z80CoreWithClockTime
 import Z80Env exposing (m1, setMemWithTime)
 import Z80Rom
 
@@ -13,8 +14,11 @@ suite =
         addr =
             30000
 
+        clock =
+            Z80CoreWithClockTime.constructor
+
         old_z80 =
-            Z80.constructor.core
+            clock.core
 
         z80 =
             { old_z80 | pc = addr }
@@ -26,7 +30,7 @@ suite =
             z80.env
 
         envwithtime =
-            { z80env = z80env, time = z80.clockTime }
+            { z80env = z80env, time = clock.clockTime }
 
         z80main =
             z80.main
@@ -51,12 +55,13 @@ suite =
                                 , flags = { flags | a = 0x76 }
                                 , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                             }
+                            |> Tuple.first
 
                     pushed_low =
-                        new_z80.env |> m1 0xFF75 0 z80rom z80.clockTime |> .value
+                        new_z80.env |> m1 0xFF75 0 z80rom clock.clockTime |> .value
 
                     pushed_high =
-                        new_z80.env |> m1 0xFF76 0 z80rom z80.clockTime |> .value
+                        new_z80.env |> m1 0xFF76 0 z80rom clock.clockTime |> .value
                 in
                 Expect.equal { pc = addr + 1, sp = 0xFF75, push_lo = 0x40, push_hi = 0x76 } { pc = new_z80.pc, sp = new_z80.env.sp, push_lo = pushed_low, push_hi = pushed_high }
         , describe "0xF9 LD SP,HL"
@@ -74,6 +79,7 @@ suite =
                                     | env = { new_env | sp = 0xFF77 }
                                     , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal { pc = addr + 1, sp = 0x5050 } { pc = new_z80.pc, sp = new_z80.env.sp }
             , test "LD SP,IX" <|
@@ -91,6 +97,7 @@ suite =
                                     | env = { new_env | sp = 0xFF77 }
                                     , main = { z80main | ix = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal { pc = addr + 2, sp = 0x5050 } { pc = new_z80.pc, sp = new_z80.env.sp }
             , test "LD SP,IY" <|
@@ -108,6 +115,7 @@ suite =
                                     | env = { new_env | sp = 0xFF77 }
                                     , main = { z80main | iy = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal { pc = addr + 2, sp = 0x5050 } { pc = new_z80.pc, sp = new_z80.env.sp }
             ]
