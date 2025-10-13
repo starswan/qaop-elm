@@ -3,6 +3,7 @@ module CB78Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
+import Z80CoreWithClockTime
 import Z80Env exposing (setMem, setMemWithTime)
 import Z80Rom
 
@@ -22,8 +23,11 @@ suite =
         hl =
             0x1234
 
+        clock =
+            Z80CoreWithClockTime.constructor
+
         old_z80 =
-            Z80.constructor.core
+            clock.core
 
         old_z80env =
             old_z80.env
@@ -38,7 +42,7 @@ suite =
             z80.flags
 
         z80env =
-            { z80env = z80.env |> setMem addr 0xCB z80.clockTime |> Tuple.first, time = z80.clockTime }
+            { z80env = z80.env |> setMem addr 0xCB clock.clockTime |> Tuple.first, time = clock.clockTime }
 
         z80rom =
             Z80Rom.constructor
@@ -59,6 +63,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | b = 0x00 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 2, 0x00 ) ( new_z80.pc, new_z80.flags.fr )
             , test "set" <|
@@ -75,6 +80,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | b = 0x80 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 2, True ) ( new_z80.pc, new_z80.flags.fr /= 0 )
             ]
@@ -93,6 +99,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | c = 0x00 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 2, 0x00 ) ( new_z80.pc, new_z80.flags.fr )
             , test "set" <|
@@ -109,6 +116,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | c = 0x80 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 2, True ) ( new_z80.pc, new_z80.flags.fr /= 0 )
             ]
@@ -127,6 +135,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | hl = 0x6545, d = 0x00 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 2, 0x00 ) ( new_z80.pc, new_z80.flags.fr )
             , test "(set)" <|
@@ -143,6 +152,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | d = 0x80 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 2, True ) ( new_z80.pc, new_z80.flags.fr /= 0 )
             ]
@@ -161,6 +171,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | e = 0x00 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 2, 0x00 ) ( new_z80.pc, new_z80.flags.fr )
             , test "(set)" <|
@@ -177,6 +188,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | e = 0x84 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 2, True ) ( new_z80.pc, new_z80.flags.fr /= 0 )
             ]
@@ -195,6 +207,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | hl = 0x7F45 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 2, 0x00 ) ( new_z80.pc, new_z80.flags.fr )
             , test "(set)" <|
@@ -211,6 +224,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | hl = 0x8045 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 2, True ) ( new_z80.pc, new_z80.flags.fr /= 0 )
             ]
@@ -229,6 +243,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | hl = 0x647F }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 2, 0x00 ) ( new_z80.pc, new_z80.flags.fr )
             , test "(set)" <|
@@ -245,6 +260,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | hl = 0x6580 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 2, True ) ( new_z80.pc, new_z80.flags.fr /= 0 )
             ]
@@ -264,6 +280,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | hl = 0x6545 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 2, True ) ( new_z80.pc, new_z80.flags.fr /= 0 )
             , test "BIT 7, (IX + d) unset" <|
@@ -284,6 +301,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | ix = 0x6540 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 4, 0x00 ) ( new_z80.pc, new_z80.flags.fr )
             , test "BIT 7, (IX + d) set" <|
@@ -304,6 +322,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | ix = 0x6540 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 4, True ) ( new_z80.pc, new_z80.flags.fr /= 0 )
             ]
@@ -322,6 +341,7 @@ suite =
                                     | env = new_env
                                     , flags = { flags | a = 0x7F }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 2, 0x00 ) ( new_z80.pc, new_z80.flags.fr )
             , test "(set)" <|
@@ -338,6 +358,7 @@ suite =
                                     | env = new_env
                                     , flags = { flags | a = 0x80 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 2, True ) ( new_z80.pc, new_z80.flags.fr /= 0 )
             ]

@@ -4,6 +4,7 @@ import Bitwise
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
+import Z80CoreWithClockTime
 import Z80Env exposing (setMemWithTime)
 import Z80Flags exposing (c_FC, c_FZ, getFlags, setFlags)
 import Z80Mem exposing (mem)
@@ -17,8 +18,11 @@ suite =
         addr =
             30000
 
+        clock =
+            Z80CoreWithClockTime.constructor
+
         old_z80 =
-            Z80.constructor.core
+            clock.core
 
         z80 =
             { old_z80 | pc = addr }
@@ -27,7 +31,7 @@ suite =
             z80.flags
 
         z80env =
-            { z80env = z80.env, time = z80.clockTime }
+            { z80env = z80.env, time = clock.clockTime }
 
         z80main =
             z80.main
@@ -53,6 +57,7 @@ suite =
                                     | env = new_env
                                     , flags = { flags | ff = 0x0100 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal (addr + 2) new_z80.pc
             , test "Jump" <|
@@ -70,6 +75,7 @@ suite =
                                     | env = new_env
                                     , flags = { flags | a = 0x39, ff = 0xFF }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal (addr + 7) new_z80.pc
             ]
@@ -89,6 +95,7 @@ suite =
                                 | env = new_env
                                 , flags = { flags | a = 0x39 }
                             }
+                            |> Tuple.first
                 in
                 Expect.equal ( addr + 3, 0x0705 ) ( new_z80.pc, new_z80.env.sp )
         , test "0x32 - LD (nn), A" <|
@@ -108,9 +115,10 @@ suite =
                                 , main = { z80main | hl = 0x6545 }
                                 , flags = { flags | a = 0x39 }
                             }
+                            |> Tuple.first
 
                     mem_value =
-                        new_z80.env |> mem 0x5577 new_z80.clockTime z80rom
+                        new_z80.env |> mem 0x5577 clock.clockTime z80rom
                 in
                 Expect.equal ( addr + 3, 0x39 ) ( new_z80.pc, mem_value.value )
         , test "0x33 INC SP" <|
@@ -128,6 +136,7 @@ suite =
                                 , main = { z80main | hl = 0x6545 }
                                 , flags = { flags | a = 0x39 }
                             }
+                            |> Tuple.first
                 in
                 Expect.equal ( addr + 1, 0x8766 ) ( new_z80.pc, new_z80.env.sp )
         , describe "16 bit indirect"
@@ -147,9 +156,10 @@ suite =
                                     , main = { z80main | hl = 0x6545 }
                                     , flags = { flags | a = 0x39 }
                                 }
+                                |> Tuple.first
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 new_z80.clockTime z80rom
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
                     in
                     Expect.equal ( addr + 1, 0x79 ) ( new_z80.pc, mem_value.value )
             , test "0xDD 0x34 INC (IX + d)" <|
@@ -170,9 +180,10 @@ suite =
                                     , main = { z80main | ix = 0x6543, hl = 0x2545 }
                                     , flags = { flags | a = 0x39 }
                                 }
+                                |> Tuple.first
 
                         mem_value =
-                            new_z80.env |> mem 0x6544 new_z80.clockTime z80rom
+                            new_z80.env |> mem 0x6544 clock.clockTime z80rom
                     in
                     Expect.equal ( addr + 3, 0x79 ) ( new_z80.pc, mem_value.value )
             , test "0xFD 0x34 INC (IY + d)" <|
@@ -193,9 +204,10 @@ suite =
                                     , main = { z80main | iy = 0x6545, hl = 0x2545 }
                                     , flags = { flags | a = 0x39 }
                                 }
+                                |> Tuple.first
 
                         mem_value =
-                            new_z80.env |> mem 0x6544 new_z80.clockTime z80rom
+                            new_z80.env |> mem 0x6544 clock.clockTime z80rom
                     in
                     Expect.equal ( addr + 3, 0x79 ) ( new_z80.pc, mem_value.value )
             , describe "0x35 DEC(HL) variants"
@@ -215,9 +227,10 @@ suite =
                                         , main = { z80main | hl = 0x6545 }
                                         , flags = { flags | a = 0x39 }
                                     }
+                                    |> Tuple.first
 
                             mem_value =
-                                new_z80.env |> mem 0x6545 new_z80.clockTime z80rom
+                                new_z80.env |> mem 0x6545 clock.clockTime z80rom
                         in
                         Expect.equal ( addr + 1, 0x77, 119 ) ( new_z80.pc, mem_value.value, new_z80.flags.fr )
                 , test "0x35 DEC (HL) going to zero" <|
@@ -236,9 +249,10 @@ suite =
                                         , main = { z80main | hl = 0x6545 }
                                         , flags = { flags | a = 0x39 }
                                     }
+                                    |> Tuple.first
 
                             mem_value =
-                                new_z80.env |> mem 0x6545 new_z80.clockTime z80rom
+                                new_z80.env |> mem 0x6545 clock.clockTime z80rom
                         in
                         Expect.equal ( addr + 1, 0x00, 0 ) ( new_z80.pc, mem_value.value, new_z80.flags.fr )
                 ]
@@ -259,9 +273,10 @@ suite =
                                     | env = new_env
                                     , main = { z80main | ix = 0x6547 }
                                 }
+                                |> Tuple.first
 
                         mem_value =
-                            new_z80.env |> mem 0x6546 new_z80.clockTime z80rom
+                            new_z80.env |> mem 0x6546 clock.clockTime z80rom
                     in
                     Expect.equal ( addr + 3, 0x77 ) ( new_z80.pc, mem_value.value )
             , test "0xFD 0x35 DEC (IY + n)" <|
@@ -281,9 +296,10 @@ suite =
                                     | env = new_env
                                     , main = { z80main | iy = 0x6545 }
                                 }
+                                |> Tuple.first
 
                         mem_value =
-                            new_z80.env |> mem 0x6546 new_z80.clockTime z80rom
+                            new_z80.env |> mem 0x6546 clock.clockTime z80rom
                     in
                     Expect.equal ( addr + 3, 0x77 ) ( new_z80.pc, mem_value.value )
             ]
@@ -304,9 +320,10 @@ suite =
                                     , main = { z80main | hl = 0x6545 }
                                     , flags = { flags | a = 0x39 }
                                 }
+                                |> Tuple.first
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 new_z80.clockTime z80rom
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
                     in
                     Expect.equal ( addr + 2, 0xA5 ) ( new_z80.pc, mem_value.value )
             , test "0xDD 0x36 LD (IX + m),n" <|
@@ -327,9 +344,10 @@ suite =
                                     , main = { z80main | ix = 0x6545, hl = 0x6545 }
                                     , flags = { flags | a = 0x39 }
                                 }
+                                |> Tuple.first
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 new_z80.clockTime z80rom
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
                     in
                     Expect.equal ( addr + 4, 0xA5 ) ( new_z80.pc, mem_value.value )
             ]
@@ -348,6 +366,7 @@ suite =
                                     | env = new_env
                                     , flags = setFlags 0 z80.flags
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 1, c_FC ) ( new_z80.pc, new_z80.flags |> getFlags )
             , test "with Z" <|
@@ -364,6 +383,7 @@ suite =
                                     | env = new_env
                                     , flags = setFlags c_FZ z80.flags
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 1, Bitwise.or c_FC c_FZ ) ( new_z80.pc, new_z80.flags |> getFlags )
             , test "with all" <|
@@ -380,6 +400,7 @@ suite =
                                     | env = new_env
                                     , flags = setFlags 0xFE z80.flags
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 1, 0xC5 ) ( new_z80.pc, new_z80.flags |> getFlags )
             ]
@@ -399,6 +420,7 @@ suite =
                                     | env = new_env
                                     , flags = { flags | ff = 0xFF }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal (addr + 2) new_z80.pc
             , test "Jump" <|
@@ -416,6 +438,7 @@ suite =
                                     | env = new_env
                                     , flags = { flags | a = 0x39, ff = 0x0100 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal (addr + 7) new_z80.pc
             ]
@@ -434,6 +457,7 @@ suite =
                                     | env = { new_env | sp = 0x4321 }
                                     , main = { z80main | hl = 0x1234 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 1, 0x5555 ) ( new_z80.pc, new_z80.main.hl )
             , test "0xDD 0x39 ADD IX,SP" <|
@@ -451,6 +475,7 @@ suite =
                                     | env = { new_env | sp = 0x4321 }
                                     , main = { z80main | ix = 0x1234, hl = 0x4234 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 2, 0x5555 ) ( new_z80.pc, new_z80.main.ix )
             , test "0xFD 0x39 ADD IY,SP" <|
@@ -468,6 +493,7 @@ suite =
                                     | env = { new_env | sp = 0x4321 }
                                     , main = { z80main | iy = 0x1234, hl = 0x4234 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 2, 0x5555 ) ( new_z80.pc, new_z80.main.iy )
             ]
@@ -488,6 +514,7 @@ suite =
                                 | env = new_env
                                 , main = { z80main | hl = 0x4334 }
                             }
+                            |> Tuple.first
                 in
                 Expect.equal ( addr + 3, 0x87 ) ( new_z80.pc, new_z80.flags.a )
         , test "0x3B DEC SP" <|
@@ -505,6 +532,7 @@ suite =
                                 , main = { z80main | hl = 0x6500 }
                                 , flags = { flags | a = 0x39 }
                             }
+                            |> Tuple.first
                 in
                 Expect.equal ( addr + 1, 0x8755 ) ( new_z80.pc, new_z80.env.sp )
         , test "0x3C INC A" <|
@@ -522,6 +550,7 @@ suite =
                                 , main = { z80main | hl = 0x6500 }
                                 , flags = { flags | a = 0x39 }
                             }
+                            |> Tuple.first
                 in
                 Expect.equal ( addr + 1, 0x3A ) ( new_z80.pc, new_z80.flags.a )
         , test "DEC A - 0x3D" <|
@@ -539,6 +568,7 @@ suite =
                                 , main = { z80main | hl = 0x6500 }
                                 , flags = { flags | a = 0x39 }
                             }
+                            |> Tuple.first
                 in
                 Expect.equal ( addr + 1, 0x38 ) ( new_z80.pc, new_z80.flags.a )
         , test "LD A,n - 0x3E" <|
@@ -557,6 +587,7 @@ suite =
                                 , main = { z80main | d = 0x45, e = 0x00 }
                                 , flags = { flags | a = 0x39 }
                             }
+                            |> Tuple.first
                 in
                 Expect.equal ( addr + 2, 0x78 ) ( z80_after_01.pc, z80_after_01.flags.a )
         , describe "0x3F CCF"
@@ -574,6 +605,7 @@ suite =
                                     | env = new_env
                                     , flags = setFlags c_FC z80.flags
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 1, 0x10 ) ( new_z80.pc, new_z80.flags |> getFlags )
             , test "all" <|
@@ -590,6 +622,7 @@ suite =
                                     | env = new_env
                                     , flags = setFlags 0xFF z80.flags
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 1, 0xD4 ) ( new_z80.pc, new_z80.flags |> getFlags )
             ]
