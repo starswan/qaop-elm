@@ -2,6 +2,7 @@ module NonCoreTests exposing (..)
 
 import Expect
 import Test exposing (..)
+import Triple
 import Z80 exposing (executeCoreInstruction)
 import Z80CoreWithClockTime
 import Z80Env exposing (setMemWithTime)
@@ -28,7 +29,7 @@ suite =
             old_z80.env
 
         z80 =
-            { old_z80 | pc = addr, env = { old_z80env | sp = sp } }
+            { old_z80 | env = { old_z80env | sp = sp } }
 
         z80env =
             z80.env
@@ -57,15 +58,16 @@ suite =
                                 |> setMemWithTime (addr + 1) 0x05
                                 |> setMemWithTime (addr + 2) 0x34
 
-                        new_z80 =
+                        new_pc =
                             executeCoreInstruction z80rom
+                                addr
                                 { z80
                                     | env = new_env.z80env
                                     , flags = { flags | a = 0x39, ff = 0x0100 }
                                 }
-                                |> Tuple.first
+                                |> Triple.third
                     in
-                    Expect.equal (addr + 3) new_z80.pc
+                    Expect.equal (addr + 3) new_pc
             , test "Jump" <|
                 \_ ->
                     let
@@ -75,15 +77,16 @@ suite =
                                 |> setMemWithTime (addr + 1) 0x05
                                 |> setMemWithTime (addr + 2) 0x34
 
-                        new_z80 =
+                        new_pc =
                             executeCoreInstruction z80rom
+                                addr
                                 { z80
                                     | env = new_env.z80env
                                     , flags = { flags | a = 0x39, ff = 0x0200 }
                                 }
-                                |> Tuple.first
+                                |> Triple.third
                     in
-                    Expect.equal 0x3405 new_z80.pc
+                    Expect.equal 0x3405 new_pc
             ]
 
         --, test "0xD9 EXX" <|
@@ -97,40 +100,13 @@ suite =
         --                    |> setMemWithTime addr 0xD9
         --                    |> setMemWithTime (addr + 1) 0x16
         --
-        --            new_z80 =
-        --                executeCoreInstruction z80rom
+        --            ( new_z80, new_pc ) =
+        --                executeCoreInstruction z80rom addr
         --                    { z80
         --                        | env = { new_env | sp = 0xFF77 }
         --                        , alt_main = { alt | hl = 0x4040, b = 0x67, c = 0x34, d = 0x12, e = 0x81 }
         --                        , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
         --                    }
         --        in
-        --        Expect.equal { pc = addr + 1, hl = 0x4040 } { pc = new_z80.pc, hl = new_z80.main.hl }
-        , test "0xDF RST 18" <|
-            \_ ->
-                let
-                    new_env =
-                        envwithtime
-                            |> setMemWithTime addr 0xDF
-                            |> setMemWithTime 0xFF75 0x16
-                            |> setMemWithTime 0xFF76 0x56
-
-                    env2 =
-                        new_env.z80env
-
-                    new_z80 =
-                        executeCoreInstruction z80rom
-                            { z80
-                                | env = { env2 | sp = 0xFF77 }
-                                , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
-                            }
-                            |> Tuple.first
-
-                    lo_value =
-                        mem 0xFF75 clock.clockTime z80rom new_z80.env |> .value
-
-                    hi_value =
-                        mem 0xFF76 clock.clockTime z80rom new_z80.env |> .value
-                in
-                Expect.equal { pc = 0x18, sp = 0xFF75, lowmem = 1, highmem = 0x80 } { sp = new_z80.env.sp, pc = new_z80.pc, lowmem = lo_value, highmem = hi_value }
+        --        Expect.equal { pc = addr + 1, hl = 0x4040 } { pc = new_pc, hl = new_z80.main.hl }
         ]

@@ -327,7 +327,7 @@ frames keys speccy =
 
                 Nothing ->
                     let
-                        new_z80 =
+                        ( new_z80, new_pc ) =
                             cpu1
                                 |> interrupt 0xFF rom
                                 |> execute rom

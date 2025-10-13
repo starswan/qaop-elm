@@ -24,7 +24,7 @@ import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (InterruptMode(..), InterruptRegisters, MainWithIndexRegisters, get_bc, get_de, set_bc_main, set_de_main)
 
 
-delta_dict_lite_E0 : Dict Int (Z80ROM -> CpuTimeCTime -> Z80Core -> ( Z80Delta, CpuTimeCTime ))
+delta_dict_lite_E0 : Dict Int (Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime ))
 delta_dict_lite_E0 =
     Dict.fromList
         [ -- ( 0xDB, execute_0xDB )
@@ -33,7 +33,7 @@ delta_dict_lite_E0 =
         ]
 
 
-group_ed_dict : Dict Int (Z80ROM -> CpuTimeCTime -> Z80Core -> ( Z80Delta, CpuTimeCTime ))
+group_ed_dict : Dict Int (Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime ))
 group_ed_dict =
     Dict.fromList
         [ ( 0x43, execute_ED43 )
@@ -52,48 +52,48 @@ group_ed_dict =
         , ( 0x70, execute_ED70 )
 
         -- ED08/ED09 no-op in Java version of Qaop
-        , ( 0x00, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
-        , ( 0x01, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
-        , ( 0x04, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
-        , ( 0x08, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
-        , ( 0x09, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
-        , ( 0x10, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
-        , ( 0x11, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
-        , ( 0x14, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
-        , ( 0x18, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
-        , ( 0x19, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
-        , ( 0x20, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
-        , ( 0x21, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
-        , ( 0x24, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
-        , ( 0x28, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
-        , ( 0x29, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
-        , ( 0x34, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
-        , ( 0x38, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
-        , ( 0x39, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
+        , ( 0x00, \rom48k clockTime oc z80 -> ( NoOp, clockTime ) )
+        , ( 0x01, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
+        , ( 0x04, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
+        , ( 0x08, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
+        , ( 0x09, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
+        , ( 0x10, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
+        , ( 0x11, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
+        , ( 0x14, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
+        , ( 0x18, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
+        , ( 0x19, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
+        , ( 0x20, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
+        , ( 0x21, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
+        , ( 0x24, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
+        , ( 0x28, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
+        , ( 0x29, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
+        , ( 0x34, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
+        , ( 0x38, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
+        , ( 0x39, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
 
         -- case 0x41: env.out(B<<8|C,B); time+=4; break;
-        , ( 0x41, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
+        , ( 0x41, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
 
         -- case 0x49: env.out(B<<8|C,C); time+=4; break;
-        , ( 0x49, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
+        , ( 0x49, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
 
         -- case 0x51: env.out(B<<8|C,D); time+=4; break;
-        , ( 0x51, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
+        , ( 0x51, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
 
         -- case 0x59: env.out(B<<8|C,E); time+=4; break;
-        , ( 0x59, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
+        , ( 0x59, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
 
         -- case 0x61: env.out(B<<8|C,HL>>>8); time+=4; break;
-        , ( 0x61, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
+        , ( 0x61, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
 
         -- case 0x69: env.out(B<<8|C,HL&0xFF); time+=4; break;
-        , ( 0x69, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
+        , ( 0x69, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
 
         -- case 0x71: env.out(B<<8|C,0); time+=4; break;
-        , ( 0x71, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
+        , ( 0x71, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
 
         -- case 0x79: MP=(v=B<<8|C)+1; env.out(v,A); time+=4; break;
-        , ( 0x79, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
+        , ( 0x79, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
 
         -- case 0xA2:
         -- case 0xA3:
@@ -104,56 +104,54 @@ group_ed_dict =
         -- case 0xBA:
         -- case 0xBB: inir_otir(c); break;
         -- RETN - end of NMI. NMIs aren't enabled on the Spectrum?
-        , ( 0x45, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
+        , ( 0x45, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
 
         -- RETI (return from maskable interupt, unused on the Spectrum I'm pretty sure)
-        , ( 0x4D, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
+        , ( 0x4D, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
 
         -- case 0x7D: IFF|=IFF>>1; MP=PC=pop(); break;
         -- TODO: Implement ED 7D (all these are the same)
-        , ( 0x55, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
-        , ( 0x5D, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
-        , ( 0x65, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
-        , ( 0x6D, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
-        , ( 0x75, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
-        , ( 0x7D, \rom48k clockTime z80 -> ( NoOp, clockTime ) )
+        , ( 0x55, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
+        , ( 0x5D, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
+        , ( 0x65, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
+        , ( 0x6D, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
+        , ( 0x75, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
+        , ( 0x7D, \rom48k clockTime pc z80 -> ( NoOp, clockTime ) )
         ]
 
 
-execute_ED43 : Z80ROM -> CpuTimeCTime -> Z80Core -> ( Z80Delta, CpuTimeCTime )
-execute_ED43 rom48k clockTime z80 =
+execute_ED43 : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime )
+execute_ED43 rom48k clockTime pc z80 =
     -- case 0x43: MP=(v=imm16())+1; env.mem16(v,B<<8|C); time+=6; break;
     let
         v =
-            z80 |> imm16 rom48k clockTime
+            z80 |> imm16 rom48k clockTime pc
 
-        z80_2 =
-            { z80 | pc = v.pc }
-
+        --z80_2 =
+        --    { z80 | pc = v.pc }
         ( env, newTime ) =
-            z80_2.env |> setMem16 v.value16 (Bitwise.or (shiftLeftBy8 z80.main.b) z80.main.c) v.time
+            z80.env |> setMem16 v.value16 (Bitwise.or (shiftLeftBy8 z80.main.b) z80.main.c) v.time
     in
     ( EnvWithPcAndTime env v.pc, newTime )
 
 
-execute_ED47 : Z80ROM -> CpuTimeCTime -> Z80Core -> ( Z80Delta, CpuTimeCTime )
-execute_ED47 rom48k clockTime z80 =
+execute_ED47 : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime )
+execute_ED47 rom48k clockTime pc z80 =
     -- case 0x47: i(A); time++; break;
     ( InterruptsWithCpuTime (z80 |> set_i z80.flags.a), clockTime |> addCpuTimeTime 1 )
 
 
-execute_ED4B : Z80ROM -> CpuTimeCTime -> Z80Core -> ( Z80Delta, CpuTimeCTime )
-execute_ED4B rom48k clockTime z80 =
+execute_ED4B : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime )
+execute_ED4B rom48k clockTime pc z80 =
     -- case 0x4B: MP=(v=imm16())+1; v=env.mem16(v); B=v>>>8; C=v&0xFF; time+=6; break;
     let
         v1 =
-            z80 |> imm16 rom48k clockTime
+            z80 |> imm16 rom48k clockTime pc
 
-        z80_1 =
-            { z80 | pc = v1.pc }
-
+        --z80_1 =
+        --    { z80 | pc = v1.pc }
         env =
-            z80_1.env
+            z80.env
 
         v2 =
             env |> mem16 v1.value16 rom48k clockTime
@@ -164,18 +162,17 @@ execute_ED4B rom48k clockTime z80 =
     ( MainRegsWithPcAndCpuTime (z80.main |> set_bc_main v2.value16) v1.pc, v2.time |> addCpuTimeTime 6 )
 
 
-execute_ED53 : Z80ROM -> CpuTimeCTime -> Z80Core -> ( Z80Delta, CpuTimeCTime )
-execute_ED53 rom48k clockTime z80 =
+execute_ED53 : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime )
+execute_ED53 rom48k clockTime pc z80 =
     -- case 0x53: MP=(v=imm16())+1; env.mem16(v,D<<8|E); time+=6; break;
     let
         v =
-            z80 |> imm16 rom48k clockTime
+            z80 |> imm16 rom48k clockTime pc
 
-        z80_1 =
-            { z80 | pc = v.pc }
-
+        --z80_1 =
+        --    { z80 | pc = v.pc }
         env =
-            z80_1.env |> setMem16IgnoringTime v.value16 (Bitwise.or (shiftLeftBy8 z80.main.d) z80.main.e) clockTime
+            z80.env |> setMem16IgnoringTime v.value16 (Bitwise.or (shiftLeftBy8 z80.main.d) z80.main.e) clockTime
 
         --env = case (v.value |> fromInt) of
         --  Z80Address.ROMAddress int -> z80_1.env
@@ -186,18 +183,17 @@ execute_ED53 rom48k clockTime z80 =
     ( EnvWithPcAndTime env v.pc, clockTime |> addCpuTimeTime 6 )
 
 
-execute_ED63 : Z80ROM -> CpuTimeCTime -> Z80Core -> ( Z80Delta, CpuTimeCTime )
-execute_ED63 rom48k clockTime z80 =
+execute_ED63 : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime )
+execute_ED63 rom48k clockTime pc z80 =
     -- case 0x53: MP=(v=imm16())+1; env.mem16(v,D<<8|E); time+=6; break;
     let
         v =
-            z80 |> imm16 rom48k clockTime
+            z80 |> imm16 rom48k clockTime pc
 
-        z80_1 =
-            { z80 | pc = v.pc }
-
+        --z80_1 =
+        --    { z80 | pc = v.pc }
         env =
-            z80_1.env |> setMem16IgnoringTime v.value16 z80.main.hl clockTime
+            z80.env |> setMem16IgnoringTime v.value16 z80.main.hl clockTime
 
         --env = case (v.value |> fromInt) of
         --  Z80Address.ROMAddress int -> z80_1.env
@@ -208,12 +204,12 @@ execute_ED63 rom48k clockTime z80 =
     ( EnvWithPcAndTime env v.pc, clockTime |> addCpuTimeTime 6 )
 
 
-execute_ED5B : Z80ROM -> CpuTimeCTime -> Z80Core -> ( Z80Delta, CpuTimeCTime )
-execute_ED5B rom48k clockTime z80 =
+execute_ED5B : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime )
+execute_ED5B rom48k clockTime pc z80 =
     -- case 0x5B: MP=(v=imm16())+1; v=env.mem16(v); D=v>>>8; E=v&0xFF; time+=6; break;
     let
         v1 =
-            z80 |> imm16 rom48k clockTime
+            z80 |> imm16 rom48k clockTime pc
 
         --z80_1 = { z80 | pc = v1.pc }
         env =
@@ -226,15 +222,15 @@ execute_ED5B rom48k clockTime z80 =
     ( MainRegsWithPcAndCpuTime (z80.main |> set_de_main v2.value16) v1.pc, v2.time |> addCpuTimeTime 6 )
 
 
-execute_ED6B : Z80ROM -> CpuTimeCTime -> Z80Core -> ( Z80Delta, CpuTimeCTime )
-execute_ED6B rom48k clockTime z80 =
+execute_ED6B : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime )
+execute_ED6B rom48k clockTime pc z80 =
     -- case 0x6B: MP=(v=imm16())+1; HL=env.mem16(v); time+=6; break;
     let
         z80_main =
             z80.main
 
         v1 =
-            z80 |> imm16 rom48k clockTime
+            z80 |> imm16 rom48k clockTime pc
 
         --z80_1 = { z80 | pc = v1.pc }
         env =
@@ -246,28 +242,28 @@ execute_ED6B rom48k clockTime z80 =
     ( MainRegsWithPcAndCpuTime { z80_main | hl = v2.value16 } v1.pc, v2.time |> addCpuTimeTime 6 )
 
 
-execute_ED73 : Z80ROM -> CpuTimeCTime -> Z80Core -> ( Z80Delta, CpuTimeCTime )
-execute_ED73 rom48k clockTime z80 =
+execute_ED73 : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime )
+execute_ED73 rom48k clockTime pc z80 =
     -- case 0x73: MP=(v=imm16())+1; env.mem16(v,SP); time+=6; break;
     let
         v =
-            z80 |> imm16 rom48k clockTime
+            z80 |> imm16 rom48k clockTime pc
 
-        z80_1 =
-            { z80 | pc = v.pc }
-
+        --z80_1 =
+        --    { z80 | pc = v.pc }
         env =
             z80.env
 
         env2 =
-            env |> setMem16IgnoringTime v.value16 z80_1.env.sp v.time
+            --env |> setMem16IgnoringTime v.value16 z80_1.env.sp v.time
+            env |> setMem16IgnoringTime v.value16 z80.env.sp v.time
     in
     --{ z80 | env = env2 } |> add_cpu_time 6 |> Whole
     ( EnvWithPcAndTime env2 v.pc, clockTime |> addCpuTimeTime 6 )
 
 
-execute_ED78 : Z80ROM -> CpuTimeCTime -> Z80Core -> ( Z80Delta, CpuTimeCTime )
-execute_ED78 rom48k clockTime z80 =
+execute_ED78 : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime )
+execute_ED78 rom48k clockTime pc z80 =
     --  case 0x78: MP=(v=B<<8|C)+1; f_szh0n0p(A=env.in(v)); time+=4; break;
     let
         v =
@@ -286,21 +282,23 @@ execute_ED78 rom48k clockTime z80 =
             { flags | a = new_a.value } |> f_szh0n0p new_a.value
     in
     --{ z80 | env = { env | time = new_a.time |> add_cpu_time_time 4 } , flags = new_flags } |> Whole
-    ( CpuTimeWithFlagsAndPc new_flags z80.pc, new_a.time |> addCpuTimeTime 4 )
+    --( CpuTimeWithFlagsAndPc new_flags z80.pc, new_a.time |> addCpuTimeTime 4 )
+    -- bit weird returning Pc when it's not an output...?
+    ( CpuTimeWithFlagsAndPc new_flags pc, new_a.time |> addCpuTimeTime 4 )
 
 
-execute_ED7B : Z80ROM -> CpuTimeCTime -> Z80Core -> ( Z80Delta, CpuTimeCTime )
-execute_ED7B rom48k clockTime z80 =
+execute_ED7B : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime )
+execute_ED7B rom48k clockTime pc z80 =
     -- case 0x7B: MP=(v=imm16())+1; SP=env.mem16(v); time+=6; break;
     let
         v =
-            z80 |> imm16 rom48k clockTime
+            z80 |> imm16 rom48k clockTime pc
 
-        z80_1 =
-            { z80 | pc = v.pc }
-
+        --z80_1 =
+        --    { z80 | pc = v.pc }
         sp =
-            z80_1.env |> mem16 v.value16 rom48k v.time
+            --z80_1.env |> mem16 v.value16 rom48k v.time
+            z80.env |> mem16 v.value16 rom48k v.time
 
         --env = z80_1.env
     in
@@ -319,14 +317,14 @@ execute_ED7B rom48k clockTime z80 =
 -- case 0x7E: IM = c>>3&3; break;
 
 
-adc_hl_sp : Z80ROM -> CpuTimeCTime -> Z80Core -> ( Z80Delta, CpuTimeCTime )
-adc_hl_sp _ clockTime z80 =
+adc_hl_sp : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime )
+adc_hl_sp _ clockTime pc z80 =
     -- case 0x7A: adc_hl(SP); break;
-    z80 |> adc_hl z80.env.sp clockTime
+    z80 |> adc_hl z80.env.sp clockTime pc
 
 
-execute_ED70 : Z80ROM -> CpuTimeCTime -> Z80Core -> ( Z80Delta, CpuTimeCTime )
-execute_ED70 rom48k clockTime z80 =
+execute_ED70 : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime )
+execute_ED70 rom48k clockTime pc z80 =
     let
         v =
             z80.main |> get_bc
@@ -338,11 +336,13 @@ execute_ED70 rom48k clockTime z80 =
             debugLog "ED70 - IN (C)" ( new_a.value, z80.main.b |> toHexString2, z80.main.c |> toHexString2 ) z80.flags |> f_szh0n0p new_a.value
     in
     --{ z80 | env = { env | time = new_a.time |> add_cpu_time_time 4 } , flags = new_flags } |> Whole
-    ( CpuTimeWithFlagsAndPc new_flags z80.pc, new_a.time |> addCpuTimeTime 4 )
+    --( CpuTimeWithFlagsAndPc new_flags z80.pc, new_a.time |> addCpuTimeTime 4 )
+    -- again weird returning a PC when we don't need to
+    ( CpuTimeWithFlagsAndPc new_flags pc, new_a.time |> addCpuTimeTime 4 )
 
 
-group_ed : Z80ROM -> CpuTimeCTime -> Z80Core -> ( Z80Delta, CpuTimeCTime )
-group_ed rom48k clockTime z80_core =
+group_ed : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime )
+group_ed rom48k clockTime pc z80_core =
     let
         ints =
             z80_core.interrupts
@@ -350,7 +350,7 @@ group_ed rom48k clockTime z80_core =
         --c =
         --    z80_core.env |> m1 z80_core.pc (Bitwise.or z80_core.interrupts.ir (Bitwise.and ints.r 0x7F)) rom48k z80_core.clockTime
         c =
-            z80_core.env |> mem z80_core.pc clockTime rom48k
+            z80_core.env |> mem pc clockTime rom48k
 
         new_r =
             ints.r + 1
@@ -359,17 +359,19 @@ group_ed rom48k clockTime z80_core =
             { ints | r = new_r }
 
         new_pc =
-            Bitwise.and (z80_core.pc + 1) 0xFFFF
+            Bitwise.and (pc + 1) 0xFFFF
 
+        --z80 =
+        --    { z80_core | pc = new_pc, interrupts = new_ints }
         z80 =
-            { z80_core | pc = new_pc, interrupts = new_ints }
+            { z80_core | interrupts = new_ints }
 
         ed_func =
             group_ed_dict |> Dict.get c.value
     in
     case ed_func of
         Just f ->
-            z80 |> f rom48k (clockTime |> addCpuTimeTime 4)
+            z80 |> f rom48k (clockTime |> addCpuTimeTime 4) pc
 
         Nothing ->
             --// -------------- >8 ed
@@ -482,8 +484,12 @@ sbc_hl b z80 =
     ( { flags | ff = ff, fa = fa, fb = fb, fr = fr }, { main | hl = r } )
 
 
-ldir : DirectionForLDIR -> Bool -> Z80ROM -> CpuTimeCTime -> Z80Core -> ( Z80Core, Maybe ShortDelay )
-ldir incOrDec repeat rom48k clockTime z80 =
+
+-- return data, delay and PC
+
+
+ldir : DirectionForLDIR -> Bool -> Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Core, Maybe ShortDelay, Int )
+ldir incOrDec repeat rom48k clockTime pc_in z80 =
     --  private void ldir(int i, boolean r)
     let
         --v = env.mem(a = HL); HL = (char)(a+i); time += 3;
@@ -561,23 +567,23 @@ ldir incOrDec repeat rom48k clockTime z80 =
         ( v, pc, time ) =
             if a /= 0 then
                 if repeat then
-                    ( 0x80, Bitwise.and (z80_2.pc - 2) 0xFFFF, Just FiveExtraTStates )
+                    ( 0x80, Bitwise.and (pc_in - 2) 0xFFFF, Just FiveExtraTStates )
 
                 else
-                    ( 0x80, z80_2.pc, Nothing )
+                    ( 0x80, pc_in, Nothing )
 
             else
-                ( 0, z80_2.pc, Nothing )
+                ( 0, pc_in, Nothing )
 
         flags =
             z80_2.flags
     in
     ( { z80_2
         | main = z80_2.main |> set_bc_main a
-        , pc = pc
         , flags = { flags | fr = fr, ff = ff, fa = v, fb = v }
       }
     , time
+    , pc
     )
 
 
@@ -609,8 +615,8 @@ set_i v z80_core =
 --  }
 
 
-adc_hl : Int -> CpuTimeCTime -> Z80Core -> ( Z80Delta, CpuTimeCTime )
-adc_hl b clockTime z80 =
+adc_hl : Int -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime )
+adc_hl b clockTime pc z80 =
     let
         z80_main =
             z80.main
@@ -620,7 +626,8 @@ adc_hl b clockTime z80 =
     in
     --{ z80 | main = { main | hl = r }, flags = { flags | ff = ff, fa = fa, fb = fb, fr = fr} } |> add_cpu_time 7
     --FlagsWithPCMainAndCpuTime { flags | ff = ff, fa = fa, fb = fb, fr = fr } z80.pc { main | hl = r } (z80.env.time |> addCpuTimeTime 7)
-    ( FlagsWithPCMainAndCpuTime flags z80.pc { z80_main | hl = hl }, clockTime |> addCpuTimeTime 7 )
+    --( FlagsWithPCMainAndCpuTime flags z80.pc { z80_main | hl = hl }, clockTime |> addCpuTimeTime 7 )
+    ( FlagsWithPCMainAndCpuTime flags pc { z80_main | hl = hl }, clockTime |> addCpuTimeTime 7 )
 
 
 
@@ -653,8 +660,8 @@ adc_hl b clockTime z80 =
 --}
 
 
-cpir : DirectionForLDIR -> Bool -> Z80ROM -> CpuTimeCTime -> Z80Core -> ( Z80Core, CpuTimeCTime )
-cpir incOrDec repeat rom48k clockTime z80_core =
+cpir : DirectionForLDIR -> Bool -> Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Core, CpuTimeCTime, Int )
+cpir incOrDec repeat rom48k clockTime pc_in z80_core =
     let
         z80_flags =
             z80_core.flags
@@ -696,15 +703,15 @@ cpir incOrDec repeat rom48k clockTime z80_core =
                 let
                     newish_pc =
                         if repeat && v /= 0 then
-                            z80_core.pc - 2 |> Bitwise.and 0xFFFF
+                            pc_in - 2 |> Bitwise.and 0xFFFF
 
                         else
-                            z80_core.pc
+                            pc_in
                 in
                 ( Bitwise.or 0x80 fa, Bitwise.or 0x80 fb, newish_pc )
 
             else
-                ( fa, fb, z80_core.pc )
+                ( fa, fb, pc_in )
 
         old_ff =
             Bitwise.or (z80_core.flags.ff |> Bitwise.and 0xFF00) (v |> Bitwise.and (c_F53 |> complement))
@@ -723,7 +730,10 @@ cpir incOrDec repeat rom48k clockTime z80_core =
             z80_core.main |> set_bc_main new_bc
     in
     --HLBCWithFlagsAndPc hl new_bc { z80_flags | ff = ff, fa = new_fa, fb = new_fb, fr = fr } new_pc
-    ( { z80_core | main = { newMain | hl = hl }, flags = { z80_flags | ff = ff, fa = new_fa, fb = new_fb, fr = fr }, pc = new_pc }, b.time )
+    ( { z80_core | main = { newMain | hl = hl }, flags = { z80_flags | ff = ff, fa = new_fa, fb = new_fb, fr = fr } }
+    , b.time
+    , new_pc
+    )
 
 
 
@@ -738,8 +748,8 @@ cpir incOrDec repeat rom48k clockTime z80_core =
 --  }
 
 
-rld : Z80ROM -> CpuTimeCTime -> Z80Core -> ( Z80Delta, CpuTimeCTime )
-rld rom48k clockTime z80 =
+rld : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime )
+rld rom48k clockTime pc z80 =
     let
         v_lhs_1 =
             z80.env |> mem z80.main.hl clockTime rom48k
@@ -774,7 +784,9 @@ rld rom48k clockTime z80 =
             env_0 |> setMemIgnoringTime z80.main.hl (Bitwise.and v 0xFF) v_lhs_1.time
     in
     --{ z80_1 | env = env_1 } |> add_cpu_time 10 |> Whole
-    ( FlagsWithPcEnvAndCpuTime new_flags z80.pc env_1, clockTime |> addCpuTimeTime 10 )
+    --( FlagsWithPcEnvAndCpuTime new_flags z80.pc env_1, clockTime |> addCpuTimeTime 10 )
+    -- again wasteful return of PC
+    ( FlagsWithPcEnvAndCpuTime new_flags pc env_1, clockTime |> addCpuTimeTime 10 )
 
 
 
@@ -789,8 +801,8 @@ rld rom48k clockTime z80 =
 --}
 
 
-rrd : Z80ROM -> CpuTimeCTime -> Z80Core -> ( Z80Delta, CpuTimeCTime )
-rrd rom48k clockTime z80 =
+rrd : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime )
+rrd rom48k clockTime pc z80 =
     let
         v_lhs =
             z80.env |> mem z80.main.hl clockTime rom48k
@@ -822,7 +834,9 @@ rrd rom48k clockTime z80 =
             env_0 |> setMemIgnoringTime z80.main.hl (Bitwise.and (v |> shiftRightBy 4) 0xFF) v_lhs.time
     in
     --{ z80_1 | env = env_1 } |> add_cpu_time 10 |> Whole
-    ( FlagsWithPcEnvAndCpuTime new_flags z80.pc env_1, clockTime |> addCpuTimeTime 10 )
+    --( FlagsWithPcEnvAndCpuTime new_flags z80.pc env_1, clockTime |> addCpuTimeTime 10 )
+    -- wasteful return of PC
+    ( FlagsWithPcEnvAndCpuTime new_flags pc env_1, clockTime |> addCpuTimeTime 10 )
 
 
 singleByteMainRegsED : Dict Int ( MainWithIndexRegisters -> EDRegisterChange, InstructionDuration )

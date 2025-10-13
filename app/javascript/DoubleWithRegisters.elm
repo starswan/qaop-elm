@@ -229,12 +229,13 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
     case z80changeData of
         DoubleRegChangeStoreIndirect addr value ->
             let
+                --pc =
+                --    Bitwise.and new_pc 0xFFFF
                 ( env_1, newTime ) =
                     z80.env |> setMem addr value cpu_time
             in
             { z80
-                | pc = pc
-                , env = env_1
+                | env = env_1
             }
 
         NewHLRegisterValue int ->
@@ -243,8 +244,7 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                     z80.main
             in
             { z80
-                | pc = pc
-                , main = { main | hl = int }
+                | main = { main | hl = int }
             }
 
         NewIXRegisterValue int ->
@@ -253,8 +253,7 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                     z80.main
             in
             { z80
-                | pc = pc
-                , main = { main | ix = int }
+                | main = { main | ix = int }
             }
 
         NewIYRegisterValue int ->
@@ -263,8 +262,7 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                     z80.main
             in
             { z80
-                | pc = pc
-                , main = { main | iy = int }
+                | main = { main | iy = int }
             }
 
         NewRegisterIndirect changeOneRegister addr ->
@@ -296,8 +294,7 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                             { main | hl = Bitwise.or (main.hl |> Bitwise.and 0xFF00) (new_b.value |> Bitwise.and 0xFF) }
             in
             { z80
-                | pc = pc
-                , main = new_main
+                | main = new_main
             }
 
         NewARegisterIndirect addr ->
@@ -309,8 +306,7 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                     z80.env |> mem addr cpu_time rom48k
             in
             { z80
-                | pc = pc
-                , flags = { flags | a = new_a.value }
+                | flags = { flags | a = new_a.value }
             }
 
         SetARegisterIndirect addr ->
@@ -319,8 +315,7 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                     z80.env |> setMem addr z80.flags.a cpu_time
             in
             { z80
-                | pc = pc
-                , env = env_1
+                | env = env_1
             }
 
         FlagOpIndexedIndirect flagFunc address ->
@@ -328,12 +323,14 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 flags =
                     z80.flags
 
+                address =
+                    addr + byte offset |> Bitwise.and 0xFFFF
+
                 value =
                     z80.env |> mem address cpu_time rom48k
             in
             { z80
-                | pc = pc
-                , flags = flags |> changeFlags flagFunc value.value
+                | flags = flags |> changeFlags flagFunc value.value
             }
 
         IndexedIndirectIncrement inAddr offset ->
@@ -356,15 +353,12 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                         z80.env |> setMem base_addr valueWithFlags.value value.time
                 in
                 { z80
-                    | pc = pc
-                    , env = env_1
+                    | env = env_1
                     , flags = valueWithFlags.flags
                 }
 
             else
-                { z80
-                    | pc = pc
-                }
+                z80
 
         IndexedIndirectDecrement inAddr offset ->
             let
@@ -386,12 +380,9 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                         z80.env |> setMem base_addr valueWithFlags.value value.time
                 in
                 { z80
-                    | pc = pc
-                    , env = env_1
+                    | env = env_1
                     , flags = valueWithFlags.flags
                 }
 
             else
-                { z80
-                    | pc = pc
-                }
+                z80

@@ -2,6 +2,7 @@ module CB70Test exposing (..)
 
 import Expect exposing (Expectation)
 import Test exposing (..)
+import Triple
 import Z80 exposing (executeCoreInstruction)
 import Z80CoreWithClockTime
 import Z80Env exposing (setMem, setMemWithTime)
@@ -36,7 +37,7 @@ suite =
             old_z80.main
 
         z80 =
-            { old_z80 | pc = addr, env = { old_z80env | sp = sp }, main = { z80main | hl = hl } }
+            { old_z80 | env = { old_z80env | sp = sp }, main = { z80main | hl = hl } }
 
         flags =
             z80.flags
@@ -57,15 +58,16 @@ suite =
                                 |> setMemWithTime addr_1 0x70
                                 |> .z80env
 
-                        new_z80 =
+                        ( new_z80, new_pc ) =
                             executeCoreInstruction z80rom
+                                addr
                                 { z80
                                     | env = new_env
                                     , main = { z80main | b = 0x00 }
                                 }
-                                |> Tuple.first
+                                |> Triple.dropSecond
                     in
-                    Expect.equal ( addr + 2, 0x00 ) ( new_z80.pc, new_z80.flags.fr )
+                    Expect.equal ( addr + 2, 0x00 ) ( new_pc, new_z80.flags.fr )
             , test "set" <|
                 \_ ->
                     let
@@ -74,15 +76,16 @@ suite =
                                 |> setMemWithTime addr_1 0x70
                                 |> .z80env
 
-                        new_z80 =
+                        ( new_z80, new_pc ) =
                             executeCoreInstruction z80rom
+                                addr
                                 { z80
                                     | env = new_env
                                     , main = { z80main | b = 0x40 }
                                 }
-                                |> Tuple.first
+                                |> Triple.dropSecond
                     in
-                    Expect.equal ( addr + 2, True ) ( new_z80.pc, new_z80.flags.fr /= 0 )
+                    Expect.equal ( addr + 2, True ) ( new_pc, new_z80.flags.fr /= 0 )
             ]
         , describe "0xCB 0x71 BIT 6,C"
             [ test "unset" <|
@@ -93,15 +96,16 @@ suite =
                                 |> setMemWithTime addr_1 0x71
                                 |> .z80env
 
-                        new_z80 =
+                        ( new_z80, new_pc ) =
                             executeCoreInstruction z80rom
+                                addr
                                 { z80
                                     | env = new_env
                                     , main = { z80main | c = 0x00 }
                                 }
-                                |> Tuple.first
+                                |> Triple.dropSecond
                     in
-                    Expect.equal ( addr + 2, 0x00 ) ( new_z80.pc, new_z80.flags.fr )
+                    Expect.equal ( addr + 2, 0x00 ) ( new_pc, new_z80.flags.fr )
             , test "set" <|
                 \_ ->
                     let
@@ -110,15 +114,16 @@ suite =
                                 |> setMemWithTime addr_1 0x71
                                 |> .z80env
 
-                        new_z80 =
+                        ( new_z80, new_pc ) =
                             executeCoreInstruction z80rom
+                                addr
                                 { z80
                                     | env = new_env
                                     , main = { z80main | c = 0x40 }
                                 }
-                                |> Tuple.first
+                                |> Triple.dropSecond
                     in
-                    Expect.equal ( addr + 2, True ) ( new_z80.pc, new_z80.flags.fr /= 0 )
+                    Expect.equal ( addr + 2, True ) ( new_pc, new_z80.flags.fr /= 0 )
             ]
         , describe "0xCB 0x72 BIT 6,D"
             [ test "(unset)" <|
@@ -129,15 +134,16 @@ suite =
                                 |> setMemWithTime (addr + 1) 0x72
                                 |> .z80env
 
-                        new_z80 =
+                        ( new_z80, new_pc ) =
                             executeCoreInstruction z80rom
+                                addr
                                 { z80
                                     | env = new_env
                                     , main = { z80main | hl = 0x6545, d = 0x00 }
                                 }
-                                |> Tuple.first
+                                |> Triple.dropSecond
                     in
-                    Expect.equal ( addr + 2, 0x00 ) ( new_z80.pc, new_z80.flags.fr )
+                    Expect.equal ( addr + 2, 0x00 ) ( new_pc, new_z80.flags.fr )
             , test "(set)" <|
                 \_ ->
                     let
@@ -146,15 +152,16 @@ suite =
                                 |> setMemWithTime (addr + 1) 0x72
                                 |> .z80env
 
-                        new_z80 =
+                        ( new_z80, new_pc ) =
                             executeCoreInstruction z80rom
+                                addr
                                 { z80
                                     | env = new_env
                                     , main = { z80main | d = 0x40 }
                                 }
-                                |> Tuple.first
+                                |> Triple.dropSecond
                     in
-                    Expect.equal ( addr + 2, True ) ( new_z80.pc, new_z80.flags.fr /= 0 )
+                    Expect.equal ( addr + 2, True ) ( new_pc, new_z80.flags.fr /= 0 )
             ]
         , describe "0xCB 0x73 BIT 6,E"
             [ test "(unset)" <|
@@ -165,15 +172,16 @@ suite =
                                 |> setMemWithTime (addr + 1) 0x73
                                 |> .z80env
 
-                        new_z80 =
+                        ( new_z80, new_pc ) =
                             executeCoreInstruction z80rom
+                                addr
                                 { z80
                                     | env = new_env
                                     , main = { z80main | e = 0x00 }
                                 }
-                                |> Tuple.first
+                                |> Triple.dropSecond
                     in
-                    Expect.equal ( addr + 2, 0x00 ) ( new_z80.pc, new_z80.flags.fr )
+                    Expect.equal ( addr + 2, 0x00 ) ( new_pc, new_z80.flags.fr )
             , test "(set)" <|
                 \_ ->
                     let
@@ -182,15 +190,16 @@ suite =
                                 |> setMemWithTime (addr + 1) 0x73
                                 |> .z80env
 
-                        new_z80 =
+                        ( new_z80, new_pc ) =
                             executeCoreInstruction z80rom
+                                addr
                                 { z80
                                     | env = new_env
                                     , main = { z80main | e = 0x74 }
                                 }
-                                |> Tuple.first
+                                |> Triple.dropSecond
                     in
-                    Expect.equal ( addr + 2, True ) ( new_z80.pc, new_z80.flags.fr /= 0 )
+                    Expect.equal ( addr + 2, True ) ( new_pc, new_z80.flags.fr /= 0 )
             ]
         , describe "0xCB 0x74 BIT 6,H"
             [ test "(unset)" <|
@@ -201,15 +210,16 @@ suite =
                                 |> setMemWithTime (addr + 1) 0x74
                                 |> .z80env
 
-                        new_z80 =
+                        ( new_z80, new_pc ) =
                             executeCoreInstruction z80rom
+                                addr
                                 { z80
                                     | env = new_env
                                     , main = { z80main | hl = 0x45 }
                                 }
-                                |> Tuple.first
+                                |> Triple.dropSecond
                     in
-                    Expect.equal ( addr + 2, 0x00 ) ( new_z80.pc, new_z80.flags.fr )
+                    Expect.equal ( addr + 2, 0x00 ) ( new_pc, new_z80.flags.fr )
             , test "(set)" <|
                 \_ ->
                     let
@@ -218,15 +228,16 @@ suite =
                                 |> setMemWithTime (addr + 1) 0x74
                                 |> .z80env
 
-                        new_z80 =
+                        ( new_z80, new_pc ) =
                             executeCoreInstruction z80rom
+                                addr
                                 { z80
                                     | env = new_env
                                     , main = { z80main | hl = 0x4045 }
                                 }
-                                |> Tuple.first
+                                |> Triple.dropSecond
                     in
-                    Expect.equal ( addr + 2, True ) ( new_z80.pc, new_z80.flags.fr /= 0 )
+                    Expect.equal ( addr + 2, True ) ( new_pc, new_z80.flags.fr /= 0 )
             ]
         , describe "0xCB 0x75 BIT 6,L"
             [ test "(unset)" <|
@@ -237,15 +248,16 @@ suite =
                                 |> setMemWithTime (addr + 1) 0x75
                                 |> .z80env
 
-                        new_z80 =
+                        ( new_z80, new_pc ) =
                             executeCoreInstruction z80rom
+                                addr
                                 { z80
                                     | env = new_env
                                     , main = { z80main | hl = 0x6400 }
                                 }
-                                |> Tuple.first
+                                |> Triple.dropSecond
                     in
-                    Expect.equal ( addr + 2, 0x00 ) ( new_z80.pc, new_z80.flags.fr )
+                    Expect.equal ( addr + 2, 0x00 ) ( new_pc, new_z80.flags.fr )
             , test "(set)" <|
                 \_ ->
                     let
@@ -254,15 +266,16 @@ suite =
                                 |> setMemWithTime (addr + 1) 0x75
                                 |> .z80env
 
-                        new_z80 =
+                        ( new_z80, new_pc ) =
                             executeCoreInstruction z80rom
+                                addr
                                 { z80
                                     | env = new_env
                                     , main = { z80main | hl = 0x6545 }
                                 }
-                                |> Tuple.first
+                                |> Triple.dropSecond
                     in
-                    Expect.equal ( addr + 2, True ) ( new_z80.pc, new_z80.flags.fr /= 0 )
+                    Expect.equal ( addr + 2, True ) ( new_pc, new_z80.flags.fr /= 0 )
             ]
         , describe "0xCB 0x76 BIT 6,(HL)"
             [ test "set" <|
@@ -274,15 +287,16 @@ suite =
                                 |> setMemWithTime 0x6545 0x40
                                 |> .z80env
 
-                        new_z80 =
+                        ( new_z80, new_pc ) =
                             executeCoreInstruction z80rom
+                                addr
                                 { z80
                                     | env = new_env
                                     , main = { z80main | hl = 0x6545 }
                                 }
-                                |> Tuple.first
+                                |> Triple.dropSecond
                     in
-                    Expect.equal ( addr + 2, True ) ( new_z80.pc, new_z80.flags.fr /= 0 )
+                    Expect.equal ( addr + 2, True ) ( new_pc, new_z80.flags.fr /= 0 )
             , test "BIT 6, (IX + d) unset" <|
                 \_ ->
                     let
@@ -295,15 +309,16 @@ suite =
                                 |> setMemWithTime 0x6545 0x00
                                 |> .z80env
 
-                        new_z80 =
+                        ( new_z80, new_pc ) =
                             executeCoreInstruction z80rom
+                                addr
                                 { z80
                                     | env = new_env
                                     , main = { z80main | ix = 0x6540 }
                                 }
-                                |> Tuple.first
+                                |> Triple.dropSecond
                     in
-                    Expect.equal ( addr + 4, 0x00 ) ( new_z80.pc, new_z80.flags.fr )
+                    Expect.equal ( addr + 4, 0x00 ) ( new_pc, new_z80.flags.fr )
             , test "BIT 5, (IX + d) set" <|
                 \_ ->
                     let
@@ -316,15 +331,16 @@ suite =
                                 |> setMemWithTime 0x6545 0x40
                                 |> .z80env
 
-                        new_z80 =
+                        ( new_z80, new_pc ) =
                             executeCoreInstruction z80rom
+                                addr
                                 { z80
                                     | env = new_env
                                     , main = { z80main | ix = 0x6540 }
                                 }
-                                |> Tuple.first
+                                |> Triple.dropSecond
                     in
-                    Expect.equal ( addr + 4, True ) ( new_z80.pc, new_z80.flags.fr /= 0 )
+                    Expect.equal ( addr + 4, True ) ( new_pc, new_z80.flags.fr /= 0 )
             ]
         , describe "0xCB 0x77 BIT 6,A"
             [ test "(unset)" <|
@@ -335,15 +351,16 @@ suite =
                                 |> setMemWithTime (addr + 1) 0x77
                                 |> .z80env
 
-                        new_z80 =
+                        ( new_z80, new_pc ) =
                             executeCoreInstruction z80rom
+                                addr
                                 { z80
                                     | env = new_env
                                     , flags = { flags | a = 0x00 }
                                 }
-                                |> Tuple.first
+                                |> Triple.dropSecond
                     in
-                    Expect.equal ( addr + 2, 0x00 ) ( new_z80.pc, new_z80.flags.fr )
+                    Expect.equal ( addr + 2, 0x00 ) ( new_pc, new_z80.flags.fr )
             , test "(set)" <|
                 \_ ->
                     let
@@ -352,14 +369,15 @@ suite =
                                 |> setMemWithTime (addr + 1) 0x77
                                 |> .z80env
 
-                        new_z80 =
+                        ( new_z80, new_pc ) =
                             executeCoreInstruction z80rom
+                                addr
                                 { z80
                                     | env = new_env
                                     , flags = { flags | a = 0x40 }
                                 }
-                                |> Tuple.first
+                                |> Triple.dropSecond
                     in
-                    Expect.equal ( addr + 2, True ) ( new_z80.pc, new_z80.flags.fr /= 0 )
+                    Expect.equal ( addr + 2, True ) ( new_pc, new_z80.flags.fr /= 0 )
             ]
         ]

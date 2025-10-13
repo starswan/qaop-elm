@@ -2,6 +2,7 @@ module CBB0Test exposing (..)
 
 import Expect exposing (Expectation)
 import Test exposing (..)
+import Triple
 import Z80 exposing (executeCoreInstruction)
 import Z80CoreWithClockTime
 import Z80Env exposing (setMemWithTime)
@@ -33,7 +34,7 @@ suite =
             old_z80.main
 
         z80 =
-            { old_z80 | pc = addr, env = { old_z80env | sp = sp }, main = { z80main | hl = hl } }
+            { old_z80 | env = { old_z80env | sp = sp }, main = { z80main | hl = hl } }
 
         z80env =
             { z80env = z80.env, time = clock.clockTime }
@@ -51,15 +52,16 @@ suite =
                             |> setMemWithTime (addr + 1) 0xB0
                             |> .z80env
 
-                    new_z80 =
+                    ( new_z80, new_pc ) =
                         executeCoreInstruction z80rom
+                            addr
                             { z80
                                 | env = new_env
                                 , main = { z80main | b = 0xFF }
                             }
-                            |> Tuple.first
+                            |> Triple.dropSecond
                 in
-                Expect.equal ( addr + 2, 0xBF ) ( new_z80.pc, new_z80.main.b )
+                Expect.equal ( addr + 2, 0xBF ) ( new_pc, new_z80.main.b )
         , test "0xCB B1 RES 6,C" <|
             \_ ->
                 let
@@ -69,13 +71,14 @@ suite =
                             |> setMemWithTime (addr + 1) 0xB1
                             |> .z80env
 
-                    new_z80 =
+                    ( new_z80, new_pc ) =
                         executeCoreInstruction z80rom
+                            addr
                             { z80
                                 | env = new_env
                                 , main = { z80main | c = 0xFF }
                             }
-                            |> Tuple.first
+                            |> Triple.dropSecond
                 in
-                Expect.equal ( addr + 2, 0xBF ) ( new_z80.pc, new_z80.main.c )
+                Expect.equal ( addr + 2, 0xBF ) ( new_pc, new_z80.main.c )
         ]

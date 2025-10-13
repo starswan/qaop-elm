@@ -2,6 +2,7 @@ module CBC0Test exposing (..)
 
 import Expect exposing (Expectation)
 import Test exposing (..)
+import Triple
 import Z80 exposing (executeCoreInstruction)
 import Z80CoreWithClockTime
 import Z80Env exposing (setMemWithTime)
@@ -34,7 +35,7 @@ suite =
             old_z80.main
 
         z80 =
-            { old_z80 | pc = addr, env = { old_z80env | sp = sp }, main = { z80main | hl = hl } }
+            { old_z80 | env = { old_z80env | sp = sp }, main = { z80main | hl = hl } }
 
         z80env =
             { z80env = z80.env, time = clock.clockTime }
@@ -52,15 +53,16 @@ suite =
                             |> setMemWithTime (addr + 1) 0xC0
                             |> .z80env
 
-                    new_z80 =
+                    ( new_z80, new_pc ) =
                         executeCoreInstruction z80rom
+                            addr
                             { z80
                                 | env = new_env
                                 , main = { z80main | b = 0x00 }
                             }
-                            |> Tuple.first
+                            |> Triple.dropSecond
                 in
-                Expect.equal ( addr + 2, 0x01 ) ( new_z80.pc, new_z80.main.b )
+                Expect.equal ( addr + 2, 0x01 ) ( new_pc, new_z80.main.b )
         , test "0xDD 0xCB nn 0xC6 SET 0, (IX + n)" <|
             \_ ->
                 let
@@ -73,18 +75,19 @@ suite =
                             |> setMemWithTime 0xA086 0x10
                             |> .z80env
 
-                    new_z80 =
+                    ( new_z80, new_pc ) =
                         executeCoreInstruction z80rom
+                            addr
                             { z80
                                 | env = new_env
                                 , main = { z80main | ix = 0xA080 }
                             }
-                            |> Tuple.first
+                            |> Triple.dropSecond
 
                     mem_value =
                         new_z80.env |> mem 0xA086 clock.clockTime z80rom
                 in
-                Expect.equal ( addr + 4, 0x11 ) ( new_z80.pc, mem_value.value )
+                Expect.equal ( addr + 4, 0x11 ) ( new_pc, mem_value.value )
         , test "0xCB C8 SET 1,B" <|
             \_ ->
                 let
@@ -94,13 +97,14 @@ suite =
                             |> setMemWithTime (addr + 1) 0xC8
                             |> .z80env
 
-                    new_z80 =
+                    ( new_z80, new_pc ) =
                         executeCoreInstruction z80rom
+                            addr
                             { z80
                                 | env = new_env
                                 , main = { z80main | b = 0x00 }
                             }
-                            |> Tuple.first
+                            |> Triple.dropSecond
                 in
-                Expect.equal ( addr + 2, 0x02 ) ( new_z80.pc, new_z80.main.b )
+                Expect.equal ( addr + 2, 0x02 ) ( new_pc, new_z80.main.b )
         ]

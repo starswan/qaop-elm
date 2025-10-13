@@ -31,7 +31,7 @@ type DeltaWithChanges
     | PureDelta PCIncrement Z80Change
     | InterruptDelta InterruptPCIncrement InterruptChange
     | FlagDelta PCIncrement FlagChange
-    | RegisterChangeDelta PCIncrement RegisterChange
+    | RegisterChangeDelta RegisterChange
     | EDChangeDelta PCIncrement EDRegisterChange
     | Simple8BitDelta MediumPCIncrement Single8BitChange
     | DoubleWithRegistersDelta MediumPCIncrement DoubleWithRegisterChange
@@ -39,39 +39,39 @@ type DeltaWithChanges
     | NoParamsDelta NoParamChange
     | SingleEnvDelta SingleByteEnvChange
     | MainWithEnvDelta PCIncrement SingleEnvMainChange
-    | TripleMainChangeDelta CpuTimeCTime TriplePCIncrement TripleMainChange
+    | TripleMainChangeDelta CpuTimeCTime TripleMainChange
     | Triple16ParamDelta TriplePCIncrement TripleByteChange
     | Triple16FlagsDelta TripleWithFlagsChange
     | UnknownInstruction String Int
     | RstDelta RstChange
 
 
-apply_delta : Z80Core -> Z80ROM -> CpuTimeCTime -> DeltaWithChanges -> CoreChange
-apply_delta z80 rom48k clockTime z80delta =
+apply_delta : Z80Core -> Z80ROM -> CpuTimeCTime -> Int -> DeltaWithChanges -> CoreChange
+apply_delta z80 rom48k clockTime pc z80delta =
     case z80delta of
         OldDeltaWithChanges deltaWithChangesData ->
-            z80 |> applyDeltaWithChanges deltaWithChangesData |> CoreOnly
+            z80 |> applyDeltaWithChanges deltaWithChangesData
 
         PureDelta cpuInc z80ChangeData ->
             z80 |> applyPureDelta cpuInc clockTime z80ChangeData |> CoreOnly
 
         FlagDelta pcInc flagRegisters ->
-            z80 |> applyFlagDelta pcInc clockTime flagRegisters rom48k |> CoreOnly
+            z80 |> applyFlagDelta pcInc clockTime flagRegisters rom48k
 
-        RegisterChangeDelta pcInc registerChange ->
-            z80 |> applyRegisterDelta pcInc clockTime registerChange rom48k |> CoreOnly
+        RegisterChangeDelta registerChange ->
+            z80 |> applyRegisterDelta clockTime registerChange rom48k
 
         Simple8BitDelta pcInc single8BitChange ->
             z80 |> applySimple8BitDelta pcInc clockTime single8BitChange rom48k |> CoreOnly
 
         DoubleWithRegistersDelta pcInc doubleWithRegisterChange ->
-            z80 |> applyDoubleWithRegistersDelta pcInc clockTime doubleWithRegisterChange rom48k |> CoreOnly
+            z80 |> applyDoubleWithRegistersDelta pcInc clockTime doubleWithRegisterChange rom48k pc |> CoreOnly
 
         JumpChangeDelta jumpChange ->
             z80 |> applyJumpChangeDelta jumpChange
 
         NoParamsDelta noParamChange ->
-            z80 |> applyNoParamsDelta clockTime noParamChange rom48k |> CoreOnly
+            z80 |> applyNoParamsDelta clockTime noParamChange rom48k pc
 
         SingleEnvDelta singleByteEnvChange ->
             z80 |> applyEnvChangeDelta clockTime singleByteEnvChange |> CoreOnly
@@ -79,14 +79,14 @@ apply_delta z80 rom48k clockTime z80delta =
         MainWithEnvDelta pcInc singleEnvMainChange ->
             z80 |> applySingleEnvMainChange pcInc clockTime singleEnvMainChange rom48k |> CoreOnly
 
-        TripleMainChangeDelta cpuTimeCTime triplePCIncrement tripleMainChange ->
-            z80 |> applyTripleMainChange cpuTimeCTime triplePCIncrement tripleMainChange |> CoreOnly
+        TripleMainChangeDelta cpuTimeCTime tripleMainChange ->
+            z80 |> applyTripleMainChange cpuTimeCTime tripleMainChange |> CoreOnly
 
         Triple16ParamDelta triplePCIncrement tripleByteChange ->
-            z80 |> applyTripleChangeDelta rom48k triplePCIncrement clockTime tripleByteChange |> CoreOnly
+            z80 |> applyTripleChangeDelta rom48k triplePCIncrement clockTime tripleByteChange pc
 
         Triple16FlagsDelta tripleWithFlagsChange ->
-            z80 |> applyTripleFlagChange clockTime tripleWithFlagsChange
+            z80 |> applyTripleFlagChange clockTime tripleWithFlagsChange pc
 
         UnknownInstruction string int ->
             debugTodo string (int |> toHexString2) z80 |> CoreOnly
@@ -95,20 +95,21 @@ apply_delta z80 rom48k clockTime z80delta =
             z80 |> applyInterruptChange pCIncrement interruptChange |> CoreOnly
 
         EDChangeDelta pCIncrement eDRegisterChange ->
-            z80 |> applyEdRegisterDelta pCIncrement clockTime eDRegisterChange rom48k
+            z80 |> applyEdRegisterDelta pCIncrement clockTime eDRegisterChange rom48k pc
 
         RstDelta noParamChange ->
-            z80 |> applyRstDelta clockTime noParamChange rom48k |> CoreOnly
+            z80 |> applyRstDelta clockTime noParamChange rom48k pc
 
 
 applyJumpChangeDelta : JumpChange -> Z80Core -> CoreChange
 applyJumpChangeDelta z80changeData z80 =
     case z80changeData of
         ActualJump pc ->
-            { z80
-                | pc = pc
-            }
-                |> CoreOnly
+            --let
+            --    pc =
+            --        Bitwise.and (z80.pc + 2 + jump) 0xFFFF
+            --in
+            z80 |> CoreWithPC pc
 
         ConditionalJump address shortDelay function ->
             if z80.flags |> function then
@@ -116,16 +117,10 @@ applyJumpChangeDelta z80changeData z80 =
                     pc =
                         Bitwise.and address 0xFFFF
                 in
-                { z80
-                    | pc = pc
-                }
-                    |> CoreWithTime shortDelay
+                z80 |> CoreWithPCAndDelay pc shortDelay
 
             else
-                { z80
-                    | pc = Bitwise.and (z80.pc + 2) 0xFFFF
-                }
-                    |> CoreOnly
+                z80 |> CoreOnly
 
         DJNZ address shortDelay ->
             let
@@ -139,63 +134,49 @@ applyJumpChangeDelta z80changeData z80 =
                     z80.main
             in
             if b /= 0 then
-                { z80
-                    | pc = address
-                    , main = { main | b = b }
-                }
-                    |> CoreWithTime shortDelay
+                { z80 | main = { main | b = b } }
+                    |> CoreWithPCAndDelay address shortDelay
 
             else
-                { z80
-                    | pc = Bitwise.and (z80.pc + 2) 0xFFFF
-                    , main = { main | b = b }
-                }
+                { z80 | main = { main | b = b } }
                     |> CoreWithTime shortDelay
 
 
 applySimple8BitDelta : MediumPCIncrement -> CpuTimeCTime -> Single8BitChange -> Z80ROM -> Z80Core -> Z80Core
 applySimple8BitDelta pcInc cpu_time z80changeData rom48k z80 =
-    let
-        new_pc =
-            case pcInc of
-                IncreaseByTwo ->
-                    Bitwise.and (z80.pc + 2) 0xFFFF
-
-                IncreaseByThree ->
-                    Bitwise.and (z80.pc + 3) 0xFFFF
-    in
+    --let
+    --    new_pc =
+    --        case pcInc of
+    --            IncreaseByTwo ->
+    --                Bitwise.and (z80.pc + 2) 0xFFFF
+    --
+    --            IncreaseByThree ->
+    --                Bitwise.and (z80.pc + 3) 0xFFFF
+    --in
     case z80changeData of
         NewRegister coreRegister int ->
             let
                 main =
                     z80.main |> applySimple8BitChange coreRegister int
             in
-            { z80 | pc = new_pc, main = main }
+            { z80 | main = main }
 
         NewARegister new_a ->
             let
-                pc =
-                    Bitwise.and (z80.pc + 2) 0xFFFF
-
                 flags =
                     z80.flags
             in
             { z80
-                | pc = pc
-                , flags = { flags | a = new_a }
+                | flags = { flags | a = new_a }
             }
 
         FlagJump operation param ->
             let
-                pc =
-                    Bitwise.and (z80.pc + 2) 0xFFFF
-
                 flags =
                     z80.flags |> changeFlags operation param
             in
             { z80
-                | pc = pc
-                , flags = flags
+                | flags = flags
             }
 
         Z80In param ->
@@ -207,15 +188,11 @@ applySimple8BitDelta pcInc cpu_time z80changeData rom48k z80 =
                 portNum =
                     Bitwise.or param (shiftLeftBy8 flags.a)
 
-                pc =
-                    Bitwise.and (z80.pc + 2) 0xFFFF
-
                 new_a =
                     z80.env |> z80_in portNum rom48k.keyboard cpu_time
             in
             { z80
-                | pc = pc
-                , flags = { flags | a = new_a.value }
+                | flags = { flags | a = new_a.value }
             }
 
         Z80Out param ->
@@ -224,26 +201,22 @@ applySimple8BitDelta pcInc cpu_time z80changeData rom48k z80 =
                 portNum =
                     Bitwise.or param (shiftLeftBy8 z80.flags.a)
 
-                pc =
-                    Bitwise.and (z80.pc + 2) 0xFFFF
-
                 ( env, newTime ) =
                     z80.env |> z80_out portNum z80.flags.a cpu_time
             in
             { z80
-                | pc = pc
-                , env = env
+                | env = env
             }
 
 
 applyInterruptChange : InterruptPCIncrement -> InterruptChange -> Z80Core -> Z80Core
 applyInterruptChange pcInc chaange z80 =
-    let
-        new_pc =
-            case pcInc of
-                AddTwoToPC ->
-                    (z80.pc + 2) |> Bitwise.and 0xFFFF
-    in
+    --let
+    --    new_pc =
+    --        case pcInc of
+    --            AddTwoToPC ->
+    --                (z80.pc + 2) |> Bitwise.and 0xFFFF
+    --in
     case chaange of
         LoadAFromIR value ->
             --private void ld_a_ir(int v)
@@ -273,29 +246,29 @@ applyInterruptChange pcInc chaange z80 =
                 flags =
                     { z80_flags | a = value, ff = ff, fr = fr, fa = fab, fb = fab }
             in
-            { z80 | pc = new_pc, flags = flags }
+            { z80 | flags = flags }
 
 
-applyFlagDelta : PCIncrement -> CpuTimeCTime -> FlagChange -> Z80ROM -> Z80Core -> Z80Core
+applyFlagDelta : PCIncrement -> CpuTimeCTime -> FlagChange -> Z80ROM -> Z80Core -> CoreChange
 applyFlagDelta pcInc clockTime z80_flags rom48k z80_core =
-    let
-        new_pc =
-            case pcInc of
-                IncrementByOne ->
-                    (z80_core.pc + 1) |> Bitwise.and 0xFFFF
-
-                IncrementByTwo ->
-                    (z80_core.pc + 2) |> Bitwise.and 0xFFFF
-
-                IncrementByThree ->
-                    Bitwise.and (z80_core.pc + 3) 0xFFFF
-
-                IncrementByFour ->
-                    Bitwise.and (z80_core.pc + 4) 0xFFFF
-    in
+    --let
+    --    new_pc =
+    --        case pcInc of
+    --            IncrementByOne ->
+    --                (z80_core.pc + 1) |> Bitwise.and 0xFFFF
+    --
+    --            IncrementByTwo ->
+    --                (z80_core.pc + 2) |> Bitwise.and 0xFFFF
+    --
+    --            IncrementByThree ->
+    --                Bitwise.and (z80_core.pc + 3) 0xFFFF
+    --
+    --            IncrementByFour ->
+    --                Bitwise.and (z80_core.pc + 4) 0xFFFF
+    --in
     case z80_flags of
         OnlyFlags flagRegisters ->
-            { z80_core | pc = new_pc, flags = flagRegisters }
+            { z80_core | flags = flagRegisters } |> CoreOnly
 
         FlagChange8Bit register value ->
             let
@@ -304,30 +277,30 @@ applyFlagDelta pcInc clockTime z80_flags rom48k z80_core =
             in
             case register of
                 RegisterB ->
-                    { z80_core | pc = new_pc, main = { main | b = value } }
+                    { z80_core | main = { main | b = value } } |> CoreOnly
 
                 RegisterC ->
-                    { z80_core | pc = new_pc, main = { main | c = value } }
+                    { z80_core | main = { main | c = value } } |> CoreOnly
 
                 RegisterD ->
-                    { z80_core | pc = new_pc, main = { main | d = value } }
+                    { z80_core | main = { main | d = value } } |> CoreOnly
 
                 RegisterE ->
-                    { z80_core | pc = new_pc, main = { main | e = value } }
+                    { z80_core | main = { main | e = value } } |> CoreOnly
 
         FlagChangeH int ->
             let
                 main =
                     z80_core.main
             in
-            { z80_core | pc = new_pc, main = { main | hl = Bitwise.or (shiftLeftBy8 int) (Bitwise.and main.hl 0xFF) } }
+            { z80_core | main = { main | hl = Bitwise.or (shiftLeftBy8 int) (Bitwise.and main.hl 0xFF) } } |> CoreOnly
 
         FlagChangeL int ->
             let
                 main =
                     z80_core.main
             in
-            { z80_core | pc = new_pc, main = { main | hl = Bitwise.or int (Bitwise.and main.hl 0xFF00) } }
+            { z80_core | main = { main | hl = Bitwise.or int (Bitwise.and main.hl 0xFF00) } } |> CoreOnly
 
         ReturnWithPop ->
             let
@@ -339,84 +312,84 @@ applyFlagDelta pcInc clockTime z80_flags rom48k z80_core =
 
                 --x = debug_log "ret nz" (result.value |> subName) Nothing
             in
-            { z80_core | pc = result.value16, env = { env1 | sp = result.sp } }
+            { z80_core | env = { env1 | sp = result.sp } } |> CoreWithPC result.value16
 
         EmptyFlagChange ->
-            { z80_core | pc = new_pc }
+            z80_core |> CoreOnly
 
         FlagNewRValue int ->
             let
                 ints =
                     z80_core.interrupts
             in
-            { z80_core | pc = new_pc, interrupts = { ints | r = int } }
+            { z80_core | interrupts = { ints | r = int } } |> CoreOnly
 
         FlagChangePush int ->
-            { z80_core | pc = new_pc, env = z80_core.env |> z80_push int clockTime }
+            { z80_core | env = z80_core.env |> z80_push int clockTime } |> CoreOnly
 
 
 applyPureDelta : PCIncrement -> CpuTimeCTime -> Z80Change -> Z80Core -> Z80Core
 applyPureDelta cpuInc cpu_time z80changeData z80 =
-    let
-        new_pc =
-            case cpuInc of
-                IncrementByOne ->
-                    (z80.pc + 1) |> Bitwise.and 0xFFFF
-
-                IncrementByTwo ->
-                    (z80.pc + 2) |> Bitwise.and 0xFFFF
-
-                IncrementByThree ->
-                    Bitwise.and (z80.pc + 3) 0xFFFF
-
-                IncrementByFour ->
-                    Bitwise.and (z80.pc + 4) 0xFFFF
-    in
+    --let
+    --    new_pc =
+    --        case cpuInc of
+    --            IncrementByOne ->
+    --                (z80.pc + 1) |> Bitwise.and 0xFFFF
+    --
+    --            IncrementByTwo ->
+    --                (z80.pc + 2) |> Bitwise.and 0xFFFF
+    --
+    --            IncrementByThree ->
+    --                Bitwise.and (z80.pc + 3) 0xFFFF
+    --
+    --            IncrementByFour ->
+    --                Bitwise.and (z80.pc + 4) 0xFFFF
+    --in
     case z80changeData of
         FlagsWithHLRegister flagRegisters int ->
             let
                 main =
                     z80.main
             in
-            { z80 | pc = new_pc, flags = flagRegisters, main = { main | hl = int } }
+            { z80 | flags = flagRegisters, main = { main | hl = int } }
 
         Z80ChangeFlags flagRegisters ->
-            { z80 | pc = new_pc, flags = flagRegisters }
+            { z80 | flags = flagRegisters }
 
         Z80ChangeSetIndirect addr int ->
             let
                 ( env, clockTime ) =
                     z80.env |> setMem addr int cpu_time
             in
-            { z80 | pc = new_pc, env = env }
+            { z80 | env = env }
 
         FlagsWithIXRegister flagRegisters int ->
             let
                 main =
                     z80.main
             in
-            { z80 | pc = new_pc, flags = flagRegisters, main = { main | ix = int } }
+            { z80 | flags = flagRegisters, main = { main | ix = int } }
 
         FlagsWithIYRegister flagRegisters int ->
             let
                 main =
                     z80.main
             in
-            { z80 | pc = new_pc, flags = flagRegisters, main = { main | iy = int } }
+            { z80 | flags = flagRegisters, main = { main | iy = int } }
 
         JustIXRegister int ->
             let
                 main =
                     z80.main
             in
-            { z80 | pc = new_pc, main = { main | ix = int } }
+            { z80 | main = { main | ix = int } }
 
         JustIYRegister int ->
             let
                 main =
                     z80.main
             in
-            { z80 | pc = new_pc, main = { main | iy = int } }
+            { z80 | main = { main | iy = int } }
 
         FlagsWithRegisterChange changeMainRegister intWithFlags ->
             let
@@ -443,28 +416,28 @@ applyPureDelta cpuInc cpu_time z80changeData z80 =
                 --ChangeMainL ->
                 --    { z80_main | hl = Bitwise.or intWithFlags.value (Bitwise.and z80_main.hl 0xFF00) }
             in
-            { z80 | pc = new_pc, flags = intWithFlags.flags, main = new_main }
+            { z80 | flags = intWithFlags.flags, main = new_main }
 
 
-applyRegisterDelta : PCIncrement -> CpuTimeCTime -> RegisterChange -> Z80ROM -> Z80Core -> Z80Core
-applyRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
+applyRegisterDelta : CpuTimeCTime -> RegisterChange -> Z80ROM -> Z80Core -> CoreChange
+applyRegisterDelta clockTime z80changeData rom48k z80_core =
     let
         env =
             z80_core.env
 
-        new_pc =
-            case pc_inc of
-                IncrementByOne ->
-                    Bitwise.and (z80_core.pc + 1) 0xFFFF
-
-                IncrementByTwo ->
-                    Bitwise.and (z80_core.pc + 2) 0xFFFF
-
-                IncrementByThree ->
-                    Bitwise.and (z80_core.pc + 3) 0xFFFF
-
-                IncrementByFour ->
-                    Bitwise.and (z80_core.pc + 4) 0xFFFF
+        --new_pc =
+        --    case pc_inc of
+        --        IncrementByOne ->
+        --            Bitwise.and (z80_core.pc + 1) 0xFFFF
+        --
+        --        IncrementByTwo ->
+        --            Bitwise.and (z80_core.pc + 2) 0xFFFF
+        --
+        --        IncrementByThree ->
+        --            Bitwise.and (z80_core.pc + 3) 0xFFFF
+        --
+        --        IncrementByFour ->
+        --            Bitwise.and (z80_core.pc + 4) 0xFFFF
     in
     case z80changeData of
         ChangeRegisterBC reg_b reg_c ->
@@ -473,9 +446,9 @@ applyRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
                     z80_core.main
             in
             { z80_core
-                | pc = new_pc
-                , main = { z80_main | b = reg_b, c = reg_c }
+                | main = { z80_main | b = reg_b, c = reg_c }
             }
+                |> CoreOnly
 
         ChangeRegisterDE reg_d reg_e ->
             let
@@ -483,9 +456,9 @@ applyRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
                     z80_core.main
             in
             { z80_core
-                | pc = new_pc
-                , main = { z80_main | d = reg_d, e = reg_e }
+                | main = { z80_main | d = reg_d, e = reg_e }
             }
+                |> CoreOnly
 
         ChangeRegisterHL int ->
             let
@@ -493,9 +466,9 @@ applyRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
                     z80_core.main
             in
             { z80_core
-                | pc = new_pc
-                , main = { z80_main | hl = int }
+                | main = { z80_main | hl = int }
             }
+                |> CoreOnly
 
         ChangeRegisterIX int ->
             let
@@ -503,9 +476,9 @@ applyRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
                     z80_core.main
             in
             { z80_core
-                | pc = new_pc
-                , main = { z80_main | ix = int }
+                | main = { z80_main | ix = int }
             }
+                |> CoreOnly
 
         ChangeRegisterIY int ->
             let
@@ -513,9 +486,9 @@ applyRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
                     z80_core.main
             in
             { z80_core
-                | pc = new_pc
-                , main = { z80_main | iy = int }
+                | main = { z80_main | iy = int }
             }
+                |> CoreOnly
 
         ChangeRegisterIXH int ->
             let
@@ -523,9 +496,9 @@ applyRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
                     z80_core.main
             in
             { z80_core
-                | pc = new_pc
-                , main = { main | ix = Bitwise.or (Bitwise.and main.ix 0xFF) (int |> shiftLeftBy8) }
+                | main = { main | ix = Bitwise.or (Bitwise.and main.ix 0xFF) (int |> shiftLeftBy8) }
             }
+                |> CoreOnly
 
         ChangeRegisterIXL int ->
             let
@@ -533,9 +506,9 @@ applyRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
                     z80_core.main
             in
             { z80_core
-                | pc = new_pc
-                , main = { main | ix = Bitwise.or (Bitwise.and main.ix 0xFF00) int }
+                | main = { main | ix = Bitwise.or (Bitwise.and main.ix 0xFF00) int }
             }
+                |> CoreOnly
 
         ChangeRegisterIYH int ->
             let
@@ -543,9 +516,9 @@ applyRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
                     z80_core.main
             in
             { z80_core
-                | pc = new_pc
-                , main = { main | iy = Bitwise.or (Bitwise.and main.iy 0xFF) (int |> shiftLeftBy8) }
+                | main = { main | iy = Bitwise.or (Bitwise.and main.iy 0xFF) (int |> shiftLeftBy8) }
             }
+                |> CoreOnly
 
         ChangeRegisterIYL int ->
             let
@@ -553,21 +526,21 @@ applyRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
                     z80_core.main
             in
             { z80_core
-                | pc = new_pc
-                , main = { main | iy = Bitwise.or (Bitwise.and main.iy 0xFF00) int }
+                | main = { main | iy = Bitwise.or (Bitwise.and main.iy 0xFF00) int }
             }
+                |> CoreOnly
 
         PushedValue int ->
             { z80_core
-                | pc = new_pc
-                , env = z80_core.env |> z80_push int clockTime
+                | env = z80_core.env |> z80_push int clockTime
             }
+                |> CoreOnly
 
         RegChangeNewSP int ->
             { z80_core
-                | pc = new_pc
-                , env = { env | sp = int }
+                | env = { env | sp = int }
             }
+                |> CoreOnly
 
         IncrementIndirect addr ->
             -- This should be a primitive operation on Z80Env to increment a stored value
@@ -581,7 +554,7 @@ applyRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
                 ( env_3, newNew ) =
                     env |> setMem addr flags.value value.time
             in
-            { z80_core | pc = new_pc, env = env_3, flags = flags.flags }
+            { z80_core | env = env_3, flags = flags.flags } |> CoreOnly
 
         DecrementIndirect addr ->
             -- This should be a primitive operation on Z80Env to decrement a stored value
@@ -595,19 +568,17 @@ applyRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
                 ( env_3, newNew ) =
                     env |> setMem addr flags.value clockTime
             in
-            { z80_core | pc = new_pc, env = env_3, flags = flags.flags }
+            { z80_core | env = env_3, flags = flags.flags } |> CoreOnly
 
         RegisterChangeJump int ->
-            { z80_core
-                | pc = int
-            }
+            z80_core |> CoreWithPC int
 
         SetIndirect addr value ->
             let
                 ( env_2, newTime ) =
                     env |> setMem addr value clockTime
             in
-            { z80_core | pc = new_pc, env = env_2 }
+            { z80_core | env = env_2 } |> CoreOnly
 
         ChangeRegisterDEAndHL de hl ->
             let
@@ -615,15 +586,15 @@ applyRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
                     z80_core.main
             in
             { z80_core
-                | pc = new_pc
-                , main = { main | hl = hl } |> set_de_main de
+                | main = { main | hl = hl } |> set_de_main de
             }
+                |> CoreOnly
 
         RegisterChangeShifter shifter addr ->
-            z80_core |> applyShifter new_pc shifter addr clockTime rom48k
+            z80_core |> applyShifter shifter addr clockTime rom48k |> CoreOnly
 
         RegisterChangeIndexShifter shifter raw_addr ->
-            z80_core |> applyShifter new_pc shifter (raw_addr |> Bitwise.and 0xFFFF) clockTime rom48k
+            z80_core |> applyShifter shifter (raw_addr |> Bitwise.and 0xFFFF) clockTime rom48k |> CoreOnly
 
         IndirectBitReset bitMask addr ->
             let
@@ -636,7 +607,7 @@ applyRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
                 ( env_3, newNewTime ) =
                     env |> setMem addr new_value value.time
             in
-            { z80_core | pc = new_pc, env = env_3 }
+            { z80_core | env = env_3 } |> CoreOnly
 
         IndirectBitSet bitMask raw_addr ->
             let
@@ -652,10 +623,10 @@ applyRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
                 ( env_3, newNewTime ) =
                     env |> setMem addr new_value value.time
             in
-            { z80_core | pc = new_pc, env = env_3 }
+            { z80_core | env = env_3 } |> CoreOnly
 
         RegChangeNoOp ->
-            { z80_core | pc = new_pc }
+            z80_core |> CoreOnly
 
         SingleEnvFlagFunc flagFunc value ->
             let
@@ -663,9 +634,9 @@ applyRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
                     z80_core.flags
             in
             { z80_core
-                | pc = new_pc
-                , flags = z80_flags |> changeFlags flagFunc value
+                | flags = z80_flags |> changeFlags flagFunc value
             }
+                |> CoreOnly
 
         ExchangeTopOfStackWith ixiyhl ->
             let
@@ -681,7 +652,7 @@ applyRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
                 main =
                     z80_core.main |> set_xy popped.value16 ixiyhl
             in
-            { z80_core | pc = new_pc, env = env_2, main = main }
+            { z80_core | env = env_2, main = main } |> CoreOnly
 
         SingleRegisterChange changeOneRegister int ->
             let
@@ -691,15 +662,15 @@ applyRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
             case changeOneRegister of
                 ChangeBRegister ->
                     { z80_core
-                        | pc = new_pc
-                        , main = { z80_main | b = int }
+                        | main = { z80_main | b = int }
                     }
+                        |> CoreOnly
 
                 ChangeCRegister ->
                     { z80_core
-                        | pc = new_pc
-                        , main = { z80_main | c = int }
+                        | main = { z80_main | c = int }
                     }
+                        |> CoreOnly
 
                 ChangeARegister ->
                     let
@@ -707,33 +678,33 @@ applyRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
                             z80_core.flags
                     in
                     { z80_core
-                        | pc = new_pc
-                        , flags = { z80_flags | a = int }
+                        | flags = { z80_flags | a = int }
                     }
+                        |> CoreOnly
 
                 ChangeDRegister ->
                     { z80_core
-                        | pc = new_pc
-                        , main = { z80_main | d = int }
+                        | main = { z80_main | d = int }
                     }
+                        |> CoreOnly
 
                 ChangeERegister ->
                     { z80_core
-                        | pc = new_pc
-                        , main = { z80_main | e = int }
+                        | main = { z80_main | e = int }
                     }
+                        |> CoreOnly
 
                 ChangeHRegister ->
                     { z80_core
-                        | pc = new_pc
-                        , main = { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 int) }
+                        | main = { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 int) }
                     }
+                        |> CoreOnly
 
                 ChangeLRegister ->
                     { z80_core
-                        | pc = new_pc
-                        , main = { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) int }
+                        | main = { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) int }
                     }
+                        |> CoreOnly
 
         RegisterIndirectWithShifter shifterFunc changeOneRegister raw_addr ->
             let
@@ -795,7 +766,7 @@ applyRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
                 ( env_2, newNew ) =
                     env |> setMem addr value.value input.time
             in
-            { z80_core | pc = new_pc, main = new_main, flags = value.flags, env = env_2 }
+            { z80_core | main = new_main, flags = value.flags, env = env_2 } |> CoreOnly
 
         SetBitIndirectWithCopy bitTest changeOneRegister raw_addr ->
             let
@@ -834,7 +805,7 @@ applyRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
                 ( env_2, newTime2 ) =
                     env |> setMem addr value input.time
             in
-            { z80_core | pc = new_pc, main = new_main, env = env_2 }
+            { z80_core | main = new_main, env = env_2 } |> CoreOnly
 
         ResetBitIndirectWithCopy bitTest changeOneRegister raw_addr ->
             let
@@ -873,11 +844,11 @@ applyRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
                 ( env_2, newTime ) =
                     env |> setMem addr value input.time
             in
-            { z80_core | pc = new_pc, main = new_main, env = env_2 }
+            { z80_core | main = new_main, env = env_2 } |> CoreOnly
 
 
-applyShifter : Int -> Shifter -> Int -> CpuTimeCTime -> Z80ROM -> Z80Core -> Z80Core
-applyShifter new_pc shifterFunc addr cpu_time rom48k z80 =
+applyShifter : Shifter -> Int -> CpuTimeCTime -> Z80ROM -> Z80Core -> Z80Core
+applyShifter shifterFunc addr cpu_time rom48k z80 =
     let
         value =
             z80.env |> mem addr cpu_time rom48k
@@ -914,29 +885,29 @@ applyShifter new_pc shifterFunc addr cpu_time rom48k z80 =
         ( env_2, newTime2 ) =
             env |> setMem addr result.value value.time
     in
-    { z80 | pc = new_pc, flags = result.flags, env = env_2 }
+    { z80 | flags = result.flags, env = env_2 }
 
 
-applyTripleChangeDelta : Z80ROM -> TriplePCIncrement -> CpuTimeCTime -> TripleByteChange -> Z80Core -> Z80Core
-applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
+applyTripleChangeDelta : Z80ROM -> TriplePCIncrement -> CpuTimeCTime -> TripleByteChange -> Int -> Z80Core -> CoreChange
+applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData new_pc z80 =
     let
-        new_pc =
-            case pc_increment of
-                TripleIncrementByThree ->
-                    Bitwise.and (z80.pc + 3) 0xFFFF
-
-                TripleIncrementByFour ->
-                    Bitwise.and (z80.pc + 4) 0xFFFF
-
+        --new_pc =
+        --    case pc_increment of
+        --        TripleIncrementByThree ->
+        --            Bitwise.and (z80.pc + 3) 0xFFFF
+        --
+        --        TripleIncrementByFour ->
+        --            Bitwise.and (z80.pc + 4) 0xFFFF
+        --
         env =
             z80.env
     in
     case z80changeData of
         NewSPRegister int ->
             { z80
-                | pc = new_pc
-                , env = { env | sp = int }
+                | env = { env | sp = int }
             }
+                |> CoreOnly
 
         NewIXRegister int ->
             let
@@ -945,8 +916,8 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
             in
             { z80
                 | main = { main | ix = int }
-                , pc = new_pc
             }
+                |> CoreOnly
 
         NewIYRegister int ->
             let
@@ -955,8 +926,8 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
             in
             { z80
                 | main = { main | iy = int }
-                , pc = new_pc
             }
+                |> CoreOnly
 
         NewHLIndirect int ->
             let
@@ -968,8 +939,8 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
             in
             { z80
                 | main = { main | hl = value.value16 }
-                , pc = new_pc
             }
+                |> CoreOnly
 
         NewIXIndirect int ->
             let
@@ -981,8 +952,8 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
             in
             { z80
                 | main = { main | ix = value.value16 }
-                , pc = new_pc
             }
+                |> CoreOnly
 
         NewIYIndirect int ->
             let
@@ -994,8 +965,8 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
             in
             { z80
                 | main = { main | iy = value.value16 }
-                , pc = new_pc
             }
+                |> CoreOnly
 
         NewAIndirect int ->
             let
@@ -1007,18 +978,15 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
             in
             { z80
                 | flags = { flags | a = value.value }
-                , pc = new_pc
             }
+                |> CoreOnly
 
         TripleSetIndirectFromA addr ->
             let
                 ( env2, time2 ) =
                     env |> setMem addr z80.flags.a cpu_time
             in
-            { z80
-                | pc = new_pc
-                , env = env2
-            }
+            { z80 | env = env2 } |> CoreOnly
 
         NewTripleRegister int tripleByteRegister ->
             let
@@ -1039,8 +1007,8 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
             in
             { z80
                 | main = z80_main
-                , pc = new_pc
             }
+                |> CoreOnly
 
         Store16BitFromHL address ->
             let
@@ -1051,94 +1019,76 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
                     env |> setMem16 address value cpu_time
             in
             { z80
-                | pc = new_pc
-                , env = env1
-            }
-
-
-applyTripleFlagChange : CpuTimeCTime -> TripleWithFlagsChange -> Z80Core -> CoreChange
-applyTripleFlagChange cpu_time z80changeData z80 =
-    case z80changeData of
-        Conditional16BitJump int function ->
-            if z80.flags |> function then
-                { z80
-                    | pc = int
-                }
-                    |> CoreOnly
-
-            else
-                { z80
-                    | pc = Bitwise.and (z80.pc + 3) 0xFFFF
-                }
-                    |> CoreOnly
-
-        Conditional16BitCall address shortdelay function ->
-            if z80.flags |> function then
-                let
-                    new_pc =
-                        Bitwise.and (z80.pc + 3) 0xFFFF
-
-                    env_1 =
-                        z80.env |> z80_push new_pc cpu_time
-                in
-                { z80 | pc = address, env = env_1 } |> CoreWithTime shortdelay
-
-            else
-                { z80
-                    | pc = Bitwise.and (z80.pc + 3) 0xFFFF
-                }
-                    |> CoreOnly
-
-        CallImmediate int ->
-            let
-                new_pc =
-                    Bitwise.and (z80.pc + 3) 0xFFFF
-
-                env_1 =
-                    z80.env |> z80_push new_pc cpu_time
-            in
-            { z80 | pc = int, env = env_1 } |> CoreOnly
-
-        NewPCRegister int ->
-            { z80
-                | pc = int
+                | env = env1
             }
                 |> CoreOnly
 
 
-applyEdRegisterDelta : PCIncrement -> CpuTimeCTime -> EDRegisterChange -> Z80ROM -> Z80Core -> CoreChange
-applyEdRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
+applyTripleFlagChange : CpuTimeCTime -> TripleWithFlagsChange -> Int -> Z80Core -> CoreChange
+applyTripleFlagChange cpu_time z80changeData pc z80 =
+    case z80changeData of
+        Conditional16BitJump int function ->
+            if z80.flags |> function then
+                z80 |> CoreWithPC int
+
+            else
+                z80 |> CoreOnly
+
+        Conditional16BitCall address shortdelay function ->
+            if z80.flags |> function then
+                let
+                    env_1 =
+                        z80.env |> z80_push pc cpu_time
+                in
+                { z80 | env = env_1 } |> CoreWithPCAndDelay address shortdelay
+
+            else
+                z80 |> CoreOnly
+
+        CallImmediate int ->
+            let
+                new_pc =
+                    Bitwise.and (pc + 3) 0xFFFF
+
+                env_1 =
+                    z80.env |> z80_push new_pc cpu_time
+            in
+            { z80 | env = env_1 } |> CoreWithPC int
+
+        NewPCRegister int ->
+            z80 |> CoreWithPC int
+
+
+applyEdRegisterDelta : PCIncrement -> CpuTimeCTime -> EDRegisterChange -> Z80ROM -> Int -> Z80Core -> CoreChange
+applyEdRegisterDelta pc_inc clockTime z80changeData rom48k pc_in z80_core =
     let
         env =
             z80_core.env
 
-        new_pc =
-            case pc_inc of
-                IncrementByOne ->
-                    Bitwise.and (z80_core.pc + 1) 0xFFFF
-
-                IncrementByTwo ->
-                    Bitwise.and (z80_core.pc + 2) 0xFFFF
-
-                IncrementByThree ->
-                    Bitwise.and (z80_core.pc + 3) 0xFFFF
-
-                IncrementByFour ->
-                    Bitwise.and (z80_core.pc + 4) 0xFFFF
+        --new_pc =
+        --    case pc_inc of
+        --        IncrementByOne ->
+        --            Bitwise.and (z80_core.pc + 1) 0xFFFF
+        --
+        --        IncrementByTwo ->
+        --            Bitwise.and (z80_core.pc + 2) 0xFFFF
+        --
+        --        IncrementByThree ->
+        --            Bitwise.and (z80_core.pc + 3) 0xFFFF
+        --
+        --        IncrementByFour ->
+        --            Bitwise.and (z80_core.pc + 4) 0xFFFF
     in
     case z80changeData of
         EDNoOp ->
-            { z80_core | pc = new_pc } |> CoreOnly
+            z80_core |> CoreOnly
 
         Cpir direction repeat ->
             let
-                core =
-                    { z80_core | pc = new_pc }
-
-                ( core2, newTime ) =
-                    core |> cpir direction repeat rom48k clockTime
+                ( core2, newTime, newpc ) =
+                    z80_core |> cpir direction repeat rom48k clockTime pc_in
             in
-            CoreOnly core2
+            core2 |> CoreWithPC newpc
 
         SbcHL reg16type ->
             let
@@ -1159,22 +1109,19 @@ applyEdRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
                 ( flags, main ) =
                     z80_core |> sbc_hl reg
             in
-            { z80_core | pc = new_pc, main = main, flags = flags } |> CoreOnly
+            { z80_core | main = main, flags = flags } |> CoreOnly
 
         Ldir direction repeat ->
             let
-                core =
-                    { z80_core | pc = new_pc }
-
-                ( result, maybeDelay ) =
-                    core |> ldir direction repeat rom48k clockTime
+                ( result, maybeDelay, new_pc ) =
+                    z80_core |> ldir direction repeat rom48k clockTime pc_in
             in
             case maybeDelay of
                 Just a ->
-                    result |> CoreWithTime a
+                    result |> CoreWithPCAndDelay new_pc a
 
                 Nothing ->
-                    result |> CoreOnly
+                    result |> CoreWithPC new_pc
 
         RegChangeIm intMode ->
             let
@@ -1182,8 +1129,7 @@ applyEdRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
                     debugLog "SetInterruptMode" intMode z80_core.interrupts
             in
             { z80_core
-                | pc = new_pc
-                , interrupts = { interrupts | iM = intMode }
+                | interrupts = { interrupts | iM = intMode }
             }
                 |> CoreOnly
 
@@ -1211,10 +1157,10 @@ applyEdRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
 
                 pc2 =
                     if repeat && new_b /= 0 then
-                        z80_core.pc
+                        pc_in - 2
 
                     else
-                        new_pc
+                        pc_in
 
                 new_main =
                     { main | hl = new_hl, b = new_b }
@@ -1230,7 +1176,7 @@ applyEdRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
                 flags =
                     z80_core.flags |> inirOtirFlags d_flag (new_main |> get_bc) in_value.value
             in
-            { z80_core | env = env_2, pc = pc2, flags = flags, main = new_main } |> CoreOnly
+            { z80_core | env = env_2, flags = flags, main = new_main } |> CoreWithPC pc2
 
         Z80OutI direction repeat ->
             let
@@ -1262,15 +1208,15 @@ applyEdRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
 
                 pc2 =
                     if repeat && new_b /= 0 then
-                        z80_core.pc
+                        pc_in - 2
 
                     else
-                        new_pc
+                        pc_in
 
                 flags =
                     z80_core.flags |> inirOtirFlags new_hl new_bc outvalue.value
             in
-            { z80_core | env = env2, flags = flags, pc = pc2, main = main_2 } |> CoreOnly
+            { z80_core | env = env2, flags = flags, main = main_2 } |> CoreWithPC pc2
 
         InRC changeMainRegister ->
             let
@@ -1303,4 +1249,4 @@ applyEdRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
                         ChangeMainL ->
                             { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) in_value.value }
             in
-            { z80_core | pc = new_pc, flags = z80_flags |> f_szh0n0p in_value.value, main = main } |> CoreOnly
+            { z80_core | flags = z80_flags |> f_szh0n0p in_value.value, main = main } |> CoreOnly

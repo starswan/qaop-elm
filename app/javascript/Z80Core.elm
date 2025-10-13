@@ -8,7 +8,6 @@ import Z80Types exposing (InterruptMode(..), InterruptRegisters, MainRegisters, 
 
 type alias Z80Core =
     { env : Z80Env
-    , pc : Int
     , main : MainWithIndexRegisters
     , flags : FlagRegisters
     , interrupts : InterruptRegisters
@@ -18,6 +17,8 @@ type alias Z80Core =
 type CoreChange
     = CoreOnly Z80Core
     | CoreWithTime ShortDelay Z80Core
+    | CoreWithPC Int Z80Core
+    | CoreWithPCAndDelay Int ShortDelay Z80Core
 
 
 type DirectionForLDIR

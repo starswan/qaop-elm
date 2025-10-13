@@ -24,15 +24,13 @@ applyEnvChangeDelta cpu_time z80changeData z80 =
     case z80changeData of
         NewSPValue int ->
             let
-                new_pc =
-                    Bitwise.and (z80.pc + 1) 0xFFFF
-
+                --new_pc =
+                --    Bitwise.and (z80.pc + 1) 0xFFFF
                 env =
                     z80.env
             in
             { z80
-                | pc = new_pc
-                , env = { env | sp = int }
+                | env = { env | sp = int }
             }
 
 

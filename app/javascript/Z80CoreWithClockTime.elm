@@ -13,6 +13,7 @@ import Z80Types exposing (InterruptMode(..), MainRegisters)
 type alias Z80CoreWithClockTime =
     { core : Z80Core
     , clockTime : CpuTimeCTime
+    , pc : Int
     }
 
 
@@ -34,7 +35,7 @@ constructor =
             reset_cpu_time
     in
     --Z80 z80env_constructor 0 main main_flags alternate alt_flags 0 interrupts
-    Z80CoreWithClockTime (Z80Core z80env_constructor 0 main flags interrupts) time
+    Z80CoreWithClockTime (Z80Core z80env_constructor main flags interrupts) time 0
 
 
 type alias Z80 =
@@ -67,8 +68,8 @@ im0 bus z80 =
         z80
 
 
-interrupt : Int -> Z80ROM -> Z80 -> Z80
-interrupt bus rom48k full_z80 =
+interrupt : Int -> Z80ROM -> Int -> Z80 -> Z80
+interrupt bus rom48k pc full_z80 =
     let
         z80Clock =
             full_z80.coreWithClock
@@ -92,7 +93,7 @@ interrupt bus rom48k full_z80 =
                 { z80_core | interrupts = { ints | halted = False, iff = 0 } }
 
             pushed =
-                z80_1.env |> z80_push z80_1.pc z80Clock.clockTime
+                z80_1.env |> z80_push pc z80Clock.clockTime
 
             new_core =
                 { z80_1 | env = pushed }
@@ -123,11 +124,10 @@ interrupt bus rom48k full_z80 =
                     env_and_pc =
                         new_core.env |> mem16 addr rom48k newClock.clockTime
 
-                    core_1 =
-                        { new_core | pc = env_and_pc.value16 }
-
+                    --core_1 =
+                    --    { new_core | pc = env_and_pc.value16 }
                     newClock1 =
-                        { newClock | core = core_1, clockTime = env_and_pc.time |> addCpuTimeTime 6 }
+                        { newClock | pc = env_and_pc.value16, core = new_core, clockTime = env_and_pc.time |> addCpuTimeTime 6 }
                 in
                 { new_z80 | coreWithClock = newClock1 }
 
@@ -169,10 +169,11 @@ set_pc pc z80 =
         clock =
             z80.coreWithClock
 
-        core =
-            clock.core
+        --core =
+        --    clock.core
     in
-    { z80 | coreWithClock = { clock | core = { core | pc = Bitwise.and pc 0xFFFF } } }
+    --{ z80 | coreWithClock = { clock | core = { core | pc = Bitwise.and pc 0xFFFF } } }
+    { z80 | coreWithClock = { clock | pc = Bitwise.and pc 0xFFFF } }
 
 
 get_ei : Z80 -> Bool

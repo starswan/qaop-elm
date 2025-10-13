@@ -2,6 +2,7 @@ module GroupF0Test exposing (..)
 
 import Expect
 import Test exposing (..)
+import Triple
 import Z80 exposing (executeCoreInstruction)
 import Z80CoreWithClockTime
 import Z80Env exposing (setMemWithTime)
@@ -18,11 +19,8 @@ suite =
         clock =
             Z80CoreWithClockTime.constructor
 
-        old_z80 =
-            clock.core
-
         z80 =
-            { old_z80 | pc = addr }
+            clock.core
 
         flags =
             z80.flags
@@ -49,14 +47,15 @@ suite =
                             |> setMemWithTime addr 0xF5
                             |> .z80env
 
-                    new_z80 =
+                    ( new_z80, new_pc ) =
                         executeCoreInstruction z80rom
+                            addr
                             { z80
                                 | env = { new_env | sp = 0xFF77 }
                                 , flags = { flags | a = 0x76 }
                                 , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                             }
-                            |> Tuple.first
+                            |> Triple.dropSecond
 
                     pushed_low =
                         new_z80.env |> mem 0xFF75 clock.clockTime z80rom |> .value
@@ -64,7 +63,7 @@ suite =
                     pushed_high =
                         new_z80.env |> mem 0xFF76 clock.clockTime z80rom |> .value
                 in
-                Expect.equal { pc = addr + 1, sp = 0xFF75, push_lo = 0x40, push_hi = 0x76 } { pc = new_z80.pc, sp = new_z80.env.sp, push_lo = pushed_low, push_hi = pushed_high }
+                Expect.equal { pc = addr + 1, sp = 0xFF75, push_lo = 0x40, push_hi = 0x76 } { pc = new_pc, sp = new_z80.env.sp, push_lo = pushed_low, push_hi = pushed_high }
         , describe "0xF9 LD SP,HL"
             [ test "LD SP,HL" <|
                 \_ ->
@@ -74,15 +73,16 @@ suite =
                                 |> setMemWithTime addr 0xF9
                                 |> .z80env
 
-                        new_z80 =
+                        ( new_z80, new_pc ) =
                             executeCoreInstruction z80rom
+                                addr
                                 { z80
                                     | env = { new_env | sp = 0xFF77 }
                                     , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
-                                |> Tuple.first
+                                |> Triple.dropSecond
                     in
-                    Expect.equal { pc = addr + 1, sp = 0x5050 } { pc = new_z80.pc, sp = new_z80.env.sp }
+                    Expect.equal { pc = addr + 1, sp = 0x5050 } { pc = new_pc, sp = new_z80.env.sp }
             , test "LD SP,IX" <|
                 \_ ->
                     let
@@ -92,15 +92,16 @@ suite =
                                 |> setMemWithTime (addr + 1) 0xF9
                                 |> .z80env
 
-                        new_z80 =
+                        ( new_z80, new_pc ) =
                             executeCoreInstruction z80rom
+                                addr
                                 { z80
                                     | env = { new_env | sp = 0xFF77 }
                                     , main = { z80main | ix = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
-                                |> Tuple.first
+                                |> Triple.dropSecond
                     in
-                    Expect.equal { pc = addr + 2, sp = 0x5050 } { pc = new_z80.pc, sp = new_z80.env.sp }
+                    Expect.equal { pc = addr + 2, sp = 0x5050 } { pc = new_pc, sp = new_z80.env.sp }
             , test "LD SP,IY" <|
                 \_ ->
                     let
@@ -110,14 +111,15 @@ suite =
                                 |> setMemWithTime (addr + 1) 0xF9
                                 |> .z80env
 
-                        new_z80 =
+                        ( new_z80, new_pc ) =
                             executeCoreInstruction z80rom
+                                addr
                                 { z80
                                     | env = { new_env | sp = 0xFF77 }
                                     , main = { z80main | iy = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
-                                |> Tuple.first
+                                |> Triple.dropSecond
                     in
-                    Expect.equal { pc = addr + 2, sp = 0x5050 } { pc = new_z80.pc, sp = new_z80.env.sp }
+                    Expect.equal { pc = addr + 2, sp = 0x5050 } { pc = new_pc, sp = new_z80.env.sp }
             ]
         ]
