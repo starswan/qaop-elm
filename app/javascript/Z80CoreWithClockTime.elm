@@ -133,6 +133,8 @@ interrupt bus rom48k full_z80 =
 
 
 
+--_ ->
+--    new_z80
 --	void pc(int v) {PC = v;}
 
 
