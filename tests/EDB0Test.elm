@@ -3,6 +3,7 @@ module EDB0Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
+import Z80CoreWithClockTime
 import Z80Env exposing (mem, setMemWithTime)
 import Z80Rom
 
@@ -19,8 +20,11 @@ suite =
         hl =
             0x1234
 
+        clock =
+            Z80CoreWithClockTime.constructor
+
         old_z80 =
-            Z80.constructor.core
+            clock.core
 
         old_z80env =
             old_z80.env
@@ -35,7 +39,7 @@ suite =
             z80.flags
 
         z80env =
-            { z80env = z80.env, time = z80.clockTime }
+            { z80env = z80.env, time = clock.clockTime }
 
         z80rom =
             Z80Rom.constructor
@@ -61,16 +65,25 @@ suite =
                                 | env = { new_env | sp = 0xFF77 }
                                 , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                             }
+                            |> Tuple.first
 
                     new_z80 =
-                        z80_1 |> executeCoreInstruction z80rom |> executeCoreInstruction z80rom |> executeCoreInstruction z80rom |> executeCoreInstruction z80rom
+                        z80_1
+                            |> executeCoreInstruction z80rom
+                            |> Tuple.first
+                            |> executeCoreInstruction z80rom
+                            |> Tuple.first
+                            |> executeCoreInstruction z80rom
+                            |> Tuple.first
+                            |> executeCoreInstruction z80rom
+                            |> Tuple.first
 
                     mem_vals =
-                        [ (mem 0x6000 new_z80.clockTime z80rom new_z80.env).value
-                        , (mem 0x6001 new_z80.clockTime z80rom new_z80.env).value
-                        , (mem 0x6002 new_z80.clockTime z80rom new_z80.env).value
-                        , (mem 0x6003 new_z80.clockTime z80rom new_z80.env).value
-                        , (mem 0x6004 new_z80.clockTime z80rom new_z80.env).value
+                        [ (mem 0x6000 clock.clockTime z80rom new_z80.env).value
+                        , (mem 0x6001 clock.clockTime z80rom new_z80.env).value
+                        , (mem 0x6002 clock.clockTime z80rom new_z80.env).value
+                        , (mem 0x6003 clock.clockTime z80rom new_z80.env).value
+                        , (mem 0x6004 clock.clockTime z80rom new_z80.env).value
                         ]
                 in
                 Expect.equal { pc = addr + 2, b = 0x00, c = 0x00, d = 0x60, e = 0x05, hl = 0x5055, mem = [ 0xA0, 0xA5, 0xAA, 0xBA, 0xB5 ] }
@@ -92,9 +105,10 @@ suite =
                                     | env = new_env
                                     , main = { z80main | hl = 0x6545, b = 0x01, c = 0x5F }
                                 }
+                                |> Tuple.first
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 new_z80.clockTime z80rom |> .value
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom |> .value
                     in
                     Expect.equal { pc = addr + 2, hl = 0x6546, b = 0x00, mem = 0xFF } { pc = new_z80.pc, hl = new_z80.main.hl, b = new_z80.main.b, mem = mem_value }
             , test "Looping" <|
@@ -113,9 +127,10 @@ suite =
                                     | env = new_env
                                     , main = { z80main | hl = 0x6545, b = 0x02, c = 0x5F }
                                 }
+                                |> Tuple.first
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 new_z80.clockTime z80rom |> .value
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom |> .value
                     in
                     Expect.equal { pc = addr, hl = 0x6546, b = 0x01, mem = 0xFF } { pc = new_z80.pc, hl = new_z80.main.hl, b = new_z80.main.b, mem = mem_value }
             ]
@@ -136,6 +151,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | hl = 0x6545, b = 0x01, c = 0x5F }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal { pc = addr + 2, hl = 0x6546, b = 0x00 } { pc = new_z80.pc, hl = new_z80.main.hl, b = new_z80.main.b }
             , test "Looping" <|
@@ -154,6 +170,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | hl = 0x6545, b = 0x02, c = 0x5F }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal { pc = addr, hl = 0x6546, b = 0x01 } { pc = new_z80.pc, hl = new_z80.main.hl, b = new_z80.main.b }
             ]
@@ -174,9 +191,10 @@ suite =
                                     | env = new_env
                                     , main = { z80main | hl = 0x6545, b = 0x01, c = 0x5F }
                                 }
+                                |> Tuple.first
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 new_z80.clockTime z80rom |> .value
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom |> .value
                     in
                     Expect.equal { pc = addr + 2, hl = 0x6544, b = 0x00, mem = 0xFF } { pc = new_z80.pc, hl = new_z80.main.hl, b = new_z80.main.b, mem = mem_value }
             , test "Looping" <|
@@ -195,9 +213,10 @@ suite =
                                     | env = new_env
                                     , main = { z80main | hl = 0x6545, b = 0x02, c = 0x5F }
                                 }
+                                |> Tuple.first
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 new_z80.clockTime z80rom |> .value
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom |> .value
                     in
                     Expect.equal { pc = addr, hl = 0x6544, b = 0x01, mem = 0xFF } { pc = new_z80.pc, hl = new_z80.main.hl, b = new_z80.main.b, mem = mem_value }
             ]
@@ -218,6 +237,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | hl = 0x6545, b = 0x01, c = 0x5F }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal { pc = addr + 2, hl = 0x6544, b = 0x00 } { pc = new_z80.pc, hl = new_z80.main.hl, b = new_z80.main.b }
             , test "Looping" <|
@@ -236,6 +256,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | hl = 0x6545, b = 0x02, c = 0x5F }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal { pc = addr, hl = 0x6544, b = 0x01 } { pc = new_z80.pc, hl = new_z80.main.hl, b = new_z80.main.b }
             ]

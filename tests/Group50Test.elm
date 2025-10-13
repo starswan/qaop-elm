@@ -3,6 +3,7 @@ module Group50Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
+import Z80CoreWithClockTime
 import Z80Env exposing (setMemWithTime)
 import Z80Rom
 
@@ -13,14 +14,17 @@ suite =
         addr =
             30000
 
+        clock =
+            Z80CoreWithClockTime.constructor
+
         old_z80 =
-            Z80.constructor.core
+            clock.core
 
         z80 =
             { old_z80 | pc = addr }
 
         z80env =
-            { z80env = z80.env, time = z80.clockTime }
+            { z80env = z80.env, time = clock.clockTime }
 
         z80main =
             z80.main
@@ -45,6 +49,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | hl = 0x6545, e = 0x76 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 1, 0x76 ) ( new_z80.pc, new_z80.main.d )
             , test "0x5A LD E,D" <|
@@ -61,6 +66,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | hl = 0x6545, d = 0x34 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 1, 0x34 ) ( new_z80.pc, new_z80.main.e )
             , test "0x5E LD E, (HL)" <|
@@ -78,6 +84,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | hl = 0x6545, d = 0x34 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 1, 0x27 ) ( new_z80.pc, new_z80.main.e )
             ]
@@ -96,6 +103,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | hl = 0x6545, c = 0x76 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 1, 0x65 ) ( new_z80.pc, new_z80.main.d )
             , test "0xDD 0x54 LD D,IXH" <|
@@ -113,6 +121,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | ix = 0x2398, hl = 0x6545, c = 0x76 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 2, 0x23 ) ( new_z80.pc, new_z80.main.d )
             , test "0xFD 0x54 LD D,IYH" <|
@@ -130,6 +139,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | iy = 0x2398, hl = 0x6545, c = 0x76 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 2, 0x23 ) ( new_z80.pc, new_z80.main.d )
             ]
@@ -148,6 +158,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | hl = 0x6545, c = 0x76 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 1, 0x45 ) ( new_z80.pc, new_z80.main.d )
             , test "0xDD 0x55 LD D,IXL" <|
@@ -165,6 +176,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | ix = 0x2398, hl = 0x6545, c = 0x76 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 2, 0x98 ) ( new_z80.pc, new_z80.main.d )
             , test "0xFD 0x55 LD D,IYL" <|
@@ -182,6 +194,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | iy = 0x2398, hl = 0x6545, c = 0x76 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 2, 0x98 ) ( new_z80.pc, new_z80.main.d )
             ]
@@ -201,6 +214,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | b = 0x45, c = 0x46, hl = 0x4546 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 1, 0x78 ) ( z80_after_01.pc, z80_after_01.main.d )
             , test "0xDD56 - LD D,(IX+d)" <|
@@ -220,6 +234,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | b = 0x45, c = 0x46, ix = 0x4547 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 3, 0x78 ) ( z80_after_01.pc, z80_after_01.main.d )
             , test "0xFD56 - LD D,(IY+d)" <|
@@ -239,6 +254,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | b = 0x45, c = 0x46, iy = 0x4547 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 3, 0x78 ) ( z80_after_01.pc, z80_after_01.main.d )
             ]
@@ -257,6 +273,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | hl = 0x6545, c = 0x76 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 1, 0x65 ) ( new_z80.pc, new_z80.main.e )
             , test "0xDD 0x5C LD E,IXH" <|
@@ -274,6 +291,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | ix = 0x2398, hl = 0x6545, c = 0x76 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 2, 0x23 ) ( new_z80.pc, new_z80.main.e )
             , test "0xFD 0x5C LD E,IYH" <|
@@ -291,6 +309,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | iy = 0x2398, hl = 0x6545, c = 0x76 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 2, 0x23 ) ( new_z80.pc, new_z80.main.e )
             ]
@@ -309,6 +328,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | hl = 0x6545, c = 0x76 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 1, 0x45 ) ( new_z80.pc, new_z80.main.e )
             , test "0xDD 0x5D LD E,IXL" <|
@@ -326,6 +346,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | ix = 0x2398, hl = 0x6545, c = 0x76 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 2, 0x98 ) ( new_z80.pc, new_z80.main.e )
             , test "0xFD 0x5D LD E,IYL" <|
@@ -343,6 +364,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | iy = 0x2398, hl = 0x6545, c = 0x76 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 2, 0x98 ) ( new_z80.pc, new_z80.main.e )
             ]
@@ -362,6 +384,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | b = 0x45, c = 0x46, hl = 0x4546 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 1, 0x78 ) ( z80_after_01.pc, z80_after_01.main.e )
             , test "0xDD5E - LD E,(IX+d)" <|
@@ -381,6 +404,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | b = 0x45, c = 0x46, ix = 0x4547 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 3, 0x78 ) ( z80_after_01.pc, z80_after_01.main.e )
             , test "0xFD5E - LD E,(IY+d)" <|
@@ -400,6 +424,7 @@ suite =
                                     | env = new_env
                                     , main = { z80main | b = 0x45, c = 0x46, iy = 0x4547 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 3, 0x78 ) ( z80_after_01.pc, z80_after_01.main.e )
             ]
