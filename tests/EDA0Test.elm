@@ -3,6 +3,7 @@ module EDA0Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
+import Z80CoreWithClockTime
 import Z80Env exposing (mem, setMemWithTime)
 import Z80Rom
 
@@ -19,8 +20,11 @@ suite =
         hl =
             0x1234
 
+        clock =
+            Z80CoreWithClockTime.constructor
+
         old_z80 =
-            Z80.constructor.core
+            clock.core
 
         old_z80env =
             old_z80.env
@@ -35,7 +39,7 @@ suite =
             z80.flags
 
         z80env =
-            { z80env = z80.env, time = z80.clockTime }
+            { z80env = z80.env, time = clock.clockTime }
 
         z80rom =
             Z80Rom.constructor
@@ -58,9 +62,10 @@ suite =
                                 | env = new_env
                                 , main = { z80main | hl = 0x6545, b = 0xA5, c = 0x5F }
                             }
+                            |> Tuple.first
 
                     mem_value =
-                        new_z80.env |> mem 0x6545 new_z80.clockTime z80rom |> .value
+                        new_z80.env |> mem 0x6545 clock.clockTime z80rom |> .value
                 in
                 Expect.equal { pc = addr + 2, hl = 0x6546, b = 0xA4, mem = 0xFF } { pc = new_z80.pc, hl = new_z80.main.hl, b = new_z80.main.b, mem = mem_value }
         , test "0xEDA3 OUTI" <|
@@ -79,6 +84,7 @@ suite =
                                 | env = new_env
                                 , main = { z80main | hl = 0x6545, b = 0xA5, c = 0x5F }
                             }
+                            |> Tuple.first
                 in
                 Expect.equal { pc = addr + 2, hl = 0x6546, b = 0xA4 } { pc = new_z80.pc, hl = new_z80.main.hl, b = new_z80.main.b }
         , test "0xEDAA IND" <|
@@ -97,9 +103,10 @@ suite =
                                 | env = new_env
                                 , main = { z80main | hl = 0x6545, b = 0xA5, c = 0x5F }
                             }
+                            |> Tuple.first
 
                     mem_value =
-                        new_z80.env |> mem 0x6545 new_z80.clockTime z80rom |> .value
+                        new_z80.env |> mem 0x6545 clock.clockTime z80rom |> .value
                 in
                 Expect.equal { pc = addr + 2, hl = 0x6544, b = 0xA4, mem = 0xFF } { pc = new_z80.pc, hl = new_z80.main.hl, b = new_z80.main.b, mem = mem_value }
         , test "0xEDAB OUTD" <|
@@ -118,6 +125,7 @@ suite =
                                 | env = new_env
                                 , main = { z80main | hl = 0x6545, b = 0xA5, c = 0x5F }
                             }
+                            |> Tuple.first
                 in
                 Expect.equal { pc = addr + 2, hl = 0x6544, b = 0xA4 } { pc = new_z80.pc, hl = new_z80.main.hl, b = new_z80.main.b }
         ]
