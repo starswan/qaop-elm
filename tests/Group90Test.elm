@@ -3,6 +3,7 @@ module Group90Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
+import Z80CoreWithClockTime
 import Z80Env exposing (setMemWithTime)
 import Z80Rom
 
@@ -13,8 +14,11 @@ suite =
         addr =
             30000
 
+        clock =
+            Z80CoreWithClockTime.constructor
+
         old_z80 =
-            Z80.constructor.core
+            clock.core
 
         z80 =
             { old_z80 | pc = addr }
@@ -23,7 +27,7 @@ suite =
             z80.flags
 
         z80env =
-            { z80env = z80.env, time = z80.clockTime }
+            { z80env = z80.env, time = clock.clockTime }
 
         z80main =
             z80.main
@@ -49,6 +53,7 @@ suite =
                                     , flags = { flags | a = 0x76 }
                                     , main = { z80main | hl = 0x5080, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal { pc = addr + 1, a = 0x26 } { pc = new_z80.pc, a = new_z80.flags.a }
             , test "SUB IXH" <|
@@ -67,6 +72,7 @@ suite =
                                     , flags = { flags | a = 0x76 }
                                     , main = { z80main | ix = 0x5052, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal { pc = addr + 2, a = 0x26 } { pc = new_z80.pc, a = new_z80.flags.a }
             , test "SUB IYH" <|
@@ -85,6 +91,7 @@ suite =
                                     , flags = { flags | a = 0x76 }
                                     , main = { z80main | iy = 0x5052, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal { pc = addr + 2, a = 0x26 } { pc = new_z80.pc, a = new_z80.flags.a }
             ]
@@ -104,6 +111,7 @@ suite =
                                     , flags = { flags | a = 0x76 }
                                     , main = { z80main | hl = 0x3050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal { pc = addr + 1, a = 0x26 } { pc = new_z80.pc, a = new_z80.flags.a }
             , test "SUB IXL" <|
@@ -122,6 +130,7 @@ suite =
                                     , flags = { flags | a = 0x76 }
                                     , main = { z80main | ix = 0x5052, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal { pc = addr + 2, a = 0x24 } { pc = new_z80.pc, a = new_z80.flags.a }
             , test "SUB IYL" <|
@@ -140,6 +149,7 @@ suite =
                                     , flags = { flags | a = 0x76 }
                                     , main = { z80main | iy = 0x2050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal { pc = addr + 2, a = 0x26 } { pc = new_z80.pc, a = new_z80.flags.a }
             ]
@@ -160,6 +170,7 @@ suite =
                                     , flags = { flags | a = 0x76 }
                                     , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal { pc = addr + 1, a = 0x65 } { pc = new_z80.pc, a = new_z80.flags.a }
             , test "0xDD 0x96 0x01 SUB (IX + n)" <|
@@ -180,6 +191,7 @@ suite =
                                     , flags = { flags | a = 0x76 }
                                     , main = { z80main | ix = 0x5052, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal { pc = addr + 3, a = 0x65 } { pc = new_z80.pc, a = new_z80.flags.a }
             , test "0xFD 0x96 0x01 SUB (IY + n)" <|
@@ -200,6 +212,7 @@ suite =
                                     , flags = { flags | a = 0x76 }
                                     , main = { z80main | iy = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal { pc = addr + 3, a = 0x65 } { pc = new_z80.pc, a = new_z80.flags.a }
             ]
@@ -238,6 +251,7 @@ suite =
                                     , flags = { flags | a = 0x76 }
                                     , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal { pc = addr + 1, a = 0x26 } { pc = new_z80.pc, a = new_z80.flags.a }
             , test "SBC IXH" <|
@@ -256,6 +270,7 @@ suite =
                                     , flags = { flags | a = 0x76 }
                                     , main = { z80main | ix = 0x5052, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal { pc = addr + 2, a = 0x26 } { pc = new_z80.pc, a = new_z80.flags.a }
             , test "SBC IYH" <|
@@ -274,6 +289,7 @@ suite =
                                     , flags = { flags | a = 0x76 }
                                     , main = { z80main | iy = 0x5054, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal { pc = addr + 2, a = 0x26 } { pc = new_z80.pc, a = new_z80.flags.a }
             ]
@@ -293,6 +309,7 @@ suite =
                                     , flags = { flags | a = 0x76 }
                                     , main = { z80main | hl = 0x2050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal { pc = addr + 1, a = 0x26 } { pc = new_z80.pc, a = new_z80.flags.a }
             , test "SBC IXL" <|
@@ -311,6 +328,7 @@ suite =
                                     , flags = { flags | a = 0x76 }
                                     , main = { z80main | ix = 0x5052, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal { pc = addr + 2, a = 0x24 } { pc = new_z80.pc, a = new_z80.flags.a }
             , test "SBC IYL" <|
@@ -329,6 +347,7 @@ suite =
                                     , flags = { flags | a = 0x76 }
                                     , main = { z80main | iy = 0x2050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal { pc = addr + 2, a = 0x26 } { pc = new_z80.pc, a = new_z80.flags.a }
             ]
@@ -349,6 +368,7 @@ suite =
                                     , flags = { flags | a = 0x76, ff = 0x0100 }
                                     , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal { pc = addr + 1, a = 0x64 } { pc = new_z80.pc, a = new_z80.flags.a }
             , test "0xDD 0x9E SBC (IX + n)" <|
@@ -369,6 +389,7 @@ suite =
                                     , flags = { flags | a = 0x76, ff = 0x0100 }
                                     , main = { z80main | ix = 0x5052, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal { pc = addr + 3, a = 0x64 } { pc = new_z80.pc, a = new_z80.flags.a }
             , test "0xFD 0x9E 0x01 SBC (IY + n)" <|
@@ -389,6 +410,7 @@ suite =
                                     , flags = { flags | a = 0x76, ff = 0x0100 }
                                     , main = { z80main | iy = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal { pc = addr + 3, a = 0x64 } { pc = new_z80.pc, a = new_z80.flags.a }
             ]

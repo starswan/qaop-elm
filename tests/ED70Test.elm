@@ -3,6 +3,7 @@ module ED70Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
+import Z80CoreWithClockTime
 import Z80Env exposing (setMemWithTime)
 import Z80Rom
 
@@ -19,8 +20,11 @@ suite =
         hl =
             0x1234
 
+        clock =
+            Z80CoreWithClockTime.constructor
+
         old_z80 =
-            Z80.constructor.core
+            clock.core
 
         old_z80env =
             old_z80.env
@@ -35,7 +39,7 @@ suite =
             z80.flags
 
         z80env =
-            { z80env = z80.env, time = z80.clockTime }
+            { z80env = z80.env, time = clock.clockTime }
 
         z80rom =
             Z80Rom.constructor
@@ -59,6 +63,7 @@ suite =
                                     , main = { z80main | hl = 0x6545, b = 0xA5, c = 0x5E }
                                     , flags = { flags | a = 0x39 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal { pc = addr + 2, fr = 0xBF, a = 0xBF } { pc = new_z80.pc, fr = new_z80.flags.fr, a = new_z80.flags.a }
             , test "0xED 0x7B LD SP,(nn)" <|
@@ -82,6 +87,7 @@ suite =
                                     , main = { z80main | hl = 0x6545 }
                                     , flags = { flags | a = 0x47 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 4, 0x0201 ) ( new_z80.pc, new_z80.env.sp )
             ]

@@ -1,7 +1,7 @@
 module SingleEnvWithMain exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, InstructionDuration(..), addDuration)
+import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, InstructionDuration(..))
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
 import Utils exposing (BitTest, shiftLeftBy8, shiftRightBy8)
@@ -61,8 +61,8 @@ singleEnvMainRegsIY =
         ]
 
 
-applySingleEnvMainChange : PCIncrement -> InstructionDuration -> SingleEnvMainChange -> Z80ROM -> Z80Core -> Z80Core
-applySingleEnvMainChange pcInc duration z80changeData rom48k z80 =
+applySingleEnvMainChange : PCIncrement -> CpuTimeCTime -> SingleEnvMainChange -> Z80ROM -> Z80Core -> Z80Core
+applySingleEnvMainChange pcInc clockTime z80changeData rom48k z80 =
     let
         new_pc =
             case pcInc of
@@ -87,7 +87,6 @@ applySingleEnvMainChange pcInc duration z80changeData rom48k z80 =
             { z80
                 | pc = new_pc
                 , flags = { flags | a = int }
-                , clockTime = cpuTimeCTime
             }
 
         SingleEnv8BitMain eightBit int cpuTimeCTime ->
@@ -112,7 +111,6 @@ applySingleEnvMainChange pcInc duration z80changeData rom48k z80 =
             { z80
                 | pc = new_pc
                 , main = main_1
-                , clockTime = cpuTimeCTime
             }
 
         SingleEnvNewHLRegister int cpuTimeCTime ->
@@ -123,21 +121,19 @@ applySingleEnvMainChange pcInc duration z80changeData rom48k z80 =
             { z80
                 | pc = new_pc
                 , main = { main | hl = int }
-                , clockTime = cpuTimeCTime
             }
 
         IndirectBitTest bitTest mp_address ->
             -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
             let
                 value =
-                    z80.env |> mem mp_address z80.clockTime rom48k
+                    z80.env |> mem mp_address clockTime rom48k
 
                 new_flags =
                     z80.flags |> testBit bitTest value.value
             in
             { z80
                 | pc = new_pc
-                , clockTime = value.time
                 , flags = { new_flags | ff = new_flags.ff |> Bitwise.and (Bitwise.complement c_F53) |> Bitwise.or (mp_address |> shiftRightBy8 |> Bitwise.and c_F53) }
             }
 
@@ -149,7 +145,6 @@ applySingleEnvMainChange pcInc duration z80changeData rom48k z80 =
             { z80
                 | pc = new_pc
                 , flags = flags |> changeFlags flagFunc int
-                , clockTime = cpuTimeCTime
             }
 
         SingleEnvNewHL16BitAdd ixiyhl hl sp ->
@@ -159,7 +154,6 @@ applySingleEnvMainChange pcInc duration z80changeData rom48k z80 =
             in
             { z80
                 | pc = new_pc
-                , clockTime = z80.clockTime |> addDuration duration
                 , flags = new_xy.flags
                 , main = z80.main |> set_xy new_xy.value ixiyhl
             }

@@ -4,6 +4,7 @@ import Bitwise exposing (shiftRightBy)
 import Expect
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
+import Z80CoreWithClockTime
 import Z80Env exposing (setMemWithTime)
 import Z80Mem exposing (m1, mem)
 import Z80Rom
@@ -18,8 +19,11 @@ suite =
         sp =
             0xF765
 
+        clock =
+            Z80CoreWithClockTime.constructor
+
         old_z80 =
-            Z80.constructor.core
+            clock.core
 
         old_z80env =
             old_z80.env
@@ -31,7 +35,7 @@ suite =
             z80.flags
 
         z80env =
-            { z80env = z80.env, time = z80.clockTime }
+            { z80env = z80.env, time = clock.clockTime }
 
         z80main =
             z80.main
@@ -57,6 +61,7 @@ suite =
                                 | env = { new_env | sp = 0xFF77 }
                                 , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                             }
+                            |> Tuple.first
                 in
                 Expect.equal { pc = addr + 1, b = 0x56, c = 0x16, sp = 0xFF79 } { sp = new_z80.env.sp, pc = new_z80.pc, b = new_z80.main.b, c = new_z80.main.c }
         , describe "0xC2 - JP NZ,nn"
@@ -76,6 +81,7 @@ suite =
                                     | env = new_env
                                     , flags = { flags | a = 0x39 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal (addr + 3) new_z80.pc
             , test "Jump" <|
@@ -94,6 +100,7 @@ suite =
                                     | env = new_env
                                     , flags = { flags | a = 0x39, fr = 1 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal 0x3405 new_z80.pc
             ]
@@ -114,6 +121,7 @@ suite =
                                     | env = new_env
                                     , flags = { flags | a = 0x39 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 3, 0xF765 ) ( new_z80.pc, new_z80.env.sp )
             , test "Jump" <|
@@ -132,6 +140,7 @@ suite =
                                     | env = new_env
                                     , flags = { flags | a = 0x39, fr = 1 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( 0x3405, 0xF763 ) ( new_z80.pc, new_z80.env.sp )
             ]
@@ -151,6 +160,7 @@ suite =
                                 , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                                 , flags = { flags | a = 0x60 }
                             }
+                            |> Tuple.first
                 in
                 Expect.equal { pc = addr + 2, a = 0x76 }
                     { pc = new_z80.pc, a = new_z80.flags.a }
@@ -171,6 +181,7 @@ suite =
                                     | env = new_env
                                     , flags = { flags | a = 0x39, fr = 1 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal (addr + 3) new_z80.pc
             , test "Jump" <|
@@ -189,6 +200,7 @@ suite =
                                     | env = new_env
                                     , flags = { flags | a = 0x39, fr = 0 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal 0x3405 new_z80.pc
             ]
@@ -217,15 +229,16 @@ suite =
                                 , flags = { flags | a = 0x30 }
                             }
                                 |> executeCoreInstruction z80rom
+                                |> Tuple.first
 
                         lo_value =
-                            z80_1.env |> mem stackp z80.clockTime z80rom |> .value
+                            z80_1.env |> mem stackp clock.clockTime z80rom |> .value
 
                         high_value =
-                            z80_1.env |> mem (stackp + 1) z80.clockTime z80rom |> .value
+                            z80_1.env |> mem (stackp + 1) clock.clockTime z80rom |> .value
 
                         z80_2 =
-                            z80_1 |> executeCoreInstruction z80rom
+                            z80_1 |> executeCoreInstruction z80rom |> Tuple.first
                     in
                     Expect.equal
                         { addr = start, sp1 = stackp, stack_low = 4, stack_high = 0x50, addr4 = start + 4, sp2 = stackp + 2 }
