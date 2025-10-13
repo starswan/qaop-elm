@@ -354,7 +354,7 @@ runOrdinary ct_value instrTime rom48k z80_core =
                                         param =
                                             z80_core.env |> mem (Bitwise.and (z80_core.pc + 1) 0xFFFF) newTime rom48k
                                     in
-                                    JumpChangeDelta param.time (f param.value z80_core.flags)
+                                    JumpChangeDelta param.time (f param.value z80_core.pc z80_core.flags)
 
                                 Nothing ->
                                     case singleEnvMainRegs |> Dict.get ct_value of

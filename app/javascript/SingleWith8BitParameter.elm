@@ -1,10 +1,10 @@
 module SingleWith8BitParameter exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (InstructionDuration(..))
+import CpuTimeCTime exposing (InstructionDuration(..), ShortDelay(..))
 import Dict exposing (Dict)
 import Utils exposing (byte, shiftLeftBy8)
-import Z80Flags exposing (FlagFunc(..), FlagRegisters, adc, sbc, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
+import Z80Flags exposing (FlagFunc(..), FlagRegisters, adc, jump_c, jump_nc, jump_nz, jump_z, sbc, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
 import Z80Types exposing (MainWithIndexRegisters)
 
 
@@ -18,7 +18,7 @@ singleWith8BitParam =
         ]
 
 
-maybeRelativeJump : Dict Int ( Int -> FlagRegisters -> JumpChange, InstructionDuration )
+maybeRelativeJump : Dict Int ( Int -> Int -> FlagRegisters -> JumpChange, InstructionDuration )
 maybeRelativeJump =
     Dict.fromList
         [ ( 0x18, ( jr_n, TwelveTStates ) )
@@ -48,11 +48,12 @@ type Single8BitChange
 
 
 type JumpChange
-    = ActualJump Int
-    | NoJump
+    = Z80Out Int Int
+    | ActualJump Int
+      --| NoJump
     | FlagJump FlagRegisters
-    | Z80Out Int Int
     | Z80In Int
+    | ConditionalJump Int ShortDelay (FlagRegisters -> Bool)
 
 
 applySimple8BitChange : Single8BitChange -> MainWithIndexRegisters -> MainWithIndexRegisters
@@ -97,56 +98,61 @@ ld_e_n param =
     NewERegister param
 
 
-jr_n : Int -> FlagRegisters -> JumpChange
-jr_n param _ =
+jr_n : Int -> Int -> FlagRegisters -> JumpChange
+jr_n param pc _ =
     -- case 0x18: MP=PC=(char)(PC+1+(byte)env.mem(PC)); time+=8; break;
     -- This is just an inlined jr() call
     --z80 |> set_pc dest |> add_cpu_time 8
-    ActualJump (byte param)
+    --ActualJump (byte param)
+    ActualJump (pc + 2 + byte param |> Bitwise.and 0xFFFF)
 
 
-jr_nz_d : Int -> FlagRegisters -> JumpChange
-jr_nz_d param z80_flags =
+jr_nz_d : Int -> Int -> FlagRegisters -> JumpChange
+jr_nz_d param pc z80_flags =
     -- case 0x20: if(Fr!=0) jr(); else imm8(); break;
-    if z80_flags.fr /= 0 then
-        ActualJump (byte param)
+    --if z80_flags.fr /= 0 then
+    --    ActualJump (byte param)
+    --
+    --else
+    --    NoJump
+    ConditionalJump (pc + 2 + byte param) FiveExtraTStates jump_nz
 
-    else
-        NoJump
 
-
-jr_z_d : Int -> FlagRegisters -> JumpChange
-jr_z_d param z80_flags =
+jr_z_d : Int -> Int -> FlagRegisters -> JumpChange
+jr_z_d param pc z80_flags =
     -- case 0x28: if(Fr==0) jr(); else imm8(); break;
-    if z80_flags.fr == 0 then
-        ActualJump (byte param)
+    --if z80_flags.fr == 0 then
+    --    ActualJump (byte param)
+    --
+    --else
+    --    NoJump
+    ConditionalJump (pc + 2 + byte param) FiveExtraTStates jump_z
 
-    else
-        NoJump
 
-
-jr_nc_d : Int -> FlagRegisters -> JumpChange
-jr_nc_d param z80_flags =
+jr_nc_d : Int -> Int -> FlagRegisters -> JumpChange
+jr_nc_d param pc z80_flags =
     -- case 0x30: if((Ff&0x100)==0) jr(); else imm8(); break;
-    if Bitwise.and z80_flags.ff 0x0100 == 0 then
-        ActualJump (byte param)
+    --if Bitwise.and z80_flags.ff 0x0100 == 0 then
+    --    ActualJump (byte param)
+    --
+    --else
+    --    NoJump
+    ConditionalJump (pc + 2 + byte param) FiveExtraTStates jump_nc
 
-    else
-        NoJump
 
-
-jr_c_d : Int -> FlagRegisters -> JumpChange
-jr_c_d param z80_flags =
+jr_c_d : Int -> Int -> FlagRegisters -> JumpChange
+jr_c_d param pc z80_flags =
     -- case 0x38: if((Ff&0x100)!=0) jr(); else imm8(); break;
-    if Bitwise.and z80_flags.ff 0x0100 /= 0 then
-        ActualJump (byte param)
+    --if Bitwise.and z80_flags.ff 0x0100 /= 0 then
+    --    ActualJump (byte param)
+    --
+    --else
+    --    NoJump
+    ConditionalJump (pc + 2 + byte param) FiveExtraTStates jump_c
 
-    else
-        NoJump
 
-
-add_a_n : Int -> FlagRegisters -> JumpChange
-add_a_n param z80_flags =
+add_a_n : Int -> Int -> FlagRegisters -> JumpChange
+add_a_n param _ z80_flags =
     -- case 0xC6: add(imm8()); break;
     let
         --v =
@@ -160,8 +166,8 @@ add_a_n param z80_flags =
     FlagJump flags
 
 
-adc_n : Int -> FlagRegisters -> JumpChange
-adc_n param z80_flags =
+adc_n : Int -> Int -> FlagRegisters -> JumpChange
+adc_n param _ z80_flags =
     -- case 0xCE: adc(imm8()); break;
     let
         --v =
@@ -175,8 +181,8 @@ adc_n param z80_flags =
     FlagJump flags
 
 
-sub_n : Int -> FlagRegisters -> JumpChange
-sub_n param z80_flags =
+sub_n : Int -> Int -> FlagRegisters -> JumpChange
+sub_n param _ z80_flags =
     -- case 0xD6: sub(imm8()); break;
     let
         --v = imm8 z80.pc z80.env.time rom48k z80.env.ram
@@ -189,14 +195,14 @@ sub_n param z80_flags =
     FlagJump flags
 
 
-sbc_a_n : Int -> FlagRegisters -> JumpChange
-sbc_a_n param z80_flags =
+sbc_a_n : Int -> Int -> FlagRegisters -> JumpChange
+sbc_a_n param _ z80_flags =
     -- case 0xDE: sbc(imm8()); break;
     z80_flags |> sbc param |> FlagJump
 
 
-and_n : Int -> FlagRegisters -> JumpChange
-and_n param z80_flags =
+and_n : Int -> Int -> FlagRegisters -> JumpChange
+and_n param _ z80_flags =
     -- case 0xE6: and(imm8()); break;
     let
         --a =
@@ -214,8 +220,8 @@ and_n param z80_flags =
     FlagJump flags
 
 
-xor_n : Int -> FlagRegisters -> JumpChange
-xor_n param z80_flags =
+xor_n : Int -> Int -> FlagRegisters -> JumpChange
+xor_n param _ z80_flags =
     -- case 0xEE: xor(imm8()); break;
     let
         --v =
@@ -229,8 +235,8 @@ xor_n param z80_flags =
     FlagJump flags
 
 
-or_n : Int -> FlagRegisters -> JumpChange
-or_n param z80_flags =
+or_n : Int -> Int -> FlagRegisters -> JumpChange
+or_n param _ z80_flags =
     -- case 0xF6: or(imm8()); break;
     let
         --a = imm8 z80.pc z80.env.time rom48k z80.env.ram
@@ -243,8 +249,8 @@ or_n param z80_flags =
     FlagJump flags
 
 
-cp_n : Int -> FlagRegisters -> JumpChange
-cp_n param z80_flags =
+cp_n : Int -> Int -> FlagRegisters -> JumpChange
+cp_n param _ z80_flags =
     -- case 0xFE: cp(imm8()); break;
     let
         flags =
@@ -253,8 +259,8 @@ cp_n param z80_flags =
     FlagJump flags
 
 
-ld_a_n : Int -> FlagRegisters -> JumpChange
-ld_a_n param z80_flags =
+ld_a_n : Int -> Int -> FlagRegisters -> JumpChange
+ld_a_n param _ z80_flags =
     -- case 0x3E: A=imm8(); break;
     --let
     --v =
@@ -266,8 +272,8 @@ ld_a_n param z80_flags =
     FlagJump { z80_flags | a = param }
 
 
-out_n_a : Int -> FlagRegisters -> JumpChange
-out_n_a param z80_flags =
+out_n_a : Int -> Int -> FlagRegisters -> JumpChange
+out_n_a param _ z80_flags =
     -- case 0xD3: env.out(v=imm8()|A<<8,A); MP=v+1&0xFF|v&0xFF00; time+=4; break;
     let
         portNum =
@@ -276,8 +282,8 @@ out_n_a param z80_flags =
     Z80Out portNum z80_flags.a
 
 
-in_a_n : Int -> FlagRegisters -> JumpChange
-in_a_n param z80_flags =
+in_a_n : Int -> Int -> FlagRegisters -> JumpChange
+in_a_n param _ z80_flags =
     -- case 0xDB: MP=(v=imm8()|A<<8)+1; A=env.in(v); time+=4; break;
     let
         portNum =
