@@ -4,7 +4,7 @@ import Bitwise
 import CpuTimeCTime exposing (InstructionDuration(..), ShortDelay(..))
 import Dict exposing (Dict)
 import Utils exposing (byte, shiftLeftBy8)
-import Z80Flags exposing (FlagFunc(..), FlagRegisters, adc, jump_c, jump_nc, jump_nz, jump_z, sbc, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
+import Z80Flags exposing (FlagFunc(..), FlagRegisters, jump_c, jump_nc, jump_nz, jump_z)
 import Z80Types exposing (MainWithIndexRegisters)
 
 
@@ -50,10 +50,10 @@ type Single8BitChange
 type JumpChange
     = Z80Out Int Int
     | ActualJump Int
-      --| NoJump
-    | FlagJump FlagRegisters
+    | FlagJump FlagFunc Int
     | Z80In Int
     | ConditionalJump Int ShortDelay (FlagRegisters -> Bool)
+    | NewARegister Int
 
 
 applySimple8BitChange : Single8BitChange -> MainWithIndexRegisters -> MainWithIndexRegisters
@@ -154,122 +154,92 @@ jr_c_d param pc z80_flags =
 add_a_n : Int -> Int -> FlagRegisters -> JumpChange
 add_a_n param _ z80_flags =
     -- case 0xC6: add(imm8()); break;
-    let
-        --v =
-        --    imm8 z80.pc z80.env.time rom48k z80.env.ram
-        --env_1 = z80.env
-        --z80_1 = { z80 | env = { env_1 | time = v.time }, pc = v.pc }
-        flags =
-            z80_flags |> z80_add param
-    in
-    --{ z80_1 | flags = flags }
-    FlagJump flags
+    --let
+    --    flags =
+    --        z80_flags |> z80_add param
+    --in
+    --FlagJump flags
+    FlagJump AddA param
 
 
 adc_n : Int -> Int -> FlagRegisters -> JumpChange
 adc_n param _ z80_flags =
     -- case 0xCE: adc(imm8()); break;
-    let
-        --v =
-        --    imm8 z80.pc z80.env.time rom48k z80.env.ram
-        flags =
-            z80_flags |> adc param
-
-        --env_1 = z80.env
-    in
-    --{z80 | pc = v.pc, env = { env_1 | time = v.time }, flags = flags }
-    FlagJump flags
+    --let
+    --    flags =
+    --        z80_flags |> adc param
+    --in
+    --FlagJump flags
+    FlagJump AdcA param
 
 
 sub_n : Int -> Int -> FlagRegisters -> JumpChange
 sub_n param _ z80_flags =
     -- case 0xD6: sub(imm8()); break;
-    let
-        --v = imm8 z80.pc z80.env.time rom48k z80.env.ram
-        flags =
-            z80_flags |> z80_sub param
-
-        --env_1 = z80.env
-    in
-    --{ z80 | flags = flags, env = { env_1 | time = v.time }, pc = v.pc }
-    FlagJump flags
+    --let
+    --    flags =
+    --        z80_flags |> z80_sub param
+    --in
+    --FlagJump flags
+    FlagJump SubA param
 
 
 sbc_a_n : Int -> Int -> FlagRegisters -> JumpChange
 sbc_a_n param _ z80_flags =
     -- case 0xDE: sbc(imm8()); break;
-    z80_flags |> sbc param |> FlagJump
+    --z80_flags |> sbc param |> FlagJump
+    FlagJump SbcA param
 
 
 and_n : Int -> Int -> FlagRegisters -> JumpChange
 and_n param _ z80_flags =
     -- case 0xE6: and(imm8()); break;
-    let
-        --a =
-        --    imm8 z80.pc z80.env.time rom48k z80.env.ram
-        --
-        --env_1 =
-        --    z80.env
-        --
-        --z80_1 =
-        --    { z80 | env = { env_1 | time = a.time }, pc = a.pc }
-        flags =
-            z80_flags |> z80_and param
-    in
-    --{ z80_1 | flags = flags }
-    FlagJump flags
+    --let
+    --    flags =
+    --        z80_flags |> z80_and param
+    --in
+    --FlagJump flags
+    FlagJump AndA param
 
 
 xor_n : Int -> Int -> FlagRegisters -> JumpChange
 xor_n param _ z80_flags =
     -- case 0xEE: xor(imm8()); break;
-    let
-        --v =
-        --    imm8 z80.pc z80.env.time rom48k z80.env.ram
-        --env_1 = z80.env
-        --z80_1 = { z80 | env = { env_1 | time = v.time }, pc = v.pc }
-        flags =
-            z80_flags |> z80_xor param
-    in
-    --{ z80_1 | flags = flags }
-    FlagJump flags
+    --let
+    --    flags =
+    --        z80_flags |> z80_xor param
+    --in
+    --FlagJump flags
+    FlagJump XorA param
 
 
 or_n : Int -> Int -> FlagRegisters -> JumpChange
 or_n param _ z80_flags =
     -- case 0xF6: or(imm8()); break;
-    let
-        --a = imm8 z80.pc z80.env.time rom48k z80.env.ram
-        --env_1 = z80.env
-        --z80_1 = { z80 | env = { env_1 | time = a.time }, pc = a.pc }
-        flags =
-            z80_flags |> z80_or param
-    in
-    --{ z80_1 | flags = flags }
-    FlagJump flags
+    --let
+    --    flags =
+    --        z80_flags |> z80_or param
+    --in
+    --FlagJump flags
+    FlagJump OrA param
 
 
 cp_n : Int -> Int -> FlagRegisters -> JumpChange
 cp_n param _ z80_flags =
     -- case 0xFE: cp(imm8()); break;
-    let
-        flags =
-            z80_flags |> z80_cp param
-    in
-    FlagJump flags
+    --let
+    --    flags =
+    --        z80_flags |> z80_cp param
+    --in
+    --FlagJump flags
+    FlagJump CpA param
 
 
 ld_a_n : Int -> Int -> FlagRegisters -> JumpChange
 ld_a_n param _ z80_flags =
     -- case 0x3E: A=imm8(); break;
-    --let
-    --v =
-    --    imm8 z80.pc z80.env.time rom48k z80.env.ram
-    --new_z80 = { z80 | env = v.env, pc = v.pc }
-    --in
-    --{ new_z80 | flags = { z80_flags | a = v.value } }
-    --CpuTimeWithFlagsAndPc v.time { z80_flags | a = v.value } v.pc
-    FlagJump { z80_flags | a = param }
+    --FlagJump { z80_flags | a = param }
+    NewARegister param
 
 
 out_n_a : Int -> Int -> FlagRegisters -> JumpChange

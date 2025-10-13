@@ -1,7 +1,7 @@
 module Z80Execute exposing (..)
 
 import Bitwise exposing (shiftLeftBy)
-import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDuration(..), addCpuTimeTime, addDuration, addExtraCpuTime)
+import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDuration(..), addDuration, addExtraCpuTime)
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
 import GroupED exposing (inirOtirFlags)
 import PCIncrement exposing (InterruptPCIncrement(..), MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
@@ -119,10 +119,13 @@ applyJumpChangeDelta cpu_time z80changeData rom48k z80 =
         --        | pc = pc
         --        , clockTime = cpu_time
         --    }
-        FlagJump flags ->
+        FlagJump operation param ->
             let
                 pc =
                     Bitwise.and (z80.pc + 2) 0xFFFF
+
+                flags =
+                    z80.flags |> changeFlags operation param
             in
             { z80
                 | pc = pc
@@ -177,6 +180,20 @@ applyJumpChangeDelta cpu_time z80changeData rom48k z80 =
                     | pc = Bitwise.and (z80.pc + 2) 0xFFFF
                     , clockTime = cpu_time
                 }
+
+        NewARegister new_a ->
+            let
+                pc =
+                    Bitwise.and (z80.pc + 2) 0xFFFF
+
+                flags =
+                    z80.flags
+            in
+            { z80
+                | pc = pc
+                , flags = { flags | a = new_a }
+                , clockTime = cpu_time
+            }
 
 
 applySimple8BitDelta : MediumPCIncrement -> CpuTimeCTime -> Single8BitChange -> Z80Core -> Z80Core
