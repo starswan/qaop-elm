@@ -9,7 +9,7 @@ import Utils exposing (BitTest(..), bitMaskFromBit, inverseBitMaskFromBit, shift
 import Z80Change exposing (Z80Change(..))
 import Z80Env exposing (Z80Env)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit)
-import Z80Registers exposing (ChangeMainRegister(..), ChangeOneRegister(..), EightBitMain(..))
+import Z80Registers exposing (ChangeMainRegister(..), ChangeOneRegister(..), CoreRegister(..))
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IntWithFlagsTimeAndPC, MainWithIndexRegisters)
 

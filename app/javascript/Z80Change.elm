@@ -1,11 +1,11 @@
 module Z80Change exposing (..)
 
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
-import Z80Registers exposing (ChangeMainRegister, EightBitMain)
+import Z80Registers exposing (ChangeMainRegister, CoreRegister)
 
 
 type Z80Change
-    = FlagsWithRegisterChange EightBitMain IntWithFlags
+    = FlagsWithRegisterChange CoreRegister IntWithFlags
     | FlagsWithHLRegister FlagRegisters Int
     | FlagsWithIXRegister FlagRegisters Int
     | FlagsWithIYRegister FlagRegisters Int
@@ -17,7 +17,7 @@ type Z80Change
 
 type FlagChange
     = OnlyFlags FlagRegisters
-    | FlagChange8Bit EightBitMain Int
+    | FlagChange8Bit CoreRegister Int
     | FlagChangeH Int
     | FlagChangeL Int
     | ReturnWithPop

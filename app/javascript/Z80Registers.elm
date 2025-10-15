@@ -20,7 +20,7 @@ type ChangeMainRegister
     | ChangeMainL
 
 
-type EightBitMain
+type CoreRegister
     = RegisterB
     | RegisterC
     | RegisterD

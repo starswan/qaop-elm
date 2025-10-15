@@ -20,7 +20,7 @@ import Z80Debug exposing (debugLog, debugTodo)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..), applyDeltaWithChanges)
 import Z80Env exposing (Z80Env, Z80EnvWithPC, mem, mem16, setMem, setMemIgnoringTime, z80_in, z80_out, z80_pop, z80_push)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, f_szh0n0p, inc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
-import Z80Registers exposing (ChangeMainRegister(..), ChangeOneRegister(..), EightBitMain(..), Single8BitChange)
+import Z80Registers exposing (ChangeMainRegister(..), ChangeOneRegister(..), CoreRegister(..), Single8BitChange)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (InterruptRegisters, MainWithIndexRegisters, get_bc, get_xy, set_bc_main, set_de_main, set_xy)
 
