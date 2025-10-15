@@ -15,6 +15,11 @@ type alias Z80Core =
     }
 
 
+type CoreChange
+    = CoreOnly Z80Core
+    | CoreWithTime ShortDelay Z80Core
+
+
 type DirectionForLDIR
     = Forwards
     | Backwards
