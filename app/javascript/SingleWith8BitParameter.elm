@@ -18,7 +18,7 @@ singleWith8BitParam =
         ]
 
 
-maybeRelativeJump : Dict Int ( Int -> Int -> FlagRegisters -> JumpChange, InstructionDuration )
+maybeRelativeJump : Dict Int ( Int -> Int -> JumpChange, InstructionDuration )
 maybeRelativeJump =
     Dict.fromList
         [ ( 0x18, ( jr_n, TwelveTStates ) )
@@ -98,8 +98,8 @@ ld_e_n param =
     NewERegister param
 
 
-jr_n : Int -> Int -> FlagRegisters -> JumpChange
-jr_n param pc _ =
+jr_n : Int -> Int -> JumpChange
+jr_n param pc =
     -- case 0x18: MP=PC=(char)(PC+1+(byte)env.mem(PC)); time+=8; break;
     -- This is just an inlined jr() call
     --z80 |> set_pc dest |> add_cpu_time 8
@@ -107,8 +107,8 @@ jr_n param pc _ =
     ActualJump (pc + 2 + byte param |> Bitwise.and 0xFFFF)
 
 
-jr_nz_d : Int -> Int -> FlagRegisters -> JumpChange
-jr_nz_d param pc z80_flags =
+jr_nz_d : Int -> Int -> JumpChange
+jr_nz_d param pc =
     -- case 0x20: if(Fr!=0) jr(); else imm8(); break;
     --if z80_flags.fr /= 0 then
     --    ActualJump (byte param)
@@ -118,8 +118,8 @@ jr_nz_d param pc z80_flags =
     ConditionalJump (pc + 2 + byte param) FiveExtraTStates jump_nz
 
 
-jr_z_d : Int -> Int -> FlagRegisters -> JumpChange
-jr_z_d param pc z80_flags =
+jr_z_d : Int -> Int -> JumpChange
+jr_z_d param pc =
     -- case 0x28: if(Fr==0) jr(); else imm8(); break;
     --if z80_flags.fr == 0 then
     --    ActualJump (byte param)
@@ -129,8 +129,8 @@ jr_z_d param pc z80_flags =
     ConditionalJump (pc + 2 + byte param) FiveExtraTStates jump_z
 
 
-jr_nc_d : Int -> Int -> FlagRegisters -> JumpChange
-jr_nc_d param pc z80_flags =
+jr_nc_d : Int -> Int -> JumpChange
+jr_nc_d param pc =
     -- case 0x30: if((Ff&0x100)==0) jr(); else imm8(); break;
     --if Bitwise.and z80_flags.ff 0x0100 == 0 then
     --    ActualJump (byte param)
@@ -140,8 +140,8 @@ jr_nc_d param pc z80_flags =
     ConditionalJump (pc + 2 + byte param) FiveExtraTStates jump_nc
 
 
-jr_c_d : Int -> Int -> FlagRegisters -> JumpChange
-jr_c_d param pc z80_flags =
+jr_c_d : Int -> Int -> JumpChange
+jr_c_d param pc =
     -- case 0x38: if((Ff&0x100)!=0) jr(); else imm8(); break;
     --if Bitwise.and z80_flags.ff 0x0100 /= 0 then
     --    ActualJump (byte param)
@@ -151,8 +151,8 @@ jr_c_d param pc z80_flags =
     ConditionalJump (pc + 2 + byte param) FiveExtraTStates jump_c
 
 
-add_a_n : Int -> Int -> FlagRegisters -> JumpChange
-add_a_n param _ z80_flags =
+add_a_n : Int -> Int -> JumpChange
+add_a_n param _ =
     -- case 0xC6: add(imm8()); break;
     --let
     --    flags =
@@ -162,8 +162,8 @@ add_a_n param _ z80_flags =
     FlagJump AddA param
 
 
-adc_n : Int -> Int -> FlagRegisters -> JumpChange
-adc_n param _ z80_flags =
+adc_n : Int -> Int -> JumpChange
+adc_n param _ =
     -- case 0xCE: adc(imm8()); break;
     --let
     --    flags =
@@ -173,8 +173,8 @@ adc_n param _ z80_flags =
     FlagJump AdcA param
 
 
-sub_n : Int -> Int -> FlagRegisters -> JumpChange
-sub_n param _ z80_flags =
+sub_n : Int -> Int -> JumpChange
+sub_n param _ =
     -- case 0xD6: sub(imm8()); break;
     --let
     --    flags =
@@ -184,15 +184,15 @@ sub_n param _ z80_flags =
     FlagJump SubA param
 
 
-sbc_a_n : Int -> Int -> FlagRegisters -> JumpChange
-sbc_a_n param _ z80_flags =
+sbc_a_n : Int -> Int -> JumpChange
+sbc_a_n param _ =
     -- case 0xDE: sbc(imm8()); break;
     --z80_flags |> sbc param |> FlagJump
     FlagJump SbcA param
 
 
-and_n : Int -> Int -> FlagRegisters -> JumpChange
-and_n param _ z80_flags =
+and_n : Int -> Int -> JumpChange
+and_n param _ =
     -- case 0xE6: and(imm8()); break;
     --let
     --    flags =
@@ -202,8 +202,8 @@ and_n param _ z80_flags =
     FlagJump AndA param
 
 
-xor_n : Int -> Int -> FlagRegisters -> JumpChange
-xor_n param _ z80_flags =
+xor_n : Int -> Int -> JumpChange
+xor_n param _ =
     -- case 0xEE: xor(imm8()); break;
     --let
     --    flags =
@@ -213,8 +213,8 @@ xor_n param _ z80_flags =
     FlagJump XorA param
 
 
-or_n : Int -> Int -> FlagRegisters -> JumpChange
-or_n param _ z80_flags =
+or_n : Int -> Int -> JumpChange
+or_n param _ =
     -- case 0xF6: or(imm8()); break;
     --let
     --    flags =
@@ -224,8 +224,8 @@ or_n param _ z80_flags =
     FlagJump OrA param
 
 
-cp_n : Int -> Int -> FlagRegisters -> JumpChange
-cp_n param _ z80_flags =
+cp_n : Int -> Int -> JumpChange
+cp_n param _ =
     -- case 0xFE: cp(imm8()); break;
     --let
     --    flags =
@@ -235,15 +235,15 @@ cp_n param _ z80_flags =
     FlagJump CpA param
 
 
-ld_a_n : Int -> Int -> FlagRegisters -> JumpChange
-ld_a_n param _ z80_flags =
+ld_a_n : Int -> Int -> JumpChange
+ld_a_n param _ =
     -- case 0x3E: A=imm8(); break;
     --FlagJump { z80_flags | a = param }
     NewARegister param
 
 
-out_n_a : Int -> Int -> FlagRegisters -> JumpChange
-out_n_a param _ z80_flags =
+out_n_a : Int -> Int -> JumpChange
+out_n_a param _ =
     -- case 0xD3: env.out(v=imm8()|A<<8,A); MP=v+1&0xFF|v&0xFF00; time+=4; break;
     --let
     --    portNum =
@@ -253,8 +253,8 @@ out_n_a param _ z80_flags =
     Z80Out param
 
 
-in_a_n : Int -> Int -> FlagRegisters -> JumpChange
-in_a_n param _ z80_flags =
+in_a_n : Int -> Int -> JumpChange
+in_a_n param _ =
     -- case 0xDB: MP=(v=imm8()|A<<8)+1; A=env.in(v); time+=4; break;
     --let
     --    portNum =
