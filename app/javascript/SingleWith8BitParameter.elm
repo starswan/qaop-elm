@@ -48,7 +48,7 @@ type Single8BitChange
 
 
 type JumpChange
-    = Z80Out Int Int
+    = Z80Out Int
     | ActualJump Int
     | FlagJump FlagFunc Int
     | Z80In Int
@@ -245,18 +245,20 @@ ld_a_n param _ z80_flags =
 out_n_a : Int -> Int -> FlagRegisters -> JumpChange
 out_n_a param _ z80_flags =
     -- case 0xD3: env.out(v=imm8()|A<<8,A); MP=v+1&0xFF|v&0xFF00; time+=4; break;
-    let
-        portNum =
-            Bitwise.or param (shiftLeftBy8 z80_flags.a)
-    in
-    Z80Out portNum z80_flags.a
+    --let
+    --    portNum =
+    --        Bitwise.or param (shiftLeftBy8 z80_flags.a)
+    --in
+    --Z80Out portNum z80_flags.a
+    Z80Out param
 
 
 in_a_n : Int -> Int -> FlagRegisters -> JumpChange
 in_a_n param _ z80_flags =
     -- case 0xDB: MP=(v=imm8()|A<<8)+1; A=env.in(v); time+=4; break;
-    let
-        portNum =
-            Bitwise.or param (shiftLeftBy8 z80_flags.a)
-    in
-    Z80In portNum
+    --let
+    --    portNum =
+    --        Bitwise.or param (shiftLeftBy8 z80_flags.a)
+    --in
+    --Z80In portNum
+    Z80In param

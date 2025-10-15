@@ -133,13 +133,17 @@ applyJumpChangeDelta cpu_time z80changeData rom48k z80 =
                 , clockTime = cpu_time
             }
 
-        Z80Out portNum value ->
+        Z80Out param ->
             let
+                -- case 0xD3: env.out(v=imm8()|A<<8,A); MP=v+1&0xFF|v&0xFF00; time+=4; break;
+                portNum =
+                    Bitwise.or param (shiftLeftBy8 z80.flags.a)
+
                 pc =
                     Bitwise.and (z80.pc + 2) 0xFFFF
 
                 ( env, newTime ) =
-                    z80.env |> z80_out portNum value cpu_time
+                    z80.env |> z80_out portNum z80.flags.a cpu_time
             in
             { z80
                 | pc = pc
@@ -147,16 +151,20 @@ applyJumpChangeDelta cpu_time z80changeData rom48k z80 =
                 , clockTime = newTime
             }
 
-        Z80In portNum ->
+        Z80In param ->
+            -- case 0xDB: MP=(v=imm8()|A<<8)+1; A=env.in(v); time+=4; break;
             let
+                flags =
+                    z80.flags
+
+                portNum =
+                    Bitwise.or param (shiftLeftBy8 flags.a)
+
                 pc =
                     Bitwise.and (z80.pc + 2) 0xFFFF
 
                 new_a =
                     z80.env |> z80_in portNum rom48k.keyboard cpu_time
-
-                flags =
-                    z80.flags
             in
             { z80
                 | pc = pc
