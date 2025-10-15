@@ -1,7 +1,7 @@
 module Z80Core exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeCTime, CpuTimePcAnd16BitValue, addCpuTimeTime)
+import CpuTimeCTime exposing (CpuTimeCTime, CpuTimePcAnd16BitValue, ShortDelay, addCpuTimeTime)
 import Z80Env exposing (Z80Env, mem16)
 import Z80Flags exposing (FlagRegisters)
 import Z80Rom exposing (Z80ROM)
@@ -15,6 +15,11 @@ type alias Z80Core =
     , flags : FlagRegisters
     , interrupts : InterruptRegisters
     }
+
+
+type CoreChange
+    = CoreOnly Z80Core
+    | CoreWithTime ShortDelay Z80Core
 
 
 type DirectionForLDIR
