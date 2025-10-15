@@ -21,7 +21,14 @@ type ChangeMainRegister
 
 
 type CoreRegister
-    = CoreRegisterB
-    | CoreRegisterC
-    | CoreRegisterD
-    | CoreRegisterE
+    = RegisterB
+    | RegisterC
+    | RegisterD
+    | RegisterE
+
+
+type Single8BitChange
+    = NewBRegister Int
+    | NewCRegister Int
+    | NewDRegister Int
+    | NewERegister Int

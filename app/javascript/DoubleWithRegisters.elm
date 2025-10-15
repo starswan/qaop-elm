@@ -4,11 +4,12 @@ import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), addCpuTimeTime)
 import Dict exposing (Dict)
 import PCIncrement exposing (MediumPCIncrement(..))
-import SingleWith8BitParameter exposing (Single8BitChange(..), applySimple8BitChange)
+import SingleWith8BitParameter exposing (applySimple8BitChange)
 import Utils exposing (byte, shiftLeftBy8)
 import Z80Core exposing (Z80Core)
 import Z80Env exposing (mem, setMem)
 import Z80Flags exposing (FlagFunc(..), changeFlags, dec, inc)
+import Z80Registers exposing (Single8BitChange(..))
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (MainWithIndexRegisters)
 

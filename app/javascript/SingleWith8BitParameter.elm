@@ -5,6 +5,7 @@ import CpuTimeCTime exposing (InstructionDuration(..), ShortDelay(..))
 import Dict exposing (Dict)
 import Utils exposing (byte, shiftLeftBy8)
 import Z80Flags exposing (FlagFunc(..), FlagRegisters, jump_c, jump_nc, jump_nz, jump_z)
+import Z80Registers exposing (Single8BitChange(..))
 import Z80Types exposing (MainWithIndexRegisters)
 
 
@@ -38,13 +39,6 @@ maybeRelativeJump =
         , ( 0xD3, ( out_n_a, ElevenTStates ) )
         , ( 0xDB, ( in_a_n, ElevenTStates ) )
         ]
-
-
-type Single8BitChange
-    = NewBRegister Int
-    | NewCRegister Int
-    | NewDRegister Int
-    | NewERegister Int
 
 
 type JumpChange

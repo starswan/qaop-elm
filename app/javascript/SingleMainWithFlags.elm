@@ -116,37 +116,37 @@ inc_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 inc_b z80_main z80_flags =
     -- case 0x04: B=inc(B); break;
     --z80 |> set_flag_regs new_b.flags |> set_b new_b.value
-    z80_flags |> inc z80_main.b |> FlagsWithRegisterChange CoreRegisterB
+    z80_flags |> inc z80_main.b |> FlagsWithRegisterChange RegisterB
 
 
 dec_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 dec_b z80_main z80_flags =
     -- case 0x05: B=dec(B); break;
-    z80_flags |> dec z80_main.b |> FlagsWithRegisterChange CoreRegisterB
+    z80_flags |> dec z80_main.b |> FlagsWithRegisterChange RegisterB
 
 
 inc_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 inc_c z80_main z80_flags =
     -- case 0x0C: C=inc(C); break;
-    z80_flags |> inc z80_main.c |> FlagsWithRegisterChange CoreRegisterC
+    z80_flags |> inc z80_main.c |> FlagsWithRegisterChange RegisterC
 
 
 dec_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 dec_c z80_main z80_flags =
     -- case 0x0D: C=dec(C); break;
-    z80_flags |> dec z80_main.c |> FlagsWithRegisterChange CoreRegisterC
+    z80_flags |> dec z80_main.c |> FlagsWithRegisterChange RegisterC
 
 
 inc_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 inc_d z80_main z80_flags =
     -- case 0x14: D=inc(D); break;
-    z80_flags |> inc z80_main.d |> FlagsWithRegisterChange CoreRegisterD
+    z80_flags |> inc z80_main.d |> FlagsWithRegisterChange RegisterD
 
 
 dec_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 dec_d z80_main z80_flags =
     -- case 0x15: D=dec(D); break;
-    z80_flags |> dec z80_main.d |> FlagsWithRegisterChange CoreRegisterD
+    z80_flags |> dec z80_main.d |> FlagsWithRegisterChange RegisterD
 
 
 inc_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -154,7 +154,7 @@ inc_e z80_main z80_flags =
     -- case 0x1C: E=inc(E); break;
     z80_flags
         |> inc z80_main.e
-        |> FlagsWithRegisterChange CoreRegisterE
+        |> FlagsWithRegisterChange RegisterE
 
 
 dec_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -162,7 +162,7 @@ dec_e z80_main z80_flags =
     -- case 0x1D: E=dec(E); break;
     z80_flags
         |> dec z80_main.e
-        |> FlagsWithRegisterChange CoreRegisterE
+        |> FlagsWithRegisterChange RegisterE
 
 
 inc_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
