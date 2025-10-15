@@ -35,6 +35,10 @@ type InstructionDuration
     | TwentyThreeTStates
 
 
+type ShortDelay
+    = FiveExtraTStates
+
+
 c_SCRENDT =
     191 * 224 + 126
 
@@ -308,11 +312,15 @@ addCpuTimeTime value z80env =
     { z80env | cpu_time = z80env.cpu_time + value }
 
 
-addCpuTimeTimeInc : CpuTimeIncrement -> CpuTimeCTime -> CpuTimeCTime
-addCpuTimeTimeInc value z80env =
-    case value of
-        CpuTimeIncrement int ->
-            { z80env | cpu_time = z80env.cpu_time + int }
+addExtraCpuTime : ShortDelay -> CpuTimeCTime -> CpuTimeCTime
+addExtraCpuTime value z80env =
+    let
+        offset =
+            case value of
+                FiveExtraTStates ->
+                    5
+    in
+    { z80env | cpu_time = z80env.cpu_time + offset }
 
 
 addDuration : InstructionDuration -> CpuTimeCTime -> CpuTimeCTime

@@ -1,7 +1,7 @@
 module Z80Execute exposing (..)
 
 import Bitwise exposing (shiftLeftBy)
-import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDuration(..), addCpuTimeTime, addDuration)
+import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDuration(..), addDuration, addExtraCpuTime)
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
 import GroupED exposing (inirOtirFlags)
 import PCIncrement exposing (InterruptPCIncrement(..), MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
@@ -99,30 +99,33 @@ apply_delta z80 rom48k z80delta =
 applyJumpChangeDelta : CpuTimeCTime -> JumpChange -> Z80ROM -> Z80Core -> Z80Core
 applyJumpChangeDelta cpu_time z80changeData rom48k z80 =
     case z80changeData of
-        ActualJump jump ->
-            let
-                pc =
-                    Bitwise.and (z80.pc + 2 + jump) 0xFFFF
-            in
-            { z80
-                | pc = pc
-                , clockTime = cpu_time |> addCpuTimeTime 5
-            }
-
-        NoJump ->
-            let
-                pc =
-                    Bitwise.and (z80.pc + 2) 0xFFFF
-            in
+        ActualJump pc ->
+            --let
+            --    pc =
+            --        Bitwise.and (z80.pc + 2 + jump) 0xFFFF
+            --in
             { z80
                 | pc = pc
                 , clockTime = cpu_time
             }
 
-        FlagJump flags ->
+        --
+        --NoJump ->
+        --    let
+        --        pc =
+        --            Bitwise.and (z80.pc + 2) 0xFFFF
+        --    in
+        --    { z80
+        --        | pc = pc
+        --        , clockTime = cpu_time
+        --    }
+        FlagJump operation param ->
             let
                 pc =
                     Bitwise.and (z80.pc + 2) 0xFFFF
+
+                flags =
+                    z80.flags |> changeFlags operation param
             in
             { z80
                 | pc = pc
@@ -130,13 +133,17 @@ applyJumpChangeDelta cpu_time z80changeData rom48k z80 =
                 , clockTime = cpu_time
             }
 
-        Z80Out portNum value ->
+        Z80Out param ->
             let
+                -- case 0xD3: env.out(v=imm8()|A<<8,A); MP=v+1&0xFF|v&0xFF00; time+=4; break;
+                portNum =
+                    Bitwise.or param (shiftLeftBy8 z80.flags.a)
+
                 pc =
                     Bitwise.and (z80.pc + 2) 0xFFFF
 
                 ( env, newTime ) =
-                    z80.env |> z80_out portNum value cpu_time
+                    z80.env |> z80_out portNum z80.flags.a cpu_time
             in
             { z80
                 | pc = pc
@@ -144,21 +151,56 @@ applyJumpChangeDelta cpu_time z80changeData rom48k z80 =
                 , clockTime = newTime
             }
 
-        Z80In portNum ->
+        Z80In param ->
+            -- case 0xDB: MP=(v=imm8()|A<<8)+1; A=env.in(v); time+=4; break;
             let
+                flags =
+                    z80.flags
+
+                portNum =
+                    Bitwise.or param (shiftLeftBy8 flags.a)
+
                 pc =
                     Bitwise.and (z80.pc + 2) 0xFFFF
 
                 new_a =
                     z80.env |> z80_in portNum rom48k.keyboard cpu_time
+            in
+            { z80
+                | pc = pc
+                , flags = { flags | a = new_a.value }
+                , clockTime = new_a.time
+            }
+
+        ConditionalJump address shortDelay function ->
+            if z80.flags |> function then
+                let
+                    pc =
+                        Bitwise.and address 0xFFFF
+                in
+                { z80
+                    | pc = pc
+                    , clockTime = cpu_time |> addExtraCpuTime shortDelay
+                }
+
+            else
+                { z80
+                    | pc = Bitwise.and (z80.pc + 2) 0xFFFF
+                    , clockTime = cpu_time
+                }
+
+        NewARegister new_a ->
+            let
+                pc =
+                    Bitwise.and (z80.pc + 2) 0xFFFF
 
                 flags =
                     z80.flags
             in
             { z80
                 | pc = pc
-                , flags = { flags | a = new_a.value }
-                , clockTime = new_a.time
+                , flags = { flags | a = new_a }
+                , clockTime = cpu_time
             }
 
 
