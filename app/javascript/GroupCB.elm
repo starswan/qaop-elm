@@ -9,7 +9,7 @@ import Utils exposing (BitTest(..), bitMaskFromBit, inverseBitMaskFromBit, shift
 import Z80Change exposing (Z80Change(..))
 import Z80Env exposing (Z80Env)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit)
-import Z80Registers exposing (ChangeMainRegister(..), ChangeOneRegister(..), CoreRegister(..))
+import Z80Registers exposing (ChangeMainRegister(..), ChangeOneRegister(..), EightBitMain(..))
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IntWithFlagsTimeAndPC, MainWithIndexRegisters)
 
@@ -832,26 +832,26 @@ singleByteMainAndFlagRegistersIYCB =
 
 rlc_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rlc_b z80_main z80_flags =
-    z80_flags |> shifter0 z80_main.b |> FlagsWithRegisterChange CoreRegisterB
+    z80_flags |> shifter0 z80_main.b |> FlagsWithRegisterChange RegisterB
 
 
 rlc_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rlc_c z80_main z80_flags =
     -- case 0x01: C=shifter(o,C); break;
     --z80_flags |> shifter_c shifter0 z80_main.c
-    z80_flags |> shifter0 z80_main.c |> FlagsWithRegisterChange CoreRegisterC
+    z80_flags |> shifter0 z80_main.c |> FlagsWithRegisterChange RegisterC
 
 
 rlc_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rlc_d z80_main z80_flags =
     -- case 0x02: D=shifter(o,D); break;
-    z80_flags |> shifter0 z80_main.d |> FlagsWithRegisterChange CoreRegisterD
+    z80_flags |> shifter0 z80_main.d |> FlagsWithRegisterChange RegisterD
 
 
 rlc_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rlc_e z80_main z80_flags =
     -- case 0x03: E=shifter(o,E); break;
-    z80_flags |> shifter0 z80_main.e |> FlagsWithRegisterChange CoreRegisterE
+    z80_flags |> shifter0 z80_main.e |> FlagsWithRegisterChange RegisterE
 
 
 rlc_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -882,25 +882,25 @@ rlc_l z80_main z80_flags =
 
 rrc_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rrc_b z80_main z80_flags =
-    z80_flags |> shifter1 z80_main.b |> FlagsWithRegisterChange CoreRegisterB
+    z80_flags |> shifter1 z80_main.b |> FlagsWithRegisterChange RegisterB
 
 
 rrc_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rrc_c z80_main z80_flags =
     -- case 0x01: C=shifter(o,C); break;
-    z80_flags |> shifter1 z80_main.c |> FlagsWithRegisterChange CoreRegisterC
+    z80_flags |> shifter1 z80_main.c |> FlagsWithRegisterChange RegisterC
 
 
 rrc_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rrc_d z80_main z80_flags =
     -- case 0x02: D=shifter(o,D); break;
-    z80_flags |> shifter1 z80_main.d |> FlagsWithRegisterChange CoreRegisterD
+    z80_flags |> shifter1 z80_main.d |> FlagsWithRegisterChange RegisterD
 
 
 rrc_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rrc_e z80_main z80_flags =
     -- case 0x03: E=shifter(o,E); break;
-    z80_flags |> shifter1 z80_main.e |> FlagsWithRegisterChange CoreRegisterE
+    z80_flags |> shifter1 z80_main.e |> FlagsWithRegisterChange RegisterE
 
 
 rrc_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -932,25 +932,25 @@ rrc_l z80_main z80_flags =
 rl_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rl_b z80_main z80_flags =
     -- case 0x00: B=shifter(o,B); break;
-    z80_flags |> shifter2 z80_main.b |> FlagsWithRegisterChange CoreRegisterB
+    z80_flags |> shifter2 z80_main.b |> FlagsWithRegisterChange RegisterB
 
 
 rl_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rl_c z80_main z80_flags =
     -- case 0x01: C=shifter(o,C); break;
-    z80_flags |> shifter2 z80_main.c |> FlagsWithRegisterChange CoreRegisterC
+    z80_flags |> shifter2 z80_main.c |> FlagsWithRegisterChange RegisterC
 
 
 rl_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rl_d z80_main z80_flags =
     -- case 0x02: D=shifter(o,D); break;
-    z80_flags |> shifter2 z80_main.d |> FlagsWithRegisterChange CoreRegisterD
+    z80_flags |> shifter2 z80_main.d |> FlagsWithRegisterChange RegisterD
 
 
 rl_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rl_e z80_main z80_flags =
     -- case 0x03: E=shifter(o,E); break;
-    z80_flags |> shifter2 z80_main.e |> FlagsWithRegisterChange CoreRegisterE
+    z80_flags |> shifter2 z80_main.e |> FlagsWithRegisterChange RegisterE
 
 
 rl_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -982,19 +982,19 @@ rl_l z80_main z80_flags =
 rr_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rr_b z80_main z80_flags =
     -- case 0x00: B=shifter(o,B); break;
-    z80_flags |> shifter3 z80_main.b |> FlagsWithRegisterChange CoreRegisterB
+    z80_flags |> shifter3 z80_main.b |> FlagsWithRegisterChange RegisterB
 
 
 rr_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rr_c z80_main z80_flags =
     -- case 0x01: C=shifter(o,C); break;
-    z80_flags |> shifter3 z80_main.c |> FlagsWithRegisterChange CoreRegisterC
+    z80_flags |> shifter3 z80_main.c |> FlagsWithRegisterChange RegisterC
 
 
 rr_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rr_d z80_main z80_flags =
     -- case 0x02: D=shifter(o,D); break;
-    z80_flags |> shifter3 z80_main.d |> FlagsWithRegisterChange CoreRegisterD
+    z80_flags |> shifter3 z80_main.d |> FlagsWithRegisterChange RegisterD
 
 
 rr_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1002,7 +1002,7 @@ rr_e z80_main z80_flags =
     -- case 0x03: E=shifter(o,E); break;
     z80_flags
         |> shifter3 z80_main.e
-        |> FlagsWithRegisterChange CoreRegisterE
+        |> FlagsWithRegisterChange RegisterE
 
 
 rr_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1034,19 +1034,19 @@ rr_l z80_main z80_flags =
 sla_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sla_b z80_main z80_flags =
     -- case 0x00: B=shifter(o,B); break;
-    z80_flags |> shifter4 z80_main.b |> FlagsWithRegisterChange CoreRegisterB
+    z80_flags |> shifter4 z80_main.b |> FlagsWithRegisterChange RegisterB
 
 
 sla_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sla_c z80_main z80_flags =
     -- case 0x01: C=shifter(o,C); break;
-    z80_flags |> shifter4 z80_main.c |> FlagsWithRegisterChange CoreRegisterC
+    z80_flags |> shifter4 z80_main.c |> FlagsWithRegisterChange RegisterC
 
 
 sla_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sla_d z80_main z80_flags =
     -- case 0x02: D=shifter(o,D); break;
-    z80_flags |> shifter4 z80_main.d |> FlagsWithRegisterChange CoreRegisterD
+    z80_flags |> shifter4 z80_main.d |> FlagsWithRegisterChange RegisterD
 
 
 sla_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1054,7 +1054,7 @@ sla_e z80_main z80_flags =
     -- case 0x03: E=shifter(o,E); break;
     z80_flags
         |> shifter4 z80_main.e
-        |> FlagsWithRegisterChange CoreRegisterE
+        |> FlagsWithRegisterChange RegisterE
 
 
 sla_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1086,19 +1086,19 @@ sla_l z80_main z80_flags =
 sra_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sra_b z80_main z80_flags =
     -- case 0x00: B=shifter(o,B); break;
-    z80_flags |> shifter5 z80_main.b |> FlagsWithRegisterChange CoreRegisterB
+    z80_flags |> shifter5 z80_main.b |> FlagsWithRegisterChange RegisterB
 
 
 sra_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sra_c z80_main z80_flags =
     -- case 0x01: C=shifter(o,C); break;
-    z80_flags |> shifter5 z80_main.c |> FlagsWithRegisterChange CoreRegisterC
+    z80_flags |> shifter5 z80_main.c |> FlagsWithRegisterChange RegisterC
 
 
 sra_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sra_d z80_main z80_flags =
     -- case 0x02: D=shifter(o,D); break;
-    z80_flags |> shifter5 z80_main.d |> FlagsWithRegisterChange CoreRegisterD
+    z80_flags |> shifter5 z80_main.d |> FlagsWithRegisterChange RegisterD
 
 
 sra_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1106,7 +1106,7 @@ sra_e z80_main z80_flags =
     -- case 0x03: E=shifter(o,E); break;
     z80_flags
         |> shifter5 z80_main.e
-        |> FlagsWithRegisterChange CoreRegisterE
+        |> FlagsWithRegisterChange RegisterE
 
 
 sra_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1138,19 +1138,19 @@ sra_l z80_main z80_flags =
 sll_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sll_b z80_main z80_flags =
     -- case 0x00: B=shifter(o,B); break;
-    z80_flags |> shifter6 z80_main.b |> FlagsWithRegisterChange CoreRegisterB
+    z80_flags |> shifter6 z80_main.b |> FlagsWithRegisterChange RegisterB
 
 
 sll_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sll_c z80_main z80_flags =
     -- case 0x01: C=shifter(o,C); break;
-    z80_flags |> shifter6 z80_main.c |> FlagsWithRegisterChange CoreRegisterC
+    z80_flags |> shifter6 z80_main.c |> FlagsWithRegisterChange RegisterC
 
 
 sll_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sll_d z80_main z80_flags =
     -- case 0x02: D=shifter(o,D); break;
-    z80_flags |> shifter6 z80_main.d |> FlagsWithRegisterChange CoreRegisterD
+    z80_flags |> shifter6 z80_main.d |> FlagsWithRegisterChange RegisterD
 
 
 sll_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1158,7 +1158,7 @@ sll_e z80_main z80_flags =
     -- case 0x03: E=shifter(o,E); break;
     z80_flags
         |> shifter6 z80_main.e
-        |> FlagsWithRegisterChange CoreRegisterE
+        |> FlagsWithRegisterChange RegisterE
 
 
 sll_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1190,19 +1190,19 @@ sll_l z80_main z80_flags =
 srl_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 srl_b z80_main z80_flags =
     -- case 0x00: B=shifter(o,B); break;
-    z80_flags |> shifter7 z80_main.b |> FlagsWithRegisterChange CoreRegisterB
+    z80_flags |> shifter7 z80_main.b |> FlagsWithRegisterChange RegisterB
 
 
 srl_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 srl_c z80_main z80_flags =
     -- case 0x01: C=shifter(o,C); break;
-    z80_flags |> shifter7 z80_main.c |> FlagsWithRegisterChange CoreRegisterC
+    z80_flags |> shifter7 z80_main.c |> FlagsWithRegisterChange RegisterC
 
 
 srl_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 srl_d z80_main z80_flags =
     -- case 0x02: D=shifter(o,D); break;
-    z80_flags |> shifter7 z80_main.d |> FlagsWithRegisterChange CoreRegisterD
+    z80_flags |> shifter7 z80_main.d |> FlagsWithRegisterChange RegisterD
 
 
 srl_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1210,7 +1210,7 @@ srl_e z80_main z80_flags =
     -- case 0x03: E=shifter(o,E); break;
     z80_flags
         |> shifter7 z80_main.e
-        |> FlagsWithRegisterChange CoreRegisterE
+        |> FlagsWithRegisterChange RegisterE
 
 
 srl_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
