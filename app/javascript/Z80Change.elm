@@ -1,8 +1,7 @@
 module Z80Change exposing (..)
 
-import SingleEnvWithMain exposing (EightBitMain)
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
-import Z80Registers exposing (ChangeMainRegister, CoreRegister)
+import Z80Registers exposing (ChangeMainRegister, CoreRegister, EightBitMain)
 
 
 type Z80Change

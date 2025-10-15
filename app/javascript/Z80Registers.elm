@@ -25,3 +25,10 @@ type CoreRegister
     | CoreRegisterC
     | CoreRegisterD
     | CoreRegisterE
+
+
+type EightBitMain
+    = RegisterB
+    | RegisterC
+    | RegisterD
+    | RegisterE
