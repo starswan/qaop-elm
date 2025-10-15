@@ -15,7 +15,7 @@ import TripleWithFlags exposing (TripleWithFlagsChange(..))
 import TripleWithMain exposing (TripleMainChange, applyTripleMainChange)
 import Utils exposing (bitMaskFromBit, clearBit, inverseBitMaskFromBit, setBit, shiftLeftBy8, toHexString2)
 import Z80Change exposing (FlagChange(..), Z80Change(..))
-import Z80Core exposing (DirectionForLDIR(..), Z80Core)
+import Z80Core exposing (CoreChange(..), DirectionForLDIR(..), Z80Core)
 import Z80Debug exposing (debugLog, debugTodo)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..), applyDeltaWithChanges)
 import Z80Env exposing (Z80Env, Z80EnvWithPC, mem, mem16, setMem, setMemIgnoringTime, z80_in, z80_out, z80_pop, z80_push)
@@ -44,59 +44,59 @@ type DeltaWithChanges
     | UnknownInstruction String Int
 
 
-apply_delta : Z80Core -> Z80ROM -> CpuTimeCTime -> DeltaWithChanges -> Z80Core
+apply_delta : Z80Core -> Z80ROM -> CpuTimeCTime -> DeltaWithChanges -> CoreChange
 apply_delta z80 rom48k clockTime z80delta =
     case z80delta of
         OldDeltaWithChanges deltaWithChangesData ->
-            z80 |> applyDeltaWithChanges deltaWithChangesData
+            z80 |> applyDeltaWithChanges deltaWithChangesData |> CoreOnly
 
         PureDelta cpuInc z80ChangeData ->
-            z80 |> applyPureDelta cpuInc clockTime z80ChangeData
+            z80 |> applyPureDelta cpuInc clockTime z80ChangeData |> CoreOnly
 
         FlagDelta pcInc flagRegisters ->
-            z80 |> applyFlagDelta pcInc clockTime flagRegisters rom48k
+            z80 |> applyFlagDelta pcInc clockTime flagRegisters rom48k |> CoreOnly
 
         RegisterChangeDelta pcInc registerChange ->
-            z80 |> applyRegisterDelta pcInc clockTime registerChange rom48k
+            z80 |> applyRegisterDelta pcInc clockTime registerChange rom48k |> CoreOnly
 
         Simple8BitDelta pcInc single8BitChange ->
-            z80 |> applySimple8BitDelta pcInc single8BitChange
+            z80 |> applySimple8BitDelta pcInc single8BitChange |> CoreOnly
 
         DoubleWithRegistersDelta pcInc doubleWithRegisterChange ->
-            z80 |> applyDoubleWithRegistersDelta pcInc clockTime doubleWithRegisterChange rom48k
+            z80 |> applyDoubleWithRegistersDelta pcInc clockTime doubleWithRegisterChange rom48k |> CoreOnly
 
         JumpChangeDelta jumpChange ->
             z80 |> applyJumpChangeDelta clockTime jumpChange rom48k
 
         NoParamsDelta noParamChange ->
-            z80 |> applyNoParamsDelta clockTime noParamChange rom48k
+            z80 |> applyNoParamsDelta clockTime noParamChange rom48k |> CoreOnly
 
         SingleEnvDelta singleByteEnvChange ->
-            z80 |> applyEnvChangeDelta clockTime singleByteEnvChange
+            z80 |> applyEnvChangeDelta clockTime singleByteEnvChange |> CoreOnly
 
         MainWithEnvDelta pcInc singleEnvMainChange ->
-            z80 |> applySingleEnvMainChange pcInc clockTime singleEnvMainChange rom48k
+            z80 |> applySingleEnvMainChange pcInc clockTime singleEnvMainChange rom48k |> CoreOnly
 
         TripleMainChangeDelta cpuTimeCTime triplePCIncrement tripleMainChange ->
-            z80 |> applyTripleMainChange cpuTimeCTime triplePCIncrement tripleMainChange
+            z80 |> applyTripleMainChange cpuTimeCTime triplePCIncrement tripleMainChange |> CoreOnly
 
         Triple16ParamDelta triplePCIncrement tripleByteChange ->
-            z80 |> applyTripleChangeDelta rom48k triplePCIncrement clockTime tripleByteChange
+            z80 |> applyTripleChangeDelta rom48k triplePCIncrement clockTime tripleByteChange |> CoreOnly
 
         Triple16FlagsDelta tripleWithFlagsChange ->
-            z80 |> applyTripleFlagChange clockTime tripleWithFlagsChange
+            z80 |> applyTripleFlagChange clockTime tripleWithFlagsChange |> CoreOnly
 
         UnknownInstruction string int ->
-            debugTodo string (int |> toHexString2) z80
+            debugTodo string (int |> toHexString2) z80 |> CoreOnly
 
         InterruptDelta pCIncrement interruptChange ->
-            z80 |> applyInterruptChange pCIncrement interruptChange
+            z80 |> applyInterruptChange pCIncrement interruptChange |> CoreOnly
 
         EDChangeDelta pCIncrement eDRegisterChange ->
-            z80 |> applyEdRegisterDelta pCIncrement clockTime eDRegisterChange rom48k
+            z80 |> applyEdRegisterDelta pCIncrement clockTime eDRegisterChange rom48k |> CoreOnly
 
 
-applyJumpChangeDelta : CpuTimeCTime -> JumpChange -> Z80ROM -> Z80Core -> Z80Core
+applyJumpChangeDelta : CpuTimeCTime -> JumpChange -> Z80ROM -> Z80Core -> CoreChange
 applyJumpChangeDelta cpu_time z80changeData rom48k z80 =
     case z80changeData of
         ActualJump pc ->
@@ -107,6 +107,7 @@ applyJumpChangeDelta cpu_time z80changeData rom48k z80 =
             { z80
                 | pc = pc
             }
+                |> CoreOnly
 
         --
         --NoJump ->
@@ -130,6 +131,7 @@ applyJumpChangeDelta cpu_time z80changeData rom48k z80 =
                 | pc = pc
                 , flags = flags
             }
+                |> CoreOnly
 
         Z80Out param ->
             let
@@ -147,6 +149,7 @@ applyJumpChangeDelta cpu_time z80changeData rom48k z80 =
                 | pc = pc
                 , env = env
             }
+                |> CoreOnly
 
         Z80In param ->
             -- case 0xDB: MP=(v=imm8()|A<<8)+1; A=env.in(v); time+=4; break;
@@ -167,6 +170,7 @@ applyJumpChangeDelta cpu_time z80changeData rom48k z80 =
                 | pc = pc
                 , flags = { flags | a = new_a.value }
             }
+                |> CoreOnly
 
         ConditionalJump address shortDelay function ->
             if z80.flags |> function then
@@ -179,11 +183,13 @@ applyJumpChangeDelta cpu_time z80changeData rom48k z80 =
 
                     --, clockTime = cpu_time |> addExtraCpuTime shortDelay
                 }
+                    |> CoreWithTime shortDelay
 
             else
                 { z80
                     | pc = Bitwise.and (z80.pc + 2) 0xFFFF
                 }
+                    |> CoreOnly
 
         NewARegister new_a ->
             let
@@ -197,6 +203,7 @@ applyJumpChangeDelta cpu_time z80changeData rom48k z80 =
                 | pc = pc
                 , flags = { flags | a = new_a }
             }
+                |> CoreOnly
 
 
 applySimple8BitDelta : MediumPCIncrement -> Single8BitChange -> Z80Core -> Z80Core

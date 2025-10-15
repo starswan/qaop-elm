@@ -7,7 +7,7 @@ module Z80 exposing (..)
 
 import Array exposing (Array)
 import Bitwise
-import CpuTimeCTime exposing (CTime(..), CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, InstructionDuration(..), addCpuTimeTime, addDuration, c_TIME_LIMIT, reset_cpu_time)
+import CpuTimeCTime exposing (CTime(..), CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, InstructionDuration(..), addCpuTimeTime, addDuration, addExtraCpuTime, c_TIME_LIMIT, reset_cpu_time)
 import Dict exposing (Dict)
 import DoubleWithRegisters exposing (doubleWithRegisters, doubleWithRegistersIX, doubleWithRegistersIY)
 import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainAndFlagRegistersIXCB, singleByteMainAndFlagRegistersIYCB, singleByteMainRegsCB, singleEnvMainRegsCB)
@@ -26,7 +26,7 @@ import SingleWith8BitParameter exposing (maybeRelativeJump, singleWith8BitParam)
 import TripleByte exposing (tripleByteWith16BitParam, tripleByteWith16BitParamDD, tripleByteWith16BitParamFD)
 import TripleWithFlags exposing (triple16WithFlags)
 import TripleWithMain exposing (tripleMainRegs, tripleMainRegsIX, tripleMainRegsIY)
-import Z80Core exposing (Z80Core)
+import Z80Core exposing (CoreChange(..), Z80Core)
 import Z80CoreWithClockTime exposing (Z80, Z80CoreWithClockTime, di_0xF3, ei_0xFB)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..))
 import Z80Env exposing (Z80Env, mem, mem16, z80env_constructor)
@@ -244,10 +244,16 @@ executeAndApplyDelta ct rom48k z80clock =
         ( delta, clockTime ) =
             z80_core |> execute_delta ct rom48k
 
-        new_core =
-            delta |> apply_delta z80_core rom48k clockTime
+        --new_core =
+        --    delta |> apply_delta z80_core rom48k clockTime
     in
-    { z80clock | core = new_core, clockTime = clockTime }
+    --{ z80clock | core = new_core, clockTime = clockTime }
+    case delta |> apply_delta z80_core rom48k clockTime of
+        CoreOnly z80Core ->
+            { z80clock | core = z80Core, clockTime = clockTime }
+
+        CoreWithTime shortDelay z80Core ->
+            { z80clock | core = z80Core, clockTime = clockTime |> addExtraCpuTime shortDelay }
 
 
 execute_delta : CpuTimeAndValue -> Z80ROM -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime )
@@ -771,7 +777,13 @@ executeCoreInstruction rom48k z80_core =
         ( deltaWithChanges, clockTime ) =
             z80_core |> execute_delta ct rom48k
     in
-    ( deltaWithChanges |> apply_delta z80_core rom48k clockTime, clockTime )
+    --( deltaWithChanges |> apply_delta z80_core rom48k clockTime, clockTime )
+    case deltaWithChanges |> apply_delta z80_core rom48k clockTime of
+        CoreOnly z80Core ->
+            ( z80Core, clockTime )
+
+        CoreWithTime shortDelay z80Core ->
+            ( z80Core, clockTime |> addExtraCpuTime shortDelay )
 
 
 c_EX_AF_AFDASH =
