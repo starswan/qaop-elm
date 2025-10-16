@@ -23,6 +23,7 @@ maybeRelativeJump : Dict Int ( Int -> Int -> JumpChange, InstructionDuration )
 maybeRelativeJump =
     Dict.fromList
         [ ( 0x18, ( jr_n, TwelveTStates ) )
+        , ( 0x10, ( djnz, FourTStates ) )
         , ( 0x20, ( jr_nz_d, SevenTStates ) )
         , ( 0x28, ( jr_z_d, SevenTStates ) )
         , ( 0x30, ( jr_nc_d, SevenTStates ) )
@@ -48,6 +49,7 @@ type JumpChange
     | Z80In Int
     | ConditionalJump Int ShortDelay (FlagRegisters -> Bool)
     | NewARegister Int
+    | DJNZ Int ShortDelay
 
 
 applySimple8BitChange : Single8BitChange -> MainWithIndexRegisters -> MainWithIndexRegisters
@@ -143,6 +145,29 @@ jr_c_d param pc =
     --else
     --    NoJump
     ConditionalJump (pc + 2 + byte param) FiveExtraTStates jump_c
+
+
+djnz : Int -> Int -> JumpChange
+djnz param pc =
+    --case 0x10: {time++; v=PC; byte d=(byte)env.mem(v++); time+=3;
+    --if((B=B-1&0xFF)!=0) {time+=5; MP=v+=d;}
+    --PC=(char)v;} break;
+    --let
+    --    d =
+    --        byte param
+    --
+    --    b =
+    --        Bitwise.and (z80_main.b - 1) 0xFF
+    --
+    --    ( time, jump ) =
+    --        if b /= 0 then
+    --            ( 9, Just d )
+    --
+    --        else
+    --            ( 4, Nothing )
+    --in
+    --RelativeJumpWithTimeOffset (NewBRegister b) jump time
+    DJNZ (pc + 2 + byte param) FiveExtraTStates
 
 
 add_a_n : Int -> Int -> JumpChange

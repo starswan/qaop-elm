@@ -36,9 +36,7 @@ type DoubleWithRegisterChange
 doubleWithRegisters : Dict Int ( MainWithIndexRegisters -> Int -> DoubleWithRegisterChange, InstructionDuration )
 doubleWithRegisters =
     Dict.fromList
-        [ --  another 5 if jump actually taken
-          ( 0x10, ( djnz, EightTStates ) )
-        , ( 0x26, ( ld_h_n, SevenTStates ) )
+        [ ( 0x26, ( ld_h_n, SevenTStates ) )
         , ( 0x2E, ( ld_l_n, SevenTStates ) )
         , ( 0x36, ( ld_indirect_hl_n, TenTStates ) )
         ]
@@ -224,28 +222,6 @@ ld_c_indirect_iy z80_main param =
             z80_main.iy + byte param
     in
     NewCRegisterIndirect address
-
-
-djnz : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
-djnz z80_main param =
-    --case 0x10: {time++; v=PC; byte d=(byte)env.mem(v++); time+=3;
-    --if((B=B-1&0xFF)!=0) {time+=5; MP=v+=d;}
-    --PC=(char)v;} break;
-    let
-        d =
-            byte param
-
-        b =
-            Bitwise.and (z80_main.b - 1) 0xFF
-
-        ( time, jump ) =
-            if b /= 0 then
-                ( 9, Just d )
-
-            else
-                ( 4, Nothing )
-    in
-    RelativeJumpWithTimeOffset (NewBRegister b) jump time
 
 
 ld_indirect_hl_n : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
