@@ -689,27 +689,28 @@ setRam addr value z80env =
     { z80env | ram = z80env.ram |> Dict.insert addr value }
 
 
-setRamMemoryValue : MemoryAddress -> Int -> Z80Env -> Z80Env
-setRamMemoryValue addr value z80env =
-    case addr of
-        ROM _ ->
-            z80env
 
-        ULAMem screenType address ->
-            case screenType of
-                Screen ->
-                    { z80env | ram = z80env.ram |> Dict.insert address value }
-
-                ULA ->
-                    { z80env | ram = z80env.ram |> Dict.insert (address + 6912) value }
-
-        Himem himemType address ->
-            case himemType of
-                HimemLow ->
-                    { z80env | ram = z80env.ram |> Dict.insert (address + 0x4000) value }
-
-                HimemHigh ->
-                    { z80env | ram = z80env.ram |> Dict.insert (address + 0x8000) value }
+--setRamMemoryValue : MemoryAddress -> Int -> Z80Env -> Z80Env
+--setRamMemoryValue addr value z80env =
+--    case addr of
+--        ROM _ ->
+--            z80env
+--
+--        ULAMem screenType address ->
+--            case screenType of
+--                Screen ->
+--                    { z80env | ram = z80env.ram |> Dict.insert address value }
+--
+--                ULA ->
+--                    { z80env | ram = z80env.ram |> Dict.insert (address + 6912) value }
+--
+--        Himem himemType address ->
+--            case himemType of
+--                HimemLow ->
+--                    { z80env | ram = z80env.ram |> Dict.insert (address + 0x4000) value }
+--
+--                HimemHigh ->
+--                    { z80env | ram = z80env.ram |> Dict.insert (address + 0x8000) value }
 
 
 getRamValue : Int -> Z80ROM -> Z80Env -> Int
@@ -722,56 +723,57 @@ getRamValue addr z80rom z80env =
             z80rom.z80ram |> Z80Ram.getRamValue addr
 
 
-getRamMemoryValue : MemoryAddress -> Z80ROM -> Z80Env -> Int
-getRamMemoryValue addr z80rom z80env =
-    case addr of
-        ROM address ->
-            z80rom |> getROMValue address
 
-        ULAMem screenType address ->
-            case screenType of
-                Screen ->
-                    case z80env.ram |> Dict.get address of
-                        Just a ->
-                            a
-
-                        Nothing ->
-                            z80rom.z80ram |> Z80Ram.getRamValue address
-
-                ULA ->
-                    let
-                        addr1 =
-                            address + 6912
-                    in
-                    case z80env.ram |> Dict.get addr1 of
-                        Just a ->
-                            a
-
-                        Nothing ->
-                            z80rom.z80ram |> Z80Ram.getRamValue addr1
-
-        Himem himemType address ->
-            case himemType of
-                HimemHigh ->
-                    let
-                        addr1 =
-                            address + 0x8000
-                    in
-                    case z80env.ram |> Dict.get addr1 of
-                        Just a ->
-                            a
-
-                        Nothing ->
-                            z80rom.z80ram |> Z80Ram.getRamValue addr1
-
-                HimemLow ->
-                    let
-                        addr1 =
-                            address + 0x4000
-                    in
-                    case z80env.ram |> Dict.get addr1 of
-                        Just a ->
-                            a
-
-                        Nothing ->
-                            z80rom.z80ram |> Z80Ram.getRamValue addr1
+--getRamMemoryValue : MemoryAddress -> Z80ROM -> Z80Env -> Int
+--getRamMemoryValue addr z80rom z80env =
+--    case addr of
+--        ROM address ->
+--            z80rom |> getROMValue address
+--
+--        ULAMem screenType address ->
+--            case screenType of
+--                Screen ->
+--                    case z80env.ram |> Dict.get address of
+--                        Just a ->
+--                            a
+--
+--                        Nothing ->
+--                            z80rom.z80ram |> Z80Ram.getRamValue address
+--
+--                ULA ->
+--                    let
+--                        addr1 =
+--                            address + 6912
+--                    in
+--                    case z80env.ram |> Dict.get addr1 of
+--                        Just a ->
+--                            a
+--
+--                        Nothing ->
+--                            z80rom.z80ram |> Z80Ram.getRamValue addr1
+--
+--        Himem himemType address ->
+--            case himemType of
+--                HimemHigh ->
+--                    let
+--                        addr1 =
+--                            address + 0x8000
+--                    in
+--                    case z80env.ram |> Dict.get addr1 of
+--                        Just a ->
+--                            a
+--
+--                        Nothing ->
+--                            z80rom.z80ram |> Z80Ram.getRamValue addr1
+--
+--                HimemLow ->
+--                    let
+--                        addr1 =
+--                            address + 0x4000
+--                    in
+--                    case z80env.ram |> Dict.get addr1 of
+--                        Just a ->
+--                            a
+--
+--                        Nothing ->
+--                            z80rom.z80ram |> Z80Ram.getRamValue addr1
