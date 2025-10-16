@@ -100,25 +100,11 @@ applyJumpChangeDelta : CpuTimeCTime -> JumpChange -> Z80ROM -> Z80Core -> Z80Cor
 applyJumpChangeDelta cpu_time z80changeData rom48k z80 =
     case z80changeData of
         ActualJump pc ->
-            --let
-            --    pc =
-            --        Bitwise.and (z80.pc + 2 + jump) 0xFFFF
-            --in
             { z80
                 | pc = pc
                 , clockTime = cpu_time
             }
 
-        --
-        --NoJump ->
-        --    let
-        --        pc =
-        --            Bitwise.and (z80.pc + 2) 0xFFFF
-        --    in
-        --    { z80
-        --        | pc = pc
-        --        , clockTime = cpu_time
-        --    }
         FlagJump operation param ->
             let
                 pc =
@@ -202,6 +188,31 @@ applyJumpChangeDelta cpu_time z80changeData rom48k z80 =
                 , flags = { flags | a = new_a }
                 , clockTime = cpu_time
             }
+
+        DJNZ address shortDelay ->
+            let
+                --case 0x10: {time++; v=PC; byte d=(byte)env.mem(v++); time+=3;
+                --if((B=B-1&0xFF)!=0) {time+=5; MP=v+=d;}
+                --PC=(char)v;} break;
+                b =
+                    Bitwise.and (z80.main.b - 1) 0xFF
+
+                main =
+                    z80.main
+            in
+            if b /= 0 then
+                { z80
+                    | pc = address
+                    , main = { main | b = b }
+                    , clockTime = cpu_time |> addExtraCpuTime shortDelay
+                }
+
+            else
+                { z80
+                    | pc = Bitwise.and (z80.pc + 2) 0xFFFF
+                    , main = { main | b = b }
+                    , clockTime = cpu_time
+                }
 
 
 applySimple8BitDelta : MediumPCIncrement -> CpuTimeCTime -> Single8BitChange -> Z80Core -> Z80Core
