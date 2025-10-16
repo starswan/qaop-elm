@@ -637,19 +637,15 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                         value =
                             z80.env |> mem base_addr cpu_time rom48k
 
-                        --z80.env |> getRamMemoryValue memAddress rom48k
-                        --z80.env |> getRamValue memAddress rom48k
                         valueWithFlags =
                             z80.flags |> dec value.value
 
-                        env_1 =
-                            z80.env |> setRam ramAddr valueWithFlags.value
-
-                        --z80.env |> setRamMemoryValue memAddress valueWithFlags.value
+                        ( env_1, newTime ) =
+                            z80.env |> setMem base_addr valueWithFlags.value value.time
                     in
                     { z80
                         | pc = pc
-                        , clockTime = value.time
+                        , clockTime = newTime
                         , env = env_1
                         , flags = valueWithFlags.flags
                     }
@@ -659,15 +655,11 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                         value =
                             z80.env |> getRamValue ramAddr rom48k
 
-                        --z80.env |> getRamMemoryValue memAddress rom48k
-                        --z80.env |> getRamValue memAddress rom48k
                         valueWithFlags =
                             z80.flags |> dec value
 
                         env_1 =
                             z80.env |> setRam ramAddr valueWithFlags.value
-
-                        --z80.env |> setRamMemoryValue memAddress valueWithFlags.value
                     in
                     { z80
                         | pc = pc
