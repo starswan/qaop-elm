@@ -60,7 +60,7 @@ apply_delta z80 rom48k z80delta =
             z80 |> applyRegisterDelta pcInc duration registerChange rom48k
 
         Simple8BitDelta pcInc cpuTimeCTime single8BitChange ->
-            z80 |> applySimple8BitDelta pcInc cpuTimeCTime single8BitChange
+            z80 |> applySimple8BitDelta pcInc cpuTimeCTime single8BitChange rom48k
 
         DoubleWithRegistersDelta pcInc cpuTimeCTime doubleWithRegisterChange ->
             z80 |> applyDoubleWithRegistersDelta pcInc cpuTimeCTime doubleWithRegisterChange rom48k
@@ -137,27 +137,6 @@ applyJumpChangeDelta cpu_time z80changeData rom48k z80 =
                 , clockTime = newTime
             }
 
-        Z80In param ->
-            -- case 0xDB: MP=(v=imm8()|A<<8)+1; A=env.in(v); time+=4; break;
-            let
-                flags =
-                    z80.flags
-
-                portNum =
-                    Bitwise.or param (shiftLeftBy8 flags.a)
-
-                pc =
-                    Bitwise.and (z80.pc + 2) 0xFFFF
-
-                new_a =
-                    z80.env |> z80_in portNum rom48k.keyboard cpu_time
-            in
-            { z80
-                | pc = pc
-                , flags = { flags | a = new_a.value }
-                , clockTime = new_a.time
-            }
-
         ConditionalJump address shortDelay function ->
             if z80.flags |> function then
                 let
@@ -215,8 +194,8 @@ applyJumpChangeDelta cpu_time z80changeData rom48k z80 =
                 }
 
 
-applySimple8BitDelta : MediumPCIncrement -> CpuTimeCTime -> Single8BitChange -> Z80Core -> Z80Core
-applySimple8BitDelta pcInc cpu_time z80changeData z80 =
+applySimple8BitDelta : MediumPCIncrement -> CpuTimeCTime -> Single8BitChange -> Z80ROM -> Z80Core -> Z80Core
+applySimple8BitDelta pcInc cpu_time z80changeData rom48k z80 =
     let
         new_pc =
             case pcInc of
@@ -225,13 +204,35 @@ applySimple8BitDelta pcInc cpu_time z80changeData z80 =
 
                 IncreaseByThree ->
                     Bitwise.and (z80.pc + 3) 0xFFFF
-
-        main =
-            case z80changeData of
-                NewRegister coreRegister int ->
-                    z80.main |> applySimple8BitChange coreRegister int
     in
-    { z80 | pc = new_pc, main = main, clockTime = cpu_time }
+    case z80changeData of
+        NewRegister coreRegister int ->
+            let
+                main =
+                    z80.main |> applySimple8BitChange coreRegister int
+            in
+            { z80 | pc = new_pc, main = main, clockTime = cpu_time }
+
+        Z80In param ->
+            -- case 0xDB: MP=(v=imm8()|A<<8)+1; A=env.in(v); time+=4; break;
+            let
+                flags =
+                    z80.flags
+
+                portNum =
+                    Bitwise.or param (shiftLeftBy8 flags.a)
+
+                pc =
+                    Bitwise.and (z80.pc + 2) 0xFFFF
+
+                new_a =
+                    z80.env |> z80_in portNum rom48k.keyboard cpu_time
+            in
+            { z80
+                | pc = pc
+                , flags = { flags | a = new_a.value }
+                , clockTime = new_a.time
+            }
 
 
 applyInterruptChange : InterruptPCIncrement -> InstructionDuration -> InterruptChange -> Z80Core -> Z80Core
