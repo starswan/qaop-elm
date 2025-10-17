@@ -136,20 +136,6 @@ applyJumpChangeDelta cpu_time z80changeData z80 =
                     , clockTime = cpu_time
                 }
 
-        NewARegister new_a ->
-            let
-                pc =
-                    Bitwise.and (z80.pc + 2) 0xFFFF
-
-                flags =
-                    z80.flags
-            in
-            { z80
-                | pc = pc
-                , flags = { flags | a = new_a }
-                , clockTime = cpu_time
-            }
-
         DJNZ address shortDelay ->
             let
                 --case 0x10: {time++; v=PC; byte d=(byte)env.mem(v++); time+=3;
@@ -194,6 +180,20 @@ applySimple8BitDelta pcInc cpu_time z80changeData rom48k z80 =
                     z80.main |> applySimple8BitChange coreRegister int
             in
             { z80 | pc = new_pc, main = main, clockTime = cpu_time }
+
+        NewARegister new_a ->
+            let
+                pc =
+                    Bitwise.and (z80.pc + 2) 0xFFFF
+
+                flags =
+                    z80.flags
+            in
+            { z80
+                | pc = pc
+                , flags = { flags | a = new_a }
+                , clockTime = cpu_time
+            }
 
         Z80In param ->
             -- case 0xDB: MP=(v=imm8()|A<<8)+1; A=env.in(v); time+=4; break;

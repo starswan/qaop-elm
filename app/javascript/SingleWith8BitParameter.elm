@@ -13,6 +13,7 @@ type Single8BitChange
     = NewRegister CoreRegister Int
     | Z80In Int
     | Z80Out Int
+    | NewARegister Int
 
 
 singleWith8BitParam : Dict Int ( Int -> Single8BitChange, InstructionDuration )
@@ -22,6 +23,7 @@ singleWith8BitParam =
         , ( 0x0E, ( ld_c_n, SevenTStates ) )
         , ( 0x16, ( ld_d_n, SevenTStates ) )
         , ( 0x1E, ( ld_e_n, SevenTStates ) )
+        , ( 0x3E, ( ld_a_n, SevenTStates ) )
         , ( 0xD3, ( out_n_a, ElevenTStates ) )
         , ( 0xDB, ( in_a_n, ElevenTStates ) )
         ]
@@ -36,7 +38,6 @@ maybeRelativeJump =
         , ( 0x28, ( jr_z_d, SevenTStates ) )
         , ( 0x30, ( jr_nc_d, SevenTStates ) )
         , ( 0x38, ( jr_c_d, SevenTStates ) )
-        , ( 0x3E, ( ld_a_n, SevenTStates ) )
         , ( 0xC6, ( add_a_n, SevenTStates ) )
         , ( 0xCE, ( adc_n, SevenTStates ) )
         , ( 0xD6, ( sub_n, SevenTStates ) )
@@ -52,7 +53,6 @@ type JumpChange
     = ActualJump Int
     | FlagJump FlagFunc Int
     | ConditionalJump Int ShortDelay (FlagRegisters -> Bool)
-    | NewARegister Int
     | DJNZ Int ShortDelay
 
 
@@ -258,8 +258,8 @@ cp_n param _ =
     FlagJump CpA param
 
 
-ld_a_n : Int -> Int -> JumpChange
-ld_a_n param _ =
+ld_a_n : Int -> Single8BitChange
+ld_a_n param =
     -- case 0x3E: A=imm8(); break;
     --FlagJump { z80_flags | a = param }
     NewARegister param
