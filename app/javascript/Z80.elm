@@ -370,7 +370,7 @@ runOrdinary ct_value instrTime rom48k z80_core =
                                                         doubleParam =
                                                             env |> mem16 (Bitwise.and (z80_core.pc + 1) 0xFFFF) rom48k env_1
                                                     in
-                                                    Triple16FlagsDelta doubleParam.time (f doubleParam.value16 z80_core.flags)
+                                                    Triple16FlagsDelta doubleParam.time (f doubleParam.value16)
 
                                                 Nothing ->
                                                     case singleByteMainAndFlagRegisters |> Dict.get ct_value of

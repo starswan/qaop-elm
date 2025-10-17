@@ -105,14 +105,13 @@ RSpec.describe "Game" do
     # 110 OTDR
     # 157 LD A,R
     #
-    # Regs: 024 of 160 tests failed.
+    # Regs: 023 of 160 tests failed.
     # 52 SRO (XY) ,R     F783EB33 expected 31DC0D48
-    # 74 BIT N,(XY)-     BB3CB5FB expected 62003A45
-    # 79 SET N,(XY),R  DD CB xx C0
-    # 84 RES N,(XY),R  DD CB xx 80
+    # 74 BIT N,(XY),-    BB3CB5FB expected 62003A45
+    # 79 SET N,(XY),R    F0BFA05E expected 02392678
+    # 84 RES N,(XY),R    84AFC43A expected 54E6DA74
     # 89 LDIR->NOP'      83DCFE53 expected EF3C3C61
-    # 90 LDDR->NOP',     25AB70C9 expected
-    # 96 IN R, (C)
+    # 90 LDDR->NOP',     25AB70C9 expected 5210121F
     # 98 INI
     # 99 IND
     # 100 INIR
