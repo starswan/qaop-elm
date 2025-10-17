@@ -1,29 +1,28 @@
 module TripleWithFlags exposing (..)
 
-import Bitwise
 import CpuTimeCTime exposing (InstructionDuration(..), ShortDelay(..))
 import Dict exposing (Dict)
-import Z80Flags exposing (FlagRegisters, c_FP, c_FS, getFlags, jump_c, jump_m, jump_nc, jump_nz, jump_p, jump_pe, jump_po, jump_z)
+import Z80Flags exposing (FlagRegisters, jump_c, jump_m, jump_nc, jump_nz, jump_p, jump_pe, jump_po, jump_z)
 
 
 type TripleWithFlagsChange
-    = TripleSetIndirect Int Int
-      --| AbsoluteCall Int
-      -- 16 bits jumps always take 10 TStates regardless of whether the jump is made
-    | Conditional16BitJump Int (FlagRegisters -> Bool)
+    = Conditional16BitJump Int (FlagRegisters -> Bool)
     | Conditional16BitCall Int ShortDelay (FlagRegisters -> Bool)
+    | CallImmediate Int
+    | NewPCRegister Int
 
 
 triple16WithFlags : Dict Int ( Int -> FlagRegisters -> TripleWithFlagsChange, InstructionDuration )
 triple16WithFlags =
     Dict.fromList
-        [ ( 0x32, ( ld_indirect_nn_a, ThirteenTStates ) )
-        , ( 0xC2, ( jp_nz, TenTStates ) )
+        [ ( 0xC2, ( jp_nz, TenTStates ) )
+        , ( 0xC3, ( jp_nn, TenTStates ) )
 
         -- conditional calls get another 7 if the call is made
         , ( 0xC4, ( call_nz_nn, TenTStates ) )
         , ( 0xCA, ( jp_z_nn, TenTStates ) )
         , ( 0xCC, ( call_z_nn, TenTStates ) )
+        , ( 0xCD, ( call_0xCD, SeventeenTStates ) )
         , ( 0xD2, ( jp_nc_nn, TenTStates ) )
         , ( 0xD4, ( call_nc_nn, TenTStates ) )
         , ( 0xDA, ( jp_c_nn, TenTStates ) )
@@ -171,12 +170,6 @@ call_m_nn param z80_flags =
     Conditional16BitCall param SevenExtraTStates jump_m
 
 
-ld_indirect_nn_a : Int -> FlagRegisters -> TripleWithFlagsChange
-ld_indirect_nn_a param z80_flags =
-    -- case 0x32: MP=(v=imm16())+1&0xFF|A<<8; env.mem(v,A); time+=3; break;
-    TripleSetIndirect param z80_flags.a
-
-
 call_nz_nn : Int -> FlagRegisters -> TripleWithFlagsChange
 call_nz_nn param z80_flags =
     -- case 0xC4: call(Fr!=0); break;
@@ -219,3 +212,15 @@ call_c_nn param z80_flags =
     --else
     --    Skip3ByteInstruction
     Conditional16BitCall param SevenExtraTStates jump_c
+
+
+call_0xCD : Int -> FlagRegisters -> TripleWithFlagsChange
+call_0xCD param16 z80_flags =
+    -- case 0xCD: v=imm16(); push(PC); MP=PC=v; break;
+    CallImmediate param16
+
+
+jp_nn : Int -> FlagRegisters -> TripleWithFlagsChange
+jp_nn param16 z80_flags =
+    -- case 0xC3: MP=PC=imm16(); break;
+    NewPCRegister param16

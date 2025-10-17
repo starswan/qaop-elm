@@ -236,7 +236,7 @@ applySimple8BitDelta pcInc cpu_time z80changeData rom48k z80 =
 
 
 applyInterruptChange : InterruptPCIncrement -> InstructionDuration -> InterruptChange -> Z80Core -> Z80Core
-applyInterruptChange pcInc duration chaange z80 =
+applyInterruptChange pcInc duration change z80 =
     let
         new_pc =
             case pcInc of
@@ -246,7 +246,7 @@ applyInterruptChange pcInc duration chaange z80 =
         newTime =
             z80.clockTime |> addDuration duration
     in
-    case chaange of
+    case change of
         LoadAFromIR value ->
             --private void ld_a_ir(int v)
             --{
@@ -968,19 +968,6 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
                 , env = { env | sp = int }
             }
 
-        NewPCRegister int ->
-            { z80
-                | pc = int
-                , clockTime = cpu_time
-            }
-
-        CallImmediate int ->
-            let
-                env_1 =
-                    z80.env |> z80_push new_pc cpu_time
-            in
-            { z80 | clockTime = cpu_time |> addDuration SevenTStates, pc = int, env = env_1 }
-
         NewIXRegister int ->
             let
                 main =
@@ -1059,6 +1046,17 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
                 , clockTime = value.time
             }
 
+        TripleSetIndirectFromA addr ->
+            let
+                ( env2, time2 ) =
+                    env |> setMem addr z80.flags.a cpu_time
+            in
+            { z80
+                | pc = new_pc
+                , clockTime = time2
+                , env = env2
+            }
+
         NewTripleRegister int tripleByteRegister ->
             let
                 z80_main =
@@ -1104,20 +1102,6 @@ applyTripleFlagChange cpu_time z80changeData z80 =
         --        | pc = int
         --        , clockTime = cpu_time
         --    }
-        TripleSetIndirect addr value ->
-            let
-                new_pc =
-                    Bitwise.and (z80.pc + 3) 0xFFFF
-
-                ( env2, time2 ) =
-                    env |> setMem addr value cpu_time
-            in
-            { z80
-                | pc = new_pc
-                , clockTime = time2
-                , env = env2
-            }
-
         --AbsoluteCall address ->
         --    let
         --        new_pc =
@@ -1156,6 +1140,22 @@ applyTripleFlagChange cpu_time z80changeData z80 =
                     | pc = Bitwise.and (z80.pc + 3) 0xFFFF
                     , clockTime = cpu_time
                 }
+
+        CallImmediate int ->
+            let
+                new_pc =
+                    Bitwise.and (z80.pc + 3) 0xFFFF
+
+                env_1 =
+                    z80.env |> z80_push new_pc cpu_time
+            in
+            { z80 | clockTime = cpu_time, pc = int, env = env_1 }
+
+        NewPCRegister int ->
+            { z80
+                | pc = int
+                , clockTime = cpu_time
+            }
 
 
 applyEdRegisterDelta : PCIncrement -> InstructionDuration -> EDRegisterChange -> Z80ROM -> Z80Core -> Z80Core
