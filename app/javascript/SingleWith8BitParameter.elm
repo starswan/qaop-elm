@@ -14,6 +14,7 @@ type Single8BitChange
     | Z80In Int
     | Z80Out Int
     | NewARegister Int
+    | FlagJump FlagFunc Int
 
 
 singleWith8BitParam : Dict Int ( Int -> Single8BitChange, InstructionDuration )
@@ -24,8 +25,16 @@ singleWith8BitParam =
         , ( 0x16, ( ld_d_n, SevenTStates ) )
         , ( 0x1E, ( ld_e_n, SevenTStates ) )
         , ( 0x3E, ( ld_a_n, SevenTStates ) )
+        , ( 0xC6, ( add_a_n, SevenTStates ) )
+        , ( 0xCE, ( adc_n, SevenTStates ) )
         , ( 0xD3, ( out_n_a, ElevenTStates ) )
+        , ( 0xD6, ( sub_n, SevenTStates ) )
         , ( 0xDB, ( in_a_n, ElevenTStates ) )
+        , ( 0xDE, ( sbc_a_n, SevenTStates ) )
+        , ( 0xE6, ( and_n, SevenTStates ) )
+        , ( 0xEE, ( xor_n, SevenTStates ) )
+        , ( 0xF6, ( or_n, SevenTStates ) )
+        , ( 0xFE, ( cp_n, SevenTStates ) )
         ]
 
 
@@ -38,20 +47,11 @@ maybeRelativeJump =
         , ( 0x28, ( jr_z_d, SevenTStates ) )
         , ( 0x30, ( jr_nc_d, SevenTStates ) )
         , ( 0x38, ( jr_c_d, SevenTStates ) )
-        , ( 0xC6, ( add_a_n, SevenTStates ) )
-        , ( 0xCE, ( adc_n, SevenTStates ) )
-        , ( 0xD6, ( sub_n, SevenTStates ) )
-        , ( 0xDE, ( sbc_a_n, SevenTStates ) )
-        , ( 0xE6, ( and_n, SevenTStates ) )
-        , ( 0xEE, ( xor_n, SevenTStates ) )
-        , ( 0xF6, ( or_n, SevenTStates ) )
-        , ( 0xFE, ( cp_n, SevenTStates ) )
         ]
 
 
 type JumpChange
     = ActualJump Int
-    | FlagJump FlagFunc Int
     | ConditionalJump Int ShortDelay (FlagRegisters -> Bool)
     | DJNZ Int ShortDelay
 
@@ -174,8 +174,8 @@ djnz param pc =
     DJNZ (pc + 2 + byte param) FiveExtraTStates
 
 
-add_a_n : Int -> Int -> JumpChange
-add_a_n param _ =
+add_a_n : Int -> Single8BitChange
+add_a_n param =
     -- case 0xC6: add(imm8()); break;
     --let
     --    flags =
@@ -185,8 +185,8 @@ add_a_n param _ =
     FlagJump AddA param
 
 
-adc_n : Int -> Int -> JumpChange
-adc_n param _ =
+adc_n : Int -> Single8BitChange
+adc_n param =
     -- case 0xCE: adc(imm8()); break;
     --let
     --    flags =
@@ -196,8 +196,8 @@ adc_n param _ =
     FlagJump AdcA param
 
 
-sub_n : Int -> Int -> JumpChange
-sub_n param _ =
+sub_n : Int -> Single8BitChange
+sub_n param =
     -- case 0xD6: sub(imm8()); break;
     --let
     --    flags =
@@ -207,15 +207,15 @@ sub_n param _ =
     FlagJump SubA param
 
 
-sbc_a_n : Int -> Int -> JumpChange
-sbc_a_n param _ =
+sbc_a_n : Int -> Single8BitChange
+sbc_a_n param =
     -- case 0xDE: sbc(imm8()); break;
     --z80_flags |> sbc param |> FlagJump
     FlagJump SbcA param
 
 
-and_n : Int -> Int -> JumpChange
-and_n param _ =
+and_n : Int -> Single8BitChange
+and_n param =
     -- case 0xE6: and(imm8()); break;
     --let
     --    flags =
@@ -225,8 +225,8 @@ and_n param _ =
     FlagJump AndA param
 
 
-xor_n : Int -> Int -> JumpChange
-xor_n param _ =
+xor_n : Int -> Single8BitChange
+xor_n param =
     -- case 0xEE: xor(imm8()); break;
     --let
     --    flags =
@@ -236,8 +236,8 @@ xor_n param _ =
     FlagJump XorA param
 
 
-or_n : Int -> Int -> JumpChange
-or_n param _ =
+or_n : Int -> Single8BitChange
+or_n param =
     -- case 0xF6: or(imm8()); break;
     --let
     --    flags =
@@ -247,8 +247,8 @@ or_n param _ =
     FlagJump OrA param
 
 
-cp_n : Int -> Int -> JumpChange
-cp_n param _ =
+cp_n : Int -> Single8BitChange
+cp_n param =
     -- case 0xFE: cp(imm8()); break;
     --let
     --    flags =

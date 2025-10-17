@@ -105,20 +105,6 @@ applyJumpChangeDelta cpu_time z80changeData z80 =
                 , clockTime = cpu_time
             }
 
-        FlagJump operation param ->
-            let
-                pc =
-                    Bitwise.and (z80.pc + 2) 0xFFFF
-
-                flags =
-                    z80.flags |> changeFlags operation param
-            in
-            { z80
-                | pc = pc
-                , flags = flags
-                , clockTime = cpu_time
-            }
-
         ConditionalJump address shortDelay function ->
             if z80.flags |> function then
                 let
@@ -192,6 +178,20 @@ applySimple8BitDelta pcInc cpu_time z80changeData rom48k z80 =
             { z80
                 | pc = pc
                 , flags = { flags | a = new_a }
+                , clockTime = cpu_time
+            }
+
+        FlagJump operation param ->
+            let
+                pc =
+                    Bitwise.and (z80.pc + 2) 0xFFFF
+
+                flags =
+                    z80.flags |> changeFlags operation param
+            in
+            { z80
+                | pc = pc
+                , flags = flags
                 , clockTime = cpu_time
             }
 
