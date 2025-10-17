@@ -326,11 +326,7 @@ runOrdinary ct_value instrTime rom48k z80_core =
                     FlagDelta IncrementByOne duration (flagFunc z80_core.flags)
 
                 Nothing ->
-                    let
-                        triple16 =
-                            tripleByteWith16BitParam |> Dict.get ct_value
-                    in
-                    case triple16 of
+                    case tripleByteWith16BitParam |> Dict.get ct_value of
                         Just ( f, duration ) ->
                             let
                                 env =
@@ -374,7 +370,7 @@ runOrdinary ct_value instrTime rom48k z80_core =
                                                         doubleParam =
                                                             env |> mem16 (Bitwise.and (z80_core.pc + 1) 0xFFFF) rom48k env_1
                                                     in
-                                                    Triple16FlagsDelta doubleParam.time (f doubleParam.value16 z80_core.flags)
+                                                    Triple16FlagsDelta doubleParam.time (f doubleParam.value16)
 
                                                 Nothing ->
                                                     case singleByteMainAndFlagRegisters |> Dict.get ct_value of

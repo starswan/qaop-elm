@@ -9,13 +9,13 @@ import Utils exposing (byte, shiftLeftBy8)
 import Z80Core exposing (Z80Core)
 import Z80Env exposing (mem, setMem)
 import Z80Flags exposing (FlagFunc(..), changeFlags, dec, inc)
-import Z80Registers exposing (Single8BitChange(..))
+import Z80Registers exposing (CoreRegister)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (MainWithIndexRegisters)
 
 
 type DoubleWithRegisterChange
-    = RelativeJumpWithTimeOffset Single8BitChange (Maybe Int) Int
+    = RelativeJumpWithTimeOffset CoreRegister Int (Maybe Int) Int
     | DoubleRegChangeStoreIndirect Int Int
     | NewHLRegisterValue Int
     | NewIXRegisterValue Int
@@ -318,7 +318,7 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                     z80.pc + 3
     in
     case z80changeData of
-        RelativeJumpWithTimeOffset single8BitChange maybeInt timeOffset ->
+        RelativeJumpWithTimeOffset single8BitChange regvalue maybeInt timeOffset ->
             let
                 pc =
                     case maybeInt of
@@ -329,7 +329,7 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                             Bitwise.and new_pc 0xFFFF
 
                 main =
-                    z80.main |> applySimple8BitChange single8BitChange
+                    z80.main |> applySimple8BitChange single8BitChange regvalue
             in
             { z80
                 | main = main

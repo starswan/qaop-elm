@@ -37,6 +37,7 @@ type InstructionDuration
 
 type ShortDelay
     = FiveExtraTStates
+    | SevenExtraTStates
 
 
 c_SCRENDT =
@@ -319,6 +320,9 @@ addExtraCpuTime value z80env =
             case value of
                 FiveExtraTStates ->
                     5
+
+                SevenExtraTStates ->
+                    7
     in
     { z80env | cpu_time = z80env.cpu_time + offset }
 

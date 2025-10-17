@@ -3,10 +3,18 @@ module SingleWith8BitParameter exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (InstructionDuration(..), ShortDelay(..))
 import Dict exposing (Dict)
-import Utils exposing (byte, shiftLeftBy8)
+import Utils exposing (byte)
 import Z80Flags exposing (FlagFunc(..), FlagRegisters, jump_c, jump_nc, jump_nz, jump_z)
-import Z80Registers exposing (Single8BitChange(..))
+import Z80Registers exposing (CoreRegister(..))
 import Z80Types exposing (MainWithIndexRegisters)
+
+
+type Single8BitChange
+    = NewRegister CoreRegister Int
+    | Z80In Int
+    | Z80Out Int
+    | NewARegister Int
+    | FlagJump FlagFunc Int
 
 
 singleWith8BitParam : Dict Int ( Int -> Single8BitChange, InstructionDuration )
@@ -16,55 +24,51 @@ singleWith8BitParam =
         , ( 0x0E, ( ld_c_n, SevenTStates ) )
         , ( 0x16, ( ld_d_n, SevenTStates ) )
         , ( 0x1E, ( ld_e_n, SevenTStates ) )
+        , ( 0x3E, ( ld_a_n, SevenTStates ) )
+        , ( 0xC6, ( add_a_n, SevenTStates ) )
+        , ( 0xCE, ( adc_n, SevenTStates ) )
+        , ( 0xD3, ( out_n_a, ElevenTStates ) )
+        , ( 0xD6, ( sub_n, SevenTStates ) )
+        , ( 0xDB, ( in_a_n, ElevenTStates ) )
+        , ( 0xDE, ( sbc_a_n, SevenTStates ) )
+        , ( 0xE6, ( and_n, SevenTStates ) )
+        , ( 0xEE, ( xor_n, SevenTStates ) )
+        , ( 0xF6, ( or_n, SevenTStates ) )
+        , ( 0xFE, ( cp_n, SevenTStates ) )
         ]
 
 
 maybeRelativeJump : Dict Int ( Int -> Int -> JumpChange, InstructionDuration )
 maybeRelativeJump =
     Dict.fromList
-        [ ( 0x18, ( jr_n, TwelveTStates ) )
-        , ( 0x10, ( djnz, FourTStates ) )
+        [ ( 0x10, ( djnz, FourTStates ) )
+        , ( 0x18, ( jr_n, TwelveTStates ) )
         , ( 0x20, ( jr_nz_d, SevenTStates ) )
         , ( 0x28, ( jr_z_d, SevenTStates ) )
         , ( 0x30, ( jr_nc_d, SevenTStates ) )
         , ( 0x38, ( jr_c_d, SevenTStates ) )
-        , ( 0x3E, ( ld_a_n, SevenTStates ) )
-        , ( 0xC6, ( add_a_n, SevenTStates ) )
-        , ( 0xCE, ( adc_n, SevenTStates ) )
-        , ( 0xD6, ( sub_n, SevenTStates ) )
-        , ( 0xDE, ( sbc_a_n, SevenTStates ) )
-        , ( 0xE6, ( and_n, SevenTStates ) )
-        , ( 0xEE, ( xor_n, SevenTStates ) )
-        , ( 0xF6, ( or_n, SevenTStates ) )
-        , ( 0xFE, ( cp_n, SevenTStates ) )
-        , ( 0xD3, ( out_n_a, ElevenTStates ) )
-        , ( 0xDB, ( in_a_n, ElevenTStates ) )
         ]
 
 
 type JumpChange
-    = Z80Out Int
-    | ActualJump Int
-    | FlagJump FlagFunc Int
-    | Z80In Int
+    = ActualJump Int
     | ConditionalJump Int ShortDelay (FlagRegisters -> Bool)
-    | NewARegister Int
     | DJNZ Int ShortDelay
 
 
-applySimple8BitChange : Single8BitChange -> MainWithIndexRegisters -> MainWithIndexRegisters
-applySimple8BitChange change z80_main =
+applySimple8BitChange : CoreRegister -> Int -> MainWithIndexRegisters -> MainWithIndexRegisters
+applySimple8BitChange change int z80_main =
     case change of
-        NewBRegister int ->
+        RegisterB ->
             { z80_main | b = int }
 
-        NewCRegister int ->
+        RegisterC ->
             { z80_main | c = int }
 
-        NewDRegister int ->
+        RegisterD ->
             { z80_main | d = int }
 
-        NewERegister int ->
+        RegisterE ->
             { z80_main | e = int }
 
 
@@ -72,26 +76,26 @@ ld_b_n : Int -> Single8BitChange
 ld_b_n param =
     -- case 0x06: B=imm8(); break;
     --{ z80 | env = new_b.env, pc = new_b.pc }|> set_b new_b.value
-    NewBRegister param
+    NewRegister RegisterB param
 
 
 ld_c_n : Int -> Single8BitChange
 ld_c_n param =
     -- case 0x0E: C=imm8(); break;
     --{ z80 | env = new_c.env, pc = new_c.pc, main = { z80_main | c = new_c.value } }
-    NewCRegister param
+    NewRegister RegisterC param
 
 
 ld_d_n : Int -> Single8BitChange
 ld_d_n param =
     -- case 0x16: D=imm8(); break;
-    NewDRegister param
+    NewRegister RegisterD param
 
 
 ld_e_n : Int -> Single8BitChange
 ld_e_n param =
     -- case 0x1E: E=imm8(); break;
-    NewERegister param
+    NewRegister RegisterE param
 
 
 jr_n : Int -> Int -> JumpChange
@@ -170,8 +174,8 @@ djnz param pc =
     DJNZ (pc + 2 + byte param) FiveExtraTStates
 
 
-add_a_n : Int -> Int -> JumpChange
-add_a_n param _ =
+add_a_n : Int -> Single8BitChange
+add_a_n param =
     -- case 0xC6: add(imm8()); break;
     --let
     --    flags =
@@ -181,8 +185,8 @@ add_a_n param _ =
     FlagJump AddA param
 
 
-adc_n : Int -> Int -> JumpChange
-adc_n param _ =
+adc_n : Int -> Single8BitChange
+adc_n param =
     -- case 0xCE: adc(imm8()); break;
     --let
     --    flags =
@@ -192,8 +196,8 @@ adc_n param _ =
     FlagJump AdcA param
 
 
-sub_n : Int -> Int -> JumpChange
-sub_n param _ =
+sub_n : Int -> Single8BitChange
+sub_n param =
     -- case 0xD6: sub(imm8()); break;
     --let
     --    flags =
@@ -203,15 +207,15 @@ sub_n param _ =
     FlagJump SubA param
 
 
-sbc_a_n : Int -> Int -> JumpChange
-sbc_a_n param _ =
+sbc_a_n : Int -> Single8BitChange
+sbc_a_n param =
     -- case 0xDE: sbc(imm8()); break;
     --z80_flags |> sbc param |> FlagJump
     FlagJump SbcA param
 
 
-and_n : Int -> Int -> JumpChange
-and_n param _ =
+and_n : Int -> Single8BitChange
+and_n param =
     -- case 0xE6: and(imm8()); break;
     --let
     --    flags =
@@ -221,8 +225,8 @@ and_n param _ =
     FlagJump AndA param
 
 
-xor_n : Int -> Int -> JumpChange
-xor_n param _ =
+xor_n : Int -> Single8BitChange
+xor_n param =
     -- case 0xEE: xor(imm8()); break;
     --let
     --    flags =
@@ -232,8 +236,8 @@ xor_n param _ =
     FlagJump XorA param
 
 
-or_n : Int -> Int -> JumpChange
-or_n param _ =
+or_n : Int -> Single8BitChange
+or_n param =
     -- case 0xF6: or(imm8()); break;
     --let
     --    flags =
@@ -243,8 +247,8 @@ or_n param _ =
     FlagJump OrA param
 
 
-cp_n : Int -> Int -> JumpChange
-cp_n param _ =
+cp_n : Int -> Single8BitChange
+cp_n param =
     -- case 0xFE: cp(imm8()); break;
     --let
     --    flags =
@@ -254,15 +258,15 @@ cp_n param _ =
     FlagJump CpA param
 
 
-ld_a_n : Int -> Int -> JumpChange
-ld_a_n param _ =
+ld_a_n : Int -> Single8BitChange
+ld_a_n param =
     -- case 0x3E: A=imm8(); break;
     --FlagJump { z80_flags | a = param }
     NewARegister param
 
 
-out_n_a : Int -> Int -> JumpChange
-out_n_a param _ =
+out_n_a : Int -> Single8BitChange
+out_n_a param =
     -- case 0xD3: env.out(v=imm8()|A<<8,A); MP=v+1&0xFF|v&0xFF00; time+=4; break;
     --let
     --    portNum =
@@ -272,8 +276,8 @@ out_n_a param _ =
     Z80Out param
 
 
-in_a_n : Int -> Int -> JumpChange
-in_a_n param _ =
+in_a_n : Int -> Single8BitChange
+in_a_n param =
     -- case 0xDB: MP=(v=imm8()|A<<8)+1; A=env.in(v); time+=4; break;
     --let
     --    portNum =
