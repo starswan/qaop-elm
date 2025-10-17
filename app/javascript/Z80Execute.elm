@@ -9,7 +9,7 @@ import RegisterChange exposing (EDRegisterChange(..), InterruptChange(..), Regis
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
 import SingleEnvWithMain exposing (SingleEnvMainChange, applySingleEnvMainChange)
 import SingleNoParams exposing (NoParamChange(..), applyNoParamsDelta)
-import SingleWith8BitParameter exposing (JumpChange(..), applySimple8BitChange)
+import SingleWith8BitParameter exposing (JumpChange(..), Single8BitChange(..), applySimple8BitChange)
 import TripleByte exposing (TripleByteChange(..), TripleByteRegister(..))
 import TripleWithFlags exposing (TripleWithFlagsChange(..))
 import TripleWithMain exposing (TripleMainChange, applyTripleMainChange)
@@ -20,7 +20,7 @@ import Z80Debug exposing (debugLog, debugTodo)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..), applyDeltaWithChanges)
 import Z80Env exposing (Z80Env, Z80EnvWithPC, mem, mem16, setMem, setMemIgnoringTime, z80_in, z80_out, z80_pop, z80_push)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, f_szh0n0p, inc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
-import Z80Registers exposing (ChangeMainRegister(..), ChangeOneRegister(..), CoreRegister(..), Single8BitChange)
+import Z80Registers exposing (ChangeMainRegister(..), ChangeOneRegister(..), CoreRegister(..))
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (InterruptRegisters, MainWithIndexRegisters, get_bc, get_xy, set_bc_main, set_de_main, set_xy)
 
@@ -227,7 +227,9 @@ applySimple8BitDelta pcInc cpu_time z80changeData z80 =
                     Bitwise.and (z80.pc + 3) 0xFFFF
 
         main =
-            z80.main |> applySimple8BitChange z80changeData
+            case z80changeData of
+                NewRegister coreRegister int ->
+                    z80.main |> applySimple8BitChange coreRegister int
     in
     { z80 | pc = new_pc, main = main, clockTime = cpu_time }
 

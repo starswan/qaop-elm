@@ -3,10 +3,14 @@ module SingleWith8BitParameter exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (InstructionDuration(..), ShortDelay(..))
 import Dict exposing (Dict)
-import Utils exposing (byte, shiftLeftBy8)
+import Utils exposing (byte)
 import Z80Flags exposing (FlagFunc(..), FlagRegisters, jump_c, jump_nc, jump_nz, jump_z)
-import Z80Registers exposing (Single8BitChange(..))
+import Z80Registers exposing (CoreRegister(..))
 import Z80Types exposing (MainWithIndexRegisters)
+
+
+type Single8BitChange
+    = NewRegister CoreRegister Int
 
 
 singleWith8BitParam : Dict Int ( Int -> Single8BitChange, InstructionDuration )
@@ -52,19 +56,19 @@ type JumpChange
     | DJNZ Int ShortDelay
 
 
-applySimple8BitChange : Single8BitChange -> MainWithIndexRegisters -> MainWithIndexRegisters
-applySimple8BitChange change z80_main =
+applySimple8BitChange : CoreRegister -> Int -> MainWithIndexRegisters -> MainWithIndexRegisters
+applySimple8BitChange change int z80_main =
     case change of
-        NewBRegister int ->
+        RegisterB ->
             { z80_main | b = int }
 
-        NewCRegister int ->
+        RegisterC ->
             { z80_main | c = int }
 
-        NewDRegister int ->
+        RegisterD ->
             { z80_main | d = int }
 
-        NewERegister int ->
+        RegisterE ->
             { z80_main | e = int }
 
 
@@ -72,26 +76,26 @@ ld_b_n : Int -> Single8BitChange
 ld_b_n param =
     -- case 0x06: B=imm8(); break;
     --{ z80 | env = new_b.env, pc = new_b.pc }|> set_b new_b.value
-    NewBRegister param
+    NewRegister RegisterB param
 
 
 ld_c_n : Int -> Single8BitChange
 ld_c_n param =
     -- case 0x0E: C=imm8(); break;
     --{ z80 | env = new_c.env, pc = new_c.pc, main = { z80_main | c = new_c.value } }
-    NewCRegister param
+    NewRegister RegisterC param
 
 
 ld_d_n : Int -> Single8BitChange
 ld_d_n param =
     -- case 0x16: D=imm8(); break;
-    NewDRegister param
+    NewRegister RegisterD param
 
 
 ld_e_n : Int -> Single8BitChange
 ld_e_n param =
     -- case 0x1E: E=imm8(); break;
-    NewERegister param
+    NewRegister RegisterE param
 
 
 jr_n : Int -> Int -> JumpChange

@@ -25,10 +25,3 @@ type CoreRegister
     | RegisterC
     | RegisterD
     | RegisterE
-
-
-type Single8BitChange
-    = NewBRegister Int
-    | NewCRegister Int
-    | NewDRegister Int
-    | NewERegister Int
