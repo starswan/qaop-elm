@@ -41,8 +41,8 @@ singleWith8BitParam =
 maybeRelativeJump : Dict Int ( Int -> Int -> JumpChange, InstructionDuration )
 maybeRelativeJump =
     Dict.fromList
-        [ ( 0x18, ( jr_n, TwelveTStates ) )
-        , ( 0x10, ( djnz, FourTStates ) )
+        [ ( 0x10, ( djnz, FourTStates ) )
+        , ( 0x18, ( jr_n, TwelveTStates ) )
         , ( 0x20, ( jr_nz_d, SevenTStates ) )
         , ( 0x28, ( jr_z_d, SevenTStates ) )
         , ( 0x30, ( jr_nc_d, SevenTStates ) )
