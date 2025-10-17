@@ -12,6 +12,7 @@ import Z80Types exposing (MainWithIndexRegisters)
 type Single8BitChange
     = NewRegister CoreRegister Int
     | Z80In Int
+    | Z80Out Int
 
 
 singleWith8BitParam : Dict Int ( Int -> Single8BitChange, InstructionDuration )
@@ -21,6 +22,7 @@ singleWith8BitParam =
         , ( 0x0E, ( ld_c_n, SevenTStates ) )
         , ( 0x16, ( ld_d_n, SevenTStates ) )
         , ( 0x1E, ( ld_e_n, SevenTStates ) )
+        , ( 0xD3, ( out_n_a, ElevenTStates ) )
         , ( 0xDB, ( in_a_n, ElevenTStates ) )
         ]
 
@@ -43,13 +45,11 @@ maybeRelativeJump =
         , ( 0xEE, ( xor_n, SevenTStates ) )
         , ( 0xF6, ( or_n, SevenTStates ) )
         , ( 0xFE, ( cp_n, SevenTStates ) )
-        , ( 0xD3, ( out_n_a, ElevenTStates ) )
         ]
 
 
 type JumpChange
-    = Z80Out Int
-    | ActualJump Int
+    = ActualJump Int
     | FlagJump FlagFunc Int
     | ConditionalJump Int ShortDelay (FlagRegisters -> Bool)
     | NewARegister Int
@@ -265,8 +265,8 @@ ld_a_n param _ =
     NewARegister param
 
 
-out_n_a : Int -> Int -> JumpChange
-out_n_a param _ =
+out_n_a : Int -> Single8BitChange
+out_n_a param =
     -- case 0xD3: env.out(v=imm8()|A<<8,A); MP=v+1&0xFF|v&0xFF00; time+=4; break;
     --let
     --    portNum =

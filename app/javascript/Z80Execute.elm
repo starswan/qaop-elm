@@ -66,7 +66,7 @@ apply_delta z80 rom48k z80delta =
             z80 |> applyDoubleWithRegistersDelta pcInc cpuTimeCTime doubleWithRegisterChange rom48k
 
         JumpChangeDelta cpuTimeCTime jumpChange ->
-            z80 |> applyJumpChangeDelta cpuTimeCTime jumpChange rom48k
+            z80 |> applyJumpChangeDelta cpuTimeCTime jumpChange
 
         NoParamsDelta cpuTimeCTime noParamChange ->
             z80 |> applyNoParamsDelta cpuTimeCTime noParamChange rom48k
@@ -96,8 +96,8 @@ apply_delta z80 rom48k z80delta =
             z80 |> applyEdRegisterDelta pCIncrement instructionDuration eDRegisterChange rom48k
 
 
-applyJumpChangeDelta : CpuTimeCTime -> JumpChange -> Z80ROM -> Z80Core -> Z80Core
-applyJumpChangeDelta cpu_time z80changeData rom48k z80 =
+applyJumpChangeDelta : CpuTimeCTime -> JumpChange -> Z80Core -> Z80Core
+applyJumpChangeDelta cpu_time z80changeData z80 =
     case z80changeData of
         ActualJump pc ->
             { z80
@@ -117,24 +117,6 @@ applyJumpChangeDelta cpu_time z80changeData rom48k z80 =
                 | pc = pc
                 , flags = flags
                 , clockTime = cpu_time
-            }
-
-        Z80Out param ->
-            let
-                -- case 0xD3: env.out(v=imm8()|A<<8,A); MP=v+1&0xFF|v&0xFF00; time+=4; break;
-                portNum =
-                    Bitwise.or param (shiftLeftBy8 z80.flags.a)
-
-                pc =
-                    Bitwise.and (z80.pc + 2) 0xFFFF
-
-                ( env, newTime ) =
-                    z80.env |> z80_out portNum z80.flags.a cpu_time
-            in
-            { z80
-                | pc = pc
-                , env = env
-                , clockTime = newTime
             }
 
         ConditionalJump address shortDelay function ->
@@ -232,6 +214,24 @@ applySimple8BitDelta pcInc cpu_time z80changeData rom48k z80 =
                 | pc = pc
                 , flags = { flags | a = new_a.value }
                 , clockTime = new_a.time
+            }
+
+        Z80Out param ->
+            let
+                -- case 0xD3: env.out(v=imm8()|A<<8,A); MP=v+1&0xFF|v&0xFF00; time+=4; break;
+                portNum =
+                    Bitwise.or param (shiftLeftBy8 z80.flags.a)
+
+                pc =
+                    Bitwise.and (z80.pc + 2) 0xFFFF
+
+                ( env, newTime ) =
+                    z80.env |> z80_out portNum z80.flags.a cpu_time
+            in
+            { z80
+                | pc = pc
+                , env = env
+                , clockTime = newTime
             }
 
 
