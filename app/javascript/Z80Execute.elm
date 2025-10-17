@@ -1090,22 +1090,20 @@ applyTripleFlagChange cpu_time z80changeData z80 =
             z80.env
     in
     case z80changeData of
-        Skip3ByteInstruction ->
-            let
-                new_pc =
-                    Bitwise.and (z80.pc + 3) 0xFFFF
-            in
-            { z80
-                | pc = new_pc
-                , clockTime = cpu_time
-            }
-
-        AbsoluteJump int ->
-            { z80
-                | pc = int
-                , clockTime = cpu_time
-            }
-
+        --Skip3ByteInstruction ->
+        --    let
+        --        new_pc =
+        --            Bitwise.and (z80.pc + 3) 0xFFFF
+        --    in
+        --    { z80
+        --        | pc = new_pc
+        --        , clockTime = cpu_time
+        --    }
+        --AbsoluteJump int ->
+        --    { z80
+        --        | pc = int
+        --        , clockTime = cpu_time
+        --    }
         TripleSetIndirect addr value ->
             let
                 new_pc =
@@ -1120,15 +1118,44 @@ applyTripleFlagChange cpu_time z80changeData z80 =
                 , env = env2
             }
 
-        AbsoluteCall address ->
-            let
-                new_pc =
-                    Bitwise.and (z80.pc + 3) 0xFFFF
+        --AbsoluteCall address ->
+        --    let
+        --        new_pc =
+        --            Bitwise.and (z80.pc + 3) 0xFFFF
+        --
+        --        env_1 =
+        --            z80.env |> z80_push new_pc cpu_time
+        --    in
+        --    { z80 | clockTime = cpu_time |> addDuration SevenTStates, pc = address, env = env_1 }
+        Conditional16BitJump int function ->
+            if z80.flags |> function then
+                { z80
+                    | pc = int
+                    , clockTime = cpu_time
+                }
 
-                env_1 =
-                    z80.env |> z80_push new_pc cpu_time
-            in
-            { z80 | clockTime = cpu_time |> addDuration SevenTStates, pc = address, env = env_1 }
+            else
+                { z80
+                    | pc = Bitwise.and (z80.pc + 3) 0xFFFF
+                    , clockTime = cpu_time
+                }
+
+        Conditional16BitCall address shortdelay function ->
+            if z80.flags |> function then
+                let
+                    new_pc =
+                        Bitwise.and (z80.pc + 3) 0xFFFF
+
+                    env_1 =
+                        z80.env |> z80_push new_pc cpu_time
+                in
+                { z80 | clockTime = cpu_time |> addExtraCpuTime shortdelay, pc = address, env = env_1 }
+
+            else
+                { z80
+                    | pc = Bitwise.and (z80.pc + 3) 0xFFFF
+                    , clockTime = cpu_time
+                }
 
 
 applyEdRegisterDelta : PCIncrement -> InstructionDuration -> EDRegisterChange -> Z80ROM -> Z80Core -> Z80Core
