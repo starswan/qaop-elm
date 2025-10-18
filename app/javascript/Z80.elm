@@ -24,7 +24,7 @@ import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters, singleByteM
 import SingleNoParams exposing (ex_af, execute_0x76_halt, exx, singleWithNoParam, singleWithNoParamDD, singleWithNoParamFD)
 import SingleWith8BitParameter exposing (maybeRelativeJump, singleWith8BitParam)
 import TripleByte exposing (tripleByteWith16BitParam, tripleByteWith16BitParamDD, tripleByteWith16BitParamFD)
-import TripleWithFlags exposing (triple16WithFlags)
+import TripleWithFlags exposing (triple16bitJumps)
 import TripleWithMain exposing (tripleMainRegs, tripleMainRegsIX, tripleMainRegsIY)
 import Z80Core exposing (Z80, Z80Core, di_0xF3, ei_0xFB)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..))
@@ -358,7 +358,7 @@ runOrdinary ct_value instrTime rom48k z80_core =
                                             MainWithEnvDelta IncrementByOne duration (f z80_core.main rom48k instrTime z80_core.env)
 
                                         Nothing ->
-                                            case triple16WithFlags |> Dict.get ct_value of
+                                            case triple16bitJumps |> Dict.get ct_value of
                                                 Just ( f, duration ) ->
                                                     let
                                                         env =

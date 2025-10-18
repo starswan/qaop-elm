@@ -12,8 +12,8 @@ type TripleWithFlagsChange
     | NewPCRegister Int
 
 
-triple16WithFlags : Dict Int ( Int -> TripleWithFlagsChange, InstructionDuration )
-triple16WithFlags =
+triple16bitJumps : Dict Int ( Int -> TripleWithFlagsChange, InstructionDuration )
+triple16bitJumps =
     Dict.fromList
         [ ( 0xC2, ( jp_nz, TenTStates ) )
         , ( 0xC3, ( jp_nn, TenTStates ) )
