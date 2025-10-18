@@ -148,15 +148,11 @@ compileRunning rom48k z80env key value input =
                 { input | state = state, seen = input.seen |> Set.insert key }
 
             JumpTo int ->
-                let
-                    state =
-                        if key < int then
-                            JumpTo int
+                if key < int then
+                    input
 
-                        else
-                            Running
-                in
-                { input | state = state }
+                else
+                    { input | state = Running }
 
             Running ->
                 let
@@ -164,7 +160,6 @@ compileRunning rom48k z80env key value input =
                         if [ 0xC9, 0xE9 ] |> List.member value then
                             -- C9 == RET , E9 = JP (HL)
                             { input | state = Stopping }
-                            --else if value == 0x18 then
 
                         else
                             let
