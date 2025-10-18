@@ -57,7 +57,7 @@ apply_delta z80 rom48k z80delta =
             z80 |> applyFlagDelta pcInc duration flagRegisters rom48k
 
         RegisterChangeDelta pcInc duration registerChange ->
-            z80 |> applyRegisterDelta pcInc duration registerChange rom48k
+            z80 |> applyRegisterDelta pcInc (z80.clockTime |> addDuration duration) registerChange rom48k
 
         Simple8BitDelta pcInc cpuTimeCTime single8BitChange ->
             z80 |> applySimple8BitDelta pcInc cpuTimeCTime single8BitChange rom48k
@@ -451,14 +451,11 @@ applyPureDelta cpuInc cpu_time z80changeData z80 =
             { z80 | pc = new_pc, clockTime = cpu_time, flags = intWithFlags.flags, main = new_main }
 
 
-applyRegisterDelta : PCIncrement -> InstructionDuration -> RegisterChange -> Z80ROM -> Z80Core -> Z80Core
-applyRegisterDelta pc_inc duration z80changeData rom48k z80_core =
+applyRegisterDelta : PCIncrement -> CpuTimeCTime -> RegisterChange -> Z80ROM -> Z80Core -> Z80Core
+applyRegisterDelta pc_inc newTime z80changeData rom48k z80_core =
     let
         env =
             z80_core.env
-
-        newTime =
-            z80_core.clockTime |> addDuration duration
 
         new_pc =
             case pc_inc of
