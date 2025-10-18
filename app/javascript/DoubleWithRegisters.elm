@@ -17,7 +17,7 @@ import Z80Types exposing (IXIY(..), MainWithIndexRegisters)
 type DoubleWithRegisterChange
     = DoubleRegChangeStoreIndirectHL Int
     | NewARegisterIndirect IXIY Int
-    | SetARegisterIndirect Int
+    | SetARegisterIndirect IXIY Int
     | NewBRegisterIndirect Int
     | NewCRegisterIndirect Int
     | NewDRegisterIndirect Int
@@ -164,7 +164,7 @@ ld_indirect_ix_a z80_main param =
         address =
             z80_main.ix + byte param
     in
-    SetARegisterIndirect address
+    SetARegisterIndirect IXIY_IX (byte param)
 
 
 ld_indirect_iy_a : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
@@ -175,7 +175,7 @@ ld_indirect_iy_a z80_main param =
         address =
             z80_main.iy + byte param
     in
-    SetARegisterIndirect address
+    SetARegisterIndirect IXIY_IY (byte param)
 
 
 ld_a_indirect_ix : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
@@ -505,8 +505,16 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 , flags = { flags | a = new_a.value }
             }
 
-        SetARegisterIndirect addr ->
+        SetARegisterIndirect ixiy param ->
             let
+                addr =
+                    case ixiy of
+                        IXIY_IX ->
+                            z80.main.ix + param
+
+                        IXIY_IY ->
+                            z80.main.iy + param
+
                 pc =
                     Bitwise.and new_pc 0xFFFF
 
