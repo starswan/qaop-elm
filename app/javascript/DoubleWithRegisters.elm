@@ -14,19 +14,22 @@ import Z80Types exposing (MainWithIndexRegisters)
 
 
 type DoubleWithRegisterChange
-    = DoubleRegChangeStoreIndirect Int Int
-    | NewHLRegisterValue Int
-    | NewIXRegisterValue Int
-    | NewIYRegisterValue Int
+    = DoubleRegChangeStoreIndirect (MainWithIndexRegisters -> Int) Int
     | NewARegisterIndirect Int
     | SetARegisterIndirect Int
     | IndexedIndirectIncrement Int Int
     | IndexedIndirectDecrement Int Int
     | FlagOpIndexedIndirect FlagFunc Int
-    | NewRegisterIndirect ChangeMainRegister Int
+    | NewRegisterIndirect ChangeMainRegister (MainWithIndexRegisters -> Int) Int
+    | NewHValue Int
+    | NewLValue Int
+    | NewIXHValue Int
+    | NewIXLValue Int
+    | NewIYHValue Int
+    | NewIYLValue Int
 
 
-doubleWithRegisters : Dict Int ( MainWithIndexRegisters -> Int -> DoubleWithRegisterChange, InstructionDuration )
+doubleWithRegisters : Dict Int ( Int -> DoubleWithRegisterChange, InstructionDuration )
 doubleWithRegisters =
     Dict.fromList
         [ ( 0x26, ( ld_h_n, SevenTStates ) )
@@ -44,22 +47,22 @@ doubleWithRegistersIX =
         , ( 0x35, ( dec_indirect_ix, TwentyThreeTStates ) )
 
         -- case 0x46: B=env.mem(getd(xy)); time+=3; break;
-        , ( 0x46, ( \z80_main param -> NewRegisterIndirect ChangeMainB (z80_main.ix + byte param |> Bitwise.and 0xFFFF), SevenTStates ) )
+        , ( 0x46, ( \z80_main param -> NewRegisterIndirect ChangeMainB .ix (byte param), SevenTStates ) )
 
         -- case 0x4E: C=env.mem(getd(xy)); time+=3; break;
-        , ( 0x4E, ( \z80_main param -> NewRegisterIndirect ChangeMainC (z80_main.ix + byte param |> Bitwise.and 0xFFFF), SevenTStates ) )
+        , ( 0x4E, ( \z80_main param -> NewRegisterIndirect ChangeMainC .ix (byte param), SevenTStates ) )
 
         --case 0x56: D=env.mem(getd(xy)); time+=3; break;
-        , ( 0x56, ( \z80_main param -> NewRegisterIndirect ChangeMainD (z80_main.ix + byte param |> Bitwise.and 0xFFFF), SevenTStates ) )
+        , ( 0x56, ( \z80_main param -> NewRegisterIndirect ChangeMainD .ix (byte param), SevenTStates ) )
 
         --case 0x5E: E=env.mem(getd(xy)); time+=3; break;
-        , ( 0x5E, ( \z80_main param -> NewRegisterIndirect ChangeMainE (z80_main.ix + byte param |> Bitwise.and 0xFFFF), SevenTStates ) )
+        , ( 0x5E, ( \z80_main param -> NewRegisterIndirect ChangeMainE .ix (byte param), SevenTStates ) )
 
         -- case 0x66: HL=HL&0xFF|env.mem(getd(xy))<<8; time+=3; break;
-        , ( 0x66, ( \z80_main param -> NewRegisterIndirect ChangeMainH (z80_main.ix + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
+        , ( 0x66, ( \z80_main param -> NewRegisterIndirect ChangeMainH .ix (byte param), NineteenTStates ) )
 
         -- case 0x6E: HL=HL&0xFF00|env.mem(getd(xy)); time+=3; break;
-        , ( 0x6E, ( \z80_main param -> NewRegisterIndirect ChangeMainL (z80_main.ix + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
+        , ( 0x6E, ( \z80_main param -> NewRegisterIndirect ChangeMainL .ix (byte param), NineteenTStates ) )
         , ( 0x86, ( \z80_main param -> FlagOpIndexedIndirect AddA (z80_main.ix + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
         , ( 0x8E, ( \z80_main param -> FlagOpIndexedIndirect AdcA (z80_main.ix + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
         , ( 0x96, ( \z80_main param -> FlagOpIndexedIndirect SubA (z80_main.ix + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
@@ -82,22 +85,22 @@ doubleWithRegistersIY =
         , ( 0x35, ( dec_indirect_iy, TwentyThreeTStates ) )
 
         -- case 0x46: B=env.mem(getd(xy)); time+=3; break;
-        , ( 0x46, ( \z80_main param -> NewRegisterIndirect ChangeMainB (z80_main.iy + byte param |> Bitwise.and 0xFFFF), SevenTStates ) )
+        , ( 0x46, ( \z80_main param -> NewRegisterIndirect ChangeMainB .iy (byte param), SevenTStates ) )
 
         -- case 0x4E: C=env.mem(getd(xy)); time+=3; break;
-        , ( 0x4E, ( \z80_main param -> NewRegisterIndirect ChangeMainC (z80_main.iy + byte param |> Bitwise.and 0xFFFF), SevenTStates ) )
+        , ( 0x4E, ( \z80_main param -> NewRegisterIndirect ChangeMainC .iy (byte param), SevenTStates ) )
 
         --case 0x56: D=env.mem(getd(xy)); time+=3; break;
-        , ( 0x56, ( \z80_main param -> NewRegisterIndirect ChangeMainD (z80_main.iy + byte param |> Bitwise.and 0xFFFF), SevenTStates ) )
+        , ( 0x56, ( \z80_main param -> NewRegisterIndirect ChangeMainD .iy (byte param), SevenTStates ) )
 
         --case 0x5E: E=env.mem(getd(xy)); time+=3; break;
-        , ( 0x5E, ( \z80_main param -> NewRegisterIndirect ChangeMainE (z80_main.iy + byte param |> Bitwise.and 0xFFFF), SevenTStates ) )
+        , ( 0x5E, ( \z80_main param -> NewRegisterIndirect ChangeMainE .iy (byte param), SevenTStates ) )
 
         -- case 0x66: HL=HL&0xFF|env.mem(getd(xy))<<8; time+=3; break;
-        , ( 0x66, ( \z80_main param -> NewRegisterIndirect ChangeMainH (z80_main.iy + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
+        , ( 0x66, ( \z80_main param -> NewRegisterIndirect ChangeMainH .iy (byte param), NineteenTStates ) )
 
         -- case 0x6E: HL=HL&0xFF00|env.mem(getd(xy)); time+=3; break;
-        , ( 0x6E, ( \z80_main param -> NewRegisterIndirect ChangeMainL (z80_main.iy + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
+        , ( 0x6E, ( \z80_main param -> NewRegisterIndirect ChangeMainL .iy (byte param), NineteenTStates ) )
         , ( 0x86, ( \z80_main param -> FlagOpIndexedIndirect AddA (z80_main.iy + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
         , ( 0x8E, ( \z80_main param -> FlagOpIndexedIndirect AdcA (z80_main.iy + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
         , ( 0x96, ( \z80_main param -> FlagOpIndexedIndirect SubA (z80_main.iy + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
@@ -111,40 +114,46 @@ doubleWithRegistersIY =
         ]
 
 
-ld_h_n : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
-ld_h_n z80_main param =
+ld_h_n : Int -> DoubleWithRegisterChange
+ld_h_n param =
     -- case 0x26: HL=HL&0xFF|imm8()<<8; break;
-    Bitwise.or (param |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF) |> NewHLRegisterValue
+    --Bitwise.or (param |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF) |> NewHLRegisterValue
+    NewHValue param
 
 
 ld_ix_h_n : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
-ld_ix_h_n z80_main param =
+ld_ix_h_n _ param =
     -- case 0x26: xy=xy&0xFF|imm8()<<8; break;
-    Bitwise.or (param |> shiftLeftBy8) (Bitwise.and z80_main.ix 0xFF) |> NewIXRegisterValue
+    --Bitwise.or (param |> shiftLeftBy8) (Bitwise.and z80_main.ix 0xFF) |> NewIXRegisterValue
+    NewIXHValue param
 
 
 ld_iy_h_n : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
-ld_iy_h_n z80_main param =
+ld_iy_h_n _ param =
     -- case 0x26: xy=xy&0xFF|imm8()<<8; break;
-    Bitwise.or (param |> shiftLeftBy8) (Bitwise.and z80_main.iy 0xFF) |> NewIYRegisterValue
+    --Bitwise.or (param |> shiftLeftBy8) (Bitwise.and z80_main.iy 0xFF) |> NewIYRegisterValue
+    NewIYHValue param
 
 
-ld_l_n : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
-ld_l_n z80_main param =
+ld_l_n : Int -> DoubleWithRegisterChange
+ld_l_n param =
     -- case 0x2E: HL=HL&0xFF00|imm8(); break;
-    Bitwise.or param (Bitwise.and z80_main.hl 0xFF00) |> NewHLRegisterValue
+    --Bitwise.or param (Bitwise.and z80_main.hl 0xFF00) |> NewHLRegisterValue
+    NewLValue param
 
 
 ld_ix_l_n : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
-ld_ix_l_n z80_main param =
+ld_ix_l_n _ param =
     -- case 0x2E: xy=xy&0xFF00|imm8(); break;
-    Bitwise.or param (Bitwise.and z80_main.ix 0xFF00) |> NewIXRegisterValue
+    --Bitwise.or param (Bitwise.and z80_main.ix 0xFF00) |> NewIXRegisterValue
+    NewIXLValue param
 
 
 ld_iy_l_n : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
-ld_iy_l_n z80_main param =
+ld_iy_l_n _ param =
     -- case 0x2E: xy=xy&0xFF00|imm8(); break;
-    Bitwise.or param (Bitwise.and z80_main.iy 0xFF00) |> NewIYRegisterValue
+    --Bitwise.or param (Bitwise.and z80_main.iy 0xFF00) |> NewIYRegisterValue
+    NewIYLValue param
 
 
 ld_indirect_ix_a : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
@@ -172,18 +181,14 @@ ld_a_indirect_iy : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
 ld_a_indirect_iy z80_main param =
     -- case 0x7E: A=env.mem(HL); time+=3; break;
     -- case 0x7E: A=env.mem(getd(xy)); time+=3; break;
-    let
-        address =
-            z80_main.iy + byte param
-    in
-    NewARegisterIndirect address
+    NewARegisterIndirect (z80_main.iy + byte param)
 
 
-ld_indirect_hl_n : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
-ld_indirect_hl_n z80_main param =
+ld_indirect_hl_n : Int -> DoubleWithRegisterChange
+ld_indirect_hl_n param =
     -- case 0x36: env.mem(HL,imm8()); time+=3; break;
     -- case 0x36: {int a=(char)(xy+(byte)env.mem(PC)); time+=3;
-    DoubleRegChangeStoreIndirect z80_main.hl param
+    DoubleRegChangeStoreIndirect .hl param
 
 
 inc_indirect_ix : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
@@ -219,38 +224,89 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
         DoubleRegChangeStoreIndirect addr value ->
             let
                 ( env_1, newTime ) =
-                    z80.env |> setMem addr value cpu_time
+                    z80.env |> setMem (z80.main |> addr) value cpu_time
             in
             { z80 | env = env_1 }
 
-        NewHLRegisterValue int ->
+        NewHValue param ->
             let
-                main =
+                z80_main =
                     z80.main
-            in
-            { z80 | main = { main | hl = int } }
 
-        NewIXRegisterValue int ->
+                new_hl =
+                    Bitwise.or (param |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
+            in
+            { z80
+                | main = { z80_main | hl = new_hl }
+            }
+
+        NewLValue param ->
             let
-                main =
+                z80_main =
                     z80.main
-            in
-            { z80 | main = { main | ix = int } }
 
-        NewIYRegisterValue int ->
+                new_hl =
+                    Bitwise.or param (Bitwise.and z80_main.hl 0xFF00)
+            in
+            { z80
+                | main = { z80_main | hl = new_hl }
+            }
+
+        NewIXHValue param ->
             let
-                main =
+                z80_main =
                     z80.main
-            in
-            { z80 | main = { main | iy = int } }
 
-        NewRegisterIndirect changeOneRegister addr ->
+                new_hl =
+                    Bitwise.or (param |> shiftLeftBy8) (Bitwise.and z80_main.ix 0xFF)
+            in
+            { z80
+                | main = { z80_main | ix = new_hl }
+            }
+
+        NewIXLValue param ->
+            let
+                z80_main =
+                    z80.main
+
+                new_hl =
+                    Bitwise.or param (Bitwise.and z80_main.ix 0xFF00)
+            in
+            { z80
+                | main = { z80_main | ix = new_hl }
+            }
+
+        NewIYHValue param ->
+            let
+                z80_main =
+                    z80.main
+
+                new_hl =
+                    Bitwise.or (param |> shiftLeftBy8) (Bitwise.and z80_main.iy 0xFF)
+            in
+            { z80
+                | main = { z80_main | iy = new_hl }
+            }
+
+        NewIYLValue param ->
+            let
+                z80_main =
+                    z80.main
+
+                new_hl =
+                    Bitwise.or param (Bitwise.and z80_main.iy 0xFF00)
+            in
+            { z80
+                | main = { z80_main | iy = new_hl }
+            }
+
+        NewRegisterIndirect changeOneRegister addr offset ->
             let
                 main =
                     z80.main
 
                 new_b =
-                    z80.env |> mem addr cpu_time rom48k
+                    z80.env |> mem ((main |> addr) + offset |> Bitwise.and 0xFFFF) cpu_time rom48k
 
                 new_main =
                     case changeOneRegister of
