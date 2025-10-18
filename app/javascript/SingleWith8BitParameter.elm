@@ -156,21 +156,6 @@ djnz param pc =
     --case 0x10: {time++; v=PC; byte d=(byte)env.mem(v++); time+=3;
     --if((B=B-1&0xFF)!=0) {time+=5; MP=v+=d;}
     --PC=(char)v;} break;
-    --let
-    --    d =
-    --        byte param
-    --
-    --    b =
-    --        Bitwise.and (z80_main.b - 1) 0xFF
-    --
-    --    ( time, jump ) =
-    --        if b /= 0 then
-    --            ( 9, Just d )
-    --
-    --        else
-    --            ( 4, Nothing )
-    --in
-    --RelativeJumpWithTimeOffset (NewBRegister b) jump time
     DJNZ (pc + 2 + byte param) FiveExtraTStates
 
 
