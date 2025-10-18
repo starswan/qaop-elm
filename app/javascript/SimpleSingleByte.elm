@@ -552,34 +552,6 @@ ld_a_l =
     RegisterChangeA get_l
 
 
-
---ld_indirect_hl_c : MainWithIndexRegisters -> RegisterChange
---ld_indirect_hl_c z80_main =
--- case 0x71: env.mem(HL,C); time+=3; break;
--- case 0x71: env.mem(getd(xy),C); time+=3; break;
---SetIndirect .hl .c
---ld_indirect_hl_d : MainWithIndexRegisters -> RegisterChange
---ld_indirect_hl_d z80_main =
--- case 0x72: env.mem(HL,D); time+=3; break;
--- case 0x72: env.mem(getd(xy),D); time+=3; break;
---SetIndirect .hl .d
---ld_indirect_hl_e : MainWithIndexRegisters -> RegisterChange
---ld_indirect_hl_e z80_main =
--- case 0x73: env.mem(HL,E); time+=3; break;
--- case 0x73: env.mem(getd(xy),E); time+=3; break;
---SetIndirect .hl .e
---ld_indirect_hl_h : MainWithIndexRegisters -> RegisterChange
---ld_indirect_hl_h z80_main =
--- case 0x74: env.mem(HL,HL>>>8); time+=3; break;
--- case 0x74: env.mem(getd(xy),HL>>>8); time+=3; break;
---SetIndirect .hl get_h
---ld_indirect_hl_l : MainWithIndexRegisters -> RegisterChange
---ld_indirect_hl_l z80_main =
--- case 0x75: env.mem(HL,HL&0xFF); time+=3; break;
--- case 0x75: env.mem(getd(xy),HL&0xFF); time+=3; break;
---SetIndirect .hl get_l
-
-
 ex_de_hl : MainWithIndexRegisters -> MainWithIndexRegisters
 ex_de_hl z80_main =
     -- case 0xEB: v=HL; HL=D<<8|E; D=v>>>8; E=v&0xFF; break;
