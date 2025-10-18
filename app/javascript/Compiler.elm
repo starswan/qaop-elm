@@ -6,16 +6,16 @@ import Dict exposing (Dict)
 import Maybe.Extra exposing (oneOf)
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
 import Set exposing (Set)
+import SimpleFlagOps exposing (singleByteFlags)
 import SimpleSingleByte exposing (singleByteMainRegs)
 import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters)
 import SingleNoParams exposing (applyNoParamsDelta, singleWithNoParam)
-import SingleWith8BitParameter exposing (maybeRelativeJump, singleWith8BitParam)
+import SingleWith8BitParameter exposing (JumpChange(..), maybeRelativeJump, singleWith8BitParam)
 import TripleByte exposing (tripleByteWith16BitParam)
 import TripleWithFlags exposing (triple16bitJumps)
-import Utils exposing (byte)
 import Z80Core exposing (Z80Core)
 import Z80Env exposing (Z80Env, m1, mem, mem16)
-import Z80Execute exposing (applyJumpChangeDelta, applyPureDelta, applyRegisterDelta, applySimple8BitDelta, applyTripleChangeDelta, applyTripleFlagChange)
+import Z80Execute exposing (applyFlagDelta, applyJumpChangeDelta, applyPureDelta, applyRegisterDelta, applySimple8BitDelta, applyTripleChangeDelta, applyTripleFlagChange)
 import Z80Rom exposing (Z80ROM)
 
 
@@ -76,6 +76,15 @@ lengthAndDuration pc rom48k z80env =
                             in
                             ( IncrementByTwo, duration, \dur z80core -> z80core |> applySimple8BitDelta IncreaseByTwo (z80core.clockTime |> addDuration dur) (f param.value) rom48k )
                         )
+            , \instruction ->
+                singleByteFlags
+                    |> Dict.get instruction
+                    |> Maybe.map
+                        (\( flagFunc, duration ) ->
+                            ( IncrementByOne, duration, \dur z80core -> z80core |> applyFlagDelta IncrementByOne dur (flagFunc z80core.flags) rom48k )
+                        )
+
+            -- These 2 not supported by tests (yet)
             , \instruction ->
                 triple16bitJumps
                     |> Dict.get instruction
@@ -155,50 +164,72 @@ compileRunning rom48k z80env key value input =
                         if [ 0xC9, 0xE9 ] |> List.member value then
                             -- C9 == RET , E9 = JP (HL)
                             { input | state = Stopping }
-
-                        else if value == 0x18 then
-                            -- 18 == JR
-                            let
-                                --PC will advance 1 by default, so just add 1 to jr value not 2
-                                addr =
-                                    z80env |> mem (key + 1) reset_cpu_time rom48k |> .value |> byte
-                            in
-                            if (input.seen |> Set.member key) || (input.compiled |> Dict.member key) then
-                                { input | state = Stopping }
-
-                            else if addr > 0 then
-                                { input | state = JumpTo (addr + 1) }
-
-                            else
-                                rom48k.rom48k |> Dict.foldl (compileRunning rom48k z80env) { seen = input.seen, compiled = input.compiled, state = JumpTo (addr + 1) }
-
-                        else if value == 0xC3 then
-                            -- C3 == JP
-                            let
-                                addr =
-                                    z80env |> mem16 (key + 1) rom48k reset_cpu_time |> .value16
-                            in
-                            if (input.seen |> Set.member key) || (input.compiled |> Dict.member key) then
-                                { input | state = Stopping }
-
-                            else if addr > key then
-                                { input | state = JumpTo addr }
-
-                            else
-                                rom48k.rom48k |> Dict.foldl (compileRunning rom48k z80env) { seen = input.seen, compiled = input.compiled, state = JumpTo addr }
-                            -- all conditional jumps are recursed
-                            -- all calls are recursed.
-                            --else if [ 0x18, 0xC3, 0xCD, 0xC7, 0xCF, 0xD7, 0xDF, 0xE7, 0xEF, 0xF7, 0xFF ] |> List.member value then
-                            --    -- 0x18 JR, 0xC3 JP, 0xCD CALL, 0xC7 - 0xFF RST 00 - RST 38
-                            --    let
-                            --        call =
-                            --            rom48k.rom48k |> Dict.filter (\k v -> k > target)
-                            --                |> Dict.foldl (compileRunning rom48k z80env) { seen = input.seen, compiled = input.compiled, skip = 0, stop = False }
-                            --    in
-                            --    { input | seen = call.seen, compiled = call.compiled }
+                            --else if value == 0x18 then
 
                         else
-                            input
+                            let
+                                param =
+                                    z80env |> mem (Bitwise.and (key + 1) 0xFFFF) reset_cpu_time rom48k
+
+                                maybeJump =
+                                    maybeRelativeJump |> Dict.get value |> Maybe.map Tuple.first |> Maybe.map (\f -> f param.value key)
+                            in
+                            case maybeJump of
+                                Just relJump ->
+                                    let
+                                        address =
+                                            case relJump of
+                                                ActualJump addr ->
+                                                    addr
+
+                                                ConditionalJump int _ _ ->
+                                                    int
+
+                                                DJNZ int _ ->
+                                                    int
+                                    in
+                                    if (input.seen |> Set.member address) || (input.compiled |> Dict.member address) then
+                                        { input | state = Stopping }
+
+                                    else
+                                        case relJump of
+                                            ActualJump addr ->
+                                                { input | state = JumpTo address }
+
+                                            ConditionalJump int delay f ->
+                                                rom48k.rom48k |> Dict.foldl (compileRunning rom48k z80env) { seen = input.seen, compiled = input.compiled, state = JumpTo address }
+
+                                            DJNZ int delay ->
+                                                rom48k.rom48k |> Dict.foldl (compileRunning rom48k z80env) { seen = input.seen, compiled = input.compiled, state = JumpTo address }
+
+                                Nothing ->
+                                    if value == 0xC3 then
+                                        -- C3 == JP
+                                        let
+                                            addr =
+                                                z80env |> mem16 (key + 1) rom48k reset_cpu_time |> .value16
+                                        in
+                                        if (input.seen |> Set.member key) || (input.compiled |> Dict.member key) then
+                                            { input | state = Stopping }
+
+                                        else if addr > key then
+                                            { input | state = JumpTo addr }
+
+                                        else
+                                            rom48k.rom48k |> Dict.foldl (compileRunning rom48k z80env) { seen = input.seen, compiled = input.compiled, state = JumpTo addr }
+                                        -- all conditional jumps are recursed
+                                        -- all calls are recursed.
+                                        --else if [ 0x18, 0xC3, 0xCD, 0xC7, 0xCF, 0xD7, 0xDF, 0xE7, 0xEF, 0xF7, 0xFF ] |> List.member value then
+                                        --    -- 0x18 JR, 0xC3 JP, 0xCD CALL, 0xC7 - 0xFF RST 00 - RST 38
+                                        --    let
+                                        --        call =
+                                        --            rom48k.rom48k |> Dict.filter (\k v -> k > target)
+                                        --                |> Dict.foldl (compileRunning rom48k z80env) { seen = input.seen, compiled = input.compiled, skip = 0, stop = False }
+                                        --    in
+                                        --    { input | seen = call.seen, compiled = call.compiled }
+
+                                    else
+                                        input
                 in
                 case lengthAndDuration value rom48k z80env of
                     Just ( length, duration, f ) ->

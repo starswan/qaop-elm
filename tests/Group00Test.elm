@@ -214,6 +214,15 @@ suite =
                     in
                     -- This is RLCA - bit 7 goes into bit 0 and carry flag
                     Expect.equal ( addr + 1, 0x8E, 0x48 ) ( newZ80.pc, newZ80.flags.a, newZ80.flags |> getFlags )
+            , test "length RLCA" <|
+                \_ ->
+                    let
+                        z80inc =
+                            z80env
+                                |> setMemWithTime addr 0x07
+                                |> .z80env
+                    in
+                    lengthAndDuration z80.pc z80rom z80inc |> Maybe.map (\d -> d |> Triple.dropThird) |> Expect.equal (Just ( IncrementByOne, FourTStates ))
             ]
 
         --, describe "EX AF,AF'"
