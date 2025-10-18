@@ -15,9 +15,8 @@ import Z80Types exposing (IXIY(..), MainWithIndexRegisters)
 
 
 type DoubleWithRegisterChange
-    = RelativeJumpWithTimeOffset CoreRegister Int (Maybe Int) Int
-    | DoubleRegChangeStoreIndirect Int Int
-    | NewARegisterIndirect Int
+    = DoubleRegChangeStoreIndirectHL Int
+    | NewARegisterIndirect IXIY Int
     | SetARegisterIndirect Int
     | NewBRegisterIndirect Int
     | NewCRegisterIndirect Int
@@ -27,7 +26,7 @@ type DoubleWithRegisterChange
     | NewLRegisterIndirect Int
     | IndexedIndirectIncrement IXIY Int
     | IndexedIndirectDecrement IXIY Int
-    | FlagOpIndexedIndirect FlagFunc Int Int
+    | FlagOpIndexedIndirect FlagFunc IXIY Int
     | NewHValue Int
     | NewLValue Int
     | NewIXHValue Int
@@ -62,14 +61,14 @@ doubleWithRegistersIX =
 
         -- case 0x6E: HL=HL&0xFF00|env.mem(getd(xy)); time+=3; break;
         , ( 0x6E, ( \z80_main param -> NewLRegisterIndirect (z80_main.ix + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
-        , ( 0x86, ( \z80_main param -> FlagOpIndexedIndirect AddA z80_main.ix param, NineteenTStates ) )
-        , ( 0x8E, ( \z80_main param -> FlagOpIndexedIndirect AdcA z80_main.ix param, NineteenTStates ) )
-        , ( 0x96, ( \z80_main param -> FlagOpIndexedIndirect SubA z80_main.ix param, NineteenTStates ) )
-        , ( 0x9E, ( \z80_main param -> FlagOpIndexedIndirect SbcA z80_main.ix param, NineteenTStates ) )
-        , ( 0xA6, ( \z80_main param -> FlagOpIndexedIndirect AndA z80_main.ix param, NineteenTStates ) )
-        , ( 0xAE, ( \z80_main param -> FlagOpIndexedIndirect XorA z80_main.ix param, NineteenTStates ) )
-        , ( 0xB6, ( \z80_main param -> FlagOpIndexedIndirect OrA z80_main.ix param, NineteenTStates ) )
-        , ( 0xBE, ( \z80_main param -> FlagOpIndexedIndirect CpA z80_main.ix param, NineteenTStates ) )
+        , ( 0x86, ( \z80_main param -> FlagOpIndexedIndirect AddA IXIY_IX (byte param), NineteenTStates ) )
+        , ( 0x8E, ( \z80_main param -> FlagOpIndexedIndirect AdcA IXIY_IX (byte param), NineteenTStates ) )
+        , ( 0x96, ( \z80_main param -> FlagOpIndexedIndirect SubA IXIY_IX (byte param), NineteenTStates ) )
+        , ( 0x9E, ( \z80_main param -> FlagOpIndexedIndirect SbcA IXIY_IX (byte param), NineteenTStates ) )
+        , ( 0xA6, ( \z80_main param -> FlagOpIndexedIndirect AndA IXIY_IX (byte param), NineteenTStates ) )
+        , ( 0xAE, ( \z80_main param -> FlagOpIndexedIndirect XorA IXIY_IX (byte param), NineteenTStates ) )
+        , ( 0xB6, ( \z80_main param -> FlagOpIndexedIndirect OrA IXIY_IX (byte param), NineteenTStates ) )
+        , ( 0xBE, ( \z80_main param -> FlagOpIndexedIndirect CpA IXIY_IX (byte param), NineteenTStates ) )
         , ( 0x77, ( ld_indirect_ix_a, NineteenTStates ) )
         , ( 0x7E, ( ld_a_indirect_ix, NineteenTStates ) )
         ]
@@ -92,14 +91,14 @@ doubleWithRegistersIY =
 
         -- case 0x6E: HL=HL&0xFF00|env.mem(getd(xy)); time+=3; break;
         , ( 0x6E, ( \z80_main param -> NewLRegisterIndirect (z80_main.iy + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
-        , ( 0x86, ( \z80_main param -> FlagOpIndexedIndirect AddA z80_main.iy param, NineteenTStates ) )
-        , ( 0x8E, ( \z80_main param -> FlagOpIndexedIndirect AdcA z80_main.iy param, NineteenTStates ) )
-        , ( 0x96, ( \z80_main param -> FlagOpIndexedIndirect SubA z80_main.iy param, NineteenTStates ) )
-        , ( 0x9E, ( \z80_main param -> FlagOpIndexedIndirect SbcA z80_main.iy param, NineteenTStates ) )
-        , ( 0xA6, ( \z80_main param -> FlagOpIndexedIndirect AndA z80_main.iy param, NineteenTStates ) )
-        , ( 0xAE, ( \z80_main param -> FlagOpIndexedIndirect XorA z80_main.iy param, NineteenTStates ) )
-        , ( 0xB6, ( \z80_main param -> FlagOpIndexedIndirect OrA z80_main.iy param, NineteenTStates ) )
-        , ( 0xBE, ( \z80_main param -> FlagOpIndexedIndirect CpA z80_main.iy param, NineteenTStates ) )
+        , ( 0x86, ( \z80_main param -> FlagOpIndexedIndirect AddA IXIY_IY (byte param), NineteenTStates ) )
+        , ( 0x8E, ( \z80_main param -> FlagOpIndexedIndirect AdcA IXIY_IY (byte param), NineteenTStates ) )
+        , ( 0x96, ( \z80_main param -> FlagOpIndexedIndirect SubA IXIY_IY (byte param), NineteenTStates ) )
+        , ( 0x9E, ( \z80_main param -> FlagOpIndexedIndirect SbcA IXIY_IY (byte param), NineteenTStates ) )
+        , ( 0xA6, ( \z80_main param -> FlagOpIndexedIndirect AndA IXIY_IY (byte param), NineteenTStates ) )
+        , ( 0xAE, ( \z80_main param -> FlagOpIndexedIndirect XorA IXIY_IY (byte param), NineteenTStates ) )
+        , ( 0xB6, ( \z80_main param -> FlagOpIndexedIndirect OrA IXIY_IY (byte param), NineteenTStates ) )
+        , ( 0xBE, ( \z80_main param -> FlagOpIndexedIndirect CpA IXIY_IY (byte param), NineteenTStates ) )
         , ( 0x77, ( ld_indirect_iy_a, NineteenTStates ) )
         , ( 0x7E, ( ld_a_indirect_iy, NineteenTStates ) )
         ]
@@ -188,7 +187,7 @@ ld_a_indirect_ix z80_main param =
             z80_main.ix + byte param
     in
     --{ z80 | pc = value.pc, env = { env_1 | time = value.time } } |> set_a value.value
-    NewARegisterIndirect address
+    NewARegisterIndirect IXIY_IX (byte param)
 
 
 ld_a_indirect_iy : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
@@ -200,7 +199,7 @@ ld_a_indirect_iy z80_main param =
             z80_main.iy + byte param
     in
     --{ z80 | pc = value.pc, env = { env_1 | time = value.time } } |> set_a value.value
-    NewARegisterIndirect address
+    NewARegisterIndirect IXIY_IY (byte param)
 
 
 ld_b_indirect_iy : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
@@ -237,7 +236,7 @@ ld_indirect_hl_n : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
 ld_indirect_hl_n z80_main param =
     -- case 0x36: env.mem(HL,imm8()); time+=3; break;
     -- case 0x36: {int a=(char)(xy+(byte)env.mem(PC)); time+=3;
-    DoubleRegChangeStoreIndirect z80_main.hl param
+    DoubleRegChangeStoreIndirectHL param
 
 
 inc_indirect_ix : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
@@ -327,27 +326,29 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                     z80.pc + 3
     in
     case z80changeData of
-        RelativeJumpWithTimeOffset single8BitChange regvalue maybeInt timeOffset ->
+        --RelativeJumpWithTimeOffset single8BitChange regvalue maybeInt timeOffset ->
+        --    let
+        --        pc =
+        --            case maybeInt of
+        --                Just jump ->
+        --                    Bitwise.and (new_pc + jump) 0xFFFF
+        --
+        --                Nothing ->
+        --                    Bitwise.and new_pc 0xFFFF
+        --
+        --        main =
+        --            z80.main |> applySimple8BitChange single8BitChange regvalue
+        --    in
+        --    { z80
+        --        | main = main
+        --        , pc = pc
+        --        , clockTime = cpu_time |> addCpuTimeTime timeOffset
+        --    }
+        DoubleRegChangeStoreIndirectHL value ->
             let
-                pc =
-                    case maybeInt of
-                        Just jump ->
-                            Bitwise.and (new_pc + jump) 0xFFFF
+                addr =
+                    z80.main.hl
 
-                        Nothing ->
-                            Bitwise.and new_pc 0xFFFF
-
-                main =
-                    z80.main |> applySimple8BitChange single8BitChange regvalue
-            in
-            { z80
-                | main = main
-                , pc = pc
-                , clockTime = cpu_time |> addCpuTimeTime timeOffset
-            }
-
-        DoubleRegChangeStoreIndirect addr value ->
-            let
                 pc =
                     Bitwise.and new_pc 0xFFFF
 
@@ -479,8 +480,16 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 , main = { main | b = new_b.value }
             }
 
-        NewARegisterIndirect addr ->
+        NewARegisterIndirect ixiy param ->
             let
+                addr =
+                    case ixiy of
+                        IXIY_IX ->
+                            z80.main.ix + param
+
+                        IXIY_IY ->
+                            z80.main.iy + param
+
                 pc =
                     Bitwise.and new_pc 0xFFFF
 
@@ -597,13 +606,21 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 , main = { main | hl = Bitwise.or (main.hl |> Bitwise.and 0xFF00) (new_b.value |> Bitwise.and 0xFF) }
             }
 
-        FlagOpIndexedIndirect flagFunc addr offset ->
+        FlagOpIndexedIndirect flagFunc ixiy offset ->
             let
+                addr =
+                    case ixiy of
+                        IXIY_IX ->
+                            z80.main.ix
+
+                        IXIY_IY ->
+                            z80.main.iy
+
                 flags =
                     z80.flags
 
                 address =
-                    addr + byte offset |> Bitwise.and 0xFFFF
+                    addr + offset |> Bitwise.and 0xFFFF
 
                 pc =
                     Bitwise.and new_pc 0xFFFF
