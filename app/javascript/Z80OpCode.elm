@@ -109,7 +109,7 @@ fetchInstruction rom48k r_register z80_core =
                                                 duration
 
                                         Nothing ->
-                                            case triple16WithFlags |> Dict.get ct.value of
+                                            case triple16bitJumps |> Dict.get ct.value of
                                                 Just ( f, duration ) ->
                                                     let
                                                         env =
