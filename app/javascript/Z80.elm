@@ -10,7 +10,7 @@ import Bitwise
 import CpuTimeCTime exposing (CTime(..), CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, InstructionDuration(..), addCpuTimeTime, addDuration, c_TIME_LIMIT, reset_cpu_time)
 import Dict exposing (Dict)
 import DoubleWithRegisters exposing (doubleWithRegisters, doubleWithRegistersIX, doubleWithRegistersIY)
-import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainAndFlagRegistersIXCB, singleByteMainAndFlagRegistersIYCB, singleByteMainRegsCB, singleEnvMainRegsCB)
+import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainRegsCB, singleEnvMainRegsCB)
 import GroupCBIXIY exposing (singleByteMainRegsIXCB, singleByteMainRegsIYCB, singleEnvMainRegsIXCB, singleEnvMainRegsIYCB)
 import GroupED exposing (delta_dict_lite_E0, edWithInterrupts, singleByteFlagsED, singleByteMainAndFlagsED, singleByteMainRegsED)
 import Loop
@@ -632,13 +632,13 @@ runSpecial specialType rom48k z80_core =
                                     MainWithEnvDelta IncrementByFour duration (f z80_core.main offset rom48k z80_core.env)
 
                                 Nothing ->
-                                    case singleByteMainAndFlagRegistersIXCB |> Dict.get param.value of
-                                        Just ( f, duration ) ->
-                                            PureDelta IncrementByFour (instrTime |> addDuration duration) (f z80_core.main z80_core.flags)
-
-                                        Nothing ->
-                                            -- This fails on DD CB 3D xx
-                                            UnknownInstruction "execute IXCB" param.value
+                                    --case singleByteMainAndFlagRegistersIXCB |> Dict.get param.value of
+                                    --    Just ( f, duration ) ->
+                                    --        PureDelta IncrementByFour (instrTime |> addDuration duration) (f z80_core.main z80_core.flags)
+                                    --
+                                    --    Nothing ->
+                                    -- This fails on DD CB 3D xx
+                                    UnknownInstruction "execute IXCB" param.value
 
         --oldDelta 0xDD instrTime z80.interrupts z80 rom48k
         --UnknownInstruction "execute IXCB" param.value
@@ -662,13 +662,13 @@ runSpecial specialType rom48k z80_core =
                                     MainWithEnvDelta IncrementByFour duration (f z80_core.main iycboffset rom48k z80_core.env)
 
                                 Nothing ->
-                                    case singleByteMainAndFlagRegistersIYCB |> Dict.get param.value of
-                                        Just ( f, duration ) ->
-                                            PureDelta IncrementByFour (instrTime |> addDuration duration) (f z80_core.main z80_core.flags)
-
-                                        Nothing ->
-                                            -- This fails on FD CB 3D xx
-                                            UnknownInstruction "execute IYCB" param.value
+                                    --case singleByteMainAndFlagRegistersIYCB |> Dict.get param.value of
+                                    --    Just ( f, duration ) ->
+                                    --        PureDelta IncrementByFour (instrTime |> addDuration duration) (f z80_core.main z80_core.flags)
+                                    --
+                                    --    Nothing ->
+                                    -- This fails on FD CB 3D xx
+                                    UnknownInstruction "execute IYCB" param.value
 
         --oldDelta 0xFD instrTime z80.interrupts z80 rom48k
         EDMisc param ->
