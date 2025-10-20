@@ -7,7 +7,7 @@ module Z80 exposing (..)
 
 import Array exposing (Array)
 import Bitwise
-import CpuTimeCTime exposing (CTime(..), CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, InstructionDuration(..), addCpuTimeTime, addDuration, c_TIME_LIMIT, reset_cpu_time)
+import CpuTimeCTime exposing (CTime(..), CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAnd16BitValue, InstructionDuration(..), addCpuTimeTime, addDuration, c_TIME_LIMIT, reset_cpu_time)
 import Dict exposing (Dict)
 import DoubleWithRegisters exposing (doubleWithRegisters, doubleWithRegistersIX, doubleWithRegistersIY)
 import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainRegsCB, singleEnvMainRegsCB)
@@ -26,11 +26,12 @@ import SingleWith8BitParameter exposing (maybeRelativeJump, singleWith8BitParam)
 import TripleByte exposing (tripleByteWith16BitParam, tripleByteWith16BitParamDD, tripleByteWith16BitParamFD)
 import TripleWithFlags exposing (triple16bitJumps)
 import TripleWithMain exposing (tripleMainRegsIX, tripleMainRegsIY)
-import Z80Core exposing (Z80, Z80Core, di_0xF3, ei_0xFB)
+import Z80Core exposing (Z80, Z80Core, di_0xF3, ei_0xFB, im0, set_pc)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..))
-import Z80Env exposing (Z80Env, mem, mem16, z80env_constructor)
+import Z80Env exposing (Z80Env, z80_push, z80env_constructor)
 import Z80Execute exposing (DeltaWithChanges(..), apply_delta)
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
+import Z80Mem exposing (mem, mem16)
 import Z80OpCode exposing (fetchInstruction)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IntWithFlagsTimeAndPC, InterruptMode(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
@@ -385,12 +386,7 @@ runOrdinary ct_value instrTime rom48k z80_core =
                                                                             instrTime |> addDuration duration
 
                                                                         param =
-                                                                            --case pcInc of
-                                                                            --    IncreaseByTwo ->
                                                                             z80_core.env |> mem (Bitwise.and (z80_core.pc + 1) 0xFFFF) time rom48k
-
-                                                                        --IncreaseByThree ->
-                                                                        --    z80_core.env |> mem (Bitwise.and (z80_core.pc + 2) 0xFFFF) time rom48k
                                                                     in
                                                                     DoubleWithRegistersDelta IncreaseByTwo param.time (f z80_core.main param.value)
 
@@ -1027,3 +1023,59 @@ execute rom48k z80 =
 --		af(SP = 0xFFFF);
 --	}
 --}
+
+
+interrupt : Int -> Z80ROM -> Z80 -> Z80
+interrupt bus rom48k full_z80 =
+    let
+        z80_core =
+            full_z80.core
+
+        ints =
+            z80_core.interrupts
+
+        main =
+            z80_core.main
+    in
+    if Bitwise.and ints.iff 1 == 0 then
+        full_z80
+
+    else
+        let
+            --z81 = debug_log "interrupt" "keyboard scan" z80
+            z80_1 =
+                { z80_core | interrupts = { ints | halted = False, iff = 0 } }
+
+            pushed =
+                z80_1.env |> z80_push z80_1.pc z80_1.clockTime
+
+            new_core =
+                { z80_1 | env = pushed, clockTime = z80_1.clockTime |> addCpuTimeTime 6 }
+
+            new_z80 =
+                { full_z80 | core = new_core }
+        in
+        case ints.iM of
+            IM0 ->
+                new_z80 |> im0 bus
+
+            --1 ->
+            --    new_z80 |> im0 bus
+            IM1 ->
+                new_z80 |> set_pc 0x38
+
+            IM2 ->
+                let
+                    new_ir =
+                        Bitwise.and ints.ir 0xFF00
+
+                    addr =
+                        Bitwise.or new_ir bus
+
+                    env_and_pc =
+                        z80_core.env |> mem16 addr rom48k z80_1.clockTime
+
+                    core_1 =
+                        { new_core | clockTime = env_and_pc.time |> addCpuTimeTime 6, pc = env_and_pc.value16 }
+                in
+                { new_z80 | core = core_1 }

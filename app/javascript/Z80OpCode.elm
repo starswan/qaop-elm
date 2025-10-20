@@ -3,7 +3,7 @@ module Z80OpCode exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeAndValue, InstructionDuration)
 import Z80Core exposing (Z80Core)
-import Z80Env exposing (m1)
+import Z80Mem exposing (m1)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (MainWithIndexRegisters)
 

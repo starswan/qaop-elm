@@ -2,20 +2,26 @@ module Compiler exposing (..)
 
 import Bitwise
 import CpuTimeCTime exposing (InstructionDuration(..), addDuration, reset_cpu_time)
+import Debug exposing (toString)
 import Dict exposing (Dict)
+import DoubleWithRegisters exposing (applyDoubleWithRegistersDelta, doubleWithRegisters, doubleWithRegistersIY)
 import Maybe.Extra exposing (oneOf)
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
 import Set exposing (Set)
 import SimpleFlagOps exposing (singleByteFlags)
-import SimpleSingleByte exposing (singleByteMainRegs)
+import SimpleSingleByte exposing (singleByteMainRegs, singleByteMainRegsFD)
 import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters)
 import SingleNoParams exposing (applyNoParamsDelta, singleWithNoParam)
 import SingleWith8BitParameter exposing (JumpChange(..), maybeRelativeJump, singleWith8BitParam)
 import TripleByte exposing (tripleByteWith16BitParam)
 import TripleWithFlags exposing (TripleWithFlagsChange(..), triple16bitJumps)
+import TripleWithMain exposing (applyTripleMainChange)
+import Utils exposing (toHexString, toHexString2, toPlainHexString2)
 import Z80Core exposing (Z80Core)
-import Z80Env exposing (Z80Env, m1, mem, mem16)
+import Z80Debug exposing (debugLog, debugTodo)
+import Z80Env exposing (Z80Env)
 import Z80Execute exposing (applyFlagDelta, applyJumpChangeDelta, applyPureDelta, applyRegisterDelta, applySimple8BitDelta, applyTripleChangeDelta, applyTripleFlagChange)
+import Z80Mem exposing (m1, mem, mem16)
 import Z80Rom exposing (Z80ROM)
 
 
@@ -84,7 +90,58 @@ lengthAndDuration pc rom48k z80env =
                             ( IncrementByOne, duration, \dur z80core -> z80core |> applyFlagDelta IncrementByOne dur (flagFunc z80core.flags) rom48k )
                         )
 
-            -- These 2 not supported by tests (yet)
+            -- These not supported by tests (yet)
+            , \instruction ->
+                doubleWithRegisters
+                    |> Dict.get instruction
+                    |> Maybe.map
+                        (\( f, duration ) ->
+                            let
+                                param =
+                                    z80env |> mem (Bitwise.and (pc + 1) 0xFFFF) reset_cpu_time rom48k
+                            in
+                            ( IncrementByTwo
+                            , duration
+                            , \dur z80core ->
+                                z80core
+                                    |> applyDoubleWithRegistersDelta IncreaseByTwo (z80core.clockTime |> addDuration dur) (f z80core.main param.value) rom48k
+                            )
+                        )
+            , \instruction ->
+                if instruction == 0xFD then
+                    let
+                        param =
+                            z80env |> mem (Bitwise.and (pc + 1) 0xFFFF) reset_cpu_time rom48k
+                    in
+                    param.value
+                        |> oneOf
+                            [ \fdinstruction ->
+                                singleByteMainRegsFD
+                                    |> Dict.get fdinstruction
+                                    |> Maybe.map
+                                        (\( mainRegFunc, duration ) ->
+                                            ( IncrementByTwo, duration, \dur z80core -> z80core |> applyRegisterDelta IncrementByTwo dur (mainRegFunc z80core.main) rom48k )
+                                        )
+                            , \fdinstruction ->
+                                doubleWithRegistersIY
+                                    |> Dict.get fdinstruction
+                                    |> Maybe.map
+                                        (\( f, duration ) ->
+                                            let
+                                                doubleParam =
+                                                    z80env |> mem (Bitwise.and (pc + 2) 0xFFFF) reset_cpu_time rom48k
+                                            in
+                                            ( IncrementByThree
+                                            , duration
+                                            , \dur z80core ->
+                                                z80core
+                                                    |> applyDoubleWithRegistersDelta IncreaseByThree (z80core.clockTime |> addDuration dur) (f z80core.main doubleParam.value) rom48k
+                                            )
+                                        )
+                            ]
+
+                else
+                    Nothing
             , \instruction ->
                 triple16bitJumps
                     |> Dict.get instruction
@@ -144,7 +201,7 @@ compileRunning rom48k z80env key value input =
             { input | state = state, seen = input.seen |> Set.insert key }
 
         JumpTo int ->
-            if key < int then
+            if key < int - 1 then
                 input
 
             else
@@ -183,7 +240,11 @@ compileRunning rom48k z80env key value input =
                                                 int
                                 in
                                 if (input.seen |> Set.member address) || (input.compiled |> Dict.member address) then
-                                    { input | state = Stopping }
+                                    if address < key then
+                                        input
+
+                                    else
+                                        { input | state = Stopping }
 
                                 else
                                     case relJump of
@@ -206,21 +267,6 @@ compileRunning rom48k z80env key value input =
                                 in
                                 case maybeLongJump of
                                     Just aLongJump ->
-                                        --let
-                                        --    longAddr =
-                                        --        case aLongJump of
-                                        --            Conditional16BitJump int function ->
-                                        --                int
-                                        --
-                                        --            Conditional16BitCall int shortDelay function ->
-                                        --                int
-                                        --
-                                        --            CallImmediate int ->
-                                        --                int
-                                        --
-                                        --            NewPCRegister int ->
-                                        --                int
-                                        --in
                                         if (input.seen |> Set.member key) || (input.compiled |> Dict.member key) then
                                             { input | state = Stopping }
 
@@ -236,53 +282,69 @@ compileRunning rom48k z80env key value input =
                                                     rom48k.rom48k |> Dict.foldl (compileRunning rom48k z80env) { seen = input.seen, compiled = input.compiled, state = JumpTo jumpAddress }
 
                                                 NewPCRegister int ->
-                                                    { input | state = JumpTo jumpAddress }
+                                                    --{ input | state = JumpTo jumpAddress }
+                                                    rom48k.rom48k |> Dict.foldl (compileRunning rom48k z80env) { seen = input.seen, compiled = input.compiled, state = JumpTo jumpAddress }
 
-                                    --else if jumpAddress > key then
-                                    --case aLongJump of
-                                    --    Conditional16BitJump int function ->
-                                    --        rom48k.rom48k |> Dict.foldl (compileRunning rom48k z80env) { seen = input.seen, compiled = input.compiled, state = JumpTo jumpAddress }
-                                    --
-                                    --    Conditional16BitCall int shortDelay function ->
-                                    --        rom48k.rom48k |> Dict.foldl (compileRunning rom48k z80env) { seen = input.seen, compiled = input.compiled, state = JumpTo jumpAddress }
-                                    --
-                                    --    CallImmediate int ->
-                                    --        rom48k.rom48k |> Dict.foldl (compileRunning rom48k z80env) { seen = input.seen, compiled = input.compiled, state = JumpTo jumpAddress }
-                                    --
-                                    --    NewPCRegister int ->
-                                    --        if jumpAddress > key then
-                                    --            rom48k.rom48k |> Dict.foldl (compileRunning rom48k z80env) { seen = input.seen, compiled = input.compiled, state = JumpTo jumpAddress }
-                                    --
-                                    --        else
-                                    --            { input | state = Stopping }
-                                    --else
-                                    --    rom48k.rom48k |> Dict.foldl (compileRunning rom48k z80env) { seen = input.seen, compiled = input.compiled, state = JumpTo jumpAddress }
-                                    -- all conditional jumps are recursed
-                                    -- all calls are recursed.
                                     Nothing ->
                                         input
             in
-            case lengthAndDuration value rom48k z80env of
+            case lengthAndDuration key rom48k z80env of
                 Just ( length, duration, f ) ->
                     let
                         state =
-                            case length of
-                                IncrementByOne ->
-                                    Running
+                            case running.state of
+                                Running ->
+                                    case length of
+                                        IncrementByOne ->
+                                            Running
 
-                                IncrementByTwo ->
-                                    Skipping 1
+                                        IncrementByTwo ->
+                                            Skipping 1
 
-                                IncrementByThree ->
-                                    Skipping 2
+                                        IncrementByThree ->
+                                            Skipping 2
 
-                                IncrementByFour ->
-                                    Skipping 3
+                                        IncrementByFour ->
+                                            Skipping 3
+
+                                Skipping int ->
+                                    Skipping int
+
+                                JumpTo int ->
+                                    JumpTo int
+
+                                Stopping ->
+                                    Stopping
+
+                        keyVal =
+                            debugLog ("Key " ++ (key |> toHexString)) ((value |> toHexString2) ++ " " ++ (length |> toString) ++ " " ++ (state |> toString)) key
                     in
-                    { running | compiled = running.compiled |> Dict.insert key (f duration), state = state }
+                    { running | compiled = running.compiled |> Dict.insert keyVal (f duration), state = state }
 
                 Nothing ->
-                    { running | seen = running.seen |> Set.insert key }
+                    -- single byte unavailable (e.g. DI/EI etc)
+                    if [ 0xF3, 0xD9 ] |> List.member value then
+                        { running | seen = running.seen |> Set.insert key }
+
+                    else if [ 0xED ] |> List.member value then
+                        -- 2 byte unavailable
+                        { running | seen = running.seen |> Set.insert key, state = Skipping 1 }
+
+                    else if [ 0xFD ] |> List.member value then
+                        let
+                            nextValue =
+                                z80env |> mem (Bitwise.and (key + 1) 0xFFFF) clockTime rom48k |> .value
+                        in
+                        if nextValue == 0xCB then
+                            -- FDCB is always 3 bytes
+                            { running | seen = running.seen |> Set.insert key, state = Skipping 2 }
+
+                        else
+                            --{ running | seen = running.seen |> Set.insert key }
+                            debugTodo "no length" ((key |> toHexString) ++ " " ++ (value |> toPlainHexString2) ++ (nextValue |> toPlainHexString2)) { running | seen = running.seen |> Set.insert key }
+
+                    else
+                        debugTodo "no length" ((key |> toHexString) ++ " " ++ (value |> toHexString2)) { running | seen = running.seen |> Set.insert key }
 
 
 compileRom : Z80ROM -> Z80Env -> Dict Int (Z80Core -> Z80Core)
