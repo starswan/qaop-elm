@@ -4,7 +4,8 @@ import Bitwise exposing (shiftRightBy)
 import Expect
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
-import Z80Env exposing (m1, setMemWithTime)
+import Z80Env exposing (setMemWithTime)
+import Z80Mem exposing (m1)
 import Z80Rom
 
 

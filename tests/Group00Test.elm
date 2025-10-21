@@ -7,8 +7,9 @@ import PCIncrement exposing (PCIncrement(..))
 import Test exposing (..)
 import Triple
 import Z80 exposing (executeCoreInstruction)
-import Z80Env exposing (mem, setMemWithTime)
+import Z80Env exposing (setMemWithTime)
 import Z80Flags exposing (getFlags)
+import Z80Mem exposing (mem)
 import Z80Rom
 
 
