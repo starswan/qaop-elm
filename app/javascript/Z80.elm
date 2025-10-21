@@ -25,7 +25,7 @@ import SingleNoParams exposing (ex_af, execute_0x76_halt, exx, singleWithNoParam
 import SingleWith8BitParameter exposing (maybeRelativeJump, singleWith8BitParam)
 import TripleByte exposing (tripleByteWith16BitParam, tripleByteWith16BitParamDD, tripleByteWith16BitParamFD)
 import TripleWithFlags exposing (triple16bitJumps)
-import TripleWithMain exposing (tripleMainRegs, tripleMainRegsIX, tripleMainRegsIY)
+import TripleWithMain exposing (tripleMainRegsIX, tripleMainRegsIY)
 import Z80Core exposing (Z80, Z80Core, di_0xF3, ei_0xFB)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..))
 import Z80Env exposing (Z80Env, mem, mem16, z80env_constructor)
@@ -395,37 +395,22 @@ runOrdinary ct_value instrTime rom48k z80_core =
                                                                     DoubleWithRegistersDelta IncreaseByTwo param.time (f z80_core.main param.value)
 
                                                                 Nothing ->
-                                                                    case tripleMainRegs |> Dict.get ct_value of
+                                                                    case singleByteZ80Env |> Dict.get ct_value of
                                                                         Just ( f, duration ) ->
-                                                                            let
-                                                                                time =
-                                                                                    instrTime |> addDuration duration
-
-                                                                                env =
-                                                                                    z80_core.env
-
-                                                                                doubleParam =
-                                                                                    env |> mem16 (Bitwise.and (z80_core.pc + 1) 0xFFFF) rom48k time
-                                                                            in
-                                                                            TripleMainChangeDelta doubleParam.time TripleIncrementByThree (f doubleParam.value16 z80_core.main)
+                                                                            SingleEnvDelta (instrTime |> addDuration duration) (f z80_core.env)
 
                                                                         Nothing ->
-                                                                            case singleByteZ80Env |> Dict.get ct_value of
+                                                                            case singleWithNoParam |> Dict.get ct_value of
                                                                                 Just ( f, duration ) ->
-                                                                                    SingleEnvDelta (instrTime |> addDuration duration) (f z80_core.env)
+                                                                                    NoParamsDelta (instrTime |> addDuration duration) f
 
                                                                                 Nothing ->
-                                                                                    case singleWithNoParam |> Dict.get ct_value of
-                                                                                        Just ( f, duration ) ->
-                                                                                            NoParamsDelta (instrTime |> addDuration duration) f
+                                                                                    case singleByte instrTime ct_value z80_core rom48k of
+                                                                                        Just deltaThing ->
+                                                                                            deltaThing
 
                                                                                         Nothing ->
-                                                                                            case singleByte instrTime ct_value z80_core rom48k of
-                                                                                                Just deltaThing ->
-                                                                                                    deltaThing
-
-                                                                                                Nothing ->
-                                                                                                    oldDelta ct_value instrTime z80_core.interrupts z80_core rom48k
+                                                                                            oldDelta ct_value instrTime z80_core.interrupts z80_core rom48k
 
 
 runIndexIX : CpuTimeAndValue -> Z80ROM -> Z80Core -> DeltaWithChanges

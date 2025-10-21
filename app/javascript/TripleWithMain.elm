@@ -15,12 +15,6 @@ type TripleMainChange
     | Store8BitValue Int Int
 
 
-tripleMainRegs : Dict Int ( Int -> MainWithIndexRegisters -> TripleMainChange, InstructionDuration )
-tripleMainRegs =
-    Dict.fromList
-        []
-
-
 tripleMainRegsIX : Dict Int ( Int -> MainWithIndexRegisters -> TripleMainChange, TriplePCIncrement, InstructionDuration )
 tripleMainRegsIX =
     Dict.fromList
