@@ -20,6 +20,7 @@ type TripleByteChange
     | NewAIndirect Int
     | NewTripleRegister Int TripleByteRegister
     | TripleSetIndirectFromA Int
+    | Store16BitFromHL Int
 
 
 tripleByteWith16BitParam : Dict Int ( Int -> TripleByteChange, InstructionDuration )
@@ -28,6 +29,7 @@ tripleByteWith16BitParam =
         [ ( 0x01, ( ld_bc_nn, TenTStates ) )
         , ( 0x11, ( ld_de_nn, TenTStates ) )
         , ( 0x21, ( ld_hl_nn, TenTStates ) )
+        , ( 0x22, ( ld_nn_indirect_hl, SixteenTStates ) )
         , ( 0x2A, ( ld_hl_indirect_nn, SixteenTStates ) )
         , ( 0x31, ( ld_sp_nn, TenTStates ) )
         , ( 0x32, ( ld_indirect_nn_a, ThirteenTStates ) )
@@ -118,3 +120,9 @@ ld_indirect_nn_a : Int -> TripleByteChange
 ld_indirect_nn_a param =
     -- case 0x32: MP=(v=imm16())+1&0xFF|A<<8; env.mem(v,A); time+=3; break;
     TripleSetIndirectFromA param
+
+
+ld_nn_indirect_hl : Int -> TripleByteChange
+ld_nn_indirect_hl param16 =
+    -- case 0x22: MP=(v=imm16())+1; env.mem16(v,HL); time+=6; break;
+    Store16BitFromHL param16

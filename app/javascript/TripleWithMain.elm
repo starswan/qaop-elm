@@ -15,13 +15,6 @@ type TripleMainChange
     | Store8BitValue Int Int
 
 
-tripleMainRegs : Dict Int ( Int -> MainWithIndexRegisters -> TripleMainChange, InstructionDuration )
-tripleMainRegs =
-    Dict.fromList
-        [ ( 0x22, ( ld_nn_indirect_hl, SixteenTStates ) )
-        ]
-
-
 tripleMainRegsIX : Dict Int ( Int -> MainWithIndexRegisters -> TripleMainChange, TriplePCIncrement, InstructionDuration )
 tripleMainRegsIX =
     Dict.fromList
@@ -86,12 +79,6 @@ applyTripleMainChange time pcInc z80changeData z80 =
                 , clockTime = clockTime
                 , env = env1
             }
-
-
-ld_nn_indirect_hl : Int -> MainWithIndexRegisters -> TripleMainChange
-ld_nn_indirect_hl param16 z80_main =
-    -- case 0x22: MP=(v=imm16())+1; env.mem16(v,HL); time+=6; break;
-    Store16BitValue param16 z80_main.hl
 
 
 ld_nn_indirect_ix : Int -> MainWithIndexRegisters -> TripleMainChange
