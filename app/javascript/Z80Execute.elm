@@ -18,7 +18,7 @@ import Z80Change exposing (FlagChange(..), Z80Change(..))
 import Z80Core exposing (DirectionForLDIR(..), Z80Core)
 import Z80Debug exposing (debugLog, debugTodo)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..), applyDeltaWithChanges)
-import Z80Env exposing (Z80Env, Z80EnvWithPC, mem, mem16, setMem, setMemIgnoringTime, z80_in, z80_out, z80_pop, z80_push)
+import Z80Env exposing (Z80Env, Z80EnvWithPC, mem, mem16, setMem, setMem16, setMemIgnoringTime, z80_in, z80_out, z80_pop, z80_push)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, f_szh0n0p, inc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
 import Z80Registers exposing (ChangeMainRegister(..), ChangeOneRegister(..), CoreRegister(..))
 import Z80Rom exposing (Z80ROM)
@@ -1080,37 +1080,24 @@ applyTripleChangeDelta rom48k pc_increment cpu_time z80changeData z80 =
                 , clockTime = cpu_time
             }
 
+        Store16BitFromHL address ->
+            let
+                value =
+                    z80.main.hl
+
+                ( env1, clockTime ) =
+                    env |> setMem16 address value cpu_time
+            in
+            { z80
+                | pc = new_pc
+                , env = env1
+                , clockTime = clockTime
+            }
+
 
 applyTripleFlagChange : CpuTimeCTime -> TripleWithFlagsChange -> Z80Core -> Z80Core
 applyTripleFlagChange cpu_time z80changeData z80 =
-    let
-        env =
-            z80.env
-    in
     case z80changeData of
-        --Skip3ByteInstruction ->
-        --    let
-        --        new_pc =
-        --            Bitwise.and (z80.pc + 3) 0xFFFF
-        --    in
-        --    { z80
-        --        | pc = new_pc
-        --        , clockTime = cpu_time
-        --    }
-        --AbsoluteJump int ->
-        --    { z80
-        --        | pc = int
-        --        , clockTime = cpu_time
-        --    }
-        --AbsoluteCall address ->
-        --    let
-        --        new_pc =
-        --            Bitwise.and (z80.pc + 3) 0xFFFF
-        --
-        --        env_1 =
-        --            z80.env |> z80_push new_pc cpu_time
-        --    in
-        --    { z80 | clockTime = cpu_time |> addDuration SevenTStates, pc = address, env = env_1 }
         Conditional16BitJump int function ->
             if z80.flags |> function then
                 { z80
