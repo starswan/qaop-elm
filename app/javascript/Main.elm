@@ -7,8 +7,9 @@ module Main exposing (..)
 
 import Bitwise exposing (complement)
 import Browser
+import Compiler exposing (compileRom)
 import Delay
-import Dict
+import Dict exposing (Dict)
 import Html exposing (Attribute, Html, button, div, h2, span, text)
 import Html.Attributes exposing (disabled, id, style, tabindex)
 import Html.Events exposing (onClick, preventDefaultOn)
@@ -84,7 +85,7 @@ type alias Model =
 
 type Message
     = GotTAP (Result Http.Error (List Tapfile))
-    | GotRom (Result Http.Error (Maybe Z80ROM))
+    | GotRom (Result Http.Error (Maybe (Dict Int Int)))
     | Tick Time.Posix
     | FlipFlash Time.Posix
     | Pause
@@ -464,7 +465,7 @@ actionToCmd action =
                 }
 
 
-gotRom : Qaop -> Result Http.Error (Maybe Z80ROM) -> ( Qaop, Cmd Message )
+gotRom : Qaop -> Result Http.Error (Maybe (Dict Int Int)) -> ( Qaop, Cmd Message )
 gotRom qaop result =
     case result of
         Ok value ->
@@ -473,8 +474,17 @@ gotRom qaop result =
                     let
                         speccy =
                             qaop.spectrum
+
+                        oldRom =
+                            speccy.rom48k
+
+                        romWithDict =
+                            { oldRom | rom48k = a }
+
+                        romDict =
+                            compileRom romWithDict speccy.cpu.core.env
                     in
-                    { qaop | spectrum = { speccy | rom48k = a } } |> run
+                    { qaop | spectrum = { speccy | rom48k = { romWithDict | compiled = romDict } } } |> run
 
                 Nothing ->
                     ( qaop, Cmd.none )

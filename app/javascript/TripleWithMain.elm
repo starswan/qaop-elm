@@ -7,11 +7,11 @@ import PCIncrement exposing (PCIncrement(..), TriplePCIncrement(..))
 import Utils exposing (byte, shiftRightBy8)
 import Z80Core exposing (Z80Core)
 import Z80Env exposing (Z80Env, setMem, setMem16)
-import Z80Types exposing (MainWithIndexRegisters)
+import Z80Types exposing (IXIYHL(..), MainWithIndexRegisters)
 
 
 type TripleMainChange
-    = Store16BitValue Int Int
+    = Store16BitValue Int IXIYHL
     | Store8BitValue Int Int
 
 
@@ -58,8 +58,19 @@ applyTripleMainChange time pcInc z80changeData z80 =
                     Bitwise.and (z80.pc + 4) 0xFFFF
     in
     case z80changeData of
-        Store16BitValue address value ->
+        Store16BitValue address ixiyix ->
             let
+                value =
+                    case ixiyix of
+                        IX ->
+                            z80.main.ix
+
+                        IY ->
+                            z80.main.iy
+
+                        HL ->
+                            z80.main.hl
+
                 ( env1, clockTime ) =
                     env |> setMem16 address value time
             in
@@ -84,13 +95,13 @@ applyTripleMainChange time pcInc z80changeData z80 =
 ld_nn_indirect_ix : Int -> MainWithIndexRegisters -> TripleMainChange
 ld_nn_indirect_ix param16 z80_main =
     -- case 0x22: MP=(v=imm16())+1; env.mem16(v,xy); time+=6; break;
-    Store16BitValue param16 z80_main.ix
+    Store16BitValue param16 IX
 
 
 ld_nn_indirect_iy : Int -> MainWithIndexRegisters -> TripleMainChange
 ld_nn_indirect_iy param16 z80_main =
     -- case 0x22: MP=(v=imm16())+1; env.mem16(v,xy); time+=6; break;
-    Store16BitValue param16 z80_main.iy
+    Store16BitValue param16 IY
 
 
 ld_indirect_ix_n : Int -> MainWithIndexRegisters -> TripleMainChange
