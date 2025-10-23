@@ -8,7 +8,7 @@ import PCIncrement exposing (InterruptPCIncrement(..), MediumPCIncrement(..), PC
 import RegisterChange exposing (EDRegisterChange(..), InterruptChange(..), RegisterChange(..), Shifter(..))
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
 import SingleEnvWithMain exposing (SingleEnvMainChange, applySingleEnvMainChange)
-import SingleNoParams exposing (NoParamChange(..), applyNoParamsDelta)
+import SingleNoParams exposing (NoParamChange(..), RstChange, applyNoParamsDelta, applyRstDelta)
 import SingleWith8BitParameter exposing (JumpChange(..), Single8BitChange(..), applySimple8BitChange)
 import TripleByte exposing (TripleByteChange(..), TripleByteRegister(..))
 import TripleWithFlags exposing (TripleWithFlagsChange(..))
@@ -36,6 +36,7 @@ type DeltaWithChanges
     | DoubleWithRegistersDelta MediumPCIncrement CpuTimeCTime DoubleWithRegisterChange
     | JumpChangeDelta CpuTimeCTime JumpChange
     | NoParamsDelta CpuTimeCTime NoParamChange
+    | RstDelta CpuTimeCTime RstChange
     | SingleEnvDelta CpuTimeCTime SingleByteEnvChange
     | MainWithEnvDelta PCIncrement InstructionDuration SingleEnvMainChange
     | TripleMainChangeDelta CpuTimeCTime TriplePCIncrement TripleMainChange
@@ -70,6 +71,9 @@ apply_delta z80 rom48k z80delta =
 
         NoParamsDelta cpuTimeCTime noParamChange ->
             z80 |> applyNoParamsDelta cpuTimeCTime noParamChange rom48k
+
+        RstDelta cpuTimeCTime noParamChange ->
+            z80 |> applyRstDelta cpuTimeCTime noParamChange rom48k
 
         SingleEnvDelta cpuTimeCTime singleByteEnvChange ->
             z80 |> applyEnvChangeDelta cpuTimeCTime singleByteEnvChange
