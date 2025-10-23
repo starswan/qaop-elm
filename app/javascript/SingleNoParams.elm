@@ -23,15 +23,19 @@ type NoParamChange
     | PopAF
       --| Exx
       --| ExAfAfDash
-    | Rst00
-    | Rst08
-    | Rst10
-    | Rst18
-    | Rst20
-    | Rst28
-    | Rst30
-    | Rst38
+      --| Rst00
+      --| Rst08
+      --| Rst10
+      --| Rst18
+      --| Rst20
+      --| Rst28
+      --| Rst30
+      --| Rst38
     | Ret
+
+
+type RstChange
+    = Rst Int
 
 
 singleWithNoParam : Dict Int ( NoParamChange, InstructionDuration )
@@ -61,25 +65,29 @@ singleWithNoParam =
         -- case 0x7F: break;
         , ( 0x7F, ( NoOp, FourTStates ) )
         , ( 0xC1, ( PopBC, TenTStates ) )
-        , ( 0xC7, ( Rst00, FourTStates ) )
         , ( 0xC9, ( Ret, TenTStates ) )
-        , ( 0xCF, ( Rst08, ElevenTStates ) )
         , ( 0xD1, ( PopDE, TenTStates ) )
-        , ( 0xD7, ( Rst10, ElevenTStates ) )
 
         -- case 0xD9: exx(); break;
         --, ( 0xD9, ( Exx, FourTStates ) )
-        , ( 0xDF, ( Rst18, ElevenTStates ) )
         , ( 0xE1, ( PopHL, TenTStates ) )
-        , ( 0xE7, ( Rst20, ElevenTStates ) )
-        , ( 0xEF, ( Rst28, ElevenTStates ) )
         , ( 0xF1, ( PopAF, TenTStates ) )
 
-        --, ( 0xF3, ( DisableInterrupts, FourTStates ) )
-        , ( 0xF7, ( Rst30, ElevenTStates ) )
-
         --, ( 0xFB, ( EnableInterrupts, FourTStates ) )
-        , ( 0xFF, ( Rst38, ElevenTStates ) )
+        ]
+
+
+singleNoParamCalls : Dict Int ( RstChange, InstructionDuration )
+singleNoParamCalls =
+    Dict.fromList
+        [ ( 0xC7, ( Rst 0x00, ElevenTStates ) )
+        , ( 0xCF, ( Rst 0x08, ElevenTStates ) )
+        , ( 0xD7, ( Rst 0x10, ElevenTStates ) )
+        , ( 0xDF, ( Rst 0x18, ElevenTStates ) )
+        , ( 0xE7, ( Rst 0x20, ElevenTStates ) )
+        , ( 0xEF, ( Rst 0x28, ElevenTStates ) )
+        , ( 0xF7, ( Rst 0x30, ElevenTStates ) )
+        , ( 0xFF, ( Rst 0x38, ElevenTStates ) )
         ]
 
 
@@ -218,38 +226,37 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
                 , env = { old_env | sp = v.sp }
             }
 
-        Rst00 ->
-            --case 0xC7:push(PC); PC=c-199; break;
-            z80 |> rst 0xC7 cpu_time
-
-        Rst08 ->
-            --case 0xCF:push(PC); PC=c-199; break;
-            z80 |> rst 0xCF cpu_time
-
-        Rst10 ->
-            --case 0xD7:push(PC); PC=c-199; break;
-            z80 |> rst 0xD7 cpu_time
-
-        Rst18 ->
-            --case 0xDF:push(PC); PC=c-199; break;
-            z80 |> rst 0xDF cpu_time
-
-        Rst20 ->
-            --case 0xE7:push(PC); PC=c-199; break;
-            z80 |> rst 0xE7 cpu_time
-
-        Rst28 ->
-            --case 0xEF:push(PC); PC=c-199; break;
-            z80 |> rst 0xEF cpu_time
-
-        Rst30 ->
-            --case 0xF7:push(PC); PC=c-199; break;
-            z80 |> rst 0xF7 cpu_time
-
-        Rst38 ->
-            --case 0xFF:push(PC); PC=c-199; break;
-            z80 |> rst 0xFF cpu_time
-
+        --Rst00 ->
+        --    --case 0xC7:push(PC); PC=c-199; break;
+        --    z80 |> rst 0xC7 cpu_time
+        --
+        --Rst08 ->
+        --    --case 0xCF:push(PC); PC=c-199; break;
+        --    z80 |> rst 0xCF cpu_time
+        --
+        --Rst10 ->
+        --    --case 0xD7:push(PC); PC=c-199; break;
+        --    z80 |> rst 0xD7 cpu_time
+        --
+        --Rst18 ->
+        --    --case 0xDF:push(PC); PC=c-199; break;
+        --    z80 |> rst 0xDF cpu_time
+        --
+        --Rst20 ->
+        --    --case 0xE7:push(PC); PC=c-199; break;
+        --    z80 |> rst 0xE7 cpu_time
+        --
+        --Rst28 ->
+        --    --case 0xEF:push(PC); PC=c-199; break;
+        --    z80 |> rst 0xEF cpu_time
+        --
+        --Rst30 ->
+        --    --case 0xF7:push(PC); PC=c-199; break;
+        --    z80 |> rst 0xF7 cpu_time
+        --
+        --Rst38 ->
+        --    --case 0xFF:push(PC); PC=c-199; break;
+        --    z80 |> rst 0xFF cpu_time
         Ret ->
             --ret : Z80ROM -> Z80 -> Z80Delta
             --ret rom48k z80 =
@@ -267,24 +274,6 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
                 , clockTime = a.time
                 , pc = a.value16
             }
-
-
-rst : Int -> CpuTimeCTime -> Z80Core -> Z80Core
-rst value cpu_time z80 =
-    let
-        --interrupts =
-        --    z80.interrupts
-        old_env =
-            z80.env
-
-        pc =
-            Bitwise.and (z80.pc + 1) 0xFFFF
-    in
-    { z80
-        | pc = value - 199
-        , clockTime = cpu_time
-        , env = old_env |> z80_push pc cpu_time
-    }
 
 
 ex_af : Z80 -> Z80
@@ -350,3 +339,61 @@ execute_0x76_halt z80 =
                 { z80_core | interrupts = { interrupts | halted = True } }
     in
     { z80 | core = new_core }
+
+
+rst : Int -> CpuTimeCTime -> Z80Core -> Z80Core
+rst new_pc cpu_time z80 =
+    let
+        old_env =
+            z80.env
+
+        pc =
+            Bitwise.and (z80.pc + 1) 0xFFFF
+    in
+    { z80
+        | pc = new_pc
+        , clockTime = cpu_time
+        , env = old_env |> z80_push pc cpu_time
+    }
+
+
+applyRstDelta : CpuTimeCTime -> RstChange -> Z80ROM -> Z80Core -> Z80Core
+applyRstDelta cpu_time z80changeData rom48k z80 =
+    let
+        old_env =
+            z80.env
+    in
+    case z80changeData of
+        Rst int ->
+            --case 0xC7:push(PC); PC=c-199; break;
+            z80 |> rst int cpu_time
+
+
+
+--Rst08 ->
+--    --case 0xCF:push(PC); PC=c-199; break;
+--    z80 |> rst 0xCF cpu_time
+--
+--Rst10 ->
+--    --case 0xD7:push(PC); PC=c-199; break;
+--    z80 |> rst 0xD7 cpu_time
+--
+--Rst18 ->
+--    --case 0xDF:push(PC); PC=c-199; break;
+--    z80 |> rst 0xDF cpu_time
+--
+--Rst20 ->
+--    --case 0xE7:push(PC); PC=c-199; break;
+--    z80 |> rst 0xE7 cpu_time
+--
+--Rst28 ->
+--    --case 0xEF:push(PC); PC=c-199; break;
+--    z80 |> rst 0xEF cpu_time
+--
+--Rst30 ->
+--    --case 0xF7:push(PC); PC=c-199; break;
+--    z80 |> rst 0xF7 cpu_time
+--
+--Rst38 ->
+--    --case 0xFF:push(PC); PC=c-199; break;
+--    z80 |> rst 0xFF cpu_time
