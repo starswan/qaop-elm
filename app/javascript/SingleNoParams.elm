@@ -5,8 +5,9 @@ import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDur
 import Dict exposing (Dict)
 import Z80Core exposing (Z80, Z80Core, add_cpu_time)
 import Z80Debug exposing (debugLog)
-import Z80Env exposing (z80_pop, z80_push)
+import Z80Env exposing (z80_push)
 import Z80Flags exposing (set_af)
+import Z80Mem exposing (z80_pop)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (set_bc_main, set_de_main)
 
