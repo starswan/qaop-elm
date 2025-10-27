@@ -342,6 +342,6 @@ compileRom rom48k z80env =
                 |> Dict.foldl (compileRunning 0 rom48k z80env) { seen = Set.empty, compiled = Dict.empty, state = Running }
 
         z =
-            debugLog "Sizes" ((y.compiled |> Dict.size |> String.fromInt) ++ " " ++ (y.seen |> Set.size |> String.fromInt)) (y.compiled |> Dict.size) + (y.seen |> Set.size)
+            debugLog "Compiled " ((y.compiled |> Dict.size |> String.fromInt) ++ " Seen " ++ (y.seen |> Set.size |> String.fromInt)) (y.compiled |> Dict.size) + (y.seen |> Set.size)
     in
     ( y.compiled, z ) |> Tuple.first
