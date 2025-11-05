@@ -3,7 +3,7 @@ module GroupE0Test exposing (..)
 import Expect
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
-import Z80Env exposing (m1, mem16, setMemWithTime)
+import Z80Env exposing (m1, mem, mem16, setMemWithTime)
 import Z80Rom
 
 
@@ -119,10 +119,10 @@ suite =
                                 }
 
                         top_lo =
-                            (new_z80.env |> m1 sp 0 z80rom z80.clockTime).value
+                            (new_z80.env |> mem sp z80.clockTime z80rom).value
 
                         top_hi =
-                            (new_z80.env |> m1 (sp + 1) 0 z80rom z80.clockTime).value
+                            (new_z80.env |> mem (sp + 1) z80.clockTime z80rom).value
                     in
                     Expect.equal
                         { pc = new_z80.pc, sp = new_z80.env.sp, hl = new_z80.main.hl, top_lo = top_lo, top_hi = top_hi }

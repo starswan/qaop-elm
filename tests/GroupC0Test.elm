@@ -4,7 +4,8 @@ import Bitwise exposing (shiftRightBy)
 import Expect
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
-import Z80Env exposing (m1, setMemWithTime)
+import Z80Env exposing (setMemWithTime)
+import Z80Mem exposing (m1, mem)
 import Z80Rom
 
 
@@ -218,10 +219,10 @@ suite =
                                 |> executeCoreInstruction z80rom
 
                         lo_value =
-                            z80_1.env |> m1 stackp 0 z80rom z80.clockTime |> .value
+                            z80_1.env |> mem stackp z80.clockTime z80rom |> .value
 
                         high_value =
-                            z80_1.env |> m1 (stackp + 1) 0 z80rom z80.clockTime |> .value
+                            z80_1.env |> mem (stackp + 1) z80.clockTime z80rom |> .value
 
                         z80_2 =
                             z80_1 |> executeCoreInstruction z80rom
