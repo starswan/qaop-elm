@@ -191,10 +191,10 @@ suite =
                                 }
 
                         lo_value =
-                            new_z80.env |> m1 0x5577 0 z80rom z80.clockTime
+                            new_z80.env |> mem 0x5577 z80.clockTime z80rom
 
                         high_value =
-                            new_z80.env |> m1 0x5578 0 z80rom z80.clockTime
+                            new_z80.env |> mem 0x5578 z80.clockTime z80rom
                     in
                     Expect.equal ( addr + 4, 0x8F, 0x4D ) ( new_z80.pc, lo_value.value, high_value.value )
             , test "0xFD 22 LD (nn), IY" <|
@@ -217,10 +217,10 @@ suite =
                                 }
 
                         lo_value =
-                            new_z80.env |> m1 0x5577 0 z80rom z80.clockTime
+                            new_z80.env |> mem 0x5577 z80.clockTime z80rom
 
                         high_value =
-                            new_z80.env |> m1 0x5578 0 z80rom z80.clockTime
+                            new_z80.env |> mem 0x5578 z80.clockTime z80rom
                     in
                     Expect.equal ( addr + 4, 0x8F, 0x4D ) ( new_z80.pc, lo_value.value, high_value.value )
             ]
