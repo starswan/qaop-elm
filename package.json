@@ -2,7 +2,7 @@
   "name": "retroelm",
   "private": true,
   "dependencies": {
-    "@activeadmin/activeadmin": "~3.3.0",
+    "@activeadmin/activeadmin": "~3.4.0",
     "@popperjs/core": "^2.11.8",
     "@rails/ujs": "7.1.502",
     "bootstrap": "^5.3.8",
