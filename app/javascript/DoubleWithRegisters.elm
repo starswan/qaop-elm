@@ -3,12 +3,12 @@ module DoubleWithRegisters exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), addCpuTimeTime)
 import Dict exposing (Dict)
-import MemoryAddress exposing (MemoryAddress(..))
+import MemoryAddress exposing (HimemType(..), MemoryAddress(..))
 import PCIncrement exposing (MediumPCIncrement(..))
 import SingleWith8BitParameter exposing (applySimple8BitChange)
 import Utils exposing (byte, shiftLeftBy8)
 import Z80Core exposing (Z80Core)
-import Z80Env exposing (getRamValue, mem, setMem, setRam)
+import Z80Env exposing (getHiMemRamValue, getLowMemRamValue, mem, setMem, setRam)
 import Z80Flags exposing (FlagFunc(..), changeFlags, dec, inc)
 import Z80Registers exposing (CoreRegister)
 import Z80Rom exposing (Z80ROM)
@@ -554,9 +554,8 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 base_addr =
                     inAddr + byte offset |> Bitwise.and 0xFFFF
 
-                ramAddr =
-                    base_addr - 0x4000
-
+                --ramAddr =
+                --    base_addr - 0x4000
                 memAddress =
                     base_addr |> MemoryAddress.fromInt
 
@@ -592,19 +591,23 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                         , flags = valueWithFlags.flags
                     }
 
-                Himem _ _ ->
+                Himem himemType himemAddr ->
                     let
                         value =
-                            --    z80.env |> getRamMemoryValue memAddress rom48k
-                            z80.env |> getRamValue ramAddr rom48k
+                            --z80.env |> getRamValue ramAddr rom48k
+                            case himemType of
+                                HimemLow ->
+                                    z80.env |> getLowMemRamValue himemAddr rom48k
+
+                                HimemHigh ->
+                                    z80.env |> getHiMemRamValue himemAddr rom48k
 
                         valueWithFlags =
                             z80.flags |> inc value
 
                         env_1 =
-                            z80.env |> setRam ramAddr valueWithFlags.value
-
-                        --z80.env |> setRamMemoryValue memAddress valueWithFlags.value
+                            --z80.env |> setRam ramAddr valueWithFlags.value
+                            z80.env |> setRam memAddress valueWithFlags.value z80.clockTime |> Tuple.first
                     in
                     { z80
                         | pc = pc
@@ -650,16 +653,23 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                         , flags = valueWithFlags.flags
                     }
 
-                Himem _ _ ->
+                Himem himemType himemAddr ->
                     let
                         value =
-                            z80.env |> getRamValue ramAddr rom48k
+                            --z80.env |> getRamValue ramAddr rom48k
+                            case himemType of
+                                HimemLow ->
+                                    z80.env |> getLowMemRamValue himemAddr rom48k
+
+                                HimemHigh ->
+                                    z80.env |> getHiMemRamValue himemAddr rom48k
 
                         valueWithFlags =
                             z80.flags |> dec value
 
                         env_1 =
-                            z80.env |> setRam ramAddr valueWithFlags.value
+                            --z80.env |> setRam ramAddr valueWithFlags.value
+                            z80.env |> setRam memAddress valueWithFlags.value z80.clockTime |> Tuple.first
                     in
                     { z80
                         | pc = pc

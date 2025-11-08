@@ -11,9 +11,8 @@ import Vector8
 import Z80 exposing (execute)
 import Z80Core exposing (Z80, Z80Core, get_ei, interrupt)
 import Z80Debug exposing (debugLog)
-import Z80Env exposing (Z80Env, mem, mem16, setMemIgnoringTime, z80_pop)
+import Z80Env exposing (Z80Env, foldDictIntoRam, mem, mem16, setMemIgnoringTime, z80_pop)
 import Z80Flags exposing (c_FC, c_FZ, getFlags, setFlags)
-import Z80Ram exposing (foldDictIntoRam)
 import Z80Rom exposing (Z80ROM)
 import Z80Tape exposing (TapePosition, Z80Tape)
 import Z80Types exposing (get_de)
@@ -312,7 +311,7 @@ frames keys speccy =
                                     core_2.env
 
                                 newRam =
-                                    rom.z80ram |> foldDictIntoRam env_2.ram
+                                    rom.z80ram |> foldDictIntoRam env_2
 
                                 rom_2 =
                                     { new_rom | z80ram = newRam }
@@ -336,13 +335,13 @@ frames keys speccy =
                             core_2.env
 
                         newRam =
-                            rom.z80ram |> foldDictIntoRam env_2.ram
+                            rom.z80ram |> foldDictIntoRam env_2
 
                         rom_2 =
                             { new_rom | z80ram = newRam }
 
                         new_core =
-                            { core_2 | env = { env_2 | ram = Dict.empty } }
+                            { core_2 | env = { env_2 | ulaRam = Dict.empty, himemHighRam = Dict.empty, himemLowRam = Dict.empty } }
                     in
                     { load = False
                     , z80 = { new_z80 | core = new_core }
