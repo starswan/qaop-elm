@@ -11,7 +11,7 @@ gem "activeadmin"
 # gem "mutex_m"
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '~> 7.1', '< 7.2'
+gem 'rails', '~> 8.1'
 # Use sqlite3 as the database for Active Record
 gem 'sqlite3', '~> 2.8'
 gem "cssbundling-rails"
