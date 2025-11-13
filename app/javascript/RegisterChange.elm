@@ -48,6 +48,13 @@ type RegisterChange
     | ResetBitIndirectWithCopy BitTest ChangeMainRegister Int
 
 
+type SixteenBit
+    = RegHL
+    | RegDE
+    | RegBC
+    | RegSP
+
+
 type EDRegisterChange
     = EDNoOp
     | RegChangeIm InterruptMode
@@ -56,6 +63,7 @@ type EDRegisterChange
     | InRC ChangeMainRegister
     | Ldir DirectionForLDIR Bool
     | Cpir DirectionForLDIR Bool
+    | SbcHL SixteenBit
 
 
 type InterruptChange
