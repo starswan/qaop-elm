@@ -74,14 +74,6 @@ group_ed_dict =
         --, ( 0x7E, setImED7E )
         , ( 0x70, execute_ED70 )
         , ( 0x62, execute_ED62 )
-        , ( 0xA0, ed_ldi )
-        , ( 0xA1, ed_cpi )
-        , ( 0xA8, ed_ldd )
-        , ( 0xA9, ed_cpd )
-        , ( 0xB0, ed_ldir )
-        , ( 0xB1, ed_cpir )
-        , ( 0xB8, ed_lddr )
-        , ( 0xB9, ed_cpdr )
 
         -- ED08/ED09 no-op in Java version of Qaop
         , ( 0x00, \rom48k z80 -> NoOp )
@@ -401,25 +393,6 @@ execute_ED7B rom48k z80 =
     CpuTimeWithSpAndPc (sp.time |> addCpuTimeTime 6) sp.value16 v.pc
 
 
-ed_ldir : Z80ROM -> Z80Core -> Z80Delta
-ed_ldir rom48k z80 =
-    --0xB0 -> debug_log "LDIR" ("HL " ++ (z80.main.hl |> toHexString) ++ " BC " ++ (z80 |> get_bc |> toHexString2)) (z80 |> ldir 1 True)
-    -- case 0xB0: ldir(1,true); break;
-    z80 |> ldir Forwards True rom48k
-
-
-ed_lddr : Z80ROM -> Z80Core -> Z80Delta
-ed_lddr rom48k z80 =
-    -- case 0xB8: ldir(-1,true); break;
-    z80 |> ldir Backwards True rom48k
-
-
-ed_cpdr : Z80ROM -> Z80Core -> Z80Delta
-ed_cpdr rom48k z80 =
-    -- case 0xB9: cpir(-1,true); break;
-    z80 |> cpir Backwards True rom48k
-
-
 
 -- case 0x46:
 -- case 0x4E:
@@ -578,8 +551,8 @@ group_ed rom48k z80_core =
 --  }
 
 
-sbc_hl : Int -> Z80Core -> Z80Delta
-sbc_hl b z80 =
+sbc_hl_new : Int -> Z80Core -> ( FlagRegisters, MainWithIndexRegisters )
+sbc_hl_new b z80 =
     let
         a =
             z80.main.hl
@@ -608,8 +581,16 @@ sbc_hl b z80 =
         flags =
             z80.flags
     in
-    --{ z80 | main = { main | hl = r }, flags = { flags | ff = ff, fa = fa, fb = fb, fr = fr} } |> add_cpu_time 7 |> Whole
-    FlagsWithPCMainAndCpuTime { flags | ff = ff, fa = fa, fb = fb, fr = fr } z80.pc { main | hl = r } (z80.clockTime |> addCpuTimeTime 7)
+    ( { flags | ff = ff, fa = fa, fb = fb, fr = fr }, { main | hl = r } )
+
+
+sbc_hl : Int -> Z80Core -> Z80Delta
+sbc_hl b z80 =
+    let
+        ( flags, main ) =
+            z80 |> sbc_hl_new b
+    in
+    FlagsWithPCMainAndCpuTime flags z80.pc main (z80.clockTime |> addCpuTimeTime 7)
 
 
 
@@ -619,7 +600,7 @@ sbc_hl b z80 =
 --    SetImValue value
 
 
-ldir : DirectionForLDIR -> Bool -> Z80ROM -> Z80Core -> Z80Delta
+ldir : DirectionForLDIR -> Bool -> Z80ROM -> Z80Core -> Z80Core
 ldir incOrDec repeat rom48k z80 =
     --  private void ldir(int i, boolean r)
     let
@@ -709,7 +690,12 @@ ldir incOrDec repeat rom48k z80 =
         flags =
             z80_2.flags
     in
-    { z80_2 | clockTime = z80.clockTime |> addCpuTimeTime time, main = z80_2.main |> set_bc_main a, pc = pc, flags = { flags | fr = fr, ff = ff, fa = v, fb = v } } |> WholeCore
+    { z80_2
+        | clockTime = z80.clockTime |> addCpuTimeTime time
+        , main = z80_2.main |> set_bc_main a
+        , pc = pc
+        , flags = { flags | fr = fr, ff = ff, fa = v, fb = v }
+    }
 
 
 set_i : Int -> Z80Core -> InterruptRegisters
@@ -786,7 +772,7 @@ adc_hl b z80 =
 --}
 
 
-cpir : DirectionForLDIR -> Bool -> Z80ROM -> Z80Core -> Z80Delta
+cpir : DirectionForLDIR -> Bool -> Z80ROM -> Z80Core -> Z80Core
 cpir incOrDec repeat rom48k z80_core =
     let
         z80_flags =
@@ -851,8 +837,12 @@ cpir incOrDec repeat rom48k z80_core =
 
         ff =
             Bitwise.or old_ff ((new_v |> shiftLeftBy 4) |> Bitwise.and 0x20) |> Bitwise.or (Bitwise.and new_v 0x08)
+
+        newMain =
+            z80_core.main |> set_bc_main new_bc
     in
-    HLBCWithFlagsAndPc hl new_bc { z80_flags | ff = ff, fa = new_fa, fb = new_fb, fr = fr } new_pc
+    --HLBCWithFlagsAndPc hl new_bc { z80_flags | ff = ff, fa = new_fa, fb = new_fb, fr = fr } new_pc
+    { z80_core | main = { newMain | hl = hl }, flags = { z80_flags | ff = ff, fa = new_fa, fb = new_fb, fr = fr }, pc = new_pc }
 
 
 
@@ -954,36 +944,6 @@ rrd rom48k z80 =
     FlagsWithPcEnvAndCpuTime new_flags z80.pc env_1 10
 
 
-ed_ldi : Z80ROM -> Z80Core -> Z80Delta
-ed_ldi rom48k z80 =
-    -- case 0xA0: ldir(1,false); break;
-    z80 |> ldir Forwards False rom48k
-
-
-ed_cpi : Z80ROM -> Z80Core -> Z80Delta
-ed_cpi rom48k z80 =
-    -- case 0xA1: cpir(1,false); break;
-    z80 |> cpir Forwards False rom48k
-
-
-ed_ldd : Z80ROM -> Z80Core -> Z80Delta
-ed_ldd rom48k z80 =
-    -- case 0xA8: ldir(-1,false); break;
-    z80 |> ldir Backwards False rom48k
-
-
-ed_cpd : Z80ROM -> Z80Core -> Z80Delta
-ed_cpd rom48k z80 =
-    -- case 0xA9: cpir(-1,false); break;
-    z80 |> cpir Backwards False rom48k
-
-
-ed_cpir : Z80ROM -> Z80Core -> Z80Delta
-ed_cpir rom48k z80 =
-    -- case 0xB1: cpir(1,true); break;
-    z80 |> cpir Forwards True rom48k
-
-
 singleByteMainRegsED : Dict Int ( MainWithIndexRegisters -> EDRegisterChange, InstructionDuration )
 singleByteMainRegsED =
     Dict.fromList
@@ -1045,6 +1005,30 @@ singleByteMainRegsED =
         --The ED opcodes in the range 00-3F and 80-FF (except for the block instructions of course) do nothing at all but taking up 8 T states
         -- and incrementing the R register by 2. Most of the unlisted opcodes in the range 0x40 to 0x7f do have an effect, however
         , ( 0xBF, ( \_ -> EDNoOp, EightTStates ) )
+
+        -- case 0xA0: ldir(1,false); break;
+        , ( 0xA0, ( \_ -> Ldir Forwards False, SixteenTStates ) )
+
+        -- case 0xA8: ldir(-1,false); break;
+        , ( 0xA8, ( \_ -> Ldir Backwards False, SixteenTStates ) )
+
+        -- case 0xB0: ldir(1,true); break;
+        , ( 0xB0, ( \_ -> Ldir Forwards True, SixteenTStates ) )
+
+        -- case 0xB8: ldir(-1,true); break;
+        , ( 0xB8, ( \_ -> Ldir Backwards True, SixteenTStates ) )
+
+        -- case 0xA1: cpir(1,false); break;
+        , ( 0xA1, ( \_ -> Cpir Forwards False, SixteenTStates ) )
+
+        -- case 0xA9: cpir(-1,false); break;
+        , ( 0xA9, ( \_ -> Cpir Backwards False, SixteenTStates ) )
+
+        -- case 0xB1: cpir(1,true); break;
+        , ( 0xB1, ( \_ -> Cpir Forwards True, SixteenTStates ) )
+
+        -- case 0xB9: cpir(-1,true); break;
+        , ( 0xB9, ( \_ -> Cpir Forwards False, SixteenTStates ) )
         ]
 
 

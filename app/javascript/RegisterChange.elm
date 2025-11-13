@@ -54,6 +54,8 @@ type EDRegisterChange
     | Z80InI DirectionForLDIR Bool
     | Z80OutI DirectionForLDIR Bool
     | InRC ChangeMainRegister
+    | Ldir DirectionForLDIR Bool
+    | Cpir DirectionForLDIR Bool
 
 
 type InterruptChange

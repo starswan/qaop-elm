@@ -6,14 +6,13 @@ import Z80Core exposing (Z80, Z80Core)
 import Z80Debug exposing (debugTodo)
 import Z80Env exposing (Z80Env)
 import Z80Flags exposing (FlagRegisters)
-import Z80Types exposing (InterruptRegisters, MainRegisters, MainWithIndexRegisters, set_bc_main)
+import Z80Types exposing (InterruptRegisters, MainRegisters, MainWithIndexRegisters)
 
 
 type
     Z80Delta
     -- only used by LDIR
-    = WholeCore Z80Core
-    | MainRegsWithPcAndCpuTime MainWithIndexRegisters Int CpuTimeCTime
+    = MainRegsWithPcAndCpuTime MainWithIndexRegisters Int CpuTimeCTime
     | FlagsWithPCMainAndCpuTime FlagRegisters Int MainWithIndexRegisters CpuTimeCTime
     | CpuTimeWithFlagsAndPc CpuTimeCTime FlagRegisters Int
     | EnvWithPcAndTime Z80Env Int CpuTimeCTime
@@ -25,7 +24,7 @@ type
     | FlagsWithPcEnvAndCpuTime FlagRegisters Int Z80Env Int
     | UnknownIntValue String Int
       -- only used by CPIR
-    | HLBCWithFlagsAndPc Int Int FlagRegisters Int
+      --| HLBCWithFlagsAndPc Int Int FlagRegisters Int
     | NewAValue Int
     | NoOp
 
@@ -45,16 +44,14 @@ applyDeltaWithChanges z80delta z80 =
             z80.env
     in
     case z80delta.delta of
-        WholeCore just_z80 ->
-            just_z80
-
-        HLBCWithFlagsAndPc hl bc flags pc ->
-            let
-                main =
-                    z80.main |> set_bc_main bc
-            in
-            { z80 | pc = pc, flags = flags, main = { main | hl = hl }, env = z80_env, clockTime = z80delta.time }
-
+        --WholeCore just_z80 ->
+        --    just_z80
+        --HLBCWithFlagsAndPc hl bc flags pc ->
+        --    let
+        --        main =
+        --            z80.main |> set_bc_main bc
+        --    in
+        --    { z80 | pc = pc, flags = flags, main = { main | hl = hl }, env = z80_env, clockTime = z80delta.time }
         MainRegsWithPcAndCpuTime mainRegisters pc cpu_time ->
             { z80 | pc = pc, env = z80_env, clockTime = cpu_time, main = mainRegisters, interrupts = z80delta.interrupts }
 
