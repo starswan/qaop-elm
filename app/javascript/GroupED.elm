@@ -371,23 +371,6 @@ execute_ED7B rom48k z80 =
 -- case 0x6E:
 -- case 0x76:
 -- case 0x7E: IM = c>>3&3; break;
---adc_hl_bc : Z80ROM -> Z80Core -> Z80Delta
---adc_hl_bc _ z80 =
---    -- case 0x4A: adc_hl(B<<8|C); break;
---    --0x4A -> z80 |> adc_hl (z80 |> get_bc)
---    z80 |> adc_hl (z80.main |> get_bc)
---adc_hl_de : Z80ROM -> Z80Core -> Z80Delta
---adc_hl_de _ z80 =
---    ---- case 0x5A: adc_hl(D<<8|E); break;
---    --0x5A -> z80 |> adc_hl (z80 |> get_de)
---    z80 |> adc_hl (z80.main |> get_de)
---
---
---adc_hl_hl : Z80ROM -> Z80Core -> Z80Delta
---adc_hl_hl _ z80 =
---    ---- case 0x6A: adc_hl(HL); break;
---    --0x6A -> z80 |> adc_hl z80.main.hl
---    z80 |> adc_hl z80.main.hl
 
 
 adc_hl_sp : Z80ROM -> Z80Core -> Z80Delta
