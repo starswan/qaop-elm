@@ -1,15 +1,22 @@
 {
   "name": "retroelm",
   "private": true,
+  "type": "module",
   "dependencies": {
     "@activeadmin/activeadmin": "~3.4.0",
     "@popperjs/core": "^2.11.8",
     "@rails/ujs": "7.1.600",
     "bootstrap": "^5.3.8",
     "elm": "^0.19.1-6",
-    "esbuild": "^0.15.18",
-    "esbuild-plugin-elm": "^0.0.12",
-    "sass": "^1.93.3"
+    "esbuild": "^0.25.9",
+    "postcss": "^8.5.6",
+    "postcss-flexbugs-fixes": "^5.0.2",
+    "postcss-import": "^16.1.1",
+    "postcss-preset-env": "^10.2.4",
+    "sass": "^1.93.3",
+    "vite": "^5.4.19",
+    "vite-plugin-elm": "^3.0.1",
+    "vite-plugin-ruby": "^5.1.0"
   },
   "overrides": {
     "cross-spawn": ">= 7.0.3"
@@ -20,7 +27,7 @@
     "elm-test": "0.19.1-revision16"
   },
   "scripts": {
-    "build": "node ./esbuild.config.js",
+    "build": "vite build",
     "build:css": "sass --quiet-deps -I node_modules app/assets/stylesheets/application.scss:app/assets/builds/application.css app/assets/stylesheets/active_admin.scss:app/assets/builds/active_admin.css"
   }
 }
