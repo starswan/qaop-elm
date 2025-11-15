@@ -225,12 +225,23 @@ mapScreenLine globalFlash screenLine =
         --drawnFolded =
         --    rawData
         --    |> Vector8.map (\v32 -> v32 |> Vector32.foldr foldUp []) |> Vector8.map (\v32 -> v32 |> List.foldr foldDrawn [])
+        --scrFolded : Vector8 (List ( Int, ScreenColourRun ))
+        --scrFolded =
+        --    rawData
+        --        |> Vector8.map (\v32 -> v32 |> Vector32.foldr foldUp [])
+        --        |> Vector8.map (\v32 -> v32 |> List.foldr foldDrawn [])
+        --        |> Vector8.map (\scrList -> scrList |> List.foldl foldScr [] |> List.reverse)
         scrFolded : Vector8 (List ( Int, ScreenColourRun ))
         scrFolded =
             rawData
-                |> Vector8.map (\v32 -> v32 |> Vector32.foldr foldUp [])
-                |> Vector8.map (\v32 -> v32 |> List.foldr foldDrawn [])
-                |> Vector8.map (\scrList -> scrList |> List.foldl foldScr [] |> List.reverse)
+                |> Vector8.map
+                    (\v32 ->
+                        v32
+                            |> Vector32.foldr foldUp []
+                            |> List.foldr foldDrawn []
+                            |> List.foldl foldScr []
+                            |> List.reverse
+                    )
     in
     scrFolded
 
