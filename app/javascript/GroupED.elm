@@ -10,7 +10,7 @@ import Bitwise exposing (complement, shiftLeftBy, shiftRightBy)
 import CpuTimeCTime exposing (InstructionDuration(..), addCpuTimeTime)
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
-import RegisterChange exposing (EDRegisterChange(..), InterruptChange(..), RegisterChange(..), SixteenBit(..))
+import RegisterChange exposing (EDRegisterChange(..), InterruptChange(..), RegisterChange(..))
 import Utils exposing (char, shiftLeftBy8, shiftRightBy8, toHexString2)
 import Z80Change exposing (FlagChange(..), Z80Change(..))
 import Z80Core exposing (DirectionForLDIR(..), Z80Core, add_cpu_time, imm16)
@@ -35,7 +35,8 @@ delta_dict_lite_E0 =
 group_ed_dict : Dict Int (Z80ROM -> Z80Core -> Z80Delta)
 group_ed_dict =
     Dict.fromList
-        [ ( 0x43, execute_ED43 )
+        [ ( 0x42, execute_ED42 )
+        , ( 0x43, execute_ED43 )
 
         --, ( 0x46, setImED46 )
         , ( 0x47, execute_ED47 )
@@ -53,12 +54,14 @@ group_ed_dict =
         -- case 0x67: rrd(); break;
         -- case 0x6F: rld(); break;
         , ( 0x78, execute_ED78 )
+        , ( 0x52, execute_ED52 )
         , ( 0x53, execute_ED53 )
         , ( 0x63, execute_ED63 )
         , ( 0x7B, execute_ED7B )
         , ( 0x73, execute_ED73 )
         , ( 0x5B, execute_ED5B )
         , ( 0x6B, execute_ED6B )
+        , ( 0x72, execute_ED72 )
 
         --, ( 0x56, setIm0x56 )
         --, ( 0x5E, setIm0x5E )
@@ -70,8 +73,16 @@ group_ed_dict =
         --, ( 0x76, setImED76 )
         --, ( 0x7E, setImED7E )
         , ( 0x70, execute_ED70 )
+        , ( 0x62, execute_ED62 )
+        , ( 0xA0, ed_ldi )
+        , ( 0xA1, ed_cpi )
+        , ( 0xA8, ed_ldd )
+        , ( 0xA9, ed_cpd )
+        , ( 0xB0, ed_ldir )
+        , ( 0xB1, ed_cpir )
+        , ( 0xB8, ed_lddr )
+        , ( 0xB9, ed_cpdr )
 
-        --, ( 0x62, execute_ED62 )
         -- ED08/ED09 no-op in Java version of Qaop
         , ( 0x00, \rom48k z80 -> NoOp )
         , ( 0x01, \rom48k z80 -> NoOp )
@@ -141,6 +152,22 @@ group_ed_dict =
         ]
 
 
+execute_ED42 : Z80ROM -> Z80Core -> Z80Delta
+execute_ED42 rom48k z80 =
+    -- case 0x42: sbc_hl(B<<8|C); break;
+    let
+        bc =
+            z80.main |> get_bc
+    in
+    z80 |> sbc_hl bc
+
+
+execute_ED62 : Z80ROM -> Z80Core -> Z80Delta
+execute_ED62 rom48k z80 =
+    -- case 0x62: sbc_hl(HL); break;
+    z80 |> sbc_hl z80.main.hl
+
+
 execute_ED43 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED43 rom48k z80 =
     -- case 0x43: MP=(v=imm16())+1; env.mem16(v,B<<8|C); time+=6; break;
@@ -204,6 +231,12 @@ execute_ED4B rom48k z80 =
 --ld_r_a rom48k z80 =
 --    -- case 0x4F: r(A); time++; break;
 --    NewRValue z80.flags.a
+
+
+execute_ED52 : Z80ROM -> Z80Core -> Z80Delta
+execute_ED52 rom48k z80 =
+    -- case 0x52: sbc_hl(D<<8|E); break;
+    z80 |> sbc_hl (Bitwise.or (shiftLeftBy8 z80.main.d) z80.main.e)
 
 
 execute_ED53 : Z80ROM -> Z80Core -> Z80Delta
@@ -288,6 +321,12 @@ execute_ED6B rom48k z80 =
     MainRegsWithPcAndCpuTime { z80_main | hl = v2.value16 } v1.pc (v2.time |> addCpuTimeTime 6)
 
 
+execute_ED72 : Z80ROM -> Z80Core -> Z80Delta
+execute_ED72 rom48k z80 =
+    -- case 0x72: sbc_hl(SP); break;
+    z80 |> sbc_hl z80.env.sp
+
+
 execute_ED73 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED73 rom48k z80 =
     -- case 0x73: MP=(v=imm16())+1; env.mem16(v,SP); time+=6; break;
@@ -362,6 +401,25 @@ execute_ED7B rom48k z80 =
     CpuTimeWithSpAndPc (sp.time |> addCpuTimeTime 6) sp.value16 v.pc
 
 
+ed_ldir : Z80ROM -> Z80Core -> Z80Delta
+ed_ldir rom48k z80 =
+    --0xB0 -> debug_log "LDIR" ("HL " ++ (z80.main.hl |> toHexString) ++ " BC " ++ (z80 |> get_bc |> toHexString2)) (z80 |> ldir 1 True)
+    -- case 0xB0: ldir(1,true); break;
+    z80 |> ldir Forwards True rom48k
+
+
+ed_lddr : Z80ROM -> Z80Core -> Z80Delta
+ed_lddr rom48k z80 =
+    -- case 0xB8: ldir(-1,true); break;
+    z80 |> ldir Backwards True rom48k
+
+
+ed_cpdr : Z80ROM -> Z80Core -> Z80Delta
+ed_cpdr rom48k z80 =
+    -- case 0xB9: cpir(-1,true); break;
+    z80 |> cpir Backwards True rom48k
+
+
 
 -- case 0x46:
 -- case 0x4E:
@@ -371,6 +429,23 @@ execute_ED7B rom48k z80 =
 -- case 0x6E:
 -- case 0x76:
 -- case 0x7E: IM = c>>3&3; break;
+--adc_hl_bc : Z80ROM -> Z80Core -> Z80Delta
+--adc_hl_bc _ z80 =
+--    -- case 0x4A: adc_hl(B<<8|C); break;
+--    --0x4A -> z80 |> adc_hl (z80 |> get_bc)
+--    z80 |> adc_hl (z80.main |> get_bc)
+--adc_hl_de : Z80ROM -> Z80Core -> Z80Delta
+--adc_hl_de _ z80 =
+--    ---- case 0x5A: adc_hl(D<<8|E); break;
+--    --0x5A -> z80 |> adc_hl (z80 |> get_de)
+--    z80 |> adc_hl (z80.main |> get_de)
+--
+--
+--adc_hl_hl : Z80ROM -> Z80Core -> Z80Delta
+--adc_hl_hl _ z80 =
+--    ---- case 0x6A: adc_hl(HL); break;
+--    --0x6A -> z80 |> adc_hl z80.main.hl
+--    z80 |> adc_hl z80.main.hl
 
 
 adc_hl_sp : Z80ROM -> Z80Core -> Z80Delta
@@ -503,7 +578,7 @@ group_ed rom48k z80_core =
 --  }
 
 
-sbc_hl : Int -> Z80Core -> ( FlagRegisters, MainWithIndexRegisters )
+sbc_hl : Int -> Z80Core -> Z80Delta
 sbc_hl b z80 =
     let
         a =
@@ -533,7 +608,8 @@ sbc_hl b z80 =
         flags =
             z80.flags
     in
-    ( { flags | ff = ff, fa = fa, fb = fb, fr = fr }, { main | hl = r } )
+    --{ z80 | main = { main | hl = r }, flags = { flags | ff = ff, fa = fa, fb = fb, fr = fr} } |> add_cpu_time 7 |> Whole
+    FlagsWithPCMainAndCpuTime { flags | ff = ff, fa = fa, fb = fb, fr = fr } z80.pc { main | hl = r } (z80.clockTime |> addCpuTimeTime 7)
 
 
 
@@ -543,7 +619,7 @@ sbc_hl b z80 =
 --    SetImValue value
 
 
-ldir : DirectionForLDIR -> Bool -> Z80ROM -> Z80Core -> Z80Core
+ldir : DirectionForLDIR -> Bool -> Z80ROM -> Z80Core -> Z80Delta
 ldir incOrDec repeat rom48k z80 =
     --  private void ldir(int i, boolean r)
     let
@@ -633,12 +709,7 @@ ldir incOrDec repeat rom48k z80 =
         flags =
             z80_2.flags
     in
-    { z80_2
-        | clockTime = z80.clockTime |> addCpuTimeTime time
-        , main = z80_2.main |> set_bc_main a
-        , pc = pc
-        , flags = { flags | fr = fr, ff = ff, fa = v, fb = v }
-    }
+    { z80_2 | clockTime = z80.clockTime |> addCpuTimeTime time, main = z80_2.main |> set_bc_main a, pc = pc, flags = { flags | fr = fr, ff = ff, fa = v, fb = v } } |> WholeCore
 
 
 set_i : Int -> Z80Core -> InterruptRegisters
@@ -715,7 +786,7 @@ adc_hl b z80 =
 --}
 
 
-cpir : DirectionForLDIR -> Bool -> Z80ROM -> Z80Core -> Z80Core
+cpir : DirectionForLDIR -> Bool -> Z80ROM -> Z80Core -> Z80Delta
 cpir incOrDec repeat rom48k z80_core =
     let
         z80_flags =
@@ -780,12 +851,8 @@ cpir incOrDec repeat rom48k z80_core =
 
         ff =
             Bitwise.or old_ff ((new_v |> shiftLeftBy 4) |> Bitwise.and 0x20) |> Bitwise.or (Bitwise.and new_v 0x08)
-
-        newMain =
-            z80_core.main |> set_bc_main new_bc
     in
-    --HLBCWithFlagsAndPc hl new_bc { z80_flags | ff = ff, fa = new_fa, fb = new_fb, fr = fr } new_pc
-    { z80_core | main = { newMain | hl = hl }, flags = { z80_flags | ff = ff, fa = new_fa, fb = new_fb, fr = fr }, pc = new_pc }
+    HLBCWithFlagsAndPc hl new_bc { z80_flags | ff = ff, fa = new_fa, fb = new_fb, fr = fr } new_pc
 
 
 
@@ -887,6 +954,36 @@ rrd rom48k z80 =
     FlagsWithPcEnvAndCpuTime new_flags z80.pc env_1 10
 
 
+ed_ldi : Z80ROM -> Z80Core -> Z80Delta
+ed_ldi rom48k z80 =
+    -- case 0xA0: ldir(1,false); break;
+    z80 |> ldir Forwards False rom48k
+
+
+ed_cpi : Z80ROM -> Z80Core -> Z80Delta
+ed_cpi rom48k z80 =
+    -- case 0xA1: cpir(1,false); break;
+    z80 |> cpir Forwards False rom48k
+
+
+ed_ldd : Z80ROM -> Z80Core -> Z80Delta
+ed_ldd rom48k z80 =
+    -- case 0xA8: ldir(-1,false); break;
+    z80 |> ldir Backwards False rom48k
+
+
+ed_cpd : Z80ROM -> Z80Core -> Z80Delta
+ed_cpd rom48k z80 =
+    -- case 0xA9: cpir(-1,false); break;
+    z80 |> cpir Backwards False rom48k
+
+
+ed_cpir : Z80ROM -> Z80Core -> Z80Delta
+ed_cpir rom48k z80 =
+    -- case 0xB1: cpir(1,true); break;
+    z80 |> cpir Forwards True rom48k
+
+
 singleByteMainRegsED : Dict Int ( MainWithIndexRegisters -> EDRegisterChange, InstructionDuration )
 singleByteMainRegsED =
     Dict.fromList
@@ -948,42 +1045,6 @@ singleByteMainRegsED =
         --The ED opcodes in the range 00-3F and 80-FF (except for the block instructions of course) do nothing at all but taking up 8 T states
         -- and incrementing the R register by 2. Most of the unlisted opcodes in the range 0x40 to 0x7f do have an effect, however
         , ( 0xBF, ( \_ -> EDNoOp, EightTStates ) )
-
-        -- case 0xA0: ldir(1,false); break;
-        , ( 0xA0, ( \_ -> Ldir Forwards False, SixteenTStates ) )
-
-        -- case 0xA8: ldir(-1,false); break;
-        , ( 0xA8, ( \_ -> Ldir Backwards False, SixteenTStates ) )
-
-        -- case 0xB0: ldir(1,true); break;
-        , ( 0xB0, ( \_ -> Ldir Forwards True, SixteenTStates ) )
-
-        -- case 0xB8: ldir(-1,true); break;
-        , ( 0xB8, ( \_ -> Ldir Backwards True, SixteenTStates ) )
-
-        -- case 0xA1: cpir(1,false); break;
-        , ( 0xA1, ( \_ -> Cpir Forwards False, SixteenTStates ) )
-
-        -- case 0xA9: cpir(-1,false); break;
-        , ( 0xA9, ( \_ -> Cpir Backwards False, SixteenTStates ) )
-
-        -- case 0xB1: cpir(1,true); break;
-        , ( 0xB1, ( \_ -> Cpir Forwards True, SixteenTStates ) )
-
-        -- case 0xB9: cpir(-1,true); break;
-        , ( 0xB9, ( \_ -> Cpir Forwards False, SixteenTStates ) )
-
-        -- case 0x62: sbc_hl(HL); break;
-        , ( 0x62, ( \_ -> SbcHL RegHL, FifteenTStates ) )
-
-        -- case 0x42: sbc_hl(B<<8|C); break;
-        , ( 0x42, ( \_ -> SbcHL RegBC, FifteenTStates ) )
-
-        -- case 0x52: sbc_hl(D<<8|E); break;
-        , ( 0x52, ( \_ -> SbcHL RegDE, FifteenTStates ) )
-
-        -- case 0x72: sbc_hl(SP); break;
-        , ( 0x72, ( \_ -> SbcHL RegSP, FifteenTStates ) )
         ]
 
 
