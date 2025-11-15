@@ -178,18 +178,16 @@ screenDataNodeList flash screenLines =
         |> Vector24.indexedMap
             (\index line ->
                 let
-                    allAttrsOnLine : Int
-                    allAttrsOnLine =
-                        line.attrs |> Vector32.foldl (\x y -> Bitwise.or x y) 0x00
-                in
-                -- if flash is off (bit 7) on the whole line, use False for globalFlash value to help SVG caching
-                if (allAttrsOnLine |> Bitwise.and 0x80) == 0x00 then
-                    line
-                        |> Svg.Lazy.lazy3 mapScreenLineToSvg False index
+                    -- if flash is off (bit 7) on the whole line, use False for globalFlash value to help SVG caching
+                    localFlash =
+                        if (line.attrs |> Vector32.foldl (\x y -> Bitwise.or x y) 0x00 |> Bitwise.and 0x80) == 0x00 then
+                            False
 
-                else
-                    line
-                        |> Svg.Lazy.lazy3 mapScreenLineToSvg flash index
+                        else
+                            flash
+                in
+                line
+                    |> Svg.Lazy.lazy3 mapScreenLineToSvg localFlash index
             )
 
 
