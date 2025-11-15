@@ -10,7 +10,6 @@ import CpuTimeCTime exposing (CTime(..), CpuTimeAnd16BitValue, CpuTimeAndValue, 
 import Dict exposing (Dict)
 import Keyboard exposing (Keyboard, z80_keyboard_input)
 import Utils exposing (shiftRightBy8)
-import Z80Ram exposing (Z80Ram)
 
 
 type alias Z80Env =
