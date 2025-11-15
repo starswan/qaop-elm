@@ -4,6 +4,7 @@ import Bitwise
 import CpuTimeCTime exposing (CpuTimeAndValue, InstructionDuration, addDuration, reset_cpu_time)
 import Dict
 import DoubleWithRegisters exposing (applyDoubleWithRegistersDelta, doubleWithRegisters, doubleWithRegistersIY)
+import GroupED exposing (singleByteMainAndFlagsED, singleByteMainRegsED)
 import Maybe.Extra exposing (oneOf)
 import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
 import SimpleFlagOps exposing (singleByteFlags)
@@ -16,7 +17,7 @@ import TripleByte exposing (tripleByteWith16BitParam)
 import TripleWithFlags exposing (triple16bitJumps)
 import Z80Core exposing (Z80Core)
 import Z80Env exposing (Z80Env)
-import Z80Execute exposing (applyFlagDelta, applyJumpChangeDelta, applyPureDelta, applyRegisterDelta, applySimple8BitDelta, applyTripleChangeDelta, applyTripleFlagChange)
+import Z80Execute exposing (applyEdRegisterDelta, applyFlagDelta, applyJumpChangeDelta, applyPureDelta, applyRegisterDelta, applySimple8BitDelta, applyTripleChangeDelta, applyTripleFlagChange)
 import Z80Mem exposing (m1, mem, mem16)
 import Z80Rom exposing (CompiledZ80ROM, CpuInstruction, Z80ROM)
 import Z80Types exposing (MainWithIndexRegisters)
@@ -204,6 +205,28 @@ lengthAndDuration pc rom48k z80env =
                                 , duration
                                 , \dur z80rom z80core ->
                                     z80core |> applySingleEnvMainChange IncrementByOne dur (f z80core.main z80rom (z80core.clockTime |> addDuration dur) z80core.env) z80rom
+                                )
+                            )
+                , \instruction ->
+                    singleByteMainRegsED
+                        |> Dict.get instruction
+                        |> Maybe.map
+                            (\( f, duration ) ->
+                                ( IncrementByTwo
+                                , duration
+                                , \dur z80rom z80core ->
+                                    z80core |> applyEdRegisterDelta IncrementByTwo dur (f z80core.main) z80rom
+                                )
+                            )
+                , \instruction ->
+                    singleByteMainAndFlagsED
+                        |> Dict.get instruction
+                        |> Maybe.map
+                            (\( f, pcInc, duration ) ->
+                                ( pcInc
+                                , duration
+                                , \dur z80rom z80core ->
+                                    z80core |> applyPureDelta pcInc (z80core.clockTime |> addDuration dur) (f z80core.main z80core.flags)
                                 )
                             )
                 ]

@@ -41,6 +41,10 @@ type alias CompileRunning =
     }
 
 
+compilerInit =
+    { seen = Set.empty, compiled = Dict.empty, state = Running }
+
+
 compileRunning : Int -> Z80ROM -> Z80Env -> Int -> Int -> CompileRunning -> CompileRunning
 compileRunning nesting rom48k z80env key value input =
     case input.state of
@@ -390,11 +394,11 @@ compileRunning nesting rom48k z80env key value input =
 
 compileRom : Z80ROM -> Z80Env -> Dict Int ( Z80ROM -> Z80Core -> Z80Core, InstructionDuration )
 compileRom rom48k z80env =
-    -- compiled 2844 Seen 2625
+    -- compiled 2846/2623
     let
         y =
             rom48k.rom48k
-                |> Dict.foldl (compileRunning 0 rom48k z80env) { seen = Set.empty, compiled = Dict.empty, state = Running }
+                |> Dict.foldl (compileRunning 0 rom48k z80env) compilerInit
 
         z =
             debugLog "Compiled " ((y.compiled |> Dict.size |> String.fromInt) ++ " Seen " ++ (y.seen |> Set.size |> String.fromInt)) (y.compiled |> Dict.size) + (y.seen |> Set.size)
