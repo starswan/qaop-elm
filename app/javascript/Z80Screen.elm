@@ -218,17 +218,30 @@ mapScreenLine globalFlash screenLine =
                         Vector32.map2 (\data attr -> { colour = attr, data = data }) dataRow attr_row
                     )
 
-        foldedLines : Vector8 (List ScreenData)
-        foldedLines =
-            rawData |> Vector8.map (\v32 -> v32 |> Vector32.foldr foldUp [])
-
-        drawnFolded : Vector8 (List ScreenColourRun)
-        drawnFolded =
-            foldedLines |> Vector8.map (\v32 -> v32 |> List.foldr foldDrawn [])
-
+        --foldedLines : Vector8 (List ScreenData)
+        --foldedLines =
+        --    rawData |> Vector8.map (\v32 -> v32 |> Vector32.foldr foldUp [])
+        --drawnFolded : Vector8 (List ScreenColourRun)
+        --drawnFolded =
+        --    rawData
+        --    |> Vector8.map (\v32 -> v32 |> Vector32.foldr foldUp []) |> Vector8.map (\v32 -> v32 |> List.foldr foldDrawn [])
+        --scrFolded : Vector8 (List ( Int, ScreenColourRun ))
+        --scrFolded =
+        --    rawData
+        --        |> Vector8.map (\v32 -> v32 |> Vector32.foldr foldUp [])
+        --        |> Vector8.map (\v32 -> v32 |> List.foldr foldDrawn [])
+        --        |> Vector8.map (\scrList -> scrList |> List.foldl foldScr [] |> List.reverse)
         scrFolded : Vector8 (List ( Int, ScreenColourRun ))
         scrFolded =
-            drawnFolded |> Vector8.map (\scrList -> scrList |> List.foldl foldScr [] |> List.reverse)
+            rawData
+                |> Vector8.map
+                    (\v32 ->
+                        v32
+                            |> Vector32.foldr foldUp []
+                            |> List.foldr foldDrawn []
+                            |> List.foldl foldScr []
+                            |> List.reverse
+                    )
     in
     scrFolded
 
