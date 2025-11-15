@@ -1204,6 +1204,41 @@ applyEdRegisterDelta pc_inc duration z80changeData rom48k z80_core =
             in
             core |> ldir direction repeat rom48k
 
+        Cpir direction repeat ->
+            let
+                core =
+                    { z80_core | pc = new_pc, clockTime = newTime }
+            in
+            core |> cpir direction repeat rom48k
+
+        SbcHL reg16type ->
+            let
+                reg =
+                    case reg16type of
+                        RegHL ->
+                            z80_core.main.hl
+
+                        RegDE ->
+                            z80_core.main |> get_de
+
+                        RegBC ->
+                            z80_core.main |> get_bc
+
+                        RegSP ->
+                            z80_core.env.sp
+
+                ( flags, main ) =
+                    z80_core |> sbc_hl reg
+            in
+            { z80_core | pc = new_pc, clockTime = newTime, main = main, flags = flags }
+
+        Ldir direction repeat ->
+            let
+                core =
+                    { z80_core | pc = new_pc, clockTime = newTime }
+            in
+            core |> ldir direction repeat rom48k
+
         RegChangeIm intMode ->
             let
                 interrupts =

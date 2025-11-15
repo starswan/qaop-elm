@@ -70,10 +70,6 @@ group_ed_dict =
         --, ( 0x76, setImED76 )
         --, ( 0x7E, setImED7E )
         , ( 0x70, execute_ED70 )
-        , ( 0xA1, ed_cpi )
-        , ( 0xA9, ed_cpd )
-        , ( 0xB1, ed_cpir )
-        , ( 0xB9, ed_cpdr )
 
         --, ( 0x62, execute_ED62 )
         -- ED08/ED09 no-op in Java version of Qaop
@@ -366,12 +362,6 @@ execute_ED7B rom48k z80 =
     CpuTimeWithSpAndPc (sp.time |> addCpuTimeTime 6) sp.value16 v.pc
 
 
-ed_cpdr : Z80ROM -> Z80Core -> Z80Delta
-ed_cpdr rom48k z80 =
-    -- case 0xB9: cpir(-1,true); break;
-    z80 |> cpir Backwards True rom48k
-
-
 
 -- case 0x46:
 -- case 0x4E:
@@ -381,23 +371,6 @@ ed_cpdr rom48k z80 =
 -- case 0x6E:
 -- case 0x76:
 -- case 0x7E: IM = c>>3&3; break;
---adc_hl_bc : Z80ROM -> Z80Core -> Z80Delta
---adc_hl_bc _ z80 =
---    -- case 0x4A: adc_hl(B<<8|C); break;
---    --0x4A -> z80 |> adc_hl (z80 |> get_bc)
---    z80 |> adc_hl (z80.main |> get_bc)
---adc_hl_de : Z80ROM -> Z80Core -> Z80Delta
---adc_hl_de _ z80 =
---    ---- case 0x5A: adc_hl(D<<8|E); break;
---    --0x5A -> z80 |> adc_hl (z80 |> get_de)
---    z80 |> adc_hl (z80.main |> get_de)
---
---
---adc_hl_hl : Z80ROM -> Z80Core -> Z80Delta
---adc_hl_hl _ z80 =
---    ---- case 0x6A: adc_hl(HL); break;
---    --0x6A -> z80 |> adc_hl z80.main.hl
---    z80 |> adc_hl z80.main.hl
 
 
 adc_hl_sp : Z80ROM -> Z80Core -> Z80Delta
@@ -742,7 +715,7 @@ adc_hl b z80 =
 --}
 
 
-cpir : DirectionForLDIR -> Bool -> Z80ROM -> Z80Core -> Z80Delta
+cpir : DirectionForLDIR -> Bool -> Z80ROM -> Z80Core -> Z80Core
 cpir incOrDec repeat rom48k z80_core =
     let
         z80_flags =
@@ -807,8 +780,12 @@ cpir incOrDec repeat rom48k z80_core =
 
         ff =
             Bitwise.or old_ff ((new_v |> shiftLeftBy 4) |> Bitwise.and 0x20) |> Bitwise.or (Bitwise.and new_v 0x08)
+
+        newMain =
+            z80_core.main |> set_bc_main new_bc
     in
-    HLBCWithFlagsAndPc hl new_bc { z80_flags | ff = ff, fa = new_fa, fb = new_fb, fr = fr } new_pc
+    --HLBCWithFlagsAndPc hl new_bc { z80_flags | ff = ff, fa = new_fa, fb = new_fb, fr = fr } new_pc
+    { z80_core | main = { newMain | hl = hl }, flags = { z80_flags | ff = ff, fa = new_fa, fb = new_fb, fr = fr }, pc = new_pc }
 
 
 
@@ -910,24 +887,6 @@ rrd rom48k z80 =
     FlagsWithPcEnvAndCpuTime new_flags z80.pc env_1 10
 
 
-ed_cpi : Z80ROM -> Z80Core -> Z80Delta
-ed_cpi rom48k z80 =
-    -- case 0xA1: cpir(1,false); break;
-    z80 |> cpir Forwards False rom48k
-
-
-ed_cpd : Z80ROM -> Z80Core -> Z80Delta
-ed_cpd rom48k z80 =
-    -- case 0xA9: cpir(-1,false); break;
-    z80 |> cpir Backwards False rom48k
-
-
-ed_cpir : Z80ROM -> Z80Core -> Z80Delta
-ed_cpir rom48k z80 =
-    -- case 0xB1: cpir(1,true); break;
-    z80 |> cpir Forwards True rom48k
-
-
 singleByteMainRegsED : Dict Int ( MainWithIndexRegisters -> EDRegisterChange, InstructionDuration )
 singleByteMainRegsED =
     Dict.fromList
@@ -1001,6 +960,18 @@ singleByteMainRegsED =
 
         -- case 0xB8: ldir(-1,true); break;
         , ( 0xB8, ( \_ -> Ldir Backwards True, SixteenTStates ) )
+
+        -- case 0xA1: cpir(1,false); break;
+        , ( 0xA1, ( \_ -> Cpir Forwards False, SixteenTStates ) )
+
+        -- case 0xA9: cpir(-1,false); break;
+        , ( 0xA9, ( \_ -> Cpir Backwards False, SixteenTStates ) )
+
+        -- case 0xB1: cpir(1,true); break;
+        , ( 0xB1, ( \_ -> Cpir Forwards True, SixteenTStates ) )
+
+        -- case 0xB9: cpir(-1,true); break;
+        , ( 0xB9, ( \_ -> Cpir Forwards False, SixteenTStates ) )
 
         -- case 0x62: sbc_hl(HL); break;
         , ( 0x62, ( \_ -> SbcHL RegHL, FifteenTStates ) )
