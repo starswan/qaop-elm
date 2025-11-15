@@ -136,14 +136,19 @@ setScreenValue addr value z80screen =
 
             line =
                 z80screen.lines |> Vector24.get lineNumber
-
-            newLine =
-                { line | data = line.data |> setMemValue lineOffset value }
-
-            newData =
-                z80screen.lines |> Vector24.set lineNumber newLine
         in
-        { z80screen | lines = newData }
+        if (line.data |> getMemValue lineOffset) == value then
+            z80screen
+
+        else
+            let
+                newLine =
+                    { line | data = line.data |> setMemValue lineOffset value }
+
+                newData =
+                    z80screen.lines |> Vector24.set lineNumber newLine
+            in
+            { z80screen | lines = newData }
 
     else
         let
@@ -158,11 +163,16 @@ setScreenValue addr value z80screen =
 
             col =
                 offset |> remainderBy 32 |> Vector32.intToIndex |> Maybe.withDefault Vector32.Index0
-
-            new_row =
-                { oldrow | attrs = oldrow.attrs |> Vector32.set col value }
         in
-        { z80screen | lines = z80screen.lines |> Vector24.set row new_row }
+        if (oldrow.attrs |> Vector32.get col) == value then
+            z80screen
+
+        else
+            let
+                new_row =
+                    { oldrow | attrs = oldrow.attrs |> Vector32.set col value }
+            in
+            { z80screen | lines = z80screen.lines |> Vector24.set row new_row }
 
 
 getScreenValue : Int -> Z80Screen -> Int
