@@ -28,6 +28,7 @@ import Tapfile exposing (Tapfile)
 import Time exposing (posixToMillis)
 import Utils exposing (speed_in_hz, time_display)
 import Vector24 exposing (Vector24)
+import Vector32
 import Vector8 exposing (Vector8)
 import Z80Debug exposing (debugLog)
 import Z80Rom exposing (Z80ROM)
@@ -165,7 +166,21 @@ mapScreenLineToSvg flash index24 screenLine =
 
 screenDataNodeList : Bool -> Vector24 ScreenLine -> Vector24 (Svg Message)
 screenDataNodeList flash screenLines =
-    screenLines |> Vector24.indexedMap (\index line -> line |> Svg.Lazy.lazy3 mapScreenLineToSvg flash index)
+    screenLines
+        |> Vector24.indexedMap
+            (\index line ->
+                let
+                    -- if flash is off (bit 7) on the whole line, use False for globalFlash value to help SVG caching
+                    localFlash =
+                        if (line.attrs |> Vector32.foldl (\x y -> Bitwise.or x y) 0x00 |> Bitwise.and 0x80) == 0x00 then
+                            False
+
+                        else
+                            flash
+                in
+                line
+                    |> Svg.Lazy.lazy3 mapScreenLineToSvg localFlash index
+            )
 
 
 svgNode : Z80Screen -> Bool -> Html Message
