@@ -3,7 +3,7 @@ module Z80Execute exposing (..)
 import Bitwise exposing (shiftLeftBy)
 import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDuration(..), addDuration, addExtraCpuTime)
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
-import GroupED exposing (inirOtirFlags)
+import GroupED exposing (cpir, inirOtirFlags, ldir, sbc_hl)
 import PCIncrement exposing (InterruptPCIncrement(..), MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
 import RegisterChange exposing (EDRegisterChange(..), InterruptChange(..), RegisterChange(..), Shifter(..))
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
@@ -22,7 +22,7 @@ import Z80Env exposing (Z80Env, Z80EnvWithPC, mem, mem16, setMem, setMem16, setM
 import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, f_szh0n0p, inc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
 import Z80Registers exposing (ChangeMainRegister(..), ChangeOneRegister(..), CoreRegister(..))
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (InterruptRegisters, MainWithIndexRegisters, get_bc, get_xy, set_bc_main, set_de_main, set_xy)
+import Z80Types exposing (InterruptRegisters, MainWithIndexRegisters, get_bc, get_de, get_xy, set_bc_main, set_de_main, set_xy)
 
 
 type DeltaWithChanges
@@ -1175,6 +1175,13 @@ applyEdRegisterDelta pc_inc duration z80changeData rom48k z80_core =
     case z80changeData of
         EDNoOp ->
             { z80_core | pc = new_pc, clockTime = newTime }
+
+        Ldir direction repeat ->
+            let
+                core =
+                    { z80_core | pc = new_pc, clockTime = newTime }
+            in
+            core |> ldir direction repeat rom48k
 
         RegChangeIm intMode ->
             let

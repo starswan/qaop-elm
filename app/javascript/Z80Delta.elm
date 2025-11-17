@@ -12,8 +12,7 @@ import Z80Types exposing (InterruptRegisters, MainRegisters, MainWithIndexRegist
 type
     Z80Delta
     -- only used by LDIR
-    = WholeCore Z80Core
-    | MainRegsWithPcAndCpuTime MainWithIndexRegisters Int CpuTimeCTime
+    = MainRegsWithPcAndCpuTime MainWithIndexRegisters Int CpuTimeCTime
     | FlagsWithPCMainAndCpuTime FlagRegisters Int MainWithIndexRegisters CpuTimeCTime
     | CpuTimeWithFlagsAndPc CpuTimeCTime FlagRegisters Int
     | EnvWithPcAndTime Z80Env Int CpuTimeCTime
@@ -45,9 +44,8 @@ applyDeltaWithChanges z80delta z80 =
             z80.env
     in
     case z80delta.delta of
-        WholeCore just_z80 ->
-            just_z80
-
+        --WholeCore just_z80 ->
+        --    just_z80
         HLBCWithFlagsAndPc hl bc flags pc ->
             let
                 main =
