@@ -10,7 +10,7 @@ import Bitwise exposing (complement, shiftLeftBy, shiftRightBy)
 import CpuTimeCTime exposing (InstructionDuration(..), addCpuTimeTime)
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
-import RegisterChange exposing (EDRegisterChange(..), InterruptChange(..), RegisterChange(..))
+import RegisterChange exposing (EDRegisterChange(..), InterruptChange(..), RegisterChange(..), SixteenBit(..))
 import Utils exposing (char, shiftLeftBy8, shiftRightBy8, toHexString2)
 import Z80Change exposing (FlagChange(..), Z80Change(..))
 import Z80Core exposing (DirectionForLDIR(..), Z80Core, add_cpu_time, imm16)
@@ -35,8 +35,7 @@ delta_dict_lite_E0 =
 group_ed_dict : Dict Int (Z80ROM -> Z80Core -> Z80Delta)
 group_ed_dict =
     Dict.fromList
-        [ ( 0x42, execute_ED42 )
-        , ( 0x43, execute_ED43 )
+        [ ( 0x43, execute_ED43 )
 
         --, ( 0x46, setImED46 )
         , ( 0x47, execute_ED47 )
@@ -54,14 +53,12 @@ group_ed_dict =
         -- case 0x67: rrd(); break;
         -- case 0x6F: rld(); break;
         , ( 0x78, execute_ED78 )
-        , ( 0x52, execute_ED52 )
         , ( 0x53, execute_ED53 )
         , ( 0x63, execute_ED63 )
         , ( 0x7B, execute_ED7B )
         , ( 0x73, execute_ED73 )
         , ( 0x5B, execute_ED5B )
         , ( 0x6B, execute_ED6B )
-        , ( 0x72, execute_ED72 )
 
         --, ( 0x56, setIm0x56 )
         --, ( 0x5E, setIm0x5E )
@@ -73,12 +70,12 @@ group_ed_dict =
         --, ( 0x76, setImED76 )
         --, ( 0x7E, setImED7E )
         , ( 0x70, execute_ED70 )
-        , ( 0x62, execute_ED62 )
         , ( 0xA1, ed_cpi )
         , ( 0xA9, ed_cpd )
         , ( 0xB1, ed_cpir )
         , ( 0xB9, ed_cpdr )
 
+        --, ( 0x62, execute_ED62 )
         -- ED08/ED09 no-op in Java version of Qaop
         , ( 0x00, \rom48k z80 -> NoOp )
         , ( 0x01, \rom48k z80 -> NoOp )
@@ -148,22 +145,6 @@ group_ed_dict =
         ]
 
 
-execute_ED42 : Z80ROM -> Z80Core -> Z80Delta
-execute_ED42 rom48k z80 =
-    -- case 0x42: sbc_hl(B<<8|C); break;
-    let
-        bc =
-            z80.main |> get_bc
-    in
-    z80 |> sbc_hl bc
-
-
-execute_ED62 : Z80ROM -> Z80Core -> Z80Delta
-execute_ED62 rom48k z80 =
-    -- case 0x62: sbc_hl(HL); break;
-    z80 |> sbc_hl z80.main.hl
-
-
 execute_ED43 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED43 rom48k z80 =
     -- case 0x43: MP=(v=imm16())+1; env.mem16(v,B<<8|C); time+=6; break;
@@ -227,12 +208,6 @@ execute_ED4B rom48k z80 =
 --ld_r_a rom48k z80 =
 --    -- case 0x4F: r(A); time++; break;
 --    NewRValue z80.flags.a
-
-
-execute_ED52 : Z80ROM -> Z80Core -> Z80Delta
-execute_ED52 rom48k z80 =
-    -- case 0x52: sbc_hl(D<<8|E); break;
-    z80 |> sbc_hl (Bitwise.or (shiftLeftBy8 z80.main.d) z80.main.e)
 
 
 execute_ED53 : Z80ROM -> Z80Core -> Z80Delta
@@ -315,12 +290,6 @@ execute_ED6B rom48k z80 =
             env |> mem16 v1.value16 rom48k v1.time
     in
     MainRegsWithPcAndCpuTime { z80_main | hl = v2.value16 } v1.pc (v2.time |> addCpuTimeTime 6)
-
-
-execute_ED72 : Z80ROM -> Z80Core -> Z80Delta
-execute_ED72 rom48k z80 =
-    -- case 0x72: sbc_hl(SP); break;
-    z80 |> sbc_hl z80.env.sp
 
 
 execute_ED73 : Z80ROM -> Z80Core -> Z80Delta
@@ -561,7 +530,7 @@ group_ed rom48k z80_core =
 --  }
 
 
-sbc_hl : Int -> Z80Core -> Z80Delta
+sbc_hl : Int -> Z80Core -> ( FlagRegisters, MainWithIndexRegisters )
 sbc_hl b z80 =
     let
         a =
@@ -591,8 +560,7 @@ sbc_hl b z80 =
         flags =
             z80.flags
     in
-    --{ z80 | main = { main | hl = r }, flags = { flags | ff = ff, fa = fa, fb = fb, fr = fr} } |> add_cpu_time 7 |> Whole
-    FlagsWithPCMainAndCpuTime { flags | ff = ff, fa = fa, fb = fb, fr = fr } z80.pc { main | hl = r } (z80.clockTime |> addCpuTimeTime 7)
+    ( { flags | ff = ff, fa = fa, fb = fb, fr = fr }, { main | hl = r } )
 
 
 
@@ -1033,6 +1001,18 @@ singleByteMainRegsED =
 
         -- case 0xB8: ldir(-1,true); break;
         , ( 0xB8, ( \_ -> Ldir Backwards True, SixteenTStates ) )
+
+        -- case 0x62: sbc_hl(HL); break;
+        , ( 0x62, ( \_ -> SbcHL RegHL, FifteenTStates ) )
+
+        -- case 0x42: sbc_hl(B<<8|C); break;
+        , ( 0x42, ( \_ -> SbcHL RegBC, FifteenTStates ) )
+
+        -- case 0x52: sbc_hl(D<<8|E); break;
+        , ( 0x52, ( \_ -> SbcHL RegDE, FifteenTStates ) )
+
+        -- case 0x72: sbc_hl(SP); break;
+        , ( 0x72, ( \_ -> SbcHL RegSP, FifteenTStates ) )
         ]
 
 

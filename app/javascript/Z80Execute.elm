@@ -5,7 +5,7 @@ import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDur
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
 import GroupED exposing (cpir, inirOtirFlags, ldir, sbc_hl)
 import PCIncrement exposing (InterruptPCIncrement(..), MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
-import RegisterChange exposing (EDRegisterChange(..), InterruptChange(..), RegisterChange(..), Shifter(..))
+import RegisterChange exposing (EDRegisterChange(..), InterruptChange(..), RegisterChange(..), Shifter(..), SixteenBit(..))
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
 import SingleEnvWithMain exposing (SingleEnvMainChange, applySingleEnvMainChange)
 import SingleNoParams exposing (NoParamChange(..), RstChange, applyNoParamsDelta, applyRstDelta)
@@ -1175,6 +1175,27 @@ applyEdRegisterDelta pc_inc duration z80changeData rom48k z80_core =
     case z80changeData of
         EDNoOp ->
             { z80_core | pc = new_pc, clockTime = newTime }
+
+        SbcHL reg16type ->
+            let
+                reg =
+                    case reg16type of
+                        RegHL ->
+                            z80_core.main.hl
+
+                        RegDE ->
+                            z80_core.main |> get_de
+
+                        RegBC ->
+                            z80_core.main |> get_bc
+
+                        RegSP ->
+                            z80_core.env.sp
+
+                ( flags, main ) =
+                    z80_core |> sbc_hl reg
+            in
+            { z80_core | pc = new_pc, clockTime = newTime, main = main, flags = flags }
 
         Ldir direction repeat ->
             let

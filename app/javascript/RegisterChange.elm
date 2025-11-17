@@ -48,6 +48,13 @@ type RegisterChange
     | ResetBitIndirectWithCopy BitTest ChangeMainRegister Int
 
 
+type SixteenBit
+    = RegHL
+    | RegDE
+    | RegBC
+    | RegSP
+
+
 type EDRegisterChange
     = EDNoOp
     | RegChangeIm InterruptMode
@@ -55,6 +62,7 @@ type EDRegisterChange
     | Z80OutI DirectionForLDIR Bool
     | InRC ChangeMainRegister
     | Ldir DirectionForLDIR Bool
+    | SbcHL SixteenBit
 
 
 type InterruptChange
