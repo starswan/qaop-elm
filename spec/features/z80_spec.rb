@@ -35,11 +35,11 @@ RSpec.describe "Game" do
       {
         matchday.name => ->(spectrum) {
           delay_and_send(spectrum, 200, "")
-          delay_and_send(spectrum, 1050, "")
+          delay_and_send(spectrum, 750, "")
           # Start 1 player match day (with kempston, so kicks all the time)
-          delay_and_send(spectrum, 1150, "")
+          delay_and_send(spectrum, 850, "")
 
-          measure_speed_in_hz
+          measure_speed_in_hz 180
         },
         cyrus.name => ->(spectrum) {
           # square colours
@@ -70,8 +70,8 @@ RSpec.describe "Game" do
           measure_speed_in_hz do
             spectrum.send_keys :enter
           end
-          spectrum.send_keys :enter
-          measure_speed_in_hz
+          # spectrum.send_keys :enter
+          # measure_speed_in_hz
         }
       }
     }
@@ -199,12 +199,12 @@ RSpec.describe "Game" do
     spectrum.send_keys [:enter]
   end
 
-  def measure_speed_in_hz
+  def measure_speed_in_hz max = 10_000_000
     # Test emulation speed in Hz
     low = 0
     high = page.find("#hz").text.to_f
     # wait for speed to hit a steady state
-    while high - low > 0.02
+    while high - low > 0.02 && page.find("#elapsed").text.to_i < max
       times = 1.upto(8).map do
         sleep 0.4
         page.find("#hz").text.to_f

@@ -1276,11 +1276,11 @@ applyEdRegisterDelta pc_inc duration z80changeData rom48k z80_core =
                         Backwards ->
                             main.hl - 1 |> Bitwise.and 0xFFFF
 
-                main_2 =
-                    { main | b = new_b }
-
                 outvalue =
                     z80_core.env |> mem main.hl newTime rom48k
+
+                main_2 =
+                    { main | b = new_b, hl = new_hl }
 
                 new_bc =
                     main_2 |> get_bc
@@ -1298,7 +1298,7 @@ applyEdRegisterDelta pc_inc duration z80changeData rom48k z80_core =
                 flags =
                     z80_core.flags |> inirOtirFlags new_hl new_bc outvalue.value
             in
-            { z80_core | env = env2, flags = flags, pc = pc2, main = { main_2 | hl = new_hl }, clockTime = newTime2 }
+            { z80_core | env = env2, flags = flags, pc = pc2, main = main_2, clockTime = newTime2 }
 
         InRC changeMainRegister ->
             let
