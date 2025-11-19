@@ -1,6 +1,6 @@
 module MemoryAddress exposing (..)
 
-import Bitwise exposing (shiftRightBy)
+import Bitwise
 
 
 type ScreenType
