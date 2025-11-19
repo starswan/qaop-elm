@@ -312,7 +312,7 @@ frames keys speccy =
                                     core_2.env
 
                                 newRam =
-                                    rom.z80ram |> foldDictIntoRam env_2.ram
+                                    rom.z80ram |> foldDictIntoRam env_2.screenRam env_2.lomemRam env_2.himemRam
 
                                 rom_2 =
                                     { new_rom | z80ram = newRam }
@@ -336,13 +336,13 @@ frames keys speccy =
                             core_2.env
 
                         newRam =
-                            rom.z80ram |> foldDictIntoRam env_2.ram
+                            rom.z80ram |> foldDictIntoRam env_2.screenRam env_2.lomemRam env_2.himemRam
 
                         rom_2 =
                             { new_rom | z80ram = newRam }
 
                         new_core =
-                            { core_2 | env = { env_2 | ram = Dict.empty } }
+                            { core_2 | env = { env_2 | screenRam = Dict.empty, lomemRam = Dict.empty, himemRam = Dict.empty } }
                     in
                     { load = False
                     , z80 = { new_z80 | core = new_core }

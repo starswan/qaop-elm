@@ -22,7 +22,9 @@ import Z80Rom exposing (Z80ROM, getROMValue)
 
 
 type alias Z80Env =
-    { ram : Dict Int Int
+    { screenRam : Dict Int Int
+    , lomemRam : Dict Int Int
+    , himemRam : Dict Int Int
     , sp : Int
     }
 
@@ -52,7 +54,7 @@ type alias ValueWithTime =
 
 
 z80env_constructor =
-    Z80Env Dict.empty 0
+    Z80Env Dict.empty Dict.empty Dict.empty 0
 
 
 
@@ -293,6 +295,7 @@ mem16 addr rom48k clockTime z80env =
                     cont1 3 z80env_time
 
                 low =
+                    -- addr = 0x3FFF
                     rom48k |> getROMValue addr
 
                 high =
@@ -305,6 +308,7 @@ mem16 addr rom48k clockTime z80env =
                 new_env_time =
                     z80env_time |> cont1 0
 
+                -- addr = 0x7FFF
                 low =
                     z80env |> getRamValue (addr - 0x4000) rom48k
 
@@ -315,6 +319,7 @@ mem16 addr rom48k clockTime z80env =
 
         else if addr1shift14 == 2 then
             let
+                -- addr = 0xBFFF
                 low =
                     z80env |> getRamValue (addr - 0x4000) rom48k
 
@@ -685,7 +690,14 @@ setRam addr value z80env =
     --       Nothing
     --in
     -- addr is in range 0 - 0xBFFF
-    { z80env | ram = z80env.ram |> Dict.insert addr value }
+    if addr < 0x4000 then
+        { z80env | screenRam = z80env.screenRam |> Dict.insert addr value }
+
+    else if addr < 0x8000 then
+        { z80env | lomemRam = z80env.lomemRam |> Dict.insert (addr - 0x4000) value }
+
+    else
+        { z80env | himemRam = z80env.himemRam |> Dict.insert (addr - 0x8000) value }
 
 
 setRamMemoryValue : RamAddress -> Int -> Z80Env -> Z80Env
@@ -694,34 +706,82 @@ setRamMemoryValue ramAddress value z80env =
         ULAMem screenType addr ->
             case screenType of
                 Screen ->
-                    { z80env | ram = z80env.ram |> Dict.insert addr value }
+                    { z80env | screenRam = z80env.screenRam |> Dict.insert addr value }
 
                 ULA ->
-                    { z80env | ram = z80env.ram |> Dict.insert (addr + 6912) value }
+                    { z80env | screenRam = z80env.screenRam |> Dict.insert (addr + 6912) value }
 
         Himem himemType addr ->
             case himemType of
                 HimemLow ->
-                    { z80env | ram = z80env.ram |> Dict.insert (addr + 0x4000) value }
+                    { z80env | lomemRam = z80env.lomemRam |> Dict.insert addr value }
 
                 HimemHigh ->
-                    { z80env | ram = z80env.ram |> Dict.insert (addr + 0x8000) value }
+                    { z80env | himemRam = z80env.himemRam |> Dict.insert addr value }
 
 
 getRamValue : Int -> Z80ROM -> Z80Env -> Int
-getRamValue addr z80rom z80env =
-    case z80env.ram |> Dict.get addr of
-        Just a ->
-            a
+getRamValue addr_in z80rom z80env =
+    let
+        ramAddr =
+            if addr_in < 6912 then
+                ULAMem Screen addr_in
 
-        Nothing ->
-            z80rom.z80ram |> Z80Ram.getRamValue addr
+            else if addr_in < 0x4000 then
+                ULAMem ULA (addr_in - 6912)
+
+            else if addr_in < 0x8000 then
+                Himem HimemLow (addr_in - 0x4000)
+
+            else
+                Himem HimemHigh (addr_in - 0xC000)
+    in
+    case ramAddr of
+        ULAMem screenType addr ->
+            case screenType of
+                Screen ->
+                    case z80env.screenRam |> Dict.get addr of
+                        Just a ->
+                            a
+
+                        Nothing ->
+                            z80rom.z80ram |> Z80Ram.getRamValue addr
+
+                ULA ->
+                    let
+                        ulaAddr =
+                            addr + 6912
+                    in
+                    case z80env.screenRam |> Dict.get ulaAddr of
+                        Just a ->
+                            a
+
+                        Nothing ->
+                            z80rom.z80ram |> Z80Ram.getRamValue ulaAddr
+
+        Himem himemType addr ->
+            case himemType of
+                HimemLow ->
+                    case z80env.lomemRam |> Dict.get addr of
+                        Just a ->
+                            a
+
+                        Nothing ->
+                            z80rom.z80ram |> Z80Ram.getRamValue (addr + 0x4000)
+
+                HimemHigh ->
+                    case z80env.himemRam |> Dict.get addr of
+                        Just a ->
+                            a
+
+                        Nothing ->
+                            z80rom.z80ram |> Z80Ram.getRamValue (addr + 0x8000)
 
 
 getRamMemoryValue : RamAddress -> CpuTimeCTime -> Z80ROM -> Z80Env -> ( Int, CpuTimeCTime )
 getRamMemoryValue ramAddress clockTime z80rom z80env =
     let
-        ( addressInt, time ) =
+        ( addressInt, time, maybeValue ) =
             case ramAddress of
                 ULAMem screenType addr ->
                     let
@@ -733,10 +793,14 @@ getRamMemoryValue ramAddress clockTime z80rom z80env =
                     in
                     case screenType of
                         Screen ->
-                            ( addr, newNewTime )
+                            ( addr, newNewTime, z80env.screenRam |> Dict.get addr )
 
                         ULA ->
-                            ( addr + 6912, newNewTime )
+                            let
+                                ulaAddr =
+                                    addr + 6912
+                            in
+                            ( ulaAddr, newNewTime, z80env.screenRam |> Dict.get ulaAddr )
 
                 Himem himemType addr ->
                     let
@@ -745,12 +809,12 @@ getRamMemoryValue ramAddress clockTime z80rom z80env =
                     in
                     case himemType of
                         HimemLow ->
-                            ( addr + 0x4000, newTime )
+                            ( addr + 0x4000, newTime, z80env.lomemRam |> Dict.get addr )
 
                         HimemHigh ->
-                            ( addr + 0x8000, newTime )
+                            ( addr + 0x8000, newTime, z80env.himemRam |> Dict.get addr )
     in
-    case z80env.ram |> Dict.get addressInt of
+    case maybeValue of
         Just a ->
             ( a, time )
 

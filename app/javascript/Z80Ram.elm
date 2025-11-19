@@ -69,16 +69,36 @@ getRamValue addr z80ram =
 --        { z80ram | screen = z80ram.screen |> setScreenValue addr value }
 
 
-foldDictIntoRam : Dict Int Int -> Z80Ram -> Z80Ram
-foldDictIntoRam ramdict z80_ram =
-    ramdict
-        |> Dict.foldl
-            (\addr value z80ram ->
-                if addr >= 6912 then
-                    { z80ram | non_screen = z80ram.non_screen |> setMemValue (addr - 6912) value }
+foldDictIntoRam : Dict Int Int -> Dict Int Int -> Dict Int Int -> Z80Ram -> Z80Ram
+foldDictIntoRam screenDict lomemDict himemDict z80_ram =
+    let
+        a =
+            screenDict
+                |> Dict.foldl
+                    (\addr value z80ram ->
+                        if addr >= 6912 then
+                            { z80ram | non_screen = z80ram.non_screen |> setMemValue (addr - 6912) value }
 
-                else
-                    { z80ram | screen = z80ram.screen |> setScreenValue addr value }
-             --z80ram |> setRamValue key value
-            )
-            z80_ram
+                        else
+                            { z80ram | screen = z80ram.screen |> setScreenValue addr value }
+                     --z80ram |> setRamValue key value
+                    )
+                    z80_ram
+
+        b =
+            lomemDict
+                |> Dict.foldl
+                    (\addr value z80ram ->
+                        { z80ram | non_screen = z80ram.non_screen |> setMemValue (addr + 0x4000) value }
+                    )
+                    a
+
+        c =
+            himemDict
+                |> Dict.foldl
+                    (\addr value z80ram ->
+                        { z80ram | non_screen = z80ram.non_screen |> setMemValue (addr + 0x8000) value }
+                    )
+                    b
+    in
+    c
