@@ -29,14 +29,14 @@ fromInt inAddr =
         addr =
             inAddr |> Bitwise.and 0x3FFF
     in
-    case inAddr |> shiftRightBy 14 of
-        3 ->
+    case inAddr |> Bitwise.and 0xC000 of
+        0xC000 ->
             RAM (Himem HimemHigh addr)
 
-        2 ->
+        0x8000 ->
             RAM (Himem HimemLow addr)
 
-        1 ->
+        0x4000 ->
             if addr >= 6912 then
                 RAM (ULAMem ULA (addr - 6912))
 
