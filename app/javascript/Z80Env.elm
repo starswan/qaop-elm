@@ -10,7 +10,9 @@ import CpuTimeCTime exposing (CTime(..), CpuTimeAnd16BitValue, CpuTimeAndValue, 
 import Dict exposing (Dict)
 import Keyboard exposing (Keyboard, z80_keyboard_input)
 import MemoryAddress exposing (HimemType(..), MemoryAddress(..), RamAddress(..), ScreenType(..))
+import ScreenStorage exposing (getScreenValue)
 import Utils exposing (shiftLeftBy8, shiftRightBy8)
+import Z80MemoryDict exposing (getMemValue)
 import Z80Ram exposing (Z80Ram)
 import Z80Rom exposing (Z80ROM, getROMValue)
 
@@ -753,4 +755,15 @@ getRamMemoryValue ramAddress clockTime z80rom z80env =
             ( a, time )
 
         Nothing ->
-            ( z80rom.z80ram |> Z80Ram.getRamValue addressInt, time )
+            let
+                ram_addr =
+                    addressInt - 6912
+
+                z80ram =
+                    z80rom.z80ram
+            in
+            if ram_addr >= 0 then
+                ( z80ram.non_screen |> getMemValue ram_addr, time )
+
+            else
+                ( z80ram.screen |> getScreenValue addressInt, time )
