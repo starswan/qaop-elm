@@ -677,13 +677,13 @@ z80_pop z80rom clockTime z80_env =
 
 setRam : Int -> Int -> Z80Env -> Z80Env
 setRam addr value z80env =
-    --    --let
-    --    --ram_value = getValue addr z80env.ram
-    --    --n = if addr == 0x1CB6 || addr == 0x1CB7 then
-    --    --       debug_log "Alert!" ("setting " ++ (addr |> toHexString) ++ " from " ++ (ram_value |> toHexString2) ++ " to " ++ (value |> toHexString2)) Nothing
-    --    --    else
-    --    --       Nothing
-    --    --in
+    --let
+    --ram_value = getValue addr z80env.ram
+    --n = if addr == 0x1CB6 || addr == 0x1CB7 then
+    --       debug_log "Alert!" ("setting " ++ (addr |> toHexString) ++ " from " ++ (ram_value |> toHexString2) ++ " to " ++ (value |> toHexString2)) Nothing
+    --    else
+    --       Nothing
+    --in
     -- addr is in range 0 - 0xBFFF
     { z80env | ram = z80env.ram |> Dict.insert addr value }
 
