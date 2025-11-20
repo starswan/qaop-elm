@@ -690,14 +690,14 @@ setRam addr value z80env =
     --       Nothing
     --in
     -- addr is in range 0 - 0xBFFF
-    if addr < 0x4000 then
-        { z80env | screenRam = z80env.screenRam |> Dict.insert addr value }
+    if addr >= 0x8000 then
+        { z80env | himemRam = z80env.himemRam |> Dict.insert (addr - 0x8000) value }
 
-    else if addr < 0x8000 then
+    else if addr >= 0x4000 then
         { z80env | lomemRam = z80env.lomemRam |> Dict.insert (addr - 0x4000) value }
 
     else
-        { z80env | himemRam = z80env.himemRam |> Dict.insert (addr - 0x8000) value }
+        { z80env | screenRam = z80env.screenRam |> Dict.insert addr value }
 
 
 setRamMemoryValue : RamAddress -> Int -> Z80Env -> Z80Env
