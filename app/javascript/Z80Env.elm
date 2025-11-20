@@ -734,7 +734,7 @@ getRamValue addr_in z80rom z80env =
                 Himem HimemLow (addr_in - 0x4000)
 
             else
-                Himem HimemHigh (addr_in - 0xC000)
+                Himem HimemHigh (addr_in - 0x8000)
     in
     case ramAddr of
         ULAMem screenType addr ->
