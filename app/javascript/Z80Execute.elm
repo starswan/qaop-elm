@@ -1176,6 +1176,13 @@ applyEdRegisterDelta pc_inc duration z80changeData rom48k z80_core =
         EDNoOp ->
             { z80_core | pc = new_pc, clockTime = newTime }
 
+        Cpir direction repeat ->
+            let
+                core =
+                    { z80_core | pc = new_pc, clockTime = newTime }
+            in
+            core |> cpir direction repeat rom48k
+
         SbcHL reg16type ->
             let
                 reg =

@@ -62,6 +62,7 @@ type EDRegisterChange
     | Z80OutI DirectionForLDIR Bool
     | InRC ChangeMainRegister
     | Ldir DirectionForLDIR Bool
+    | Cpir DirectionForLDIR Bool
     | SbcHL SixteenBit
 
 
