@@ -17,7 +17,7 @@
   "version": "0.1.0",
   "devDependencies": {
     "elm-format": "^0.8.8",
-    "elm-test": "0.19.1-revision16"
+    "elm-test": "0.19.1-revision17"
   },
   "scripts": {
     "build": "node ./esbuild.config.js",
