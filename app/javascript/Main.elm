@@ -223,7 +223,15 @@ view model =
     div []
         [ h2 [] [ text ("Refresh Interval " ++ (model.tickInterval |> String.fromInt) ++ "ms ") ]
         , div [ style "display" "flex", style "justify-content" "center" ]
-            [ div [] [ span [ id "cyclecount" ] [ text (String.fromInt model.count) ], text " in ", text time_disp, span [ id "hz" ] [ text speed ], text " Hz" ]
+            [ div []
+                [ span [ id "cyclecount" ] [ text (String.fromInt model.count) ]
+                , text " in "
+                , span [ id "elapsed" ] [ text (model.elapsed_millis // 1000 |> String.fromInt) ]
+                , text " sec, "
+                , text time_disp
+                , span [ id "hz" ] [ text speed ]
+                , text " Hz"
+                ]
             , button [ onClick Pause ]
                 [ text
                     (if model.qaop.spectrum.paused then
