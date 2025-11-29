@@ -1,7 +1,9 @@
 module RegisterChange exposing (..)
 
 import Utils exposing (BitTest)
+import Z80Core exposing (DirectionForLDIR)
 import Z80Flags exposing (FlagFunc, FlagRegisters)
+import Z80Registers exposing (ChangeMainRegister, ChangeOneRegister)
 import Z80Types exposing (IXIYHL, InterruptMode, MainWithIndexRegisters)
 
 
@@ -14,25 +16,6 @@ type Shifter
     | Shifter5
     | Shifter6
     | Shifter7
-
-
-type ChangeOneRegister
-    = ChangeARegister
-    | ChangeBRegister
-    | ChangeCRegister
-    | ChangeDRegister
-    | ChangeERegister
-    | ChangeHRegister
-    | ChangeLRegister
-
-
-type ChangeMainRegister
-    = ChangeMainB
-    | ChangeMainC
-    | ChangeMainD
-    | ChangeMainE
-    | ChangeMainH
-    | ChangeMainL
 
 
 type RegisterChange
@@ -58,12 +41,28 @@ type RegisterChange
     | IndirectBitSet BitTest Int
     | RegChangeNoOp
     | SingleEnvFlagFunc FlagFunc Int
-    | RegChangeIm InterruptMode
     | ExchangeTopOfStackWith IXIYHL
     | SingleRegisterChange ChangeOneRegister Int
     | RegisterIndirectWithShifter Shifter ChangeMainRegister Int
     | SetBitIndirectWithCopy BitTest ChangeMainRegister Int
     | ResetBitIndirectWithCopy BitTest ChangeMainRegister Int
+
+
+type SixteenBit
+    = RegHL
+    | RegDE
+    | RegBC
+    | RegSP
+
+
+type EDRegisterChange
+    = EDNoOp
+    | RegChangeIm InterruptMode
+    | Z80InI DirectionForLDIR Bool
+    | Z80OutI DirectionForLDIR Bool
+    | InRC ChangeMainRegister
+    | Ldir DirectionForLDIR Bool
+    | SbcHL SixteenBit
 
 
 type InterruptChange

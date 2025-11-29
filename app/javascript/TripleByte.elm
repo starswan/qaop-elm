@@ -2,7 +2,6 @@ module TripleByte exposing (..)
 
 import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
-import PCIncrement exposing (PCIncrement(..), TriplePCIncrement(..))
 
 
 type TripleByteRegister
@@ -18,10 +17,10 @@ type TripleByteChange
     | NewIYRegister Int
     | NewIYIndirect Int
     | NewSPRegister Int
-    | NewPCRegister Int
-    | CallImmediate Int
     | NewAIndirect Int
     | NewTripleRegister Int TripleByteRegister
+    | TripleSetIndirectFromA Int
+    | Store16BitFromHL Int
 
 
 tripleByteWith16BitParam : Dict Int ( Int -> TripleByteChange, InstructionDuration )
@@ -30,10 +29,10 @@ tripleByteWith16BitParam =
         [ ( 0x01, ( ld_bc_nn, TenTStates ) )
         , ( 0x11, ( ld_de_nn, TenTStates ) )
         , ( 0x21, ( ld_hl_nn, TenTStates ) )
+        , ( 0x22, ( ld_nn_indirect_hl, SixteenTStates ) )
         , ( 0x2A, ( ld_hl_indirect_nn, SixteenTStates ) )
         , ( 0x31, ( ld_sp_nn, TenTStates ) )
-        , ( 0xC3, ( jp_nn, TenTStates ) )
-        , ( 0xCD, ( call_0xCD, SeventeenTStates ) )
+        , ( 0x32, ( ld_indirect_nn_a, ThirteenTStates ) )
         , ( 0x3A, ( ld_a_indirect_nn, ThirteenTStates ) )
         ]
 
@@ -46,11 +45,11 @@ tripleByteWith16BitParamDD =
         ]
 
 
-tripleByteWith16BitParamFD : Dict Int ( Int -> TripleByteChange, TriplePCIncrement, InstructionDuration )
+tripleByteWith16BitParamFD : Dict Int ( Int -> TripleByteChange, InstructionDuration )
 tripleByteWith16BitParamFD =
     Dict.fromList
-        [ ( 0x21, ( ld_iy_nn, IncrementByFour, TwentyTStates ) )
-        , ( 0x2A, ( ld_iy_indirect_nn, IncrementByFour, TwentyTStates ) )
+        [ ( 0x21, ( ld_iy_nn, TwentyTStates ) )
+        , ( 0x2A, ( ld_iy_indirect_nn, TwentyTStates ) )
         ]
 
 
@@ -93,18 +92,6 @@ ld_sp_nn param16 =
     NewSPRegister param16
 
 
-jp_nn : Int -> TripleByteChange
-jp_nn param16 =
-    -- case 0xC3: MP=PC=imm16(); break;
-    NewPCRegister param16
-
-
-call_0xCD : Int -> TripleByteChange
-call_0xCD param16 =
-    -- case 0xCD: v=imm16(); push(PC); MP=PC=v; break;
-    CallImmediate param16
-
-
 ld_hl_indirect_nn : Int -> TripleByteChange
 ld_hl_indirect_nn param16 =
     -- case 0x2A: MP=(v=imm16())+1; HL=env.mem16(v); time+=6; break;
@@ -127,3 +114,15 @@ ld_a_indirect_nn : Int -> TripleByteChange
 ld_a_indirect_nn param16 =
     -- case 0x3A: MP=(v=imm16())+1; A=env.mem(v); time+=3; break;
     NewAIndirect param16
+
+
+ld_indirect_nn_a : Int -> TripleByteChange
+ld_indirect_nn_a param =
+    -- case 0x32: MP=(v=imm16())+1&0xFF|A<<8; env.mem(v,A); time+=3; break;
+    TripleSetIndirectFromA param
+
+
+ld_nn_indirect_hl : Int -> TripleByteChange
+ld_nn_indirect_hl param16 =
+    -- case 0x22: MP=(v=imm16())+1; env.mem16(v,HL); time+=6; break;
+    Store16BitFromHL param16

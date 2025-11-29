@@ -5,11 +5,11 @@ import SpectrumColour exposing (BorderColour(..))
 import Vector24 exposing (Vector24)
 import Vector32 exposing (Vector32)
 import Vector8 exposing (Vector8)
-import Z80Memory exposing (Z80Memory, getMemValue)
+import Z80MemoryDict exposing (Z80MemoryDict, getMemValue, setMemValue)
 
 
 type alias ScreenLine =
-    { data : Z80Memory
+    { data : Z80MemoryDict
     , attrs : Vector32 Int
     }
 
@@ -17,8 +17,8 @@ type alias ScreenLine =
 type alias Z80Screen =
     { lines : Vector24 ScreenLine
     , border : BorderColour
-    , flash : Bool
 
+    --, flash : Bool
     --refrs_a: Int,
     --refrs_b: Int,
     --refrs_t: Int,
@@ -40,7 +40,7 @@ constructor : Z80Screen
 constructor =
     let
         screen_line =
-            List.repeat 256 0 |> Z80Memory.constructor
+            List.repeat 256 0 |> Z80MemoryDict.constructor
 
         --for(int i=6144;i<6912;i++) ram[i] = 070; // white
         attr_line =
@@ -49,7 +49,8 @@ constructor =
         line =
             { attrs = attr_line, data = screen_line }
     in
-    Z80Screen (Vector24.repeat line) BorderWhite False
+    --Z80Screen (Vector24.repeat line) BorderWhite False
+    Z80Screen (Vector24.repeat line) BorderWhite
 
 
 calcDataOffset : Int -> Int
@@ -137,7 +138,7 @@ setScreenValue addr value z80screen =
                 z80screen.lines |> Vector24.get lineNumber
 
             newLine =
-                { line | data = line.data |> Z80Memory.setMemValue lineOffset value }
+                { line | data = line.data |> setMemValue lineOffset value }
 
             newData =
                 z80screen.lines |> Vector24.set lineNumber newLine
@@ -177,7 +178,7 @@ getScreenValue addr z80screen =
             line =
                 z80screen.lines |> Vector24.get lineNumber
         in
-        line.data |> Z80Memory.getMemValue lineOffset
+        line.data |> getMemValue lineOffset
 
     else
         let
@@ -196,7 +197,7 @@ getScreenValue addr z80screen =
         oldrow.attrs |> Vector32.get col
 
 
-memoryRow : Z80Memory -> Vector8.Index -> Vector32 Int
+memoryRow : Z80MemoryDict -> Vector8.Index -> Vector32 Int
 memoryRow screenLine index8 =
     let
         dataOffset =

@@ -3,7 +3,7 @@ module CBB8Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
-import Z80Env exposing (mem, setMem)
+import Z80Env exposing (mem, setMemWithTime)
 import Z80Rom
 
 
@@ -32,7 +32,7 @@ suite =
             { old_z80 | pc = addr, env = { old_z80env | sp = sp }, main = { z80main | hl = hl } }
 
         z80env =
-            z80.env
+            { z80env = z80.env, time = z80.clockTime }
 
         z80rom =
             Z80Rom.constructor
@@ -43,11 +43,12 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xFD
-                            |> setMem (addr + 1) 0xCB
-                            |> setMem (addr + 2) 0xFE
-                            |> setMem (addr + 3) 0xBE
-                            |> setMem 0xA07E 0xFF
+                            |> setMemWithTime addr 0xFD
+                            |> setMemWithTime (addr + 1) 0xCB
+                            |> setMemWithTime (addr + 2) 0xFE
+                            |> setMemWithTime (addr + 3) 0xBE
+                            |> setMemWithTime 0xA07E 0xFF
+                            |> .z80env
 
                     new_z80 =
                         executeCoreInstruction z80rom
@@ -57,7 +58,7 @@ suite =
                             }
 
                     mem_value =
-                        new_z80.env |> mem 0xA07E new_z80.env.time z80rom
+                        new_z80.env |> mem 0xA07E new_z80.clockTime z80rom
                 in
                 Expect.equal ( addr + 4, 0x7F ) ( new_z80.pc, mem_value.value )
         ]

@@ -3,6 +3,18 @@ module CpuTimeCTime exposing (..)
 import Bitwise exposing (shiftLeftBy, shiftRightBy)
 
 
+c_FRSTART =
+    -14335
+
+
+c_FRTIME =
+    69888
+
+
+c_TIME_LIMIT =
+    c_FRSTART + c_FRTIME
+
+
 type InstructionDuration
     = FourTStates
     | FiveTStates
@@ -21,6 +33,11 @@ type InstructionDuration
     | NineteenTStates
     | TwentyTStates
     | TwentyThreeTStates
+
+
+type ShortDelay
+    = FiveExtraTStates
+    | SevenExtraTStates
 
 
 c_SCRENDT =
@@ -55,11 +72,12 @@ type alias CpuTimeAnd16BitValue =
     }
 
 
-type alias CpuTimePcAndValue =
-    { time : CpuTimeCTime
-    , pc : Int
-    , value : Int
-    }
+
+--type alias CpuTimePcAndValue =
+--    { time : CpuTimeCTime
+--    , pc : Int
+--    , value : Int
+--    }
 
 
 type alias CpuTimePcAnd16BitValue =
@@ -295,11 +313,18 @@ addCpuTimeTime value z80env =
     { z80env | cpu_time = z80env.cpu_time + value }
 
 
-addCpuTimeTimeInc : CpuTimeIncrement -> CpuTimeCTime -> CpuTimeCTime
-addCpuTimeTimeInc value z80env =
-    case value of
-        CpuTimeIncrement int ->
-            { z80env | cpu_time = z80env.cpu_time + int }
+addExtraCpuTime : ShortDelay -> CpuTimeCTime -> CpuTimeCTime
+addExtraCpuTime value z80env =
+    let
+        offset =
+            case value of
+                FiveExtraTStates ->
+                    5
+
+                SevenExtraTStates ->
+                    7
+    in
+    { z80env | cpu_time = z80env.cpu_time + offset }
 
 
 addDuration : InstructionDuration -> CpuTimeCTime -> CpuTimeCTime
@@ -361,3 +386,8 @@ addDuration duration time =
                     19
     in
     { time | cpu_time = time.cpu_time + offset }
+
+
+reset_cpu_time : CpuTimeCTime
+reset_cpu_time =
+    CpuTimeCTime c_FRSTART NoCont

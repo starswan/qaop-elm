@@ -1,11 +1,11 @@
 module SingleNoParams exposing (..)
 
 import Bitwise exposing (shiftRightBy)
-import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDuration(..))
+import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDuration(..), c_TIME_LIMIT)
 import Dict exposing (Dict)
-import Z80Core exposing (Z80, Z80Core, add_cpu_time, set_iff)
+import Z80Core exposing (Z80, Z80Core, add_cpu_time)
 import Z80Debug exposing (debugLog)
-import Z80Env exposing (c_TIME_LIMIT, z80_pop, z80_push)
+import Z80Env exposing (z80_pop, z80_push)
 import Z80Flags exposing (set_af)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (set_bc_main, set_de_main)
@@ -23,15 +23,19 @@ type NoParamChange
     | PopAF
       --| Exx
       --| ExAfAfDash
-    | Rst00
-    | Rst08
-    | Rst10
-    | Rst18
-    | Rst20
-    | Rst28
-    | Rst30
-    | Rst38
+      --| Rst00
+      --| Rst08
+      --| Rst10
+      --| Rst18
+      --| Rst20
+      --| Rst28
+      --| Rst30
+      --| Rst38
     | Ret
+
+
+type RstChange
+    = Rst Int
 
 
 singleWithNoParam : Dict Int ( NoParamChange, InstructionDuration )
@@ -61,25 +65,29 @@ singleWithNoParam =
         -- case 0x7F: break;
         , ( 0x7F, ( NoOp, FourTStates ) )
         , ( 0xC1, ( PopBC, TenTStates ) )
-        , ( 0xC7, ( Rst00, FourTStates ) )
         , ( 0xC9, ( Ret, TenTStates ) )
-        , ( 0xCF, ( Rst08, ElevenTStates ) )
         , ( 0xD1, ( PopDE, TenTStates ) )
-        , ( 0xD7, ( Rst10, ElevenTStates ) )
 
         -- case 0xD9: exx(); break;
         --, ( 0xD9, ( Exx, FourTStates ) )
-        , ( 0xDF, ( Rst18, ElevenTStates ) )
         , ( 0xE1, ( PopHL, TenTStates ) )
-        , ( 0xE7, ( Rst20, ElevenTStates ) )
-        , ( 0xEF, ( Rst28, ElevenTStates ) )
         , ( 0xF1, ( PopAF, TenTStates ) )
 
-        --, ( 0xF3, ( DisableInterrupts, FourTStates ) )
-        , ( 0xF7, ( Rst30, ElevenTStates ) )
-
         --, ( 0xFB, ( EnableInterrupts, FourTStates ) )
-        , ( 0xFF, ( Rst38, ElevenTStates ) )
+        ]
+
+
+singleNoParamCalls : Dict Int ( RstChange, InstructionDuration )
+singleNoParamCalls =
+    Dict.fromList
+        [ ( 0xC7, ( Rst 0x00, ElevenTStates ) )
+        , ( 0xCF, ( Rst 0x08, ElevenTStates ) )
+        , ( 0xD7, ( Rst 0x10, ElevenTStates ) )
+        , ( 0xDF, ( Rst 0x18, ElevenTStates ) )
+        , ( 0xE7, ( Rst 0x20, ElevenTStates ) )
+        , ( 0xEF, ( Rst 0x28, ElevenTStates ) )
+        , ( 0xF7, ( Rst 0x30, ElevenTStates ) )
+        , ( 0xFF, ( Rst 0x38, ElevenTStates ) )
         ]
 
 
@@ -107,16 +115,13 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
         NoOp ->
             { z80
                 | pc = Bitwise.and (z80.pc + 1) 0xFFFF
-                , env = { old_env | time = cpu_time }
+                , clockTime = cpu_time
             }
 
         PopBC ->
             let
-                env1 =
-                    { old_env | time = cpu_time }
-
                 v =
-                    env1 |> z80_pop rom48k
+                    old_env |> z80_pop rom48k cpu_time
 
                 --env = z80.env
                 --z80_1 = { z80 | env = { env | time = v.time, sp = v.sp } }
@@ -125,16 +130,14 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
             { z80
                 | pc = Bitwise.and (z80.pc + 1) 0xFFFF
                 , main = z80.main |> set_bc_main v.value16
-                , env = { env1 | time = v.time, sp = v.sp }
+                , clockTime = v.time
+                , env = { old_env | sp = v.sp }
             }
 
         PopHL ->
             let
-                env1 =
-                    { old_env | time = cpu_time }
-
                 v =
-                    env1 |> z80_pop rom48k
+                    old_env |> z80_pop rom48k cpu_time
 
                 main =
                     z80.main
@@ -142,16 +145,14 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
             { z80
                 | pc = Bitwise.and (z80.pc + 1) 0xFFFF
                 , main = { main | hl = v.value16 }
-                , env = { env1 | time = v.time, sp = v.sp }
+                , clockTime = v.time
+                , env = { old_env | sp = v.sp }
             }
 
         PopIX ->
             let
-                env1 =
-                    { old_env | time = cpu_time }
-
                 v =
-                    env1 |> z80_pop rom48k
+                    old_env |> z80_pop rom48k cpu_time
 
                 main =
                     z80.main
@@ -159,16 +160,14 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
             { z80
                 | pc = Bitwise.and (z80.pc + 2) 0xFFFF
                 , main = { main | ix = v.value16 }
-                , env = { env1 | time = v.time, sp = v.sp }
+                , clockTime = v.time
+                , env = { old_env | sp = v.sp }
             }
 
         PopIY ->
             let
-                env1 =
-                    { old_env | time = cpu_time }
-
                 v =
-                    env1 |> z80_pop rom48k
+                    old_env |> z80_pop rom48k cpu_time
 
                 main =
                     z80.main
@@ -176,7 +175,8 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
             { z80
                 | pc = Bitwise.and (z80.pc + 2) 0xFFFF
                 , main = { main | iy = v.value16 }
-                , env = { env1 | time = v.time, sp = v.sp }
+                , clockTime = v.time
+                , env = { old_env | sp = v.sp }
             }
 
         --DisableInterrupts ->
@@ -203,98 +203,77 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
         PopAF ->
             -- case 0xF1: af(pop()); break;
             let
-                env1 =
-                    { old_env | time = cpu_time }
-
                 v =
-                    env1 |> z80_pop rom48k
+                    old_env |> z80_pop rom48k cpu_time
             in
             { z80
                 | pc = Bitwise.and (z80.pc + 1) 0xFFFF
                 , flags = set_af v.value16
-                , env = { env1 | time = v.time, sp = v.sp }
+                , clockTime = v.time
+                , env = { old_env | sp = v.sp }
             }
 
         PopDE ->
             -- case 0xD1: v=pop(); D=v>>>8; E=v&0xFF; break;
             let
-                env1 =
-                    { old_env | time = cpu_time }
-
                 v =
-                    env1 |> z80_pop rom48k
+                    old_env |> z80_pop rom48k cpu_time
             in
             { z80
                 | pc = Bitwise.and (z80.pc + 1) 0xFFFF
                 , main = z80.main |> set_de_main v.value16
-                , env = { env1 | time = v.time, sp = v.sp }
+                , clockTime = v.time
+                , env = { old_env | sp = v.sp }
             }
 
-        Rst00 ->
-            --case 0xC7:push(PC); PC=c-199; break;
-            z80 |> rst 0xC7 cpu_time
-
-        Rst08 ->
-            --case 0xCF:push(PC); PC=c-199; break;
-            z80 |> rst 0xCF cpu_time
-
-        Rst10 ->
-            --case 0xD7:push(PC); PC=c-199; break;
-            z80 |> rst 0xD7 cpu_time
-
-        Rst18 ->
-            --case 0xDF:push(PC); PC=c-199; break;
-            z80 |> rst 0xDF cpu_time
-
-        Rst20 ->
-            --case 0xE7:push(PC); PC=c-199; break;
-            z80 |> rst 0xE7 cpu_time
-
-        Rst28 ->
-            --case 0xEF:push(PC); PC=c-199; break;
-            z80 |> rst 0xEF cpu_time
-
-        Rst30 ->
-            --case 0xF7:push(PC); PC=c-199; break;
-            z80 |> rst 0xF7 cpu_time
-
-        Rst38 ->
-            --case 0xFF:push(PC); PC=c-199; break;
-            z80 |> rst 0xFF cpu_time
-
+        --Rst00 ->
+        --    --case 0xC7:push(PC); PC=c-199; break;
+        --    z80 |> rst 0xC7 cpu_time
+        --
+        --Rst08 ->
+        --    --case 0xCF:push(PC); PC=c-199; break;
+        --    z80 |> rst 0xCF cpu_time
+        --
+        --Rst10 ->
+        --    --case 0xD7:push(PC); PC=c-199; break;
+        --    z80 |> rst 0xD7 cpu_time
+        --
+        --Rst18 ->
+        --    --case 0xDF:push(PC); PC=c-199; break;
+        --    z80 |> rst 0xDF cpu_time
+        --
+        --Rst20 ->
+        --    --case 0xE7:push(PC); PC=c-199; break;
+        --    z80 |> rst 0xE7 cpu_time
+        --
+        --Rst28 ->
+        --    --case 0xEF:push(PC); PC=c-199; break;
+        --    z80 |> rst 0xEF cpu_time
+        --
+        --Rst30 ->
+        --    --case 0xF7:push(PC); PC=c-199; break;
+        --    z80 |> rst 0xF7 cpu_time
+        --
+        --Rst38 ->
+        --    --case 0xFF:push(PC); PC=c-199; break;
+        --    z80 |> rst 0xFF cpu_time
         Ret ->
             --ret : Z80ROM -> Z80 -> Z80Delta
             --ret rom48k z80 =
             -- case 0xC9: MP=PC=pop(); break;
             let
                 a =
-                    z80.env |> z80_pop rom48k
+                    z80.env |> z80_pop rom48k cpu_time
 
                 --b = debug_log "ret" (a.value |> subName) Nothing
                 --env = z80.env
                 --    CpuTimeWithSpAndPc a.time a.sp a.value
             in
             { z80
-                | env = { old_env | time = a.time, sp = a.sp }
+                | env = { old_env | sp = a.sp }
+                , clockTime = a.time
                 , pc = a.value16
             }
-
-
-rst : Int -> CpuTimeCTime -> Z80Core -> Z80Core
-rst value cpu_time z80 =
-    let
-        --interrupts =
-        --    z80.interrupts
-        old_env =
-            z80.env
-
-        pc =
-            Bitwise.and (z80.pc + 1) 0xFFFF
-    in
-    { z80
-        | pc = value - 199
-        , env = { old_env | time = cpu_time } |> z80_push pc
-    }
 
 
 ex_af : Z80 -> Z80
@@ -349,7 +328,7 @@ execute_0x76_halt z80 =
             z80_core.interrupts
 
         n =
-            shiftRightBy 2 (c_TIME_LIMIT - z80_core.env.time.cpu_time + 3)
+            shiftRightBy 2 (c_TIME_LIMIT - z80_core.clockTime.cpu_time + 3)
 
         new_core =
             if n > 0 then
@@ -360,3 +339,61 @@ execute_0x76_halt z80 =
                 { z80_core | interrupts = { interrupts | halted = True } }
     in
     { z80 | core = new_core }
+
+
+rst : Int -> CpuTimeCTime -> Z80Core -> Z80Core
+rst new_pc cpu_time z80 =
+    let
+        old_env =
+            z80.env
+
+        pc =
+            Bitwise.and (z80.pc + 1) 0xFFFF
+    in
+    { z80
+        | pc = new_pc
+        , clockTime = cpu_time
+        , env = old_env |> z80_push pc cpu_time
+    }
+
+
+applyRstDelta : CpuTimeCTime -> RstChange -> Z80ROM -> Z80Core -> Z80Core
+applyRstDelta cpu_time z80changeData rom48k z80 =
+    let
+        old_env =
+            z80.env
+    in
+    case z80changeData of
+        Rst int ->
+            --case 0xC7:push(PC); PC=c-199; break;
+            z80 |> rst int cpu_time
+
+
+
+--Rst08 ->
+--    --case 0xCF:push(PC); PC=c-199; break;
+--    z80 |> rst 0xCF cpu_time
+--
+--Rst10 ->
+--    --case 0xD7:push(PC); PC=c-199; break;
+--    z80 |> rst 0xD7 cpu_time
+--
+--Rst18 ->
+--    --case 0xDF:push(PC); PC=c-199; break;
+--    z80 |> rst 0xDF cpu_time
+--
+--Rst20 ->
+--    --case 0xE7:push(PC); PC=c-199; break;
+--    z80 |> rst 0xE7 cpu_time
+--
+--Rst28 ->
+--    --case 0xEF:push(PC); PC=c-199; break;
+--    z80 |> rst 0xEF cpu_time
+--
+--Rst30 ->
+--    --case 0xF7:push(PC); PC=c-199; break;
+--    z80 |> rst 0xF7 cpu_time
+--
+--Rst38 ->
+--    --case 0xFF:push(PC); PC=c-199; break;
+--    z80 |> rst 0xFF cpu_time

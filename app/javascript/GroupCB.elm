@@ -1,14 +1,15 @@
 module GroupCB exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimePcAnd16BitValue, CpuTimePcAndValue, InstructionDuration(..))
+import CpuTimeCTime exposing (CpuTimePcAnd16BitValue, InstructionDuration(..))
 import Dict exposing (Dict)
-import RegisterChange exposing (ChangeMainRegister(..), ChangeOneRegister(..), RegisterChange(..), Shifter(..))
-import SingleEnvWithMain exposing (EightBitMain(..), SingleEnvMainChange(..))
+import RegisterChange exposing (RegisterChange(..), Shifter(..))
+import SingleEnvWithMain exposing (SingleEnvMainChange(..))
 import Utils exposing (BitTest(..), bitMaskFromBit, inverseBitMaskFromBit, shiftLeftBy8, shiftRightBy8)
 import Z80Change exposing (Z80Change(..))
-import Z80Env exposing (Z80Env, mem)
+import Z80Env exposing (Z80Env)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit)
+import Z80Registers exposing (ChangeMainRegister(..), ChangeOneRegister(..), CoreRegister(..))
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IntWithFlagsTimeAndPC, MainWithIndexRegisters)
 
@@ -608,253 +609,28 @@ singleByteMainAndFlagRegistersCB =
         ]
 
 
-singleByteMainAndFlagRegistersIXCB : Dict Int ( MainWithIndexRegisters -> FlagRegisters -> Z80Change, InstructionDuration )
-singleByteMainAndFlagRegistersIXCB =
-    Dict.fromList
-        [ ( 0x00, ( rlc_b, EightTStates ) )
-        , ( 0x01, ( rlc_c, EightTStates ) )
-        , ( 0x02, ( rlc_d, EightTStates ) )
-        , ( 0x03, ( rlc_e, EightTStates ) )
-
-        --, ( 0x04, ( rlc_h, PCIncrementByFour, EightTStates ) )
-        --, ( 0x05, ( rlc_l, PCIncrementByFour, EightTStates ) )
-        --, ( 0x08, ( rrc_b, PCIncrementByFour, EightTStates ) )
-        --, ( 0x09, ( rrc_c, PCIncrementByFour, EightTStates ) )
-        --, ( 0x0A, ( rrc_d, PCIncrementByFour, EightTStates ) )
-        --, ( 0x0B, ( rrc_e, PCIncrementByFour, EightTStates ) )
-        --
-        --, ( 0x0C, ( rrc_h, PCIncrementByFour, EightTStates ) )
-        --, ( 0x0D, ( rrc_l, PCIncrementByFour, EightTStates ) )
-        --, ( 0x10, ( rl_b, PCIncrementByFour, EightTStates ) )
-        --, ( 0x11, ( rl_c, PCIncrementByFour, EightTStates ) )
-        --, ( 0x12, ( rl_d, PCIncrementByFour, EightTStates ) )
-        --, ( 0x13, ( rl_e, PCIncrementByFour, EightTStates ) )
-        --
-        ----, ( 0x14, ( rl_h, PCIncrementByFour, EightTStates ) )
-        ----, ( 0x15, ( rl_l, PCIncrementByFour, EightTStates ) )
-        --, ( 0x18, ( rr_b, PCIncrementByFour, EightTStates ) )
-        --, ( 0x19, ( rr_c, PCIncrementByFour, EightTStates ) )
-        --, ( 0x1A, ( rr_d, PCIncrementByFour, EightTStates ) )
-        --, ( 0x1B, ( rr_e, PCIncrementByFour, EightTStates ) )
-        --
-        ----, ( 0x1C, ( rr_h, PCIncrementByFour, EightTStates ) )
-        ----, ( 0x1D, ( rr_l, PCIncrementByFour, EightTStates ) )
-        --, ( 0x20, ( sla_b, PCIncrementByFour, EightTStates ) )
-        --, ( 0x21, ( sla_c, PCIncrementByFour, EightTStates ) )
-        --, ( 0x22, ( sla_d, PCIncrementByFour, EightTStates ) )
-        --, ( 0x23, ( sla_e, PCIncrementByFour, EightTStates ) )
-        --
-        ----, ( 0x24, ( sla_h, PCIncrementByFour, EightTStates ) )
-        ----, ( 0x25, ( sla_l, PCIncrementByFour, EightTStates ) )
-        --, ( 0x28, ( sra_b, PCIncrementByFour, EightTStates ) )
-        --, ( 0x29, ( sra_c, PCIncrementByFour, EightTStates ) )
-        --, ( 0x2A, ( sra_d, PCIncrementByFour, EightTStates ) )
-        --, ( 0x2B, ( sra_e, PCIncrementByFour, EightTStates ) )
-        --
-        ----, ( 0x2C, ( sra_h, PCIncrementByFour, EightTStates ) )
-        ----, ( 0x2D, ( sra_l, PCIncrementByFour, EightTStates ) )
-        --, ( 0x30, ( sll_b, PCIncrementByFour, EightTStates ) )
-        --, ( 0x31, ( sll_c, PCIncrementByFour, EightTStates ) )
-        --, ( 0x32, ( sll_d, PCIncrementByFour, EightTStates ) )
-        --, ( 0x33, ( sll_e, PCIncrementByFour, EightTStates ) )
-        --, ( 0x34, ( sll_h, PCIncrementByFour, EightTStates ) )
-        --, ( 0x35, ( sll_l, PCIncrementByFour, EightTStates ) )
-        --, ( 0x38, ( srl_b, PCIncrementByFour, EightTStates ) )
-        --, ( 0x39, ( srl_c, PCIncrementByFour, EightTStates ) )
-        --, ( 0x3A, ( srl_d, PCIncrementByFour, EightTStates ) )
-        --, ( 0x3B, ( srl_e, PCIncrementByFour, EightTStates ) )
-        --
-        --, ( 0x3C, ( srl_h, PCIncrementByFour, EightTStates ) )
-        --, ( 0x3D, ( srl_ixl, TwentyThreeTStates ) )
-        --, ( 0x40, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.b |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x41, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.c |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x42, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.d |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x43, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.e |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x44, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 (z80_main.ix |> shiftRightBy8) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x45, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 (z80_main.ix |> Bitwise.and 0xFF) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x48, ( bit_1_b, PCIncrementByFour, EightTStates ) )
-        --, ( 0x49, ( bit_1_c, PCIncrementByFour, EightTStates ) )
-        --, ( 0x4A, ( bit_1_d, PCIncrementByFour, EightTStates ) )
-        --, ( 0x4B, ( bit_1_e, PCIncrementByFour, EightTStates ) )
-        --, ( 0x4C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_1 (z80_main.ix |> shiftRightBy8) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x4D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_1 (z80_main.ix |> Bitwise.and 0xFF) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x50, ( bit_2_b, PCIncrementByFour, EightTStates ) )
-        --, ( 0x51, ( bit_2_c, PCIncrementByFour, EightTStates ) )
-        --, ( 0x52, ( bit_2_d, PCIncrementByFour, EightTStates ) )
-        --, ( 0x53, ( bit_2_e, PCIncrementByFour, EightTStates ) )
-        --, ( 0x54, ( \z80_main z80_flags -> z80_flags |> testBit Bit_2 (z80_main.ix |> shiftRightBy8) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x55, ( \z80_main z80_flags -> z80_flags |> testBit Bit_2 (z80_main.ix |> Bitwise.and 0xFF) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x58, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.b |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x59, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.c |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x5A, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.d |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x5B, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.e |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x5C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 (z80_main.ix |> shiftRightBy8) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x5D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 (z80_main.ix |> Bitwise.and 0xFF) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x60, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.b |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x61, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.c |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x62, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.d |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x63, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.e |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x64, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 (z80_main.ix |> shiftRightBy8) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x65, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 (z80_main.ix |> Bitwise.and 0xFF) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x68, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.b |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x69, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.c |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x6A, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.d |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x6B, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.e |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x6C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 (z80_main.ix |> shiftRightBy8) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x6D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 (z80_main.ix |> Bitwise.and 0xFF) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x70, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.b |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x71, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.c |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x72, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.d |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x73, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.e |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x74, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 (z80_main.ix |> shiftRightBy8) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x75, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 (z80_main.ix |> Bitwise.and 0xFF) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x78, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.b |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x79, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.c |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x7A, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.d |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x7B, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.e |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x7C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 (z80_main.ix |> shiftRightBy8) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x7D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 (z80_main.ix |> Bitwise.and 0xFF) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        ]
-
-
-singleByteMainAndFlagRegistersIYCB : Dict Int ( MainWithIndexRegisters -> FlagRegisters -> Z80Change, InstructionDuration )
-singleByteMainAndFlagRegistersIYCB =
-    Dict.fromList
-        [ ( 0x00, ( rlc_b, EightTStates ) )
-        , ( 0x01, ( rlc_c, EightTStates ) )
-        , ( 0x02, ( rlc_d, EightTStates ) )
-        , ( 0x03, ( rlc_e, EightTStates ) )
-
-        --, ( 0x04, ( rlc_h, PCIncrementByFour, EightTStates ) )
-        --, ( 0x05, ( rlc_l, PCIncrementByFour, EightTStates ) )
-        --, ( 0x08, ( rrc_b, PCIncrementByFour, EightTStates ) )
-        --, ( 0x09, ( rrc_c, PCIncrementByFour, EightTStates ) )
-        --, ( 0x0A, ( rrc_d, PCIncrementByFour, EightTStates ) )
-        --, ( 0x0B, ( rrc_e, PCIncrementByFour, EightTStates ) )
-        --
-        --, ( 0x0C, ( rrc_h, PCIncrementByFour, EightTStates ) )
-        --, ( 0x0D, ( rrc_l, PCIncrementByFour, EightTStates ) )
-        --, ( 0x10, ( rl_b, PCIncrementByFour, EightTStates ) )
-        --, ( 0x11, ( rl_c, PCIncrementByFour, EightTStates ) )
-        --, ( 0x12, ( rl_d, PCIncrementByFour, EightTStates ) )
-        --, ( 0x13, ( rl_e, PCIncrementByFour, EightTStates ) )
-        --
-        --, ( 0x14, ( rl_h, PCIncrementByFour, EightTStates ) )
-        --, ( 0x15, ( rl_l, PCIncrementByFour, EightTStates ) )
-        --, ( 0x18, ( rr_b, PCIncrementByFour, EightTStates ) )
-        --, ( 0x19, ( rr_c, PCIncrementByFour, EightTStates ) )
-        --, ( 0x1A, ( rr_d, PCIncrementByFour, EightTStates ) )
-        --, ( 0x1B, ( rr_e, PCIncrementByFour, EightTStates ) )
-        --
-        ----, ( 0x1C, ( rr_h, PCIncrementByFour, EightTStates ) )
-        ----, ( 0x1D, ( rr_l, PCIncrementByFour, EightTStates ) )
-        --, ( 0x20, ( sla_b, PCIncrementByFour, EightTStates ) )
-        --, ( 0x21, ( sla_c, PCIncrementByFour, EightTStates ) )
-        --, ( 0x22, ( sla_d, PCIncrementByFour, EightTStates ) )
-        --, ( 0x23, ( sla_e, PCIncrementByFour, EightTStates ) )
-        --
-        ----, ( 0x24, ( sla_h, PCIncrementByFour, EightTStates ) )
-        ----, ( 0x25, ( sla_l, PCIncrementByFour, EightTStates ) )
-        --, ( 0x28, ( sra_b, PCIncrementByFour, EightTStates ) )
-        --, ( 0x29, ( sra_c, PCIncrementByFour, EightTStates ) )
-        --, ( 0x2A, ( sra_d, PCIncrementByFour, EightTStates ) )
-        --, ( 0x2B, ( sra_e, PCIncrementByFour, EightTStates ) )
-        --
-        ----, ( 0x2C, ( sra_h, PCIncrementByFour, EightTStates ) )
-        ----, ( 0x2D, ( sra_l, PCIncrementByFour, EightTStates ) )
-        --, ( 0x30, ( sll_b, PCIncrementByFour, EightTStates ) )
-        --, ( 0x31, ( sll_c, PCIncrementByFour, EightTStates ) )
-        --, ( 0x32, ( sll_d, PCIncrementByFour, EightTStates ) )
-        --, ( 0x33, ( sll_e, PCIncrementByFour, EightTStates ) )
-        --
-        ----, ( 0x34, ( sll_h, PCIncrementByFour, EightTStates ) )
-        ----, ( 0x35, ( sll_l, PCIncrementByFour, EightTStates ) )
-        --, ( 0x38, ( srl_b, PCIncrementByFour, EightTStates ) )
-        --, ( 0x39, ( srl_c, PCIncrementByFour, EightTStates ) )
-        --, ( 0x3A, ( srl_d, PCIncrementByFour, EightTStates ) )
-        --, ( 0x3B, ( srl_e, PCIncrementByFour, EightTStates ) )
-        --
-        --, ( 0x3C, ( srl_h, PCIncrementByFour, EightTStates ) )
-        --, ( 0x3D, ( srl_iyl, TwentyThreeTStates ) )
-        --, ( 0x40, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.b |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x41, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.c |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x42, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.d |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x43, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.e |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x44, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 (z80_main.iy |> shiftRightBy8) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x45, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 (z80_main.iy |> Bitwise.and 0xFF) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x48, ( bit_1_b, PCIncrementByFour, EightTStates ) )
-        --, ( 0x49, ( bit_1_c, PCIncrementByFour, EightTStates ) )
-        --, ( 0x4A, ( bit_1_d, PCIncrementByFour, EightTStates ) )
-        --, ( 0x4B, ( bit_1_e, PCIncrementByFour, EightTStates ) )
-        --
-        ----, ( 0x4C, ( bit_1_h, PCIncrementByFour, EightTStates ) )
-        ----, ( 0x4D, ( bit_1_l, PCIncrementByFour, EightTStates ) )
-        --, ( 0x50, ( bit_2_b, PCIncrementByFour, EightTStates ) )
-        --, ( 0x51, ( bit_2_c, PCIncrementByFour, EightTStates ) )
-        --, ( 0x52, ( bit_2_d, PCIncrementByFour, EightTStates ) )
-        --, ( 0x53, ( bit_2_e, PCIncrementByFour, EightTStates ) )
-        --
-        ----, ( 0x54, ( bit_2_h, PCIncrementByFour, EightTStates ) )
-        ----, ( 0x55, ( bit_2_l, PCIncrementByFour, EightTStates ) )
-        --, ( 0x58, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.b |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x59, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.c |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x5A, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.d |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x5B, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.e |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x5C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 (z80_main.iy |> shiftRightBy8) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x5D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 (z80_main.iy |> Bitwise.and 0xFF) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x60, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.b |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x61, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.c |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x62, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.d |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x63, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.e |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x64, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 (z80_main.iy |> shiftRightBy8) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x65, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 (z80_main.iy |> Bitwise.and 0xFF) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x68, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.b |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x69, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.c |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x6A, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.d |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x6B, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.e |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x6C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 (z80_main.iy |> shiftRightBy8) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x6D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 (z80_main.iy |> Bitwise.and 0xFF) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x70, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.b |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x71, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.c |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x72, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.d |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x73, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.e |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x74, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 (z80_main.iy |> shiftRightBy8) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x75, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 (z80_main.iy |> Bitwise.and 0xFF) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x78, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.b |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x79, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.c |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x7A, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.d |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x7B, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.e |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x7C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 (z80_main.iy |> shiftRightBy8) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        --, ( 0x7D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 (z80_main.iy |> Bitwise.and 0xFF) |> Z80ChangeFlags, PCIncrementByFour, EightTStates ) )
-        ]
-
-
 rlc_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rlc_b z80_main z80_flags =
-    z80_flags |> shifter0 z80_main.b |> FlagsWithBRegister
+    z80_flags |> shifter0 z80_main.b |> FlagsWithRegisterChange RegisterB
 
 
 rlc_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rlc_c z80_main z80_flags =
     -- case 0x01: C=shifter(o,C); break;
     --z80_flags |> shifter_c shifter0 z80_main.c
-    z80_flags |> shifter0 z80_main.c |> FlagsWithCRegister
+    z80_flags |> shifter0 z80_main.c |> FlagsWithRegisterChange RegisterC
 
 
 rlc_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rlc_d z80_main z80_flags =
     -- case 0x02: D=shifter(o,D); break;
-    z80_flags |> shifter0 z80_main.d |> FlagsWithDRegister
+    z80_flags |> shifter0 z80_main.d |> FlagsWithRegisterChange RegisterD
 
 
 rlc_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rlc_e z80_main z80_flags =
     -- case 0x03: E=shifter(o,E); break;
-    let
-        value =
-            shifter0 z80_main.e z80_flags
-    in
-    FlagsWithERegister value.flags value.value
+    z80_flags |> shifter0 z80_main.e |> FlagsWithRegisterChange RegisterE
 
 
 rlc_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -885,29 +661,25 @@ rlc_l z80_main z80_flags =
 
 rrc_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rrc_b z80_main z80_flags =
-    z80_flags |> shifter1 z80_main.b |> FlagsWithBRegister
+    z80_flags |> shifter1 z80_main.b |> FlagsWithRegisterChange RegisterB
 
 
 rrc_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rrc_c z80_main z80_flags =
     -- case 0x01: C=shifter(o,C); break;
-    z80_flags |> shifter1 z80_main.c |> FlagsWithCRegister
+    z80_flags |> shifter1 z80_main.c |> FlagsWithRegisterChange RegisterC
 
 
 rrc_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rrc_d z80_main z80_flags =
     -- case 0x02: D=shifter(o,D); break;
-    z80_flags |> shifter1 z80_main.d |> FlagsWithDRegister
+    z80_flags |> shifter1 z80_main.d |> FlagsWithRegisterChange RegisterD
 
 
 rrc_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rrc_e z80_main z80_flags =
     -- case 0x03: E=shifter(o,E); break;
-    let
-        value =
-            shifter1 z80_main.e z80_flags
-    in
-    FlagsWithERegister value.flags value.value
+    z80_flags |> shifter1 z80_main.e |> FlagsWithRegisterChange RegisterE
 
 
 rrc_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -939,29 +711,25 @@ rrc_l z80_main z80_flags =
 rl_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rl_b z80_main z80_flags =
     -- case 0x00: B=shifter(o,B); break;
-    z80_flags |> shifter2 z80_main.b |> FlagsWithBRegister
+    z80_flags |> shifter2 z80_main.b |> FlagsWithRegisterChange RegisterB
 
 
 rl_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rl_c z80_main z80_flags =
     -- case 0x01: C=shifter(o,C); break;
-    z80_flags |> shifter2 z80_main.c |> FlagsWithCRegister
+    z80_flags |> shifter2 z80_main.c |> FlagsWithRegisterChange RegisterC
 
 
 rl_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rl_d z80_main z80_flags =
     -- case 0x02: D=shifter(o,D); break;
-    z80_flags |> shifter2 z80_main.d |> FlagsWithDRegister
+    z80_flags |> shifter2 z80_main.d |> FlagsWithRegisterChange RegisterD
 
 
 rl_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rl_e z80_main z80_flags =
     -- case 0x03: E=shifter(o,E); break;
-    let
-        value =
-            shifter2 z80_main.e z80_flags
-    in
-    FlagsWithERegister value.flags value.value
+    z80_flags |> shifter2 z80_main.e |> FlagsWithRegisterChange RegisterE
 
 
 rl_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -993,29 +761,27 @@ rl_l z80_main z80_flags =
 rr_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rr_b z80_main z80_flags =
     -- case 0x00: B=shifter(o,B); break;
-    z80_flags |> shifter3 z80_main.b |> FlagsWithBRegister
+    z80_flags |> shifter3 z80_main.b |> FlagsWithRegisterChange RegisterB
 
 
 rr_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rr_c z80_main z80_flags =
     -- case 0x01: C=shifter(o,C); break;
-    z80_flags |> shifter3 z80_main.c |> FlagsWithCRegister
+    z80_flags |> shifter3 z80_main.c |> FlagsWithRegisterChange RegisterC
 
 
 rr_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rr_d z80_main z80_flags =
     -- case 0x02: D=shifter(o,D); break;
-    z80_flags |> shifter3 z80_main.d |> FlagsWithDRegister
+    z80_flags |> shifter3 z80_main.d |> FlagsWithRegisterChange RegisterD
 
 
 rr_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rr_e z80_main z80_flags =
     -- case 0x03: E=shifter(o,E); break;
-    let
-        value =
-            shifter3 z80_main.e z80_flags
-    in
-    FlagsWithERegister value.flags value.value
+    z80_flags
+        |> shifter3 z80_main.e
+        |> FlagsWithRegisterChange RegisterE
 
 
 rr_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1047,29 +813,27 @@ rr_l z80_main z80_flags =
 sla_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sla_b z80_main z80_flags =
     -- case 0x00: B=shifter(o,B); break;
-    z80_flags |> shifter4 z80_main.b |> FlagsWithBRegister
+    z80_flags |> shifter4 z80_main.b |> FlagsWithRegisterChange RegisterB
 
 
 sla_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sla_c z80_main z80_flags =
     -- case 0x01: C=shifter(o,C); break;
-    z80_flags |> shifter4 z80_main.c |> FlagsWithCRegister
+    z80_flags |> shifter4 z80_main.c |> FlagsWithRegisterChange RegisterC
 
 
 sla_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sla_d z80_main z80_flags =
     -- case 0x02: D=shifter(o,D); break;
-    z80_flags |> shifter4 z80_main.d |> FlagsWithDRegister
+    z80_flags |> shifter4 z80_main.d |> FlagsWithRegisterChange RegisterD
 
 
 sla_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sla_e z80_main z80_flags =
     -- case 0x03: E=shifter(o,E); break;
-    let
-        value =
-            shifter4 z80_main.e z80_flags
-    in
-    FlagsWithERegister value.flags value.value
+    z80_flags
+        |> shifter4 z80_main.e
+        |> FlagsWithRegisterChange RegisterE
 
 
 sla_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1101,29 +865,27 @@ sla_l z80_main z80_flags =
 sra_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sra_b z80_main z80_flags =
     -- case 0x00: B=shifter(o,B); break;
-    z80_flags |> shifter5 z80_main.b |> FlagsWithBRegister
+    z80_flags |> shifter5 z80_main.b |> FlagsWithRegisterChange RegisterB
 
 
 sra_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sra_c z80_main z80_flags =
     -- case 0x01: C=shifter(o,C); break;
-    z80_flags |> shifter5 z80_main.c |> FlagsWithCRegister
+    z80_flags |> shifter5 z80_main.c |> FlagsWithRegisterChange RegisterC
 
 
 sra_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sra_d z80_main z80_flags =
     -- case 0x02: D=shifter(o,D); break;
-    z80_flags |> shifter5 z80_main.d |> FlagsWithDRegister
+    z80_flags |> shifter5 z80_main.d |> FlagsWithRegisterChange RegisterD
 
 
 sra_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sra_e z80_main z80_flags =
     -- case 0x03: E=shifter(o,E); break;
-    let
-        value =
-            shifter5 z80_main.e z80_flags
-    in
-    FlagsWithERegister value.flags value.value
+    z80_flags
+        |> shifter5 z80_main.e
+        |> FlagsWithRegisterChange RegisterE
 
 
 sra_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1155,29 +917,27 @@ sra_l z80_main z80_flags =
 sll_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sll_b z80_main z80_flags =
     -- case 0x00: B=shifter(o,B); break;
-    z80_flags |> shifter6 z80_main.b |> FlagsWithBRegister
+    z80_flags |> shifter6 z80_main.b |> FlagsWithRegisterChange RegisterB
 
 
 sll_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sll_c z80_main z80_flags =
     -- case 0x01: C=shifter(o,C); break;
-    z80_flags |> shifter6 z80_main.c |> FlagsWithCRegister
+    z80_flags |> shifter6 z80_main.c |> FlagsWithRegisterChange RegisterC
 
 
 sll_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sll_d z80_main z80_flags =
     -- case 0x02: D=shifter(o,D); break;
-    z80_flags |> shifter6 z80_main.d |> FlagsWithDRegister
+    z80_flags |> shifter6 z80_main.d |> FlagsWithRegisterChange RegisterD
 
 
 sll_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 sll_e z80_main z80_flags =
     -- case 0x03: E=shifter(o,E); break;
-    let
-        value =
-            shifter6 z80_main.e z80_flags
-    in
-    FlagsWithERegister value.flags value.value
+    z80_flags
+        |> shifter6 z80_main.e
+        |> FlagsWithRegisterChange RegisterE
 
 
 sll_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -1209,29 +969,27 @@ sll_l z80_main z80_flags =
 srl_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 srl_b z80_main z80_flags =
     -- case 0x00: B=shifter(o,B); break;
-    z80_flags |> shifter7 z80_main.b |> FlagsWithBRegister
+    z80_flags |> shifter7 z80_main.b |> FlagsWithRegisterChange RegisterB
 
 
 srl_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 srl_c z80_main z80_flags =
     -- case 0x01: C=shifter(o,C); break;
-    z80_flags |> shifter7 z80_main.c |> FlagsWithCRegister
+    z80_flags |> shifter7 z80_main.c |> FlagsWithRegisterChange RegisterC
 
 
 srl_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 srl_d z80_main z80_flags =
     -- case 0x02: D=shifter(o,D); break;
-    z80_flags |> shifter7 z80_main.d |> FlagsWithDRegister
+    z80_flags |> shifter7 z80_main.d |> FlagsWithRegisterChange RegisterD
 
 
 srl_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 srl_e z80_main z80_flags =
     -- case 0x03: E=shifter(o,E); break;
-    let
-        value =
-            shifter7 z80_main.e z80_flags
-    in
-    FlagsWithERegister value.flags value.value
+    z80_flags
+        |> shifter7 z80_main.e
+        |> FlagsWithRegisterChange RegisterE
 
 
 srl_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change

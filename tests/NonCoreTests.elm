@@ -3,7 +3,7 @@ module NonCoreTests exposing (..)
 import Expect
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
-import Z80Env exposing (m1, setMem)
+import Z80Env exposing (mem, setMemWithTime)
 import Z80Rom
 
 
@@ -28,6 +28,9 @@ suite =
         z80env =
             z80.env
 
+        envwithtime =
+            { z80env = z80env, time = z80.clockTime }
+
         z80main =
             z80.main
 
@@ -44,15 +47,15 @@ suite =
                 \_ ->
                     let
                         new_env =
-                            z80env
-                                |> setMem addr 0xD2
-                                |> setMem (addr + 1) 0x05
-                                |> setMem (addr + 2) 0x34
+                            envwithtime
+                                |> setMemWithTime addr 0xD2
+                                |> setMemWithTime (addr + 1) 0x05
+                                |> setMemWithTime (addr + 2) 0x34
 
                         new_z80 =
                             executeCoreInstruction z80rom
                                 { z80
-                                    | env = new_env
+                                    | env = new_env.z80env
                                     , flags = { flags | a = 0x39, ff = 0x0100 }
                                 }
                     in
@@ -61,15 +64,15 @@ suite =
                 \_ ->
                     let
                         new_env =
-                            z80env
-                                |> setMem addr 0xD2
-                                |> setMem (addr + 1) 0x05
-                                |> setMem (addr + 2) 0x34
+                            envwithtime
+                                |> setMemWithTime addr 0xD2
+                                |> setMemWithTime (addr + 1) 0x05
+                                |> setMemWithTime (addr + 2) 0x34
 
                         new_z80 =
                             executeCoreInstruction z80rom
                                 { z80
-                                    | env = new_env
+                                    | env = new_env.z80env
                                     , flags = { flags | a = 0x39, ff = 0x0200 }
                                 }
                     in
@@ -83,7 +86,7 @@ suite =
         --                z80.alt_main
         --
         --            new_env =
-        --                z80env
+        --                envwithtime
         --                    |> setMem addr 0xD9
         --                    |> setMem (addr + 1) 0x16
         --
@@ -100,23 +103,26 @@ suite =
             \_ ->
                 let
                     new_env =
-                        z80env
-                            |> setMem addr 0xDF
-                            |> setMem 0xFF75 0x16
-                            |> setMem 0xFF76 0x56
+                        envwithtime
+                            |> setMemWithTime addr 0xDF
+                            |> setMemWithTime 0xFF75 0x16
+                            |> setMemWithTime 0xFF76 0x56
+
+                    env2 =
+                        new_env.z80env
 
                     new_z80 =
                         executeCoreInstruction z80rom
                             { z80
-                                | env = { new_env | sp = 0xFF77 }
+                                | env = { env2 | sp = 0xFF77 }
                                 , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                             }
 
                     lo_value =
-                        m1 0xFF75 0 z80rom new_z80.env |> .value
+                        mem 0xFF75 new_z80.clockTime z80rom new_z80.env |> .value
 
                     hi_value =
-                        m1 0xFF76 0 z80rom new_z80.env |> .value
+                        mem 0xFF76 new_z80.clockTime z80rom new_z80.env |> .value
                 in
                 Expect.equal { pc = 0x18, sp = 0xFF75, lowmem = 1, highmem = 0x80 } { sp = new_z80.env.sp, pc = new_z80.pc, lowmem = lo_value, highmem = hi_value }
         ]

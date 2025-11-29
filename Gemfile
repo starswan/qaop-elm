@@ -13,7 +13,7 @@ gem "activeadmin"
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '~> 7.1', '< 7.2'
 # Use sqlite3 as the database for Active Record
-gem 'sqlite3', '~> 2.7'
+gem 'sqlite3', '~> 2.8'
 gem "cssbundling-rails"
 gem "jsbundling-rails"
 gem "propshaft"
@@ -84,6 +84,9 @@ group :development do
   gem 'ed25519'
   # required for passenger support
   gem 'rexml'
+
+  gem "rubocop-govuk"
+  gem "rubocop-performance"
 end
 
 group :test do

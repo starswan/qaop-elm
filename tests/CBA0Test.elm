@@ -3,7 +3,7 @@ module CBA0Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
-import Z80Env exposing (mem, setMem)
+import Z80Env exposing (setMemWithTime)
 import Z80Rom
 
 
@@ -32,7 +32,7 @@ suite =
             { old_z80 | pc = addr, env = { old_z80env | sp = sp }, main = { z80main | hl = hl } }
 
         z80env =
-            z80.env
+            { z80env = z80.env, time = z80.clockTime }
 
         z80rom =
             Z80Rom.constructor
@@ -43,8 +43,9 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0xCB
-                            |> setMem (addr + 1) 0xA0
+                            |> setMemWithTime addr 0xCB
+                            |> setMemWithTime (addr + 1) 0xA0
+                            |> .z80env
 
                     new_z80 =
                         executeCoreInstruction z80rom

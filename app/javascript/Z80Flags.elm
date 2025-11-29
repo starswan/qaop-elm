@@ -772,3 +772,43 @@ changeFlags flagFunc int flags =
 
         CpA ->
             flags |> z80_cp int
+
+
+jump_nz : FlagRegisters -> Bool
+jump_nz z80_flags =
+    z80_flags.fr /= 0
+
+
+jump_z : FlagRegisters -> Bool
+jump_z z80_flags =
+    z80_flags.fr == 0
+
+
+jump_nc : FlagRegisters -> Bool
+jump_nc z80_flags =
+    Bitwise.and z80_flags.ff 0x0100 == 0
+
+
+jump_c : FlagRegisters -> Bool
+jump_c z80_flags =
+    Bitwise.and z80_flags.ff 0x0100 /= 0
+
+
+jump_po : FlagRegisters -> Bool
+jump_po z80_flags =
+    Bitwise.and (z80_flags |> getFlags) c_FP == 0
+
+
+jump_pe : FlagRegisters -> Bool
+jump_pe z80_flags =
+    Bitwise.and (z80_flags |> getFlags) c_FP /= 0
+
+
+jump_p : FlagRegisters -> Bool
+jump_p z80_flags =
+    Bitwise.and z80_flags.ff c_FS == 0
+
+
+jump_m : FlagRegisters -> Bool
+jump_m z80_flags =
+    Bitwise.and z80_flags.ff c_FS /= 0

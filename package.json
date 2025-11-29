@@ -2,14 +2,14 @@
   "name": "retroelm",
   "private": true,
   "dependencies": {
-    "@activeadmin/activeadmin": "~3.3.0",
+    "@activeadmin/activeadmin": "~3.4.0",
     "@popperjs/core": "^2.11.8",
-    "@rails/ujs": "7.1.502",
+    "@rails/ujs": "7.1.600",
     "bootstrap": "^5.3.8",
     "elm": "^0.19.1-6",
     "esbuild": "^0.15.18",
     "esbuild-plugin-elm": "^0.0.12",
-    "sass": "^1.92.1"
+    "sass": "^1.94.2"
   },
   "overrides": {
     "cross-spawn": ">= 7.0.3"

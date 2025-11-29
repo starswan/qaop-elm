@@ -134,9 +134,6 @@ loop_time_in_ms elapsed_millis count =
 time_display : Int -> Int -> String
 time_display elapsed_millis count =
     let
-        elapsed_string =
-            (elapsed_millis // 1000) |> String.fromInt
-
         loop_time =
             loop_time_in_ms elapsed_millis count
 
@@ -146,7 +143,7 @@ time_display elapsed_millis count =
         last =
             loop_time |> modBy (10 ^ c_DECIMAL_PLACES) |> digitToString c_DECIMAL_PLACES
     in
-    elapsed_string ++ " sec, time " ++ time_string ++ "." ++ last ++ " ms "
+    "time " ++ time_string ++ "." ++ last ++ " ms "
 
 
 speed_in_hz : Int -> Int -> String

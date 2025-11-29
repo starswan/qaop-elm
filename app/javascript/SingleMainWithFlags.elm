@@ -3,82 +3,82 @@ module SingleMainWithFlags exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
-import PCIncrement exposing (PCIncrement(..))
 import Utils exposing (BitTest(..), shiftLeftBy8, shiftRightBy8)
 import Z80Change exposing (Z80Change(..))
-import Z80Flags exposing (FlagRegisters, IntWithFlags, adc, add16, dec, inc, sbc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
+import Z80Flags exposing (FlagRegisters, IntWithFlags, adc, add16, dec, inc, sbc, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
+import Z80Registers exposing (ChangeMainRegister(..), CoreRegister(..))
 import Z80Types exposing (MainWithIndexRegisters, get_bc, get_de)
 
 
-singleByteMainAndFlagRegisters : Dict Int ( MainWithIndexRegisters -> FlagRegisters -> Z80Change, PCIncrement, InstructionDuration )
+singleByteMainAndFlagRegisters : Dict Int ( MainWithIndexRegisters -> FlagRegisters -> Z80Change, InstructionDuration )
 singleByteMainAndFlagRegisters =
     Dict.fromList
-        [ ( 0x02, ( ld_indirect_bc_a, IncrementByOne, SevenTStates ) )
-        , ( 0x04, ( inc_b, IncrementByOne, FourTStates ) )
-        , ( 0x05, ( dec_b, IncrementByOne, FourTStates ) )
-        , ( 0x09, ( add_hl_bc, IncrementByOne, ElevenTStates ) )
-        , ( 0x0C, ( inc_c, IncrementByOne, FourTStates ) )
-        , ( 0x0D, ( dec_c, IncrementByOne, FourTStates ) )
-        , ( 0x12, ( ld_indirect_de_a, IncrementByOne, SevenTStates ) )
-        , ( 0x14, ( inc_d, IncrementByOne, FourTStates ) )
-        , ( 0x15, ( dec_d, IncrementByOne, FourTStates ) )
-        , ( 0x19, ( add_hl_de, IncrementByOne, ElevenTStates ) )
-        , ( 0x1C, ( inc_e, IncrementByOne, EightTStates ) )
-        , ( 0x1D, ( dec_e, IncrementByOne, EightTStates ) )
-        , ( 0x24, ( inc_h, IncrementByOne, FourTStates ) )
-        , ( 0x25, ( dec_h, IncrementByOne, FourTStates ) )
-        , ( 0x29, ( add_hl_hl, IncrementByOne, ElevenTStates ) )
-        , ( 0x2C, ( inc_l, IncrementByOne, FourTStates ) )
-        , ( 0x2D, ( dec_l, IncrementByOne, FourTStates ) )
-        , ( 0x77, ( ld_indirect_hl_a, IncrementByOne, SevenTStates ) )
-        , ( 0x80, ( add_a_b, IncrementByOne, FourTStates ) )
-        , ( 0x81, ( add_a_c, IncrementByOne, FourTStates ) )
-        , ( 0x82, ( add_a_d, IncrementByOne, FourTStates ) )
-        , ( 0x83, ( add_a_e, IncrementByOne, FourTStates ) )
-        , ( 0x84, ( add_a_h, IncrementByOne, FourTStates ) )
-        , ( 0x85, ( add_a_l, IncrementByOne, FourTStates ) )
-        , ( 0x88, ( adc_a_b, IncrementByOne, FourTStates ) )
-        , ( 0x89, ( adc_a_c, IncrementByOne, FourTStates ) )
-        , ( 0x8A, ( adc_a_d, IncrementByOne, FourTStates ) )
-        , ( 0x8B, ( adc_a_e, IncrementByOne, FourTStates ) )
-        , ( 0x8C, ( adc_a_h, IncrementByOne, FourTStates ) )
-        , ( 0x8D, ( adc_a_l, IncrementByOne, FourTStates ) )
-        , ( 0x90, ( sub_b, IncrementByOne, FourTStates ) )
-        , ( 0x91, ( sub_c, IncrementByOne, FourTStates ) )
-        , ( 0x92, ( sub_d, IncrementByOne, FourTStates ) )
-        , ( 0x93, ( sub_e, IncrementByOne, FourTStates ) )
-        , ( 0x94, ( sub_h, IncrementByOne, FourTStates ) )
-        , ( 0x95, ( sub_l, IncrementByOne, FourTStates ) )
-        , ( 0x98, ( sbc_b, IncrementByOne, FourTStates ) )
-        , ( 0x99, ( sbc_c, IncrementByOne, FourTStates ) )
-        , ( 0x9A, ( sbc_d, IncrementByOne, FourTStates ) )
-        , ( 0x9B, ( sbc_e, IncrementByOne, FourTStates ) )
-        , ( 0x9C, ( sbc_h, IncrementByOne, FourTStates ) )
-        , ( 0x9D, ( sbc_l, IncrementByOne, FourTStates ) )
-        , ( 0xA0, ( and_b, IncrementByOne, FourTStates ) )
-        , ( 0xA1, ( and_c, IncrementByOne, FourTStates ) )
-        , ( 0xA2, ( and_d, IncrementByOne, FourTStates ) )
-        , ( 0xA3, ( and_e, IncrementByOne, FourTStates ) )
-        , ( 0xA4, ( and_h, IncrementByOne, FourTStates ) )
-        , ( 0xA5, ( and_l, IncrementByOne, FourTStates ) )
-        , ( 0xA8, ( xor_b, IncrementByOne, FourTStates ) )
-        , ( 0xA9, ( xor_c, IncrementByOne, FourTStates ) )
-        , ( 0xAA, ( xor_d, IncrementByOne, FourTStates ) )
-        , ( 0xAB, ( xor_e, IncrementByOne, FourTStates ) )
-        , ( 0xAC, ( xor_h, IncrementByOne, FourTStates ) )
-        , ( 0xAD, ( xor_l, IncrementByOne, FourTStates ) )
-        , ( 0xB0, ( or_b, IncrementByOne, FourTStates ) )
-        , ( 0xB1, ( or_c, IncrementByOne, FourTStates ) )
-        , ( 0xB2, ( or_d, IncrementByOne, FourTStates ) )
-        , ( 0xB3, ( or_e, IncrementByOne, FourTStates ) )
-        , ( 0xB4, ( or_h, IncrementByOne, FourTStates ) )
-        , ( 0xB5, ( or_l, IncrementByOne, FourTStates ) )
-        , ( 0xB8, ( cp_b, IncrementByOne, FourTStates ) )
-        , ( 0xB9, ( cp_c, IncrementByOne, FourTStates ) )
-        , ( 0xBA, ( cp_d, IncrementByOne, FourTStates ) )
-        , ( 0xBB, ( cp_e, IncrementByOne, FourTStates ) )
-        , ( 0xBC, ( cp_h, IncrementByOne, FourTStates ) )
-        , ( 0xBD, ( cp_l, IncrementByOne, FourTStates ) )
+        [ ( 0x02, ( ld_indirect_bc_a, SevenTStates ) )
+        , ( 0x04, ( inc_b, FourTStates ) )
+        , ( 0x05, ( dec_b, FourTStates ) )
+        , ( 0x09, ( add_hl_bc, ElevenTStates ) )
+        , ( 0x0C, ( inc_c, FourTStates ) )
+        , ( 0x0D, ( dec_c, FourTStates ) )
+        , ( 0x12, ( ld_indirect_de_a, SevenTStates ) )
+        , ( 0x14, ( inc_d, FourTStates ) )
+        , ( 0x15, ( dec_d, FourTStates ) )
+        , ( 0x19, ( add_hl_de, ElevenTStates ) )
+        , ( 0x1C, ( inc_e, EightTStates ) )
+        , ( 0x1D, ( dec_e, EightTStates ) )
+        , ( 0x24, ( inc_h, FourTStates ) )
+        , ( 0x25, ( dec_h, FourTStates ) )
+        , ( 0x29, ( add_hl_hl, ElevenTStates ) )
+        , ( 0x2C, ( inc_l, FourTStates ) )
+        , ( 0x2D, ( dec_l, FourTStates ) )
+        , ( 0x77, ( ld_indirect_hl_a, SevenTStates ) )
+        , ( 0x80, ( add_a_b, FourTStates ) )
+        , ( 0x81, ( add_a_c, FourTStates ) )
+        , ( 0x82, ( add_a_d, FourTStates ) )
+        , ( 0x83, ( add_a_e, FourTStates ) )
+        , ( 0x84, ( add_a_h, FourTStates ) )
+        , ( 0x85, ( add_a_l, FourTStates ) )
+        , ( 0x88, ( adc_a_b, FourTStates ) )
+        , ( 0x89, ( adc_a_c, FourTStates ) )
+        , ( 0x8A, ( adc_a_d, FourTStates ) )
+        , ( 0x8B, ( adc_a_e, FourTStates ) )
+        , ( 0x8C, ( adc_a_h, FourTStates ) )
+        , ( 0x8D, ( adc_a_l, FourTStates ) )
+        , ( 0x90, ( sub_b, FourTStates ) )
+        , ( 0x91, ( sub_c, FourTStates ) )
+        , ( 0x92, ( sub_d, FourTStates ) )
+        , ( 0x93, ( sub_e, FourTStates ) )
+        , ( 0x94, ( sub_h, FourTStates ) )
+        , ( 0x95, ( sub_l, FourTStates ) )
+        , ( 0x98, ( sbc_b, FourTStates ) )
+        , ( 0x99, ( sbc_c, FourTStates ) )
+        , ( 0x9A, ( sbc_d, FourTStates ) )
+        , ( 0x9B, ( sbc_e, FourTStates ) )
+        , ( 0x9C, ( sbc_h, FourTStates ) )
+        , ( 0x9D, ( sbc_l, FourTStates ) )
+        , ( 0xA0, ( and_b, FourTStates ) )
+        , ( 0xA1, ( and_c, FourTStates ) )
+        , ( 0xA2, ( and_d, FourTStates ) )
+        , ( 0xA3, ( and_e, FourTStates ) )
+        , ( 0xA4, ( and_h, FourTStates ) )
+        , ( 0xA5, ( and_l, FourTStates ) )
+        , ( 0xA8, ( xor_b, FourTStates ) )
+        , ( 0xA9, ( xor_c, FourTStates ) )
+        , ( 0xAA, ( xor_d, FourTStates ) )
+        , ( 0xAB, ( xor_e, FourTStates ) )
+        , ( 0xAC, ( xor_h, FourTStates ) )
+        , ( 0xAD, ( xor_l, FourTStates ) )
+        , ( 0xB0, ( or_b, FourTStates ) )
+        , ( 0xB1, ( or_c, FourTStates ) )
+        , ( 0xB2, ( or_d, FourTStates ) )
+        , ( 0xB3, ( or_e, FourTStates ) )
+        , ( 0xB4, ( or_h, FourTStates ) )
+        , ( 0xB5, ( or_l, FourTStates ) )
+        , ( 0xB8, ( cp_b, FourTStates ) )
+        , ( 0xB9, ( cp_c, FourTStates ) )
+        , ( 0xBA, ( cp_d, FourTStates ) )
+        , ( 0xBB, ( cp_e, FourTStates ) )
+        , ( 0xBC, ( cp_h, FourTStates ) )
+        , ( 0xBD, ( cp_l, FourTStates ) )
         ]
 
 
@@ -116,58 +116,53 @@ inc_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 inc_b z80_main z80_flags =
     -- case 0x04: B=inc(B); break;
     --z80 |> set_flag_regs new_b.flags |> set_b new_b.value
-    z80_flags |> inc z80_main.b |> FlagsWithBRegister
+    z80_flags |> inc z80_main.b |> FlagsWithRegisterChange RegisterB
 
 
 dec_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 dec_b z80_main z80_flags =
     -- case 0x05: B=dec(B); break;
-    z80_flags |> dec z80_main.b |> FlagsWithBRegister
+    z80_flags |> dec z80_main.b |> FlagsWithRegisterChange RegisterB
 
 
 inc_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 inc_c z80_main z80_flags =
     -- case 0x0C: C=inc(C); break;
-    z80_flags |> inc z80_main.c |> FlagsWithCRegister
+    z80_flags |> inc z80_main.c |> FlagsWithRegisterChange RegisterC
 
 
 dec_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 dec_c z80_main z80_flags =
     -- case 0x0D: C=dec(C); break;
-    z80_flags |> dec z80_main.c |> FlagsWithCRegister
+    z80_flags |> dec z80_main.c |> FlagsWithRegisterChange RegisterC
 
 
 inc_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 inc_d z80_main z80_flags =
     -- case 0x14: D=inc(D); break;
-    z80_flags |> inc z80_main.d |> FlagsWithDRegister
+    z80_flags |> inc z80_main.d |> FlagsWithRegisterChange RegisterD
 
 
 dec_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 dec_d z80_main z80_flags =
     -- case 0x15: D=dec(D); break;
-    z80_flags |> dec z80_main.d |> FlagsWithDRegister
+    z80_flags |> dec z80_main.d |> FlagsWithRegisterChange RegisterD
 
 
 inc_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 inc_e z80_main z80_flags =
     -- case 0x1C: E=inc(E); break;
-    let
-        new_e =
-            inc z80_main.e z80_flags
-    in
-    --{ z80 | flags = new_e.flags, main = { z80_main | e = new_e.value } }
-    FlagsWithERegister new_e.flags new_e.value
+    z80_flags
+        |> inc z80_main.e
+        |> FlagsWithRegisterChange RegisterE
 
 
 dec_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 dec_e z80_main z80_flags =
     -- case 0x1D: E=dec(E); break;
-    let
-        new_e =
-            dec z80_main.e z80_flags
-    in
-    FlagsWithERegister new_e.flags new_e.value
+    z80_flags
+        |> dec z80_main.e
+        |> FlagsWithRegisterChange RegisterE
 
 
 inc_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change

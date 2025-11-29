@@ -3,13 +3,14 @@ module Group00Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
-import Z80Env exposing (mem, setMem)
+import Z80Env exposing (mem, setMemWithTime)
 import Z80Flags exposing (getFlags)
 import Z80Rom
 
 
 suite : Test
 suite =
+    -- complete - 0x00 - 0x0F
     let
         addr =
             30000
@@ -24,7 +25,7 @@ suite =
             z80.flags
 
         z80env =
-            z80.env
+            { z80env = z80.env, time = z80.clockTime }
 
         z80main =
             z80.main
@@ -38,17 +39,18 @@ suite =
             \_ ->
                 let
                     z80inc =
-                        { z80 | env = z80env |> setMem addr 0x00 } |> Z80.executeCoreInstruction z80rom
+                        { z80 | env = z80env |> setMemWithTime addr 0x00 |> .z80env } |> Z80.executeCoreInstruction z80rom
                 in
-                Expect.equal ( addr + 1, 4 ) ( z80inc.pc, z80inc.env.time.cpu_time - z80.env.time.cpu_time )
+                Expect.equal ( addr + 1, 4 ) ( z80inc.pc, z80inc.clockTime.cpu_time - z80.clockTime.cpu_time )
         , test "0x01 LD BC,nn" <|
             \_ ->
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0x01
-                            |> setMem (addr + 1) 0x34
-                            |> setMem (addr + 2) 0x45
+                            |> setMemWithTime addr 0x01
+                            |> setMemWithTime (addr + 1) 0x34
+                            |> setMemWithTime (addr + 2) 0x45
+                            |> .z80env
 
                     z80_after_01 =
                         { z80 | env = new_env } |> Z80.executeCoreInstruction z80rom
@@ -59,7 +61,7 @@ suite =
                 let
                     z80inc =
                         { z80
-                            | env = z80env |> setMem addr 0x02
+                            | env = z80env |> setMemWithTime addr 0x02 |> .z80env
                             , main = { z80main | b = 0x45, c = 0x34 }
                             , flags = { flags | a = 0x27 }
                         }
@@ -68,7 +70,7 @@ suite =
                         z80inc |> Z80.executeCoreInstruction z80rom
 
                     mem_value =
-                        z80_after_01.env |> mem 0x4534 z80_after_01.env.time z80rom
+                        z80_after_01.env |> mem 0x4534 z80_after_01.clockTime z80rom
                 in
                 Expect.equal ( addr + 1, 0x27 ) ( z80_after_01.pc, mem_value.value )
         , test "0x03 INC BC" <|
@@ -77,7 +79,7 @@ suite =
                     z80_after_01 =
                         executeCoreInstruction z80rom
                             { z80
-                                | env = z80env |> setMem addr 0x03
+                                | env = z80env |> setMemWithTime addr 0x03 |> .z80env
                                 , main = { z80main | b = 0x45, c = 0xFF }
                             }
                 in
@@ -88,7 +90,7 @@ suite =
                     z80_after_01 =
                         executeCoreInstruction z80rom
                             { z80
-                                | env = z80env |> setMem addr 0x04
+                                | env = z80env |> setMemWithTime addr 0x04 |> .z80env
                                 , main = { z80main | b = 0x45 }
                             }
                 in
@@ -99,7 +101,7 @@ suite =
                     z80_after_01 =
                         executeCoreInstruction z80rom
                             { z80
-                                | env = z80env |> setMem addr 0x05
+                                | env = z80env |> setMemWithTime addr 0x05 |> .z80env
                                 , main = { z80main | b = 0x45 }
                             }
                 in
@@ -109,8 +111,9 @@ suite =
                 let
                     new_env =
                         z80env
-                            |> setMem addr 0x06
-                            |> setMem (addr + 1) 0x78
+                            |> setMemWithTime addr 0x06
+                            |> setMemWithTime (addr + 1) 0x78
+                            |> .z80env
 
                     z80_after_01 =
                         executeCoreInstruction z80rom { z80 | env = new_env }
@@ -122,7 +125,8 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0x07
+                                |> setMemWithTime addr 0x07
+                                |> .z80env
 
                         newZ80 =
                             executeCoreInstruction z80rom
@@ -138,7 +142,8 @@ suite =
                     let
                         new_env =
                             z80env
-                                |> setMem addr 0x07
+                                |> setMemWithTime addr 0x07
+                                |> .z80env
 
                         newZ80 =
                             executeCoreInstruction z80rom
@@ -171,7 +176,7 @@ suite =
                         z80_01 =
                             executeCoreInstruction z80rom
                                 { z80
-                                    | env = z80env |> setMem addr 0x09
+                                    | env = z80env |> setMemWithTime addr 0x09 |> .z80env
                                     , main = { z80main | ix = 0x27, b = 0x01, c = 0x02, hl = 0x0304 }
                                 }
                     in
@@ -182,7 +187,7 @@ suite =
                         z80_after_01 =
                             executeCoreInstruction z80rom
                                 { z80
-                                    | env = z80env |> setMem addr 0xDD |> setMem (addr + 1) 0x09
+                                    | env = z80env |> setMemWithTime addr 0xDD |> setMemWithTime (addr + 1) 0x09 |> .z80env
                                     , main = { z80main | ix = 0x05, b = 0x01, c = 0x02, hl = 0x3445 }
                                 }
                     in
@@ -193,98 +198,88 @@ suite =
                         z80_after_01 =
                             executeCoreInstruction z80rom
                                 { z80
-                                    | env = z80env |> setMem addr 0xFD |> setMem (addr + 1) 0x09
+                                    | env = z80env |> setMemWithTime addr 0xFD |> setMemWithTime (addr + 1) 0x09 |> .z80env
                                     , main = { z80main | iy = 0x05, b = 0x01, c = 0x02, hl = 0x3445 }
                                 }
                     in
                     Expect.equal ( addr + 2, 0x3445, 0x0107 ) ( z80_after_01.pc, z80_after_01.main.hl, z80_after_01.main.iy )
             ]
-        , describe "LD A, (16 bit)"
-            [ test "0x0A - LD A,(BC)" <|
-                \_ ->
-                    let
-                        new_env =
-                            z80env
-                                |> setMem addr 0x0A
-                                |> setMem 0x4546 0x78
+        , test "0x0A - LD A,(BC)" <|
+            \_ ->
+                let
+                    new_env =
+                        z80env
+                            |> setMemWithTime addr 0x0A
+                            |> setMemWithTime 0x4546 0x78
+                            |> .z80env
 
-                        z80_after_01 =
-                            executeCoreInstruction z80rom
-                                { z80
-                                    | env = new_env
-                                    , main = { z80main | b = 0x45, c = 0x46 }
-                                }
-                    in
-                    Expect.equal ( addr + 1, 0x78 ) ( z80_after_01.pc, z80_after_01.flags.a )
-            ]
-        , describe "DEC 16 bit"
-            [ test "0x0B DEC BC" <|
-                \_ ->
-                    let
-                        z80_after_01 =
-                            executeCoreInstruction z80rom
-                                { z80
-                                    | env = z80env |> setMem addr 0x0B
-                                    , main = { z80main | b = 0x45, c = 0x00 }
-                                }
-                    in
-                    Expect.equal ( addr + 1, 0x44, 0xFF ) ( z80_after_01.pc, z80_after_01.main.b, z80_after_01.main.c )
-            ]
-        , describe "INC 8 bit"
-            [ test "INC C - 0x0C" <|
-                \_ ->
-                    let
-                        z80_after_01 =
-                            executeCoreInstruction z80rom
-                                { z80
-                                    | env = z80env |> setMem addr 0x0C
-                                    , main = { z80main | b = 0x45, c = 0x00 }
-                                }
-                    in
-                    Expect.equal ( addr + 1, 0x45, 0x01 ) ( z80_after_01.pc, z80_after_01.main.b, z80_after_01.main.c )
-            ]
-        , describe "DEC 8 bit"
-            [ test "DEC C - 0x0D" <|
-                \_ ->
-                    let
-                        z80_after_01 =
-                            executeCoreInstruction z80rom
-                                { z80
-                                    | env = z80env |> setMem addr 0x0D
-                                    , main = { z80main | b = 0x45, c = 0x00 }
-                                }
-                    in
-                    Expect.equal ( addr + 1, 0x45, 0xFF ) ( z80_after_01.pc, z80_after_01.main.b, z80_after_01.main.c )
-            ]
-        , describe "LD 8-bit,n"
-            [ test "LD C,n - 0x0E" <|
-                \_ ->
-                    let
-                        new_env =
-                            z80env
-                                |> setMem addr 0x0E
-                                |> setMem (addr + 1) 0x78
+                    z80_after_01 =
+                        executeCoreInstruction z80rom
+                            { z80
+                                | env = new_env
+                                , main = { z80main | b = 0x45, c = 0x46 }
+                            }
+                in
+                Expect.equal ( addr + 1, 0x78 ) ( z80_after_01.pc, z80_after_01.flags.a )
+        , test "0x0B DEC BC" <|
+            \_ ->
+                let
+                    z80_after_01 =
+                        executeCoreInstruction z80rom
+                            { z80
+                                | env = z80env |> setMemWithTime addr 0x0B |> .z80env
+                                , main = { z80main | b = 0x45, c = 0x00 }
+                            }
+                in
+                Expect.equal ( addr + 1, 0x44, 0xFF ) ( z80_after_01.pc, z80_after_01.main.b, z80_after_01.main.c )
+        , test "INC C - 0x0C" <|
+            \_ ->
+                let
+                    z80_after_01 =
+                        executeCoreInstruction z80rom
+                            { z80
+                                | env = z80env |> setMemWithTime addr 0x0C |> .z80env
+                                , main = { z80main | b = 0x45, c = 0x00 }
+                            }
+                in
+                Expect.equal ( addr + 1, 0x45, 0x01 ) ( z80_after_01.pc, z80_after_01.main.b, z80_after_01.main.c )
+        , test "DEC C - 0x0D" <|
+            \_ ->
+                let
+                    z80_after_01 =
+                        executeCoreInstruction z80rom
+                            { z80
+                                | env = z80env |> setMemWithTime addr 0x0D |> .z80env
+                                , main = { z80main | b = 0x45, c = 0x00 }
+                            }
+                in
+                Expect.equal ( addr + 1, 0x45, 0xFF ) ( z80_after_01.pc, z80_after_01.main.b, z80_after_01.main.c )
+        , test "LD C,n - 0x0E" <|
+            \_ ->
+                let
+                    new_env =
+                        z80env
+                            |> setMemWithTime addr 0x0E
+                            |> setMemWithTime (addr + 1) 0x78
+                            |> .z80env
 
-                        z80_after_01 =
-                            executeCoreInstruction z80rom
-                                { z80
-                                    | env = new_env
-                                    , main = { z80main | b = 0x45, c = 0x00 }
-                                }
-                    in
-                    Expect.equal ( addr + 2, 0x45, 0x78 ) ( z80_after_01.pc, z80_after_01.main.b, z80_after_01.main.c )
-            ]
-        , describe "RRCA"
-            [ test "RRCA - 0x0F" <|
-                \_ ->
-                    let
-                        z80_after_01 =
-                            executeCoreInstruction z80rom
-                                { z80
-                                    | env = z80env |> setMem addr 0x0F
-                                    , flags = { flags | a = 0x80 }
-                                }
-                    in
-                    Expect.equal ( addr + 1, 0x40 ) ( z80_after_01.pc, z80_after_01.flags.a )
-            ]
+                    z80_after_01 =
+                        executeCoreInstruction z80rom
+                            { z80
+                                | env = new_env
+                                , main = { z80main | b = 0x45, c = 0x00 }
+                            }
+                in
+                Expect.equal ( addr + 2, 0x45, 0x78 ) ( z80_after_01.pc, z80_after_01.main.b, z80_after_01.main.c )
+        , test "RRCA - 0x0F" <|
+            \_ ->
+                let
+                    z80_after_01 =
+                        executeCoreInstruction z80rom
+                            { z80
+                                | env = z80env |> setMemWithTime addr 0x0F |> .z80env
+                                , flags = { flags | a = 0x80 }
+                            }
+                in
+                Expect.equal ( addr + 1, 0x40 ) ( z80_after_01.pc, z80_after_01.flags.a )
         ]
