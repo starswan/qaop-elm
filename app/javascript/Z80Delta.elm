@@ -72,7 +72,7 @@ applyDeltaWithChanges z80delta z80 =
             { z80 | flags = flagRegisters, pc = pc, env = z80_env, clockTime = time, main = mainWithIndexRegisters, interrupts = z80delta.interrupts }
 
         FlagsWithPcEnvAndCpuTime flagRegisters pc z80Env int ->
-            { z80 | flags = flagRegisters, pc = pc, env = z80Env, clockTime = z80.clockTime |> addCpuTimeTime int, interrupts = z80delta.interrupts }
+            { z80 | flags = flagRegisters, pc = pc, env = z80Env, clockTime = z80delta.time |> addCpuTimeTime int, interrupts = z80delta.interrupts }
 
         UnknownIntValue string int ->
             debugTodo string (int |> toHexString2) z80

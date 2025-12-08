@@ -2,6 +2,7 @@ module Spectrum exposing (..)
 
 import Bitwise exposing (complement, shiftRightBy)
 import CpuTimeCTime exposing (reset_cpu_time)
+import Dict
 import Keyboard exposing (KeyEvent, Keyboard, update_keyboard)
 import SingleNoParams exposing (ex_af)
 import Tapfile exposing (Tapfile, tapfileDataToList)
