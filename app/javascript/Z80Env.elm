@@ -6,7 +6,7 @@
 module Z80Env exposing (..)
 
 import Bitwise exposing (and, or, shiftRightBy)
-import CpuTimeCTime exposing (CTime(..), CpuTimeAnd16BitValue, CpuTimeAndValue, CpuTimeCTime, CpuTimeSpAnd16BitValue, CpuTimeSpAndValue, addCpuTimeTime, cont, cont1, cont_port)
+import CpuTimeCTime exposing (CTime(..), CpuTimeAnd16BitValue, CpuTimeAndValue, CpuTimeCTime, CpuTimeSpAnd16BitValue, addCpuTimeTime, cont, cont1, cont_port)
 import Dict exposing (Dict)
 import Keyboard exposing (Keyboard, z80_keyboard_input)
 import Utils exposing (shiftLeftBy8, shiftRightBy8)
@@ -14,12 +14,9 @@ import Z80Ram exposing (Z80Ram)
 import Z80Rom exposing (Z80ROM, getROMValue)
 
 
-
--- changing this to an array results in a recursion error in the browser :-(
-
-
 type alias Z80Env =
-    { ram : Dict Int Int
+    { -- changing this to an array results in a recursion error in the browser :-(
+      ram : Dict Int Int
     , sp : Int
     }
 
@@ -30,36 +27,11 @@ type alias Z80EnvWithTime =
     }
 
 
-type alias Z80EnvWithValue =
-    { env : Z80Env
-    , value : Int
-    }
-
-
-type alias Z80EnvWithPC =
-    { env : Z80Env
-    , pc : Int
-    }
-
-
-type alias ValueWithTime =
-    { value : Int
-    , cpu_time : Int
-    }
-
-
 z80env_constructor =
     Z80Env Dict.empty 0
 
 
 
---set_rom : Array Int -> Z80Env -> Z80Env
---set_rom romdata z80env =
---    let
---        rommy =
---            make_spectrum_rom romdata
---    in
---    { z80env | rom48k = rommy }
 --public final int m1(int addr, int ir) {
 --	int n = cpu.time - ctime;
 --	if(n>0) cont(n);
@@ -524,9 +496,6 @@ setMem16 addr value time_input z80env =
 
 
 
---contPortEnv : Int -> Z80Env -> Z80Env
---contPortEnv portn z80env =
---    { z80env | time = z80env.time |> cont_port portn }
 --	public void out(int port, int v)
 --	{
 --		cont_port(port);
