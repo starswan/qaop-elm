@@ -68,7 +68,7 @@ apply_delta z80 rom48k clockTime z80delta =
             z80 |> applyDoubleWithRegistersDelta pcInc clockTime doubleWithRegisterChange rom48k |> CoreOnly
 
         JumpChangeDelta jumpChange ->
-            z80 |> applyJumpChangeDelta clockTime jumpChange
+            z80 |> applyJumpChangeDelta jumpChange
 
         NoParamsDelta noParamChange ->
             z80 |> applyNoParamsDelta clockTime noParamChange rom48k |> CoreOnly
