@@ -3,7 +3,7 @@ module Z80Execute exposing (..)
 import Bitwise exposing (shiftLeftBy)
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
-import GroupED exposing (cpir, inirOtirFlags, ldir, sbc_hl)
+import GroupED exposing (inirOtirFlags, ldir, sbc_hl)
 import PCIncrement exposing (InterruptPCIncrement(..), MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
 import RegisterChange exposing (EDRegisterChange(..), InterruptChange(..), RegisterChange(..), Shifter(..), SixteenBit(..))
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
@@ -68,7 +68,7 @@ apply_delta z80 rom48k clockTime z80delta =
             z80 |> applyDoubleWithRegistersDelta pcInc clockTime doubleWithRegisterChange rom48k |> CoreOnly
 
         JumpChangeDelta jumpChange ->
-            z80 |> applyJumpChangeDelta jumpChange
+            z80 |> applyJumpChangeDelta clockTime jumpChange
 
         NoParamsDelta noParamChange ->
             z80 |> applyNoParamsDelta clockTime noParamChange rom48k |> CoreOnly
