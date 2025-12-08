@@ -63,12 +63,14 @@ jobs:
 
       - name: Yarn install
         run: yarn install
+      #        run this when elm-review has no errors
+      - name: Run Elm review
+        run: yarn run elm-review
       # Run elm tests for correctness before speed tests
       - name: Run Elm tests
         run: yarn run elm-test
       - name: Undebug
         run: cp app/helpers/Undebug.elm app/javascript/Z80Debug.elm
-
       # Run ruby tests in headless mode
       - name: Ruby tests compiled for production mode
         env:
