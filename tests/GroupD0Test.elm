@@ -3,7 +3,8 @@ module GroupD0Test exposing (..)
 import Expect
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
-import Z80Env exposing (mem, setMemWithTime)
+import Z80Env exposing (setMemWithTime)
+import Z80Mem exposing (m1, mem)
 import Z80Rom
 
 
@@ -264,10 +265,10 @@ suite =
                             }
 
                     lo_value =
-                        mem 0xFF75 z80.clockTime z80rom new_z80.env |> .value
+                        mem 0xFF75 z80.clockTime z80rom.z80rom new_z80.env |> .value
 
                     hi_value =
-                        mem 0xFF76 z80.clockTime z80rom new_z80.env |> .value
+                        mem 0xFF76 z80.clockTime z80rom.z80rom new_z80.env |> .value
                 in
                 Expect.equal { pc = 0x18, sp = 0xFF75, lowmem = 1, highmem = 0x80 } { sp = new_z80.env.sp, pc = new_z80.pc, lowmem = lo_value, highmem = hi_value }
         ]
