@@ -1,7 +1,7 @@
 module SimpleFlagOps exposing (..)
 
 import Bitwise exposing (complement)
-import CpuTimeCTime exposing (CpuTimeIncrement(..), InstructionDuration(..))
+import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
 import Utils exposing (BitTest(..), bitMaskFromBit, inverseBitMaskFromBit, shiftLeftBy8, shiftRightBy8)
 import Z80Change exposing (FlagChange(..))

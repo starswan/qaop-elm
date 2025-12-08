@@ -1,9 +1,9 @@
 module Z80Execute exposing (..)
 
 import Bitwise exposing (shiftLeftBy)
-import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDuration(..), addDuration, addExtraCpuTime)
+import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), addDuration, addExtraCpuTime)
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
-import GroupED exposing (cpir, inirOtirFlags, ldir, sbc_hl)
+import GroupED exposing (inirOtirFlags, ldir, sbc_hl)
 import PCIncrement exposing (InterruptPCIncrement(..), MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
 import RegisterChange exposing (EDRegisterChange(..), InterruptChange(..), RegisterChange(..), Shifter(..), SixteenBit(..))
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)

@@ -1,7 +1,7 @@
 module SingleNoParams exposing (..)
 
 import Bitwise exposing (shiftRightBy)
-import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDuration(..), c_TIME_LIMIT)
+import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), c_TIME_LIMIT)
 import Dict exposing (Dict)
 import Z80Core exposing (Z80, Z80Core, add_cpu_time)
 import Z80Debug exposing (debugLog)
@@ -358,11 +358,7 @@ rst new_pc cpu_time z80 =
 
 
 applyRstDelta : CpuTimeCTime -> RstChange -> Z80ROM -> Z80Core -> Z80Core
-applyRstDelta cpu_time z80changeData rom48k z80 =
-    let
-        old_env =
-            z80.env
-    in
+applyRstDelta cpu_time z80changeData _ z80 =
     case z80changeData of
         Rst int ->
             --case 0xC7:push(PC); PC=c-199; break;

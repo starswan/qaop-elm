@@ -2,9 +2,9 @@ module RegisterChange exposing (..)
 
 import Utils exposing (BitTest)
 import Z80Core exposing (DirectionForLDIR)
-import Z80Flags exposing (FlagFunc, FlagRegisters)
+import Z80Flags exposing (FlagFunc)
 import Z80Registers exposing (ChangeMainRegister, ChangeOneRegister)
-import Z80Types exposing (IXIYHL, InterruptMode, MainWithIndexRegisters)
+import Z80Types exposing (IXIYHL, InterruptMode)
 
 
 type Shifter

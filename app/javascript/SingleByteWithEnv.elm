@@ -1,7 +1,7 @@
 module SingleByteWithEnv exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeCTime, CpuTimeIncrement(..), InstructionDuration(..))
+import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import Dict exposing (Dict)
 import Z80Core exposing (Z80Core)
 import Z80Env exposing (Z80Env)
@@ -21,15 +21,15 @@ singleByteZ80Env =
 
 applyEnvChangeDelta : CpuTimeCTime -> SingleByteEnvChange -> Z80Core -> Z80Core
 applyEnvChangeDelta cpu_time z80changeData z80 =
-    let
-        new_pc =
-            Bitwise.and (z80.pc + 1) 0xFFFF
-
-        env =
-            z80.env
-    in
     case z80changeData of
         NewSPValue int ->
+            let
+                new_pc =
+                    Bitwise.and (z80.pc + 1) 0xFFFF
+
+                env =
+                    z80.env
+            in
             { z80
                 | pc = new_pc
                 , clockTime = cpu_time

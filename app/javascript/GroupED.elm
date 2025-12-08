@@ -10,13 +10,13 @@ import Bitwise exposing (complement, shiftLeftBy, shiftRightBy)
 import CpuTimeCTime exposing (InstructionDuration(..), addCpuTimeTime)
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
-import RegisterChange exposing (EDRegisterChange(..), InterruptChange(..), RegisterChange(..), SixteenBit(..))
+import RegisterChange exposing (EDRegisterChange(..), InterruptChange(..), SixteenBit(..))
 import Utils exposing (char, shiftLeftBy8, shiftRightBy8, toHexString2)
 import Z80Change exposing (FlagChange(..), Z80Change(..))
 import Z80Core exposing (DirectionForLDIR(..), Z80Core, add_cpu_time, imm16)
 import Z80Debug exposing (debugLog)
 import Z80Delta exposing (Z80Delta(..))
-import Z80Env exposing (Z80Env, mem, mem16, setMem16, setMem16IgnoringTime, setMemIgnoringTime, z80_in, z80_out)
+import Z80Env exposing (mem, mem16, setMem16, setMem16IgnoringTime, setMemIgnoringTime, z80_in, z80_out)
 import Z80Flags exposing (FlagRegisters, c_F3, c_F5, c_F53, c_FC, c_FH, f_szh0n0p, z80_sub)
 import Z80Registers exposing (ChangeMainRegister(..))
 import Z80Rom exposing (Z80ROM)
@@ -442,14 +442,15 @@ group_ed rom48k z80_core =
         new_pc =
             Bitwise.and (z80_core.pc + 1) 0xFFFF
 
-        z80 =
-            { z80_core | pc = new_pc, interrupts = new_ints } |> add_cpu_time 4
-
         ed_func =
             group_ed_dict |> Dict.get c.value
     in
     case ed_func of
         Just f ->
+            let
+                z80 =
+                    { z80_core | pc = new_pc, interrupts = new_ints } |> add_cpu_time 4
+            in
             z80 |> f rom48k
 
         Nothing ->
@@ -1178,79 +1179,78 @@ type alias Z80IniOuti =
     }
 
 
-inir : DirectionForLDIR -> Bool -> Z80ROM -> Z80Core -> Z80IniOuti
-inir direction repeat rom48k z80_core =
-    let
-        d_original =
-            case direction of
-                Forwards ->
-                    1
 
-                Backwards ->
-                    -1
-
-        hl =
-            z80_core.main.hl + d_original |> Bitwise.and 0xFFFF
-
-        bc =
-            z80_core.main |> get_bc
-
-        flags =
-            z80_core.flags
-
-        new_bc =
-            bc - 256 |> Bitwise.and 0xFFFF
-
-        v =
-            z80_core.env |> z80_in bc rom48k.keyboard z80_core.clockTime
-
-        d =
-            (d_original + new_bc |> Bitwise.and 0xFFFF) + v.value
-
-        pc =
-            if repeat && (new_bc > 0) then
-                z80_core.pc
-
-            else
-                z80_core.pc + 2
-    in
-    { flags = flags |> inirOtirFlags d new_bc v.value, hl = hl, bc = new_bc }
-
-
-otir : DirectionForLDIR -> Bool -> Z80ROM -> Z80Core -> Z80IniOuti
-otir direction repeat rom48k z80_core =
-    let
-        hl =
-            case direction of
-                Forwards ->
-                    z80_core.main.hl + 1 |> Bitwise.and 0xFFFF
-
-                Backwards ->
-                    z80_core.main.hl - 1 |> Bitwise.and 0xFFFF
-
-        in_bc =
-            z80_core.main |> get_bc
-
-        flags =
-            z80_core.flags
-
-        v =
-            z80_core.env |> mem hl z80_core.clockTime rom48k
-
-        new_bc =
-            in_bc - 256 |> Bitwise.and 0xFFFF
-
-        ( env_1, time ) =
-            z80_core.env |> z80_out new_bc v.value z80_core.clockTime
-
-        pc =
-            if repeat && (new_bc > 0) then
-                z80_core.pc
-
-            else
-                z80_core.pc + 2
-    in
-    { flags = flags |> inirOtirFlags hl new_bc v.value, hl = hl, bc = new_bc }
+--inir : DirectionForLDIR -> Bool -> Z80ROM -> Z80Core -> Z80IniOuti
+--inir direction repeat rom48k z80_core =
+--    let
+--        d_original =
+--            case direction of
+--                Forwards ->
+--                    1
+--
+--                Backwards ->
+--                    -1
+--
+--        hl =
+--            z80_core.main.hl + d_original |> Bitwise.and 0xFFFF
+--
+--        bc =
+--            z80_core.main |> get_bc
+--
+--        flags =
+--            z80_core.flags
+--
+--        new_bc =
+--            bc - 256 |> Bitwise.and 0xFFFF
+--
+--        v =
+--            z80_core.env |> z80_in bc rom48k.keyboard z80_core.clockTime
+--
+--        d =
+--            (d_original + new_bc |> Bitwise.and 0xFFFF) + v.value
+--
+--        pc =
+--            if repeat && (new_bc > 0) then
+--                z80_core.pc
+--
+--            else
+--                z80_core.pc + 2
+--    in
+--    { flags = flags |> inirOtirFlags d new_bc v.value, hl = hl, bc = new_bc }
+--otir : DirectionForLDIR -> Bool -> Z80ROM -> Z80Core -> Z80IniOuti
+--otir direction repeat rom48k z80_core =
+--    let
+--        hl =
+--            case direction of
+--                Forwards ->
+--                    z80_core.main.hl + 1 |> Bitwise.and 0xFFFF
+--
+--                Backwards ->
+--                    z80_core.main.hl - 1 |> Bitwise.and 0xFFFF
+--
+--        in_bc =
+--            z80_core.main |> get_bc
+--
+--        flags =
+--            z80_core.flags
+--
+--        v =
+--            z80_core.env |> mem hl z80_core.clockTime rom48k
+--
+--        new_bc =
+--            in_bc - 256 |> Bitwise.and 0xFFFF
+--
+--        ( env_1, time ) =
+--            z80_core.env |> z80_out new_bc v.value z80_core.clockTime
+--
+--        pc =
+--            if repeat && (new_bc > 0) then
+--                z80_core.pc
+--
+--            else
+--                z80_core.pc + 2
+--    in
+--    { flags = flags |> inirOtirFlags hl new_bc v.value, hl = hl, bc = new_bc }
 
 
 inirOtirFlags : Int -> Int -> Int -> FlagRegisters -> FlagRegisters

@@ -1,6 +1,6 @@
 module Z80Delta exposing (..)
 
-import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimeIncrement, InstructionDuration, addCpuTimeTime)
+import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, InstructionDuration, addCpuTimeTime)
 import Utils exposing (toHexString2)
 import Z80Core exposing (Z80, Z80Core)
 import Z80Debug exposing (debugTodo)

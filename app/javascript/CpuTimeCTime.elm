@@ -44,11 +44,6 @@ c_SCRENDT =
     191 * 224 + 126
 
 
-type alias CpuTime =
-    { cpu_time : Int
-    }
-
-
 type CTime
     = NoCont
     | ContUntil Int
@@ -87,13 +82,6 @@ type alias CpuTimePcAnd16BitValue =
     }
 
 
-type alias CpuTimeSpAndValue =
-    { time : CpuTimeCTime
-    , sp : Int
-    , value : Int
-    }
-
-
 type alias CpuTimeSpAnd16BitValue =
     { time : CpuTimeCTime
     , sp : Int
@@ -105,10 +93,6 @@ type alias CpuTimeAndPc =
     { time : CpuTimeCTime
     , pc : Int
     }
-
-
-type CpuTimeIncrement
-    = CpuTimeIncrement Int
 
 
 
@@ -279,33 +263,30 @@ cont_port portn z80env =
 
                     else
                         z80env
-
-                env2 =
-                    if Bitwise.and portn 0xC000 /= 0x4000 then
-                        let
-                            env3 =
-                                if Bitwise.and portn 0x01 == 0 then
-                                    env1_time |> cont1 1
-
-                                else
-                                    env1_time
-                        in
-                        { env3 | ctime = NoCont }
-
-                    else
-                        let
-                            env3 =
-                                { env1_time | ctime = ContUntil env1_time.cpu_time }
-
-                            contval =
-                                Bitwise.and portn 1 |> shiftLeftBy 1
-
-                            env4 =
-                                env3 |> cont (2 + contval)
-                        in
-                        env4 |> addCpuTimeTime 4
             in
-            env2
+            if Bitwise.and portn 0xC000 /= 0x4000 then
+                let
+                    env3 =
+                        if Bitwise.and portn 0x01 == 0 then
+                            env1_time |> cont1 1
+
+                        else
+                            env1_time
+                in
+                { env3 | ctime = NoCont }
+
+            else
+                let
+                    env3 =
+                        { env1_time | ctime = ContUntil env1_time.cpu_time }
+
+                    contval =
+                        Bitwise.and portn 1 |> shiftLeftBy 1
+
+                    env4 =
+                        env3 |> cont (2 + contval)
+                in
+                env4 |> addCpuTimeTime 4
 
 
 addCpuTimeTime : Int -> CpuTimeCTime -> CpuTimeCTime
