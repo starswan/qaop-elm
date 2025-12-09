@@ -3,10 +3,10 @@ module SingleMainWithFlags exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
-import Utils exposing (BitTest(..), shiftLeftBy8, shiftRightBy8)
+import Utils exposing (BitTest, shiftLeftBy8, shiftRightBy8)
 import Z80Change exposing (Z80Change(..))
 import Z80Flags exposing (FlagRegisters, IntWithFlags, adc, add16, dec, inc, sbc, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
-import Z80Registers exposing (ChangeMainRegister(..), CoreRegister(..))
+import Z80Registers exposing (CoreRegister(..))
 import Z80Types exposing (MainWithIndexRegisters, get_bc, get_de)
 
 

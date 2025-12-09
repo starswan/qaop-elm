@@ -5,8 +5,8 @@
 
 module Qaop exposing (..)
 
-import Keyboard exposing (ControlKey(..), KeyEvent(..))
-import Loader exposing (LoadAction(..), Loader, paramHandler)
+import Keyboard exposing (KeyEvent)
+import Loader exposing (Loader, paramHandler)
 import Spectrum exposing (Spectrum)
 import Utils exposing (compact)
 

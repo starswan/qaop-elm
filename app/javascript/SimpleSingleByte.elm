@@ -1,7 +1,7 @@
 module SimpleSingleByte exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeIncrement(..), InstructionDuration(..))
+import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
 import RegisterChange exposing (RegisterChange(..), Shifter(..))
 import Utils exposing (BitTest(..), shiftRightBy8)

@@ -1,6 +1,6 @@
 module MessageHandler exposing (..)
 
-import Bytes exposing (Bytes, Endianness(..))
+import Bytes exposing (Bytes)
 import Http exposing (Error, Expect, Metadata, Response)
 import Tapfile exposing (Tapfile, parseTapFile)
 import Z80Rom exposing (Z80ROM, parseRomFile)
@@ -18,10 +18,10 @@ bytesToTap httpResponse =
         Http.NetworkError_ ->
             Err Http.NetworkError
 
-        Http.BadStatus_ metadata body ->
+        Http.BadStatus_ metadata _ ->
             Err (Http.BadStatus metadata.statusCode)
 
-        Http.GoodStatus_ metadata body ->
+        Http.GoodStatus_ _ body ->
             --let
             -- would be nice to parse headers - but we seem to get a
             -- gzipped body size not an actual size which makes things tough
@@ -45,10 +45,10 @@ bytesToRom httpResponse =
         Http.NetworkError_ ->
             Err Http.NetworkError
 
-        Http.BadStatus_ metadata body ->
+        Http.BadStatus_ metadata _ ->
             Err (Http.BadStatus metadata.statusCode)
 
-        Http.GoodStatus_ metadata body ->
+        Http.GoodStatus_ _ body ->
             --let
             -- would be nice to parse headers - but we seem to get a
             -- gzipped body size not an actual size which makes things tough

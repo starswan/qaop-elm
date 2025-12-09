@@ -1,156 +1,17 @@
 module GroupCB exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimePcAnd16BitValue, InstructionDuration(..))
+import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
 import RegisterChange exposing (RegisterChange(..), Shifter(..))
 import SingleEnvWithMain exposing (SingleEnvMainChange(..))
 import Utils exposing (BitTest(..), bitMaskFromBit, inverseBitMaskFromBit, shiftLeftBy8, shiftRightBy8)
 import Z80Change exposing (Z80Change(..))
 import Z80Env exposing (Z80Env)
-import Z80Flags exposing (FlagRegisters, IntWithFlags, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit)
-import Z80Registers exposing (ChangeMainRegister(..), ChangeOneRegister(..), CoreRegister(..))
+import Z80Flags exposing (FlagRegisters, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit)
+import Z80Registers exposing (ChangeOneRegister(..), CoreRegister(..))
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IntWithFlagsTimeAndPC, MainWithIndexRegisters)
-
-
-
---
---  private void group_xy_cb(int xy)
---  {
---    int pc = PC;
---    int a = MP = (char)(xy + (byte)env.mem(pc));
---    time += 3;
---    int c = env.mem((char)(pc+1));
---    PC = (char)(pc+2);
---    time += 5;
---    int v = env.mem(a);
---    time += 4;
---    int o = c>>>3 & 7;
---group_xy_cb : IXIY -> Z80ROM -> Z80Core -> Z80Delta
---group_xy_cb ixiyhl rom48k z80 =
---    let
---        xy =
---            get_ixiy_xy ixiyhl z80.main
---
---        offset =
---            z80.env |> mem z80.pc z80.env.time rom48k
---
---        addr =
---            char (xy + byte offset.value)
---
---        env_1 =
---            z80.env
---
---        c =
---            z80.env |> mem (char (z80.pc + 1)) (offset.time |> addCpuTimeTime 3) rom48k
---
---        new_pc =
---            z80 |> inc_pc2
---
---        v1 =
---            z80.env |> mem addr (c.time |> addCpuTimeTime 5) rom48k
---
---        z80_3 =
---            { z80 | pc = new_pc, env = { env_1 | time = v1.time |> addCpuTimeTime 4 } }
---
---        o =
---            Bitwise.and (shiftRightBy 3 c.value) 7
---
---        cAndC0 =
---            Bitwise.and c.value 0xC0
---
---        --    switch(c&0xC0) {
---        --      case 0x00: v = shifter(o, v); break;
---        --      case 0x40: bit(o, v); Ff=Ff&~F53 | a>>8&F53; return;
---        --      case 0x80: v &= ~(1<<o); break;
---        --      case 0xC0: v |= 1<<o; break;
---        --    }
---        v2 =
---            case cAndC0 of
---                0x00 ->
---                    let
---                        flagRegs =
---                            z80_3.flags
---
---                        v_in =
---                            v1.value
---                    in
---                    case Bitwise.and o 7 of
---                        0 ->
---                            flagRegs |> shifter0 v_in
---
---                        1 ->
---                            flagRegs |> shifter1 v_in
---
---                        2 ->
---                            flagRegs |> shifter2 v_in
---
---                        3 ->
---                            flagRegs |> shifter3 v_in
---
---                        4 ->
---                            flagRegs |> shifter4 v_in
---
---                        5 ->
---                            flagRegs |> shifter5 v_in
---
---                        6 ->
---                            flagRegs |> shifter6 v_in
---
---                        _ ->
---                            flagRegs |> shifter7 v_in
---
---                0x40 ->
---                    let
---                        flags =
---                            bit o v1.value z80_3.flags
---                    in
---                    IntWithFlags v1.value { flags | ff = Bitwise.or (Bitwise.and flags.ff (complement c_F53)) (shiftRightBy (Bitwise.and 8 c_F53) addr) }
---
---                0x80 ->
---                    IntWithFlags (Bitwise.and v1.value (complement (shiftLeftBy o 1))) z80_3.flags
---
---                _ ->
---                    IntWithFlags (Bitwise.or v1.value (shiftLeftBy o 1)) z80_3.flags
---
---        new_env =
---            if cAndC0 == 0x40 then
---                z80_3.env
---
---            else
---                z80_3.env |> setMem addr v2.value |> addCpuTimeEnv 3
---
---        --y = debug_log "xy_cb2" ((z80.pc |> toHexString) ++ " c " ++ (c.value |> toHexString2) ++
---        --                                                   " set " ++ (a |> toHexString) ++
---        --                                                   " from " ++ (v1.value |> toHexString2) ++
---        --                                                   " to " ++ (v2.value |> toHexString2)) new_env
---        --    env.mem(a, v);
---        --    time += 3;
---        z80_4 =
---            { z80_3 | flags = v2.flags, env = new_env }
---
---        --    switch(c&0x07) {
---        --      case 0: B = v; break;
---        --      case 1: C = v; break;
---        --      case 2: D = v; break;
---        --      case 3: E = v; break;
---        --      case 4: HL = HL&0x00FF | v<<8; break;
---        --      case 5: HL = HL&0xFF00 | v; break;
---        --      case 7: A = v; break;
---        --    }
---        caseval =
---            Bitwise.and c.value 0x07
---    in
---    if (caseval /= 6) && (cAndC0 /= 0x40) then
---        let
---            ( main, flags, env ) =
---                set408bitHL caseval v2.value ( z80.main, z80.flags, z80.env )
---        in
---        { z80_4 | main = main, flags = flags, env = env } |> WholeCore
---
---    else
---        z80_4 |> WholeCore
+import Z80Types exposing (MainWithIndexRegisters)
 
 
 singleEnvMainRegsCB : Dict Int ( MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )

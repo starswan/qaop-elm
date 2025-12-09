@@ -19,7 +19,7 @@ import Loader exposing (LoadAction(..), trimActionList)
 import MessageHandler exposing (bytesToRom, bytesToTap)
 import Qaop exposing (Qaop, pause)
 import ScreenStorage exposing (ScreenLine, Z80Screen)
-import Spectrum exposing (Spectrum, frames, new_tape)
+import Spectrum exposing (frames, new_tape)
 import SpectrumColour exposing (borderColour)
 import Svg exposing (Svg, g, line, rect, svg)
 import Svg.Attributes exposing (fill, height, rx, stroke, viewBox, width, x1, x2, y1, y2)
@@ -159,16 +159,8 @@ mapScreenLineToSvg flash index24 screenLine =
                         in
                         vec |> List.map (mapLineToSvg y_index)
                     )
-
-        folded4 : List (Svg Message)
-        folded4 =
-            folded2 |> Vector8.map (\row -> g [] row) |> Vector8.toList
-
-        folded5 : Svg Message
-        folded5 =
-            folded4 |> g []
     in
-    folded5
+    folded2 |> Vector8.map (\row -> g [] row) |> Vector8.toList |> g []
 
 
 screenDataNodeList : Bool -> Vector24 ScreenLine -> Vector24 (Svg Message)

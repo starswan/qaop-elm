@@ -143,17 +143,17 @@ kempstonMapping kempston =
 z80_keyboard_input : Int -> Keyboard -> Int
 z80_keyboard_input portnum keyboard =
     if Bitwise.and portnum 0xE0 == 0 then
-        let
-            val =
-                if keyboard.kempston |> List.isEmpty then
-                    0xFF
+        --let
+        --    val =
+        if keyboard.kempston |> List.isEmpty then
+            0xFF
 
-                else
-                    keyboard.kempston |> List.foldl (\kemp total -> Bitwise.or (kempstonMapping kemp) total) 0
-        in
+        else
+            keyboard.kempston |> List.foldl (\kemp total -> Bitwise.or (kempstonMapping kemp) total) 0
+        --in
         -- can't log this as Manic Miner seems to poll it *very* fast
         --debugLog "kempston" (val |> toHexString2) val
-        val
+        --val
 
     else if Bitwise.and portnum 0x01 == 0 then
         let
@@ -257,7 +257,8 @@ update_keyboard keys =
         -- more idiomatic to filter out the Nothings when mapping keys
         k_list =
             --keys |> List.map keyEventToValue |> List.filter (\( v, kemp ) -> v >= 0)
-            keys |> List.map keyEventToValue |> List.filterMap identity
+            --keys |> List.map keyEventToValue |> List.filterMap identity
+            keys |> List.filterMap keyEventToValue
 
         s1 =
             k_list |> List.map Tuple.first |> List.foldl (\k total -> Bitwise.or k total) 0

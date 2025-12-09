@@ -15,8 +15,7 @@ import Z80Types exposing (MainWithIndexRegisters)
 
 
 type DoubleWithRegisterChange
-    = RelativeJumpWithTimeOffset CoreRegister Int (Maybe Int) Int
-    | DoubleRegChangeStoreIndirect Int Int
+    = DoubleRegChangeStoreIndirect Int Int
     | NewHLRegisterValue Int
     | NewIXRegisterValue Int
     | NewIYRegisterValue Int
@@ -318,25 +317,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                     z80.pc + 3
     in
     case z80changeData of
-        RelativeJumpWithTimeOffset single8BitChange regvalue maybeInt timeOffset ->
-            let
-                pc =
-                    case maybeInt of
-                        Just jump ->
-                            Bitwise.and (new_pc + jump) 0xFFFF
-
-                        Nothing ->
-                            Bitwise.and new_pc 0xFFFF
-
-                main =
-                    z80.main |> applySimple8BitChange single8BitChange regvalue
-            in
-            { z80
-                | main = main
-                , pc = pc
-                , clockTime = cpu_time |> addCpuTimeTime timeOffset
-            }
-
         DoubleRegChangeStoreIndirect addr value ->
             let
                 pc =

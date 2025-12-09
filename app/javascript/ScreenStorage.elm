@@ -204,7 +204,7 @@ memoryRow screenLine index8 =
             (index8 |> Vector8.indexToInt) * 32
 
         d0 =
-            screenLine |> getMemValue (dataOffset + 0)
+            screenLine |> getMemValue dataOffset
 
         d1 =
             screenLine |> getMemValue (dataOffset + 1)
@@ -298,8 +298,5 @@ memoryRow screenLine index8 =
 
         d31 =
             screenLine |> getMemValue (dataOffset + 31)
-
-        data_row =
-            Vector32.from32 d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 d17 d18 d19 d20 d21 d22 d23 d24 d25 d26 d27 d28 d29 d30 d31
     in
-    data_row
+    Vector32.from32 d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 d17 d18 d19 d20 d21 d22 d23 d24 d25 d26 d27 d28 d29 d30 d31
