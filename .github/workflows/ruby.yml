@@ -51,15 +51,19 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
 
+      - name: debug
+        run: env
+
       - name: Set up elm cache
         uses: actions/cache@v4
         with:
-          path: | 
-            ${HOME}/.elm 
-            elm-stuff
-          key: ${{ runner.os }}-elm-${{ hashFiles('yarn.lock') }}
+          path: /home/runner/.elm
+          key: ${{ runner.os }}-elmish-${{ hashFiles('yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-elm-
+            ${{ runner.os }}-elmish-
+
+      - name: Restore $HOME/.elm from tar file
+        run: bin/restore-cache
 
       - name: Yarn install
         run: yarn install
