@@ -1,0 +1,40 @@
+# --- Script Configuration ---
+
+# 1. Determine the source directory for Elm configurations.
+# This uses parameter expansion: ${VAR:-DEFAULT_VALUE}
+# It checks if $ELM_HOME is set and non-empty. If it is, that path is used.
+# Otherwise, it falls back to the default: $HOME/.elm.
+ELM_HOME_DIR=${ELM_HOME:-$HOME/.elm}
+OUTPUT_FILENAME="elm-home.tar.gz"
+
+echo "Attempting to locate Elm home directory..."
+echo "Source directory determined: $ELM_HOME_DIR"
+
+# 2. Check if the determined directory actually exists.
+if [ -d "$ELM_HOME_DIR" ]; then
+    echo "Directory found. Starting compression..."
+
+    # Create the gzipped tarball in the current working directory.
+    # Options used:
+    # -c: Create a new archive
+    # -z: Compress the archive using gzip
+    # -f: Specify the filename
+    # -C "$ELM_HOME_DIR": Change the current directory to $ELM_HOME_DIR *before* archiving.
+    # .: This tells tar to archive all contents of the newly changed directory (i.e., the contents of $ELM_HOME_DIR).
+    #    This ensures the tarball contents start at the root level (e.g., elm-stuff/, not /home/user/.elm/elm-stuff/).
+    tar -czf "$OUTPUT_FILENAME" -C "$ELM_HOME_DIR" .
+
+    # Check the exit status of the tar command
+    if [ $? -eq 0 ]; then
+        echo "✅ Success! Archive '$OUTPUT_FILENAME' created in the current directory."
+        echo "Contents were taken from: $ELM_HOME_DIR"
+    else
+        echo "❌ Error: The 'tar' command failed to create the archive."
+        exit 1
+    fi
+
+else
+    echo "❌ Error: The specified Elm directory does not exist or is not a directory."
+    echo "Could not find: $ELM_HOME_DIR"
+    exit 1
+fi

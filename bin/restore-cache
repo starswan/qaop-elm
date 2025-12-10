@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+# --- Error Handling and Configuration ---
+# set -e: Exit immediately if a command exits with a non-zero status.
+# set -u: Treat unset variables as an error and exit immediately.
+# set -o pipefail: Use the exit status of the rightmost command that failed in a pipeline.
+set -euo pipefail
+
+# 1. Configuration
+ELM_HOME_DIR=${ELM_HOME:-$HOME/.elm}
+INPUT_FILENAME="elm-home.tar.gz"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+
+echo "--- Elm Home Restoration Script ---"
+
+# 2. Check for the input tarball
+if [ ! -f "$INPUT_FILENAME" ]; then
+    echo "❌ Error: Input file '$INPUT_FILENAME' not found in the current directory."
+    echo "Please ensure the backup tarball is present."
+    exit 1
+fi
+
+echo "Input archive found: $INPUT_FILENAME"
+echo "Target directory: $ELM_HOME_DIR"
+
+# 3. Backup existing directory if it exists
+if [ -d "$ELM_HOME_DIR" ]; then
+    BACKUP_NAME="${ELM_HOME_DIR}_backup_${TIMESTAMP}"
+    echo "Found existing Elm home directory."
+    
+    # Move/rename the existing directory for backup
+    echo "Creating backup at: $BACKUP_NAME"
+    mv "$ELM_HOME_DIR" "$BACKUP_NAME"
+    
+    echo "✅ Backup complete."
+fi
+
+# 4. Create the new, empty target directory
+echo "Creating new target directory: $ELM_HOME_DIR"
+mkdir -p "$ELM_HOME_DIR"
+
+# 5. Extract the content into the target directory
+echo "Extracting contents of $INPUT_FILENAME into $ELM_HOME_DIR..."
+
+# Options used for extraction:
+# -x: Extract files from the archive
+# -z: Filter the archive through gzip (decompress)
+# -f: Specify the filename
+# -C "$ELM_HOME_DIR": Change to the target directory *before* extraction.
+# Note: Since the original script used '-C' and '.', the tar contents start at the root, 
+# so extracting them directly into $ELM_HOME_DIR is the correct approach.
+tar -xzf "$INPUT_FILENAME" -C "$ELM_HOME_DIR"
+
+echo "==================================="
+echo "✅ Restoration Success!"
+echo "The contents of '$INPUT_FILENAME' have been successfully extracted to '$ELM_HOME_DIR'."
+if [ -v BACKUP_NAME ]; then
+    echo "Previous content backed up to: $BACKUP_NAME"
+fi
+echo "==================================="
