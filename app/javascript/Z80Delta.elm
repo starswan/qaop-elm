@@ -19,13 +19,13 @@ type
       -- only used by ED78
     | CpuTimeWithSpAndPc CpuTimeCTime Int Int
     | InterruptsWithCpuTime InterruptRegisters CpuTimeCTime
-    | MainRegsWithCpuTime MainWithIndexRegisters CpuTimeCTime
+      --| MainRegsWithCpuTime MainWithIndexRegisters CpuTimeCTime
       -- only used by RLD
     | FlagsWithPcEnvAndCpuTime FlagRegisters Int Z80Env Int
     | UnknownIntValue String Int
       -- only used by CPIR
     | HLBCWithFlagsAndPc Int Int FlagRegisters Int
-    | NewAValue Int
+      --| NewAValue Int
     | NoOp
 
 
@@ -77,15 +77,13 @@ applyDeltaWithChanges z80delta z80 =
         UnknownIntValue string int ->
             debugTodo string (int |> toHexString2) z80
 
+        --MainRegsWithCpuTime mainWithIndexRegisters cpuTimeCTime ->
+        --    { z80 | pc = z80delta.pc, env = z80_env, clockTime = cpuTimeCTime, main = mainWithIndexRegisters, interrupts = z80delta.interrupts }
+        --NewAValue int ->
+        --    let
+        --        flags =
+        --            z80.flags
+        --    in
+        --    { z80 | pc = z80delta.pc, flags = { flags | a = int }, env = z80_env, clockTime = z80delta.time, interrupts = z80delta.interrupts }
         NoOp ->
             { z80 | pc = z80delta.pc, env = z80_env, clockTime = z80delta.time, interrupts = z80delta.interrupts }
-
-        NewAValue int ->
-            let
-                flags =
-                    z80.flags
-            in
-            { z80 | pc = z80delta.pc, flags = { flags | a = int }, env = z80_env, clockTime = z80delta.time, interrupts = z80delta.interrupts }
-
-        MainRegsWithCpuTime mainWithIndexRegisters cpuTimeCTime ->
-            { z80 | pc = z80delta.pc, env = z80_env, clockTime = cpuTimeCTime, main = mainWithIndexRegisters, interrupts = z80delta.interrupts }

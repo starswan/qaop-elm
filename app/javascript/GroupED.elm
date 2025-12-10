@@ -36,22 +36,9 @@ group_ed_dict : Dict Int (Z80ROM -> Z80Core -> Z80Delta)
 group_ed_dict =
     Dict.fromList
         [ ( 0x43, execute_ED43 )
-
-        --, ( 0x46, setImED46 )
         , ( 0x47, execute_ED47 )
-
-        --, ( 0x4A, adc_hl_bc )
         , ( 0x4B, execute_ED4B )
-
-        --, ( 0x4E, setImED4E )
-        --, ( 0x4F, ld_r_a )
-        --, ( 0x5A, adc_hl_de )
-        --, ( 0x6A, adc_hl_hl )
         , ( 0x7A, adc_hl_sp )
-
-        -- case 0x4F: r(A); time++; break;
-        -- case 0x67: rrd(); break;
-        -- case 0x6F: rld(); break;
         , ( 0x78, execute_ED78 )
         , ( 0x53, execute_ED53 )
         , ( 0x63, execute_ED63 )
@@ -59,23 +46,14 @@ group_ed_dict =
         , ( 0x73, execute_ED73 )
         , ( 0x5B, execute_ED5B )
         , ( 0x6B, execute_ED6B )
-
-        --, ( 0x56, setIm0x56 )
-        --, ( 0x5E, setIm0x5E )
-        --, ( 0x66, setImED66 )
         , ( 0x67, rrd )
         , ( 0x6F, rld )
-
-        --, ( 0x6E, setImED6E )
-        --, ( 0x76, setImED76 )
-        --, ( 0x7E, setImED7E )
         , ( 0x70, execute_ED70 )
         , ( 0xA1, ed_cpi )
         , ( 0xA9, ed_cpd )
         , ( 0xB1, ed_cpir )
         , ( 0xB9, ed_cpdr )
 
-        --, ( 0x62, execute_ED62 )
         -- ED08/ED09 no-op in Java version of Qaop
         , ( 0x00, \rom48k z80 -> NoOp )
         , ( 0x01, \rom48k z80 -> NoOp )
@@ -161,19 +139,6 @@ execute_ED43 rom48k z80 =
     EnvWithPcAndTime env v.pc newTime
 
 
-
---setImED46 : Z80ROM -> Z80Core -> Z80Delta
---setImED46 rom48k z80 =
---    --z80 |> set_im_value 0x46
---    NoOp
---
---
---setImED4E : Z80ROM -> Z80Core -> Z80Delta
---setImED4E rom48k z80 =
---    --z80 |> set_im_value 0x4E
---    NoOp
-
-
 execute_ED47 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED47 rom48k z80 =
     -- case 0x47: i(A); time++; break;
@@ -201,13 +166,6 @@ execute_ED4B rom48k z80 =
     in
     --{ z80_1 | env = { env | time = v2.time } } |> set_bc v2.value |> add_cpu_time 6 |> Whole
     MainRegsWithPcAndCpuTime (z80.main |> set_bc_main v2.value16) v1.pc (v2.time |> addCpuTimeTime 6)
-
-
-
---ld_r_a : Z80ROM -> Z80Core -> Z80Delta
---ld_r_a rom48k z80 =
---    -- case 0x4F: r(A); time++; break;
---    NewRValue z80.flags.a
 
 
 execute_ED53 : Z80ROM -> Z80Core -> Z80Delta
@@ -312,18 +270,6 @@ execute_ED73 rom48k z80 =
     EnvWithPcAndTime env2 v.pc (z80.clockTime |> addCpuTimeTime 6)
 
 
-
---ld_a_i : Z80ROM -> Z80Core -> Z80Delta
---ld_a_i rom48k z80 =
---     case 0x57: ld_a_ir(IR>>>8); break;
---NewAValue (z80.main.ir |> shiftRightBy8)
---ld_a_r : Z80ROM -> Z80Core -> Z80Delta
---ld_a_r rom48k z80 =
---    --int r() {return R&0x7F | IR&0x80;}
---    -- case 0x5F: ld_a_ir(r()); break;
---    NewAValue z80.interrupts.r
-
-
 execute_ED78 : Z80ROM -> Z80Core -> Z80Delta
 execute_ED78 rom48k z80 =
     --  case 0x78: MP=(v=B<<8|C)+1; f_szh0n0p(A=env.in(v)); time+=4; break;
@@ -370,34 +316,6 @@ ed_cpdr : Z80ROM -> Z80Core -> Z80Delta
 ed_cpdr rom48k z80 =
     -- case 0xB9: cpir(-1,true); break;
     z80 |> cpir Backwards True rom48k
-
-
-
--- case 0x46:
--- case 0x4E:
--- case 0x56:
--- case 0x5E:
--- case 0x66:
--- case 0x6E:
--- case 0x76:
--- case 0x7E: IM = c>>3&3; break;
---adc_hl_bc : Z80ROM -> Z80Core -> Z80Delta
---adc_hl_bc _ z80 =
---    -- case 0x4A: adc_hl(B<<8|C); break;
---    --0x4A -> z80 |> adc_hl (z80 |> get_bc)
---    z80 |> adc_hl (z80.main |> get_bc)
---adc_hl_de : Z80ROM -> Z80Core -> Z80Delta
---adc_hl_de _ z80 =
---    ---- case 0x5A: adc_hl(D<<8|E); break;
---    --0x5A -> z80 |> adc_hl (z80 |> get_de)
---    z80 |> adc_hl (z80.main |> get_de)
---
---
---adc_hl_hl : Z80ROM -> Z80Core -> Z80Delta
---adc_hl_hl _ z80 =
---    ---- case 0x6A: adc_hl(HL); break;
---    --0x6A -> z80 |> adc_hl z80.main.hl
---    z80 |> adc_hl z80.main.hl
 
 
 adc_hl_sp : Z80ROM -> Z80Core -> Z80Delta
@@ -564,13 +482,6 @@ sbc_hl b z80 =
     ( { flags | ff = ff, fa = fa, fb = fb, fr = fr }, { main | hl = r } )
 
 
-
---set_im_direct : Int -> Z80Core -> Z80Delta
---set_im_direct value z80 =
---    --{ z80 | interrupts = { ints | iM = value } } |> Whole
---    SetImValue value
-
-
 ldir : DirectionForLDIR -> Bool -> Z80ROM -> Z80Core -> Z80Core
 ldir incOrDec repeat rom48k z80 =
     --  private void ldir(int i, boolean r)
@@ -695,8 +606,6 @@ set_i v z80_core =
 --    MP = a+1;
 --    time += 7;
 --  }
---ed_adc_hl : Int -> MainWithIndexRegisters -> FlagRegisters -> ( FlagRegisters, Int )
---ed_adc_hl b z80_main z80_flags =
 
 
 adc_hl : Int -> Z80Core -> Z80Delta
@@ -708,8 +617,6 @@ adc_hl b z80 =
         ( flags, hl ) =
             ed_adc_hl b z80_main z80.flags
     in
-    --{ z80 | main = { main | hl = r }, flags = { flags | ff = ff, fa = fa, fb = fb, fr = fr} } |> add_cpu_time 7
-    --FlagsWithPCMainAndCpuTime { flags | ff = ff, fa = fa, fb = fb, fr = fr } z80.pc { main | hl = r } (z80.env.time |> addCpuTimeTime 7)
     FlagsWithPCMainAndCpuTime flags z80.pc { z80_main | hl = hl } (z80.clockTime |> addCpuTimeTime 7)
 
 
