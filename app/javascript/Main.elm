@@ -7,6 +7,7 @@ module Main exposing (..)
 
 import Bitwise exposing (complement)
 import Browser
+import Browser.Events
 import Delay
 import Dict exposing (Dict)
 import Html exposing (Attribute, Html, button, div, h2, span, text)
@@ -399,8 +400,10 @@ subscriptions model =
 
     else
         let
+            --ticker =
+            --    Time.every (model.tickInterval |> toFloat) Tick
             ticker =
-                Time.every (model.tickInterval |> toFloat) Tick
+                Browser.Events.onAnimationFrame Tick
 
             flasher =
                 Time.every (model.tickInterval * 16 |> toFloat) FlipFlash
