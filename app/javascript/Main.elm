@@ -129,15 +129,6 @@ type alias Flags =
 
 init : Flags -> ( Model, Cmd Message )
 init data =
-    --let
-    --    params =
-    --        [ ( "rom", data.rom )
-    --        , ( "tape", data.tape )
-    --        ]
-    --( newQaop, cmd ) =
-    --    Qaop.new params |> run
-    --in
-    --( Model newQaop c_TICKTIME 0 0 Nothing False False, cmd )
     ( Model (Loading (RomURL data.rom) Nothing data.tape) c_TICKTIME, romLoad data.rom )
 
 
