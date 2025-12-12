@@ -1,5 +1,6 @@
 module CBD0Test exposing (..)
 
+import Dict
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Triple
@@ -41,7 +42,7 @@ suite =
             { z80env = z80.env, time = clock.clockTime }
 
         z80rom =
-            Z80Rom.constructor
+            Z80Rom.constructor Dict.empty
     in
     describe "Bit instructions (CB)"
         [ test "0xCB D0 SET 2,B" <|
