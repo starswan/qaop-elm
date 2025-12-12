@@ -96,9 +96,8 @@ type alias Model =
     }
 
 
-type Message
+type QaopMessage
     = GotTAP (Result Http.Error (List Tapfile))
-    | GotRom (Result Http.Error (Maybe Z80ROM))
     | Tick Time.Posix
     | FlipFlash Time.Posix
     | Pause
@@ -110,6 +109,16 @@ type Message
     | KeyRepeat
     | CharacterKeyUp Char
     | ControlKeyUp String
+
+
+type InitMessage
+    = GotRom (Result Http.Error (Maybe Z80ROM))
+    | InitTick Time.Posix
+
+
+type Message
+    = InitialingMessage InitMessage
+    | RunningMessage QaopMessage
 
 
 type alias Flags =
@@ -207,7 +216,7 @@ svgNode screen flash =
 view : Model -> Html Message
 view model =
     case model.state of
-        Loading spectrumRom maybePosix string ->
+        Loading _ _ _ ->
             div [] []
 
         Running qaopModel ->
@@ -248,7 +257,7 @@ viewQaop model tickInterval =
                 , span [ id "hz" ] [ text speed ]
                 , text " Hz"
                 ]
-            , button [ onClick Pause ]
+            , button [ onClick (RunningMessage Pause) ]
                 [ text
                     (if model.qaop.spectrum.paused then
                         "Unpause"
@@ -257,7 +266,7 @@ viewQaop model tickInterval =
                         "Pause"
                     )
                 ]
-            , button [ onClick Autoload, disabled load_disabled ]
+            , button [ onClick (RunningMessage Autoload), disabled load_disabled ]
                 [ text "Load"
                 ]
             ]
@@ -281,91 +290,61 @@ alwaysPreventDefault msg =
 
 update : Message -> Model -> ( Model, Cmd Message )
 update message model =
-    case model.state of
-        Loading spectrumRom maybePosix tapUrl ->
-            case message of
-                GotTAP result ->
-                    ( model, Cmd.none )
+    case message of
+        InitialingMessage initMessage ->
+            case model.state of
+                Loading spectrumRom maybePosix tapUrl ->
+                    case initMessage of
+                        GotRom result ->
+                            case result of
+                                Ok value ->
+                                    case value of
+                                        Just a ->
+                                            ( { model | state = Loading (ROM a) maybePosix tapUrl }, Cmd.none )
 
-                GotRom result ->
-                    case result of
-                        Ok value ->
-                            case value of
-                                Just a ->
-                                    ( { model | state = Loading (ROM a) maybePosix tapUrl }, Cmd.none )
+                                        Nothing ->
+                                            ( model, Cmd.none )
 
-                                Nothing ->
+                                Err _ ->
                                     ( model, Cmd.none )
 
-                        Err error ->
-                            ( model, Cmd.none )
+                        InitTick posix ->
+                            case spectrumRom of
+                                RomURL _ ->
+                                    ( { model | state = Loading spectrumRom (Just posix) tapUrl }, Cmd.none )
 
-                Tick posix ->
-                    case spectrumRom of
-                        RomURL string ->
-                            ( { model | state = Loading spectrumRom (Just posix) tapUrl }, Cmd.none )
+                                ROM z80ROM ->
+                                    let
+                                        speccy =
+                                            Spectrum.constructor
 
-                        ROM z80ROM ->
-                            let
-                                speccy =
-                                    Spectrum.constructor
+                                        qaop =
+                                            { spectrum = { speccy | rom48k = z80ROM }, keys = [], state = 0 }
 
-                                qaop =
-                                    { spectrum = { speccy | rom48k = z80ROM }, keys = [], state = 0 }
+                                        qaopModel =
+                                            QaopModel qaop 0 0 posix False False
+                                    in
+                                    ( { model | state = Running qaopModel }, tapLoad tapUrl )
 
-                                qaopModel =
-                                    QaopModel qaop 0 0 posix False False
-                            in
-                            ( { model | state = Running qaopModel }, tapLoad tapUrl )
-
-                FlipFlash posix ->
+                Running _ ->
                     ( model, Cmd.none )
 
-                Pause ->
+        RunningMessage qaopMessage ->
+            case model.state of
+                Loading _ _ _ ->
                     ( model, Cmd.none )
 
-                Autoload ->
-                    ( model, Cmd.none )
-
-                CharacterKeyDown char ->
-                    ( model, Cmd.none )
-
-                CharacterUnKey char ->
-                    ( model, Cmd.none )
-
-                ControlKeyDown str ->
-                    ( model, Cmd.none )
-
-                ControlUnKey str ->
-                    ( model, Cmd.none )
-
-                KeyRepeat ->
-                    ( model, Cmd.none )
-
-                CharacterKeyUp char ->
-                    ( model, Cmd.none )
-
-                ControlKeyUp str ->
-                    ( model, Cmd.none )
-
-        Running qaopModel ->
-            let
-                ( x, y ) =
-                    updateQaop message qaopModel
-            in
-            ( { model | state = Running x }, y )
+                Running qaopModel ->
+                    let
+                        ( x, y ) =
+                            updateQaop qaopMessage qaopModel
+                    in
+                    ( { model | state = Running x }, y )
 
 
-updateQaop : Message -> QaopModel -> ( QaopModel, Cmd Message )
+updateQaop : QaopMessage -> QaopModel -> ( QaopModel, Cmd Message )
 updateQaop message model =
     case message of
-        GotRom result ->
-            let
-                ( qaop, cmd ) =
-                    gotRom model.qaop result
-            in
-            ( { model | qaop = qaop, count = model.count + 1 }, cmd )
-
         GotTAP result ->
             let
                 ( qaop, cmd ) =
@@ -432,10 +411,10 @@ updateQaop message model =
 
         -- This tiny sleep makes the keyboard work in capybara
         CharacterKeyUp char ->
-            ( model, Delay.after 2 (CharacterUnKey char) )
+            ( model, Delay.after 2 (RunningMessage (CharacterUnKey char)) )
 
         ControlKeyUp str ->
-            ( model, Delay.after 2 (ControlUnKey str) )
+            ( model, Delay.after 2 (RunningMessage (ControlUnKey str)) )
 
         Autoload ->
             ( { model | loadPressed = True }, Cmd.batch loadingCommands )
@@ -461,10 +440,10 @@ loadingCommands =
                     ( down, up ) =
                         case item of
                             AutoChar char ->
-                                ( CharacterKeyDown char, CharacterKeyUp char )
+                                ( RunningMessage (CharacterKeyDown char), RunningMessage (CharacterKeyUp char) )
 
                             AutoControl string ->
-                                ( ControlKeyDown string, ControlKeyUp string )
+                                ( RunningMessage (ControlKeyDown string), RunningMessage (ControlKeyUp string) )
                 in
                 -- TODO: loading delay is based on time not cycles. Once keyboard
                 -- scanner is always run at 50Hz, this value could be reduced
@@ -478,8 +457,8 @@ loadingCommands =
 subscriptions : Model -> Sub Message
 subscriptions model =
     case model.state of
-        Loading spectrumRom maybePosix string ->
-            Time.every (model.tickInterval |> toFloat) Tick
+        Loading _ _ _ ->
+            Time.every (model.tickInterval |> toFloat) (\posix -> InitialingMessage (InitTick posix))
 
         Running qaopModel ->
             qaopSubs qaopModel model.tickInterval
@@ -493,10 +472,10 @@ qaopSubs model tickInterval =
     else
         let
             ticker =
-                Time.every (tickInterval |> toFloat) Tick
+                Time.every (tickInterval |> toFloat) (\posix -> RunningMessage (Tick posix))
 
             flasher =
-                Time.every (tickInterval * 16 |> toFloat) FlipFlash
+                Time.every (tickInterval * 16 |> toFloat) (\posix -> RunningMessage (FlipFlash posix))
         in
         Sub.batch [ ticker, flasher ]
 
@@ -514,25 +493,25 @@ keyUpDecoder =
 toKey : String -> Bool -> Message
 toKey keyValue repeat =
     if repeat then
-        KeyRepeat
+        RunningMessage KeyRepeat
 
     else
         case String.uncons keyValue of
             Just ( char, "" ) ->
-                CharacterKeyDown char
+                RunningMessage (CharacterKeyDown char)
 
             _ ->
-                ControlKeyDown keyValue
+                RunningMessage (ControlKeyDown keyValue)
 
 
 toUnKey : String -> Message
 toUnKey keyValue =
     case String.uncons keyValue of
         Just ( char, "" ) ->
-            CharacterKeyUp char
+            RunningMessage (CharacterKeyUp char)
 
         _ ->
-            ControlKeyUp keyValue
+            RunningMessage (ControlKeyUp keyValue)
 
 
 tapLoad : String -> Cmd Message
@@ -541,7 +520,7 @@ tapLoad url =
         url
         Http.get
         { url = url
-        , expect = Http.expectBytesResponse GotTAP bytesToTap
+        , expect = Http.expectBytesResponse (\result -> RunningMessage (GotTAP result)) bytesToTap
         }
 
 
@@ -553,27 +532,8 @@ romLoad url =
         { url = url
 
         --, expect = Http.Detailed.expectBytes GotRom (array_decoder 16384 unsignedInt8)
-        , expect = Http.expectBytesResponse GotRom bytesToRom
+        , expect = Http.expectBytesResponse (\result -> InitialingMessage (GotRom result)) bytesToRom
         }
-
-
-gotRom : Qaop -> Result Http.Error (Maybe Z80ROM) -> ( Qaop, Cmd Message )
-gotRom qaop result =
-    case result of
-        Ok value ->
-            case value of
-                Just a ->
-                    let
-                        speccy =
-                            qaop.spectrum
-                    in
-                    { qaop | spectrum = { speccy | rom48k = a } } |> run
-
-                Nothing ->
-                    ( qaop, Cmd.none )
-
-        Err _ ->
-            ( qaop, Cmd.none )
 
 
 gotTap : Qaop -> Result Http.Error (List Tapfile) -> ( Qaop, Cmd Message )
