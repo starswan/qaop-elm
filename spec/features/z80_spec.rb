@@ -107,6 +107,9 @@ RSpec.describe "Game" do
           # wait for match to actually start properly
           sleep 3
 
+          # wait for match to actually start properly
+          sleep 4
+
           measure_speed_in_hz do
             spectrum.send_keys :enter
           end

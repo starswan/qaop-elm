@@ -6,35 +6,16 @@
 module Qaop exposing (..)
 
 import Keyboard exposing (KeyEvent)
-import Loader exposing (Loader, paramHandler)
 import Spectrum exposing (Spectrum)
-import Utils exposing (compact)
 
 
 type alias Qaop =
     { spectrum : Spectrum
-    , loader : Loader
+
+    --, loader : Loader
     , state : Int
     , keys : List KeyEvent
     }
-
-
-new : List ( String, String ) -> Qaop
-new params =
-    let
-        paramlist =
-            List.map paramHandler params
-
-        compacted_params =
-            compact paramlist
-
-        loader =
-            Loader compacted_params
-
-        spectrum =
-            Spectrum.constructor
-    in
-    Qaop spectrum loader 0 []
 
 
 
