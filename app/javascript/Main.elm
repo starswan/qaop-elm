@@ -15,7 +15,6 @@ import Html.Events exposing (onClick, preventDefaultOn)
 import Http exposing (Metadata)
 import Json.Decode as Decode exposing (Decoder)
 import Keyboard exposing (ctrlKeyDownEvent, ctrlKeyUpEvent, keyDownEvent, keyUpEvent)
-import Loader exposing (LoadAction(..), trimActionList)
 import MessageHandler exposing (bytesToRom, bytesToTap)
 import Qaop exposing (Qaop, pause)
 import ScreenStorage exposing (ScreenLine, Z80Screen)
@@ -130,7 +129,7 @@ init data =
     --    Qaop.new params |> run
     --in
     --( Model newQaop c_TICKTIME 0 0 Nothing False False, cmd )
-    ( Model (Loading (RomURL data.rom) Nothing data.tape) c_TICKTIME, LoadROM data.rom |> actionToCmd )
+    ( Model (Loading (RomURL data.rom) Nothing data.tape) c_TICKTIME, romLoad data.rom )
 
 
 mapLineToSvg : Int -> ( Int, ScreenColourRun ) -> Svg Message
@@ -317,7 +316,7 @@ update message model =
                                 qaopModel =
                                     QaopModel qaop 0 0 posix False False
                             in
-                            ( { model | state = Running qaopModel }, LoadTAP tapUrl |> actionToCmd )
+                            ( { model | state = Running qaopModel }, tapLoad tapUrl )
 
                 FlipFlash posix ->
                     ( model, Cmd.none )
@@ -536,41 +535,26 @@ toUnKey keyValue =
             ControlKeyUp keyValue
 
 
-actionToCmd : LoadAction -> Cmd Message
-actionToCmd action =
-    case action of
-        LoadTAP url ->
-            -- Not sure if this is helping - we want to pick out 16384 from the metadata so we know how many bytes to consume
-            -- as TAP files will not always be the same size...
-            --Http.request { method = "GET",
-            --               headers = [],
-            --               body = emptyBody,
-            --               timeout = Nothing,
-            --               tracker = Nothing,
-            --               url = String.concat ["http://localhost:3000/", fileName],
-            --               expect = Http.expectBytesResponse GotTAP convertResponse
-            --          }
-            debugLog "loadTap"
-                url
-                Http.get
-                { url = url
-                , expect = Http.expectBytesResponse GotTAP bytesToTap
-                }
+tapLoad : String -> Cmd Message
+tapLoad url =
+    debugLog "loadTap"
+        url
+        Http.get
+        { url = url
+        , expect = Http.expectBytesResponse GotTAP bytesToTap
+        }
 
-        LoadROM url ->
-            --loadRom: String -> Cmd Message
-            --loadRom fileName =
-            --    Http.get { url = String.concat ["http://localhost:3000/", fileName],
-            --               expect = Http.expectBytes GotRom (list_decoder 16384 unsignedInt8)
-            --              }
-            debugLog "loadRom"
-                url
-                Http.get
-                { url = url
 
-                --, expect = Http.Detailed.expectBytes GotRom (array_decoder 16384 unsignedInt8)
-                , expect = Http.expectBytesResponse GotRom bytesToRom
-                }
+romLoad : String -> Cmd Message
+romLoad url =
+    debugLog "loadRom"
+        url
+        Http.get
+        { url = url
+
+        --, expect = Http.Detailed.expectBytes GotRom (array_decoder 16384 unsignedInt8)
+        , expect = Http.expectBytesResponse GotRom bytesToRom
+        }
 
 
 gotRom : Qaop -> Result Http.Error (Maybe Z80ROM) -> ( Qaop, Cmd Message )
@@ -632,21 +616,6 @@ gotTap qaop result =
 run : Qaop -> ( Qaop, Cmd Message )
 run qaop =
     if qaop.spectrum.paused then
-        --let
-        --    loader =
-        --        qaop.loader
-        --
-        --    nextAction =
-        --        List.head loader.actions
-        --
-        --qaop_1 =
-        --{ qaop | loader = { loader | actions = List.tail loader.actions |> trimActionList } }
-        --in
-        --case nextAction of
-        --    Just action ->
-        --        ( qaop_1, actionToCmd action )
-        --
-        --    Nothing ->
         ( { qaop | state = Bitwise.and qaop.state (complement 2), spectrum = qaop.spectrum |> Spectrum.pause 0x08 }, Cmd.none )
 
     else
