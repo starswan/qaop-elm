@@ -338,32 +338,28 @@ updateQaop message model =
     case message of
         GotTAP result ->
             let
-                ( qaop, cmd ) =
+                qaop =
                     gotTap model.qaop result
             in
-            ( { model | qaop = qaop, count = model.count + 1 }, cmd )
+            ( { model | qaop = qaop, count = model.count + 1 }, Cmd.none )
 
         Tick posix ->
             let
                 state =
                     if model.qaop.spectrum.paused then
-                        { qaop = model.qaop, cmd = Cmd.none, count = model.count, elapsed = 0 }
+                        { qaop = model.qaop, count = model.count, elapsed = 0 }
 
                     else
                         let
                             elapsed =
-                                --case model.time of
-                                --    Just time ->
                                 posixToMillis posix - posixToMillis model.time
 
-                            --Nothing ->
-                            --    0
-                            ( q, cmd ) =
+                            q =
                                 model.qaop |> run
                         in
-                        { qaop = q, cmd = cmd, count = model.count + 1, elapsed = elapsed }
+                        { qaop = q, count = model.count + 1, elapsed = elapsed }
             in
-            ( { model | count = state.count, elapsed_millis = model.elapsed_millis + state.elapsed, time = posix, qaop = state.qaop }, state.cmd )
+            ( { model | count = state.count, elapsed_millis = model.elapsed_millis + state.elapsed, time = posix, qaop = state.qaop }, Cmd.none )
 
         Pause ->
             ( { model | qaop = model.qaop |> pause (not model.qaop.spectrum.paused) }, Cmd.none )
@@ -527,7 +523,7 @@ romLoad url =
         }
 
 
-gotTap : Qaop -> Result Http.Error (List Tapfile) -> ( Qaop, Cmd Message )
+gotTap : Qaop -> Result Http.Error (List Tapfile) -> Qaop
 gotTap qaop result =
     case result of
         Ok value ->
@@ -538,7 +534,7 @@ gotTap qaop result =
             { qaop | spectrum = qaop.spectrum |> new_tape value } |> run
 
         Err _ ->
-            ( qaop, Cmd.none )
+            qaop
 
 
 
@@ -564,13 +560,13 @@ gotTap qaop result =
 --	}
 
 
-run : Qaop -> ( Qaop, Cmd Message )
+run : Qaop -> Qaop
 run qaop =
     if qaop.spectrum.paused then
-        ( { qaop | state = Bitwise.and qaop.state (complement 2), spectrum = qaop.spectrum |> Spectrum.pause 0x08 }, Cmd.none )
+        { qaop | state = Bitwise.and qaop.state (complement 2), spectrum = qaop.spectrum |> Spectrum.pause 0x08 }
 
     else
-        ( { qaop | spectrum = qaop.spectrum |> frames qaop.keys }, Cmd.none )
+        { qaop | spectrum = qaop.spectrum |> frames qaop.keys }
 
 
 main : Program Flags Model Message
