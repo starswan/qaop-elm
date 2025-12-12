@@ -70,15 +70,30 @@ type AutoKey
     | AutoControl String
 
 
-type alias Model =
+type alias QaopModel =
     { qaop : Qaop
-    , -- This doesn't look like a variable, but think it might be useful to adjust it at runtime
-      tickInterval : Int
     , count : Int
     , elapsed_millis : Int
-    , time : Maybe Time.Posix
+    , time : Time.Posix
     , loadPressed : Bool
     , globalFlash : Bool
+    }
+
+
+type SpectrumRom
+    = RomURL String
+    | ROM Z80ROM
+
+
+type ModelState
+    = Loading SpectrumRom (Maybe Time.Posix) String
+    | Running QaopModel
+
+
+type alias Model =
+    { state : ModelState
+    , -- This doesn't look like a variable, but think it might be useful to adjust it at runtime
+      tickInterval : Int
     }
 
 
@@ -106,16 +121,16 @@ type alias Flags =
 
 init : Flags -> ( Model, Cmd Message )
 init data =
-    let
-        params =
-            [ ( "rom", data.rom )
-            , ( "tape", data.tape )
-            ]
-
-        ( newQaop, cmd ) =
-            Qaop.new params |> run
-    in
-    ( Model newQaop c_TICKTIME 0 0 Nothing False False, cmd )
+    --let
+    --    params =
+    --        [ ( "rom", data.rom )
+    --        , ( "tape", data.tape )
+    --        ]
+    --( newQaop, cmd ) =
+    --    Qaop.new params |> run
+    --in
+    --( Model newQaop c_TICKTIME 0 0 Nothing False False, cmd )
+    ( Model (Loading (RomURL data.rom) Nothing data.tape) c_TICKTIME, LoadROM data.rom |> actionToCmd )
 
 
 mapLineToSvg : Int -> ( Int, ScreenColourRun ) -> Svg Message
@@ -192,6 +207,16 @@ svgNode screen flash =
 
 view : Model -> Html Message
 view model =
+    case model.state of
+        Loading spectrumRom maybePosix string ->
+            div [] []
+
+        Running qaopModel ->
+            viewQaop qaopModel model.tickInterval
+
+
+viewQaop : QaopModel -> Int -> Html Message
+viewQaop model tickInterval =
     let
         screen =
             model.qaop.spectrum.rom48k.z80ram.screen
@@ -213,7 +238,7 @@ view model =
     -- The inline style is being used for example purposes in order to keep this example simple and
     -- avoid loading additional resources. Use a proper stylesheet when building your own app.
     div []
-        [ h2 [] [ text ("Refresh Interval " ++ (model.tickInterval |> String.fromInt) ++ "ms ") ]
+        [ h2 [] [ text ("Refresh Interval " ++ (tickInterval |> String.fromInt) ++ "ms ") ]
         , div [ style "display" "flex", style "justify-content" "center" ]
             [ div []
                 [ span [ id "cyclecount" ] [ text (String.fromInt model.count) ]
@@ -257,6 +282,83 @@ alwaysPreventDefault msg =
 
 update : Message -> Model -> ( Model, Cmd Message )
 update message model =
+    case model.state of
+        Loading spectrumRom maybePosix tapfilename ->
+            case message of
+                GotTAP result ->
+                    ( model, Cmd.none )
+
+                GotRom result ->
+                    case result of
+                        Ok value ->
+                            case value of
+                                Just a ->
+                                    ( { model | state = Loading (ROM a) maybePosix tapfilename }, Cmd.none )
+
+                                Nothing ->
+                                    ( model, Cmd.none )
+
+                        Err error ->
+                            ( model, Cmd.none )
+
+                Tick posix ->
+                    case spectrumRom of
+                        RomURL string ->
+                            ( { model | state = Loading spectrumRom (Just posix) tapfilename }, Cmd.none )
+
+                        ROM z80ROM ->
+                            let
+                                speccy =
+                                    Spectrum.constructor
+
+                                qaop =
+                                    { spectrum = { speccy | rom48k = z80ROM }, keys = [], state = 0 }
+
+                                qaopModel =
+                                    QaopModel qaop 0 0 posix False False
+                            in
+                            ( { model | state = Running qaopModel }, LoadTAP tapfilename |> actionToCmd )
+
+                FlipFlash posix ->
+                    ( model, Cmd.none )
+
+                Pause ->
+                    ( model, Cmd.none )
+
+                Autoload ->
+                    ( model, Cmd.none )
+
+                CharacterKeyDown char ->
+                    ( model, Cmd.none )
+
+                CharacterUnKey char ->
+                    ( model, Cmd.none )
+
+                ControlKeyDown str ->
+                    ( model, Cmd.none )
+
+                ControlUnKey str ->
+                    ( model, Cmd.none )
+
+                KeyRepeat ->
+                    ( model, Cmd.none )
+
+                CharacterKeyUp char ->
+                    ( model, Cmd.none )
+
+                ControlKeyUp str ->
+                    ( model, Cmd.none )
+
+        Running qaopModel ->
+            let
+                ( x, y ) =
+                    updateQaop message qaopModel
+            in
+            ( { model | state = Running x }, y )
+
+
+updateQaop : Message -> QaopModel -> ( QaopModel, Cmd Message )
+updateQaop message model =
     case message of
         GotRom result ->
             let
@@ -269,8 +371,6 @@ update message model =
             let
                 ( qaop, cmd ) =
                     gotTap model.qaop result
-
-                --run_after_30_sec = delay 30000 LoadTape
             in
             ( { model | qaop = qaop, count = model.count + 1 }, cmd )
 
@@ -283,22 +383,21 @@ update message model =
                     else
                         let
                             elapsed =
-                                case model.time of
-                                    Just time ->
-                                        posixToMillis posix - posixToMillis time
+                                --case model.time of
+                                --    Just time ->
+                                posixToMillis posix - posixToMillis model.time
 
-                                    Nothing ->
-                                        0
-
+                            --Nothing ->
+                            --    0
                             ( q, cmd ) =
                                 model.qaop |> run
                         in
                         { qaop = q, cmd = cmd, count = model.count + 1, elapsed = elapsed }
             in
-            ( { model | count = state.count, elapsed_millis = model.elapsed_millis + state.elapsed, time = Just posix, qaop = state.qaop }, state.cmd )
+            ( { model | count = state.count, elapsed_millis = model.elapsed_millis + state.elapsed, time = posix, qaop = state.qaop }, state.cmd )
 
         Pause ->
-            ( { model | time = Nothing, qaop = model.qaop |> pause (not model.qaop.spectrum.paused) }, Cmd.none )
+            ( { model | qaop = model.qaop |> pause (not model.qaop.spectrum.paused) }, Cmd.none )
 
         CharacterKeyDown char ->
             let
@@ -379,16 +478,26 @@ loadingCommands =
 
 subscriptions : Model -> Sub Message
 subscriptions model =
-    if model.qaop.spectrum.paused || not (List.isEmpty model.qaop.loader.actions) then
+    case model.state of
+        Loading spectrumRom maybePosix string ->
+            Time.every (model.tickInterval |> toFloat) Tick
+
+        Running qaopModel ->
+            qaopSubs qaopModel model.tickInterval
+
+
+qaopSubs : QaopModel -> Int -> Sub Message
+qaopSubs model tickInterval =
+    if model.qaop.spectrum.paused then
         Sub.none
 
     else
         let
             ticker =
-                Time.every (model.tickInterval |> toFloat) Tick
+                Time.every (tickInterval |> toFloat) Tick
 
             flasher =
-                Time.every (model.tickInterval * 16 |> toFloat) FlipFlash
+                Time.every (tickInterval * 16 |> toFloat) FlipFlash
         in
         Sub.batch [ ticker, flasher ]
 
@@ -523,36 +632,25 @@ gotTap qaop result =
 run : Qaop -> ( Qaop, Cmd Message )
 run qaop =
     if qaop.spectrum.paused then
-        let
-            loader =
-                qaop.loader
-
-            nextAction =
-                List.head loader.actions
-
-            qaop_1 =
-                { qaop | loader = { loader | actions = List.tail loader.actions |> trimActionList } }
-        in
-        case nextAction of
-            Just action ->
-                ( qaop_1, actionToCmd action )
-
-            Nothing ->
-                ( { qaop_1 | state = Bitwise.and qaop.state (complement 2), spectrum = qaop_1.spectrum |> Spectrum.pause 0x08 }, Cmd.none )
+        --let
+        --    loader =
+        --        qaop.loader
+        --
+        --    nextAction =
+        --        List.head loader.actions
+        --
+        --qaop_1 =
+        --{ qaop | loader = { loader | actions = List.tail loader.actions |> trimActionList } }
         --in
-        --( q2, cmd )
+        --case nextAction of
+        --    Just action ->
+        --        ( qaop_1, actionToCmd action )
+        --
+        --    Nothing ->
+        ( { qaop | state = Bitwise.and qaop.state (complement 2), spectrum = qaop.spectrum |> Spectrum.pause 0x08 }, Cmd.none )
 
     else
         ( { qaop | spectrum = qaop.spectrum |> frames qaop.keys }, Cmd.none )
-
-
-
---else
---    case qaop.spectrum.tape of
---        Just tape ->
---            let
---                newenv = qaop.spectrum.cpu.env
---        Nothing -> ( { qaop | spectrum = qaop.spectrum |> frames qaop.keys }, Cmd.none )
 
 
 main : Program Flags Model Message
