@@ -51,16 +51,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
 
-      - name: Set up elm cache
+      # Re-use ~/.elm between runs until elm.json or review/elm.json changes.
+      # The Elm compiler saves downloaded Elm packages to ~/.elm saves
+      # downloaded tool executables there.
+      - name: Cache ~/.elm
         uses: actions/cache@v4
         with:
-          path: /home/runner/.elm
-          key: ${{ runner.os }}-elmish-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-elmish-
+          path: ~/.elm
+          key: elm-${{ hashFiles('elm.json', 'review/elm.json') }}
 
-      - name: Restore $HOME/.elm from tar file
-        run: bin/restore-cache
+#      - name: Restore $HOME/.elm from tar file
+#        run: bin/restore-cache
 
       - name: Yarn install
         run: yarn install
