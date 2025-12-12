@@ -283,7 +283,7 @@ alwaysPreventDefault msg =
 update : Message -> Model -> ( Model, Cmd Message )
 update message model =
     case model.state of
-        Loading spectrumRom maybePosix tapfilename ->
+        Loading spectrumRom maybePosix tapUrl ->
             case message of
                 GotTAP result ->
                     ( model, Cmd.none )
@@ -293,7 +293,7 @@ update message model =
                         Ok value ->
                             case value of
                                 Just a ->
-                                    ( { model | state = Loading (ROM a) maybePosix tapfilename }, Cmd.none )
+                                    ( { model | state = Loading (ROM a) maybePosix tapUrl }, Cmd.none )
 
                                 Nothing ->
                                     ( model, Cmd.none )
@@ -304,7 +304,7 @@ update message model =
                 Tick posix ->
                     case spectrumRom of
                         RomURL string ->
-                            ( { model | state = Loading spectrumRom (Just posix) tapfilename }, Cmd.none )
+                            ( { model | state = Loading spectrumRom (Just posix) tapUrl }, Cmd.none )
 
                         ROM z80ROM ->
                             let
@@ -317,7 +317,7 @@ update message model =
                                 qaopModel =
                                     QaopModel qaop 0 0 posix False False
                             in
-                            ( { model | state = Running qaopModel }, LoadTAP tapfilename |> actionToCmd )
+                            ( { model | state = Running qaopModel }, LoadTAP tapUrl |> actionToCmd )
 
                 FlipFlash posix ->
                     ( model, Cmd.none )
