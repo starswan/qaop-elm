@@ -26,6 +26,7 @@ jobs:
         ruby-version: ['3.4']
 
     env:
+      ELM_HOME: ${{ github.workspace }}/.elm
       HZ: 46.387
     steps:
       - uses: actions/checkout@v4
@@ -51,16 +52,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
 
-      - name: Set up elm cache
+      - name: Cache ~/.elm
         uses: actions/cache@v4
         with:
-          path: /home/runner/.elm
-          key: ${{ runner.os }}-elmish-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-elmish-
+          path: ${{ env.ELM_HOME }}
+          key: elm-${{ hashFiles('elm.json', 'review/elm.json') }}
 
-      - name: Restore $HOME/.elm from tar file
-        run: bin/restore-cache
+#      - name: Restore $HOME/.elm from tar file
+#        run: bin/restore-cache
 
       - name: Yarn install
         run: yarn install
