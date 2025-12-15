@@ -98,7 +98,6 @@ type alias Model =
 
 type QaopMessage
     = GotTAP (Result Http.Error (List Tapfile))
-    | GotRom (Result Http.Error Z80ROM)
     | Tick Time.Posix
     | FlipFlash Time.Posix
     | Pause
@@ -113,7 +112,7 @@ type QaopMessage
 
 
 type InitMessage
-    = GotRom (Result Http.Error (Maybe Z80ROM))
+    = GotRom (Result Http.Error Z80ROM)
     | InitTick Time.Posix
 
 
@@ -290,12 +289,7 @@ update message model =
                         GotRom result ->
                             case result of
                                 Ok value ->
-                                    case value of
-                                        Just a ->
-                                            ( { model | state = Loading (ROM a) maybePosix tapUrl }, Cmd.none )
-
-                                        Nothing ->
-                                            ( model, Cmd.none )
+                                    ( { model | state = Loading (ROM value) maybePosix tapUrl }, Cmd.none )
 
                                 Err _ ->
                                     ( model, Cmd.none )
