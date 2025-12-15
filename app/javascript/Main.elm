@@ -428,15 +428,15 @@ loadingCommands =
                     ( down, up ) =
                         case item of
                             AutoChar char ->
-                                ( RunningMessage (CharacterKeyDown char), RunningMessage (CharacterKeyUp char) )
+                                ( CharacterKeyDown char, CharacterKeyUp char )
 
                             AutoControl string ->
-                                ( RunningMessage (ControlKeyDown string), RunningMessage (ControlKeyUp string) )
+                                ( ControlKeyDown string, ControlKeyUp string )
                 in
                 -- TODO: loading delay is based on time not cycles. Once keyboard
                 -- scanner is always run at 50Hz, this value could be reduced
-                [ Delay.after (c_LOADING_KEY_DELAY * index) down
-                , Delay.after (c_LOADING_KEY_DELAY * index + c_LOADING_KEY_DELAY // 2) up
+                [ Delay.after (c_LOADING_KEY_DELAY * index) (down |> RunningMessage)
+                , Delay.after (c_LOADING_KEY_DELAY * index + c_LOADING_KEY_DELAY // 2) (up |> RunningMessage)
                 ]
             )
         |> List.concat
