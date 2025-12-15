@@ -26,6 +26,7 @@ jobs:
         ruby-version: ['3.4']
 
     env:
+      ELM_HOME: ${{ github.workspace }}/.elm
       HZ: 46.387
     steps:
       - uses: actions/checkout@v4
@@ -51,13 +52,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
 
-      # Re-use ~/.elm between runs until elm.json or review/elm.json changes.
-      # The Elm compiler saves downloaded Elm packages to ~/.elm saves
-      # downloaded tool executables there.
       - name: Cache ~/.elm
         uses: actions/cache@v4
         with:
-          path: ~/.elm
+          path: ${{ env.ELM_HOME }}
           key: elm-${{ hashFiles('elm.json', 'review/elm.json') }}
 
 #      - name: Restore $HOME/.elm from tar file
