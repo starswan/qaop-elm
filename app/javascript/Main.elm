@@ -84,7 +84,7 @@ type alias Model =
 
 type Message
     = GotTAP (Result Http.Error (List Tapfile))
-    | GotRom (Result Http.Error (Maybe Z80ROM))
+    | GotRom (Result Http.Error Z80ROM)
     | Tick Time.Posix
     | FlipFlash Time.Posix
     | Pause
@@ -464,20 +464,15 @@ actionToCmd action =
                 }
 
 
-gotRom : Qaop -> Result Http.Error (Maybe Z80ROM) -> ( Qaop, Cmd Message )
+gotRom : Qaop -> Result Http.Error Z80ROM -> ( Qaop, Cmd Message )
 gotRom qaop result =
     case result of
         Ok value ->
-            case value of
-                Just a ->
-                    let
-                        speccy =
-                            qaop.spectrum
-                    in
-                    { qaop | spectrum = { speccy | rom48k = a } } |> run
-
-                Nothing ->
-                    ( qaop, Cmd.none )
+            let
+                speccy =
+                    qaop.spectrum
+            in
+            { qaop | spectrum = { speccy | rom48k = value } } |> run
 
         Err _ ->
             ( qaop, Cmd.none )
