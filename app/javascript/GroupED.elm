@@ -907,7 +907,7 @@ singleByteMainRegsED =
         , ( 0xB1, ( \_ -> Cpir Forwards True, SixteenTStates ) )
 
         -- case 0xB9: cpir(-1,true); break;
-        , ( 0xB9, ( \_ -> Cpir Forwards False, SixteenTStates ) )
+        , ( 0xB9, ( \_ -> Cpir Backwards True, SixteenTStates ) )
 
         -- case 0x62: sbc_hl(HL); break;
         , ( 0x62, ( \_ -> SbcHL RegHL, FifteenTStates ) )
