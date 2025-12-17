@@ -1,16 +1,14 @@
 module DoubleWithRegisters exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), addCpuTimeTime)
+import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import Dict exposing (Dict)
 import MemoryAddress exposing (MemoryAddress(..), RamAddress(..))
 import PCIncrement exposing (MediumPCIncrement(..))
-import SingleWith8BitParameter exposing (applySimple8BitChange)
 import Utils exposing (byte, shiftLeftBy8)
 import Z80Core exposing (Z80Core)
 import Z80Env exposing (getRamMemoryValue, mem, setMem, setRamMemoryValue)
 import Z80Flags exposing (FlagFunc(..), changeFlags, dec, inc)
-import Z80Registers exposing (CoreRegister)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (MainWithIndexRegisters)
 
