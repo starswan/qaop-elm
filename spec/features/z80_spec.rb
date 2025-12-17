@@ -78,7 +78,7 @@ RSpec.describe "Game" do
 
     let(:times) {
       {
-        flags.name => 7200,
+        flags.name => 7500,
         regs.name => 13000,
         full_flags.name => 7900,
         full.name => 14000,
@@ -93,14 +93,14 @@ RSpec.describe "Game" do
     # Flags: 015 of 160 tests failed.
     # 052 SRO (XY), R (DD CB 00 00) 334E5D5A expected 0AF8B1A8
     # 074 BIT N,(XY)- DD CB xx 40-47 (undoc?) E3DC0E5A exp 6870B827
-    # 089 LDIR-> NOP' (copying X -> X)
+    # 089 LDIR-> NOP' (copying X -> X) 4182F56F expected A4DE6FAA
     # 090 LDDR ->NOP',
-    # 098
-    # 099
-    # 100
-    # 101
-    # 102
-    # 103
+    # 098 INI
+    # 099 IND
+    # 100 INIR
+    # 101 INDR
+    # 102 INIR NOP
+    # 103 INDR NOP
     # 107 OUTI
     # 108 OUTD
     # 109 OTIR
@@ -172,7 +172,7 @@ RSpec.describe "Game" do
         end.tap do
           if times.key? z80_game
             while cpu_count.text.to_i < times.fetch(z80_game)
-              sleep 10
+              sleep 12
               # response to 'scroll?' question if required
               spectrum.send_keys 'y'
             end
