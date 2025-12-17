@@ -3,7 +3,7 @@ module Z80Execute exposing (..)
 import Bitwise exposing (shiftLeftBy)
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
-import GroupED exposing (inirOtirFlags, ldir, sbc_hl)
+import GroupED exposing (cpir, inirOtirFlags, ldir, sbc_hl)
 import PCIncrement exposing (InterruptPCIncrement(..), MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
 import RegisterChange exposing (EDRegisterChange(..), InterruptChange(..), RegisterChange(..), Shifter(..), SixteenBit(..))
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
@@ -1132,9 +1132,12 @@ applyEdRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
         Cpir direction repeat ->
             let
                 core =
-                    { z80_core | pc = new_pc, clockTime = newTime }
+                    { z80_core | pc = new_pc }
+
+                ( core2, newTime ) =
+                    core |> cpir direction repeat rom48k clockTime
             in
-            core |> cpir direction repeat rom48k
+            CoreOnly core2
 
         SbcHL reg16type ->
             let
