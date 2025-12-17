@@ -15,7 +15,7 @@
     <%= content_tag :canvas, 'Game', width: 512, height: 384, id: 'applet',
                     class: 'applet',
                     data: { load: "#{request.protocol}#{request.host_with_port}/games/#{@game.id}/download",
-                            rom: "#{request.protocol}#{request.host_with_port}/spectrum.rom" } %>
+                            rom: "#{request.protocol}#{request.host_with_port}/spec48.rom" } %>
   </div>
   <%= inline_svg_tag 'keyboard.svg', preserveAspectRatio: "xMinYMin" %>
   <!--<canvas id="myCanvas" width="200" height="100"></canvas>-->
