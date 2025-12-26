@@ -117,7 +117,7 @@ type InitMessage
 
 
 type Message
-    = InitialingMessage InitMessage
+    = LoadingMessage InitMessage
     | RunningMessage QaopMessage
 
 
@@ -282,7 +282,7 @@ alwaysPreventDefault msg =
 update : Message -> Model -> ( Model, Cmd Message )
 update message model =
     case message of
-        InitialingMessage initMessage ->
+        LoadingMessage initMessage ->
             case model.state of
                 Loading spectrumRom maybePosix tapUrl ->
                     case initMessage of
@@ -440,7 +440,7 @@ subscriptions : Model -> Sub Message
 subscriptions model =
     case model.state of
         Loading _ _ _ ->
-            Time.every (model.tickInterval |> toFloat) (\posix -> InitialingMessage (InitTick posix))
+            Time.every (model.tickInterval |> toFloat) (\posix -> LoadingMessage (InitTick posix))
 
         Running qaopModel ->
             qaopSubs qaopModel model.tickInterval
@@ -514,7 +514,7 @@ romLoad url =
         { url = url
 
         --, expect = Http.Detailed.expectBytes GotRom (array_decoder 16384 unsignedInt8)
-        , expect = Http.expectBytesResponse (\result -> InitialingMessage (GotRom result)) bytesToRom
+        , expect = Http.expectBytesResponse (\result -> LoadingMessage (GotRom result)) bytesToRom
         }
 
 
