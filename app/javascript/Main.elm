@@ -15,7 +15,6 @@ import Html.Events exposing (onClick, preventDefaultOn)
 import Http exposing (Metadata)
 import Json.Decode as Decode exposing (Decoder)
 import Keyboard exposing (ctrlKeyDownEvent, ctrlKeyUpEvent, keyDownEvent, keyUpEvent)
-import Loader exposing (LoadAction(..), trimActionList)
 import MessageHandler exposing (bytesToRom, bytesToTap)
 import Qaop exposing (Qaop, pause)
 import ScreenStorage exposing (ScreenLine, Z80Screen)
@@ -70,21 +69,35 @@ type AutoKey
     | AutoControl String
 
 
-type alias Model =
+type alias QaopModel =
     { qaop : Qaop
-    , -- This doesn't look like a variable, but think it might be useful to adjust it at runtime
-      tickInterval : Int
     , count : Int
     , elapsed_millis : Int
-    , time : Maybe Time.Posix
+    , time : Time.Posix
     , loadPressed : Bool
     , globalFlash : Bool
     }
 
 
-type Message
+type SpectrumRom
+    = RomURL String
+    | ROM Z80ROM
+
+
+type ModelState
+    = Loading SpectrumRom (Maybe Time.Posix) String
+    | Running QaopModel
+
+
+type alias Model =
+    { state : ModelState
+    , -- This doesn't look like a variable, but think it might be useful to adjust it at runtime
+      tickInterval : Int
+    }
+
+
+type QaopMessage
     = GotTAP (Result Http.Error (List Tapfile))
-    | GotRom (Result Http.Error Z80ROM)
     | Tick Time.Posix
     | FlipFlash Time.Posix
     | Pause
@@ -98,6 +111,16 @@ type Message
     | ControlKeyUp String
 
 
+type InitMessage
+    = GotRom (Result Http.Error Z80ROM)
+    | InitTick Time.Posix
+
+
+type Message
+    = LoadingMessage InitMessage
+    | RunningMessage QaopMessage
+
+
 type alias Flags =
     { rom : String
     , tape : String
@@ -106,16 +129,7 @@ type alias Flags =
 
 init : Flags -> ( Model, Cmd Message )
 init data =
-    let
-        params =
-            [ ( "rom", data.rom )
-            , ( "tape", data.tape )
-            ]
-
-        ( newQaop, cmd ) =
-            Qaop.new params |> run
-    in
-    ( Model newQaop c_TICKTIME 0 0 Nothing False False, cmd )
+    ( Model (Loading (RomURL data.rom) Nothing data.tape) c_TICKTIME, romLoad data.rom )
 
 
 mapLineToSvg : Int -> ( Int, ScreenColourRun ) -> Svg Message
@@ -192,6 +206,16 @@ svgNode screen flash =
 
 view : Model -> Html Message
 view model =
+    case model.state of
+        Loading _ _ _ ->
+            div [] []
+
+        Running qaopModel ->
+            viewQaop qaopModel model.tickInterval
+
+
+viewQaop : QaopModel -> Int -> Html Message
+viewQaop model tickInterval =
     let
         screen =
             model.qaop.spectrum.rom48k.z80ram.screen
@@ -213,7 +237,7 @@ view model =
     -- The inline style is being used for example purposes in order to keep this example simple and
     -- avoid loading additional resources. Use a proper stylesheet when building your own app.
     div []
-        [ h2 [] [ text ("Refresh Interval " ++ (model.tickInterval |> String.fromInt) ++ "ms ") ]
+        [ h2 [] [ text ("Refresh Interval " ++ (tickInterval |> String.fromInt) ++ "ms ") ]
         , div [ style "display" "flex", style "justify-content" "center" ]
             [ div []
                 [ span [ id "cyclecount" ] [ text (String.fromInt model.count) ]
@@ -224,7 +248,7 @@ view model =
                 , span [ id "hz" ] [ text speed ]
                 , text " Hz"
                 ]
-            , button [ onClick Pause ]
+            , button [ onClick (RunningMessage Pause) ]
                 [ text
                     (if model.qaop.spectrum.paused then
                         "Unpause"
@@ -233,7 +257,7 @@ view model =
                         "Pause"
                     )
                 ]
-            , button [ onClick Autoload, disabled load_disabled ]
+            , button [ onClick (RunningMessage Autoload), disabled load_disabled ]
                 [ text "Load"
                 ]
             ]
@@ -255,50 +279,94 @@ alwaysPreventDefault msg =
     ( msg, True )
 
 
+updateLoading : InitMessage -> ModelState -> ( ModelState, Cmd Message )
+updateLoading initMessage modelState =
+    case modelState of
+        Loading spectrumRom maybePosix tapUrl ->
+            case initMessage of
+                GotRom result ->
+                    case result of
+                        Ok value ->
+                            ( Loading (ROM value) maybePosix tapUrl, Cmd.none )
+
+                        Err _ ->
+                            ( modelState, Cmd.none )
+
+                InitTick posix ->
+                    case spectrumRom of
+                        RomURL _ ->
+                            ( Loading spectrumRom (Just posix) tapUrl, Cmd.none )
+
+                        ROM z80ROM ->
+                            let
+                                speccy =
+                                    Spectrum.constructor
+
+                                qaop =
+                                    { spectrum = { speccy | rom48k = z80ROM }, keys = [], state = 0 }
+
+                                qaopModel =
+                                    QaopModel qaop 0 0 posix False False
+                            in
+                            ( Running qaopModel, tapLoad tapUrl )
+
+        Running qaopModel ->
+            ( modelState, Cmd.none )
+
+
 update : Message -> Model -> ( Model, Cmd Message )
 update message model =
     case message of
-        GotRom result ->
+        LoadingMessage initMessage ->
             let
-                ( qaop, cmd ) =
-                    gotRom model.qaop result
+                ( state, cmd ) =
+                    updateLoading initMessage model.state
             in
-            ( { model | qaop = qaop, count = model.count + 1 }, cmd )
+            ( { model | state = state }, cmd )
 
+        RunningMessage qaopMessage ->
+            case model.state of
+                Loading _ _ _ ->
+                    ( model, Cmd.none )
+
+                Running qaopModel ->
+                    let
+                        ( x, y ) =
+                            updateQaop qaopMessage qaopModel
+                    in
+                    ( { model | state = Running x }, y )
+
+
+updateQaop : QaopMessage -> QaopModel -> ( QaopModel, Cmd Message )
+updateQaop message model =
+    case message of
         GotTAP result ->
             let
-                ( qaop, cmd ) =
+                qaop =
                     gotTap model.qaop result
-
-                --run_after_30_sec = delay 30000 LoadTape
             in
-            ( { model | qaop = qaop, count = model.count + 1 }, cmd )
+            ( { model | qaop = qaop, count = model.count + 1 }, Cmd.none )
 
         Tick posix ->
             let
                 state =
                     if model.qaop.spectrum.paused then
-                        { qaop = model.qaop, cmd = Cmd.none, count = model.count, elapsed = 0 }
+                        { qaop = model.qaop, count = model.count, elapsed = 0 }
 
                     else
                         let
                             elapsed =
-                                case model.time of
-                                    Just time ->
-                                        posixToMillis posix - posixToMillis time
+                                posixToMillis posix - posixToMillis model.time
 
-                                    Nothing ->
-                                        0
-
-                            ( q, cmd ) =
+                            q =
                                 model.qaop |> run
                         in
-                        { qaop = q, cmd = cmd, count = model.count + 1, elapsed = elapsed }
+                        { qaop = q, count = model.count + 1, elapsed = elapsed }
             in
-            ( { model | count = state.count, elapsed_millis = model.elapsed_millis + state.elapsed, time = Just posix, qaop = state.qaop }, state.cmd )
+            ( { model | count = state.count, elapsed_millis = model.elapsed_millis + state.elapsed, time = posix, qaop = state.qaop }, Cmd.none )
 
         Pause ->
-            ( { model | time = Nothing, qaop = model.qaop |> pause (not model.qaop.spectrum.paused) }, Cmd.none )
+            ( { model | qaop = model.qaop |> pause (not model.qaop.spectrum.paused) }, Cmd.none )
 
         CharacterKeyDown char ->
             let
@@ -334,10 +402,10 @@ update message model =
 
         -- This tiny sleep makes the keyboard work in capybara
         CharacterKeyUp char ->
-            ( model, Delay.after 2 (CharacterUnKey char) )
+            ( model, Delay.after 2 (RunningMessage (CharacterUnKey char)) )
 
         ControlKeyUp str ->
-            ( model, Delay.after 2 (ControlUnKey str) )
+            ( model, Delay.after 2 (RunningMessage (ControlUnKey str)) )
 
         Autoload ->
             ( { model | loadPressed = True }, Cmd.batch loadingCommands )
@@ -370,8 +438,8 @@ loadingCommands =
                 in
                 -- TODO: loading delay is based on time not cycles. Once keyboard
                 -- scanner is always run at 50Hz, this value could be reduced
-                [ Delay.after (c_LOADING_KEY_DELAY * index) down
-                , Delay.after (c_LOADING_KEY_DELAY * index + c_LOADING_KEY_DELAY // 2) up
+                [ Delay.after (c_LOADING_KEY_DELAY * index) (down |> RunningMessage)
+                , Delay.after (c_LOADING_KEY_DELAY * index + c_LOADING_KEY_DELAY // 2) (up |> RunningMessage)
                 ]
             )
         |> List.concat
@@ -379,16 +447,26 @@ loadingCommands =
 
 subscriptions : Model -> Sub Message
 subscriptions model =
-    if model.qaop.spectrum.paused || not (List.isEmpty model.qaop.loader.actions) then
+    case model.state of
+        Loading _ _ _ ->
+            Time.every (model.tickInterval |> toFloat) (\posix -> LoadingMessage (InitTick posix))
+
+        Running qaopModel ->
+            qaopSubs qaopModel model.tickInterval
+
+
+qaopSubs : QaopModel -> Int -> Sub Message
+qaopSubs model tickInterval =
+    if model.qaop.spectrum.paused then
         Sub.none
 
     else
         let
             ticker =
-                Time.every (model.tickInterval |> toFloat) Tick
+                Time.every (tickInterval |> toFloat) (\posix -> RunningMessage (Tick posix))
 
             flasher =
-                Time.every (model.tickInterval * 16 |> toFloat) FlipFlash
+                Time.every (tickInterval * 16 |> toFloat) (\posix -> RunningMessage (FlipFlash posix))
         in
         Sub.batch [ ticker, flasher ]
 
@@ -406,79 +484,50 @@ keyUpDecoder =
 toKey : String -> Bool -> Message
 toKey keyValue repeat =
     if repeat then
-        KeyRepeat
+        RunningMessage KeyRepeat
 
     else
         case String.uncons keyValue of
             Just ( char, "" ) ->
-                CharacterKeyDown char
+                RunningMessage (CharacterKeyDown char)
 
             _ ->
-                ControlKeyDown keyValue
+                RunningMessage (ControlKeyDown keyValue)
 
 
 toUnKey : String -> Message
 toUnKey keyValue =
     case String.uncons keyValue of
         Just ( char, "" ) ->
-            CharacterKeyUp char
+            RunningMessage (CharacterKeyUp char)
 
         _ ->
-            ControlKeyUp keyValue
+            RunningMessage (ControlKeyUp keyValue)
 
 
-actionToCmd : LoadAction -> Cmd Message
-actionToCmd action =
-    case action of
-        LoadTAP url ->
-            -- Not sure if this is helping - we want to pick out 16384 from the metadata so we know how many bytes to consume
-            -- as TAP files will not always be the same size...
-            --Http.request { method = "GET",
-            --               headers = [],
-            --               body = emptyBody,
-            --               timeout = Nothing,
-            --               tracker = Nothing,
-            --               url = String.concat ["http://localhost:3000/", fileName],
-            --               expect = Http.expectBytesResponse GotTAP convertResponse
-            --          }
-            debugLog "loadTap"
-                url
-                Http.get
-                { url = url
-                , expect = Http.expectBytesResponse GotTAP bytesToTap
-                }
-
-        LoadROM url ->
-            --loadRom: String -> Cmd Message
-            --loadRom fileName =
-            --    Http.get { url = String.concat ["http://localhost:3000/", fileName],
-            --               expect = Http.expectBytes GotRom (list_decoder 16384 unsignedInt8)
-            --              }
-            debugLog "loadRom"
-                url
-                Http.get
-                { url = url
-
-                --, expect = Http.Detailed.expectBytes GotRom (array_decoder 16384 unsignedInt8)
-                , expect = Http.expectBytesResponse GotRom bytesToRom
-                }
+tapLoad : String -> Cmd Message
+tapLoad url =
+    debugLog "loadTap"
+        url
+        Http.get
+        { url = url
+        , expect = Http.expectBytesResponse (\result -> RunningMessage (GotTAP result)) bytesToTap
+        }
 
 
-gotRom : Qaop -> Result Http.Error Z80ROM -> ( Qaop, Cmd Message )
-gotRom qaop result =
-    case result of
-        Ok value ->
-            let
-                speccy =
-                    qaop.spectrum
-            in
-            { qaop | spectrum = { speccy | rom48k = value } } |> run
+romLoad : String -> Cmd Message
+romLoad url =
+    debugLog "loadRom"
+        url
+        Http.get
+        { url = url
 
-        Err _ ->
-            ( qaop, Cmd.none )
+        --, expect = Http.Detailed.expectBytes GotRom (array_decoder 16384 unsignedInt8)
+        , expect = Http.expectBytesResponse (\result -> LoadingMessage (GotRom result)) bytesToRom
+        }
 
 
-gotTap : Qaop -> Result Http.Error (List Tapfile) -> ( Qaop, Cmd Message )
+gotTap : Qaop -> Result Http.Error (List Tapfile) -> Qaop
 gotTap qaop result =
     case result of
         Ok value ->
@@ -489,7 +538,7 @@ gotTap qaop result =
             { qaop | spectrum = qaop.spectrum |> new_tape value } |> run
 
         Err _ ->
-            ( qaop, Cmd.none )
+            qaop
 
 
 
@@ -515,39 +564,13 @@ gotTap qaop result =
 --	}
 
 
-run : Qaop -> ( Qaop, Cmd Message )
+run : Qaop -> Qaop
 run qaop =
     if qaop.spectrum.paused then
-        let
-            loader =
-                qaop.loader
-
-            nextAction =
-                List.head loader.actions
-
-            qaop_1 =
-                { qaop | loader = { loader | actions = List.tail loader.actions |> trimActionList } }
-        in
-        case nextAction of
-            Just action ->
-                ( qaop_1, actionToCmd action )
-
-            Nothing ->
-                ( { qaop_1 | state = Bitwise.and qaop.state (complement 2), spectrum = qaop_1.spectrum |> Spectrum.pause 0x08 }, Cmd.none )
-        --in
-        --( q2, cmd )
+        { qaop | state = Bitwise.and qaop.state (complement 2), spectrum = qaop.spectrum |> Spectrum.pause 0x08 }
 
     else
-        ( { qaop | spectrum = qaop.spectrum |> frames qaop.keys }, Cmd.none )
-
-
-
---else
---    case qaop.spectrum.tape of
---        Just tape ->
---            let
---                newenv = qaop.spectrum.cpu.env
---        Nothing -> ( { qaop | spectrum = qaop.spectrum |> frames qaop.keys }, Cmd.none )
+        { qaop | spectrum = qaop.spectrum |> frames qaop.keys }
 
 
 main : Program Flags Model Message
