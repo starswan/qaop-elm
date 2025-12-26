@@ -279,41 +279,50 @@ alwaysPreventDefault msg =
     ( msg, True )
 
 
+updateLoading : InitMessage -> ModelState -> ( ModelState, Cmd Message )
+updateLoading initMessage modelState =
+    case modelState of
+        Loading spectrumRom maybePosix tapUrl ->
+            case initMessage of
+                GotRom result ->
+                    case result of
+                        Ok value ->
+                            ( Loading (ROM value) maybePosix tapUrl, Cmd.none )
+
+                        Err _ ->
+                            ( modelState, Cmd.none )
+
+                InitTick posix ->
+                    case spectrumRom of
+                        RomURL _ ->
+                            ( Loading spectrumRom (Just posix) tapUrl, Cmd.none )
+
+                        ROM z80ROM ->
+                            let
+                                speccy =
+                                    Spectrum.constructor
+
+                                qaop =
+                                    { spectrum = { speccy | rom48k = z80ROM }, keys = [], state = 0 }
+
+                                qaopModel =
+                                    QaopModel qaop 0 0 posix False False
+                            in
+                            ( Running qaopModel, tapLoad tapUrl )
+
+        Running qaopModel ->
+            ( modelState, Cmd.none )
+
+
 update : Message -> Model -> ( Model, Cmd Message )
 update message model =
     case message of
         LoadingMessage initMessage ->
-            case model.state of
-                Loading spectrumRom maybePosix tapUrl ->
-                    case initMessage of
-                        GotRom result ->
-                            case result of
-                                Ok value ->
-                                    ( { model | state = Loading (ROM value) maybePosix tapUrl }, Cmd.none )
-
-                                Err _ ->
-                                    ( model, Cmd.none )
-
-                        InitTick posix ->
-                            case spectrumRom of
-                                RomURL _ ->
-                                    ( { model | state = Loading spectrumRom (Just posix) tapUrl }, Cmd.none )
-
-                                ROM z80ROM ->
-                                    let
-                                        speccy =
-                                            Spectrum.constructor
-
-                                        qaop =
-                                            { spectrum = { speccy | rom48k = z80ROM }, keys = [], state = 0 }
-
-                                        qaopModel =
-                                            QaopModel qaop 0 0 posix False False
-                                    in
-                                    ( { model | state = Running qaopModel }, tapLoad tapUrl )
-
-                Running _ ->
-                    ( model, Cmd.none )
+            let
+                ( state, cmd ) =
+                    updateLoading initMessage model.state
+            in
+            ( { model | state = state }, cmd )
 
         RunningMessage qaopMessage ->
             case model.state of
