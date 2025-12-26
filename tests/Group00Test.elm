@@ -3,6 +3,7 @@ module Group00Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
+import Z80CoreWithClockTime
 import Z80Env exposing (mem, setMemWithTime)
 import Z80Flags exposing (getFlags)
 import Z80Rom
@@ -15,8 +16,11 @@ suite =
         addr =
             30000
 
+        clock =
+            Z80CoreWithClockTime.constructor
+
         old_z80 =
-            Z80.constructor.core
+            clock.core
 
         z80 =
             { old_z80 | pc = addr }
@@ -25,7 +29,7 @@ suite =
             z80.flags
 
         z80env =
-            { z80env = z80.env, time = z80.clockTime }
+            { z80env = z80.env, time = clock.clockTime }
 
         z80main =
             z80.main
@@ -38,10 +42,10 @@ suite =
         [ test "0x00" <|
             \_ ->
                 let
-                    z80inc =
+                    ( z80inc, clockTime ) =
                         { z80 | env = z80env |> setMemWithTime addr 0x00 |> .z80env } |> Z80.executeCoreInstruction z80rom
                 in
-                Expect.equal ( addr + 1, 4 ) ( z80inc.pc, z80inc.clockTime.cpu_time - z80.clockTime.cpu_time )
+                Expect.equal ( addr + 1, 4 ) ( z80inc.pc, clockTime.cpu_time - clock.clockTime.cpu_time )
         , test "0x01 LD BC,nn" <|
             \_ ->
                 let
@@ -53,7 +57,7 @@ suite =
                             |> .z80env
 
                     z80_after_01 =
-                        { z80 | env = new_env } |> Z80.executeCoreInstruction z80rom
+                        { z80 | env = new_env } |> Z80.executeCoreInstruction z80rom |> Tuple.first
                 in
                 Expect.equal ( addr + 3, 0x45, 0x34 ) ( z80_after_01.pc, z80_after_01.main.b, z80_after_01.main.c )
         , test "0x02 LD (BC), A" <|
@@ -67,10 +71,10 @@ suite =
                         }
 
                     z80_after_01 =
-                        z80inc |> Z80.executeCoreInstruction z80rom
+                        z80inc |> Z80.executeCoreInstruction z80rom |> Tuple.first
 
                     mem_value =
-                        z80_after_01.env |> mem 0x4534 z80_after_01.clockTime z80rom
+                        z80_after_01.env |> mem 0x4534 clock.clockTime z80rom
                 in
                 Expect.equal ( addr + 1, 0x27 ) ( z80_after_01.pc, mem_value.value )
         , test "0x03 INC BC" <|
@@ -82,6 +86,7 @@ suite =
                                 | env = z80env |> setMemWithTime addr 0x03 |> .z80env
                                 , main = { z80main | b = 0x45, c = 0xFF }
                             }
+                            |> Tuple.first
                 in
                 Expect.equal ( addr + 1, 0x46, 0x00 ) ( z80_after_01.pc, z80_after_01.main.b, z80_after_01.main.c )
         , test "0x04 INC B" <|
@@ -93,6 +98,7 @@ suite =
                                 | env = z80env |> setMemWithTime addr 0x04 |> .z80env
                                 , main = { z80main | b = 0x45 }
                             }
+                            |> Tuple.first
                 in
                 Expect.equal ( addr + 1, 0x46 ) ( z80_after_01.pc, z80_after_01.main.b )
         , test "0x05 DEC B" <|
@@ -104,6 +110,7 @@ suite =
                                 | env = z80env |> setMemWithTime addr 0x05 |> .z80env
                                 , main = { z80main | b = 0x45 }
                             }
+                            |> Tuple.first
                 in
                 Expect.equal ( addr + 1, 0x44 ) ( z80_after_01.pc, z80_after_01.main.b )
         , test "0x06 LD B,n" <|
@@ -116,7 +123,7 @@ suite =
                             |> .z80env
 
                     z80_after_01 =
-                        executeCoreInstruction z80rom { z80 | env = new_env }
+                        executeCoreInstruction z80rom { z80 | env = new_env } |> Tuple.first
                 in
                 Expect.equal ( addr + 2, 0x78 ) ( z80_after_01.pc, z80_after_01.main.b )
         , describe "RLCA 0x07"
@@ -134,6 +141,7 @@ suite =
                                     | env = new_env
                                     , flags = { flags | a = 0x87 }
                                 }
+                                |> Tuple.first
                     in
                     -- This is RLCA - bit 7 goes into bit 0 and carry flag
                     Expect.equal ( addr + 1, 0x0F, 0x49 ) ( newZ80.pc, newZ80.flags.a, newZ80.flags |> getFlags )
@@ -151,6 +159,7 @@ suite =
                                     | env = new_env
                                     , flags = { flags | a = 0x47 }
                                 }
+                                |> Tuple.first
                     in
                     -- This is RLCA - bit 7 goes into bit 0 and carry flag
                     Expect.equal ( addr + 1, 0x8E, 0x48 ) ( newZ80.pc, newZ80.flags.a, newZ80.flags |> getFlags )
@@ -179,6 +188,7 @@ suite =
                                     | env = z80env |> setMemWithTime addr 0x09 |> .z80env
                                     , main = { z80main | ix = 0x27, b = 0x01, c = 0x02, hl = 0x0304 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 1, 0x0406, 0x27 ) ( z80_01.pc, z80_01.main.hl, z80_01.main.ix )
             , test "0xDD 0x09 ADD IX, BC" <|
@@ -190,6 +200,7 @@ suite =
                                     | env = z80env |> setMemWithTime addr 0xDD |> setMemWithTime (addr + 1) 0x09 |> .z80env
                                     , main = { z80main | ix = 0x05, b = 0x01, c = 0x02, hl = 0x3445 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 2, 0x3445, 0x0107 ) ( z80_after_01.pc, z80_after_01.main.hl, z80_after_01.main.ix )
             , test "0xFD 0x09 ADD IY, BC" <|
@@ -201,6 +212,7 @@ suite =
                                     | env = z80env |> setMemWithTime addr 0xFD |> setMemWithTime (addr + 1) 0x09 |> .z80env
                                     , main = { z80main | iy = 0x05, b = 0x01, c = 0x02, hl = 0x3445 }
                                 }
+                                |> Tuple.first
                     in
                     Expect.equal ( addr + 2, 0x3445, 0x0107 ) ( z80_after_01.pc, z80_after_01.main.hl, z80_after_01.main.iy )
             ]
@@ -219,6 +231,7 @@ suite =
                                 | env = new_env
                                 , main = { z80main | b = 0x45, c = 0x46 }
                             }
+                            |> Tuple.first
                 in
                 Expect.equal ( addr + 1, 0x78 ) ( z80_after_01.pc, z80_after_01.flags.a )
         , test "0x0B DEC BC" <|
@@ -230,6 +243,7 @@ suite =
                                 | env = z80env |> setMemWithTime addr 0x0B |> .z80env
                                 , main = { z80main | b = 0x45, c = 0x00 }
                             }
+                            |> Tuple.first
                 in
                 Expect.equal ( addr + 1, 0x44, 0xFF ) ( z80_after_01.pc, z80_after_01.main.b, z80_after_01.main.c )
         , test "INC C - 0x0C" <|
@@ -241,6 +255,7 @@ suite =
                                 | env = z80env |> setMemWithTime addr 0x0C |> .z80env
                                 , main = { z80main | b = 0x45, c = 0x00 }
                             }
+                            |> Tuple.first
                 in
                 Expect.equal ( addr + 1, 0x45, 0x01 ) ( z80_after_01.pc, z80_after_01.main.b, z80_after_01.main.c )
         , test "DEC C - 0x0D" <|
@@ -252,6 +267,7 @@ suite =
                                 | env = z80env |> setMemWithTime addr 0x0D |> .z80env
                                 , main = { z80main | b = 0x45, c = 0x00 }
                             }
+                            |> Tuple.first
                 in
                 Expect.equal ( addr + 1, 0x45, 0xFF ) ( z80_after_01.pc, z80_after_01.main.b, z80_after_01.main.c )
         , test "LD C,n - 0x0E" <|
@@ -269,6 +285,7 @@ suite =
                                 | env = new_env
                                 , main = { z80main | b = 0x45, c = 0x00 }
                             }
+                            |> Tuple.first
                 in
                 Expect.equal ( addr + 2, 0x45, 0x78 ) ( z80_after_01.pc, z80_after_01.main.b, z80_after_01.main.c )
         , test "RRCA - 0x0F" <|
@@ -280,6 +297,7 @@ suite =
                                 | env = z80env |> setMemWithTime addr 0x0F |> .z80env
                                 , flags = { flags | a = 0x80 }
                             }
+                            |> Tuple.first
                 in
                 Expect.equal ( addr + 1, 0x40 ) ( z80_after_01.pc, z80_after_01.flags.a )
         ]
