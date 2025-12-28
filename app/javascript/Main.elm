@@ -84,8 +84,15 @@ type SpectrumRom
     | ROM Z80ROM
 
 
+type alias LoadingModel =
+    { rom : SpectrumRom
+    , maybeTime : Maybe Time.Posix
+    , tapUrl : String
+    }
+
+
 type ModelState
-    = Loading SpectrumRom (Maybe Time.Posix) String
+    = Loading LoadingModel
     | Running QaopModel
 
 
@@ -129,7 +136,7 @@ type alias Flags =
 
 init : Flags -> ( Model, Cmd Message )
 init data =
-    ( Model (Loading (RomURL data.rom) Nothing data.tape) c_TICKTIME, romLoad data.rom )
+    ( Model (Loading (LoadingModel (RomURL data.rom) Nothing data.tape)) c_TICKTIME, romLoad data.rom )
 
 
 mapLineToSvg : Int -> ( Int, ScreenColourRun ) -> Svg Message
@@ -207,7 +214,7 @@ svgNode screen flash =
 view : Model -> Html Message
 view model =
     case model.state of
-        Loading _ _ _ ->
+        Loading _ ->
             div [] []
 
         Running qaopModel ->
@@ -282,20 +289,24 @@ alwaysPreventDefault msg =
 updateLoading : InitMessage -> ModelState -> ( ModelState, Cmd Message )
 updateLoading initMessage modelState =
     case modelState of
-        Loading spectrumRom maybePosix tapUrl ->
+        Loading loadingModel ->
             case initMessage of
                 GotRom result ->
                     case result of
                         Ok value ->
-                            ( Loading (ROM value) maybePosix tapUrl, Cmd.none )
+                            let
+                                newModel =
+                                    { loadingModel | rom = ROM value }
+                            in
+                            ( Loading newModel, Cmd.none )
 
                         Err _ ->
                             ( modelState, Cmd.none )
 
                 InitTick posix ->
-                    case spectrumRom of
+                    case loadingModel.rom of
                         RomURL _ ->
-                            ( Loading spectrumRom (Just posix) tapUrl, Cmd.none )
+                            ( Loading loadingModel, Cmd.none )
 
                         ROM z80ROM ->
                             let
@@ -308,9 +319,9 @@ updateLoading initMessage modelState =
                                 qaopModel =
                                     QaopModel qaop 0 0 posix False False
                             in
-                            ( Running qaopModel, tapLoad tapUrl )
+                            ( Running qaopModel, tapLoad loadingModel.tapUrl )
 
-        Running qaopModel ->
+        Running _ ->
             ( modelState, Cmd.none )
 
 
@@ -326,7 +337,7 @@ update message model =
 
         RunningMessage qaopMessage ->
             case model.state of
-                Loading _ _ _ ->
+                Loading _ ->
                     ( model, Cmd.none )
 
                 Running qaopModel ->
@@ -448,7 +459,7 @@ loadingCommands =
 subscriptions : Model -> Sub Message
 subscriptions model =
     case model.state of
-        Loading _ _ _ ->
+        Loading _ ->
             Time.every (model.tickInterval |> toFloat) (\posix -> LoadingMessage (InitTick posix))
 
         Running qaopModel ->
