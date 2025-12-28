@@ -286,7 +286,12 @@ alwaysPreventDefault msg =
     ( msg, True )
 
 
-updateLoading : InitMessage -> LoadingModel -> ( ModelState, Cmd Message )
+type LoadResult
+    = StillLoading LoadingModel
+    | NowRunning QaopModel
+
+
+updateLoading : InitMessage -> LoadingModel -> ( LoadResult, Cmd Message )
 updateLoading initMessage loadingModel =
     case initMessage of
         GotRom result ->
@@ -296,15 +301,15 @@ updateLoading initMessage loadingModel =
                         newModel =
                             { loadingModel | rom = ROM value }
                     in
-                    ( Loading newModel, Cmd.none )
+                    ( StillLoading newModel, Cmd.none )
 
                 Err _ ->
-                    ( Loading loadingModel, Cmd.none )
+                    ( StillLoading loadingModel, Cmd.none )
 
         InitTick posix ->
             case loadingModel.rom of
                 RomURL _ ->
-                    ( Loading loadingModel, Cmd.none )
+                    ( StillLoading loadingModel, Cmd.none )
 
                 ROM z80ROM ->
                     let
@@ -317,7 +322,7 @@ updateLoading initMessage loadingModel =
                         qaopModel =
                             QaopModel qaop 0 0 posix False False
                     in
-                    ( Running qaopModel, tapLoad loadingModel.tapUrl )
+                    ( NowRunning qaopModel, tapLoad loadingModel.tapUrl )
 
 
 update : Message -> Model -> ( Model, Cmd Message )
@@ -330,7 +335,12 @@ update message model =
                         ( state, cmd ) =
                             updateLoading initMessage loadingModel
                     in
-                    ( { model | state = state }, cmd )
+                    case state of
+                        StillLoading newloadingModel ->
+                            ( { model | state = Loading newloadingModel }, cmd )
+
+                        NowRunning qaopModel ->
+                            ( { model | state = Running qaopModel }, cmd )
 
                 Running _ ->
                     ( model, Cmd.none )
