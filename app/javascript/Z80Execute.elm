@@ -870,7 +870,7 @@ applyRegisterDelta pc_inc clockTime z80changeData rom48k z80_core =
                         ChangeMainL ->
                             { main | hl = Bitwise.or value (Bitwise.and z80_core.main.hl 0xFF00) }
 
-                ( env_2, newTme2 ) =
+                ( env_2, newTime ) =
                     env |> setMem addr value input.time
             in
             { z80_core | pc = new_pc, main = new_main, env = env_2 }
