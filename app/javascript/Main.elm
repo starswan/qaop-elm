@@ -26,7 +26,7 @@ import Svg exposing (Svg, g, line, rect, svg)
 import Svg.Attributes exposing (fill, height, rx, stroke, viewBox, width, x1, x2, y1, y2)
 import Svg.Lazy
 import Tapfile exposing (Tapfile)
-import Time exposing (posixToMillis)
+import Time
 import Utils exposing (speed_in_hz, time_display)
 import Vector24 exposing (Vector24)
 import Vector8 exposing (Vector8)
@@ -77,7 +77,6 @@ type alias Model =
       tickInterval : Int
     , count : Int
     , elapsed_millis : Int
-    , time : Maybe Time.Posix
     , loadPressed : Bool
     , globalFlash : Bool
     }
@@ -86,7 +85,7 @@ type alias Model =
 type Message
     = GotTAP (Result Http.Error (List Tapfile))
     | GotRom (Result Http.Error Z80ROM)
-    | Tick Time.Posix
+    | Tick Float
     | FlipFlash Time.Posix
     | Pause
     | Autoload
@@ -116,7 +115,7 @@ init data =
         ( newQaop, cmd ) =
             Qaop.new params |> run
     in
-    ( Model newQaop c_TICKTIME 0 0 Nothing False False, cmd )
+    ( Model newQaop c_TICKTIME 0 0 False False, cmd )
 
 
 mapLineToSvg : Int -> ( Int, ScreenColourRun ) -> Svg Message
@@ -284,22 +283,17 @@ update message model =
                     else
                         let
                             elapsed =
-                                case model.time of
-                                    Just time ->
-                                        posixToMillis posix - posixToMillis time
-
-                                    Nothing ->
-                                        0
+                                posix |> floor
 
                             ( q, cmd ) =
                                 model.qaop |> run
                         in
                         { qaop = q, cmd = cmd, count = model.count + 1, elapsed = elapsed }
             in
-            ( { model | count = state.count, elapsed_millis = model.elapsed_millis + state.elapsed, time = Just posix, qaop = state.qaop }, state.cmd )
+            ( { model | count = state.count, elapsed_millis = model.elapsed_millis + state.elapsed, qaop = state.qaop }, state.cmd )
 
         Pause ->
-            ( { model | time = Nothing, qaop = model.qaop |> pause (not model.qaop.spectrum.paused) }, Cmd.none )
+            ( { model | qaop = model.qaop |> pause (not model.qaop.spectrum.paused) }, Cmd.none )
 
         CharacterKeyDown char ->
             let
@@ -388,7 +382,7 @@ subscriptions model =
             --ticker =
             --    Time.every (model.tickInterval |> toFloat) Tick
             ticker =
-                Browser.Events.onAnimationFrame Tick
+                Browser.Events.onAnimationFrameDelta Tick
 
             flasher =
                 Time.every (model.tickInterval * 16 |> toFloat) FlipFlash
