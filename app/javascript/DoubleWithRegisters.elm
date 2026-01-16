@@ -327,7 +327,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
             in
             { z80
                 | pc = pc
-                , clockTime = newTime
                 , env = env_1
             }
 
@@ -341,7 +340,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
             in
             { z80
                 | pc = pc
-                , clockTime = cpu_time
                 , main = { main | hl = int }
             }
 
@@ -355,7 +353,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
             in
             { z80
                 | pc = pc
-                , clockTime = cpu_time
                 , main = { main | ix = int }
             }
 
@@ -369,7 +366,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
             in
             { z80
                 | pc = pc
-                , clockTime = cpu_time
                 , main = { main | iy = int }
             }
 
@@ -386,7 +382,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
             in
             { z80
                 | pc = pc
-                , clockTime = new_b.time
                 , main = { main | b = new_b.value }
             }
 
@@ -403,7 +398,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
             in
             { z80
                 | pc = pc
-                , clockTime = new_a.time
                 , flags = { flags | a = new_a.value }
             }
 
@@ -417,7 +411,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
             in
             { z80
                 | pc = pc
-                , clockTime = newTime
                 , env = env_1
             }
 
@@ -434,7 +427,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
             in
             { z80
                 | pc = pc
-                , clockTime = new_b.time
                 , main = { main | c = new_b.value }
             }
 
@@ -451,7 +443,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
             in
             { z80
                 | pc = pc
-                , clockTime = new_b.time
                 , main = { main | d = new_b.value }
             }
 
@@ -470,7 +461,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
             in
             { z80
                 | pc = pc
-                , clockTime = new_b.time
                 , main = { main | e = new_b.value }
             }
 
@@ -487,7 +477,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
             in
             { z80
                 | pc = pc
-                , clockTime = new_b.time
                 , main = { main | hl = Bitwise.or (main.hl |> Bitwise.and 0xFF) (new_b.value |> shiftLeftBy8) }
             }
 
@@ -504,7 +493,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
             in
             { z80
                 | pc = pc
-                , clockTime = new_b.time
                 , main = { main | hl = Bitwise.or (main.hl |> Bitwise.and 0xFF00) (new_b.value |> Bitwise.and 0xFF) }
             }
 
@@ -525,7 +513,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
             { z80
                 | pc = pc
                 , flags = flags |> changeFlags flagFunc value.value
-                , clockTime = value.time
             }
 
         IndexedIndirectIncrement inAddr offset ->
@@ -553,14 +540,12 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 { z80
                     | pc = pc
                     , env = env_1
-                    , clockTime = newTime
                     , flags = valueWithFlags.flags
                 }
 
             else
                 { z80
                     | pc = pc
-                    , clockTime = cpu_time
                 }
 
         IndexedIndirectDecrement inAddr offset ->
@@ -587,7 +572,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 in
                 { z80
                     | pc = pc
-                    , clockTime = newTime
                     , env = env_1
                     , flags = valueWithFlags.flags
                 }
@@ -595,5 +579,4 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
             else
                 { z80
                     | pc = pc
-                    , clockTime = cpu_time
                 }

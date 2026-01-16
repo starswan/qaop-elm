@@ -3,7 +3,8 @@ module SingleNoParams exposing (..)
 import Bitwise exposing (shiftRightBy)
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), c_TIME_LIMIT)
 import Dict exposing (Dict)
-import Z80Core exposing (Z80, Z80Core, add_cpu_time)
+import Z80Core exposing (Z80Core)
+import Z80CoreWithClockTime exposing (Z80, add_cpu_time)
 import Z80Debug exposing (debugLog)
 import Z80Env exposing (z80_pop, z80_push)
 import Z80Flags exposing (set_af)
@@ -115,7 +116,6 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
         NoOp ->
             { z80
                 | pc = Bitwise.and (z80.pc + 1) 0xFFFF
-                , clockTime = cpu_time
             }
 
         PopBC ->
@@ -130,7 +130,6 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
             { z80
                 | pc = Bitwise.and (z80.pc + 1) 0xFFFF
                 , main = z80.main |> set_bc_main v.value16
-                , clockTime = v.time
                 , env = { old_env | sp = v.sp }
             }
 
@@ -145,7 +144,6 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
             { z80
                 | pc = Bitwise.and (z80.pc + 1) 0xFFFF
                 , main = { main | hl = v.value16 }
-                , clockTime = v.time
                 , env = { old_env | sp = v.sp }
             }
 
@@ -160,7 +158,6 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
             { z80
                 | pc = Bitwise.and (z80.pc + 2) 0xFFFF
                 , main = { main | ix = v.value16 }
-                , clockTime = v.time
                 , env = { old_env | sp = v.sp }
             }
 
@@ -175,7 +172,6 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
             { z80
                 | pc = Bitwise.and (z80.pc + 2) 0xFFFF
                 , main = { main | iy = v.value16 }
-                , clockTime = v.time
                 , env = { old_env | sp = v.sp }
             }
 
@@ -209,7 +205,6 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
             { z80
                 | pc = Bitwise.and (z80.pc + 1) 0xFFFF
                 , flags = set_af v.value16
-                , clockTime = v.time
                 , env = { old_env | sp = v.sp }
             }
 
@@ -222,7 +217,6 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
             { z80
                 | pc = Bitwise.and (z80.pc + 1) 0xFFFF
                 , main = z80.main |> set_de_main v.value16
-                , clockTime = v.time
                 , env = { old_env | sp = v.sp }
             }
 
@@ -271,7 +265,6 @@ applyNoParamsDelta cpu_time z80changeData rom48k z80 =
             in
             { z80
                 | env = { old_env | sp = a.sp }
-                , clockTime = a.time
                 , pc = a.value16
             }
 
@@ -280,11 +273,14 @@ ex_af : Z80 -> Z80
 ex_af z80 =
     -- called by Spectrum loader
     let
+        clock =
+            z80.coreWithClock
+
         core =
-            z80.core
+            clock.core
     in
     { z80
-        | core = { core | flags = z80.alt_flags }
+        | coreWithClock = { clock | core = { core | flags = z80.alt_flags } }
         , alt_flags = core.flags
     }
 
@@ -293,8 +289,11 @@ exx : Z80 -> Z80
 exx z80 =
     -- case 0xD9: exx(); break;
     let
+        clock =
+            z80.coreWithClock
+
         core =
-            z80.core
+            clock.core
 
         main =
             core.main
@@ -303,7 +302,7 @@ exx z80 =
             z80.alt_main
     in
     { z80
-        | core = { core | main = { main | b = alt.b, c = alt.c, d = alt.d, e = alt.e, hl = alt.hl } }
+        | coreWithClock = { clock | core = { core | main = { main | b = alt.b, c = alt.c, d = alt.d, e = alt.e, hl = alt.hl } } }
         , alt_main = { alt | b = main.b, c = main.c, d = main.d, e = main.e, hl = main.hl }
     }
 
@@ -321,24 +320,27 @@ execute_0x76_halt z80 =
     --		}
     --	}
     let
+        clock =
+            z80.coreWithClock
+
         z80_core =
-            z80.core |> debugLog "halt" ""
+            clock.core |> debugLog "halt" ""
 
         interrupts =
             z80_core.interrupts
 
         n =
-            shiftRightBy 2 (c_TIME_LIMIT - z80_core.clockTime.cpu_time + 3)
+            shiftRightBy 2 (c_TIME_LIMIT - clock.clockTime.cpu_time + 3)
 
         new_core =
             if n > 0 then
                 -- turns out env.halt(n, r) just returns n...?
-                { z80_core | interrupts = { interrupts | halted = True, r = interrupts.r + n } } |> add_cpu_time (4 * n)
+                { clock | core = { z80_core | interrupts = { interrupts | halted = True, r = interrupts.r + n } } } |> add_cpu_time (4 * n)
 
             else
-                { z80_core | interrupts = { interrupts | halted = True } }
+                { clock | core = { z80_core | interrupts = { interrupts | halted = True } } }
     in
-    { z80 | core = new_core }
+    { z80 | coreWithClock = new_core }
 
 
 rst : Int -> CpuTimeCTime -> Z80Core -> Z80Core
@@ -352,7 +354,6 @@ rst new_pc cpu_time z80 =
     in
     { z80
         | pc = new_pc
-        , clockTime = cpu_time
         , env = old_env |> z80_push pc cpu_time
     }
 
