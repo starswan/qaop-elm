@@ -7,6 +7,7 @@ module Utils exposing (..)
 
 import Array exposing (Array)
 import Bitwise exposing (shiftLeftBy, shiftRightBy)
+import Bytes.Decode exposing (Decoder, Step(..), loop, map, succeed)
 import Dict exposing (Dict)
 import Hex
 import Process
