@@ -15,7 +15,6 @@ import GroupCBIXIY exposing (singleByteMainRegsIXCB, singleByteMainRegsIYCB, sin
 import GroupED exposing (delta_dict_lite_E0, edWithInterrupts, singleByteFlagsED, singleByteMainAndFlagsED, singleByteMainRegsED)
 import Loop
 import PCIncrement exposing (InterruptPCIncrement(..), MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
-import Set
 import SimpleFlagOps exposing (singleByteFlags, singleByteFlagsCB, singleByteFlagsDD, singleByteFlagsFD)
 import SimpleSingleByte exposing (singleByteMainRegs, singleByteMainRegsDD, singleByteMainRegsFD)
 import SingleByteWithEnv exposing (singleByteZ80Env)
@@ -800,8 +799,9 @@ nonCoreOpCodeList =
     nonCoreFuncs |> Dict.keys
 
 
-nonCoreOpCodeSet =
-    nonCoreOpCodeList |> Set.fromList
+
+--nonCoreOpCodeSet =
+--    nonCoreOpCodeList |> Set.fromList
 
 
 isCoreOpCode : Int -> Bool
