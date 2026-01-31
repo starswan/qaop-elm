@@ -4,8 +4,9 @@ import Bitwise
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
-import Z80Env exposing (mem, setMemWithTime)
+import Z80Env exposing (setMemWithTime)
 import Z80Flags exposing (c_FC, c_FZ, getFlags, setFlags)
+import Z80Mem exposing (mem)
 import Z80Rom
 
 

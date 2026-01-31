@@ -3,7 +3,8 @@ module GroupE0Test exposing (..)
 import Expect
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
-import Z80Env exposing (m1, mem, mem16, setMemWithTime)
+import Z80Env exposing (setMemWithTime)
+import Z80Mem exposing (mem, mem16)
 import Z80Rom
 
 

@@ -34,8 +34,6 @@ constructor =
 
 getROMValue : Int -> Z80ROM -> Int
 getROMValue addr z80rom =
-    --case z80rom of
-    --    Z80ROM z80dict _ ->
     case Dict.get addr z80rom.rom48k of
         Just a ->
             a
@@ -44,29 +42,19 @@ getROMValue addr z80rom =
             debugTodo "getROMValue" (String.fromInt addr) -1
 
 
-
---make_spectrum_rom : Array Int -> Z80ROM
---make_spectrum_rom romdata =
---    let
---        romDict =
---            listToDict (Array.toList romdata)
---    in
---    Z80ROM romDict
-
-
-parseRomFile : Bytes -> Maybe Z80ROM
+parseRomFile : Bytes -> Maybe (Dict Int Int)
 parseRomFile bytes =
     Bytes.Decode.decode romDecoder bytes
 
 
-romDecoder : Decoder Z80ROM
+romDecoder : Decoder (Dict Int Int)
 romDecoder =
     array_decoder 16384 unsignedInt8 |> andThen grabRomDecoder
 
 
-grabRomDecoder : Array Int -> Decoder Z80ROM
+grabRomDecoder : Array Int -> Decoder (Dict Int Int)
 grabRomDecoder romData =
-    succeed (Z80ROM (romData |> Array.toList |> listToDict) Keyboard.constructor Z80Ram.constructor)
+    succeed (romData |> Array.toList |> listToDict)
 
 
 array_decoder : Int -> Decoder Int -> Decoder (Array Int)

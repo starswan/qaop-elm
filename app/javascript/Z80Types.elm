@@ -43,13 +43,6 @@ type alias InterruptRegisters =
     }
 
 
-type alias EnvWithPCAndValue =
-    { env : Z80Env
-    , pc : Int
-    , value : Int
-    }
-
-
 type alias IntWithFlagsTimeAndPC =
     { value : Int
     , flags : FlagRegisters

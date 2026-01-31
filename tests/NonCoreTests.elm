@@ -3,7 +3,8 @@ module NonCoreTests exposing (..)
 import Expect
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
-import Z80Env exposing (mem, setMemWithTime)
+import Z80Env exposing (setMemWithTime)
+import Z80Mem exposing (mem)
 import Z80Rom
 
 
