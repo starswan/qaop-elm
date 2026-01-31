@@ -76,7 +76,7 @@ suite =
                             }
 
                     mem_value =
-                        new_z80.env |> mem 0xA086 new_z80.clockTime z80rom
+                        new_z80.env |> mem 0xA086 new_z80.clockTime z80rom.z80rom
                 in
                 Expect.equal ( addr + 4, 0x40 ) ( new_z80.pc, mem_value.value )
         , test "0xCB F8 SET 7,B" <|
@@ -134,7 +134,7 @@ suite =
                                 }
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 new_z80.clockTime z80rom
+                            new_z80.env |> mem 0x6545 new_z80.clockTime z80rom.z80rom
                     in
                     Expect.equal ( addr + 4, 0x5080, 0x80 ) ( new_z80.pc, new_z80.main.hl, mem_value.value )
             , test "0xFD 0xCB d 0xFD SET 7, (IY + d), L" <|
@@ -157,7 +157,7 @@ suite =
                                 }
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 new_z80.clockTime z80rom
+                            new_z80.env |> mem 0x6545 new_z80.clockTime z80rom.z80rom
                     in
                     Expect.equal ( addr + 4, 0x5080, 0x80 ) ( new_z80.pc, new_z80.main.hl, mem_value.value )
             ]

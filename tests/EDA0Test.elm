@@ -58,7 +58,7 @@ suite =
                             }
 
                     mem_value =
-                        new_z80.env |> mem 0x6545 new_z80.clockTime z80rom |> .value
+                        new_z80.env |> mem 0x6545 new_z80.clockTime z80rom.z80rom |> .value
                 in
                 Expect.equal { pc = addr + 2, hl = 0x6546, b = 0xA4, mem = 0xFF } { pc = new_z80.pc, hl = new_z80.main.hl, b = new_z80.main.b, mem = mem_value }
         , test "0xEDA3 OUTI" <|
@@ -97,7 +97,7 @@ suite =
                             }
 
                     mem_value =
-                        new_z80.env |> mem 0x6545 new_z80.clockTime z80rom |> .value
+                        new_z80.env |> mem 0x6545 new_z80.clockTime z80rom.z80rom |> .value
                 in
                 Expect.equal { pc = addr + 2, hl = 0x6544, b = 0xA4, mem = 0xFF } { pc = new_z80.pc, hl = new_z80.main.hl, b = new_z80.main.b, mem = mem_value }
         , test "0xEDAB OUTD" <|
