@@ -50,9 +50,15 @@ doubleWithRegistersIX =
 
         -- case 0x46: B=env.mem(getd(xy)); time+=3; break;
         , ( 0x46, ( \z80_main param -> NewBRegisterIndirect (z80_main.ix + byte param |> Bitwise.and 0xFFFF), SevenTStates ) )
-        , ( 0x4E, ( ld_c_indirect_ix, SevenTStates ) )
-        , ( 0x56, ( ld_d_indirect_ix, SevenTStates ) )
-        , ( 0x5E, ( ld_e_indirect_ix, SevenTStates ) )
+
+        -- case 0x4E: C=env.mem(getd(xy)); time+=3; break;
+        , ( 0x4E, ( \z80_main param -> NewCRegisterIndirect (z80_main.ix + byte param |> Bitwise.and 0xFFFF), SevenTStates ) )
+
+        --case 0x56: D=env.mem(getd(xy)); time+=3; break;
+        , ( 0x56, ( \z80_main param -> NewDRegisterIndirect (z80_main.ix + byte param |> Bitwise.and 0xFFFF), SevenTStates ) )
+
+        --case 0x5E: E=env.mem(getd(xy)); time+=3; break;
+        , ( 0x5E, ( \z80_main param -> NewERegisterIndirect (z80_main.ix + byte param |> Bitwise.and 0xFFFF), SevenTStates ) )
 
         -- case 0x66: HL=HL&0xFF|env.mem(getd(xy))<<8; time+=3; break;
         , ( 0x66, ( \z80_main param -> NewHRegisterIndirect (z80_main.ix + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
@@ -79,10 +85,18 @@ doubleWithRegistersIY =
         , ( 0x2E, ( ld_iy_l_n, ElevenTStates ) )
         , ( 0x34, ( inc_indirect_iy, TwentyThreeTStates ) )
         , ( 0x35, ( dec_indirect_iy, TwentyThreeTStates ) )
-        , ( 0x46, ( ld_b_indirect_iy, SevenTStates ) )
-        , ( 0x4E, ( ld_c_indirect_iy, SevenTStates ) )
-        , ( 0x56, ( ld_d_indirect_iy, SevenTStates ) )
-        , ( 0x5E, ( ld_e_indirect_iy, SevenTStates ) )
+
+        -- case 0x46: B=env.mem(getd(xy)); time+=3; break;
+        , ( 0x46, ( \z80_main param -> NewBRegisterIndirect (z80_main.iy + byte param |> Bitwise.and 0xFFFF), SevenTStates ) )
+
+        -- case 0x4E: C=env.mem(getd(xy)); time+=3; break;
+        , ( 0x4E, ( \z80_main param -> NewCRegisterIndirect (z80_main.iy + byte param |> Bitwise.and 0xFFFF), SevenTStates ) )
+
+        --case 0x56: D=env.mem(getd(xy)); time+=3; break;
+        , ( 0x56, ( \z80_main param -> NewDRegisterIndirect (z80_main.iy + byte param |> Bitwise.and 0xFFFF), SevenTStates ) )
+
+        --case 0x5E: E=env.mem(getd(xy)); time+=3; break;
+        , ( 0x5E, ( \z80_main param -> NewERegisterIndirect (z80_main.iy + byte param |> Bitwise.and 0xFFFF), SevenTStates ) )
 
         -- case 0x66: HL=HL&0xFF|env.mem(getd(xy))<<8; time+=3; break;
         , ( 0x66, ( \z80_main param -> NewHRegisterIndirect (z80_main.iy + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
@@ -171,24 +185,6 @@ ld_a_indirect_iy z80_main param =
     NewARegisterIndirect address
 
 
-ld_b_indirect_iy : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
-ld_b_indirect_iy z80_main param =
-    -- case 0x46: B=env.mem(getd(xy)); time+=3; break;
-    NewBRegisterIndirect (z80_main.iy + byte param |> Bitwise.and 0xFFFF)
-
-
-ld_c_indirect_ix : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
-ld_c_indirect_ix z80_main param =
-    -- case 0x46: B=env.mem(getd(xy)); time+=3; break;
-    NewCRegisterIndirect (z80_main.ix + byte param |> Bitwise.and 0xFFFF)
-
-
-ld_c_indirect_iy : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
-ld_c_indirect_iy z80_main param =
-    -- case 0x46: B=env.mem(getd(xy)); time+=3; break;
-    NewCRegisterIndirect (z80_main.iy + byte param |> Bitwise.and 0xFFFF)
-
-
 ld_indirect_hl_n : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
 ld_indirect_hl_n z80_main param =
     -- case 0x36: env.mem(HL,imm8()); time+=3; break;
@@ -221,30 +217,6 @@ dec_indirect_iy z80_main param =
     -- case 0x35: v=dec(env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     -- case 0x35: {int a; v=dec(env.mem(a=getd(xy))); time+=4; env.mem(a,v); time+=3;} break;
     IndexedIndirectDecrement z80_main.iy param
-
-
-ld_d_indirect_ix : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
-ld_d_indirect_ix z80_main param =
-    --case 0x56: D=env.mem(getd(xy)); time+=3; break;
-    NewDRegisterIndirect (z80_main.ix + byte param |> Bitwise.and 0xFFFF)
-
-
-ld_e_indirect_ix : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
-ld_e_indirect_ix z80_main param =
-    --case 0x5E: E=env.mem(getd(xy)); time+=3; break;
-    NewERegisterIndirect (z80_main.ix + byte param |> Bitwise.and 0xFFFF)
-
-
-ld_d_indirect_iy : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
-ld_d_indirect_iy z80_main param =
-    --case 0x56: D=env.mem(getd(xy)); time+=3; break;
-    NewDRegisterIndirect (z80_main.iy + byte param |> Bitwise.and 0xFFFF)
-
-
-ld_e_indirect_iy : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
-ld_e_indirect_iy z80_main param =
-    --case 0x5E: E=env.mem(getd(xy)); time+=3; break;
-    NewERegisterIndirect (z80_main.iy + byte param |> Bitwise.and 0xFFFF)
 
 
 applyDoubleWithRegistersDelta : MediumPCIncrement -> CpuTimeCTime -> DoubleWithRegisterChange -> Z80ROM -> Z80Core -> Z80Core
