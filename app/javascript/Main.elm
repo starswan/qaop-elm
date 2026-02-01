@@ -71,13 +71,19 @@ type AutoKey
     | AutoControl String
 
 
+type alias RunningStats =
+    { count : Int
+    , elapsed_millis : Int
+    , time : Maybe Time.Posix
+    }
+
+
 type alias Model =
     { qaop : Qaop
     , -- This doesn't look like a variable, but think it might be useful to adjust it at runtime
       tickInterval : Int
-    , count : Int
-    , elapsed_millis : Int
-    , time : Maybe Time.Posix
+    , stats : RunningStats
+    , displayStats : RunningStats
     , loadPressed : Bool
     , globalFlash : Bool
     }
@@ -87,6 +93,7 @@ type Message
     = GotTAP (Result Http.Error (List Tapfile))
     | GotRom (Result Http.Error (Dict Int Int))
     | Tick Time.Posix
+    | StatsRefresh Time.Posix
     | FlipFlash Time.Posix
     | Pause
     | Autoload
@@ -115,8 +122,11 @@ init data =
 
         ( newQaop, cmd ) =
             Qaop.new params |> run
+
+        stats =
+            RunningStats 0 0 Nothing
     in
-    ( Model newQaop c_TICKTIME 0 0 Nothing False False, cmd )
+    ( Model newQaop c_TICKTIME stats stats False False, cmd )
 
 
 mapLineToSvg : Int -> ( Int, ScreenColourRun ) -> Svg Message
@@ -211,19 +221,22 @@ view model =
         screen =
             model.qaop.spectrum.rom48k.z80ram.screen
 
+        stats =
+            model.displayStats
+
         load_disabled =
             case model.qaop.spectrum.tape of
                 Just tape ->
-                    model.loadPressed || model.count < 100 || tape.tapePos.tapfileNumber == (tape.tapfiles |> Dict.size)
+                    model.loadPressed || stats.count < 100 || tape.tapePos.tapfileNumber == (tape.tapfiles |> Dict.size)
 
                 Nothing ->
                     True
 
         speed =
-            speed_in_hz model.elapsed_millis model.count
+            speed_in_hz stats.elapsed_millis stats.count
 
         time_disp =
-            time_display model.elapsed_millis model.count
+            time_display stats.elapsed_millis stats.count
     in
     -- The inline style is being used for example purposes in order to keep this example simple and
     -- avoid loading additional resources. Use a proper stylesheet when building your own app.
@@ -231,9 +244,9 @@ view model =
         [ h2 [] [ text ("Refresh Interval " ++ (model.tickInterval |> String.fromInt) ++ "ms ") ]
         , div [ style "display" "flex", style "justify-content" "center" ]
             [ div []
-                [ span [ id "cyclecount" ] [ text (String.fromInt model.count) ]
+                [ span [ id "cyclecount" ] [ text (String.fromInt stats.count) ]
                 , text " in "
-                , span [ id "elapsed" ] [ text (model.elapsed_millis // 1000 |> String.fromInt) ]
+                , span [ id "elapsed" ] [ text (stats.elapsed_millis // 1000 |> String.fromInt) ]
                 , text " sec, "
                 , text time_disp
                 , span [ id "hz" ] [ text speed ]
@@ -277,28 +290,37 @@ update message model =
             let
                 ( qaop, cmd ) =
                     gotRom model.qaop result
+
+                stats =
+                    model.stats
             in
-            ( { model | qaop = qaop, count = model.count + 1 }, cmd )
+            ( { model | qaop = qaop, stats = { stats | count = stats.count + 1 } }, cmd )
 
         GotTAP result ->
             let
                 ( qaop, cmd ) =
                     gotTap model.qaop result
 
+                stats =
+                    model.stats
+
                 --run_after_30_sec = delay 30000 LoadTape
             in
-            ( { model | qaop = qaop, count = model.count + 1 }, cmd )
+            ( { model | qaop = qaop, stats = { stats | count = stats.count + 1 } }, cmd )
 
         Tick posix ->
             let
+                stats =
+                    model.stats
+
                 state =
                     if model.qaop.spectrum.paused then
-                        { qaop = model.qaop, cmd = Cmd.none, count = model.count, elapsed = 0 }
+                        { qaop = model.qaop, cmd = Cmd.none, count = stats.count, elapsed = 0 }
 
                     else
                         let
                             elapsed =
-                                case model.time of
+                                case stats.time of
                                     Just time ->
                                         posixToMillis posix - posixToMillis time
 
@@ -308,12 +330,16 @@ update message model =
                             ( q, cmd ) =
                                 model.qaop |> run
                         in
-                        { qaop = q, cmd = cmd, count = model.count + 1, elapsed = elapsed }
+                        { qaop = q, cmd = cmd, count = stats.count + 1, elapsed = elapsed }
             in
-            ( { model | count = state.count, elapsed_millis = model.elapsed_millis + state.elapsed, time = Just posix, qaop = state.qaop }, state.cmd )
+            ( { model | stats = { stats | count = state.count, elapsed_millis = stats.elapsed_millis + state.elapsed, time = Just posix }, qaop = state.qaop }, state.cmd )
 
         Pause ->
-            ( { model | time = Nothing, qaop = model.qaop |> pause (not model.qaop.spectrum.paused) }, Cmd.none )
+            let
+                stats =
+                    model.stats
+            in
+            ( { model | stats = { stats | time = Nothing }, qaop = model.qaop |> pause (not model.qaop.spectrum.paused) }, Cmd.none )
 
         CharacterKeyDown char ->
             let
@@ -360,6 +386,9 @@ update message model =
         FlipFlash _ ->
             ( { model | globalFlash = not model.globalFlash }, Cmd.none )
 
+        StatsRefresh _ ->
+            ( { model | displayStats = model.stats }, Cmd.none )
+
 
 loadQuoteQuoteEnter =
     [ AutoChar 'j', AutoChar '"', AutoChar '"', AutoControl "Enter" ]
@@ -399,13 +428,16 @@ subscriptions model =
 
     else
         let
+            statsRefresh =
+                Time.every 500.0 StatsRefresh
+
             ticker =
                 Time.every (model.tickInterval |> toFloat) Tick
 
             flasher =
                 Time.every (model.tickInterval * 16 |> toFloat) FlipFlash
         in
-        Sub.batch [ ticker, flasher ]
+        Sub.batch [ ticker, flasher, statsRefresh ]
 
 
 keyDownDecoder : Decode.Decoder Message
