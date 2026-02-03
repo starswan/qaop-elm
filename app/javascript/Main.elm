@@ -137,7 +137,7 @@ type alias Flags =
 
 init : Flags -> ( Model, Cmd Message )
 init data =
-    ( Model (Loading (LoadingModel (RomURL data.rom) Nothing data.tape)) c_TICKTIME, romLoad data.rom )
+    ( Model (Loading (LoadingModel (RomURL data.rom) Nothing data.tape)) c_TICKTIME, romLoad data.rom |> Cmd.map LoadingMessage )
 
 
 mapLineToSvg : Int -> ( Int, ScreenColourRun ) -> Svg Message
@@ -306,7 +306,7 @@ type LoadResult
     | NowRunning QaopModel
 
 
-updateLoading : InitMessage -> LoadingModel -> ( LoadResult, Cmd Message )
+updateLoading : InitMessage -> LoadingModel -> ( LoadResult, Cmd QaopMessage )
 updateLoading initMessage loadingModel =
     case initMessage of
         GotRom result ->
@@ -328,11 +328,8 @@ updateLoading initMessage loadingModel =
 
                 ROM z80ROM ->
                     let
-                        speccy =
-                            Spectrum.constructor z80ROM
-
                         qaop =
-                            { spectrum = speccy, keys = [], state = 0 }
+                            Qaop (Spectrum.constructor z80ROM) 0 []
 
                         qaopModel =
                             QaopModel qaop 0 0 posix False False
@@ -347,8 +344,11 @@ update message model =
             case model.state of
                 Loading loadingModel ->
                     let
-                        ( state, cmd ) =
+                        ( state, qaopCmd ) =
                             updateLoading initMessage loadingModel
+
+                        cmd =
+                            qaopCmd |> Cmd.map RunningMessage
                     in
                     case state of
                         StillLoading newloadingModel ->
@@ -541,17 +541,17 @@ toUnKey keyValue =
             ControlKeyUp keyValue
 
 
-tapLoad : String -> Cmd Message
+tapLoad : String -> Cmd QaopMessage
 tapLoad url =
     debugLog "loadTap"
         url
         Http.get
         { url = url
-        , expect = Http.expectBytesResponse (\result -> RunningMessage (GotTAP result)) bytesToTap
+        , expect = Http.expectBytesResponse (\result -> GotTAP result) bytesToTap
         }
 
 
-romLoad : String -> Cmd Message
+romLoad : String -> Cmd InitMessage
 romLoad url =
     debugLog "loadRom"
         url
@@ -559,7 +559,7 @@ romLoad url =
         { url = url
 
         --, expect = Http.Detailed.expectBytes GotRom (array_decoder 16384 unsignedInt8)
-        , expect = Http.expectBytesResponse (\result -> LoadingMessage (GotRom result)) bytesToRom
+        , expect = Http.expectBytesResponse (\result -> GotRom result) bytesToRom
         }
 
 
