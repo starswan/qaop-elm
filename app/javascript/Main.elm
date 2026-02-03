@@ -140,7 +140,7 @@ init data =
     ( Model (Loading (LoadingModel (RomURL data.rom) Nothing data.tape)) c_TICKTIME, romLoad data.rom |> Cmd.map LoadingMessage )
 
 
-mapLineToSvg : Int -> ( Int, ScreenColourRun ) -> Svg Message
+mapLineToSvg : Int -> ( Int, ScreenColourRun ) -> Svg QaopMessage
 mapLineToSvg y_index ( start, linedata ) =
     line
         [ x1 (48 + start |> String.fromInt)
@@ -152,7 +152,7 @@ mapLineToSvg y_index ( start, linedata ) =
         []
 
 
-backgroundNode : Z80Screen -> Svg Message
+backgroundNode : Z80Screen -> Svg QaopMessage
 backgroundNode screen =
     let
         -- border colour is never bright
@@ -162,7 +162,7 @@ backgroundNode screen =
     rect [ height "100%", width "100%", fill border_colour, rx "15" ] []
 
 
-mapScreenLineToSvg : Bool -> Vector24.Index -> ScreenLine -> Svg Message
+mapScreenLineToSvg : Bool -> Vector24.Index -> ScreenLine -> Svg QaopMessage
 mapScreenLineToSvg flash index24 screenLine =
     let
         scrFolded : Vector8 (List ( Int, ScreenColourRun ))
@@ -170,7 +170,7 @@ mapScreenLineToSvg flash index24 screenLine =
             screenLine
                 |> mapScreenLine flash
 
-        folded2 : Vector8 (List (Svg Message))
+        folded2 : Vector8 (List (Svg QaopMessage))
         folded2 =
             scrFolded
                 |> Vector8.indexedMap
@@ -185,7 +185,7 @@ mapScreenLineToSvg flash index24 screenLine =
     folded2 |> Vector8.map (\row -> g [] row) |> Vector8.toList |> g []
 
 
-screenDataNodeList : Bool -> Vector24 ScreenLine -> Vector24 (Svg Message)
+screenDataNodeList : Bool -> Vector24 ScreenLine -> Vector24 (Svg QaopMessage)
 screenDataNodeList flash screenLines =
     screenLines
         |> Vector24.indexedMap
@@ -204,7 +204,7 @@ screenDataNodeList flash screenLines =
             )
 
 
-svgNode : Z80Screen -> Bool -> Html Message
+svgNode : Z80Screen -> Bool -> Html QaopMessage
 svgNode screen flash =
     let
         nodelist =
@@ -233,10 +233,10 @@ view model =
             div [] []
 
         Running qaopModel ->
-            viewQaop qaopModel model.tickInterval
+            viewQaop qaopModel model.tickInterval |> Html.map RunningMessage
 
 
-viewQaop : QaopModel -> Int -> Html Message
+viewQaop : QaopModel -> Int -> Html QaopMessage
 viewQaop model tickInterval =
     let
         screen =
@@ -270,7 +270,7 @@ viewQaop model tickInterval =
                 , span [ id "hz" ] [ text speed ]
                 , text " Hz"
                 ]
-            , button [ onClick (RunningMessage Pause) ]
+            , button [ onClick Pause ]
                 [ text
                     (if model.qaop.spectrum.paused then
                         "Unpause"
@@ -279,7 +279,7 @@ viewQaop model tickInterval =
                         "Pause"
                     )
                 ]
-            , button [ onClick (RunningMessage Autoload), disabled load_disabled ]
+            , button [ onClick Autoload, disabled load_disabled ]
                 [ text "Load"
                 ]
             ]
@@ -507,14 +507,14 @@ qaopSubs model tickInterval =
         Sub.batch [ ticker, flasher ]
 
 
-keyDownDecoder : Decode.Decoder Message
+keyDownDecoder : Decode.Decoder QaopMessage
 keyDownDecoder =
-    Decode.map2 (\s b -> toKey s b |> RunningMessage) (Decode.field "key" Decode.string) (Decode.field "repeat" Decode.bool)
+    Decode.map2 toKey (Decode.field "key" Decode.string) (Decode.field "repeat" Decode.bool)
 
 
-keyUpDecoder : Decode.Decoder Message
+keyUpDecoder : Decode.Decoder QaopMessage
 keyUpDecoder =
-    Decode.map (\s -> toUnKey s |> RunningMessage) (Decode.field "key" Decode.string)
+    Decode.map toUnKey (Decode.field "key" Decode.string)
 
 
 toKey : String -> Bool -> QaopMessage
