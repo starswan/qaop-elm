@@ -329,16 +329,10 @@ updateLoading initMessage loadingModel =
                 ROM z80ROM ->
                     let
                         speccy =
-                            Spectrum.constructor
-
-                        oldCompiledRom =
-                            speccy.rom48k
-
-                        newRom =
-                            { oldCompiledRom | rom48k = z80ROM }
+                            Spectrum.constructor z80ROM
 
                         qaop =
-                            { spectrum = { speccy | rom48k = newRom }, keys = [], state = 0 }
+                            { spectrum = speccy, keys = [], state = 0 }
 
                         qaopModel =
                             QaopModel qaop 0 0 posix False False
