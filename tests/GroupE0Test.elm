@@ -1,5 +1,6 @@
 module GroupE0Test exposing (..)
 
+import Dict
 import Expect
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
@@ -39,7 +40,7 @@ suite =
             { z80env = z80.env, time = z80.clockTime }
 
         z80rom =
-            Z80Rom.constructor
+            Z80Rom.constructor Dict.empty
     in
     describe "Z80.execute_instruction"
         -- Nest as many descriptions as you like.
