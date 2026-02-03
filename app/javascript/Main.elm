@@ -370,10 +370,10 @@ update message model =
                         ( x, y ) =
                             updateQaop qaopMessage qaopModel
                     in
-                    ( { model | state = Running x }, y )
+                    ( { model | state = Running x }, y |> Cmd.map RunningMessage )
 
 
-updateQaop : QaopMessage -> QaopModel -> ( QaopModel, Cmd Message )
+updateQaop : QaopMessage -> QaopModel -> ( QaopModel, Cmd QaopMessage )
 updateQaop message model =
     case message of
         GotTAP result ->
@@ -438,10 +438,10 @@ updateQaop message model =
 
         -- This tiny sleep makes the keyboard work in capybara
         CharacterKeyUp char ->
-            ( model, Delay.after 2 (RunningMessage (CharacterUnKey char)) )
+            ( model, Delay.after 2 (CharacterUnKey char) )
 
         ControlKeyUp str ->
-            ( model, Delay.after 2 (RunningMessage (ControlUnKey str)) )
+            ( model, Delay.after 2 (ControlUnKey str) )
 
         Autoload ->
             ( { model | loadPressed = True }, Cmd.batch loadingCommands )
@@ -458,7 +458,7 @@ c_LOADING_KEY_DELAY =
     800
 
 
-loadingCommands : List (Cmd Message)
+loadingCommands : List (Cmd QaopMessage)
 loadingCommands =
     loadQuoteQuoteEnter
         |> List.indexedMap
@@ -474,8 +474,8 @@ loadingCommands =
                 in
                 -- TODO: loading delay is based on time not cycles. Once keyboard
                 -- scanner is always run at 50Hz, this value could be reduced
-                [ Delay.after (c_LOADING_KEY_DELAY * index) (down |> RunningMessage)
-                , Delay.after (c_LOADING_KEY_DELAY * index + c_LOADING_KEY_DELAY // 2) (up |> RunningMessage)
+                [ Delay.after (c_LOADING_KEY_DELAY * index) down
+                , Delay.after (c_LOADING_KEY_DELAY * index + c_LOADING_KEY_DELAY // 2) up
                 ]
             )
         |> List.concat
@@ -488,10 +488,10 @@ subscriptions model =
             Time.every (model.tickInterval |> toFloat) (\posix -> LoadingMessage (InitTick posix))
 
         Running qaopModel ->
-            qaopSubs qaopModel model.tickInterval
+            qaopSubs qaopModel model.tickInterval |> Sub.map RunningMessage
 
 
-qaopSubs : QaopModel -> Int -> Sub Message
+qaopSubs : QaopModel -> Int -> Sub QaopMessage
 qaopSubs model tickInterval =
     if model.qaop.spectrum.paused then
         Sub.none
@@ -499,46 +499,46 @@ qaopSubs model tickInterval =
     else
         let
             ticker =
-                Time.every (tickInterval |> toFloat) (\posix -> RunningMessage (Tick posix))
+                Time.every (tickInterval |> toFloat) (\posix -> Tick posix)
 
             flasher =
-                Time.every (tickInterval * 16 |> toFloat) (\posix -> RunningMessage (FlipFlash posix))
+                Time.every (tickInterval * 16 |> toFloat) (\posix -> FlipFlash posix)
         in
         Sub.batch [ ticker, flasher ]
 
 
 keyDownDecoder : Decode.Decoder Message
 keyDownDecoder =
-    Decode.map2 toKey (Decode.field "key" Decode.string) (Decode.field "repeat" Decode.bool)
+    Decode.map2 (\s b -> toKey s b |> RunningMessage) (Decode.field "key" Decode.string) (Decode.field "repeat" Decode.bool)
 
 
 keyUpDecoder : Decode.Decoder Message
 keyUpDecoder =
-    Decode.map toUnKey (Decode.field "key" Decode.string)
+    Decode.map (\s -> toUnKey s |> RunningMessage) (Decode.field "key" Decode.string)
 
 
-toKey : String -> Bool -> Message
+toKey : String -> Bool -> QaopMessage
 toKey keyValue repeat =
     if repeat then
-        RunningMessage KeyRepeat
+        KeyRepeat
 
     else
         case String.uncons keyValue of
             Just ( char, "" ) ->
-                RunningMessage (CharacterKeyDown char)
+                CharacterKeyDown char
 
             _ ->
-                RunningMessage (ControlKeyDown keyValue)
+                ControlKeyDown keyValue
 
 
-toUnKey : String -> Message
+toUnKey : String -> QaopMessage
 toUnKey keyValue =
     case String.uncons keyValue of
         Just ( char, "" ) ->
-            RunningMessage (CharacterKeyUp char)
+            CharacterKeyUp char
 
         _ ->
-            RunningMessage (ControlKeyUp keyValue)
+            ControlKeyUp keyValue
 
 
 tapLoad : String -> Cmd Message
