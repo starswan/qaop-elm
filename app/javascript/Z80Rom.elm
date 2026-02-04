@@ -17,18 +17,8 @@ type alias Z80ROM =
     }
 
 
-constructor : Z80ROM
-constructor =
-    let
-        rom48k =
-            List.range 0 16384
-
-        rom_list =
-            List.indexedMap Tuple.pair rom48k
-
-        rom_dict =
-            Dict.fromList rom_list
-    in
+constructor : Dict Int Int -> Z80ROM
+constructor rom_dict =
     Z80ROM rom_dict Keyboard.constructor Z80Ram.constructor
 
 

@@ -1,5 +1,6 @@
 module CBB8Test exposing (..)
 
+import Dict
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
@@ -36,7 +37,7 @@ suite =
             { z80env = z80.env, time = z80.clockTime }
 
         z80rom =
-            Z80Rom.constructor
+            Z80Rom.constructor Dict.empty
     in
     describe "Bit instructions (CB)"
         [ test "0xFD 0xCB nn 0xBE RES 7, (IY + n) -ve" <|
