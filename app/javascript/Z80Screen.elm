@@ -6,7 +6,6 @@ import Byte exposing (Byte, getBit)
 import Maybe
 import ScreenStorage exposing (RawScreenData, ScreenLine, Z80Screen, memoryRow)
 import SpectrumColour exposing (SpectrumColour, spectrumColour)
-import Vector24 exposing (Vector24)
 import Vector32 exposing (Vector32)
 import Vector8 exposing (Vector8)
 
