@@ -18,7 +18,7 @@ import Z80Change exposing (FlagChange(..), Z80Change(..))
 import Z80Core exposing (DirectionForLDIR(..), Z80Core)
 import Z80Debug exposing (debugLog, debugTodo)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..), applyDeltaWithChanges)
-import Z80Env exposing (Z80Env, setMem, setMem16, setMemIgnoringTime, z80_in, z80_out, z80_push)
+import Z80Env exposing (Z80Env, setMem, setMem16, z80_in, z80_out, z80_push)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, f_szh0n0p, inc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
 import Z80Mem exposing (mem, mem16, z80_pop)
 import Z80Registers exposing (ChangeMainRegister(..), ChangeOneRegister(..), CoreRegister(..))
@@ -602,10 +602,10 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80_core =
                 flags =
                     z80_core.flags |> inc value.value
 
-                env_3 =
-                    env |> setMemIgnoringTime addr flags.value value.time
+                ( env_3, newNew ) =
+                    env |> setMem addr flags.value value.time
             in
-            { z80_core | pc = new_pc, env = env_3, flags = flags.flags, clockTime = newTime }
+            { z80_core | pc = new_pc, env = env_3, flags = flags.flags, clockTime = newNew }
 
         DecrementIndirect addr ->
             -- This should be a primitive operation on Z80Env to decrement a stored value
@@ -616,10 +616,10 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80_core =
                 flags =
                     z80_core.flags |> dec value.value
 
-                env_3 =
-                    env |> setMemIgnoringTime addr flags.value newTime
+                ( env_3, newNew ) =
+                    env |> setMem addr flags.value newTime
             in
-            { z80_core | pc = new_pc, env = env_3, flags = flags.flags, clockTime = newTime }
+            { z80_core | pc = new_pc, env = env_3, flags = flags.flags, clockTime = newNew }
 
         RegisterChangeJump int ->
             { z80_core
@@ -659,10 +659,10 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80_core =
                 new_value =
                     bitMask |> inverseBitMaskFromBit |> Bitwise.and value.value
 
-                env_3 =
-                    env |> setMemIgnoringTime addr new_value value.time
+                ( env_3, newNewTime ) =
+                    env |> setMem addr new_value value.time
             in
-            { z80_core | pc = new_pc, env = env_3, clockTime = newTime }
+            { z80_core | pc = new_pc, env = env_3, clockTime = newNewTime }
 
         IndirectBitSet bitMask raw_addr ->
             let
@@ -675,10 +675,10 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80_core =
                 new_value =
                     bitMask |> bitMaskFromBit |> Bitwise.or value.value
 
-                env_3 =
-                    env |> setMemIgnoringTime addr new_value value.time
+                ( env_3, newNewTime ) =
+                    env |> setMem addr new_value value.time
             in
-            { z80_core | pc = new_pc, env = env_3, clockTime = newTime }
+            { z80_core | pc = new_pc, env = env_3, clockTime = newNewTime }
 
         RegChangeNoOp ->
             { z80_core | pc = new_pc, clockTime = newTime }
@@ -826,10 +826,10 @@ applyRegisterDelta pc_inc duration z80changeData rom48k z80_core =
                         ChangeMainL ->
                             { main | hl = Bitwise.or value.value (Bitwise.and z80_core.main.hl 0xFF00) }
 
-                env_2 =
-                    env |> setMemIgnoringTime addr value.value input.time
+                ( env_2, newNew ) =
+                    env |> setMem addr value.value input.time
             in
-            { z80_core | pc = new_pc, main = new_main, flags = value.flags, env = env_2, clockTime = input.time }
+            { z80_core | pc = new_pc, main = new_main, flags = value.flags, env = env_2, clockTime = newNew }
 
         SetBitIndirectWithCopy bitTest changeOneRegister raw_addr ->
             let
