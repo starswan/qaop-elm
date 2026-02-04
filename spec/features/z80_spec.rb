@@ -68,7 +68,7 @@ RSpec.describe "Game" do
           delay_and_send(spectrum, 2620, "99")
 
           # wait for match to actually start properly
-          sleep 10
+          sleep 4
 
           measure_speed_in_hz do
             spectrum.send_keys :enter
@@ -208,7 +208,7 @@ RSpec.describe "Game" do
     high = page.find("#hz").text.to_f
     # wait for speed to hit a steady state
     while high - low > 0.02 && page.find("#elapsed").text.to_i < max
-      times = 1.upto(3).map do
+      times = 0.upto(4).map do
         sleep 1
         page.find("#hz").text.to_f
       end
