@@ -63,38 +63,6 @@ set_iff value z80 =
 
 
 --	int af() {return A<<8 | flags();}
---get_af_z80 : Z80 -> Int
---get_af_z80 z80 =
---    z80.flags |> get_af
---set408bitHL : Int -> Int -> CpuTimeCTime -> ( MainWithIndexRegisters, FlagRegisters, Z80Env ) -> ( MainWithIndexRegisters, FlagRegisters, Z80Env )
---set408bitHL c value clockTime ( z80_main, z80_flags, z80_env ) =
---    case Bitwise.and c 0x07 of
---        0 ->
---            ( { z80_main | b = value }, z80_flags, z80_env )
---
---        1 ->
---            ( { z80_main | c = value }, z80_flags, z80_env )
---
---        2 ->
---            ( { z80_main | d = value }, z80_flags, z80_env )
---
---        3 ->
---            ( { z80_main | e = value }, z80_flags, z80_env )
---
---        4 ->
---            ( { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 value) }, z80_flags, z80_env )
---
---        5 ->
---            ( { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) value }, z80_flags, z80_env )
---
---        -- This is only used by ED40-ED78, and ED70 is supposed to throw away the result
---        --6 ->
---        --    ( z80_main, z80_flags, z80_env |> setMemIgnoringTime z80_main.hl value clockTime )
---        7 ->
---            ( z80_main, { z80_flags | a = value }, z80_env )
---
---        _ ->
---            ( z80_main, z80_flags, z80_env )
 
 
 im0 : Int -> Z80 -> Z80
