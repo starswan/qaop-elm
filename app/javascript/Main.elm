@@ -7,9 +7,8 @@ module Main exposing (..)
 
 import Browser
 import Html exposing (Attribute, Html, div)
-import LoadingModel exposing (InitMessage(..), LoadResult(..), LoadingModel, SpectrumRom(..), romLoad, updateLoading)
+import LoadingModel exposing (Flags, InitMessage(..), LoadResult(..), LoadingModel, SpectrumRom(..), loadingInit, loadingSubs, romLoad, updateLoading)
 import QaopModel exposing (QaopMessage, QaopModel, qaopSubs, updateQaop, viewQaop)
-import Time
 
 
 
@@ -56,15 +55,13 @@ type Message
     | RunningMessage QaopMessage
 
 
-type alias Flags =
-    { rom : String
-    , tape : String
-    }
-
-
 init : Flags -> ( Model, Cmd Message )
 init data =
-    ( Model (Loading (LoadingModel (RomURL data.rom) Nothing data.tape)) c_TICKTIME, romLoad data.rom |> Cmd.map LoadingMessage )
+    let
+        ( m, c ) =
+            loadingInit data
+    in
+    ( Model (m |> Loading) c_TICKTIME, c |> Cmd.map LoadingMessage )
 
 
 view : Model -> Html Message
@@ -117,7 +114,7 @@ subscriptions : Model -> Sub Message
 subscriptions model =
     case model.state of
         Loading _ ->
-            Time.every (model.tickInterval |> toFloat) (\posix -> LoadingMessage (InitTick posix))
+            loadingSubs model.tickInterval |> Sub.map LoadingMessage
 
         Running qaopModel ->
             qaopSubs qaopModel model.tickInterval |> Sub.map RunningMessage

@@ -32,6 +32,17 @@ type LoadResult
     | NowRunning QaopModel
 
 
+type alias Flags =
+    { rom : String
+    , tape : String
+    }
+
+
+loadingInit : Flags -> ( LoadingModel, Cmd InitMessage )
+loadingInit data =
+    ( LoadingModel (RomURL data.rom) Nothing data.tape, romLoad data.rom )
+
+
 romLoad : String -> Cmd InitMessage
 romLoad url =
     debugLog "loadRom"
@@ -73,3 +84,8 @@ updateLoading initMessage loadingModel =
                             QaopModel qaop 0 0 posix False False
                     in
                     ( NowRunning qaopModel, tapLoad loadingModel.tapUrl )
+
+
+loadingSubs : Int -> Sub InitMessage
+loadingSubs tickInterval =
+    Time.every (tickInterval |> toFloat) (\posix -> InitTick posix)
