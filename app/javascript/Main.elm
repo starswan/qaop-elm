@@ -428,8 +428,9 @@ subscriptions model =
 
     else
         let
+            -- refresh the page stats less often to avoid updates
             statsRefresh =
-                Time.every 500.0 StatsRefresh
+                Time.every 1000.0 StatsRefresh
 
             ticker =
                 Time.every (model.tickInterval |> toFloat) Tick
