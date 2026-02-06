@@ -234,8 +234,6 @@ suite =
                         ( z80_1, new_pc ) =
                             { z80
                                 | env = { new_env | sp = stackp + 2 }
-
-                                --, pc = call_site + 1
                                 , flags = { flags | a = 0x30 }
                             }
                                 |> executeCoreInstruction z80rom (call_site + 1)
