@@ -68,8 +68,8 @@ im0 bus z80 =
         z80
 
 
-interrupt : Int -> Z80ROM -> Int -> Z80 -> Z80
-interrupt bus rom48k pc full_z80 =
+interrupt : Int -> Z80ROM -> Z80 -> Z80
+interrupt bus rom48k full_z80 =
     let
         z80Clock =
             full_z80.coreWithClock
@@ -93,7 +93,7 @@ interrupt bus rom48k pc full_z80 =
                 { z80_core | interrupts = { ints | halted = False, iff = 0 } }
 
             pushed =
-                z80_1.env |> z80_push pc z80Clock.clockTime
+                z80_1.env |> z80_push z80Clock.pc z80Clock.clockTime
 
             new_core =
                 { z80_1 | env = pushed }

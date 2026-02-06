@@ -1061,20 +1061,6 @@ applyEdRegisterDelta pc_inc clockTime z80changeData rom48k pc_in z80_core =
     let
         env =
             z80_core.env
-
-        --new_pc =
-        --    case pc_inc of
-        --        IncrementByOne ->
-        --            Bitwise.and (z80_core.pc + 1) 0xFFFF
-        --
-        --        IncrementByTwo ->
-        --            Bitwise.and (z80_core.pc + 2) 0xFFFF
-        --
-        --        IncrementByThree ->
-        --            Bitwise.and (z80_core.pc + 3) 0xFFFF
-        --
-        --        IncrementByFour ->
-        --            Bitwise.and (z80_core.pc + 4) 0xFFFF
     in
     case z80changeData of
         EDNoOp ->

@@ -327,7 +327,7 @@ frames keys speccy =
 
                 Nothing ->
                     let
-                        ( new_z80, new_pc ) =
+                        new_z80 =
                             cpu1
                                 |> interrupt 0xFF rom
                                 |> execute rom
@@ -1066,7 +1066,7 @@ checkLoad spectrum =
             spectrum.cpu
 
         pc1 =
-            cpu.coreWithClock.core.pc
+            cpu.coreWithClock.pc
     in
     if (cpu |> get_ei) || pc1 < 0x056B || pc1 > 0x0604 then
         Nothing
@@ -1524,7 +1524,7 @@ doLoad2 full_cpu z80rom tape =
                 z80_env =
                     tapeData.z80_env
 
-                core_1 =
+                ( core_1, new_pc ) =
                     case tapeData.rf of
                         Just rf ->
                             let
@@ -1541,10 +1541,10 @@ doLoad2 full_cpu z80rom tape =
                                     else
                                         debugLog "body pop" logged Nothing
                             in
-                            { z80_core | flags = { flags | a = tapeData.a } |> setFlags rf, pc = popped.value16, env = { z80_env | sp = popped.sp } }
+                            ( { z80_core | flags = { flags | a = tapeData.a } |> setFlags rf, env = { z80_env | sp = popped.sp } }, popped.value16 )
 
                         Nothing ->
-                            { z80_core | env = z80_env, flags = { flags | a = tapeData.a } |> setFlags tapeData.f }
+                            ( { z80_core | env = z80_env, flags = { flags | a = tapeData.a } |> setFlags tapeData.f }, cpu.pc )
 
                 new_core =
                     { core_1 | main = cpu_main }
@@ -1556,7 +1556,7 @@ doLoad2 full_cpu z80rom tape =
                     else
                         { p | position = tapeData.p, tapfileNumber = p.tapfileNumber + 1 }
             in
-            ( { full_cpu | coreWithClock = { cpu | core = new_core } }, tapeData.de <= 0, new_position )
+            ( { full_cpu | coreWithClock = { cpu | core = new_core, pc = new_pc } }, tapeData.de <= 0, new_position )
 
         Nothing ->
             -- set FZ to indicate complete end of tape
