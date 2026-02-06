@@ -58,24 +58,33 @@ suite =
                             |> setMemWithTime 0x5054 0xB5
                             |> .z80env
 
-                    z80_1 =
+                    ( z80_0, new_pc_0 ) =
                         executeCoreInstruction z80rom
                             addr
                             { z80
                                 | env = { new_env | sp = 0xFF77 }
                                 , main = { z80main | hl = 0x5050, d = 0x60, e = 0x00, b = 0x00, c = 0x05 }
                             }
-                            |> Triple.first
+                            |> Triple.dropSecond
+
+                    ( z80_1, new_pc_1 ) =
+                        z80_0
+                            |> executeCoreInstruction z80rom new_pc_0
+                            |> Triple.dropSecond
+
+                    ( z80_2, new_pc_2 ) =
+                        z80_1
+                            |> executeCoreInstruction z80rom new_pc_1
+                            |> Triple.dropSecond
+
+                    ( z80_3, new_pc_3 ) =
+                        z80_2
+                            |> executeCoreInstruction z80rom new_pc_2
+                            |> Triple.dropSecond
 
                     ( new_z80, new_pc ) =
-                        z80_1
-                            |> executeCoreInstruction z80rom addr
-                            |> Triple.first
-                            |> executeCoreInstruction z80rom addr
-                            |> Triple.first
-                            |> executeCoreInstruction z80rom addr
-                            |> Triple.first
-                            |> executeCoreInstruction z80rom addr
+                        z80_3
+                            |> executeCoreInstruction z80rom new_pc_3
                             |> Triple.dropSecond
 
                     mem_vals =
