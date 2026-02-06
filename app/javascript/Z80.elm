@@ -26,9 +26,9 @@ import TripleByte exposing (tripleByteWith16BitParam, tripleByteWith16BitParamDD
 import TripleWithFlags exposing (triple16bitJumps)
 import TripleWithMain exposing (tripleMainRegsIX, tripleMainRegsIY)
 import Z80Core exposing (CoreChange(..), Z80Core)
-import Z80CoreWithClockTime exposing (Z80, Z80CoreWithClockTime, di_0xF3, ei_0xFB, im0, set_pc)
+import Z80CoreWithClockTime exposing (Z80, Z80CoreWithClockTime, di_0xF3, ei_0xFB)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..))
-import Z80Env exposing (Z80Env, z80_push, z80env_constructor)
+import Z80Env exposing (Z80Env, z80env_constructor)
 import Z80Execute exposing (DeltaWithChanges(..), apply_delta)
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
 import Z80Mem exposing (mem, mem16)
@@ -140,7 +140,7 @@ constructor =
 --
 
 
-execute_ltC0 : Int -> Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> Maybe ( Z80Delta, CpuTimeCTime )
+execute_ltC0 : Int -> Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> Maybe ( Z80Delta, CpuTimeCTime, PCIncrement )
 execute_ltC0 c rom48k clockTime pc z80 =
     case lt40_array_lite |> Array.get c |> Maybe.withDefault Nothing of
         Just f_without_ixiyhl ->
@@ -154,7 +154,7 @@ list0255 =
     List.range 0 255
 
 
-lt40_array_lite : Array (Maybe (Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime )))
+lt40_array_lite : Array (Maybe (Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime, PCIncrement )))
 lt40_array_lite =
     let
         delta_funcs =
@@ -746,9 +746,9 @@ oldDelta c_value c_time interrupts tmp_z80 rom48k pc =
     --       in
     --       OldDeltaWithChanges (DeltaWithChangesData delta interrupts new_pc new_time)
     --       )
-    case tmp_z80 |> execute_ltC0 c_value rom48k new_time pc of
-        Just ( z80delta, clockTime ) ->
-            ( OldDeltaWithChanges (DeltaWithChangesData z80delta interrupts new_pc), clockTime, IncrementByTwo )
+    case tmp_z80 |> execute_ltC0 c_value rom48k new_time new_pc of
+        Just ( z80delta, clockTime, pcInc ) ->
+            ( OldDeltaWithChanges (DeltaWithChangesData z80delta interrupts new_pc), clockTime, pcInc )
 
         Nothing ->
             --case c.value of
