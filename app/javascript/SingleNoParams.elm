@@ -230,8 +230,6 @@ applyNoParamsDelta cpu_time z80changeData rom48k pc z80 =
         --    --case 0xFF:push(PC); PC=c-199; break;
         --    z80 |> rst 0xFF cpu_time pc
         Ret ->
-            --ret : Z80ROM -> Z80 -> Z80Delta
-            --ret rom48k z80 =
             -- case 0xC9: MP=PC=pop(); break;
             let
                 a =
@@ -241,9 +239,7 @@ applyNoParamsDelta cpu_time z80changeData rom48k pc z80 =
                 --env = z80.env
                 --    CpuTimeWithSpAndPc a.time a.sp a.value
             in
-            { z80
-                | env = { old_env | sp = a.sp }
-            }
+            { z80 | env = { old_env | sp = a.sp } }
                 |> CoreWithPC a.value16
 
 
