@@ -208,7 +208,7 @@ suite =
                                 |> setMemWithTime (addr + 1) 0x05
                                 |> .z80env
 
-                        ( new_z80, new_pc ) =
+                        new_pc =
                             executeCoreInstruction z80rom
                                 addr
                                 { z80
@@ -216,7 +216,7 @@ suite =
                                     , main = { z80main | d = 0x65, e = 0xFF }
                                     , flags = { flags | a = 0x39 }
                                 }
-                                |> Triple.dropSecond
+                                |> Triple.third
                     in
                     Expect.equal (addr + 7) new_pc
             , test "backwards" <|
@@ -228,7 +228,7 @@ suite =
                                 |> setMemWithTime (addr + 1) 0xFC
                                 |> .z80env
 
-                        ( new_z80, new_pc ) =
+                        new_pc =
                             executeCoreInstruction z80rom
                                 addr
                                 { z80
@@ -236,7 +236,7 @@ suite =
                                     , main = { z80main | d = 0x65, e = 0xFF }
                                     , flags = { flags | a = 0x39 }
                                 }
-                                |> Triple.dropSecond
+                                |> Triple.third
                     in
                     Expect.equal (addr - 2) new_pc
             ]

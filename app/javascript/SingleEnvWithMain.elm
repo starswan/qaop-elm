@@ -61,23 +61,8 @@ singleEnvMainRegsIY =
         ]
 
 
-applySingleEnvMainChange : PCIncrement -> CpuTimeCTime -> SingleEnvMainChange -> Z80ROM -> Z80Core -> Z80Core
-applySingleEnvMainChange pcInc clockTime z80changeData rom48k z80 =
-    --let
-    --    new_pc =
-    --        case pcInc of
-    --            IncrementByOne ->
-    --                Bitwise.and (z80.pc + 1) 0xFFFF
-    --
-    --            IncrementByTwo ->
-    --                Bitwise.and (z80.pc + 2) 0xFFFF
-    --
-    --            IncrementByThree ->
-    --                Bitwise.and (z80.pc + 3) 0xFFFF
-    --
-    --            IncrementByFour ->
-    --                Bitwise.and (z80.pc + 4) 0xFFFF
-    --in
+applySingleEnvMainChange : CpuTimeCTime -> SingleEnvMainChange -> Z80ROM -> Z80Core -> Z80Core
+applySingleEnvMainChange clockTime z80changeData rom48k z80 =
     case z80changeData of
         SingleEnvNewARegister int cpuTimeCTime ->
             let

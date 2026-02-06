@@ -24,31 +24,19 @@ applyEnvChangeDelta cpu_time z80changeData z80 =
     case z80changeData of
         NewSPValue int ->
             let
-                --new_pc =
-                --    Bitwise.and (z80.pc + 1) 0xFFFF
                 env =
                     z80.env
             in
-            { z80
-                | env = { env | sp = int }
-            }
+            { z80 | env = { env | sp = int } }
 
 
 inc_sp : Z80Env -> SingleByteEnvChange
 inc_sp z80_env =
     -- case 0x33: SP=(char)(SP+1); time+=2; break;
-    --let
-    --    new_sp =
-    --        Bitwise.and (z80.env.sp + 1) 0xFFFF
-    --in
     NewSPValue (Bitwise.and (z80_env.sp + 1) 0xFFFF)
 
 
 dec_sp : Z80Env -> SingleByteEnvChange
 dec_sp z80_env =
     -- case 0x3B: SP=(char)(SP-1); time+=2; break;
-    --let
-    --    new_sp =
-    --        Bitwise.and (z80.env.sp - 1) 0xFFFF
-    --in
     NewSPValue (Bitwise.and (z80_env.sp - 1) 0xFFFF)

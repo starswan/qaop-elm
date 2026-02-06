@@ -43,7 +43,7 @@ tripleMainRegsIY =
         ]
 
 
-applyTripleMainChange : CpuTimeCTime -> TripleMainChange -> Z80Core -> Z80Core
+applyTripleMainChange : CpuTimeCTime -> TripleMainChange -> Z80Core -> ( Z80Core, CpuTimeCTime )
 applyTripleMainChange time z80changeData z80 =
     case z80changeData of
         Store16BitValue address value ->
@@ -51,18 +51,14 @@ applyTripleMainChange time z80changeData z80 =
                 ( env1, clockTime ) =
                     z80.env |> setMem16 address value time
             in
-            { z80
-                | env = env1
-            }
+            ( { z80 | env = env1 }, clockTime )
 
         Store8BitValue address value ->
             let
                 ( env1, clockTime ) =
                     z80.env |> setMem address value time
             in
-            { z80
-                | env = env1
-            }
+            ( { z80 | env = env1 }, clockTime )
 
 
 ld_nn_indirect_ix : Int -> MainWithIndexRegisters -> TripleMainChange

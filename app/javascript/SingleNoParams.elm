@@ -107,8 +107,8 @@ singleWithNoParamFD =
         ]
 
 
-applyNoParamsDelta : CpuTimeCTime -> NoParamChange -> Z80ROM -> Int -> Z80Core -> CoreChange
-applyNoParamsDelta cpu_time z80changeData rom48k pc z80 =
+applyNoParamsDelta : CpuTimeCTime -> NoParamChange -> Z80ROM -> Z80Core -> CoreChange
+applyNoParamsDelta cpu_time z80changeData rom48k z80 =
     let
         old_env =
             z80.env

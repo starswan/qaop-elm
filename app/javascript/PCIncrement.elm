@@ -16,7 +16,3 @@ type TriplePCIncrement
 type MediumPCIncrement
     = IncreaseByTwo
     | IncreaseByThree
-
-
-type InterruptPCIncrement
-    = AddTwoToPC
