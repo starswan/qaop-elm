@@ -229,41 +229,31 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
     case z80changeData of
         DoubleRegChangeStoreIndirect addr value ->
             let
-                --pc =
-                --    Bitwise.and new_pc 0xFFFF
                 ( env_1, newTime ) =
                     z80.env |> setMem addr value cpu_time
             in
-            { z80
-                | env = env_1
-            }
+            { z80 | env = env_1 }
 
         NewHLRegisterValue int ->
             let
                 main =
                     z80.main
             in
-            { z80
-                | main = { main | hl = int }
-            }
+            { z80 | main = { main | hl = int } }
 
         NewIXRegisterValue int ->
             let
                 main =
                     z80.main
             in
-            { z80
-                | main = { main | ix = int }
-            }
+            { z80 | main = { main | ix = int } }
 
         NewIYRegisterValue int ->
             let
                 main =
                     z80.main
             in
-            { z80
-                | main = { main | iy = int }
-            }
+            { z80 | main = { main | iy = int } }
 
         NewRegisterIndirect changeOneRegister addr ->
             let
