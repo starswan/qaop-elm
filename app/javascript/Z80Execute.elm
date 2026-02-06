@@ -65,7 +65,7 @@ apply_delta z80 rom48k clockTime pc z80delta =
             z80 |> applySimple8BitDelta pcInc clockTime single8BitChange rom48k |> CoreOnly
 
         DoubleWithRegistersDelta pcInc doubleWithRegisterChange ->
-            z80 |> applyDoubleWithRegistersDelta pcInc clockTime doubleWithRegisterChange rom48k pc |> CoreOnly
+            z80 |> applyDoubleWithRegistersDelta pcInc clockTime doubleWithRegisterChange rom48k |> CoreOnly
 
         JumpChangeDelta jumpChange ->
             z80 |> applyJumpChangeDelta jumpChange

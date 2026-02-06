@@ -313,9 +313,6 @@ applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
                 flags =
                     z80.flags
 
-                address =
-                    addr + byte offset |> Bitwise.and 0xFFFF
-
                 value =
                     z80.env |> mem address cpu_time rom48k
             in
