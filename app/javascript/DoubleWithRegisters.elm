@@ -217,15 +217,15 @@ dec_indirect_iy z80_main param =
 
 applyDoubleWithRegistersDelta : MediumPCIncrement -> CpuTimeCTime -> DoubleWithRegisterChange -> Z80ROM -> Z80Core -> Z80Core
 applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
-    let
-        pc =
-            case pc_inc of
-                IncreaseByTwo ->
-                    z80.pc + 2 |> Bitwise.and 0xFFFF
-
-                IncreaseByThree ->
-                    z80.pc + 3 |> Bitwise.and 0xFFFF
-    in
+    --let
+    --    pc =
+    --        case pc_inc of
+    --            IncreaseByTwo ->
+    --                z80.pc + 2 |> Bitwise.and 0xFFFF
+    --
+    --            IncreaseByThree ->
+    --                z80.pc + 3 |> Bitwise.and 0xFFFF
+    --in
     case z80changeData of
         DoubleRegChangeStoreIndirect addr value ->
             let
