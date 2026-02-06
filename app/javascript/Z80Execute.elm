@@ -1047,11 +1047,8 @@ applyTripleFlagChange cpu_time z80changeData pc z80 =
 
         CallImmediate int ->
             let
-                new_pc =
-                    Bitwise.and (pc + 3) 0xFFFF
-
                 env_1 =
-                    z80.env |> z80_push new_pc cpu_time
+                    z80.env |> z80_push pc cpu_time
             in
             { z80 | env = env_1 } |> CoreWithPC int
 
