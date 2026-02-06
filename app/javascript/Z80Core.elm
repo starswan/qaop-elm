@@ -1,7 +1,6 @@
 module Z80Core exposing (..)
 
-import Bitwise
-import CpuTimeCTime exposing (CpuTimeCTime, CpuTimePcAnd16BitValue, ShortDelay, addCpuTimeTime)
+import CpuTimeCTime exposing (CpuTimeCTime, CpuTimePcAnd16BitValue, ShortDelay)
 import Z80Env exposing (Z80Env)
 import Z80Flags exposing (FlagRegisters)
 import Z80Types exposing (InterruptMode(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
@@ -34,21 +33,19 @@ type DirectionForLDIR
 --		time += 6;
 --		return v;
 --	}
-
-
-imm16 : Z80ROM -> CpuTimeCTime -> Z80Core -> CpuTimePcAnd16BitValue
-imm16 rom48k clockTime z80 =
-    let
-        v =
-            z80.env |> mem16 z80.pc rom48k clockTime
-
-        pc =
-            Bitwise.and (z80.pc + 2) 0xFFFF
-
-        env =
-            v.time |> addCpuTimeTime 6
-    in
-    CpuTimePcAnd16BitValue env pc v.value16
+--imm16 : Z80ROM -> CpuTimeCTime -> Z80Core -> CpuTimePcAnd16BitValue
+--imm16 rom48k clockTime z80 =
+--    let
+--        v =
+--            z80.env |> mem16 z80.pc rom48k clockTime
+--
+--        pc =
+--            Bitwise.and (z80.pc + 2) 0xFFFF
+--
+--        env =
+--            v.time |> addCpuTimeTime 6
+--    in
+--    CpuTimePcAnd16BitValue env pc v.value16
 
 
 set_iff : Int -> Z80Core -> InterruptRegisters

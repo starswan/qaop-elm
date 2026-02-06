@@ -4,7 +4,8 @@ import Expect
 import Test exposing (..)
 import Z80 exposing (executeCoreInstruction)
 import Z80CoreWithClockTime
-import Z80Env exposing (mem, mem16, setMemWithTime)
+import Z80Env exposing (setMemWithTime)
+import Z80Mem exposing (mem, mem16)
 import Z80Rom
 
 

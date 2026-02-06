@@ -1045,57 +1045,58 @@ execute rom48k z80 =
 --}
 
 
-interrupt : Int -> Z80ROM -> Z80 -> Z80
-interrupt bus rom48k full_z80 =
-    let
-        z80_core =
-            full_z80.core
 
-        ints =
-            z80_core.interrupts
-
-        main =
-            z80_core.main
-    in
-    if Bitwise.and ints.iff 1 == 0 then
-        full_z80
-
-    else
-        let
-            --z81 = debug_log "interrupt" "keyboard scan" z80
-            z80_1 =
-                { z80_core | interrupts = { ints | halted = False, iff = 0 } }
-
-            pushed =
-                z80_1.env |> z80_push z80_1.pc z80_1.clockTime
-
-            new_core =
-                { z80_1 | env = pushed, clockTime = z80_1.clockTime |> addCpuTimeTime 6 }
-
-            new_z80 =
-                { full_z80 | core = new_core }
-        in
-        case ints.iM of
-            IM0 ->
-                new_z80 |> im0 bus
-
-            --1 ->
-            --    new_z80 |> im0 bus
-            IM1 ->
-                new_z80 |> set_pc 0x38
-
-            IM2 ->
-                let
-                    new_ir =
-                        Bitwise.and ints.ir 0xFF00
-
-                    addr =
-                        Bitwise.or new_ir bus
-
-                    env_and_pc =
-                        z80_core.env |> mem16 addr rom48k z80_1.clockTime
-
-                    core_1 =
-                        { new_core | clockTime = env_and_pc.time |> addCpuTimeTime 6, pc = env_and_pc.value16 }
-                in
-                { new_z80 | core = core_1 }
+--interrupt : Int -> Z80ROM -> Z80 -> Z80
+--interrupt bus rom48k full_z80 =
+--    let
+--        z80_core =
+--            full_z80.core
+--
+--        ints =
+--            z80_core.interrupts
+--
+--        main =
+--            z80_core.main
+--    in
+--    if Bitwise.and ints.iff 1 == 0 then
+--        full_z80
+--
+--    else
+--        let
+--            --z81 = debug_log "interrupt" "keyboard scan" z80
+--            z80_1 =
+--                { z80_core | interrupts = { ints | halted = False, iff = 0 } }
+--
+--            pushed =
+--                z80_1.env |> z80_push z80_1.pc z80_1.clockTime
+--
+--            new_core =
+--                { z80_1 | env = pushed, clockTime = z80_1.clockTime |> addCpuTimeTime 6 }
+--
+--            new_z80 =
+--                { full_z80 | core = new_core }
+--        in
+--        case ints.iM of
+--            IM0 ->
+--                new_z80 |> im0 bus
+--
+--            --1 ->
+--            --    new_z80 |> im0 bus
+--            IM1 ->
+--                new_z80 |> set_pc 0x38
+--
+--            IM2 ->
+--                let
+--                    new_ir =
+--                        Bitwise.and ints.ir 0xFF00
+--
+--                    addr =
+--                        Bitwise.or new_ir bus
+--
+--                    env_and_pc =
+--                        z80_core.env |> mem16 addr rom48k z80_1.clockTime
+--
+--                    core_1 =
+--                        { new_core | clockTime = env_and_pc.time |> addCpuTimeTime 6, pc = env_and_pc.value16 }
+--                in
+--                { new_z80 | core = core_1 }
