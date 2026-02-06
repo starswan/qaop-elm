@@ -246,7 +246,7 @@ suite =
                             new_z80.env |> mem (stackp + 1) clock.clockTime z80rom |> .value
 
                         ( z80_2, pc_2 ) =
-                            new_z80 |> executeCoreInstruction z80rom addr |> Triple.dropSecond
+                            new_z80 |> executeCoreInstruction z80rom start |> Triple.dropSecond
                     in
                     Expect.equal
                         { addr = start, sp1 = stackp, stack_low = 4, stack_high = 0x50, addr4 = start + 4, sp2 = stackp + 2 }
