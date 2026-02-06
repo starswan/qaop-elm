@@ -220,36 +220,38 @@ suite =
                         stackp =
                             0xF000
 
-                        start =
+                        call_site =
                             0x5000
 
                         new_env =
                             z80env
-                                |> setMemWithTime start 0xC9
-                                |> setMemWithTime (start + 1) 0xCD
-                                |> setMemWithTime (start + 2) (Bitwise.and start 0xFF)
-                                |> setMemWithTime (start + 3) (shiftRightBy 8 start)
+                                |> setMemWithTime call_site 0xC9
+                                |> setMemWithTime (call_site + 1) 0xCD
+                                |> setMemWithTime (call_site + 2) (Bitwise.and call_site 0xFF)
+                                |> setMemWithTime (call_site + 3) (shiftRightBy 8 call_site)
                                 |> .z80env
 
-                        ( new_z80, new_pc ) =
+                        ( z80_1, new_pc ) =
                             { z80
                                 | env = { new_env | sp = stackp + 2 }
+
+                                --, pc = call_site + 1
                                 , flags = { flags | a = 0x30 }
                             }
-                                |> executeCoreInstruction z80rom (start + 1)
+                                |> executeCoreInstruction z80rom (call_site + 1)
                                 |> Triple.dropSecond
 
                         lo_value =
-                            new_z80.env |> mem stackp clock.clockTime z80rom |> .value
+                            z80_1.env |> mem stackp clock.clockTime z80rom |> .value
 
                         high_value =
-                            new_z80.env |> mem (stackp + 1) clock.clockTime z80rom |> .value
+                            z80_1.env |> mem (stackp + 1) clock.clockTime z80rom |> .value
 
-                        ( z80_2, pc_2 ) =
-                            new_z80 |> executeCoreInstruction z80rom start |> Triple.dropSecond
+                        ( z80_2, final_pc ) =
+                            z80_1 |> executeCoreInstruction z80rom new_pc |> Triple.dropSecond
                     in
                     Expect.equal
-                        { addr = start, sp1 = stackp, stack_low = 4, stack_high = 0x50, addr4 = start + 4, sp2 = stackp + 2 }
-                        { addr = new_pc, sp1 = new_z80.env.sp, stack_low = lo_value, stack_high = high_value, addr4 = pc_2, sp2 = z80_2.env.sp }
+                        { addr = call_site, sp1 = stackp, stack_low = 4, stack_high = 0x50, addr4 = call_site + 4, sp2 = stackp + 2 }
+                        { addr = new_pc, sp1 = z80_1.env.sp, stack_low = lo_value, stack_high = high_value, addr4 = final_pc, sp2 = z80_2.env.sp }
             ]
         ]
