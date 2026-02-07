@@ -204,23 +204,45 @@ suite =
                     Expect.equal { pc = addr + 3, a = 0x77 } { pc = new_z80.pc, a = new_z80.flags.a }
             ]
         , describe "0xBC CP H"
-            [ test "CP H" <|
+            [ test "0xBC CP H greater" <|
                 \_ ->
                     let
-                        new_env =
-                            z80env
-                                |> setMemWithTime addr 0xBC
-                                |> .z80env
-
                         new_z80 =
                             executeCoreInstruction z80rom
                                 { z80
-                                    | env = new_env
-                                    , flags = { flags | a = 0x30 }
-                                    , main = { z80main | hl = 0x3053 }
+                                    | env = z80env |> setMemWithTime addr 0xBC |> .z80env
+                                    , main = { z80main | hl = 0x0245 }
+                                    , flags = { flags | a = 0x06 }
                                 }
                     in
-                    Expect.equal { pc = addr + 1, fr = 0x00 } { pc = new_z80.pc, fr = new_z80.flags.fr }
+                    Expect.equal { pc = addr + 1, fa = 6, fb = -3, ff = 4, fr = 4 }
+                        { pc = new_z80.pc, fa = new_z80.flags.fa, fb = new_z80.flags.fb, ff = new_z80.flags.ff, fr = new_z80.flags.fr }
+            , test "0xBC CP H less" <|
+                \_ ->
+                    let
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = z80env |> setMemWithTime addr 0xBC |> .z80env
+                                    , main = { z80main | hl = 0x0645 }
+                                    , flags = { flags | a = 0x02 }
+                                }
+                    in
+                    Expect.equal { pc = addr + 1, fa = 2, fb = -7, ff = -44, fr = 252 }
+                        { pc = new_z80.pc, fa = new_z80.flags.fa, fb = new_z80.flags.fb, ff = new_z80.flags.ff, fr = new_z80.flags.fr }
+            , test "0xBC CP H equal" <|
+                \_ ->
+                    let
+                        new_z80 =
+                            executeCoreInstruction z80rom
+                                { z80
+                                    | env = z80env |> setMemWithTime addr 0xBC |> .z80env
+                                    , main = { z80main | hl = 0x0645 }
+                                    , flags = { flags | a = 0x06 }
+                                }
+                    in
+                    Expect.equal { pc = addr + 1, fa = 6, fb = -7, ff = 0, fr = 0 }
+                        { pc = new_z80.pc, fa = new_z80.flags.fa, fb = new_z80.flags.fb, ff = new_z80.flags.ff, fr = new_z80.flags.fr }
             , test "CP IXH" <|
                 \_ ->
                     let
