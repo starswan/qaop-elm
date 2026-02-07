@@ -275,6 +275,9 @@ executeAndApplyDelta ct rom48k z80clock =
         CoreWithPCAndDelay new_pc shortDelay z80Core ->
             { z80clock | core = z80Core, pc = new_pc, clockTime = clockTime |> addExtraCpuTime shortDelay }
 
+        JumpOnlyPC int ->
+            { z80clock | clockTime = clockTime, pc = int }
+
 
 execute_delta : CpuTimeAndValue -> Z80ROM -> Int -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
 execute_delta ct rom48k pc z80 =
@@ -802,6 +805,9 @@ executeCoreInstruction rom48k pc z80_core =
 
         CoreWithPCAndDelay new_pc shortDelay z80Core ->
             ( z80Core, clockTime |> addExtraCpuTime shortDelay, new_pc )
+
+        JumpOnlyPC int ->
+            ( z80_core, clockTime, int )
 
 
 c_EX_AF_AFDASH =

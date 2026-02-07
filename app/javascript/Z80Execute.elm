@@ -109,11 +109,7 @@ applyJumpChangeDelta : JumpChange -> Z80Core -> CoreChange
 applyJumpChangeDelta z80changeData z80 =
     case z80changeData of
         ActualJump pc ->
-            --let
-            --    pc =
-            --        Bitwise.and (z80.pc + 2 + jump) 0xFFFF
-            --in
-            z80 |> CoreWithPC pc
+            JumpOnlyPC pc
 
         ConditionalJump address shortDelay function ->
             if z80.flags |> function then
@@ -528,7 +524,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
             { z80_core | env = env_3, flags = flags.flags } |> CoreOnly
 
         RegisterChangeJump int ->
-            z80_core |> CoreWithPC int
+            JumpOnlyPC int
 
         SetIndirect addr value ->
             let
@@ -978,7 +974,7 @@ applyTripleFlagChange cpu_time z80changeData pc z80 =
     case z80changeData of
         Conditional16BitJump int function ->
             if z80.flags |> function then
-                z80 |> CoreWithPC int
+                JumpOnlyPC int
 
             else
                 z80 |> CoreOnly
@@ -1002,7 +998,7 @@ applyTripleFlagChange cpu_time z80changeData pc z80 =
             { z80 | env = env_1 } |> CoreWithPC int
 
         NewPCRegister int ->
-            z80 |> CoreWithPC int
+            JumpOnlyPC int
 
 
 applyEdRegisterDelta : CpuTimeCTime -> EDRegisterChange -> Z80ROM -> Int -> Z80Core -> CoreChange

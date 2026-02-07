@@ -18,6 +18,7 @@ type CoreChange
     = CoreOnly Z80Core
     | CoreWithTime ShortDelay Z80Core
     | CoreWithPC Int Z80Core
+    | JumpOnlyPC Int
     | CoreWithPCAndDelay Int ShortDelay Z80Core
 
 
