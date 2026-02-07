@@ -227,29 +227,33 @@ suite =
             [ test "0xBC CP H greater" <|
                 \_ ->
                     let
-                        new_z80 =
+                        ( new_z80, new_pc ) =
                             executeCoreInstruction z80rom
+                                addr
                                 { z80
                                     | env = z80env |> setMemWithTime addr 0xBC |> .z80env
                                     , main = { z80main | hl = 0x0245 }
                                     , flags = { flags | a = 0x06 }
                                 }
+                                |> Triple.dropSecond
                     in
                     Expect.equal { pc = addr + 1, fa = 6, fb = -3, ff = 4, fr = 4 }
-                        { pc = new_z80.pc, fa = new_z80.flags.fa, fb = new_z80.flags.fb, ff = new_z80.flags.ff, fr = new_z80.flags.fr }
+                        { pc = new_pc, fa = new_z80.flags.fa, fb = new_z80.flags.fb, ff = new_z80.flags.ff, fr = new_z80.flags.fr }
             , test "0xBC CP H less" <|
                 \_ ->
                     let
-                        new_z80 =
+                        ( new_z80, new_pc ) =
                             executeCoreInstruction z80rom
+                                addr
                                 { z80
                                     | env = z80env |> setMemWithTime addr 0xBC |> .z80env
                                     , main = { z80main | hl = 0x0645 }
                                     , flags = { flags | a = 0x02 }
                                 }
+                                |> Triple.dropSecond
                     in
                     Expect.equal { pc = addr + 1, fa = 2, fb = -7, ff = -44, fr = 252 }
-                        { pc = new_z80.pc, fa = new_z80.flags.fa, fb = new_z80.flags.fb, ff = new_z80.flags.ff, fr = new_z80.flags.fr }
+                        { pc = new_pc, fa = new_z80.flags.fa, fb = new_z80.flags.fb, ff = new_z80.flags.ff, fr = new_z80.flags.fr }
             , test "0xBC CP H equal" <|
                 \_ ->
                     let
@@ -262,7 +266,7 @@ suite =
                             executeCoreInstruction z80rom
                                 addr
                                 { z80
-                                    | env = z80env |> setMemWithTime addr 0xBC |> .z80env
+                                    | env = new_env
                                     , main = { z80main | hl = 0x0645 }
                                     , flags = { flags | a = 0x06 }
                                 }
