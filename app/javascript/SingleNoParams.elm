@@ -319,14 +319,11 @@ execute_0x76_halt z80 =
 
 rst : Int -> CpuTimeCTime -> Int -> Z80Core -> CoreChange
 rst new_pc cpu_time old_pc z80 =
-    { z80
-        | env = z80.env |> z80_push old_pc cpu_time
-    }
-        |> CoreWithPC new_pc
+    { z80 | env = z80.env |> z80_push old_pc cpu_time } |> CoreWithPC new_pc
 
 
-applyRstDelta : CpuTimeCTime -> RstChange -> Z80ROM -> Int -> Z80Core -> CoreChange
-applyRstDelta cpu_time z80changeData _ pc z80 =
+applyRstDelta : CpuTimeCTime -> RstChange -> Int -> Z80Core -> CoreChange
+applyRstDelta cpu_time z80changeData pc z80 =
     case z80changeData of
         Rst new_pc ->
             --case 0xC7:push(PC); PC=c-199; break;

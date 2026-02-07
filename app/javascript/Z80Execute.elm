@@ -102,7 +102,7 @@ apply_delta z80 rom48k clockTime pc z80delta =
             z80 |> applyEdRegisterDelta clockTime eDRegisterChange rom48k pc
 
         RstDelta noParamChange ->
-            z80 |> applyRstDelta clockTime noParamChange rom48k pc
+            z80 |> applyRstDelta clockTime noParamChange pc
 
 
 applyJumpChangeDelta : JumpChange -> Z80Core -> CoreChange

@@ -8,24 +8,17 @@ import Z80Flags exposing (FlagRegisters)
 import Z80Types exposing (InterruptRegisters, MainRegisters, MainWithIndexRegisters)
 
 
-type
-    Z80Delta
-    -- only used by LDIR
-    --= WholeCore Z80Core
-    = MainRegsWithPcAndCpuTime MainWithIndexRegisters Int
-    | FlagsWithPCMainAndCpuTime FlagRegisters Int MainWithIndexRegisters
-    | CpuTimeWithFlagsAndPc FlagRegisters Int
+type Z80Delta
+    = DeltaMainRegs MainWithIndexRegisters
+    | FlagsWithPCMainAndCpuTime FlagRegisters MainWithIndexRegisters
+    | DeltaFlags FlagRegisters
     | EnvWithPcAndTime Z80Env Int
       -- only used by ED78
     | CpuTimeWithSpAndPc Int Int
     | InterruptsWithCpuTime InterruptRegisters
-      --| MainRegsWithCpuTime MainWithIndexRegisters CpuTimeCTime
       -- only used by RLD
-    | FlagsWithPcEnvAndCpuTime FlagRegisters Int Z80Env
+    | FlagsWithPcEnvAndCpuTime FlagRegisters Z80Env
     | UnknownIntValue String Int
-      -- only used by CPIR
-      --| HLBCWithFlagsAndPc Int Int FlagRegisters Int
-      --| NewAValue Int
     | NoOp
 
 
@@ -45,22 +38,14 @@ applyDeltaWithChanges z80delta z80 =
             z80.env
     in
     case z80delta.delta of
-        --WholeCore just_z80 ->
-        --    just_z80 |> CoreOnly
-        --HLBCWithFlagsAndPc hl bc flags pc ->
-        --    let
-        --        main =
-        --            z80.main |> set_bc_main bc
-        --    in
-        --    { z80 | flags = flags, main = { main | hl = hl }, env = z80_env }
-        MainRegsWithPcAndCpuTime mainRegisters pc ->
-            { z80 | env = z80_env, main = mainRegisters, interrupts = z80delta.interrupts } |> CoreWithPC pc
+        DeltaMainRegs mainRegisters ->
+            { z80 | env = z80_env, main = mainRegisters, interrupts = z80delta.interrupts } |> CoreOnly
 
         EnvWithPcAndTime z80Env programCounter ->
             { z80 | env = z80Env, interrupts = z80delta.interrupts } |> CoreWithPC programCounter
 
-        CpuTimeWithFlagsAndPc flagRegisters pc ->
-            { z80 | flags = flagRegisters, env = z80_env, interrupts = z80delta.interrupts } |> CoreWithPC pc
+        DeltaFlags flagRegisters ->
+            { z80 | flags = flagRegisters, env = z80_env, interrupts = z80delta.interrupts } |> CoreOnly
 
         CpuTimeWithSpAndPc sp pc ->
             { z80 | env = { z80_env | sp = sp }, interrupts = z80delta.interrupts } |> CoreWithPC pc
@@ -68,11 +53,11 @@ applyDeltaWithChanges z80delta z80 =
         InterruptsWithCpuTime interruptRegisters ->
             { z80 | env = z80_env, interrupts = interruptRegisters } |> CoreOnly
 
-        FlagsWithPCMainAndCpuTime flagRegisters pc mainWithIndexRegisters ->
-            { z80 | flags = flagRegisters, env = z80_env, main = mainWithIndexRegisters, interrupts = z80delta.interrupts } |> CoreWithPC pc
+        FlagsWithPCMainAndCpuTime flagRegisters mainWithIndexRegisters ->
+            { z80 | flags = flagRegisters, env = z80_env, main = mainWithIndexRegisters, interrupts = z80delta.interrupts } |> CoreOnly
 
-        FlagsWithPcEnvAndCpuTime flagRegisters pc z80Env ->
-            { z80 | flags = flagRegisters, env = z80Env, interrupts = z80delta.interrupts } |> CoreWithPC pc
+        FlagsWithPcEnvAndCpuTime flagRegisters z80Env ->
+            { z80 | flags = flagRegisters, env = z80Env, interrupts = z80delta.interrupts } |> CoreOnly
 
         UnknownIntValue string int ->
             debugTodo string (int |> toHexString2) z80 |> CoreOnly

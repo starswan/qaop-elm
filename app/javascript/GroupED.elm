@@ -16,7 +16,7 @@ import Z80Change exposing (FlagChange(..), Z80Change(..))
 import Z80Core exposing (DirectionForLDIR(..), Z80Core)
 import Z80Debug exposing (debugLog)
 import Z80Delta exposing (Z80Delta(..))
-import Z80Env exposing (Z80Env, setMem16, setMem16IgnoringTime, setMemIgnoringTime, z80_in)
+import Z80Env exposing (Z80Env, setMem, setMem16, setMem16IgnoringTime, setMemIgnoringTime, z80_in)
 import Z80Flags exposing (FlagRegisters, c_F3, c_F5, c_F53, c_FC, c_FH, f_szh0n0p, z80_sub)
 import Z80Mem exposing (imm16, mem, mem16)
 import Z80Registers exposing (ChangeMainRegister(..))
@@ -159,7 +159,7 @@ execute_ED4B rom48k clockTime pc z80 =
         --x = debug_log "LD BC,(nnnn)" (v2.value |> toHexString) Nothing
     in
     --{ z80_1 | env = { env | time = v2.time } } |> set_bc v2.value |> add_cpu_time 6 |> Whole
-    ( MainRegsWithPcAndCpuTime (z80.main |> set_bc_main v2.value16) v1.pc, v2.time |> addCpuTimeTime 6, IncrementByFour )
+    ( DeltaMainRegs (z80.main |> set_bc_main v2.value16), v2.time |> addCpuTimeTime 6, IncrementByFour )
 
 
 execute_ED53 : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime, PCIncrement )
@@ -219,7 +219,7 @@ execute_ED5B rom48k clockTime pc z80 =
             env |> mem16 v1.value16 rom48k v1.time
     in
     --{ z80_1 | env = { env | time = v2.time } } |> set_de v2.value |> add_cpu_time 6 |> Whole
-    ( MainRegsWithPcAndCpuTime (z80.main |> set_de_main v2.value16) v1.pc, v2.time |> addCpuTimeTime 6, IncrementByFour )
+    ( DeltaMainRegs (z80.main |> set_de_main v2.value16), v2.time |> addCpuTimeTime 6, IncrementByFour )
 
 
 execute_ED6B : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime, PCIncrement )
@@ -239,7 +239,7 @@ execute_ED6B rom48k clockTime pc z80 =
         v2 =
             env |> mem16 v1.value16 rom48k v1.time
     in
-    ( MainRegsWithPcAndCpuTime { z80_main | hl = v2.value16 } v1.pc, v2.time |> addCpuTimeTime 6, IncrementByFour )
+    ( DeltaMainRegs { z80_main | hl = v2.value16 }, v2.time |> addCpuTimeTime 6, IncrementByFour )
 
 
 execute_ED73 : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime, PCIncrement )
@@ -281,10 +281,7 @@ execute_ED78 rom48k clockTime pc z80 =
         new_flags =
             { flags | a = new_a.value } |> f_szh0n0p new_a.value
     in
-    --{ z80 | env = { env | time = new_a.time |> add_cpu_time_time 4 } , flags = new_flags } |> Whole
-    --( CpuTimeWithFlagsAndPc new_flags z80.pc, new_a.time |> addCpuTimeTime 4 )
-    -- bit weird returning Pc when it's not an output...?
-    ( CpuTimeWithFlagsAndPc new_flags pc, new_a.time |> addCpuTimeTime 4, IncrementByTwo )
+    ( DeltaFlags new_flags, new_a.time |> addCpuTimeTime 4, IncrementByTwo )
 
 
 execute_ED7B : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime, PCIncrement )
@@ -335,10 +332,7 @@ execute_ED70 rom48k clockTime pc z80 =
         new_flags =
             debugLog "ED70 - IN (C)" ( new_a.value, z80.main.b |> toHexString2, z80.main.c |> toHexString2 ) z80.flags |> f_szh0n0p new_a.value
     in
-    --{ z80 | env = { env | time = new_a.time |> add_cpu_time_time 4 } , flags = new_flags } |> Whole
-    --( CpuTimeWithFlagsAndPc new_flags z80.pc, new_a.time |> addCpuTimeTime 4 )
-    -- again weird returning a PC when we don't need to
-    ( CpuTimeWithFlagsAndPc new_flags pc, new_a.time |> addCpuTimeTime 4, IncrementByTwo )
+    ( DeltaFlags new_flags, new_a.time |> addCpuTimeTime 4, IncrementByTwo )
 
 
 group_ed : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime, PCIncrement )
@@ -497,15 +491,8 @@ ldir incOrDec repeat rom48k clockTime pc_in z80 =
         main =
             z80.main
 
-        ( hl, de, bc1 ) =
+        ( hl, de, bc ) =
             ( z80.main.hl, main |> get_de, main |> get_bc )
-
-        ( a1, a2, bc ) =
-            --if incOrDec == Backwards && repeat then
-            --    debugLog "HL, DE, BC" ( hl |> toHexString, de |> toHexString, bc1 |> toHexString2 ) ( hl, de, bc1 )
-            --
-            --else
-            ( hl, de, bc1 )
 
         v1 =
             z80.env |> mem z80.main.hl clockTime rom48k
@@ -513,24 +500,24 @@ ldir incOrDec repeat rom48k clockTime pc_in z80 =
         new_hl =
             case incOrDec of
                 Forwards ->
-                    a1 + 1 |> Bitwise.and 0xFFFF
+                    hl + 1 |> Bitwise.and 0xFFFF
 
                 Backwards ->
-                    a1 - 1 |> Bitwise.and 0xFFFF
+                    hl - 1 |> Bitwise.and 0xFFFF
 
         z80_1 =
             { z80 | main = { main | hl = new_hl } }
 
-        env_1 =
-            z80.env |> setMemIgnoringTime a2 v1.value v1.time
+        ( env_1, newClock ) =
+            z80.env |> setMem de v1.value v1.time
 
         new_de =
             case incOrDec of
                 Forwards ->
-                    a2 + 1 |> Bitwise.and 0xFFFF
+                    de + 1 |> Bitwise.and 0xFFFF
 
                 Backwards ->
-                    a2 - 1 |> Bitwise.and 0xFFFF
+                    de - 1 |> Bitwise.and 0xFFFF
 
         z80_2 =
             { z80_1 | env = env_1, main = z80_1.main |> set_de_main new_de }
@@ -624,10 +611,7 @@ adc_hl b clockTime pc z80 =
         ( flags, hl ) =
             ed_adc_hl b z80_main z80.flags
     in
-    --{ z80 | main = { main | hl = r }, flags = { flags | ff = ff, fa = fa, fb = fb, fr = fr} } |> add_cpu_time 7
-    --FlagsWithPCMainAndCpuTime { flags | ff = ff, fa = fa, fb = fb, fr = fr } z80.pc { main | hl = r } (z80.env.time |> addCpuTimeTime 7)
-    --( FlagsWithPCMainAndCpuTime flags z80.pc { z80_main | hl = hl }, clockTime |> addCpuTimeTime 7 )
-    ( FlagsWithPCMainAndCpuTime flags pc { z80_main | hl = hl }, clockTime |> addCpuTimeTime 7, IncrementByTwo )
+    ( FlagsWithPCMainAndCpuTime flags { z80_main | hl = hl }, clockTime |> addCpuTimeTime 7, IncrementByTwo )
 
 
 
@@ -763,11 +747,8 @@ rld rom48k clockTime pc z80 =
         v =
             Bitwise.or v_lhs v_rhs
 
-        a1 =
-            Bitwise.and z80.flags.a 0xF0
-
         new_a =
-            Bitwise.or a1 (shiftRightBy8 v)
+            Bitwise.and z80.flags.a 0xF0 |> Bitwise.or (shiftRightBy8 v)
 
         flags =
             z80.flags
@@ -775,18 +756,10 @@ rld rom48k clockTime pc z80 =
         new_flags =
             { flags | a = new_a } |> f_szh0n0p new_a
 
-        --z80_1 =
-        --    { z80 | flags = new_flags }
-        env_0 =
-            z80.env
-
-        env_1 =
-            env_0 |> setMemIgnoringTime z80.main.hl (Bitwise.and v 0xFF) v_lhs_1.time
+        ( env_1, newClock ) =
+            z80.env |> setMem z80.main.hl (Bitwise.and v 0xFF) v_lhs_1.time
     in
-    --{ z80_1 | env = env_1 } |> add_cpu_time 10 |> Whole
-    --( FlagsWithPcEnvAndCpuTime new_flags z80.pc env_1, clockTime |> addCpuTimeTime 10 )
-    -- again wasteful return of PC
-    ( FlagsWithPcEnvAndCpuTime new_flags pc env_1, clockTime |> addCpuTimeTime 10, IncrementByTwo )
+    ( FlagsWithPcEnvAndCpuTime new_flags env_1, newClock |> addCpuTimeTime 10, IncrementByTwo )
 
 
 
@@ -813,11 +786,8 @@ rrd rom48k clockTime pc z80 =
         v =
             Bitwise.or v_lhs.value v_rhs
 
-        a1 =
-            Bitwise.and z80.flags.a 0xF0
-
         new_a =
-            Bitwise.or a1 (v |> Bitwise.and 0x0F)
+            Bitwise.and z80.flags.a 0xF0 |> Bitwise.or (v |> Bitwise.and 0x0F)
 
         flags =
             z80.flags
@@ -825,18 +795,10 @@ rrd rom48k clockTime pc z80 =
         new_flags =
             { flags | a = new_a } |> f_szh0n0p new_a
 
-        --z80_1 =
-        --    { z80 | flags = new_flags }
-        env_0 =
-            z80.env
-
         env_1 =
-            env_0 |> setMemIgnoringTime z80.main.hl (Bitwise.and (v |> shiftRightBy 4) 0xFF) v_lhs.time
+            z80.env |> setMemIgnoringTime z80.main.hl (Bitwise.and (v |> shiftRightBy 4) 0xFF) v_lhs.time
     in
-    --{ z80_1 | env = env_1 } |> add_cpu_time 10 |> Whole
-    --( FlagsWithPcEnvAndCpuTime new_flags z80.pc env_1, clockTime |> addCpuTimeTime 10 )
-    -- wasteful return of PC
-    ( FlagsWithPcEnvAndCpuTime new_flags pc env_1, clockTime |> addCpuTimeTime 10, IncrementByTwo )
+    ( FlagsWithPcEnvAndCpuTime new_flags env_1, clockTime |> addCpuTimeTime 10, IncrementByTwo )
 
 
 singleByteMainRegsED : Dict Int ( MainWithIndexRegisters -> EDRegisterChange, InstructionDuration )
