@@ -63,7 +63,7 @@ c_TICKTIME =
 
 
 c_SCALEFACTOR =
-    2
+    3
 
 
 type AutoKey
