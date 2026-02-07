@@ -9,13 +9,12 @@ FactoryBot.define do
       filename { 'MATCHDAY.TAP' }
     end
 
-    # Sadly this TAP file appears to be broken
-    # trait :chuckie_egg do
-    #   name { "ChuckieEgg" }
-    #   download_url { "https://www.worldofspectrum.org/pub/sinclair/games/c/ChuckieEgg.tap.zip" }
-    #   filetype { "tap" }
-    #   filename { "Chuckie Egg.tap" }
-    # end
+    trait :toady do
+      name { "Toady" }
+      download_url { "https://www.worldofspectrum.org//pub/sinclair/games/t/Toady.tap.zip" }
+      filetype { "TAP" }
+      filename { "TOADY.TAP" }
+    end
 
     trait :colossus do
       name { "ColossusChess" }
