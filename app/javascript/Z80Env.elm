@@ -6,11 +6,10 @@
 module Z80Env exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CTime(..), CpuTimeAnd16BitValue, CpuTimeAndValue, CpuTimeCTime, CpuTimeSpAnd16BitValue, addCpuTimeTime, cont, cont1, cont_port)
+import CpuTimeCTime exposing (CTime(..), CpuTimeAnd16BitValue, CpuTimeAndValue, CpuTimeCTime, CpuTimeSpAnd16BitValue, cont, cont1, cont_port)
 import Dict exposing (Dict)
 import Keyboard exposing (Keyboard, z80_keyboard_input)
 import Utils exposing (shiftRightBy8)
-import Z80Ram exposing (Z80Ram)
 
 
 type alias Z80Env =
