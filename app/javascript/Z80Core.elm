@@ -14,12 +14,23 @@ type alias Z80Core =
     }
 
 
+type RepeatPCOffset
+    = NoOffset
+    | JumpBack
+
+
 type CoreChange
     = CoreOnly Z80Core
     | CoreWithTime ShortDelay Z80Core
     | CoreWithPC Int Z80Core
     | JumpOnlyPC Int
+      --| CallJump Int
+      --| CallJumpOffset Int
     | CoreWithPCAndDelay Int ShortDelay Z80Core
+    | CallWithPCAndDelay Int ShortDelay
+    | CallWithPC Int
+    | Looper RepeatPCOffset Z80Core
+    | LooperWithDelay RepeatPCOffset ShortDelay Z80Core
 
 
 type DirectionForLDIR

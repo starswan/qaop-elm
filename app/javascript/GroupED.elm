@@ -13,7 +13,7 @@ import PCIncrement exposing (PCIncrement(..))
 import RegisterChange exposing (EDRegisterChange(..), InterruptChange(..), SixteenBit(..))
 import Utils exposing (char, shiftLeftBy8, shiftRightBy8, toHexString2)
 import Z80Change exposing (FlagChange(..), Z80Change(..))
-import Z80Core exposing (DirectionForLDIR(..), Z80Core)
+import Z80Core exposing (DirectionForLDIR(..), RepeatPCOffset(..), Z80Core)
 import Z80Debug exposing (debugLog)
 import Z80Delta exposing (Z80Delta(..))
 import Z80Env exposing (Z80Env, setMem, setMem16, setMem16IgnoringTime, setMemIgnoringTime, z80_in)
@@ -482,8 +482,8 @@ sbc_hl b z80 =
 -- return data, delay and PC
 
 
-ldir : DirectionForLDIR -> Bool -> Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Core, Maybe ShortDelay, Int )
-ldir incOrDec repeat rom48k clockTime pc_in z80 =
+ldir : DirectionForLDIR -> Bool -> Z80ROM -> CpuTimeCTime -> Z80Core -> ( Z80Core, Maybe ShortDelay, RepeatPCOffset )
+ldir incOrDec repeat rom48k clockTime z80 =
     --  private void ldir(int i, boolean r)
     let
         --v = env.mem(a = HL); HL = (char)(a+i); time += 3;
@@ -554,13 +554,13 @@ ldir incOrDec repeat rom48k clockTime pc_in z80 =
         ( v, pc, time ) =
             if a /= 0 then
                 if repeat then
-                    ( 0x80, Bitwise.and (pc_in - 2) 0xFFFF, Just FiveExtraTStates )
+                    ( 0x80, JumpBack, Just FiveExtraTStates )
 
                 else
-                    ( 0x80, pc_in, Nothing )
+                    ( 0x80, NoOffset, Nothing )
 
             else
-                ( 0, pc_in, Nothing )
+                ( 0, NoOffset, Nothing )
 
         flags =
             z80_2.flags
@@ -644,8 +644,8 @@ adc_hl b clockTime pc z80 =
 --}
 
 
-cpir : DirectionForLDIR -> Bool -> Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Core, CpuTimeCTime, Int )
-cpir incOrDec repeat rom48k clockTime pc_in z80_core =
+cpir : DirectionForLDIR -> Bool -> Z80ROM -> CpuTimeCTime -> Z80Core -> ( Z80Core, CpuTimeCTime, RepeatPCOffset )
+cpir incOrDec repeat rom48k clockTime z80_core =
     let
         z80_flags =
             z80_core.flags
@@ -687,15 +687,15 @@ cpir incOrDec repeat rom48k clockTime pc_in z80_core =
                 let
                     newish_pc =
                         if repeat && v /= 0 then
-                            pc_in - 2 |> Bitwise.and 0xFFFF
+                            JumpBack
 
                         else
-                            pc_in
+                            NoOffset
                 in
                 ( Bitwise.or 0x80 fa, Bitwise.or 0x80 fb, newish_pc )
 
             else
-                ( fa, fb, pc_in )
+                ( fa, fb, NoOffset )
 
         old_ff =
             Bitwise.or (z80_core.flags.ff |> Bitwise.and 0xFF00) (v |> Bitwise.and (c_F53 |> complement))
