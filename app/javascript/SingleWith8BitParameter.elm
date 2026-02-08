@@ -52,7 +52,7 @@ maybeRelativeJump =
 
 type JumpChange
     = ActualJump Int
-    | ConditionalJump Int ShortDelay (FlagRegisters -> Bool)
+    | ConditionalJumpOffset Int ShortDelay (FlagRegisters -> Bool)
     | DJNZ Int ShortDelay
 
 
@@ -115,7 +115,7 @@ jr_nz_d param pc =
     --
     --else
     --    NoJump
-    ConditionalJump (pc + 2 + byte param) FiveExtraTStates jump_nz
+    ConditionalJumpOffset (byte param) FiveExtraTStates jump_nz
 
 
 jr_z_d : Int -> Int -> JumpChange
@@ -126,7 +126,7 @@ jr_z_d param pc =
     --
     --else
     --    NoJump
-    ConditionalJump (pc + 2 + byte param) FiveExtraTStates jump_z
+    ConditionalJumpOffset (byte param) FiveExtraTStates jump_z
 
 
 jr_nc_d : Int -> Int -> JumpChange
@@ -137,7 +137,7 @@ jr_nc_d param pc =
     --
     --else
     --    NoJump
-    ConditionalJump (pc + 2 + byte param) FiveExtraTStates jump_nc
+    ConditionalJumpOffset (byte param) FiveExtraTStates jump_nc
 
 
 jr_c_d : Int -> Int -> JumpChange
@@ -148,7 +148,7 @@ jr_c_d param pc =
     --
     --else
     --    NoJump
-    ConditionalJump (pc + 2 + byte param) FiveExtraTStates jump_c
+    ConditionalJumpOffset (byte param) FiveExtraTStates jump_c
 
 
 djnz : Int -> Int -> JumpChange

@@ -8,8 +8,8 @@ import SingleNoParams exposing (ex_af)
 import Tapfile exposing (Tapfile, tapfileDataToList)
 import Utils exposing (char, shiftLeftBy8, shiftRightBy8, toHexString, toHexString2)
 import Vector8
-import Z80 exposing (execute, interrupt)
-import Z80Core exposing (Z80, Z80Core, get_ei)
+import Z80 exposing (execute)
+import Z80CoreWithClockTime exposing (Z80, get_ei, interrupt)
 import Z80Debug exposing (debugLog)
 import Z80Env exposing (Z80Env, setMemIgnoringTime)
 import Z80Flags exposing (c_FC, c_FZ, getFlags, setFlags)
@@ -265,11 +265,13 @@ frames keys speccy =
         sz80 =
             speccy.cpu
 
-        core =
-            sz80.core
+        clock =
+            sz80.coreWithClock
 
-        core_1 =
-            { core | clockTime = reset_cpu_time }
+        --core =
+        --    clock.core
+        clock_1 =
+            { clock | clockTime = reset_cpu_time }
 
         rom =
             speccy.rom48k
@@ -282,7 +284,7 @@ frames keys speccy =
               -- time_limit is a constant
               --| time_limit = c_FRSTART + c_FRTIME
               --  | core = { core | env = { env | keyboard = keys |> update_keyboard } }
-                | core = core_1
+                | coreWithClock = clock_1
             }
 
         loading_z80 =
@@ -307,7 +309,7 @@ frames keys speccy =
                                     doLoad z80 speccy.rom48k z80_tape
 
                                 core_2 =
-                                    new_z80.core
+                                    new_z80.coreWithClock.core
 
                                 env_2 =
                                     core_2.env
@@ -330,8 +332,11 @@ frames keys speccy =
                                 |> interrupt 0xFF rom
                                 |> execute rom
 
+                        clock_2 =
+                            new_z80.coreWithClock
+
                         core_2 =
-                            new_z80.core
+                            clock_2.core
 
                         env_2 =
                             core_2.env
@@ -346,7 +351,7 @@ frames keys speccy =
                             { core_2 | env = { env_2 | ram = Dict.empty } }
                     in
                     { load = False
-                    , z80 = { new_z80 | core = new_core }
+                    , z80 = { new_z80 | coreWithClock = { clock_2 | core = new_core } }
                     , pos = Nothing
                     , rom = rom_2
                     }
@@ -1061,7 +1066,7 @@ checkLoad spectrum =
             spectrum.cpu
 
         pc1 =
-            cpu.core.pc
+            cpu.coreWithClock.pc
     in
     if (cpu |> get_ei) || pc1 < 0x056B || pc1 > 0x0604 then
         Nothing
@@ -1069,16 +1074,16 @@ checkLoad spectrum =
     else
         let
             sp1 =
-                cpu.core.env.sp
+                cpu.coreWithClock.core.env.sp
 
             ( pc, sp ) =
                 if pc1 >= 0x05E3 then
                     let
                         ( pc2, sp2 ) =
-                            ( cpu.core.env |> mem16 sp1 spectrum.rom48k cpu.core.clockTime |> .value16, char sp1 + 2 )
+                            ( cpu.coreWithClock.core.env |> mem16 sp1 spectrum.rom48k cpu.coreWithClock.clockTime |> .value16, char sp1 + 2 )
                     in
                     if pc2 == 0x05E6 then
-                        ( cpu.core.env |> mem16 sp2 spectrum.rom48k cpu.core.clockTime |> .value16, char sp2 + 2 )
+                        ( cpu.coreWithClock.core.env |> mem16 sp2 spectrum.rom48k cpu.coreWithClock.clockTime |> .value16, char sp2 + 2 )
 
                     else
                         ( pc2, sp2 )
@@ -1091,8 +1096,11 @@ checkLoad spectrum =
 
         else
             let
+                clock =
+                    cpu.coreWithClock
+
                 core =
-                    cpu.core
+                    clock.core
 
                 env =
                     core.env
@@ -1101,7 +1109,7 @@ checkLoad spectrum =
                     { env | sp = sp }
 
                 new_cpu =
-                    { cpu | core = { core | env = new_env } }
+                    { cpu | coreWithClock = { clock | core = { core | env = new_env } } }
             in
             Just (new_cpu |> ex_af)
 
@@ -1242,8 +1250,11 @@ doLoad full_cpu z80rom tape =
     --			return false;
     --		}
     let
+        clock =
+            full_cpu.coreWithClock
+
         cpu =
-            full_cpu.core
+            clock.core
     in
     if (z80rom.keyboard.keyboard |> Vector8.get Vector8.Index7 |> Bitwise.and 1) == 0 then
         let
@@ -1253,7 +1264,7 @@ doLoad full_cpu z80rom tape =
             core =
                 { cpu | flags = flags }
         in
-        ( { full_cpu | core = core }, False, tape.tapePos )
+        ( { full_cpu | coreWithClock = { clock | core = core } }, False, tape.tapePos )
 
     else
         doLoad2 full_cpu z80rom tape
@@ -1263,13 +1274,16 @@ doLoad2 : Z80 -> Z80ROM -> Z80Tape -> ( Z80, Bool, TapePosition )
 doLoad2 full_cpu z80rom tape =
     let
         cpu =
-            full_cpu.core
+            full_cpu.coreWithClock
+
+        z80_core =
+            cpu.core
 
         main =
-            cpu.main
+            z80_core.main
 
         flags =
-            cpu.flags
+            z80_core.flags
 
         p : TapePosition
         p =
@@ -1287,7 +1301,7 @@ doLoad2 full_cpu z80rom tape =
             , a = flags.a
             , f = flags |> getFlags
             , rf = Nothing
-            , z80_env = cpu.env
+            , z80_env = z80_core.env
             , break = False
             , continue = False
             }
@@ -1447,7 +1461,7 @@ doLoad2 full_cpu z80rom tape =
                                                     else
                                                         let
                                                             new_a =
-                                                                Bitwise.xor (mem state.ix cpu.clockTime z80rom cpu.env |> .value) l
+                                                                Bitwise.xor (mem state.ix cpu.clockTime z80rom z80_core.env |> .value) l
                                                         in
                                                         if new_a /= 0 then
                                                             { a_rf_f_break_3 | a = new_a, rf = Just 0, break = True }
@@ -1510,7 +1524,7 @@ doLoad2 full_cpu z80rom tape =
                 z80_env =
                     tapeData.z80_env
 
-                core_1 =
+                ( core_1, new_pc ) =
                     case tapeData.rf of
                         Just rf ->
                             let
@@ -1527,10 +1541,10 @@ doLoad2 full_cpu z80rom tape =
                                     else
                                         debugLog "body pop" logged Nothing
                             in
-                            { cpu | flags = { flags | a = tapeData.a } |> setFlags rf, pc = popped.value16, env = { z80_env | sp = popped.sp } }
+                            ( { z80_core | flags = { flags | a = tapeData.a } |> setFlags rf, env = { z80_env | sp = popped.sp } }, popped.value16 )
 
                         Nothing ->
-                            { cpu | env = z80_env, flags = { flags | a = tapeData.a } |> setFlags tapeData.f }
+                            ( { z80_core | env = z80_env, flags = { flags | a = tapeData.a } |> setFlags tapeData.f }, cpu.pc )
 
                 new_core =
                     { core_1 | main = cpu_main }
@@ -1542,18 +1556,21 @@ doLoad2 full_cpu z80rom tape =
                     else
                         { p | position = tapeData.p, tapfileNumber = p.tapfileNumber + 1 }
             in
-            ( { full_cpu | core = new_core }, tapeData.de <= 0, new_position )
+            ( { full_cpu | coreWithClock = { cpu | core = new_core, pc = new_pc } }, tapeData.de <= 0, new_position )
 
         Nothing ->
             -- set FZ to indicate complete end of tape
             let
+                clock =
+                    full_cpu.coreWithClock
+
                 core =
-                    full_cpu.core
+                    clock.core
 
                 new_flags =
-                    setFlags c_FZ full_cpu.core.flags
+                    setFlags c_FZ core.flags
             in
-            ( { full_cpu | core = { core | flags = new_flags } }, False, p )
+            ( { full_cpu | coreWithClock = { clock | core = { core | flags = new_flags } } }, False, p )
 
 
 

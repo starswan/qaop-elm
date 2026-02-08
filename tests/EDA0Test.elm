@@ -2,7 +2,9 @@ module EDA0Test exposing (..)
 
 import Expect exposing (Expectation)
 import Test exposing (..)
+import Triple
 import Z80 exposing (executeCoreInstruction)
+import Z80CoreWithClockTime
 import Z80Env exposing (setMemWithTime)
 import Z80Mem exposing (mem)
 import Z80Rom
@@ -20,8 +22,11 @@ suite =
         hl =
             0x1234
 
+        clock =
+            Z80CoreWithClockTime.constructor
+
         old_z80 =
-            Z80.constructor.core
+            clock.core
 
         old_z80env =
             old_z80.env
@@ -30,10 +35,10 @@ suite =
             old_z80.main
 
         z80 =
-            { old_z80 | pc = addr, env = { old_z80env | sp = sp }, main = { z80main | hl = hl } }
+            { old_z80 | env = { old_z80env | sp = sp }, main = { z80main | hl = hl } }
 
         z80env =
-            { z80env = z80.env, time = z80.clockTime }
+            { z80env = z80.env, time = clock.clockTime }
 
         z80rom =
             Z80Rom.constructor
@@ -50,17 +55,19 @@ suite =
                             |> setMemWithTime 0x6545 0x05
                             |> .z80env
 
-                    new_z80 =
+                    ( new_z80, new_pc ) =
                         executeCoreInstruction z80rom
+                            addr
                             { z80
                                 | env = new_env
                                 , main = { z80main | hl = 0x6545, b = 0xA5, c = 0x5F }
                             }
+                            |> Triple.dropSecond
 
                     mem_value =
-                        new_z80.env |> mem 0x6545 new_z80.clockTime z80rom |> .value
+                        new_z80.env |> mem 0x6545 clock.clockTime z80rom |> .value
                 in
-                Expect.equal { pc = addr + 2, hl = 0x6546, b = 0xA4, mem = 0xFF } { pc = new_z80.pc, hl = new_z80.main.hl, b = new_z80.main.b, mem = mem_value }
+                Expect.equal { pc = addr + 2, hl = 0x6546, b = 0xA4, mem = 0xFF } { pc = new_pc, hl = new_z80.main.hl, b = new_z80.main.b, mem = mem_value }
         , test "0xEDA3 OUTI" <|
             \_ ->
                 let
@@ -71,14 +78,16 @@ suite =
                             |> setMemWithTime 0x6545 0x05
                             |> .z80env
 
-                    new_z80 =
+                    ( new_z80, new_pc ) =
                         executeCoreInstruction z80rom
+                            addr
                             { z80
                                 | env = new_env
                                 , main = { z80main | hl = 0x6545, b = 0xA5, c = 0x5F }
                             }
+                            |> Triple.dropSecond
                 in
-                Expect.equal { pc = addr + 2, hl = 0x6546, b = 0xA4 } { pc = new_z80.pc, hl = new_z80.main.hl, b = new_z80.main.b }
+                Expect.equal { pc = addr + 2, hl = 0x6546, b = 0xA4 } { pc = new_pc, hl = new_z80.main.hl, b = new_z80.main.b }
         , test "0xEDAA IND" <|
             \_ ->
                 let
@@ -89,17 +98,19 @@ suite =
                             |> setMemWithTime 0x6545 0x05
                             |> .z80env
 
-                    new_z80 =
+                    ( new_z80, new_pc ) =
                         executeCoreInstruction z80rom
+                            addr
                             { z80
                                 | env = new_env
                                 , main = { z80main | hl = 0x6545, b = 0xA5, c = 0x5F }
                             }
+                            |> Triple.dropSecond
 
                     mem_value =
-                        new_z80.env |> mem 0x6545 new_z80.clockTime z80rom |> .value
+                        new_z80.env |> mem 0x6545 clock.clockTime z80rom |> .value
                 in
-                Expect.equal { pc = addr + 2, hl = 0x6544, b = 0xA4, mem = 0xFF } { pc = new_z80.pc, hl = new_z80.main.hl, b = new_z80.main.b, mem = mem_value }
+                Expect.equal { pc = addr + 2, hl = 0x6544, b = 0xA4, mem = 0xFF } { pc = new_pc, hl = new_z80.main.hl, b = new_z80.main.b, mem = mem_value }
         , test "0xEDAB OUTD" <|
             \_ ->
                 let
@@ -110,12 +121,14 @@ suite =
                             |> setMemWithTime 0x6545 0x05
                             |> .z80env
 
-                    new_z80 =
+                    ( new_z80, new_pc ) =
                         executeCoreInstruction z80rom
+                            addr
                             { z80
                                 | env = new_env
                                 , main = { z80main | hl = 0x6545, b = 0xA5, c = 0x5F }
                             }
+                            |> Triple.dropSecond
                 in
-                Expect.equal { pc = addr + 2, hl = 0x6544, b = 0xA4 } { pc = new_z80.pc, hl = new_z80.main.hl, b = new_z80.main.b }
+                Expect.equal { pc = addr + 2, hl = 0x6544, b = 0xA4 } { pc = new_pc, hl = new_z80.main.hl, b = new_z80.main.b }
         ]

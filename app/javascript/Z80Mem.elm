@@ -295,14 +295,14 @@ getRamValue addr z80rom z80env =
             z80rom.z80ram |> Z80Ram.getRamValue addr
 
 
-imm16 : Z80ROM -> CpuTimeCTime -> Z80Core -> CpuTimePcAnd16BitValue
-imm16 rom48k clockTime z80 =
+imm16 : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> CpuTimePcAnd16BitValue
+imm16 rom48k clockTime pc_in z80 =
     let
         v =
-            z80.env |> mem16 z80.pc rom48k clockTime
+            z80.env |> mem16 pc_in rom48k clockTime
 
         pc =
-            Bitwise.and (z80.pc + 2) 0xFFFF
+            Bitwise.and (pc_in + 2) 0xFFFF
 
         env =
             v.time |> addCpuTimeTime 6
