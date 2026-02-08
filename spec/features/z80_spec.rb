@@ -33,7 +33,7 @@ RSpec.describe "Game" do
     }
     let(:scripts) {
       {
-        matchday.name => ->(spectrum) {
+        matchday.name => lambda { |spectrum|
           delay_and_send(spectrum, 200, "")
           delay_and_send(spectrum, 750, "")
           # Start 1 player match day (with kempston, so kicks all the time)
@@ -41,7 +41,7 @@ RSpec.describe "Game" do
 
           measure_speed_in_hz 180
         },
-        cyrus.name => ->(spectrum) {
+        cyrus.name => lambda { |spectrum|
           # square colours
           delay_and_send(spectrum, 300, "a0724")
           # Level 3 demo mode Cyrus vs Cyrus
@@ -49,21 +49,35 @@ RSpec.describe "Game" do
 
           measure_speed_in_hz
         },
-        flags.name => ->(spectrum) {
-          delay_and_send(spectrum, 1750, "y")
-          delay_and_send(spectrum, 3450, "y")
-          delay_and_send(spectrum, 4350, "y")
-          delay_and_send(spectrum, 5300, "y")
-          delay_and_send(spectrum, 6200, "y")
-          delay_and_send(spectrum, 6750, "y")
-          delay_and_send(spectrum, 7100, "y")
-          delay_and_send(spectrum, 7650, "y")
-
-          sleep 20
+        flags.name => lambda { |spectrum|
+          [1750, 3450, 4350, 5300, 6200, 6750, 7100, 7650].each do |t|
+            delay_and_send(spectrum, t, "y")
+          end
 
           measure_speed_in_hz
         },
-        football_manager.name => ->(spectrum) {
+        regs.name => lambda { |spectrum|
+          [3100, 6400, 7850, 8300, 9200, 9750, 10100, 10650].each do |t|
+            delay_and_send(spectrum, t, "y")
+          end
+
+          measure_speed_in_hz
+        },
+        full_flags.name => lambda { |spectrum|
+          [2200, 4350, 5450, 7100, 7700, 8500, 9650, 10070].each do |t|
+            delay_and_send(spectrum, t, "y")
+          end
+
+          measure_speed_in_hz
+        },
+        full.name => lambda { |spectrum|
+          [1750, 3450, 4350, 5300, 6200, 6750, 7100, 7650].each do |t|
+            delay_and_send(spectrum, t, "y")
+          end
+
+          measure_speed_in_hz
+        },
+        football_manager.name => lambda { |spectrum|
           # Player name
           delay_and_send(spectrum, 470, "robot")
           # select Plymouth Argyle
@@ -87,16 +101,9 @@ RSpec.describe "Game" do
           measure_speed_in_hz do
             spectrum.send_keys :enter
           end
-        }
-      }
-    }
-
-    let(:times) {
-      {
-        # flags.name => 10500,
-        regs.name => 18700,
-        full_flags.name => 7900,
-        full.name => 14000,
+          # spectrum.send_keys :enter
+          # measure_speed_in_hz
+        },
       }
     }
 
@@ -178,17 +185,9 @@ RSpec.describe "Game" do
       end
       spectrum.send_keys [:enter]
 
-      script = scripts.fetch(z80_game, -> (spectrum) {
+      script = scripts.fetch(z80_game, lambda { |spectrum|
         measure_speed_in_hz do
           spectrum.send_keys 'y'
-        end.tap do
-          if times.key? z80_game
-            while cpu_count.text.to_i < times.fetch(z80_game)
-              sleep 12
-              # response to 'scroll?' question if required
-              spectrum.send_keys 'y'
-            end
-          end
         end
       })
 
@@ -211,7 +210,7 @@ RSpec.describe "Game" do
     spectrum.send_keys [:enter]
   end
 
-  def measure_speed_in_hz max = 10_000_000
+  def measure_speed_in_hz(max = 10_000_000)
     # Test emulation speed in Hz
     low = 0
     high = page.find("#hz").text.to_f

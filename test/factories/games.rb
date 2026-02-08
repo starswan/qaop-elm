@@ -4,7 +4,7 @@ FactoryBot.define do
 
     trait :match_day do
       name { 'MatchDay' }
-      download_url { "https://www.worldofspectrum.org/pub/sinclair/games/m/MatchDay.tap.zip"}
+      download_url { "https://www.worldofspectrum.org/pub/sinclair/games/m/MatchDay.tap.zip" }
       filetype { "TAP" }
       filename { 'MATCHDAY.TAP' }
     end
