@@ -4,7 +4,6 @@ import Bitwise exposing (shiftLeftBy)
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
 import GroupED exposing (cpir, inirOtirFlags, ldir, sbc_hl)
-import PCIncrement exposing (PCIncrement)
 import RegisterChange exposing (EDRegisterChange(..), InterruptChange(..), RegisterChange(..), Shifter(..), SixteenBit(..))
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
 import SingleEnvWithMain exposing (SingleEnvMainChange, applySingleEnvMainChange)
@@ -162,9 +161,7 @@ applySimple8BitDelta cpu_time z80changeData rom48k z80 =
                 flags =
                     z80.flags |> changeFlags operation param
             in
-            { z80
-                | flags = flags
-            }
+            { z80 | flags = flags }
 
         Z80In param ->
             -- case 0xDB: MP=(v=imm8()|A<<8)+1; A=env.in(v); time+=4; break;
@@ -178,9 +175,7 @@ applySimple8BitDelta cpu_time z80changeData rom48k z80 =
                 new_a =
                     z80.env |> z80_in portNum rom48k.keyboard cpu_time
             in
-            { z80
-                | flags = { flags | a = new_a.value }
-            }
+            { z80 | flags = { flags | a = new_a.value } }
 
         Z80Out param ->
             let
@@ -273,13 +268,11 @@ applyFlagDelta clockTime z80_flags rom48k z80_core =
 
                 env1 =
                     z80_core.env
-
-                --x = debug_log "ret nz" (result.value |> subName) Nothing
             in
             { z80_core | env = { env1 | sp = result.sp } } |> CoreWithPC result.value16
 
         EmptyFlagChange ->
-            z80_core |> CoreOnly
+            NoCore
 
         FlagNewRValue int ->
             let
@@ -373,20 +366,6 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
     let
         env =
             z80_core.env
-
-        --new_pc =
-        --    case pc_inc of
-        --        IncrementByOne ->
-        --            Bitwise.and (z80_core.pc + 1) 0xFFFF
-        --
-        --        IncrementByTwo ->
-        --            Bitwise.and (z80_core.pc + 2) 0xFFFF
-        --
-        --        IncrementByThree ->
-        --            Bitwise.and (z80_core.pc + 3) 0xFFFF
-        --
-        --        IncrementByFour ->
-        --            Bitwise.and (z80_core.pc + 4) 0xFFFF
     in
     case z80changeData of
         ChangeRegisterBC reg_b reg_c ->
@@ -394,9 +373,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 z80_main =
                     z80_core.main
             in
-            { z80_core
-                | main = { z80_main | b = reg_b, c = reg_c }
-            }
+            { z80_core | main = { z80_main | b = reg_b, c = reg_c } }
                 |> CoreOnly
 
         ChangeRegisterDE reg_d reg_e ->
@@ -404,9 +381,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 z80_main =
                     z80_core.main
             in
-            { z80_core
-                | main = { z80_main | d = reg_d, e = reg_e }
-            }
+            { z80_core | main = { z80_main | d = reg_d, e = reg_e } }
                 |> CoreOnly
 
         ChangeRegisterHL int ->
@@ -414,9 +389,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 z80_main =
                     z80_core.main
             in
-            { z80_core
-                | main = { z80_main | hl = int }
-            }
+            { z80_core | main = { z80_main | hl = int } }
                 |> CoreOnly
 
         ChangeRegisterIX int ->
@@ -424,9 +397,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 z80_main =
                     z80_core.main
             in
-            { z80_core
-                | main = { z80_main | ix = int }
-            }
+            { z80_core | main = { z80_main | ix = int } }
                 |> CoreOnly
 
         ChangeRegisterIY int ->
@@ -434,9 +405,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 z80_main =
                     z80_core.main
             in
-            { z80_core
-                | main = { z80_main | iy = int }
-            }
+            { z80_core | main = { z80_main | iy = int } }
                 |> CoreOnly
 
         ChangeRegisterIXH int ->
@@ -444,9 +413,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 main =
                     z80_core.main
             in
-            { z80_core
-                | main = { main | ix = Bitwise.or (Bitwise.and main.ix 0xFF) (int |> shiftLeftBy8) }
-            }
+            { z80_core | main = { main | ix = Bitwise.or (Bitwise.and main.ix 0xFF) (int |> shiftLeftBy8) } }
                 |> CoreOnly
 
         ChangeRegisterIXL int ->
@@ -454,9 +421,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 main =
                     z80_core.main
             in
-            { z80_core
-                | main = { main | ix = Bitwise.or (Bitwise.and main.ix 0xFF00) int }
-            }
+            { z80_core | main = { main | ix = Bitwise.or (Bitwise.and main.ix 0xFF00) int } }
                 |> CoreOnly
 
         ChangeRegisterIYH int ->
@@ -464,9 +429,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 main =
                     z80_core.main
             in
-            { z80_core
-                | main = { main | iy = Bitwise.or (Bitwise.and main.iy 0xFF) (int |> shiftLeftBy8) }
-            }
+            { z80_core | main = { main | iy = Bitwise.or (Bitwise.and main.iy 0xFF) (int |> shiftLeftBy8) } }
                 |> CoreOnly
 
         ChangeRegisterIYL int ->
@@ -474,21 +437,15 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 main =
                     z80_core.main
             in
-            { z80_core
-                | main = { main | iy = Bitwise.or (Bitwise.and main.iy 0xFF00) int }
-            }
+            { z80_core | main = { main | iy = Bitwise.or (Bitwise.and main.iy 0xFF00) int } }
                 |> CoreOnly
 
         PushedValue int ->
-            { z80_core
-                | env = z80_core.env |> z80_push int clockTime
-            }
+            { z80_core | env = z80_core.env |> z80_push int clockTime }
                 |> CoreOnly
 
         RegChangeNewSP int ->
-            { z80_core
-                | env = { env | sp = int }
-            }
+            { z80_core | env = { env | sp = int } }
                 |> CoreOnly
 
         IncrementIndirect addr ->
@@ -534,9 +491,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 main =
                     z80_core.main
             in
-            { z80_core
-                | main = { main | hl = hl } |> set_de_main de
-            }
+            { z80_core | main = { main | hl = hl } |> set_de_main de }
                 |> CoreOnly
 
         RegisterChangeShifter shifter addr ->
@@ -575,16 +530,14 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
             { z80_core | env = env_3 } |> CoreOnly
 
         RegChangeNoOp ->
-            z80_core |> CoreOnly
+            NoCore
 
         SingleEnvFlagFunc flagFunc value ->
             let
                 z80_flags =
                     z80_core.flags
             in
-            { z80_core
-                | flags = z80_flags |> changeFlags flagFunc value
-            }
+            { z80_core | flags = z80_flags |> changeFlags flagFunc value }
                 |> CoreOnly
 
         ExchangeTopOfStackWith ixiyhl ->
@@ -610,15 +563,11 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
             in
             case changeOneRegister of
                 ChangeBRegister ->
-                    { z80_core
-                        | main = { z80_main | b = int }
-                    }
+                    { z80_core | main = { z80_main | b = int } }
                         |> CoreOnly
 
                 ChangeCRegister ->
-                    { z80_core
-                        | main = { z80_main | c = int }
-                    }
+                    { z80_core | main = { z80_main | c = int } }
                         |> CoreOnly
 
                 ChangeARegister ->
@@ -626,33 +575,23 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                         z80_flags =
                             z80_core.flags
                     in
-                    { z80_core
-                        | flags = { z80_flags | a = int }
-                    }
+                    { z80_core | flags = { z80_flags | a = int } }
                         |> CoreOnly
 
                 ChangeDRegister ->
-                    { z80_core
-                        | main = { z80_main | d = int }
-                    }
+                    { z80_core | main = { z80_main | d = int } }
                         |> CoreOnly
 
                 ChangeERegister ->
-                    { z80_core
-                        | main = { z80_main | e = int }
-                    }
+                    { z80_core | main = { z80_main | e = int } }
                         |> CoreOnly
 
                 ChangeHRegister ->
-                    { z80_core
-                        | main = { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 int) }
-                    }
+                    { z80_core | main = { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 int) } }
                         |> CoreOnly
 
                 ChangeLRegister ->
-                    { z80_core
-                        | main = { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) int }
-                    }
+                    { z80_core | main = { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) int } }
                         |> CoreOnly
 
         RegisterIndirectWithShifter shifterFunc changeOneRegister raw_addr ->
@@ -828,11 +767,8 @@ applyShifter shifterFunc addr cpu_time rom48k z80 =
                 Shifter7 ->
                     z80.flags |> shifter7 value.value
 
-        env =
-            z80.env
-
         ( env_2, newTime2 ) =
-            env |> setMem addr result.value value.time
+            z80.env |> setMem addr result.value value.time
     in
     { z80 | flags = result.flags, env = env_2 }
 
@@ -983,11 +919,6 @@ applyTripleFlagChange cpu_time z80changeData z80 =
                 z80 |> CoreOnly
 
         CallImmediate int ->
-            --let
-            --    env_1 =
-            --        z80.env |> z80_push pc cpu_time
-            --in
-            --{ z80 | env = env_1 } |> CoreWithPC int
             CallWithPC int
 
         NewPCRegister int ->

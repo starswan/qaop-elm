@@ -176,7 +176,6 @@ ld_a_indirect_iy z80_main param =
         address =
             z80_main.iy + byte param
     in
-    --{ z80 | pc = value.pc, env = { env_1 | time = value.time } } |> set_a value.value
     NewARegisterIndirect address
 
 
