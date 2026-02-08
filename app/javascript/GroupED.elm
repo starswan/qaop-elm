@@ -491,22 +491,22 @@ ldir incOrDec repeat rom48k clockTime z80 =
         main =
             z80.main
 
-        ( hl, de, bc ) =
-            ( z80.main.hl, main |> get_de, main |> get_bc )
-
         v1 =
             z80.env |> mem z80.main.hl clockTime rom48k
 
         new_hl =
             case incOrDec of
                 Forwards ->
-                    hl + 1 |> Bitwise.and 0xFFFF
+                    z80.main.hl + 1 |> Bitwise.and 0xFFFF
 
                 Backwards ->
-                    hl - 1 |> Bitwise.and 0xFFFF
+                    z80.main.hl - 1 |> Bitwise.and 0xFFFF
 
         z80_1 =
             { z80 | main = { main | hl = new_hl } }
+
+        de =
+            main |> get_de
 
         ( env_1, newClock ) =
             z80.env |> setMem de v1.value v1.time
@@ -523,8 +523,6 @@ ldir incOrDec repeat rom48k clockTime z80 =
             { z80_1 | env = env_1, main = z80_1.main |> set_de_main new_de }
 
         --if(Fr!=0) Fr = 1; // keep Z
-        --v += A;
-        --Ff = Ff&~F53 | v&F3 | v<<4&F5;
         fr =
             if z80_2.flags.fr /= 0 then
                 1
@@ -532,11 +530,17 @@ ldir incOrDec repeat rom48k clockTime z80 =
             else
                 z80_2.flags.fr
 
+        --v += A;
         v2 =
             v1.value + z80_2.flags.a
 
+        --Ff = Ff&~F53 | v&F3 | v<<4&F5;
+        --ff =
+        --    Bitwise.or (Bitwise.or (Bitwise.and z80_2.flags.ff (complement c_F53)) (Bitwise.and v2 c_F3)) (Bitwise.and (shiftLeftBy 4 v2) c_F5)
         ff =
-            Bitwise.or (Bitwise.or (Bitwise.and z80_2.flags.ff (complement c_F53)) (Bitwise.and v2 c_F3)) (Bitwise.and (shiftLeftBy 4 v2) c_F5)
+            (z80_2.flags.ff |> Bitwise.and (complement c_F53))
+                |> Bitwise.or (v2 |> Bitwise.and c_F3)
+                |> Bitwise.or (v2 |> shiftLeftBy 4 |> Bitwise.and c_F5)
 
         --    bc(a = (char)(bc()-1));
         --    v = 0;
@@ -548,11 +552,11 @@ ldir incOrDec repeat rom48k clockTime z80 =
         --      v = 0x80;
         --    }
         --    Fa = Fb = v;
-        a =
-            Bitwise.and (bc - 1) 0xFFFF
+        new_bc =
+            Bitwise.and ((main |> get_bc) - 1) 0xFFFF
 
         ( v, pc, time ) =
-            if a /= 0 then
+            if new_bc /= 0 then
                 if repeat then
                     ( 0x80, JumpBack, Just FiveExtraTStates )
 
@@ -566,7 +570,7 @@ ldir incOrDec repeat rom48k clockTime z80 =
             z80_2.flags
     in
     ( { z80_2
-        | main = z80_2.main |> set_bc_main a
+        | main = z80_2.main |> set_bc_main new_bc
         , flags = { flags | fr = fr, ff = ff, fa = v, fb = v }
       }
     , time
