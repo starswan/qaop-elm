@@ -3,7 +3,7 @@ module TripleWithMain exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import Dict exposing (Dict)
-import PCIncrement exposing (PCIncrement(..), TriplePCIncrement(..))
+import PCIncrement exposing (PCIncrement(..))
 import Utils exposing (byte, shiftRightBy8)
 import Z80Core exposing (Z80Core)
 import Z80Env exposing (Z80Env, setMem, setMem16)

@@ -3,7 +3,6 @@ module DoubleWithRegisters exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import Dict exposing (Dict)
-import PCIncrement exposing (MediumPCIncrement(..))
 import Utils exposing (byte, shiftLeftBy8)
 import Z80Core exposing (Z80Core)
 import Z80Env exposing (setMem)
@@ -215,17 +214,8 @@ dec_indirect_iy z80_main param =
     IndexedIndirectDecrement z80_main.iy param
 
 
-applyDoubleWithRegistersDelta : MediumPCIncrement -> CpuTimeCTime -> DoubleWithRegisterChange -> Z80ROM -> Z80Core -> Z80Core
-applyDoubleWithRegistersDelta pc_inc cpu_time z80changeData rom48k z80 =
-    --let
-    --    pc =
-    --        case pc_inc of
-    --            IncreaseByTwo ->
-    --                z80.pc + 2 |> Bitwise.and 0xFFFF
-    --
-    --            IncreaseByThree ->
-    --                z80.pc + 3 |> Bitwise.and 0xFFFF
-    --in
+applyDoubleWithRegistersDelta : CpuTimeCTime -> DoubleWithRegisterChange -> Z80ROM -> Z80Core -> Z80Core
+applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
     case z80changeData of
         DoubleRegChangeStoreIndirect addr value ->
             let

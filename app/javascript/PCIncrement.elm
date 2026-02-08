@@ -6,13 +6,3 @@ type PCIncrement
     | IncrementByTwo
     | IncrementByThree
     | IncrementByFour
-
-
-type TriplePCIncrement
-    = TripleIncrementByThree
-    | TripleIncrementByFour
-
-
-type MediumPCIncrement
-    = IncreaseByTwo
-    | IncreaseByThree
