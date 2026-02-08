@@ -49,6 +49,20 @@ RSpec.describe "Game" do
 
           measure_speed_in_hz
         },
+        flags.name => ->(spectrum) {
+          delay_and_send(spectrum, 1750, "y")
+          delay_and_send(spectrum, 3450, "y")
+          delay_and_send(spectrum, 4350, "y")
+          delay_and_send(spectrum, 5300, "y")
+          delay_and_send(spectrum, 6200, "y")
+          delay_and_send(spectrum, 6750, "y")
+          delay_and_send(spectrum, 7100, "y")
+          delay_and_send(spectrum, 7650, "y")
+
+          sleep 20
+
+          measure_speed_in_hz
+        },
         football_manager.name => ->(spectrum) {
           # Player name
           delay_and_send(spectrum, 470, "robot")
@@ -79,7 +93,7 @@ RSpec.describe "Game" do
 
     let(:times) {
       {
-        flags.name => 7500,
+        # flags.name => 10500,
         regs.name => 18700,
         full_flags.name => 7900,
         full.name => 14000,
