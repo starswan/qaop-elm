@@ -492,18 +492,7 @@ ldir incOrDec repeat rom48k clockTime z80 =
             z80.main
 
         v1 =
-            z80.env |> mem z80.main.hl clockTime rom48k
-
-        new_hl =
-            case incOrDec of
-                Forwards ->
-                    z80.main.hl + 1 |> Bitwise.and 0xFFFF
-
-                Backwards ->
-                    z80.main.hl - 1 |> Bitwise.and 0xFFFF
-
-        z80_1 =
-            { z80 | main = { main | hl = new_hl } }
+            z80.env |> mem main.hl clockTime rom48k
 
         de =
             main |> get_de
@@ -511,16 +500,21 @@ ldir incOrDec repeat rom48k clockTime z80 =
         ( env_1, newClock ) =
             z80.env |> setMem de v1.value v1.time
 
-        new_de =
+        ( new_hl, new_de ) =
             case incOrDec of
                 Forwards ->
-                    de + 1 |> Bitwise.and 0xFFFF
+                    ( main.hl + 1, de + 1 )
 
                 Backwards ->
-                    de - 1 |> Bitwise.and 0xFFFF
+                    ( main.hl - 1, de - 1 )
 
         z80_2 =
-            { z80_1 | env = env_1, main = z80_1.main |> set_de_main new_de }
+            { z80
+                | env = env_1
+                , main =
+                    { main | hl = new_hl |> Bitwise.and 0xFFFF }
+                        |> set_de_main (new_de |> Bitwise.and 0xFFFF)
+            }
 
         --if(Fr!=0) Fr = 1; // keep Z
         fr =
