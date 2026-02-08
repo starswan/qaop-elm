@@ -42,13 +42,13 @@ applyDeltaWithChanges z80delta z80 =
             { z80 | env = z80_env, main = mainRegisters, interrupts = z80delta.interrupts } |> CoreOnly
 
         EnvWithPcAndTime z80Env programCounter ->
-            { z80 | env = z80Env, interrupts = z80delta.interrupts } |> CoreWithPC programCounter
+            { z80 | env = z80Env, interrupts = z80delta.interrupts } |> CoreOnly
 
         DeltaFlags flagRegisters ->
             { z80 | flags = flagRegisters, env = z80_env, interrupts = z80delta.interrupts } |> CoreOnly
 
         CpuTimeWithSpAndPc sp pc ->
-            { z80 | env = { z80_env | sp = sp }, interrupts = z80delta.interrupts } |> CoreWithPC pc
+            { z80 | env = { z80_env | sp = sp }, interrupts = z80delta.interrupts } |> CoreOnly
 
         InterruptsWithCpuTime interruptRegisters ->
             { z80 | env = z80_env, interrupts = interruptRegisters } |> CoreOnly

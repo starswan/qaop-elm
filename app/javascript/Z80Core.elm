@@ -21,11 +21,11 @@ type RepeatPCOffset
 
 type CoreChange
     = CoreOnly Z80Core
+    | NoCore
     | CoreWithTime ShortDelay Z80Core
     | CoreWithPC Int Z80Core
     | JumpOnlyPC Int
-      --| CallJump Int
-      --| CallJumpOffset Int
+    | JumpOffsetWithDelay Int ShortDelay
     | CoreWithPCAndDelay Int ShortDelay Z80Core
     | CallWithPCAndDelay Int ShortDelay
     | CallWithPC Int

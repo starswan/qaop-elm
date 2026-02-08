@@ -111,16 +111,12 @@ applyJumpChangeDelta z80changeData z80 =
         ActualJump pc ->
             JumpOnlyPC pc
 
-        ConditionalJump address shortDelay function ->
+        ConditionalJumpOffset offset shortDelay function ->
             if z80.flags |> function then
-                let
-                    pc =
-                        Bitwise.and address 0xFFFF
-                in
-                z80 |> CoreWithPCAndDelay pc shortDelay
+                JumpOffsetWithDelay offset shortDelay
 
             else
-                z80 |> CoreOnly
+                NoCore
 
         DJNZ address shortDelay ->
             let

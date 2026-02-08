@@ -308,6 +308,12 @@ executeAndApplyDelta ct rom48k z80clock =
                 JumpBack ->
                     { z80clock | core = z80Core, clockTime = clockTime |> addExtraCpuTime shortDelay }
 
+        NoCore ->
+            { z80clock | clockTime = clockTime, pc = pcAfter }
+
+        JumpOffsetWithDelay int shortDelay ->
+            { z80clock | clockTime = clockTime |> addExtraCpuTime shortDelay, pc = (pcAfter + int) |> Bitwise.and 0xFFFF }
+
 
 execute_delta : CpuTimeAndValue -> Z80ROM -> Int -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
 execute_delta ct rom48k pc z80 =
@@ -868,6 +874,12 @@ executeCoreInstruction rom48k pc z80_core =
 
                 JumpBack ->
                     ( z80Core, clockTime, pc )
+
+        NoCore ->
+            ( z80_core, clockTime, pcAfter )
+
+        JumpOffsetWithDelay int shortDelay ->
+            ( z80_core, clockTime |> addExtraCpuTime shortDelay, (pcAfter + int) |> Bitwise.and 0xFFFF )
 
 
 c_EX_AF_AFDASH =
