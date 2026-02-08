@@ -100,6 +100,7 @@ group :test do
   gem "cuprite"
 
   gem "factory_bot_rails"
+  gem "ffaker"
 
   gem 'simplecov', require: false
   gem 'rails-controller-testing'

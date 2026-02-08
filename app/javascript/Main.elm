@@ -344,10 +344,10 @@ update message model =
 
         -- This tiny sleep makes the keyboard work in capybara
         CharacterKeyUp char ->
-            ( model, Delay.after 1 (CharacterUnKey char) )
+            ( model, Delay.after 0 (CharacterUnKey char) )
 
         ControlKeyUp str ->
-            ( model, Delay.after 1 (ControlUnKey str) )
+            ( model, Delay.after 0 (ControlUnKey str) )
 
         Autoload ->
             ( { model | loadPressed = True }, Cmd.batch loadingCommands )
