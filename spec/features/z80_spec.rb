@@ -79,7 +79,7 @@ RSpec.describe "Game" do
         },
         football_manager.name => lambda { |spectrum|
           # Player name
-          delay_and_send(spectrum, 480, "robot")
+          delay_and_send(spectrum, 480, FFaker::Name.first_name)
           # select Plymouth Argyle
           delay_and_send(spectrum, 930, "99")
           delay_and_send(spectrum, 1070, "99")
