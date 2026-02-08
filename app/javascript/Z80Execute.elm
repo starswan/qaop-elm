@@ -143,7 +143,7 @@ applyJumpChangeDelta z80changeData z80 =
 
             else
                 { z80 | main = { main | b = b } }
-                    |> CoreWithTime shortDelay
+                    |> CoreOnly
 
 
 applySimple8BitDelta : CpuTimeCTime -> Single8BitChange -> Z80ROM -> Z80Core -> Z80Core
