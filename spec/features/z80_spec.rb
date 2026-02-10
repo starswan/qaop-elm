@@ -67,11 +67,12 @@ RSpec.describe "Game" do
           # continue into match
           delay_and_send(spectrum, 2620, "99")
 
+          # wait for match to actually start properly
+          sleep 3
+
           measure_speed_in_hz do
             spectrum.send_keys :enter
           end
-          # spectrum.send_keys :enter
-          # measure_speed_in_hz
         }
       }
     }
@@ -167,7 +168,7 @@ RSpec.describe "Game" do
       spectrum.send_keys [:enter]
 
       script = scripts.fetch(z80_game, -> (spectrum) {
-         measure_speed_in_hz do
+        measure_speed_in_hz do
           spectrum.send_keys 'y'
         end.tap do
           if times.key? z80_game
@@ -205,8 +206,8 @@ RSpec.describe "Game" do
     high = page.find("#hz").text.to_f
     # wait for speed to hit a steady state
     while high - low > 0.02 && page.find("#elapsed").text.to_i < max
-      times = 1.upto(8).map do
-        sleep 0.4
+      times = 0.upto(4).map do
+        sleep 1
         page.find("#hz").text.to_f
       end
       low = times.min
