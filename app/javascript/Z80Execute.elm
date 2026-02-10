@@ -89,7 +89,7 @@ apply_delta z80 rom48k clockTime z80delta =
             z80 |> applyTripleChangeDelta rom48k clockTime tripleByteChange
 
         Triple16FlagsDelta tripleWithFlagsChange ->
-            z80 |> applyTripleFlagChange clockTime tripleWithFlagsChange
+            z80 |> applyTripleFlagChange tripleWithFlagsChange
 
         UnknownInstruction string int ->
             debugTodo string (int |> toHexString2) z80 |> CoreOnly
@@ -901,8 +901,8 @@ applyTripleChangeDelta rom48k cpu_time z80changeData z80 =
                 |> CoreOnly
 
 
-applyTripleFlagChange : CpuTimeCTime -> TripleWithFlagsChange -> Z80Core -> CoreChange
-applyTripleFlagChange cpu_time z80changeData z80 =
+applyTripleFlagChange : TripleWithFlagsChange -> Z80Core -> CoreChange
+applyTripleFlagChange z80changeData z80 =
     case z80changeData of
         Conditional16BitJump int function ->
             if z80.flags |> function then

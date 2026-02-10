@@ -13,8 +13,8 @@ import DoubleWithRegisters exposing (doubleWithRegisters, doubleWithRegistersIX,
 import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainRegsCB, singleEnvMainRegsCB)
 import GroupCBIXIY exposing (singleByteMainRegsIXCB, singleByteMainRegsIYCB, singleEnvMainRegsIXCB, singleEnvMainRegsIYCB)
 import GroupED exposing (delta_dict_lite_E0, edWithInterrupts, singleByteFlagsED, singleByteMainAndFlagsED, singleByteMainRegsED)
-import Loop exposing (while)
-import PCIncrement exposing (PCIncrement(..))
+import Loop
+import PCIncrement exposing (PCIncrement(..), TriplePCIncrement(..))
 import SimpleFlagOps exposing (singleByteFlags, singleByteFlagsCB, singleByteFlagsDD, singleByteFlagsFD)
 import SimpleSingleByte exposing (singleByteMainRegs, singleByteMainRegsDD, singleByteMainRegsFD)
 import SingleByteWithEnv exposing (singleByteZ80Env)
@@ -25,17 +25,15 @@ import SingleWith8BitParameter exposing (maybeRelativeJump, singleWith8BitParam)
 import TripleByte exposing (tripleByteWith16BitParam, tripleByteWith16BitParamDD, tripleByteWith16BitParamFD)
 import TripleWithFlags exposing (triple16bitJumps)
 import TripleWithMain exposing (tripleMainRegsIX, tripleMainRegsIY)
-import Utils exposing (toHexString2)
 import Z80Core exposing (CoreChange(..), RepeatPCOffset(..), Z80Core)
 import Z80CoreWithClockTime exposing (Z80, Z80CoreWithClockTime, di_0xF3, ei_0xFB)
-import Z80Debug exposing (debugLog)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..))
 import Z80Env exposing (Z80Env, z80_push, z80env_constructor)
 import Z80Execute exposing (DeltaWithChanges(..), apply_delta)
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
 import Z80Mem exposing (mem, mem16)
 import Z80OpCode exposing (fetchInstruction)
-import Z80Rom exposing (CompiledZ80ROM, CpuInstruction(..), Z80ROM, subName)
+import Z80Rom exposing (CompiledZ80ROM, CpuInstruction(..), Z80ROM)
 import Z80Types exposing (IntWithFlagsTimeAndPC, InterruptMode(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
 
 
@@ -237,14 +235,14 @@ type SpecialExecutionType
     | EDMisc CpuTimeAndValue
 
 
-executeAndApplyDelta : CpuTimeCTime -> Int -> Z80ROM -> Z80CoreWithClockTime -> Z80CoreWithClockTime
-executeAndApplyDelta ct_time ct_value rom48k z80clock =
+executeAndApplyDelta : Int -> CpuTimeCTime -> Z80ROM -> Z80CoreWithClockTime -> Z80CoreWithClockTime
+executeAndApplyDelta opCode cpuClock rom48k z80clock =
     let
         z80_core =
             z80clock.core
 
         ( delta, clockTime, pc_inc ) =
-            z80_core |> execute_delta ct_time ct_value rom48k z80clock.pc
+            z80_core |> execute_delta cpuClock opCode rom48k z80clock.pc
 
         pcAfter =
             case pc_inc of
@@ -259,23 +257,19 @@ executeAndApplyDelta ct_time ct_value rom48k z80clock =
 
                 IncrementByFour ->
                     Bitwise.and (z80clock.pc + 4) 0xFFFF
-
-        --new_core =
-        --    delta |> apply_delta z80_core rom48k clockTime
     in
-    --{ z80clock | core = new_core, clockTime = clockTime }
     case delta |> apply_delta z80_core rom48k clockTime of
         CoreOnly z80Core ->
-            { z80clock | core = z80Core, clockTime = clockTime, pc = pcAfter }
+            { core = z80Core, clockTime = clockTime, pc = pcAfter }
 
         CoreWithTime shortDelay z80Core ->
-            { z80clock | core = z80Core, clockTime = clockTime |> addExtraCpuTime shortDelay, pc = pcAfter }
+            { core = z80Core, clockTime = clockTime |> addExtraCpuTime shortDelay, pc = pcAfter }
 
         CoreWithPC new_pc z80Core ->
-            { z80clock | core = z80Core, clockTime = clockTime, pc = new_pc }
+            { core = z80Core, clockTime = clockTime, pc = new_pc }
 
         CoreWithPCAndDelay new_pc shortDelay z80Core ->
-            { z80clock | core = z80Core, pc = new_pc, clockTime = clockTime |> addExtraCpuTime shortDelay }
+            { core = z80Core, pc = new_pc, clockTime = clockTime |> addExtraCpuTime shortDelay }
 
         JumpOnlyPC int ->
             { z80clock | clockTime = clockTime, pc = int }
@@ -285,19 +279,19 @@ executeAndApplyDelta ct_time ct_value rom48k z80clock =
                 env =
                     z80_core.env |> z80_push pcAfter clockTime
             in
-            { z80clock | core = { z80_core | env = env }, pc = int, clockTime = clockTime |> addExtraCpuTime shortDelay }
+            { core = { z80_core | env = env }, pc = int, clockTime = clockTime |> addExtraCpuTime shortDelay }
 
         CallWithPC int ->
             let
                 env =
                     z80_core.env |> z80_push pcAfter clockTime
             in
-            { z80clock | core = { z80_core | env = env }, pc = int, clockTime = clockTime }
+            { core = { z80_core | env = env }, pc = int, clockTime = clockTime }
 
         Looper repeatPCOffset z80Core ->
             case repeatPCOffset of
                 NoOffset ->
-                    { z80clock | core = z80Core, clockTime = clockTime, pc = pcAfter }
+                    { core = z80Core, clockTime = clockTime, pc = pcAfter }
 
                 JumpBack ->
                     { z80clock | core = z80Core, clockTime = clockTime }
@@ -305,7 +299,7 @@ executeAndApplyDelta ct_time ct_value rom48k z80clock =
         LooperWithDelay repeatPCOffset shortDelay z80Core ->
             case repeatPCOffset of
                 NoOffset ->
-                    { z80clock | core = z80Core, clockTime = clockTime, pc = pcAfter }
+                    { core = z80Core, clockTime = clockTime, pc = pcAfter }
 
                 JumpBack ->
                     { z80clock | core = z80Core, clockTime = clockTime |> addExtraCpuTime shortDelay }
@@ -549,7 +543,7 @@ runIndexIX param rom48k pc z80 =
 
                                                 Nothing ->
                                                     case tripleMainRegsIX |> Dict.get param.value of
-                                                        Just ( f, pcInc, duration ) ->
+                                                        Just ( f, tripleInc, duration ) ->
                                                             let
                                                                 time =
                                                                     instrTime |> addDuration duration
@@ -559,6 +553,14 @@ runIndexIX param rom48k pc z80 =
 
                                                                 doubleParam =
                                                                     env |> mem16 (Bitwise.and (pc + paramOffset) 0xFFFF) rom48k time
+
+                                                                pcInc =
+                                                                    case tripleInc of
+                                                                        TripleIncrementByThree ->
+                                                                            IncrementByThree
+
+                                                                        TripleIncrementByFour ->
+                                                                            IncrementByFour
                                                             in
                                                             ( TripleMainChangeDelta doubleParam.time (f doubleParam.value16 z80.main), doubleParam.time, pcInc )
 
@@ -626,7 +628,7 @@ runIndexIY param rom48k pc z80 =
 
                                                 Nothing ->
                                                     case tripleMainRegsIY |> Dict.get param.value of
-                                                        Just ( f, pcInc, duration ) ->
+                                                        Just ( f, tripleInc, duration ) ->
                                                             let
                                                                 time =
                                                                     instrTime |> addDuration duration
@@ -636,6 +638,14 @@ runIndexIY param rom48k pc z80 =
 
                                                                 doubleParam =
                                                                     env |> mem16 (Bitwise.and (pc + paramOffset) 0xFFFF) rom48k time
+
+                                                                pcInc =
+                                                                    case tripleInc of
+                                                                        TripleIncrementByThree ->
+                                                                            IncrementByThree
+
+                                                                        TripleIncrementByFour ->
+                                                                            IncrementByFour
                                                             in
                                                             ( TripleMainChangeDelta doubleParam.time (f doubleParam.value16 z80.main), doubleParam.time, pcInc )
 
@@ -813,11 +823,20 @@ executeCoreInstruction rom48k pc z80_core =
         ct =
             z80_core |> fetchInstruction pc rom48k reset_cpu_time 0
 
-        ( deltaWithChanges, clockTime, pc_inc ) =
-            z80_core |> execute_delta ct rom48k pc
+        ( coreChange, pcInc, clockTime ) =
+            case ct of
+                UncompiledOpcode opcode cpuTimeCTime ->
+                    let
+                        ( deltaWithChanges, cpuClock, pc_inc ) =
+                            z80_core |> execute_delta cpuTimeCTime opcode rom48k.z80rom pc
+                    in
+                    ( deltaWithChanges |> apply_delta z80_core rom48k.z80rom cpuClock, pc_inc, cpuClock )
+
+                Z80Compiled f _ length ->
+                    ( z80_core |> f reset_cpu_time rom48k.z80rom, length, reset_cpu_time )
 
         pcAfter =
-            case pc_inc of
+            case pcInc of
                 IncrementByOne ->
                     Bitwise.and (pc + 1) 0xFFFF
 
@@ -830,14 +849,7 @@ executeCoreInstruction rom48k pc z80_core =
                 IncrementByFour ->
                     Bitwise.and (pc + 4) 0xFFFF
     in
-    case ct of
-        UncompiledOpcode int cpuTimeCTime ->
-            z80 |> executeAndApplyDelta cpuTimeCTime int rom48k.z80rom
-
-        Z80Compiled f _ ->
-            z80 |> f rom48k.z80rom
-    --( deltaWithChanges |> apply_delta z80_core rom48k clockTime, clockTime )
-    case deltaWithChanges |> apply_delta z80_core rom48k clockTime of
+    case coreChange of
         CoreOnly z80Core ->
             ( z80Core, clockTime, pcAfter )
 
@@ -949,7 +961,7 @@ coreLooping ( z80core, ct, _ ) =
         UncompiledOpcode int _ ->
             isCoreOpCode int && (z80core |> stillLooping)
 
-        Z80Compiled _ _ ->
+        Z80Compiled _ _ _ ->
             z80core |> stillLooping
 
 
@@ -962,45 +974,93 @@ executeCore rom48k z80 =
         z80_core =
             z80_clock.core
 
-        execute_f : ( Z80Core, CpuInstruction, Int ) -> ( Z80Core, CpuInstruction, Int )
+        execute_f : ( Z80CoreWithClockTime, CpuInstruction, Int ) -> ( Z80CoreWithClockTime, CpuInstruction, Int )
         execute_f =
             \( clock, cpuInstruction, r_register ) ->
                 let
-                    core_1 =
+                    core =
+                        clock.core
+
+                    core_1_clock =
                         case cpuInstruction of
                             UncompiledOpcode opCode clockTime ->
-                                --let
-                                --    ( compiled_pc, core_d ) =
-                                --        if ([ 0x11E3, 0x0E5C ] |> List.member core.pc) || (nonCoreOpCodeList |> List.member opCode) then
-                                --            ( core.pc, core )
-                                --
-                                --        else
-                                --            ( debugLog ("execute " ++ (opCode |> toHexString2) ++ " from ") (core.pc |> subName) core.pc, core )
-                                --in
-                                --core_d |> executeAndApplyDelta clockTime opCode rom48k.z80rom
-                                core |> executeAndApplyDelta clockTime opCode rom48k.z80rom
+                                clock |> executeAndApplyDelta opCode clockTime rom48k.z80rom
 
-                            Z80Compiled function _ ->
-                                core |> function rom48k.z80rom
+                            Z80Compiled function duration length ->
+                                let
+                                    clockTime =
+                                        clock.clockTime |> addDuration duration
 
-                    --let
-                    --    ( compiled_pc, core_d ) =
-                    --        if
-                    --            ([ 0x11E2, 0x11E3, 0x11E5, 0x11E6, 0x11E7, 0x11E9, 0x11EA, 0x11EC, 0x11ED, 0x11DC, 0x11DE, 0x11DF, 0x11E0 ] |> List.member core.pc)
-                    --                || ([ 0x0E54, 0x0E59, 0x0E4D, 0x0E5E, 0x0E57, 0x0E5C, 0x0E62, 0x0E5B, 0x0E58, 0x0E56, 0x0E61, 0x0E53, 0x0E52, 0x0E66, 0x0E4F, 0x0E4D, 0x0E65 ] |> List.member core.pc)
-                    --                || ([ 0x0E50, 0x0E51, 0x0E63 ] |> List.member core.pc)
-                    --        then
-                    --            ( core.pc, core )
-                    --
-                    --        else
-                    --            ( debugLog "compiled" (core.pc |> subName) core.pc, core )
-                    --in
-                    --core_d |> function
+                                    pcAfter =
+                                        case length of
+                                            IncrementByOne ->
+                                                Bitwise.and (clock.pc + 1) 0xFFFF
+
+                                            IncrementByTwo ->
+                                                Bitwise.and (clock.pc + 2) 0xFFFF
+
+                                            IncrementByThree ->
+                                                Bitwise.and (clock.pc + 3) 0xFFFF
+
+                                            IncrementByFour ->
+                                                Bitwise.and (clock.pc + 4) 0xFFFF
+                                in
+                                case clock.core |> function clockTime rom48k.z80rom of
+                                    CoreOnly z80Core ->
+                                        { clock | core = z80Core, clockTime = clockTime, pc = pcAfter }
+
+                                    CoreWithTime shortDelay z80Core ->
+                                        { clock | core = z80Core, clockTime = clockTime |> addExtraCpuTime shortDelay, pc = pcAfter }
+
+                                    CoreWithPC new_pc z80Core ->
+                                        { clock | core = z80Core, clockTime = clockTime, pc = new_pc }
+
+                                    CoreWithPCAndDelay new_pc shortDelay z80Core ->
+                                        { clock | core = z80Core, pc = new_pc, clockTime = clockTime |> addExtraCpuTime shortDelay }
+
+                                    JumpOnlyPC int ->
+                                        { clock | clockTime = clockTime, pc = int }
+
+                                    CallWithPCAndDelay int shortDelay ->
+                                        let
+                                            env =
+                                                core.env |> z80_push pcAfter clockTime
+                                        in
+                                        { clock | core = { core | env = env }, pc = int, clockTime = clockTime |> addExtraCpuTime shortDelay }
+
+                                    CallWithPC int ->
+                                        let
+                                            env =
+                                                core.env |> z80_push pcAfter clockTime
+                                        in
+                                        { clock | core = { core | env = env }, pc = int, clockTime = clockTime }
+
+                                    Looper repeatPCOffset z80Core ->
+                                        case repeatPCOffset of
+                                            NoOffset ->
+                                                { clock | core = z80Core, clockTime = clockTime, pc = pcAfter }
+
+                                            JumpBack ->
+                                                { clock | core = z80Core, clockTime = clockTime }
+
+                                    LooperWithDelay repeatPCOffset shortDelay z80Core ->
+                                        case repeatPCOffset of
+                                            NoOffset ->
+                                                { clock | core = z80Core, clockTime = clockTime, pc = pcAfter }
+
+                                            JumpBack ->
+                                                { clock | core = z80Core, clockTime = clockTime |> addExtraCpuTime shortDelay }
+
+                                    NoCore ->
+                                        { clock | clockTime = clockTime, pc = pcAfter }
+
+                                    JumpOffsetWithDelay int shortDelay ->
+                                        { clock | clockTime = clockTime |> addExtraCpuTime shortDelay, pc = (pcAfter + int) |> Bitwise.and 0xFFFF }
                 in
                 ( core_1_clock, fetchInstruction core_1_clock.pc rom48k core_1_clock.clockTime r_register core_1_clock.core, r_register + 1 )
 
         ( clock_2, ct1, new_r ) =
-            while coreLooping execute_f ( z80_clock, fetchInstruction z80_clock.pc rom48k z80_clock.clockTime z80_clock.core.interrupts.r z80_clock.core, z80_core.interrupts.r )
+            Loop.while coreLooping execute_f ( z80_clock, fetchInstruction z80_clock.pc rom48k z80_clock.clockTime z80_core.interrupts.r z80_core, z80_core.interrupts.r )
 
         core_2 =
             clock_2.core
@@ -1029,7 +1089,7 @@ executeCore rom48k z80 =
                             core.interrupts
 
                         newTime =
-                            clock.clockTime |> addDuration duration
+                            clockTime |> addDuration duration
 
                         pc =
                             Bitwise.and (clock.pc + 1) 0xFFFF
@@ -1040,7 +1100,7 @@ executeCore rom48k z80 =
                     z80_1
 
         -- non-core functions are not compiled (the compile target is specifically Z80Core -> Z80Core)
-        Z80Compiled _ _ ->
+        Z80Compiled _ _ _ ->
             z80_1
 
 

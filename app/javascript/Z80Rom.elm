@@ -6,8 +6,9 @@ import Bytes.Decode exposing (Decoder, Step(..), andThen, loop, map, succeed, un
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration)
 import Dict exposing (Dict)
 import Keyboard exposing (Keyboard)
+import PCIncrement exposing (PCIncrement)
 import Utils exposing (listToDict, toHexString)
-import Z80Core exposing (Z80Core)
+import Z80Core exposing (CoreChange, Z80Core)
 import Z80Debug exposing (debugTodo)
 import Z80Ram exposing (Z80Ram)
 
@@ -21,13 +22,13 @@ type alias Z80ROM =
 
 type alias CompiledZ80ROM =
     { z80rom : Z80ROM
-    , compiled : Dict Int ( Z80ROM -> Z80Core -> Z80Core, InstructionDuration )
+    , compiled : Dict Int ( CpuTimeCTime -> Z80ROM -> Z80Core -> CoreChange, InstructionDuration, PCIncrement )
     }
 
 
 type CpuInstruction
     = UncompiledOpcode Int CpuTimeCTime
-    | Z80Compiled (Z80ROM -> Z80Core -> Z80Core) InstructionDuration
+    | Z80Compiled (CpuTimeCTime -> Z80ROM -> Z80Core -> CoreChange) InstructionDuration PCIncrement
 
 
 constructor : CompiledZ80ROM
@@ -48,8 +49,8 @@ constructor =
 getROMInstruction : Int -> CpuTimeCTime -> CompiledZ80ROM -> CpuInstruction
 getROMInstruction addr clockTime z80rom =
     case z80rom.compiled |> Dict.get addr of
-        Just ( f, duration ) ->
-            Z80Compiled f duration
+        Just ( f, duration, length ) ->
+            Z80Compiled f duration length
 
         Nothing ->
             case Dict.get addr z80rom.z80rom.rom48k of

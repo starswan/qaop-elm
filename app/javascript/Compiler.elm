@@ -1,10 +1,10 @@
 module Compiler exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (InstructionDuration(..), addDuration, reset_cpu_time)
+import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), reset_cpu_time)
 import Dict exposing (Dict)
 import DoubleWithRegisters exposing (doubleWithRegisters, doubleWithRegistersIY)
-import PCIncrement exposing (MediumPCIncrement(..), PCIncrement(..), TriplePCIncrement(..))
+import PCIncrement exposing (PCIncrement(..), TriplePCIncrement(..))
 import Set exposing (Set)
 import SimpleFlagOps exposing (singleByteFlags)
 import SimpleSingleByte exposing (singleByteMainRegs)
@@ -16,7 +16,7 @@ import TripleByte exposing (tripleByteWith16BitParam)
 import TripleWithFlags exposing (TripleWithFlagsChange(..), triple16bitJumps)
 import TripleWithMain exposing (tripleMainRegsIY)
 import Utils exposing (toHexString, toHexString2, toPlainHexString2)
-import Z80Core exposing (Z80Core)
+import Z80Core exposing (CoreChange, Z80Core)
 import Z80Debug exposing (debugLog, debugTodo)
 import Z80Env exposing (Z80Env)
 import Z80Execute exposing (applyJumpChangeDelta, applyTripleFlagChange)
@@ -28,6 +28,7 @@ import Z80Rom exposing (Z80ROM, subName)
 type CompilerState
     = Running
     | Skipping Int
+    | SkipUntil38Sentinel
     | JumpTo Int
     | Stopping
 
@@ -36,7 +37,7 @@ type alias CompileRunning =
     { seen : Set Int
 
     -- Dict of instruction to function with time and size
-    , compiled : Dict Int ( Z80ROM -> Z80Core -> Z80Core, InstructionDuration )
+    , compiled : Dict Int ( CpuTimeCTime -> Z80ROM -> Z80Core -> CoreChange, InstructionDuration, PCIncrement )
     , state : CompilerState
     }
 
@@ -50,6 +51,13 @@ compileRunning nesting rom48k z80env key value input =
     case input.state of
         Stopping ->
             input
+
+        SkipUntil38Sentinel ->
+            if value == 0x38 then
+                { input | state = Running }
+
+            else
+                input
 
         Skipping int ->
             let
@@ -78,9 +86,15 @@ compileRunning nesting rom48k z80env key value input =
                     if (input.seen |> Set.member key) || (input.compiled |> Dict.member key) then
                         { input | state = Stopping }
 
-                    else if [ 0xC9, 0xE9 ] |> List.member value then
+                    else if [ 0xCF, 0xC9, 0xE9 ] |> List.member value then
                         -- C9 == RET , E9 = JP (HL)
+                        -- RST08(0xCF) and RST28(0xEF) take an inline parameter
+                        -- RST08 doesn't return via the stack, RST28 returns after a sentinel 0x38
                         { input | state = Stopping }
+
+                    else if value == 0xEF then
+                        -- RST28 returns after a sentinel 0x38
+                        { input | state = SkipUntil38Sentinel }
 
                     else
                         let
@@ -93,8 +107,8 @@ compileRunning nesting rom48k z80env key value input =
                         case maybeJump of
                             Just ( relJump, duration ) ->
                                 let
-                                    jumpFunc =
-                                        \dur z80rom z80core -> z80core |> applyJumpChangeDelta (z80core.clockTime |> addDuration dur) relJump
+                                    dictVal =
+                                        ( \_ _ z80core -> z80core |> applyJumpChangeDelta relJump, duration, IncrementByTwo )
                                 in
                                 case relJump of
                                     ActualJump address ->
@@ -102,9 +116,13 @@ compileRunning nesting rom48k z80env key value input =
                                             { input | state = Stopping }
 
                                         else
-                                            { input | state = JumpTo address, compiled = input.compiled |> Dict.insert key ( jumpFunc duration, duration ) }
+                                            { input | state = JumpTo address, compiled = input.compiled |> Dict.insert key dictVal }
 
-                                    ConditionalJump address _ _ ->
+                                    ConditionalJumpOffset offset _ _ ->
+                                        let
+                                            address =
+                                                key + offset
+                                        in
                                         if (input.seen |> Set.member address) || (input.compiled |> Dict.member address) then
                                             input
 
@@ -114,7 +132,7 @@ compileRunning nesting rom48k z80env key value input =
                                                     input.state
 
                                                 newState =
-                                                    { seen = input.seen, compiled = input.compiled |> Dict.insert key ( jumpFunc duration, duration ), state = JumpTo address }
+                                                    { seen = input.seen, compiled = input.compiled |> Dict.insert key dictVal, state = JumpTo address }
 
                                                 x =
                                                     rom48k.rom48k |> Dict.foldl (compileRunning (nesting + 1) rom48k z80env) newState
@@ -131,7 +149,7 @@ compileRunning nesting rom48k z80env key value input =
                                                     input.state
 
                                                 newState =
-                                                    { seen = input.seen, compiled = input.compiled |> Dict.insert key ( jumpFunc duration, duration ), state = JumpTo address }
+                                                    { seen = input.seen, compiled = input.compiled |> Dict.insert key dictVal, state = JumpTo address }
 
                                                 x =
                                                     rom48k.rom48k |> Dict.foldl (compileRunning (nesting + 1) rom48k z80env) newState
@@ -168,7 +186,7 @@ compileRunning nesting rom48k z80env key value input =
                                             Just ( aLongJump, duration ) ->
                                                 let
                                                     jumpFunc =
-                                                        \dur z80rom z80core -> z80core |> applyTripleFlagChange (z80core.clockTime |> addDuration dur) aLongJump
+                                                        \_ _ z80core -> z80core |> applyTripleFlagChange aLongJump
                                                 in
                                                 case aLongJump of
                                                     NewPCRegister _ ->
@@ -176,7 +194,7 @@ compileRunning nesting rom48k z80env key value input =
                                                             { input | state = Stopping }
 
                                                         else
-                                                            { input | state = JumpTo address, compiled = input.compiled |> Dict.insert key ( jumpFunc duration, duration ) }
+                                                            { input | state = JumpTo address, compiled = input.compiled |> Dict.insert key ( jumpFunc, duration, IncrementByThree ) }
 
                                                     Conditional16BitJump _ _ ->
                                                         if (input.seen |> Set.member address) || (input.compiled |> Dict.member address) then
@@ -188,7 +206,7 @@ compileRunning nesting rom48k z80env key value input =
                                                                     input.state
 
                                                                 newState =
-                                                                    { seen = input.seen, compiled = input.compiled |> Dict.insert key ( jumpFunc duration, duration ), state = JumpTo address }
+                                                                    { seen = input.seen, compiled = input.compiled |> Dict.insert key ( jumpFunc, duration, IncrementByThree ), state = JumpTo address }
 
                                                                 x =
                                                                     rom48k.rom48k |> Dict.foldl (compileRunning (nesting + 1) rom48k z80env) newState
@@ -205,7 +223,7 @@ compileRunning nesting rom48k z80env key value input =
                                                                     input.state
 
                                                                 newState =
-                                                                    { seen = input.seen, compiled = input.compiled |> Dict.insert key ( jumpFunc duration, duration ), state = JumpTo address }
+                                                                    { seen = input.seen, compiled = input.compiled |> Dict.insert key ( jumpFunc, duration, IncrementByThree ), state = JumpTo address }
 
                                                                 x =
                                                                     rom48k.rom48k |> Dict.foldl (compileRunning (nesting + 1) rom48k z80env) newState
@@ -222,7 +240,7 @@ compileRunning nesting rom48k z80env key value input =
                                                                     input.state
 
                                                                 newState =
-                                                                    { seen = input.seen, compiled = input.compiled |> Dict.insert key ( jumpFunc duration, duration ), state = JumpTo address }
+                                                                    { seen = input.seen, compiled = input.compiled |> Dict.insert key ( jumpFunc, duration, IncrementByThree ), state = JumpTo address }
 
                                                                 x =
                                                                     rom48k.rom48k |> Dict.foldl (compileRunning (nesting + 1) rom48k z80env) newState
@@ -234,6 +252,9 @@ compileRunning nesting rom48k z80env key value input =
             in
             case running.state of
                 Skipping _ ->
+                    running
+
+                SkipUntil38Sentinel ->
                     running
 
                 JumpTo _ ->
@@ -268,42 +289,27 @@ compileRunning nesting rom48k z80env key value input =
                                 keyVal =
                                     debugLog ((nesting |> String.fromInt) ++ " Addr " ++ (key |> subName)) (value |> toHexString2) key
                             in
-                            { running | compiled = running.compiled |> Dict.insert keyVal ( f duration, duration ), state = state }
+                            { running | compiled = running.compiled |> Dict.insert keyVal ( f, duration, length ), state = state }
 
                         Nothing ->
-                            -- single byte unavailable (e.g. DI/EI etc) 33 INC SP, 3B DEC SP or singleMain main e.g. LD A, (BC) 0x08 - EX AF, AF' 0x76 = HALT
-                            if ([ 0xF3, 0xFB, 0xD9, 0x33, 0x3B, 0x08, 0x76 ] |> List.member value) || (singleEnvMainRegs |> Dict.member value) then
+                            -- single byte unavailable (e.g. DI/EI etc) 33 INC SP, 3B DEC SP or  - EX AF, AF' 0x76 = HALT D9 = EXX
+                            if [ 0xF3, 0xFB, 0xD9, 0x33, 0x3B, 0x08, 0x76 ] |> List.member value then
                                 let
                                     keyVal =
-                                        debugLog ((nesting |> String.fromInt) ++ " Addr " ++ (key |> subName) ++ " DI/EI mains") (value |> toHexString2) key
+                                        debugLog ((nesting |> String.fromInt) ++ " Addr " ++ (key |> subName) ++ " DI/EI INC SP etc") (value |> toHexString2) key
                                 in
                                 { running | seen = running.seen |> Set.insert keyVal }
 
-                            else if
-                                ([ 0xCB ] |> List.member value)
-                                    || (maybeRelativeJump |> Dict.member value)
-                                    || (singleWith8BitParam |> Dict.member value)
-                                    || (doubleWithRegisters |> Dict.member value)
-                            then
+                            else if [ 0xCB ] |> List.member value then
                                 -- 2 byte unavailable
                                 let
+                                    nextValue =
+                                        z80env |> mem (Bitwise.and (key + 1) 0xFFFF) clockTime rom48k |> .value
+
                                     keyVal =
-                                        debugLog ((nesting |> String.fromInt) ++ " Addr " ++ (key |> subName) ++ " CB 2 bytes") (value |> toHexString2) key
+                                        debugLog ((nesting |> String.fromInt) ++ " Addr " ++ (key |> subName) ++ " CB 2 bytes") (nextValue |> toHexString2) key
                                 in
                                 { running | seen = running.seen |> Set.insert keyVal, state = Skipping 1 }
-
-                            else if
-                                (singleWithNoParam |> Dict.member value)
-                                    || (singleByteMainAndFlagRegisters |> Dict.member value)
-                                    || (singleByteMainRegs |> Dict.member value)
-                                    || (singleNoParamCalls |> Dict.member value)
-                                    || (singleByteFlags |> Dict.member value)
-                            then
-                                let
-                                    keyVal =
-                                        debugLog ((nesting |> String.fromInt) ++ " Addr " ++ (key |> subName) ++ " singleNoParam") (value |> toHexString2) key
-                                in
-                                { running | seen = running.seen |> Set.insert keyVal }
 
                             else if (tripleByteWith16BitParam |> Dict.member value) || (triple16bitJumps |> Dict.member value) then
                                 -- 3 byte unavailable
@@ -326,7 +332,7 @@ compileRunning nesting rom48k z80env key value input =
                                             1
 
                                     keyVal =
-                                        debugLog ((nesting |> String.fromInt) ++ " Addr " ++ (key |> subName) ++ " ED " ++ (1 + skipCount |> String.fromInt) ++ " bytes") (value |> toHexString2) key
+                                        debugLog ((nesting |> String.fromInt) ++ " Addr " ++ (key |> subName) ++ " ED " ++ (1 + skipCount |> String.fromInt) ++ " bytes") (nextValue |> toHexString2) key
                                 in
                                 -- ED - mostly 2 bytes, but occasionally 3
                                 { running | seen = running.seen |> Set.insert keyVal, state = Skipping skipCount }
@@ -392,7 +398,7 @@ compileRunning nesting rom48k z80env key value input =
                                 debugTodo "no length" ((key |> toHexString) ++ " " ++ (value |> toHexString2)) { running | seen = running.seen |> Set.insert key }
 
 
-compileRom : Z80ROM -> Z80Env -> Dict Int ( Z80ROM -> Z80Core -> Z80Core, InstructionDuration )
+compileRom : Z80ROM -> Z80Env -> Dict Int ( CpuTimeCTime -> Z80ROM -> Z80Core -> CoreChange, InstructionDuration, PCIncrement )
 compileRom rom48k z80env =
     -- compiled 2846/2623
     let

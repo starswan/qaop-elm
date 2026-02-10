@@ -499,7 +499,7 @@ gotRom qaop result =
                     { oldCompiledRom | z80rom = { oldRom | rom48k = value } }
 
                 romDict =
-                    compileRom romWithDict.z80rom speccy.cpu.core.env
+                    compileRom romWithDict.z80rom speccy.cpu.coreWithClock.core.env
             in
             { qaop | spectrum = { speccy | rom48k = { romWithDict | compiled = romDict } } } |> run
 

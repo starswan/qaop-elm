@@ -57,7 +57,7 @@ suite =
                         z80inc =
                             { z80 | env = z80env |> setMemWithTime addr 0x00 |> .z80env }
                     in
-                    lengthAndDuration z80inc.pc z80rom.z80rom z80inc.env |> Maybe.map (\d -> d |> Triple.dropThird) |> Expect.equal (Just ( IncrementByOne, FourTStates ))
+                    lengthAndDuration addr z80rom.z80rom z80inc.env |> Maybe.map (\d -> d |> Triple.dropThird) |> Expect.equal (Just ( IncrementByOne, FourTStates ))
             ]
         , describe "0x01 LD BC,nn"
             [ test "Execute 0x01" <|
@@ -89,7 +89,7 @@ suite =
                         ( new_z80, new_pc ) =
                             z80inc |> Z80.executeCoreInstruction z80rom addr |> Triple.dropSecond
                     in
-                    Expect.equal ( addr + 1, 0x27 ) ( new_pc, new_z80.env |> mem 0x4534 clock.clockTime z80rom |> .value )
+                    Expect.equal ( addr + 1, 0x27 ) ( new_pc, new_z80.env |> mem 0x4534 clock.clockTime z80rom.z80rom |> .value )
             , test "length LD (BC),A" <|
                 \_ ->
                     let
@@ -98,7 +98,7 @@ suite =
                                 |> setMemWithTime addr 0x02
                                 |> .z80env
                     in
-                    lengthAndDuration z80.pc z80rom.z80rom z80inc |> Maybe.map (\d -> d |> Triple.dropThird) |> Expect.equal (Just ( IncrementByOne, SevenTStates ))
+                    lengthAndDuration addr z80rom.z80rom z80inc |> Maybe.map (\d -> d |> Triple.dropThird) |> Expect.equal (Just ( IncrementByOne, SevenTStates ))
             ]
         , describe "0x03 INC BC"
             [ test "execute INC BC" <|
@@ -122,7 +122,7 @@ suite =
                                 |> setMemWithTime addr 0x03
                                 |> .z80env
                     in
-                    lengthAndDuration z80.pc z80rom.z80rom z80inc |> Maybe.map (\d -> d |> Triple.dropThird) |> Expect.equal (Just ( IncrementByOne, SixTStates ))
+                    lengthAndDuration addr z80rom.z80rom z80inc |> Maybe.map (\d -> d |> Triple.dropThird) |> Expect.equal (Just ( IncrementByOne, SixTStates ))
             ]
         , test "0x04 INC B" <|
             \_ ->
@@ -173,7 +173,7 @@ suite =
                                 |> setMemWithTime (addr + 1) 0x78
                                 |> .z80env
                     in
-                    lengthAndDuration z80.pc z80rom.z80rom z80inc |> Maybe.map (\d -> d |> Triple.dropThird) |> Expect.equal (Just ( IncrementByTwo, SevenTStates ))
+                    lengthAndDuration addr z80rom.z80rom z80inc |> Maybe.map (\d -> d |> Triple.dropThird) |> Expect.equal (Just ( IncrementByTwo, SevenTStates ))
             ]
         , describe "RLCA 0x07"
             [ test "with carry" <|
@@ -222,7 +222,7 @@ suite =
                                 |> setMemWithTime addr 0x07
                                 |> .z80env
                     in
-                    lengthAndDuration z80.pc z80rom.z80rom z80inc |> Maybe.map (\d -> d |> Triple.dropThird) |> Expect.equal (Just ( IncrementByOne, FourTStates ))
+                    lengthAndDuration addr z80rom.z80rom z80inc |> Maybe.map (\d -> d |> Triple.dropThird) |> Expect.equal (Just ( IncrementByOne, FourTStates ))
             ]
 
         --, describe "EX AF,AF'"
