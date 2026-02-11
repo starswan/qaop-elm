@@ -2,6 +2,7 @@ module Group00Test exposing (..)
 
 import CpuTimeCTime exposing (InstructionDuration(..))
 import Expect exposing (Expectation)
+import PCIncrement exposing (PCIncrement(..))
 import Test exposing (..)
 import Triple
 import Z80 exposing (executeCoreInstruction)
@@ -9,6 +10,7 @@ import Z80CoreWithClockTime
 import Z80Env exposing (setMemWithTime)
 import Z80Flags exposing (getFlags)
 import Z80Mem exposing (mem)
+import Z80OpCode exposing (lengthAndDuration)
 import Z80Rom
 
 
@@ -49,6 +51,13 @@ suite =
                                 |> Triple.dropFirst
                     in
                     Expect.equal ( addr + 1, 4 ) ( new_pc, clockTime.cpu_time - clock.clockTime.cpu_time )
+            , test "length NOP" <|
+                \_ ->
+                    let
+                        z80inc =
+                            { z80 | env = z80env |> setMemWithTime addr 0x00 |> .z80env }
+                    in
+                    lengthAndDuration addr z80rom.z80rom z80inc.env |> Maybe.map (\d -> d |> Triple.dropThird) |> Expect.equal (Just ( IncrementByOne, FourTStates ))
             ]
         , describe "0x01 LD BC,nn"
             [ test "Execute 0x01" <|
@@ -80,7 +89,16 @@ suite =
                         ( new_z80, new_pc ) =
                             z80inc |> Z80.executeCoreInstruction z80rom addr |> Triple.dropSecond
                     in
-                    Expect.equal ( addr + 1, 0x27 ) ( new_pc, new_z80.env |> mem 0x4534 clock.clockTime z80rom |> .value )
+                    Expect.equal ( addr + 1, 0x27 ) ( new_pc, new_z80.env |> mem 0x4534 clock.clockTime z80rom.z80rom |> .value )
+            , test "length LD (BC),A" <|
+                \_ ->
+                    let
+                        z80inc =
+                            z80env
+                                |> setMemWithTime addr 0x02
+                                |> .z80env
+                    in
+                    lengthAndDuration addr z80rom.z80rom z80inc |> Maybe.map (\d -> d |> Triple.dropThird) |> Expect.equal (Just ( IncrementByOne, SevenTStates ))
             ]
         , describe "0x03 INC BC"
             [ test "execute INC BC" <|
@@ -96,6 +114,15 @@ suite =
                                 |> Triple.dropSecond
                     in
                     Expect.equal ( addr + 1, 0x46, 0x00 ) ( new_pc, new_z80.main.b, new_z80.main.c )
+            , test "length INC BC" <|
+                \_ ->
+                    let
+                        z80inc =
+                            z80env
+                                |> setMemWithTime addr 0x03
+                                |> .z80env
+                    in
+                    lengthAndDuration addr z80rom.z80rom z80inc |> Maybe.map (\d -> d |> Triple.dropThird) |> Expect.equal (Just ( IncrementByOne, SixTStates ))
             ]
         , test "0x04 INC B" <|
             \_ ->
@@ -137,6 +164,16 @@ suite =
                             executeCoreInstruction z80rom addr { z80 | env = new_env } |> Triple.dropSecond
                     in
                     Expect.equal ( addr + 2, 0x78 ) ( new_pc, new_z80.main.b )
+            , test "length LD B,n" <|
+                \_ ->
+                    let
+                        z80inc =
+                            z80env
+                                |> setMemWithTime addr 0x06
+                                |> setMemWithTime (addr + 1) 0x78
+                                |> .z80env
+                    in
+                    lengthAndDuration addr z80rom.z80rom z80inc |> Maybe.map (\d -> d |> Triple.dropThird) |> Expect.equal (Just ( IncrementByTwo, SevenTStates ))
             ]
         , describe "RLCA 0x07"
             [ test "with carry" <|
@@ -177,6 +214,15 @@ suite =
                     in
                     -- This is RLCA - bit 7 goes into bit 0 and carry flag
                     Expect.equal ( addr + 1, 0x8E, 0x48 ) ( new_pc, new_z80.flags.a, new_z80.flags |> getFlags )
+            , test "length RLCA" <|
+                \_ ->
+                    let
+                        z80inc =
+                            z80env
+                                |> setMemWithTime addr 0x07
+                                |> .z80env
+                    in
+                    lengthAndDuration addr z80rom.z80rom z80inc |> Maybe.map (\d -> d |> Triple.dropThird) |> Expect.equal (Just ( IncrementByOne, FourTStates ))
             ]
 
         --, describe "EX AF,AF'"

@@ -240,10 +240,10 @@ suite =
                                 |> Triple.dropSecond
 
                         lo_value =
-                            z80_1.env |> mem stackp clock.clockTime z80rom |> .value
+                            z80_1.env |> mem stackp clock.clockTime z80rom.z80rom |> .value
 
                         high_value =
-                            z80_1.env |> mem (stackp + 1) clock.clockTime z80rom |> .value
+                            z80_1.env |> mem (stackp + 1) clock.clockTime z80rom.z80rom |> .value
 
                         ( z80_2, final_pc ) =
                             z80_1 |> executeCoreInstruction z80rom new_pc |> Triple.dropSecond

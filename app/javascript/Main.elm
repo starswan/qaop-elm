@@ -7,6 +7,7 @@ module Main exposing (..)
 
 import Bitwise exposing (complement)
 import Browser
+import Compiler exposing (compileRom)
 import Delay
 import Dict exposing (Dict)
 import Html exposing (Attribute, Html, button, div, h2, span, text)
@@ -209,7 +210,7 @@ view : Model -> Html Message
 view model =
     let
         screen =
-            model.qaop.spectrum.rom48k.z80ram.screen
+            model.qaop.spectrum.rom48k.z80rom.z80ram.screen
 
         load_disabled =
             case model.qaop.spectrum.tape of
@@ -490,10 +491,17 @@ gotRom qaop result =
                 oldCompiledRom =
                     speccy.rom48k
 
-                newRom =
-                    { oldCompiledRom | rom48k = value }
+                oldRom =
+                    oldCompiledRom.z80rom
+
+                romWithDict =
+                    --{ oldRom | rom48k = a }
+                    { oldCompiledRom | z80rom = { oldRom | rom48k = value } }
+
+                romDict =
+                    compileRom romWithDict.z80rom speccy.cpu.coreWithClock.core.env
             in
-            { qaop | spectrum = { speccy | rom48k = newRom } } |> run
+            { qaop | spectrum = { speccy | rom48k = { romWithDict | compiled = romDict } } } |> run
 
         Err _ ->
             ( qaop, Cmd.none )

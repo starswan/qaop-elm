@@ -17,7 +17,7 @@ import Z80Change exposing (FlagChange(..), Z80Change(..))
 import Z80Core exposing (CoreChange(..), DirectionForLDIR(..), RepeatPCOffset(..), Z80Core)
 import Z80Debug exposing (debugLog, debugTodo)
 import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..), applyDeltaWithChanges)
-import Z80Env exposing (Z80Env, setMem, setMem16, z80_in, z80_out, z80_push)
+import Z80Env exposing (Z80Env, Z80EnvWithPC, setMem, setMem16, z80_in, z80_out, z80_push)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, f_szh0n0p, inc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
 import Z80Mem exposing (mem, mem16, z80_pop)
 import Z80Registers exposing (ChangeMainRegister(..), ChangeOneRegister(..), CoreRegister(..))
@@ -89,7 +89,7 @@ apply_delta z80 rom48k clockTime z80delta =
             z80 |> applyTripleChangeDelta rom48k clockTime tripleByteChange
 
         Triple16FlagsDelta tripleWithFlagsChange ->
-            z80 |> applyTripleFlagChange clockTime tripleWithFlagsChange
+            z80 |> applyTripleFlagChange tripleWithFlagsChange
 
         UnknownInstruction string int ->
             debugTodo string (int |> toHexString2) z80 |> CoreOnly
@@ -901,8 +901,8 @@ applyTripleChangeDelta rom48k cpu_time z80changeData z80 =
                 |> CoreOnly
 
 
-applyTripleFlagChange : CpuTimeCTime -> TripleWithFlagsChange -> Z80Core -> CoreChange
-applyTripleFlagChange cpu_time z80changeData z80 =
+applyTripleFlagChange : TripleWithFlagsChange -> Z80Core -> CoreChange
+applyTripleFlagChange z80changeData z80 =
     case z80changeData of
         Conditional16BitJump int function ->
             if z80.flags |> function then

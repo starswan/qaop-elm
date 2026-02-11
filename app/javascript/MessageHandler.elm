@@ -1,6 +1,6 @@
 module MessageHandler exposing (..)
 
-import Bytes exposing (Bytes)
+import Bytes exposing (Bytes, Endianness(..))
 import Dict exposing (Dict)
 import Http exposing (Error(..), Expect, Metadata, Response)
 import Tapfile exposing (Tapfile, parseTapFile)
