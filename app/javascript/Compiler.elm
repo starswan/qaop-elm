@@ -286,17 +286,17 @@ compileRunning nesting rom48k z80env key value input =
                                         IncrementByFour ->
                                             Skipping 3
 
-                                keyVal =
-                                    debugLog ((nesting |> String.fromInt) ++ " Addr " ++ (key |> subName)) (value |> toHexString2) key
+                                --keyVal =
+                                --    debugLog ((nesting |> String.fromInt) ++ " compiled " ++ (key |> subName)) (value |> toHexString2) key
                             in
-                            { running | compiled = running.compiled |> Dict.insert keyVal ( f, duration, length ), state = state }
+                            { running | compiled = running.compiled |> Dict.insert key ( f, duration, length ), state = state }
 
                         Nothing ->
                             -- single byte unavailable (e.g. DI/EI etc) 33 INC SP, 3B DEC SP or  - EX AF, AF' 0x76 = HALT D9 = EXX
                             if [ 0xF3, 0xFB, 0xD9, 0x33, 0x3B, 0x08, 0x76 ] |> List.member value then
                                 let
                                     keyVal =
-                                        debugLog ((nesting |> String.fromInt) ++ " Addr " ++ (key |> subName) ++ " DI/EI INC SP etc") (value |> toHexString2) key
+                                        debugLog ((nesting |> String.fromInt) ++ " Addr B " ++ (key |> subName) ++ " DI/EI INC SP etc") (value |> toHexString2) key
                                 in
                                 { running | seen = running.seen |> Set.insert keyVal }
 
@@ -307,7 +307,7 @@ compileRunning nesting rom48k z80env key value input =
                                         z80env |> mem (Bitwise.and (key + 1) 0xFFFF) clockTime rom48k |> .value
 
                                     keyVal =
-                                        debugLog ((nesting |> String.fromInt) ++ " Addr " ++ (key |> subName) ++ " CB 2 bytes") (nextValue |> toHexString2) key
+                                        debugLog ((nesting |> String.fromInt) ++ " Addr C " ++ (key |> subName) ++ " CB 2 bytes") (nextValue |> toHexString2) key
                                 in
                                 { running | seen = running.seen |> Set.insert keyVal, state = Skipping 1 }
 
@@ -315,7 +315,7 @@ compileRunning nesting rom48k z80env key value input =
                                 -- 3 byte unavailable
                                 let
                                     keyVal =
-                                        debugLog ((nesting |> String.fromInt) ++ " Addr " ++ (key |> subName) ++ " tripleByteWith16BitParam") (value |> toHexString2) key
+                                        debugLog ((nesting |> String.fromInt) ++ " Addr D " ++ (key |> subName) ++ " tripleByteWith16BitParam") (value |> toHexString2) key
                                 in
                                 { running | seen = running.seen |> Set.insert keyVal, state = Skipping 2 }
 
@@ -332,7 +332,7 @@ compileRunning nesting rom48k z80env key value input =
                                             1
 
                                     keyVal =
-                                        debugLog ((nesting |> String.fromInt) ++ " Addr " ++ (key |> subName) ++ " ED " ++ (1 + skipCount |> String.fromInt) ++ " bytes") (nextValue |> toHexString2) key
+                                        debugLog ((nesting |> String.fromInt) ++ " Addr E " ++ (key |> subName) ++ " ED " ++ (1 + skipCount |> String.fromInt) ++ " bytes") (nextValue |> toHexString2) key
                                 in
                                 -- ED - mostly 2 bytes, but occasionally 3
                                 { running | seen = running.seen |> Set.insert keyVal, state = Skipping skipCount }
@@ -345,8 +345,11 @@ compileRunning nesting rom48k z80env key value input =
                                 if [ 0xCB ] |> List.member nextValue then
                                     -- FDCB always 4 bytes
                                     let
+                                        fdcbparam =
+                                            z80env |> mem16 (key + 2) rom48k clockTime |> .value16
+
                                         keyVal =
-                                            debugLog ((nesting |> String.fromInt) ++ " Addr " ++ (key |> subName) ++ " FDCB 4") (value |> toHexString2) key
+                                            debugLog ((nesting |> String.fromInt) ++ " Addr F " ++ (key |> subName) ++ " FDCB 4") (fdcbparam |> toHexString) key
                                     in
                                     { running | seen = running.seen |> Set.insert keyVal, state = Skipping 3 }
 
@@ -354,15 +357,15 @@ compileRunning nesting rom48k z80env key value input =
                                     -- JP (IX) or JP (IY)
                                     let
                                         keyVal =
-                                            debugLog ((nesting |> String.fromInt) ++ " Addr " ++ (key |> subName) ++ " JP (IX/IY)") (value |> toHexString2) key
+                                            debugLog ((nesting |> String.fromInt) ++ " Addr G " ++ (key |> subName) ++ " JP (IX/IY)") (value |> toHexString2) key
                                     in
                                     { running | seen = running.seen |> Set.insert keyVal, state = Stopping }
 
-                                else if ([ 0x21, 0x2A ] |> List.member nextValue) || (doubleWithRegistersIY |> Dict.member nextValue) then
+                                else if [ 0x21, 0x2A ] |> List.member nextValue then
                                     -- 3 byte unavailable
                                     let
                                         keyVal =
-                                            debugLog ((nesting |> String.fromInt) ++ " Addr " ++ (key |> subName)) (value |> toHexString2) key
+                                            debugLog ((nesting |> String.fromInt) ++ " Addr H " ++ (key |> subName)) (value |> toHexString2) key
                                     in
                                     { running | seen = running.seen |> Set.insert keyVal, state = Skipping 2 }
 
@@ -370,7 +373,7 @@ compileRunning nesting rom48k z80env key value input =
                                     -- 2 byte e.g FD09
                                     let
                                         keyVal =
-                                            debugLog ((nesting |> String.fromInt) ++ " Addr " ++ (key |> subName) ++ " 2 byte DD/FD") (value |> toHexString2) key
+                                            debugLog ((nesting |> String.fromInt) ++ " Addr I " ++ (key |> subName) ++ " 2 byte DD/FD") (value |> toHexString2) key
                                     in
                                     { running | seen = running.seen |> Set.insert keyVal, state = Skipping 1 }
 
@@ -379,7 +382,7 @@ compileRunning nesting rom48k z80env key value input =
                                         Just ( _, inc, _ ) ->
                                             let
                                                 keyVal =
-                                                    debugLog ((nesting |> String.fromInt) ++ " Addr " ++ (key |> subName)) (value |> toHexString2) key
+                                                    debugLog ((nesting |> String.fromInt) ++ " Addr J " ++ (key |> subName)) (value |> toHexString2) key
 
                                                 length =
                                                     case inc of

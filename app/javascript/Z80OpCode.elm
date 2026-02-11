@@ -87,6 +87,37 @@ lengthAndDuration pc rom48k z80env =
                             )
                 ]
 
+    else if opcode == 0xED then
+        let
+            edQualifier =
+                z80env |> mem (Bitwise.and (pc + 1) 0xFFFF) clockTime rom48k |> .value
+        in
+        edQualifier
+            |> oneOf
+                [ \instruction ->
+                    singleByteMainRegsED
+                        |> Dict.get instruction
+                        |> Maybe.map
+                            (\( f, duration ) ->
+                                ( IncrementByTwo
+                                , duration
+                                , \cpuClock z80rom z80core ->
+                                    z80core |> applyEdRegisterDelta cpuClock (f z80core.main) z80rom
+                                )
+                            )
+                , \instruction ->
+                    singleByteMainAndFlagsED
+                        |> Dict.get instruction
+                        |> Maybe.map
+                            (\( f, pcInc, duration ) ->
+                                ( pcInc
+                                , duration
+                                , \cpuClock _ z80core ->
+                                    z80core |> applyPureDelta cpuClock (f z80core.main z80core.flags) |> CoreOnly
+                                )
+                            )
+                ]
+
     else
         opcode
             |> oneOf
@@ -205,28 +236,6 @@ lengthAndDuration pc rom48k z80env =
                                 , duration
                                 , \cpuClock z80rom z80core ->
                                     z80core |> applySingleEnvMainChange cpuClock (f z80core.main z80rom cpuClock z80core.env) z80rom |> CoreOnly
-                                )
-                            )
-                , \instruction ->
-                    singleByteMainRegsED
-                        |> Dict.get instruction
-                        |> Maybe.map
-                            (\( f, duration ) ->
-                                ( IncrementByTwo
-                                , duration
-                                , \cpuClock z80rom z80core ->
-                                    z80core |> applyEdRegisterDelta cpuClock (f z80core.main) z80rom
-                                )
-                            )
-                , \instruction ->
-                    singleByteMainAndFlagsED
-                        |> Dict.get instruction
-                        |> Maybe.map
-                            (\( f, pcInc, duration ) ->
-                                ( pcInc
-                                , duration
-                                , \cpuClock _ z80core ->
-                                    z80core |> applyPureDelta cpuClock (f z80core.main z80core.flags) |> CoreOnly
                                 )
                             )
                 ]
