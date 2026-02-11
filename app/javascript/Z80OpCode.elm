@@ -8,8 +8,8 @@ import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (MainWithIndexRegisters)
 
 
-fetchInstruction : Int -> Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> CpuTimeAndValue
-fetchInstruction pc_value rom48k clockTime r_register z80_core =
+fetchInstruction : Z80ROM -> Int -> CpuTimeCTime -> Int -> Z80Core -> CpuTimeAndValue
+fetchInstruction rom48k pc_value clockTime r_register z80_core =
     --let
     --pc_value =
     --case romRoutineNames |> Dict.get z80.pc of

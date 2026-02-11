@@ -812,7 +812,7 @@ executeCoreInstruction : Z80ROM -> Int -> Z80Core -> ( Z80Core, CpuTimeCTime, In
 executeCoreInstruction rom48k pc z80_core =
     let
         ct =
-            z80_core |> fetchInstruction pc rom48k reset_cpu_time 0
+            z80_core |> fetchInstruction rom48k pc reset_cpu_time 0
 
         ( deltaWithChanges, clockTime, pc_inc ) =
             z80_core |> execute_delta ct rom48k pc
@@ -961,10 +961,10 @@ executeCore rom48k z80 =
                     core_1_clock =
                         clock |> executeAndApplyDelta ct rom48k
                 in
-                ( core_1_clock, fetchInstruction core_1_clock.pc rom48k core_1_clock.clockTime r_register core_1_clock.core, r_register + 1 )
+                ( core_1_clock, fetchInstruction rom48k core_1_clock.pc core_1_clock.clockTime r_register core_1_clock.core, r_register + 1 )
 
         ( clock_2, ct1, new_r ) =
-            Loop.while coreLooping execute_f ( z80_clock, fetchInstruction z80_clock.pc rom48k z80_clock.clockTime z80_clock.core.interrupts.r z80_clock.core, z80_core.interrupts.r )
+            Loop.while coreLooping execute_f ( z80_clock, fetchInstruction rom48k z80_clock.pc z80_clock.clockTime z80_clock.core.interrupts.r z80_clock.core, z80_core.interrupts.r )
 
         core_2 =
             clock_2.core
