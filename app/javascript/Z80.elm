@@ -502,8 +502,8 @@ runIndexIX param rom48k pc z80 =
 
                 Nothing ->
                     let
-                        ( triple16, instrTime, paramOffset ) =
-                            ( tripleByteWith16BitParamDD |> Dict.get param.value, param.time, 2 )
+                        ( triple16, instrTime ) =
+                            ( tripleByteWith16BitParamDD |> Dict.get param.value, param.time )
                     in
                     case triple16 of
                         Just ( f, duration ) ->
@@ -515,7 +515,7 @@ runIndexIX param rom48k pc z80 =
                                     instrTime |> addDuration duration
 
                                 doubleParam =
-                                    env |> mem16 (Bitwise.and (pc + paramOffset) 0xFFFF) rom48k env_1
+                                    env |> mem16 (Bitwise.and (pc + 2) 0xFFFF) rom48k env_1
                             in
                             ( Triple16ParamDelta (f doubleParam.value16), doubleParam.time, IncrementByFour )
 
@@ -552,7 +552,7 @@ runIndexIX param rom48k pc z80 =
                                                                     z80.env
 
                                                                 doubleParam =
-                                                                    env |> mem16 (Bitwise.and (pc + paramOffset) 0xFFFF) rom48k time
+                                                                    env |> mem16 (Bitwise.and (pc + 2) 0xFFFF) rom48k time
 
                                                                 pcInc =
                                                                     case tripleInc of

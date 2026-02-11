@@ -3,17 +3,17 @@ module Z80OpCode exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, InstructionDuration, reset_cpu_time)
 import Dict
-import DoubleWithRegisters exposing (applyDoubleWithRegistersDelta, doubleWithRegisters, doubleWithRegistersIY)
+import DoubleWithRegisters exposing (applyDoubleWithRegistersDelta, doubleWithRegisters, doubleWithRegistersIX, doubleWithRegistersIY)
 import GroupED exposing (singleByteMainAndFlagsED, singleByteMainRegsED)
 import Maybe.Extra exposing (oneOf)
 import PCIncrement exposing (PCIncrement(..))
 import SimpleFlagOps exposing (singleByteFlags)
-import SimpleSingleByte exposing (singleByteMainRegs, singleByteMainRegsFD)
+import SimpleSingleByte exposing (singleByteMainRegs, singleByteMainRegsDD, singleByteMainRegsFD)
 import SingleEnvWithMain exposing (applySingleEnvMainChange, singleEnvMainRegs)
 import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters)
 import SingleNoParams exposing (applyNoParamsDelta, applyRstDelta, singleNoParamCalls, singleWithNoParam)
 import SingleWith8BitParameter exposing (maybeRelativeJump, singleWith8BitParam)
-import TripleByte exposing (tripleByteWith16BitParam)
+import TripleByte exposing (tripleByteWith16BitParam, tripleByteWith16BitParamDD, tripleByteWith16BitParamFD)
 import TripleWithFlags exposing (triple16bitJumps)
 import Z80Core exposing (CoreChange(..), Z80Core)
 import Z80Env exposing (Z80Env)
@@ -57,9 +57,9 @@ lengthAndDuration pc rom48k z80env =
     if opcode == 0xFD then
         let
             param =
-                z80env |> mem (Bitwise.and (pc + 1) 0xFFFF) clockTime rom48k
+                z80env |> mem (Bitwise.and (pc + 1) 0xFFFF) clockTime rom48k |> .value
         in
-        param.value
+        param
             |> oneOf
                 [ \fdinstruction ->
                     singleByteMainRegsFD
@@ -84,6 +84,61 @@ lengthAndDuration pc rom48k z80env =
                                         |> applyDoubleWithRegistersDelta cpuClock (f z80core.main doubleParam.value) z80rom
                                         |> CoreOnly
                                 )
+                            )
+                , \fdinstruction ->
+                    tripleByteWith16BitParamFD
+                        |> Dict.get fdinstruction
+                        |> Maybe.map
+                            (\( mainRegFunc, duration ) ->
+                                let
+                                    doubleParam =
+                                        z80env |> mem16 (Bitwise.and (pc + 2) 0xFFFF) rom48k clockTime
+                                in
+                                ( IncrementByFour, duration, \cpuClock z80rom z80core -> z80core |> applyTripleChangeDelta z80rom cpuClock (mainRegFunc doubleParam.value16) )
+                            )
+                ]
+
+    else if opcode == 0xDD then
+        let
+            param =
+                z80env |> mem (Bitwise.and (pc + 1) 0xFFFF) clockTime rom48k |> .value
+        in
+        param
+            |> oneOf
+                [ \fdinstruction ->
+                    singleByteMainRegsDD
+                        |> Dict.get fdinstruction
+                        |> Maybe.map
+                            (\( mainRegFunc, duration ) ->
+                                ( IncrementByTwo, duration, \cpuClock z80rom z80core -> z80core |> applyRegisterDelta cpuClock (mainRegFunc z80core.main) z80rom )
+                            )
+                , \fdinstruction ->
+                    doubleWithRegistersIX
+                        |> Dict.get fdinstruction
+                        |> Maybe.map
+                            (\( f, duration ) ->
+                                let
+                                    doubleParam =
+                                        z80env |> mem (Bitwise.and (pc + 2) 0xFFFF) clockTime rom48k
+                                in
+                                ( IncrementByThree
+                                , duration
+                                , \cpuClock z80rom z80core ->
+                                    z80core
+                                        |> applyDoubleWithRegistersDelta cpuClock (f z80core.main doubleParam.value) z80rom
+                                        |> CoreOnly
+                                )
+                            )
+                , \fdinstruction ->
+                    tripleByteWith16BitParamDD
+                        |> Dict.get fdinstruction
+                        |> Maybe.map
+                            (\( mainRegFunc, duration ) ->
+                                let
+                                    doubleParam =
+                                        z80env |> mem16 (Bitwise.and (pc + 2) 0xFFFF) rom48k clockTime
+                                in
+                                ( IncrementByFour, duration, \cpuClock z80rom z80core -> z80core |> applyTripleChangeDelta z80rom cpuClock (mainRegFunc doubleParam.value16) )
                             )
                 ]
 
