@@ -235,8 +235,8 @@ type SpecialExecutionType
     | EDMisc CpuTimeAndValue
 
 
-executeAndApplyDelta : CpuTimeAndValue -> Z80ROM -> Z80CoreWithClockTime -> Z80CoreWithClockTime
-executeAndApplyDelta ct rom48k z80clock =
+executeAndApplyDelta : Z80ROM -> CpuTimeAndValue -> Z80CoreWithClockTime -> Z80CoreWithClockTime
+executeAndApplyDelta rom48k ct z80clock =
     let
         z80_core =
             z80clock.core
@@ -955,16 +955,24 @@ executeCore rom48k z80 =
         z80_core =
             z80_clock.core
 
+        z80_fetch : Int -> CpuTimeCTime -> Int -> Z80Core -> CpuTimeAndValue
+        z80_fetch =
+            fetchInstruction rom48k
+
+        z80_exec : CpuTimeAndValue -> Z80CoreWithClockTime -> Z80CoreWithClockTime
+        z80_exec =
+            executeAndApplyDelta rom48k
+
         execute_f =
             \( clock, ct, r_register ) ->
                 let
                     core_1_clock =
-                        clock |> executeAndApplyDelta ct rom48k
+                        clock |> z80_exec ct
                 in
-                ( core_1_clock, fetchInstruction rom48k core_1_clock.pc core_1_clock.clockTime r_register core_1_clock.core, r_register + 1 )
+                ( core_1_clock, core_1_clock.core |> z80_fetch core_1_clock.pc core_1_clock.clockTime r_register, r_register + 1 )
 
         ( clock_2, ct1, new_r ) =
-            Loop.while coreLooping execute_f ( z80_clock, fetchInstruction rom48k z80_clock.pc z80_clock.clockTime z80_clock.core.interrupts.r z80_clock.core, z80_core.interrupts.r )
+            Loop.while coreLooping execute_f ( z80_clock, z80_clock.core |> z80_fetch z80_clock.pc z80_clock.clockTime z80_clock.core.interrupts.r, z80_core.interrupts.r )
 
         core_2 =
             clock_2.core
