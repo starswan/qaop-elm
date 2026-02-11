@@ -978,9 +978,6 @@ executeCore rom48k z80 =
         execute_f =
             \( clock, cpuInstruction, r_register ) ->
                 let
-                    core =
-                        clock.core
-
                     core_1_clock =
                         case cpuInstruction of
                             UncompiledOpcode opCode clockTime ->
@@ -988,6 +985,9 @@ executeCore rom48k z80 =
 
                             Z80Compiled function duration length ->
                                 let
+                                    core =
+                                        clock.core
+
                                     clockTime =
                                         clock.clockTime |> addDuration duration
 
@@ -1005,18 +1005,18 @@ executeCore rom48k z80 =
                                             IncrementByFour ->
                                                 Bitwise.and (clock.pc + 4) 0xFFFF
                                 in
-                                case clock.core |> function clockTime rom48k.z80rom of
+                                case core |> function clockTime rom48k.z80rom of
                                     CoreOnly z80Core ->
-                                        { clock | core = z80Core, clockTime = clockTime, pc = pcAfter }
+                                        { core = z80Core, clockTime = clockTime, pc = pcAfter }
 
                                     CoreWithTime shortDelay z80Core ->
-                                        { clock | core = z80Core, clockTime = clockTime |> addExtraCpuTime shortDelay, pc = pcAfter }
+                                        { core = z80Core, clockTime = clockTime |> addExtraCpuTime shortDelay, pc = pcAfter }
 
                                     CoreWithPC new_pc z80Core ->
-                                        { clock | core = z80Core, clockTime = clockTime, pc = new_pc }
+                                        { core = z80Core, clockTime = clockTime, pc = new_pc }
 
                                     CoreWithPCAndDelay new_pc shortDelay z80Core ->
-                                        { clock | core = z80Core, pc = new_pc, clockTime = clockTime |> addExtraCpuTime shortDelay }
+                                        { core = z80Core, pc = new_pc, clockTime = clockTime |> addExtraCpuTime shortDelay }
 
                                     JumpOnlyPC int ->
                                         { clock | clockTime = clockTime, pc = int }
@@ -1026,30 +1026,30 @@ executeCore rom48k z80 =
                                             env =
                                                 core.env |> z80_push pcAfter clockTime
                                         in
-                                        { clock | core = { core | env = env }, pc = int, clockTime = clockTime |> addExtraCpuTime shortDelay }
+                                        { core = { core | env = env }, pc = int, clockTime = clockTime |> addExtraCpuTime shortDelay }
 
                                     CallWithPC int ->
                                         let
                                             env =
                                                 core.env |> z80_push pcAfter clockTime
                                         in
-                                        { clock | core = { core | env = env }, pc = int, clockTime = clockTime }
+                                        { core = { core | env = env }, pc = int, clockTime = clockTime }
 
                                     Looper repeatPCOffset z80Core ->
                                         case repeatPCOffset of
                                             NoOffset ->
-                                                { clock | core = z80Core, clockTime = clockTime, pc = pcAfter }
+                                                { core = z80Core, clockTime = clockTime, pc = pcAfter }
 
                                             JumpBack ->
-                                                { clock | core = z80Core, clockTime = clockTime }
+                                                { core = z80Core, clockTime = clockTime, pc = clock.pc }
 
                                     LooperWithDelay repeatPCOffset shortDelay z80Core ->
                                         case repeatPCOffset of
                                             NoOffset ->
-                                                { clock | core = z80Core, clockTime = clockTime, pc = pcAfter }
+                                                { core = z80Core, clockTime = clockTime, pc = pcAfter }
 
                                             JumpBack ->
-                                                { clock | core = z80Core, clockTime = clockTime |> addExtraCpuTime shortDelay }
+                                                { core = z80Core, clockTime = clockTime |> addExtraCpuTime shortDelay, pc = clock.pc }
 
                                     NoCore ->
                                         { clock | clockTime = clockTime, pc = pcAfter }
