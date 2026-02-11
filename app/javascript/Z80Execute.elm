@@ -111,8 +111,8 @@ apply_delta z80 rom48k clockTime z80delta =
 applyJumpChangeDelta : JumpChange -> Z80Core -> CoreChange
 applyJumpChangeDelta z80changeData z80 =
     case z80changeData of
-        ActualJump pc ->
-            JumpOnlyPC pc
+        ActualJumpOffset offset ->
+            JumpWithOffset offset
 
         ConditionalJumpOffset offset shortDelay function ->
             if z80.flags |> function then
@@ -121,7 +121,7 @@ applyJumpChangeDelta z80changeData z80 =
             else
                 NoCore
 
-        DJNZ address shortDelay ->
+        DJNZOffset offset shortDelay ->
             let
                 --case 0x10: {time++; v=PC; byte d=(byte)env.mem(v++); time+=3;
                 --if((B=B-1&0xFF)!=0) {time+=5; MP=v+=d;}
@@ -134,7 +134,7 @@ applyJumpChangeDelta z80changeData z80 =
             in
             if b /= 0 then
                 { z80 | main = { main | b = b } }
-                    |> CoreWithPCAndDelay address shortDelay
+                    |> CoreWithOffsetAndDelay offset shortDelay
 
             else
                 { z80 | main = { main | b = b } }

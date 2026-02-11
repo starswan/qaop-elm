@@ -38,7 +38,7 @@ singleWith8BitParam =
         ]
 
 
-maybeRelativeJump : Dict Int ( Int -> Int -> JumpChange, InstructionDuration )
+maybeRelativeJump : Dict Int ( Int -> JumpChange, InstructionDuration )
 maybeRelativeJump =
     Dict.fromList
         [ ( 0x10, ( djnz, FourTStates ) )
@@ -51,9 +51,9 @@ maybeRelativeJump =
 
 
 type JumpChange
-    = ActualJump Int
+    = ActualJumpOffset Int
     | ConditionalJumpOffset Int ShortDelay (FlagRegisters -> Bool)
-    | DJNZ Int ShortDelay
+    | DJNZOffset Int ShortDelay
 
 
 applySimple8BitChange : CoreRegister -> Int -> MainWithIndexRegisters -> MainWithIndexRegisters
@@ -98,17 +98,17 @@ ld_e_n param =
     NewRegister RegisterE param
 
 
-jr_n : Int -> Int -> JumpChange
-jr_n param pc =
+jr_n : Int -> JumpChange
+jr_n param =
     -- case 0x18: MP=PC=(char)(PC+1+(byte)env.mem(PC)); time+=8; break;
     -- This is just an inlined jr() call
     --z80 |> set_pc dest |> add_cpu_time 8
     --ActualJump (byte param)
-    ActualJump (pc + 2 + byte param |> Bitwise.and 0xFFFF)
+    ActualJumpOffset (byte param)
 
 
-jr_nz_d : Int -> Int -> JumpChange
-jr_nz_d param pc =
+jr_nz_d : Int -> JumpChange
+jr_nz_d param =
     -- case 0x20: if(Fr!=0) jr(); else imm8(); break;
     --if z80_flags.fr /= 0 then
     --    ActualJump (byte param)
@@ -118,8 +118,8 @@ jr_nz_d param pc =
     ConditionalJumpOffset (byte param) FiveExtraTStates jump_nz
 
 
-jr_z_d : Int -> Int -> JumpChange
-jr_z_d param pc =
+jr_z_d : Int -> JumpChange
+jr_z_d param =
     -- case 0x28: if(Fr==0) jr(); else imm8(); break;
     --if z80_flags.fr == 0 then
     --    ActualJump (byte param)
@@ -129,8 +129,8 @@ jr_z_d param pc =
     ConditionalJumpOffset (byte param) FiveExtraTStates jump_z
 
 
-jr_nc_d : Int -> Int -> JumpChange
-jr_nc_d param pc =
+jr_nc_d : Int -> JumpChange
+jr_nc_d param =
     -- case 0x30: if((Ff&0x100)==0) jr(); else imm8(); break;
     --if Bitwise.and z80_flags.ff 0x0100 == 0 then
     --    ActualJump (byte param)
@@ -140,8 +140,8 @@ jr_nc_d param pc =
     ConditionalJumpOffset (byte param) FiveExtraTStates jump_nc
 
 
-jr_c_d : Int -> Int -> JumpChange
-jr_c_d param pc =
+jr_c_d : Int -> JumpChange
+jr_c_d param =
     -- case 0x38: if((Ff&0x100)!=0) jr(); else imm8(); break;
     --if Bitwise.and z80_flags.ff 0x0100 /= 0 then
     --    ActualJump (byte param)
@@ -151,8 +151,8 @@ jr_c_d param pc =
     ConditionalJumpOffset (byte param) FiveExtraTStates jump_c
 
 
-djnz : Int -> Int -> JumpChange
-djnz param pc =
+djnz : Int -> JumpChange
+djnz param =
     --case 0x10: {time++; v=PC; byte d=(byte)env.mem(v++); time+=3;
     --if((B=B-1&0xFF)!=0) {time+=5; MP=v+=d;}
     --PC=(char)v;} break;
@@ -171,7 +171,7 @@ djnz param pc =
     --            ( 4, Nothing )
     --in
     --RelativeJumpWithTimeOffset (NewBRegister b) jump time
-    DJNZ (pc + 2 + byte param) FiveExtraTStates
+    DJNZOffset (byte param) FiveExtraTStates
 
 
 add_a_n : Int -> Single8BitChange

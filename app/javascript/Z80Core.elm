@@ -25,8 +25,10 @@ type CoreChange
     | CoreWithTime ShortDelay Z80Core
     | CoreWithPC Int Z80Core
     | JumpOnlyPC Int
+    | JumpWithOffset Int
     | JumpOffsetWithDelay Int ShortDelay
-    | CoreWithPCAndDelay Int ShortDelay Z80Core
+      --| CoreWithPCAndDelay Int ShortDelay Z80Core
+    | CoreWithOffsetAndDelay Int ShortDelay Z80Core
     | CallWithPCAndDelay Int ShortDelay
     | CallWithPC Int
     | Looper RepeatPCOffset Z80Core
