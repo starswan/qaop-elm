@@ -59,13 +59,13 @@ RSpec.describe "Game" do
           # select beginner
           delay_and_send(spectrum, 1340, "1")
           # select white team colours
-          delay_and_send(spectrum, 1500, "7")
+          delay_and_send(spectrum, 1420, "7")
           # continue from main menu
-          delay_and_send(spectrum, 1950, "99")
+          delay_and_send(spectrum, 1870, "99")
           #  Hit ENTER to start first match
-          delay_and_send(spectrum, 2150, "")
+          delay_and_send(spectrum, 2030, "")
           # continue into match
-          delay_and_send(spectrum, 2470, "99")
+          delay_and_send(spectrum, 2390, "99")
 
           # wait for match to actually start properly
           sleep 4
