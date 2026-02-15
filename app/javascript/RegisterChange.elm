@@ -68,6 +68,7 @@ type EDRegisterChange
 
 type EDFourByteChange
     = SetMemFrom Int SixteenBit
+    | GetFromMem Int SixteenBit
 
 
 type InterruptChange

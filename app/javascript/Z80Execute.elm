@@ -953,6 +953,46 @@ applyEdFourByte clockTime z80changeData rom48k z80_core =
             in
             { z80_core | env = env } |> CoreOnly
 
+        GetFromMem int sixteenBit ->
+            let
+                value =
+                    z80_core.env |> mem16 int rom48k clockTime
+
+                core =
+                    case sixteenBit of
+                        RegHL ->
+                            let
+                                z80_main =
+                                    z80_core.main
+
+                                main =
+                                    { z80_main | hl = value.value16 }
+                            in
+                            { z80_core | main = main }
+
+                        RegDE ->
+                            let
+                                main =
+                                    z80_core.main |> set_de_main value.value16
+                            in
+                            { z80_core | main = main }
+
+                        RegBC ->
+                            let
+                                main =
+                                    z80_core.main |> set_bc_main value.value16
+                            in
+                            { z80_core | main = main }
+
+                        RegSP ->
+                            let
+                                env =
+                                    z80_core.env
+                            in
+                            { z80_core | env = { env | sp = value.value16 } }
+            in
+            core |> CoreOnly
+
 
 applyEdRegisterDelta : CpuTimeCTime -> EDRegisterChange -> Z80ROM -> Z80Core -> CoreChange
 applyEdRegisterDelta clockTime z80changeData rom48k z80_core =
