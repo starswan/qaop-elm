@@ -7,14 +7,12 @@ import RegisterChange exposing (RegisterChange(..), Shifter(..))
 import SingleEnvWithMain exposing (SingleEnvMainChange(..))
 import Utils exposing (BitTest(..), bitMaskFromBit, inverseBitMaskFromBit, shiftLeftBy8, shiftRightBy8)
 import Z80Change exposing (Z80Change(..))
-import Z80Env exposing (Z80Env)
 import Z80Flags exposing (FlagRegisters, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit)
 import Z80Registers exposing (ChangeOneRegister(..), CoreRegister(..))
-import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (MainWithIndexRegisters)
 
 
-singleEnvMainRegsCB : Dict Int ( MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )
+singleEnvMainRegsCB : Dict Int ( MainWithIndexRegisters -> SingleEnvMainChange, InstructionDuration )
 singleEnvMainRegsCB =
     Dict.fromList
         [ ( 0x46, ( bit_0_indirect_hl, TwelveTStates ) )
@@ -28,50 +26,50 @@ singleEnvMainRegsCB =
         ]
 
 
-bit_0_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
-bit_0_indirect_hl z80_main rom48k z80_env =
+bit_0_indirect_hl : MainWithIndexRegisters -> SingleEnvMainChange
+bit_0_indirect_hl z80_main =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
     IndirectBitTest Bit_0 z80_main.hl
 
 
-bit_1_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
-bit_1_indirect_hl z80_main rom48k z80_env =
+bit_1_indirect_hl : MainWithIndexRegisters -> SingleEnvMainChange
+bit_1_indirect_hl z80_main =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
     IndirectBitTest Bit_1 z80_main.hl
 
 
-bit_2_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
-bit_2_indirect_hl z80_main rom48k z80_env =
+bit_2_indirect_hl : MainWithIndexRegisters -> SingleEnvMainChange
+bit_2_indirect_hl z80_main =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
     IndirectBitTest Bit_2 z80_main.hl
 
 
-bit_3_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
-bit_3_indirect_hl z80_main rom48k z80_env =
+bit_3_indirect_hl : MainWithIndexRegisters -> SingleEnvMainChange
+bit_3_indirect_hl z80_main =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
     IndirectBitTest Bit_3 z80_main.hl
 
 
-bit_4_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
-bit_4_indirect_hl z80_main rom48k z80_env =
+bit_4_indirect_hl : MainWithIndexRegisters -> SingleEnvMainChange
+bit_4_indirect_hl z80_main =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
     IndirectBitTest Bit_4 z80_main.hl
 
 
-bit_5_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
-bit_5_indirect_hl z80_main rom48k z80_env =
+bit_5_indirect_hl : MainWithIndexRegisters -> SingleEnvMainChange
+bit_5_indirect_hl z80_main =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
     IndirectBitTest Bit_5 z80_main.hl
 
 
-bit_6_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
-bit_6_indirect_hl z80_main rom48k z80_env =
+bit_6_indirect_hl : MainWithIndexRegisters -> SingleEnvMainChange
+bit_6_indirect_hl z80_main =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
     IndirectBitTest Bit_6 z80_main.hl
 
 
-bit_7_indirect_hl : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
-bit_7_indirect_hl z80_main rom48k z80_env =
+bit_7_indirect_hl : MainWithIndexRegisters -> SingleEnvMainChange
+bit_7_indirect_hl z80_main =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
     IndirectBitTest Bit_7 z80_main.hl
 

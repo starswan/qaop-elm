@@ -3,6 +3,7 @@ module ED40Test exposing (..)
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Triple
+import Utils exposing (shiftRightBy8)
 import Z80 exposing (executeCoreInstruction)
 import Z80CoreWithClockTime
 import Z80Env exposing (setMemWithTime)
@@ -112,6 +113,25 @@ suite =
                                 |> Triple.dropSecond
                     in
                     Expect.equal ( addr + 2, 0xB9 ) ( new_pc, new_z80.flags.a )
+            , test "0xED 0x47 LD I,A" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMemWithTime addr 0xED
+                                |> setMemWithTime (addr + 1) 0x47
+                                |> .z80env
+
+                        ( new_z80, new_pc ) =
+                            executeCoreInstruction z80rom
+                                addr
+                                { z80
+                                    | env = new_env
+                                    , flags = { flags | a = 0x47 }
+                                }
+                                |> Triple.dropSecond
+                    in
+                    Expect.equal ( addr + 2, 0x47 ) ( new_pc, new_z80.interrupts.ir |> shiftRightBy8 )
             , test "0xED 0x48 IN C, (C)" <|
                 \_ ->
                     let

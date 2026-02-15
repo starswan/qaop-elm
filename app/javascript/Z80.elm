@@ -5,14 +5,13 @@
 
 module Z80 exposing (..)
 
-import Array exposing (Array)
 import Bitwise
-import CpuTimeCTime exposing (CTime(..), CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, InstructionDuration(..), addCpuTimeTime, addDuration, addExtraCpuTime, c_TIME_LIMIT, reset_cpu_time)
+import CpuTimeCTime exposing (CTime(..), CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, InstructionDuration(..), addDuration, addExtraCpuTime, c_TIME_LIMIT, reset_cpu_time)
 import Dict exposing (Dict)
 import DoubleWithRegisters exposing (doubleWithRegisters, doubleWithRegistersIX, doubleWithRegistersIY)
 import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainRegsCB, singleEnvMainRegsCB)
 import GroupCBIXIY exposing (singleByteMainRegsIXCB, singleByteMainRegsIYCB, singleEnvMainRegsIXCB, singleEnvMainRegsIYCB)
-import GroupED exposing (delta_dict_lite_E0, edWithInterrupts, fourByteMainED, singleByteFlagsED, singleByteMainAndFlagsED, singleByteMainRegsED)
+import GroupED exposing (edWithInterrupts, fourByteMainED, singleByteFlagsED, singleByteMainAndFlagsED, singleByteMainRegsED)
 import Loop
 import PCIncrement exposing (PCIncrement(..))
 import SimpleFlagOps exposing (singleByteFlags, singleByteFlagsCB, singleByteFlagsDD, singleByteFlagsFD)
@@ -27,7 +26,6 @@ import TripleWithFlags exposing (triple16bitJumps)
 import TripleWithMain exposing (tripleMainRegsIX, tripleMainRegsIY)
 import Z80Core exposing (CoreChange(..), RepeatPCOffset(..), Z80Core)
 import Z80CoreWithClockTime exposing (Z80, Z80CoreWithClockTime, di_0xF3, ei_0xFB)
-import Z80Delta exposing (DeltaWithChangesData, Z80Delta(..))
 import Z80Env exposing (Z80Env, z80_push, z80env_constructor)
 import Z80Execute exposing (DeltaWithChanges(..), apply_delta)
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
@@ -138,32 +136,6 @@ constructor =
 --
 --	/* Note: EI isn't prefix here - interrupt will be acknowledged */
 --
-
-
-execute_ltC0 : Int -> Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> Maybe ( Z80Delta, CpuTimeCTime, PCIncrement )
-execute_ltC0 c rom48k clockTime pc z80 =
-    case lt40_array_lite |> Array.get c |> Maybe.withDefault Nothing of
-        Just f_without_ixiyhl ->
-            Just (z80 |> f_without_ixiyhl rom48k clockTime pc)
-
-        Nothing ->
-            Nothing
-
-
-list0255 =
-    List.range 0 255
-
-
-lt40_array_lite : Array (Maybe (Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime, PCIncrement )))
-lt40_array_lite =
-    let
-        delta_funcs =
-            list0255 |> List.map (\index -> delta_dict_lite_E0 |> Dict.get index)
-    in
-    delta_funcs |> Array.fromList
-
-
-
 -- case 0xC7:
 -- case 0xCF:
 -- case 0xD7:
@@ -493,7 +465,7 @@ runOrdinary ct_value instrTime rom48k pc z80_core =
                                                                                                     ( deltaThing, clockTime, inc )
 
                                                                                                 Nothing ->
-                                                                                                    oldDelta ct_value instrTime z80_core.interrupts z80_core rom48k pc
+                                                                                                    ( UnknownInstruction "runOrdinary" ct_value, instrTime, IncrementByOne )
 
 
 runIndexIX : CpuTimeAndValue -> Z80ROM -> Int -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
@@ -646,7 +618,6 @@ runIndexIY param rom48k pc z80 =
                                                                     ( NoParamsDelta f, instrTime |> addDuration duration, IncrementByTwo )
 
                                                                 Nothing ->
-                                                                    --oldDelta 0xFD instrTime z80.interrupts z80 rom48k
                                                                     ( UnknownInstruction "execute IndexIY" param.value, param.time, IncrementByTwo )
 
 
@@ -666,7 +637,7 @@ runSpecial specialType rom48k pc z80_core =
                         Nothing ->
                             case singleEnvMainRegsCB |> Dict.get param.value of
                                 Just ( f, duration ) ->
-                                    ( MainWithEnvDelta (f z80_core.main rom48k z80_core.env), param.time |> addDuration duration, IncrementByTwo )
+                                    ( MainWithEnvDelta (f z80_core.main), param.time |> addDuration duration, IncrementByTwo )
 
                                 Nothing ->
                                     case singleByteMainAndFlagRegistersCB |> Dict.get param.value of
@@ -715,11 +686,10 @@ runSpecial specialType rom48k pc z80_core =
                                     -- This fails on FD CB 3D xx
                                     ( UnknownInstruction "execute IYCB" param.value, param.time, IncrementByFour )
 
-        --oldDelta 0xFD instrTime z80.interrupts z80 rom48k
         EDMisc param ->
             case singleByteMainRegsED |> Dict.get param.value of
                 Just ( mainRegFunc, duration ) ->
-                    ( EDChangeDelta (mainRegFunc z80_core.main), param.time |> addDuration duration, IncrementByTwo )
+                    ( EDChangeDelta mainRegFunc, param.time |> addDuration duration, IncrementByTwo )
 
                 Nothing ->
                     case singleByteFlagsED |> Dict.get param.value of
@@ -746,7 +716,8 @@ runSpecial specialType rom48k pc z80_core =
                                                     ( EDFourByteDelta (mainRegFunc z80_core.main doubleParam.value16), doubleParam.time |> addDuration duration, IncrementByFour )
 
                                                 Nothing ->
-                                                    oldDelta 0xED param.time z80_core.interrupts z80_core rom48k pc
+                                                    --oldDelta 0xED param.time z80_core.interrupts z80_core rom48k pc
+                                                    ( UnknownInstruction "runSpecial" param.value, param.time, IncrementByTwo )
 
 
 
@@ -775,46 +746,6 @@ singleByte ctime instrCode tmp_z80 rom48k pc =
 
         Nothing ->
             Nothing
-
-
-oldDelta : Int -> CpuTimeCTime -> InterruptRegisters -> Z80Core -> Z80ROM -> Int -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
-oldDelta c_value c_time interrupts tmp_z80 rom48k pc =
-    let
-        new_pc =
-            Bitwise.and (pc + 1) 0xFFFF
-
-        --z80 =
-        --    { tmp_z80 | pc = new_pc }
-        new_time =
-            c_time |> addCpuTimeTime 4
-    in
-    --z80
-    --   |> execute_ltC0 c.value rom48k
-    --   |> Maybe.map (\z80delta ->  OldDeltaWithChanges (DeltaWithChangesData z80delta interrupts new_pc new_time))
-    --   |> withDefaultLazy (\() ->
-    --       let
-    --            delta = debugTodo "execute" (c.value |> toHexString) z80  |> Whole
-    --       in
-    --       OldDeltaWithChanges (DeltaWithChangesData delta interrupts new_pc new_time)
-    --       )
-    case tmp_z80 |> execute_ltC0 c_value rom48k new_time new_pc of
-        Just ( z80delta, clockTime, pcInc ) ->
-            ( OldDeltaWithChanges (DeltaWithChangesData z80delta interrupts new_pc), clockTime, pcInc )
-
-        Nothing ->
-            --case c.value of
-            --0xDD -> DeltaWithChanges (group_xy IXIY_IX z80) interrupts new_pc new_time
-            --0xFD -> DeltaWithChanges (group_xy IXIY_IY z80) interrupts new_pc new_time
-            --0xED -> DeltaWithChanges (Whole (group_ed z80)) interrupts new_pc new_time
-            --0xCD -> DeltaWithChanges (execute_0xCD z80) interrupts new_pc new_time
-            --_ ->
-            let
-                delta =
-                    UnknownIntValue "execute" c_value
-
-                --debugTodo "execute" (c.value |> toHexString) z80 |> Whole
-            in
-            ( OldDeltaWithChanges (DeltaWithChangesData delta interrupts new_pc), new_time, IncrementByTwo )
 
 
 executeCoreInstruction : Z80ROM -> Int -> Z80Core -> ( Z80Core, CpuTimeCTime, Int )
