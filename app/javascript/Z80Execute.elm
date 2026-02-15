@@ -4,7 +4,7 @@ import Bitwise exposing (shiftLeftBy)
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
 import GroupED exposing (cpir, inirOtirFlags, ldir, sbc_hl)
-import RegisterChange exposing (EDRegisterChange(..), InterruptChange(..), RegisterChange(..), Shifter(..), SixteenBit(..))
+import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), RegisterChange(..), Shifter(..), SixteenBit(..))
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
 import SingleEnvWithMain exposing (SingleEnvMainChange, applySingleEnvMainChange)
 import SingleNoParams exposing (NoParamChange(..), RstChange, applyNoParamsDelta, applyRstDelta)
@@ -32,6 +32,7 @@ type DeltaWithChanges
     | FlagDelta FlagChange
     | RegisterChangeDelta RegisterChange
     | EDChangeDelta EDRegisterChange
+    | EDFourByteDelta EDFourByteChange
     | Simple8BitDelta Single8BitChange
     | DoubleWithRegistersDelta DoubleWithRegisterChange
     | JumpChangeDelta JumpChange
@@ -99,6 +100,9 @@ apply_delta z80 rom48k clockTime z80delta =
 
         EDChangeDelta eDRegisterChange ->
             z80 |> applyEdRegisterDelta clockTime eDRegisterChange rom48k
+
+        EDFourByteDelta fourByteChnage ->
+            z80 |> applyEdFourByte clockTime fourByteChnage rom48k
 
         RstDelta noParamChange ->
             z80 |> applyRstDelta clockTime noParamChange
@@ -923,6 +927,71 @@ applyTripleFlagChange cpu_time z80changeData z80 =
 
         NewPCRegister int ->
             JumpOnlyPC int
+
+
+applyEdFourByte : CpuTimeCTime -> EDFourByteChange -> Z80ROM -> Z80Core -> CoreChange
+applyEdFourByte clockTime z80changeData rom48k z80_core =
+    case z80changeData of
+        SetMemFrom int sixteenBit ->
+            let
+                reg =
+                    case sixteenBit of
+                        RegHL ->
+                            z80_core.main.hl
+
+                        RegDE ->
+                            z80_core.main |> get_de
+
+                        RegBC ->
+                            z80_core.main |> get_bc
+
+                        RegSP ->
+                            z80_core.env.sp
+
+                ( env, newTime ) =
+                    z80_core.env |> setMem16 int reg clockTime
+            in
+            { z80_core | env = env } |> CoreOnly
+
+        GetFromMem int sixteenBit ->
+            let
+                value =
+                    z80_core.env |> mem16 int rom48k clockTime
+
+                core =
+                    case sixteenBit of
+                        RegHL ->
+                            let
+                                z80_main =
+                                    z80_core.main
+
+                                main =
+                                    { z80_main | hl = value.value16 }
+                            in
+                            { z80_core | main = main }
+
+                        RegDE ->
+                            let
+                                main =
+                                    z80_core.main |> set_de_main value.value16
+                            in
+                            { z80_core | main = main }
+
+                        RegBC ->
+                            let
+                                main =
+                                    z80_core.main |> set_bc_main value.value16
+                            in
+                            { z80_core | main = main }
+
+                        RegSP ->
+                            let
+                                env =
+                                    z80_core.env
+                            in
+                            { z80_core | env = { env | sp = value.value16 } }
+            in
+            core |> CoreOnly
 
 
 applyEdRegisterDelta : CpuTimeCTime -> EDRegisterChange -> Z80ROM -> Z80Core -> CoreChange

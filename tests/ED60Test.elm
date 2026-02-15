@@ -6,6 +6,7 @@ import Triple
 import Z80 exposing (executeCoreInstruction)
 import Z80CoreWithClockTime
 import Z80Env exposing (setMemWithTime)
+import Z80Mem exposing (mem16)
 import Z80Rom
 
 
@@ -68,6 +69,30 @@ suite =
                                 |> Triple.dropSecond
                     in
                     Expect.equal ( addr + 2, 0xBF45 ) ( new_pc, new_z80.main.hl )
+            , test "0xED 0x63 LD (NN), HL" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMemWithTime addr 0xED
+                                |> setMemWithTime (addr + 1) 0x63
+                                |> setMemWithTime (addr + 2) 0x45
+                                |> setMemWithTime (addr + 3) 0x65
+                                |> .z80env
+
+                        ( new_z80, new_pc ) =
+                            executeCoreInstruction z80rom
+                                addr
+                                { z80
+                                    | env = new_env
+                                    , main = { z80main | hl = 0x20F5 }
+                                }
+                                |> Triple.dropSecond
+
+                        mem_value =
+                            new_z80.env |> mem16 0x6545 z80rom clock.clockTime |> .value16
+                    in
+                    Expect.equal ( addr + 4, 0x20F5 ) ( new_pc, mem_value )
             , test "0xED 0x68 IN L, (C)" <|
                 \_ ->
                     let
