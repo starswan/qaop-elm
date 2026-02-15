@@ -66,5 +66,9 @@ type EDRegisterChange
     | SbcHL SixteenBit
 
 
+type EDFourByteChange
+    = SetMemFrom Int SixteenBit
+
+
 type InterruptChange
     = LoadAFromIR Int

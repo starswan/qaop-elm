@@ -12,7 +12,7 @@ type Z80Delta
     = DeltaMainRegs MainWithIndexRegisters
     | FlagsWithPCMainAndCpuTime FlagRegisters MainWithIndexRegisters
     | DeltaFlags FlagRegisters
-    | EnvWithPcAndTime Z80Env Int
+      --| EnvWithPcAndTime Z80Env Int
       -- only used by ED78
     | CpuTimeWithSpAndPc Int Int
     | InterruptsWithCpuTime InterruptRegisters
@@ -41,9 +41,8 @@ applyDeltaWithChanges z80delta z80 =
         DeltaMainRegs mainRegisters ->
             { z80 | env = z80_env, main = mainRegisters, interrupts = z80delta.interrupts } |> CoreOnly
 
-        EnvWithPcAndTime z80Env programCounter ->
-            { z80 | env = z80Env, interrupts = z80delta.interrupts } |> CoreOnly
-
+        --EnvWithPcAndTime z80Env programCounter ->
+        --    { z80 | env = z80Env, interrupts = z80delta.interrupts } |> CoreOnly
         DeltaFlags flagRegisters ->
             { z80 | flags = flagRegisters, env = z80_env, interrupts = z80delta.interrupts } |> CoreOnly
 

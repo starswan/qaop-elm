@@ -6,6 +6,7 @@ import Triple
 import Z80 exposing (executeCoreInstruction)
 import Z80CoreWithClockTime
 import Z80Env exposing (setMemWithTime)
+import Z80Mem exposing (mem16)
 import Z80Rom
 
 
@@ -48,7 +49,30 @@ suite =
     describe "0xEn instructions"
         -- Nest as many descriptions as you like.
         [ describe "ED instructions"
-            [ test "0xED 78 IN A, (C)" <|
+            [ test "0xED 0x73 LD (NN), SP" <|
+                \_ ->
+                    let
+                        new_env =
+                            z80env
+                                |> setMemWithTime addr 0xED
+                                |> setMemWithTime (addr + 1) 0x73
+                                |> setMemWithTime (addr + 2) 0x45
+                                |> setMemWithTime (addr + 3) 0x65
+                                |> .z80env
+
+                        ( new_z80, new_pc ) =
+                            executeCoreInstruction z80rom
+                                addr
+                                { z80
+                                    | env = new_env
+                                }
+                                |> Triple.dropSecond
+
+                        mem_value =
+                            new_z80.env |> mem16 0x6545 z80rom clock.clockTime |> .value16
+                    in
+                    Expect.equal ( addr + 4, 0xF765 ) ( new_pc, mem_value )
+            , test "0xED 78 IN A, (C)" <|
                 \_ ->
                     let
                         new_env =

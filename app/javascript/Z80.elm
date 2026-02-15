@@ -12,7 +12,7 @@ import Dict exposing (Dict)
 import DoubleWithRegisters exposing (doubleWithRegisters, doubleWithRegistersIX, doubleWithRegistersIY)
 import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainRegsCB, singleEnvMainRegsCB)
 import GroupCBIXIY exposing (singleByteMainRegsIXCB, singleByteMainRegsIYCB, singleEnvMainRegsIXCB, singleEnvMainRegsIYCB)
-import GroupED exposing (delta_dict_lite_E0, edWithInterrupts, singleByteFlagsED, singleByteMainAndFlagsED, singleByteMainRegsED)
+import GroupED exposing (delta_dict_lite_E0, edWithInterrupts, fourByteMainED, singleByteFlagsED, singleByteMainAndFlagsED, singleByteMainRegsED)
 import Loop
 import PCIncrement exposing (PCIncrement(..))
 import SimpleFlagOps exposing (singleByteFlags, singleByteFlagsCB, singleByteFlagsDD, singleByteFlagsFD)
@@ -734,7 +734,16 @@ runSpecial specialType rom48k pc z80_core =
                                             ( InterruptDelta (f z80_core.interrupts), param.time |> addDuration duration, IncrementByTwo )
 
                                         Nothing ->
-                                            oldDelta 0xED param.time z80_core.interrupts z80_core rom48k pc
+                                            case fourByteMainED |> Dict.get param.value of
+                                                Just ( mainRegFunc, duration ) ->
+                                                    let
+                                                        doubleParam =
+                                                            z80_core.env |> mem16 (Bitwise.and (pc + 2) 0xFFFF) rom48k param.time
+                                                    in
+                                                    ( EDFourByteDelta (mainRegFunc z80_core.main doubleParam.value16), doubleParam.time |> addDuration duration, IncrementByFour )
+
+                                                Nothing ->
+                                                    oldDelta 0xED param.time z80_core.interrupts z80_core rom48k pc
 
 
 
