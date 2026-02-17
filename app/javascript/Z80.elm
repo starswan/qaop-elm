@@ -272,11 +272,14 @@ executeAndApplyDelta ct rom48k z80clock =
         CoreWithPC new_pc z80Core ->
             { z80clock | core = z80Core, clockTime = clockTime, pc = new_pc }
 
-        CoreWithPCAndDelay new_pc shortDelay z80Core ->
-            { z80clock | core = z80Core, pc = new_pc, clockTime = clockTime |> addExtraCpuTime shortDelay }
+        CoreWithOffsetAndDelay offset shortDelay z80Core ->
+            { z80clock | core = z80Core, pc = (pcAfter + offset) |> Bitwise.and 0xFFFF, clockTime = clockTime |> addExtraCpuTime shortDelay }
 
         JumpOnlyPC int ->
             { z80clock | clockTime = clockTime, pc = int }
+
+        JumpWithOffset offset ->
+            { z80clock | clockTime = clockTime, pc = (pcAfter + offset) |> Bitwise.and 0xFFFF }
 
         CallWithPCAndDelay int shortDelay ->
             let
@@ -430,7 +433,7 @@ runOrdinary ct_value instrTime rom48k pc z80_core =
                                         param =
                                             z80_core.env |> mem (Bitwise.and (pc + 1) 0xFFFF) newTime rom48k
                                     in
-                                    ( JumpChangeDelta (f param.value pc), param.time, IncrementByTwo )
+                                    ( JumpChangeDelta (f param.value), param.time, IncrementByTwo )
 
                                 Nothing ->
                                     case singleEnvMainRegs |> Dict.get ct_value of
@@ -848,11 +851,14 @@ executeCoreInstruction rom48k pc z80_core =
         CoreWithPC new_pc z80Core ->
             ( z80Core, clockTime, new_pc )
 
-        CoreWithPCAndDelay new_pc shortDelay z80Core ->
-            ( z80Core, clockTime |> addExtraCpuTime shortDelay, new_pc )
+        CoreWithOffsetAndDelay offset shortDelay z80Core ->
+            ( z80Core, clockTime |> addExtraCpuTime shortDelay, (pcAfter + offset) |> Bitwise.and 0xFFFF )
 
         JumpOnlyPC int ->
             ( z80_core, clockTime, int )
+
+        JumpWithOffset offset ->
+            ( z80_core, clockTime, (pcAfter + offset) |> Bitwise.and 0xFFFF )
 
         CallWithPCAndDelay int shortDelay ->
             let
