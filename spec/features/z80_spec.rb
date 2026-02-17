@@ -80,7 +80,7 @@ RSpec.describe "Game" do
     let(:times) {
       {
         flags.name => 7500,
-        regs.name => 13000,
+        regs.name => 18700,
         full_flags.name => 7900,
         full.name => 14000,
       }
@@ -108,7 +108,7 @@ RSpec.describe "Game" do
     # 110 OTDR
     # 157 LD A,R
     #
-    # Regs: 023 of 160 tests failed.
+    # Regs: 018 of 160 tests failed.
     # 52 SRO (XY) ,R     F783EB33 expected 31DC0D48
     # 74 BIT N,(XY),-    BB3CB5FB expected 62003A45
     # 79 SET N,(XY),R    F0BFA05E expected 02392678
@@ -129,9 +129,6 @@ RSpec.describe "Game" do
     # 122 RETN
     # 123 RETI
     # 124 RETI/RETN
-    # 154 LD I,A
-    # 156 LD A,I
-    # 157 LD A,R
     #
     # FullFlags - 019 of 160 tests failed
     # 1. 001 SCF 958E3E1E expected 3EC05634

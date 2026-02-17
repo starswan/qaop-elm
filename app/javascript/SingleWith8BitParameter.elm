@@ -1,5 +1,6 @@
 module SingleWith8BitParameter exposing (..)
 
+import Bitwise
 import CpuTimeCTime exposing (InstructionDuration(..), ShortDelay(..))
 import Dict exposing (Dict)
 import Utils exposing (byte)

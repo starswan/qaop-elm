@@ -64,6 +64,11 @@ type EDRegisterChange
     | Ldir DirectionForLDIR Bool
     | Cpir DirectionForLDIR Bool
     | SbcHL SixteenBit
+    | RRD
+    | RLD
+    | IN_C
+    | IN_A_C
+    | AdcHLSP
 
 
 type EDFourByteChange

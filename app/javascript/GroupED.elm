@@ -1,13 +1,7 @@
 module GroupED exposing (..)
 
---  private void group_ed()
---  {
---    int v, c = env.m1(PC, IR|R++&0x7F);
---    PC = (char)(PC+1); time += 4;
---    switch(c) {
-
 import Bitwise exposing (complement, shiftLeftBy, shiftRightBy)
-import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), ShortDelay(..), addCpuTimeTime)
+import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), ShortDelay(..))
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
 import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), SixteenBit(..))
@@ -15,44 +9,16 @@ import Utils exposing (char, shiftLeftBy8, shiftRightBy8, toHexString2)
 import Z80Change exposing (FlagChange(..), Z80Change(..))
 import Z80Core exposing (DirectionForLDIR(..), RepeatPCOffset(..), Z80Core)
 import Z80Debug exposing (debugLog)
-import Z80Delta exposing (Z80Delta(..))
-import Z80Env exposing (Z80Env, setMem, setMem16, setMem16IgnoringTime, setMemIgnoringTime, z80_in)
+import Z80Env exposing (Z80Env, setMem, setMemIgnoringTime, z80_in)
 import Z80Flags exposing (FlagRegisters, c_F3, c_F5, c_F53, c_FC, c_FH, f_szh0n0p, z80_sub)
-import Z80Mem exposing (imm16, mem, mem16)
+import Z80Mem exposing (mem)
 import Z80Registers exposing (ChangeMainRegister(..))
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (InterruptMode(..), InterruptRegisters, MainWithIndexRegisters, get_bc, get_de, set_bc_main, set_de_main)
 
 
-delta_dict_lite_E0 : Dict Int (Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime, PCIncrement ))
-delta_dict_lite_E0 =
-    Dict.fromList
-        [ -- ( 0xDB, execute_0xDB )
-          --,
-          ( 0xED, group_ed )
-        ]
-
-
-group_ed_dict : Dict Int (Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime, PCIncrement ))
-group_ed_dict =
-    Dict.fromList
-        [ ( 0x47, execute_ED47 )
-        , ( 0x7A, adc_hl_sp )
-        , ( 0x78, execute_ED78 )
-        , ( 0x67, rrd )
-        , ( 0x6F, rld )
-        , ( 0x70, execute_ED70 )
-        ]
-
-
-execute_ED47 : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime, PCIncrement )
-execute_ED47 rom48k clockTime pc z80 =
-    -- case 0x47: i(A); time++; break;
-    ( InterruptsWithCpuTime (z80 |> set_i z80.flags.a), clockTime |> addCpuTimeTime 1, IncrementByTwo )
-
-
-execute_ED78 : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime, PCIncrement )
-execute_ED78 rom48k clockTime pc z80 =
+execute_ED78 : Z80ROM -> CpuTimeCTime -> Z80Core -> Z80Core
+execute_ED78 rom48k clockTime z80 =
     --  case 0x78: MP=(v=B<<8|C)+1; f_szh0n0p(A=env.in(v)); time+=4; break;
     let
         v =
@@ -70,7 +36,8 @@ execute_ED78 rom48k clockTime pc z80 =
         new_flags =
             { flags | a = new_a.value } |> f_szh0n0p new_a.value
     in
-    ( DeltaFlags new_flags, new_a.time |> addCpuTimeTime 4, IncrementByTwo )
+    --( DeltaFlags new_flags, new_a.time |> addCpuTimeTime 4, IncrementByTwo )
+    { z80 | flags = new_flags }
 
 
 
@@ -84,14 +51,14 @@ execute_ED78 rom48k clockTime pc z80 =
 -- case 0x7E: IM = c>>3&3; break;
 
 
-adc_hl_sp : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime, PCIncrement )
-adc_hl_sp _ clockTime pc z80 =
+adc_hl_sp : Z80ROM -> CpuTimeCTime -> Z80Core -> Z80Core
+adc_hl_sp _ clockTime z80 =
     -- case 0x7A: adc_hl(SP); break;
-    z80 |> adc_hl z80.env.sp clockTime pc
+    z80 |> adc_hl z80.env.sp
 
 
-execute_ED70 : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime, PCIncrement )
-execute_ED70 rom48k clockTime pc z80 =
+execute_ED70 : Z80ROM -> CpuTimeCTime -> Z80Core -> Z80Core
+execute_ED70 rom48k clockTime z80 =
     let
         v =
             z80.main |> get_bc
@@ -102,62 +69,8 @@ execute_ED70 rom48k clockTime pc z80 =
         new_flags =
             debugLog "ED70 - IN (C)" ( new_a.value, z80.main.b |> toHexString2, z80.main.c |> toHexString2 ) z80.flags |> f_szh0n0p new_a.value
     in
-    ( DeltaFlags new_flags, new_a.time |> addCpuTimeTime 4, IncrementByTwo )
-
-
-group_ed : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime, PCIncrement )
-group_ed rom48k clockTime pc z80_core =
-    let
-        ints =
-            z80_core.interrupts
-
-        --c =
-        --    z80_core.env |> m1 z80_core.pc (Bitwise.or z80_core.interrupts.ir (Bitwise.and ints.r 0x7F)) rom48k z80_core.clockTime
-        c =
-            z80_core.env |> mem pc clockTime rom48k
-
-        new_r =
-            ints.r + 1
-
-        new_ints =
-            { ints | r = new_r }
-
-        new_pc =
-            Bitwise.and (pc + 1) 0xFFFF
-
-        --z80 =
-        --    { z80_core | pc = new_pc, interrupts = new_ints }
-        z80 =
-            { z80_core | interrupts = new_ints }
-
-        ed_func =
-            group_ed_dict |> Dict.get c.value
-    in
-    case ed_func of
-        Just f ->
-            z80 |> f rom48k (clockTime |> addCpuTimeTime 4) new_pc
-
-        Nothing ->
-            --// -------------- >8 ed
-            ---- case 0x6A: adc_hl(HL); break;
-            --0x6A -> z80 |> adc_hl z80.main.hl
-            ---- case 0x5A: adc_hl(D<<8|E); break;
-            --0x5A -> z80 |> adc_hl (z80 |> get_de)
-            --else if List.member c.value [0x44, 0x4C, 0x54, 0x5C, 0x64, 0x6C, 0x74, 0x7C] then
-            --   -- case 0x44:
-            --   -- case 0x4C:
-            --   -- case 0x54:
-            --   -- case 0x5C:
-            --   -- case 0x64:
-            --   -- case 0x6C:
-            --   -- case 0x74:
-            --   -- case 0x7C: v=A; A=0; sub(v); break;
-            --   let
-            --      flags = z80.flags
-            --      flags_1 = { flags | a = 0 } |> z80_sub flags.a
-            --   in
-            --      z80 |> set_flag_regs flags_1
-            ( UnknownIntValue "group_ed" c.value, clockTime, IncrementByTwo )
+    --( DeltaFlags new_flags, new_a.time |> addCpuTimeTime 4, IncrementByTwo )
+    { z80 | flags = new_flags }
 
 
 
@@ -342,21 +255,19 @@ ldir incOrDec repeat rom48k clockTime z80 =
     )
 
 
-set_i : Int -> Z80Core -> InterruptRegisters
-set_i v z80_core =
-    --  void i(int v) {IR = IR&0xFF | v<<8;}
-    let
-        ir =
-            Bitwise.or (Bitwise.and z80_core.interrupts.ir 0xFF) (shiftLeftBy8 v)
 
-        main =
-            z80_core.interrupts
-    in
-    --{ z80 | interrupts = { interrupts | ir = ir } }
-    { main | ir = ir }
-
-
-
+--set_i : Int -> Z80Core -> InterruptRegisters
+--set_i v z80_core =
+--    --  void i(int v) {IR = IR&0xFF | v<<8;}
+--    let
+--        ir =
+--            Bitwise.or (Bitwise.and z80_core.interrupts.ir 0xFF) (shiftLeftBy8 v)
+--
+--        main =
+--            z80_core.interrupts
+--    in
+--    --{ z80 | interrupts = { interrupts | ir = ir } }
+--    { main | ir = ir }
 --  private void adc_hl(int b)
 --  {
 --    int a,r;
@@ -370,8 +281,8 @@ set_i v z80_core =
 --  }
 
 
-adc_hl : Int -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime, PCIncrement )
-adc_hl b clockTime pc z80 =
+adc_hl : Int -> Z80Core -> Z80Core
+adc_hl b z80 =
     let
         z80_main =
             z80.main
@@ -379,7 +290,8 @@ adc_hl b clockTime pc z80 =
         ( flags, hl ) =
             ed_adc_hl b z80_main z80.flags
     in
-    ( FlagsWithPCMainAndCpuTime flags { z80_main | hl = hl }, clockTime |> addCpuTimeTime 7, IncrementByTwo )
+    --( FlagsWithPCMainAndCpuTime flags { z80_main | hl = hl }, clockTime |> addCpuTimeTime 7, IncrementByTwo )
+    { z80 | flags = flags, main = { z80_main | hl = hl } }
 
 
 
@@ -500,8 +412,8 @@ cpir incOrDec repeat rom48k clockTime z80_core =
 --  }
 
 
-rld : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime, PCIncrement )
-rld rom48k clockTime pc z80 =
+rld : Z80ROM -> CpuTimeCTime -> Z80Core -> Z80Core
+rld rom48k clockTime z80 =
     let
         v_lhs_1 =
             z80.env |> mem z80.main.hl clockTime rom48k
@@ -527,7 +439,7 @@ rld rom48k clockTime pc z80 =
         ( env_1, newClock ) =
             z80.env |> setMem z80.main.hl (Bitwise.and v 0xFF) v_lhs_1.time
     in
-    ( FlagsWithPcEnvAndCpuTime new_flags env_1, newClock |> addCpuTimeTime 10, IncrementByTwo )
+    { z80 | env = env_1, flags = new_flags }
 
 
 
@@ -542,8 +454,8 @@ rld rom48k clockTime pc z80 =
 --}
 
 
-rrd : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( Z80Delta, CpuTimeCTime, PCIncrement )
-rrd rom48k clockTime pc z80 =
+rrd : Z80ROM -> CpuTimeCTime -> Z80Core -> Z80Core
+rrd rom48k clockTime z80 =
     let
         v_lhs =
             z80.env |> mem z80.main.hl clockTime rom48k
@@ -566,7 +478,7 @@ rrd rom48k clockTime pc z80 =
         env_1 =
             z80.env |> setMemIgnoringTime z80.main.hl (Bitwise.and (v |> shiftRightBy 4) 0xFF) v_lhs.time
     in
-    ( FlagsWithPcEnvAndCpuTime new_flags env_1, clockTime |> addCpuTimeTime 10, IncrementByTwo )
+    { z80 | env = env_1, flags = new_flags }
 
 
 fourByteMainED : Dict Int ( MainWithIndexRegisters -> Int -> EDFourByteChange, InstructionDuration )
@@ -583,38 +495,38 @@ fourByteMainED =
         ]
 
 
-singleByteMainRegsED : Dict Int ( MainWithIndexRegisters -> EDRegisterChange, InstructionDuration )
+singleByteMainRegsED : Dict Int ( EDRegisterChange, InstructionDuration )
 singleByteMainRegsED =
     Dict.fromList
         [ -- ED08/ED09 no-op in Java version of Qaop
-          ( 0x00, ( \_ -> EDNoOp, EightTStates ) )
-        , ( 0x01, ( \_ -> EDNoOp, EightTStates ) )
-        , ( 0x04, ( \_ -> EDNoOp, EightTStates ) )
-        , ( 0x08, ( \_ -> EDNoOp, EightTStates ) )
-        , ( 0x09, ( \_ -> EDNoOp, EightTStates ) )
-        , ( 0x10, ( \_ -> EDNoOp, EightTStates ) )
-        , ( 0x11, ( \_ -> EDNoOp, EightTStates ) )
-        , ( 0x14, ( \_ -> EDNoOp, EightTStates ) )
-        , ( 0x18, ( \_ -> EDNoOp, EightTStates ) )
-        , ( 0x19, ( \_ -> EDNoOp, EightTStates ) )
-        , ( 0x20, ( \_ -> EDNoOp, EightTStates ) )
-        , ( 0x21, ( \_ -> EDNoOp, EightTStates ) )
-        , ( 0x24, ( \_ -> EDNoOp, EightTStates ) )
-        , ( 0x28, ( \_ -> EDNoOp, EightTStates ) )
-        , ( 0x29, ( \_ -> EDNoOp, EightTStates ) )
-        , ( 0x34, ( \_ -> EDNoOp, EightTStates ) )
-        , ( 0x38, ( \_ -> EDNoOp, EightTStates ) )
-        , ( 0x39, ( \_ -> EDNoOp, EightTStates ) )
-        , ( 0x40, ( \z80_main -> InRC ChangeMainB, TwelveTStates ) )
+          ( 0x00, ( EDNoOp, EightTStates ) )
+        , ( 0x01, ( EDNoOp, EightTStates ) )
+        , ( 0x04, ( EDNoOp, EightTStates ) )
+        , ( 0x08, ( EDNoOp, EightTStates ) )
+        , ( 0x09, ( EDNoOp, EightTStates ) )
+        , ( 0x10, ( EDNoOp, EightTStates ) )
+        , ( 0x11, ( EDNoOp, EightTStates ) )
+        , ( 0x14, ( EDNoOp, EightTStates ) )
+        , ( 0x18, ( EDNoOp, EightTStates ) )
+        , ( 0x19, ( EDNoOp, EightTStates ) )
+        , ( 0x20, ( EDNoOp, EightTStates ) )
+        , ( 0x21, ( EDNoOp, EightTStates ) )
+        , ( 0x24, ( EDNoOp, EightTStates ) )
+        , ( 0x28, ( EDNoOp, EightTStates ) )
+        , ( 0x29, ( EDNoOp, EightTStates ) )
+        , ( 0x34, ( EDNoOp, EightTStates ) )
+        , ( 0x38, ( EDNoOp, EightTStates ) )
+        , ( 0x39, ( EDNoOp, EightTStates ) )
+        , ( 0x40, ( InRC ChangeMainB, TwelveTStates ) )
 
         -- case 0x41: env.out(B<<8|C,B); time+=4; break;
-        , ( 0x41, ( \_ -> EDNoOp, EightTStates ) )
+        , ( 0x41, ( EDNoOp, EightTStates ) )
 
         -- case 0x42: sbc_hl(B<<8|C); break;
-        , ( 0x42, ( \_ -> SbcHL RegBC, FifteenTStates ) )
+        , ( 0x42, ( SbcHL RegBC, FifteenTStates ) )
 
         -- RETN - end of NMI. NMIs aren't enabled on the Spectrum?
-        , ( 0x45, ( \_ -> EDNoOp, EightTStates ) )
+        , ( 0x45, ( EDNoOp, EightTStates ) )
 
         --case 0x46:
         --case 0x4E:
@@ -631,114 +543,119 @@ singleByteMainRegsED =
         --      new_z80 |> im0 bus
         -- iM == 0 (which has the same code) appears to be impossible as there is no IM3 instruction
         --( 0x46, ( \_ -> RegChangeIm 0, EightTStates ) )
-        , ( 0x46, ( \_ -> EDNoOp, EightTStates ) )
-        , ( 0x48, ( \z80_main -> InRC ChangeMainC, TwelveTStates ) )
+        , ( 0x46, ( EDNoOp, EightTStates ) )
+        , ( 0x48, ( InRC ChangeMainC, TwelveTStates ) )
 
         -- case 0x49: env.out(B<<8|C,C); time+=4; break;       , IncrementByTwo
-        , ( 0x49, ( \_ -> EDNoOp, EightTStates ) )
+        , ( 0x49, ( EDNoOp, EightTStates ) )
 
         -- RETI (return from maskable interupt, unused on the Spectrum I'm pretty sure)
-        , ( 0x4D, ( \_ -> EDNoOp, EightTStates ) )
+        , ( 0x4D, ( EDNoOp, EightTStates ) )
 
         --( 0x4E, ( \_ -> RegChangeIm (0x4E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
         --, ( 0x4E, ( \_ -> RegChangeIm 0, EightTStates ) )
-        , ( 0x4E, ( \_ -> EDNoOp, EightTStates ) )
-        , ( 0x50, ( \z80_main -> InRC ChangeMainD, TwelveTStates ) )
+        , ( 0x4E, ( EDNoOp, EightTStates ) )
+        , ( 0x50, ( InRC ChangeMainD, TwelveTStates ) )
 
         -- case 0x51: env.out(B<<8|C,D); time+=4; break;       , IncrementByTwo
-        , ( 0x51, ( \_ -> EDNoOp, EightTStates ) )
+        , ( 0x51, ( EDNoOp, EightTStates ) )
 
         -- case 0x52: sbc_hl(D<<8|E); break;
-        , ( 0x52, ( \_ -> SbcHL RegDE, FifteenTStates ) )
+        , ( 0x52, ( SbcHL RegDE, FifteenTStates ) )
 
         -- case 0x7D: IFF|=IFF>>1; MP=PC=pop(); break;
         -- TODO: Implement ED 7D (all these are the same)
-        , ( 0x55, ( \_ -> EDNoOp, EightTStates ) )
+        , ( 0x55, ( EDNoOp, EightTStates ) )
 
         --, ( 0x56, ( \_ -> RegChangeIm (0x56 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
-        , ( 0x56, ( \_ -> RegChangeIm IM1, EightTStates ) )
-        , ( 0x58, ( \z80_main -> InRC ChangeMainE, TwelveTStates ) )
+        , ( 0x56, ( RegChangeIm IM1, EightTStates ) )
+        , ( 0x58, ( InRC ChangeMainE, TwelveTStates ) )
 
         -- case 0x59: env.out(B<<8|C,E); time+=4; break;       , IncrementByTwo
-        , ( 0x59, ( \_ -> EDNoOp, EightTStates ) )
-        , ( 0x5D, ( \_ -> EDNoOp, EightTStates ) )
+        , ( 0x59, ( EDNoOp, EightTStates ) )
+        , ( 0x5D, ( EDNoOp, EightTStates ) )
 
         --, ( 0x5E, ( \_ -> RegChangeIm (0x5E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
-        , ( 0x5E, ( \_ -> RegChangeIm IM2, EightTStates ) )
-        , ( 0x60, ( \z80_main -> InRC ChangeMainH, TwelveTStates ) )
-
-        -- case 0x62: sbc_hl(HL); break;
-        , ( 0x62, ( \_ -> SbcHL RegHL, FifteenTStates ) )
-        , ( 0x65, ( \_ -> EDNoOp, EightTStates ) )
+        , ( 0x5E, ( RegChangeIm IM2, EightTStates ) )
+        , ( 0x60, ( InRC ChangeMainH, TwelveTStates ) )
 
         -- case 0x61: env.out(B<<8|C,HL>>>8); time+=4; break;  , IncrementByTwo
-        , ( 0x61, ( \_ -> EDNoOp, EightTStates ) )
+        , ( 0x61, ( EDNoOp, EightTStates ) )
 
-        --, ( 0x66, ( \_ -> RegChangeIm (0x66 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
-        --, ( 0x66, ( \_ -> RegChangeIm 0, EightTStates ) )
-        , ( 0x66, ( \_ -> EDNoOp, EightTStates ) )
-        , ( 0x68, ( \z80_main -> InRC ChangeMainL, TwelveTStates ) )
+        -- case 0x62: sbc_hl(HL); break;
+        , ( 0x62, ( SbcHL RegHL, FifteenTStates ) )
+        , ( 0x65, ( EDNoOp, EightTStates ) )
+
+        --, ( 0x66, (  RegChangeIm (0x66 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
+        --, ( 0x66, (  RegChangeIm 0, EightTStates ) )
+        , ( 0x66, ( EDNoOp, EightTStates ) )
+        , ( 0x67, ( RRD, EighteenTStates ) )
+        , ( 0x68, ( InRC ChangeMainL, TwelveTStates ) )
 
         -- case 0x69: env.out(B<<8|C,HL&0xFF); time+=4; break; , IncrementByTwo
-        , ( 0x69, ( \_ -> EDNoOp, EightTStates ) )
-        , ( 0x6D, ( \_ -> EDNoOp, EightTStates ) )
+        , ( 0x69, ( EDNoOp, EightTStates ) )
+        , ( 0x6D, ( EDNoOp, EightTStates ) )
 
-        --, ( 0x6E, ( \_ -> RegChangeIm (0x6E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
-        --, ( 0x6E, ( \_ -> RegChangeIm 0, EightTStates ) )
-        , ( 0x6E, ( \_ -> EDNoOp, EightTStates ) )
+        --, ( 0x6E, (  RegChangeIm (0x6E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
+        --, ( 0x6E, (  RegChangeIm 0, EightTStates ) )
+        , ( 0x6E, ( EDNoOp, EightTStates ) )
+        , ( 0x6F, ( RLD, EighteenTStates ) )
+        , ( 0x70, ( IN_C, TwelveTStates ) )
 
         -- case 0x71: env.out(B<<8|C,0); time+=4; break;       , IncrementByTwo
-        , ( 0x71, ( \_ -> EDNoOp, EightTStates ) )
+        , ( 0x71, ( EDNoOp, EightTStates ) )
 
         -- case 0x72: sbc_hl(SP); break;
-        , ( 0x72, ( \_ -> SbcHL RegSP, FifteenTStates ) )
-        , ( 0x75, ( \_ -> EDNoOp, EightTStates ) )
+        , ( 0x72, ( SbcHL RegSP, FifteenTStates ) )
+        , ( 0x75, ( EDNoOp, EightTStates ) )
 
-        --, ( 0x76, ( \_ -> RegChangeIm (0x76 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
-        , ( 0x76, ( \_ -> RegChangeIm IM1, EightTStates ) )
+        --, ( 0x76, (  RegChangeIm (0x76 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
+        , ( 0x76, ( RegChangeIm IM1, EightTStates ) )
+        , ( 0x78, ( IN_A_C, TwelveTStates ) )
 
         -- case 0x79: MP=(v=B<<8|C)+1; env.out(v,A); time+=4; b, IncrementByTworeak;
-        , ( 0x79, ( \_ -> EDNoOp, EightTStates ) )
-        , ( 0x7D, ( \_ -> EDNoOp, EightTStates ) )
+        , ( 0x79, ( EDNoOp, EightTStates ) )
+        , ( 0x7A, ( AdcHLSP, FifteenTStates ) )
+        , ( 0x7D, ( EDNoOp, EightTStates ) )
 
-        --, ( 0x7E, ( \_ -> RegChangeIm (0x7E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
-        , ( 0x7E, ( \_ -> RegChangeIm IM2, EightTStates ) )
-        , ( 0xA2, ( \z80_main -> Z80InI Forwards False, SixteenTStates ) )
-        , ( 0xA3, ( \z80_main -> Z80OutI Forwards False, SixteenTStates ) )
-        , ( 0xAA, ( \z80_main -> Z80InI Backwards False, SixteenTStates ) )
-        , ( 0xAB, ( \z80_main -> Z80OutI Backwards False, SixteenTStates ) )
-        , ( 0xB2, ( \z80_main -> Z80InI Forwards True, SixteenTStates ) )
-        , ( 0xB3, ( \z80_main -> Z80OutI Forwards True, SixteenTStates ) )
-        , ( 0xBA, ( \z80_main -> Z80InI Backwards True, SixteenTStates ) )
-        , ( 0xBB, ( \z80_main -> Z80OutI Backwards True, SixteenTStates ) )
+        --, ( 0x7E, (  RegChangeIm (0x7E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
+        , ( 0x7E, ( RegChangeIm IM2, EightTStates ) )
+        , ( 0xA2, ( Z80InI Forwards False, SixteenTStates ) )
+        , ( 0xA3, ( Z80OutI Forwards False, SixteenTStates ) )
+        , ( 0xAA, ( Z80InI Backwards False, SixteenTStates ) )
+        , ( 0xAB, ( Z80OutI Backwards False, SixteenTStates ) )
+        , ( 0xB2, ( Z80InI Forwards True, SixteenTStates ) )
+        , ( 0xB3, ( Z80OutI Forwards True, SixteenTStates ) )
+        , ( 0xBA, ( Z80InI Backwards True, SixteenTStates ) )
+        , ( 0xBB, ( Z80OutI Backwards True, SixteenTStates ) )
 
         --The ED opcodes in the range 00-3F and 80-FF (except for the block instructions of course) do nothing at all but taking up 8 T states
         -- and incrementing the R register by 2. Most of the unlisted opcodes in the range 0x40 to 0x7f do have an effect, however
-        , ( 0xBF, ( \_ -> EDNoOp, EightTStates ) )
+        , ( 0xBF, ( EDNoOp, EightTStates ) )
 
         -- case 0xA0: ldir(1,false); break;
-        , ( 0xA0, ( \_ -> Ldir Forwards False, SixteenTStates ) )
+        , ( 0xA0, ( Ldir Forwards False, SixteenTStates ) )
 
         -- case 0xA1: cpir(1,false); break;
-        , ( 0xA1, ( \_ -> Cpir Forwards False, SixteenTStates ) )
+        , ( 0xA1, ( Cpir Forwards False, SixteenTStates ) )
 
         -- case 0xA8: ldir(-1,false); break;
-        , ( 0xA8, ( \_ -> Ldir Backwards False, SixteenTStates ) )
+        , ( 0xA8, ( Ldir Backwards False, SixteenTStates ) )
 
         -- case 0xA9: cpir(-1,false); break;
-        , ( 0xA9, ( \_ -> Cpir Backwards False, SixteenTStates ) )
+        , ( 0xA9, ( Cpir Backwards False, SixteenTStates ) )
 
         -- case 0xB0: ldir(1,true); break;
-        , ( 0xB0, ( \_ -> Ldir Forwards True, SixteenTStates ) )
+        , ( 0xB0, ( Ldir Forwards True, SixteenTStates ) )
 
         -- case 0xB1: cpir(1,true); break;
-        , ( 0xB1, ( \_ -> Cpir Forwards True, SixteenTStates ) )
+        , ( 0xB1, ( Cpir Forwards True, SixteenTStates ) )
 
         -- case 0xB8: ldir(-1,true); break;
-        , ( 0xB8, ( \_ -> Ldir Backwards True, SixteenTStates ) )
+        , ( 0xB8, ( Ldir Backwards True, SixteenTStates ) )
 
         -- case 0xB9: cpir(-1,true); break;
-        , ( 0xB9, ( \_ -> Cpir Backwards True, SixteenTStates ) )
+        , ( 0xB9, ( Cpir Backwards True, SixteenTStates ) )
 
         -- case 0xA2:
         -- case 0xA3:
@@ -755,6 +672,9 @@ singleByteFlagsED : Dict Int ( FlagRegisters -> FlagChange, InstructionDuration 
 singleByteFlagsED =
     Dict.fromList
         [ ( 0x44, ( ed_44_neg, EightTStates ) )
+
+        -- case 0x47: i(A); time++; break;
+        , ( 0x47, ( \z80_flags -> FlagNewIValue z80_flags.a, NineTStates ) )
         , ( 0x4C, ( ed_44_neg, EightTStates ) )
 
         -- case 0x4F: r(A); time++; break;

@@ -24,3 +24,4 @@ type FlagChange
     | EmptyFlagChange
     | FlagChangePush Int
     | FlagNewRValue Int
+    | FlagNewIValue Int

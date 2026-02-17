@@ -19,8 +19,8 @@ singleByteZ80Env =
         ]
 
 
-applyEnvChangeDelta : CpuTimeCTime -> SingleByteEnvChange -> Z80Core -> Z80Core
-applyEnvChangeDelta cpu_time z80changeData z80 =
+applyEnvChangeDelta : SingleByteEnvChange -> Z80Core -> Z80Core
+applyEnvChangeDelta z80changeData z80 =
     case z80changeData of
         NewSPValue int ->
             let
