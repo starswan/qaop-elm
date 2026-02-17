@@ -4,7 +4,6 @@ import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import Dict exposing (Dict)
 import MemoryAddress exposing (MemoryAddress(..), RamAddress(..))
-import PCIncrement exposing (MediumPCIncrement(..))
 import Utils exposing (byte, shiftLeftBy8)
 import Z80Core exposing (Z80Core)
 import Z80Env exposing (getRamMemoryValue, setMem, setRamMemoryValue)
@@ -323,9 +322,7 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
             in
             case memAddress of
                 ROM _ ->
-                    { z80
-                        | pc = pc
-                    }
+                    z80
 
                 RAM ramaddress ->
                     let
@@ -341,13 +338,9 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
                         --z80.env |> setRamMemoryValue memAddress valueWithFlags.value
                     in
                     { z80
-                        |  env = env_1
-
+                        | env = env_1
                         , flags = valueWithFlags.flags
                     }
-
-            else
-                z80
 
         IndexedIndirectDecrement inAddr offset ->
             let
@@ -361,9 +354,7 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
             in
             case memAddress of
                 ROM _ ->
-                    { z80
-                        | pc = pc
-                    }
+                    z80
 
                 RAM ramAddress ->
                     let
@@ -377,8 +368,6 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
                             z80.env |> setRamMemoryValue ramAddress valueWithFlags.value
                     in
                     { z80
-                        | pc = pc
-                        , env = env_1
-                        , clockTime = newTime
+                        | env = env_1
                         , flags = valueWithFlags.flags
                     }
