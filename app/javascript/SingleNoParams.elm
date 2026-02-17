@@ -296,8 +296,10 @@ execute_0x76_halt z80 =
         clock =
             z80.coreWithClock
 
+        --z80_core =
+        --    clock.core |> debugLog "halt" ""
         z80_core =
-            clock.core |> debugLog "halt" ""
+            clock.core
 
         interrupts =
             z80_core.interrupts
