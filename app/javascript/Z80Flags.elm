@@ -19,17 +19,6 @@ type alias IntWithFlags =
     }
 
 
-type FlagFunc
-    = AdcA
-    | AddA
-    | SubA
-    | SbcA
-    | AndA
-    | XorA
-    | OrA
-    | CpA
-
-
 
 --/*
 -- lazy flag evaluation:
@@ -744,34 +733,6 @@ f_szh0n0p r flags =
             Bitwise.or r 0x0100
     in
     { flags | fr = fr, ff = ff, fa = fa, fb = 0 }
-
-
-changeFlags : FlagFunc -> Int -> FlagRegisters -> FlagRegisters
-changeFlags flagFunc int flags =
-    case flagFunc of
-        AdcA ->
-            flags |> adc int
-
-        AddA ->
-            flags |> z80_add int
-
-        SubA ->
-            flags |> z80_sub int
-
-        SbcA ->
-            flags |> sbc int
-
-        AndA ->
-            flags |> z80_and int
-
-        XorA ->
-            flags |> z80_xor int
-
-        OrA ->
-            flags |> z80_or int
-
-        CpA ->
-            flags |> z80_cp int
 
 
 jump_nz : FlagRegisters -> Bool

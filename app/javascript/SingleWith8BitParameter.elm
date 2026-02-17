@@ -4,7 +4,7 @@ import Bitwise
 import CpuTimeCTime exposing (InstructionDuration(..), ShortDelay(..))
 import Dict exposing (Dict)
 import Utils exposing (byte)
-import Z80Flags exposing (FlagFunc(..), FlagRegisters, jump_c, jump_nc, jump_nz, jump_z)
+import Z80Flags exposing (FlagRegisters, adc, jump_c, jump_nc, jump_nz, jump_z, sbc, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
 import Z80Registers exposing (CoreRegister(..))
 import Z80Types exposing (MainWithIndexRegisters)
 
@@ -14,7 +14,7 @@ type Single8BitChange
     | Z80In Int
     | Z80Out Int
     | NewARegister Int
-    | FlagJump FlagFunc Int
+    | FlagJump (Int -> FlagRegisters -> FlagRegisters) Int
 
 
 singleWith8BitParam : Dict Int ( Int -> Single8BitChange, InstructionDuration )
@@ -137,49 +137,49 @@ djnz param =
 add_a_n : Int -> Single8BitChange
 add_a_n param =
     -- case 0xC6: add(imm8()); break;
-    FlagJump AddA param
+    FlagJump z80_add param
 
 
 adc_n : Int -> Single8BitChange
 adc_n param =
     -- case 0xCE: adc(imm8()); break;
-    FlagJump AdcA param
+    FlagJump adc param
 
 
 sub_n : Int -> Single8BitChange
 sub_n param =
     -- case 0xD6: sub(imm8()); break;
-    FlagJump SubA param
+    FlagJump z80_sub param
 
 
 sbc_a_n : Int -> Single8BitChange
 sbc_a_n param =
     -- case 0xDE: sbc(imm8()); break;
-    FlagJump SbcA param
+    FlagJump sbc param
 
 
 and_n : Int -> Single8BitChange
 and_n param =
     -- case 0xE6: and(imm8()); break;
-    FlagJump AndA param
+    FlagJump z80_and param
 
 
 xor_n : Int -> Single8BitChange
 xor_n param =
     -- case 0xEE: xor(imm8()); break;
-    FlagJump XorA param
+    FlagJump z80_xor param
 
 
 or_n : Int -> Single8BitChange
 or_n param =
     -- case 0xF6: or(imm8()); break;
-    FlagJump OrA param
+    FlagJump z80_or param
 
 
 cp_n : Int -> Single8BitChange
 cp_n param =
     -- case 0xFE: cp(imm8()); break;
-    FlagJump CpA param
+    FlagJump z80_cp param
 
 
 ld_a_n : Int -> Single8BitChange
