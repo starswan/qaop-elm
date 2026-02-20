@@ -50,30 +50,38 @@ RSpec.describe "Game" do
           measure_speed_in_hz
         },
         flags.name => lambda { |spectrum|
-          [1750, 3450, 4350, 5300, 6200, 6750, 7100, 7650].each do |t|
-            delay_and_send(spectrum, t, "y")
+          [2350, 4710, 5900, 7200, 8200, 8780, 9100, 9550].each do |t|
+            delay_and_send_just(spectrum, t, "y")
           end
+
+          sleep 5
 
           measure_speed_in_hz
         },
         regs.name => lambda { |spectrum|
-          [3100, 6400, 7850, 8300, 9200, 9750, 10100, 10650].each do |t|
-            delay_and_send(spectrum, t, "y")
+          [4390, 8960, 11350, 13980, 15850, 16750, 17400, 18150].each do |t|
+            delay_and_send_just(spectrum, t, "y")
           end
+
+          sleep 5
 
           measure_speed_in_hz
         },
         full_flags.name => lambda { |spectrum|
-          [2200, 4350, 5450, 7100, 7700, 8500, 9650, 10070].each do |t|
-            delay_and_send(spectrum, t, "y")
+          [2550, 5090, 6650, 8200, 9300, 9900, 10240, 10500].each do |t|
+            delay_and_send_just(spectrum, t, "y")
           end
+
+          sleep 3
 
           measure_speed_in_hz
         },
         full.name => lambda { |spectrum|
-          [1750, 3450, 4350, 5300, 6200, 6750, 7100, 7650].each do |t|
-            delay_and_send(spectrum, t, "y")
+          [4750, 8350, 12250, 13200, 14100, 14650, 16000, 16550].each do |t|
+            delay_and_send_just(spectrum, t, "y")
           end
+
+          sleep 3
 
           measure_speed_in_hz
         },
@@ -112,7 +120,7 @@ RSpec.describe "Game" do
       visit '/'
     end
 
-    # Flags: 015 of 160 tests failed.
+    # Flags: 013 of 160 tests failed.
     # 052 SRO (XY), R (DD CB 00 00) 334E5D5A expected 0AF8B1A8
     # 074 BIT N,(XY)- DD CB xx 40-47 (undoc?) E3DC0E5A exp 6870B827
     # 089 LDIR-> NOP' (copying X -> X) 4182F56F expected A4DE6FAA
@@ -198,7 +206,7 @@ RSpec.describe "Game" do
     end
   end
 
-  def delay_and_send(spectrum, time_until, keys)
+  def delay_and_send_just(spectrum, time_until, keys)
     cpu_count = find("#cyclecount")
 
     while cpu_count.text.to_i < time_until
@@ -207,6 +215,11 @@ RSpec.describe "Game" do
     keys.each_char do |k|
       spectrum.send_keys k
     end
+  end
+
+  def delay_and_send(spectrum, time_until, keys)
+    delay_and_send_just(spectrum, time_until, keys)
+
     spectrum.send_keys [:enter]
   end
 
