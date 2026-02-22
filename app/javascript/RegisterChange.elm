@@ -2,7 +2,7 @@ module RegisterChange exposing (..)
 
 import Utils exposing (BitTest)
 import Z80Core exposing (DirectionForLDIR)
-import Z80Flags exposing (FlagFunc)
+import Z80Flags exposing (FlagRegisters)
 import Z80Registers exposing (ChangeMainRegister, ChangeOneRegister)
 import Z80Types exposing (IXIYHL, InterruptMode)
 
@@ -40,7 +40,7 @@ type RegisterChange
     | IndirectBitReset BitTest Int
     | IndirectBitSet BitTest Int
     | RegChangeNoOp
-    | SingleEnvFlagFunc FlagFunc Int
+    | SingleEnvFlagFunc (Int -> FlagRegisters -> FlagRegisters) Int
     | ExchangeTopOfStackWith IXIYHL
     | SingleRegisterChange ChangeOneRegister Int
     | RegisterIndirectWithShifter Shifter ChangeMainRegister Int

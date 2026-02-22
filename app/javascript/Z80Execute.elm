@@ -17,7 +17,7 @@ import Z80Change exposing (FlagChange(..), Z80Change(..))
 import Z80Core exposing (CoreChange(..), DirectionForLDIR(..), RepeatPCOffset(..), Z80Core)
 import Z80Debug exposing (debugLog, debugTodo)
 import Z80Env exposing (Z80Env, setMem, setMem16, z80_in, z80_out, z80_push)
-import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, f_szh0n0p, inc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
+import Z80Flags exposing (FlagRegisters, IntWithFlags, dec, f_szh0n0p, inc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
 import Z80Mem exposing (mem, mem16, z80_pop)
 import Z80Registers exposing (ChangeMainRegister(..), ChangeOneRegister(..), CoreRegister(..))
 import Z80Rom exposing (Z80ROM)
@@ -158,7 +158,7 @@ applySimple8BitDelta cpu_time z80changeData rom48k z80 =
         FlagJump operation param ->
             let
                 flags =
-                    z80.flags |> changeFlags operation param
+                    z80.flags |> operation param
             in
             { z80 | flags = flags }
 
@@ -546,7 +546,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 z80_flags =
                     z80_core.flags
             in
-            { z80_core | flags = z80_flags |> changeFlags flagFunc value }
+            { z80_core | flags = z80_flags |> flagFunc value }
                 |> CoreOnly
 
         ExchangeTopOfStackWith ixiyhl ->
