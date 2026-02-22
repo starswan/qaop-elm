@@ -66,10 +66,11 @@ server "arthur.broadband",
 set :deploy_to, "#{ENV['HOME']}/retroelm"
 set :rvm_type, :system
 set :rvm_custom_path, "/usr/share/rvm"
-set :rails_env, "arthur"
+# set :rails_env, "arthur"
+set :rails_env, "production"
 set :rvm_ruby_version, "3.3.9@retroelm"
 
-append :linked_files, ".env.arthur"
+# append :linked_files, ".env.arthur"
 
 # set :user, ENV["USER"]
 # # Try to speed up ruby compilation on Raspberry Pi 2
