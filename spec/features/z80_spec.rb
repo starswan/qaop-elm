@@ -33,7 +33,7 @@ RSpec.describe "Game" do
     }
     let(:scripts) {
       {
-        matchday.name => ->(spectrum) {
+        matchday.name => lambda { |spectrum|
           delay_and_send(spectrum, 200, "")
           delay_and_send(spectrum, 750, "")
           # Start 1 player match day (with kempston, so kicks all the time)
@@ -41,7 +41,7 @@ RSpec.describe "Game" do
 
           measure_speed_in_hz 180
         },
-        cyrus.name => ->(spectrum) {
+        cyrus.name => lambda { |spectrum|
           # square colours
           delay_and_send(spectrum, 300, "a0724")
           # Level 3 demo mode Cyrus vs Cyrus
@@ -49,9 +49,45 @@ RSpec.describe "Game" do
 
           measure_speed_in_hz
         },
-        football_manager.name => ->(spectrum) {
+        flags.name => lambda { |spectrum|
+          [2350, 4710, 5900, 7200, 8200, 8780, 9100, 9550].each do |t|
+            delay_and_send_just(spectrum, t, "y")
+          end
+
+          sleep 5
+
+          measure_speed_in_hz
+        },
+        regs.name => lambda { |spectrum|
+          [4390, 8960, 11350, 13980, 15850, 16750, 17400, 18150].each do |t|
+            delay_and_send_just(spectrum, t, "y")
+          end
+
+          sleep 5
+
+          measure_speed_in_hz
+        },
+        full_flags.name => lambda { |spectrum|
+          [2550, 5090, 6650, 8200, 9300, 9900, 10240, 10500].each do |t|
+            delay_and_send_just(spectrum, t, "y")
+          end
+
+          sleep 3
+
+          measure_speed_in_hz
+        },
+        full.name => lambda { |spectrum|
+          [4750, 8350, 12250, 13200, 14100, 14650, 16000, 16550].each do |t|
+            delay_and_send_just(spectrum, t, "y")
+          end
+
+          sleep 3
+
+          measure_speed_in_hz
+        },
+        football_manager.name => lambda { |spectrum|
           # Player name
-          delay_and_send(spectrum, 470, "robot")
+          delay_and_send(spectrum, 470, FFaker::Name.first_name)
           # select Plymouth Argyle
           delay_and_send(spectrum, 930, "99")
           delay_and_send(spectrum, 1080, "99")
@@ -73,16 +109,9 @@ RSpec.describe "Game" do
           measure_speed_in_hz do
             spectrum.send_keys :enter
           end
-        }
-      }
-    }
-
-    let(:times) {
-      {
-        flags.name => 7500,
-        regs.name => 18700,
-        full_flags.name => 7900,
-        full.name => 14000,
+          # spectrum.send_keys :enter
+          # measure_speed_in_hz
+        },
       }
     }
 
@@ -91,7 +120,7 @@ RSpec.describe "Game" do
       visit '/'
     end
 
-    # Flags: 015 of 160 tests failed.
+    # Flags: 013 of 160 tests failed.
     # 052 SRO (XY), R (DD CB 00 00) 334E5D5A expected 0AF8B1A8
     # 074 BIT N,(XY)- DD CB xx 40-47 (undoc?) E3DC0E5A exp 6870B827
     # 089 LDIR-> NOP' (copying X -> X) 4182F56F expected A4DE6FAA
@@ -164,17 +193,9 @@ RSpec.describe "Game" do
       end
       spectrum.send_keys [:enter]
 
-      script = scripts.fetch(z80_game, -> (spectrum) {
+      script = scripts.fetch(z80_game, lambda { |spectrum|
         measure_speed_in_hz do
           spectrum.send_keys 'y'
-        end.tap do
-          if times.key? z80_game
-            while cpu_count.text.to_i < times.fetch(z80_game)
-              sleep 12
-              # response to 'scroll?' question if required
-              spectrum.send_keys 'y'
-            end
-          end
         end
       })
 
@@ -185,7 +206,7 @@ RSpec.describe "Game" do
     end
   end
 
-  def delay_and_send(spectrum, time_until, keys)
+  def delay_and_send_just(spectrum, time_until, keys)
     cpu_count = find("#cyclecount")
 
     while cpu_count.text.to_i < time_until
@@ -194,10 +215,15 @@ RSpec.describe "Game" do
     keys.each_char do |k|
       spectrum.send_keys k
     end
+  end
+
+  def delay_and_send(spectrum, time_until, keys)
+    delay_and_send_just(spectrum, time_until, keys)
+
     spectrum.send_keys [:enter]
   end
 
-  def measure_speed_in_hz max = 10_000_000
+  def measure_speed_in_hz(max = 10_000_000)
     # Test emulation speed in Hz
     low = 0
     high = page.find("#hz").text.to_f
