@@ -7,7 +7,7 @@ import RegisterChange exposing (RegisterChange(..), Shifter(..))
 import SingleEnvWithMain exposing (SingleEnvMainChange(..))
 import Utils exposing (BitTest(..), byte)
 import Z80Env exposing (Z80Env)
-import Z80Registers exposing (ChangeMainRegister(..))
+import Z80Registers exposing (ChangeMainRegister(..), ChangeOneRegister(..))
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (MainWithIndexRegisters)
 
@@ -23,6 +23,7 @@ singleByteMainRegsIXCB =
         , ( 0x04, ( \offset z80_main -> RegisterIndirectWithShifter Shifter0 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x05, ( \offset z80_main -> RegisterIndirectWithShifter Shifter0 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x06, ( \offset z80_main -> RegisterChangeIndexShifter Shifter0 (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x07, ( \offset z80_main -> FlagsIndirectWithShifter Shifter0 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         --shifter1
         , ( 0x08, ( \offset z80_main -> RegisterIndirectWithShifter Shifter1 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
@@ -32,6 +33,7 @@ singleByteMainRegsIXCB =
         , ( 0x0C, ( \offset z80_main -> RegisterIndirectWithShifter Shifter1 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x0D, ( \offset z80_main -> RegisterIndirectWithShifter Shifter1 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x0E, ( \offset z80_main -> RegisterChangeIndexShifter Shifter1 (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x0F, ( \offset z80_main -> FlagsIndirectWithShifter Shifter1 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         --shifter2
         , ( 0x10, ( \offset z80_main -> RegisterIndirectWithShifter Shifter2 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
@@ -41,6 +43,7 @@ singleByteMainRegsIXCB =
         , ( 0x14, ( \offset z80_main -> RegisterIndirectWithShifter Shifter2 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x15, ( \offset z80_main -> RegisterIndirectWithShifter Shifter2 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x16, ( \offset z80_main -> RegisterChangeIndexShifter Shifter2 (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x17, ( \offset z80_main -> FlagsIndirectWithShifter Shifter2 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         --shifter3
         , ( 0x18, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
@@ -50,6 +53,7 @@ singleByteMainRegsIXCB =
         , ( 0x1C, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x1D, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x1E, ( \offset z80_main -> RegisterChangeIndexShifter Shifter3 (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x1F, ( \offset z80_main -> FlagsIndirectWithShifter Shifter3 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         --shifter4
         , ( 0x20, ( \offset z80_main -> RegisterIndirectWithShifter Shifter4 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
@@ -59,6 +63,7 @@ singleByteMainRegsIXCB =
         , ( 0x24, ( \offset z80_main -> RegisterIndirectWithShifter Shifter4 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x25, ( \offset z80_main -> RegisterIndirectWithShifter Shifter4 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x26, ( \offset z80_main -> RegisterChangeIndexShifter Shifter4 (z80_main.ix + byte offset), FifteenTStates ) )
+        , ( 0x27, ( \offset z80_main -> FlagsIndirectWithShifter Shifter4 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         --shifter5
         , ( 0x28, ( \offset z80_main -> RegisterIndirectWithShifter Shifter5 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
@@ -68,6 +73,7 @@ singleByteMainRegsIXCB =
         , ( 0x2C, ( \offset z80_main -> RegisterIndirectWithShifter Shifter5 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x2D, ( \offset z80_main -> RegisterIndirectWithShifter Shifter5 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x2E, ( \offset z80_main -> RegisterChangeIndexShifter Shifter5 (z80_main.ix + byte offset), FifteenTStates ) )
+        , ( 0x2F, ( \offset z80_main -> FlagsIndirectWithShifter Shifter5 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         --shifter6
         , ( 0x30, ( \offset z80_main -> RegisterIndirectWithShifter Shifter6 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
@@ -77,6 +83,7 @@ singleByteMainRegsIXCB =
         , ( 0x34, ( \offset z80_main -> RegisterIndirectWithShifter Shifter6 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x35, ( \offset z80_main -> RegisterIndirectWithShifter Shifter6 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x36, ( \offset z80_main -> RegisterChangeIndexShifter Shifter6 (z80_main.ix + byte offset), FifteenTStates ) )
+        , ( 0x37, ( \offset z80_main -> FlagsIndirectWithShifter Shifter6 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         --shifter7
         , ( 0x38, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
@@ -86,6 +93,7 @@ singleByteMainRegsIXCB =
         , ( 0x3C, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x3D, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x3E, ( \offset z80_main -> RegisterChangeIndexShifter Shifter7 (z80_main.ix + byte offset), FifteenTStates ) )
+        , ( 0x3F, ( \offset z80_main -> FlagsIndirectWithShifter Shifter7 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         -- reset bit0
         , ( 0x80, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_0 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
@@ -95,6 +103,7 @@ singleByteMainRegsIXCB =
         , ( 0x84, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_0 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x85, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_0 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x86, ( resetIXbit Bit_0, TwentyThreeTStates ) )
+        , ( 0x87, ( \offset z80_main -> ResetBitIndirectA Bit_0 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         -- reset bit1
         , ( 0x88, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_1 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
@@ -104,6 +113,7 @@ singleByteMainRegsIXCB =
         , ( 0x8C, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_1 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x8D, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_1 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x8E, ( resetIXbit Bit_1, TwentyThreeTStates ) )
+        , ( 0x8F, ( \offset z80_main -> ResetBitIndirectA Bit_1 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         -- reset bit2
         , ( 0x90, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_2 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
@@ -113,6 +123,7 @@ singleByteMainRegsIXCB =
         , ( 0x94, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_2 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x95, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_2 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x96, ( resetIXbit Bit_2, TwentyThreeTStates ) )
+        , ( 0x97, ( \offset z80_main -> ResetBitIndirectA Bit_2 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         -- reset bit3
         , ( 0x98, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_3 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
@@ -122,6 +133,7 @@ singleByteMainRegsIXCB =
         , ( 0x9C, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_3 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x9D, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_3 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x9E, ( resetIXbit Bit_3, TwentyThreeTStates ) )
+        , ( 0x9F, ( \offset z80_main -> ResetBitIndirectA Bit_3 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         -- reset bit4
         , ( 0xA0, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_4 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
@@ -131,6 +143,7 @@ singleByteMainRegsIXCB =
         , ( 0xA4, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_4 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xA5, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_4 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xA6, ( resetIXbit Bit_4, TwentyThreeTStates ) )
+        , ( 0xA7, ( \offset z80_main -> ResetBitIndirectA Bit_4 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         -- reset bit5
         , ( 0xA8, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_5 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
@@ -140,6 +153,7 @@ singleByteMainRegsIXCB =
         , ( 0xAC, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_5 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xAD, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_5 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xAE, ( resetIXbit Bit_5, TwentyThreeTStates ) )
+        , ( 0xAF, ( \offset z80_main -> ResetBitIndirectA Bit_5 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         -- reset bit6
         , ( 0xB0, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_6 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
@@ -149,6 +163,7 @@ singleByteMainRegsIXCB =
         , ( 0xB4, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_6 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xB5, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_6 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xB6, ( resetIXbit Bit_6, TwentyThreeTStates ) )
+        , ( 0xB7, ( \offset z80_main -> ResetBitIndirectA Bit_6 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         -- reset bit7
         , ( 0xB8, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_7 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
@@ -158,6 +173,7 @@ singleByteMainRegsIXCB =
         , ( 0xBC, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_7 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xBD, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_7 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xBE, ( resetIXbit Bit_7, TwentyThreeTStates ) )
+        , ( 0xBF, ( \offset z80_main -> ResetBitIndirectA Bit_7 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         -- set bit0
         , ( 0xC0, ( \offset z80_main -> SetBitIndirectWithCopy Bit_0 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
@@ -167,6 +183,7 @@ singleByteMainRegsIXCB =
         , ( 0xC4, ( \offset z80_main -> SetBitIndirectWithCopy Bit_0 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xC5, ( \offset z80_main -> SetBitIndirectWithCopy Bit_0 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xC6, ( \offset z80_main -> IndirectBitSet Bit_0 (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0xC7, ( \offset z80_main -> SetBitIndirectA Bit_0 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         -- set bit1
         , ( 0xC8, ( \offset z80_main -> SetBitIndirectWithCopy Bit_1 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
@@ -176,6 +193,7 @@ singleByteMainRegsIXCB =
         , ( 0xCC, ( \offset z80_main -> SetBitIndirectWithCopy Bit_1 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xCD, ( \offset z80_main -> SetBitIndirectWithCopy Bit_1 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xCE, ( \offset z80_main -> IndirectBitSet Bit_1 (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0xCF, ( \offset z80_main -> SetBitIndirectA Bit_1 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         -- set bit2
         , ( 0xD0, ( \offset z80_main -> SetBitIndirectWithCopy Bit_2 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
@@ -185,6 +203,7 @@ singleByteMainRegsIXCB =
         , ( 0xD4, ( \offset z80_main -> SetBitIndirectWithCopy Bit_2 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xD5, ( \offset z80_main -> SetBitIndirectWithCopy Bit_2 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xD6, ( \offset z80_main -> IndirectBitSet Bit_2 (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0xD7, ( \offset z80_main -> SetBitIndirectA Bit_2 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         -- set bit3
         , ( 0xD8, ( \offset z80_main -> SetBitIndirectWithCopy Bit_3 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
@@ -194,6 +213,7 @@ singleByteMainRegsIXCB =
         , ( 0xDC, ( \offset z80_main -> SetBitIndirectWithCopy Bit_3 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xDD, ( \offset z80_main -> SetBitIndirectWithCopy Bit_3 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xDE, ( \offset z80_main -> IndirectBitSet Bit_3 (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0xDF, ( \offset z80_main -> SetBitIndirectA Bit_3 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         -- set bit4
         , ( 0xE0, ( \offset z80_main -> SetBitIndirectWithCopy Bit_4 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
@@ -203,6 +223,7 @@ singleByteMainRegsIXCB =
         , ( 0xE4, ( \offset z80_main -> SetBitIndirectWithCopy Bit_4 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xE5, ( \offset z80_main -> SetBitIndirectWithCopy Bit_4 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xE6, ( \offset z80_main -> IndirectBitSet Bit_4 (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0xE7, ( \offset z80_main -> SetBitIndirectA Bit_4 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         -- set bit5
         , ( 0xE8, ( \offset z80_main -> SetBitIndirectWithCopy Bit_5 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
@@ -212,6 +233,7 @@ singleByteMainRegsIXCB =
         , ( 0xEC, ( \offset z80_main -> SetBitIndirectWithCopy Bit_5 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xED, ( \offset z80_main -> SetBitIndirectWithCopy Bit_5 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xEE, ( \offset z80_main -> IndirectBitSet Bit_5 (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0xEF, ( \offset z80_main -> SetBitIndirectA Bit_5 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         -- set bit6
         , ( 0xF0, ( \offset z80_main -> SetBitIndirectWithCopy Bit_6 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
@@ -221,6 +243,7 @@ singleByteMainRegsIXCB =
         , ( 0xF4, ( \offset z80_main -> SetBitIndirectWithCopy Bit_6 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xF5, ( \offset z80_main -> SetBitIndirectWithCopy Bit_6 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xF6, ( \offset z80_main -> IndirectBitSet Bit_6 (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0xF7, ( \offset z80_main -> SetBitIndirectA Bit_6 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         -- set bit7
         , ( 0xF8, ( \offset z80_main -> SetBitIndirectWithCopy Bit_7 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
@@ -230,6 +253,7 @@ singleByteMainRegsIXCB =
         , ( 0xFC, ( \offset z80_main -> SetBitIndirectWithCopy Bit_7 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xFD, ( \offset z80_main -> SetBitIndirectWithCopy Bit_7 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xFE, ( \offset z80_main -> IndirectBitSet Bit_7 (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0xFF, ( \offset z80_main -> SetBitIndirectA Bit_7 (z80_main.ix + byte offset), TwentyThreeTStates ) )
         ]
 
 
@@ -244,6 +268,7 @@ singleByteMainRegsIYCB =
         , ( 0x04, ( \offset z80_main -> RegisterIndirectWithShifter Shifter0 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x05, ( \offset z80_main -> RegisterIndirectWithShifter Shifter0 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x06, ( \offset z80_main -> RegisterChangeIndexShifter Shifter0 (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x07, ( \offset z80_main -> FlagsIndirectWithShifter Shifter0 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         --shifter1
         , ( 0x08, ( \offset z80_main -> RegisterIndirectWithShifter Shifter1 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
@@ -253,6 +278,7 @@ singleByteMainRegsIYCB =
         , ( 0x0C, ( \offset z80_main -> RegisterIndirectWithShifter Shifter1 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x0D, ( \offset z80_main -> RegisterIndirectWithShifter Shifter1 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x0E, ( \offset z80_main -> RegisterChangeIndexShifter Shifter1 (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x0F, ( \offset z80_main -> FlagsIndirectWithShifter Shifter1 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         --shifter2
         , ( 0x10, ( \offset z80_main -> RegisterIndirectWithShifter Shifter2 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
@@ -262,6 +288,7 @@ singleByteMainRegsIYCB =
         , ( 0x14, ( \offset z80_main -> RegisterIndirectWithShifter Shifter2 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x15, ( \offset z80_main -> RegisterIndirectWithShifter Shifter2 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x16, ( \offset z80_main -> RegisterChangeIndexShifter Shifter2 (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x17, ( \offset z80_main -> FlagsIndirectWithShifter Shifter2 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         --shifter3
         , ( 0x18, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
@@ -271,6 +298,7 @@ singleByteMainRegsIYCB =
         , ( 0x1C, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x1D, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x1E, ( \offset z80_main -> RegisterChangeIndexShifter Shifter3 (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x1F, ( \offset z80_main -> FlagsIndirectWithShifter Shifter3 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         --shifter4
         , ( 0x20, ( \offset z80_main -> RegisterIndirectWithShifter Shifter4 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
@@ -280,6 +308,7 @@ singleByteMainRegsIYCB =
         , ( 0x24, ( \offset z80_main -> RegisterIndirectWithShifter Shifter4 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x25, ( \offset z80_main -> RegisterIndirectWithShifter Shifter4 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x26, ( \offset z80_main -> RegisterChangeIndexShifter Shifter4 (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x27, ( \offset z80_main -> FlagsIndirectWithShifter Shifter4 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         --shifter5
         , ( 0x28, ( \offset z80_main -> RegisterIndirectWithShifter Shifter5 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
@@ -289,6 +318,7 @@ singleByteMainRegsIYCB =
         , ( 0x2C, ( \offset z80_main -> RegisterIndirectWithShifter Shifter5 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x2D, ( \offset z80_main -> RegisterIndirectWithShifter Shifter5 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x2E, ( \offset z80_main -> RegisterChangeIndexShifter Shifter5 (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x2F, ( \offset z80_main -> FlagsIndirectWithShifter Shifter5 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         --shifter6
         , ( 0x30, ( \offset z80_main -> RegisterIndirectWithShifter Shifter6 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
@@ -298,6 +328,7 @@ singleByteMainRegsIYCB =
         , ( 0x34, ( \offset z80_main -> RegisterIndirectWithShifter Shifter6 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x35, ( \offset z80_main -> RegisterIndirectWithShifter Shifter6 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x36, ( \offset z80_main -> RegisterChangeIndexShifter Shifter6 (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x37, ( \offset z80_main -> FlagsIndirectWithShifter Shifter6 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         --shifter7
         , ( 0x38, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
@@ -307,6 +338,7 @@ singleByteMainRegsIYCB =
         , ( 0x3C, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x3D, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x3E, ( \offset z80_main -> RegisterChangeIndexShifter Shifter7 (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x3F, ( \offset z80_main -> FlagsIndirectWithShifter Shifter7 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         -- reset bit0
         , ( 0x80, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_0 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
@@ -316,6 +348,7 @@ singleByteMainRegsIYCB =
         , ( 0x84, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_0 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x85, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_0 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x86, ( resetIYbit Bit_0, TwentyThreeTStates ) )
+        , ( 0x87, ( \offset z80_main -> ResetBitIndirectA Bit_0 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         -- reset bit1
         , ( 0x88, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_1 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
@@ -325,6 +358,7 @@ singleByteMainRegsIYCB =
         , ( 0x8C, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_1 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x8D, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_1 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x8E, ( resetIYbit Bit_1, TwentyThreeTStates ) )
+        , ( 0x8F, ( \offset z80_main -> ResetBitIndirectA Bit_1 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         -- reset bit2
         , ( 0x90, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_2 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
@@ -334,6 +368,7 @@ singleByteMainRegsIYCB =
         , ( 0x94, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_2 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x95, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_2 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x96, ( resetIYbit Bit_2, TwentyThreeTStates ) )
+        , ( 0x97, ( \offset z80_main -> ResetBitIndirectA Bit_2 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         -- reset bit3
         , ( 0x98, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_3 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
@@ -343,6 +378,7 @@ singleByteMainRegsIYCB =
         , ( 0x9C, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_3 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x9D, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_3 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x9E, ( resetIYbit Bit_3, TwentyThreeTStates ) )
+        , ( 0x9F, ( \offset z80_main -> ResetBitIndirectA Bit_3 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         -- reset bit4
         , ( 0xA0, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_4 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
@@ -352,6 +388,7 @@ singleByteMainRegsIYCB =
         , ( 0xA4, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_4 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xA5, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_4 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xA6, ( resetIYbit Bit_4, TwentyThreeTStates ) )
+        , ( 0xA7, ( \offset z80_main -> ResetBitIndirectA Bit_4 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         -- reset bit5
         , ( 0xA8, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_5 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
@@ -361,6 +398,7 @@ singleByteMainRegsIYCB =
         , ( 0xAC, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_5 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xAD, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_5 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xAE, ( resetIYbit Bit_5, TwentyThreeTStates ) )
+        , ( 0xAF, ( \offset z80_main -> ResetBitIndirectA Bit_5 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         -- reset bit6
         , ( 0xB0, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_6 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
@@ -370,6 +408,7 @@ singleByteMainRegsIYCB =
         , ( 0xB4, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_6 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xB5, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_6 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xB6, ( resetIYbit Bit_6, TwentyThreeTStates ) )
+        , ( 0xB7, ( \offset z80_main -> ResetBitIndirectA Bit_6 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         -- reset bit7
         , ( 0xB8, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_7 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
@@ -379,6 +418,7 @@ singleByteMainRegsIYCB =
         , ( 0xBC, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_7 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xBD, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_7 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xBE, ( resetIYbit Bit_7, TwentyThreeTStates ) )
+        , ( 0xBF, ( \offset z80_main -> ResetBitIndirectA Bit_7 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         -- set bit0
         , ( 0xC0, ( \offset z80_main -> SetBitIndirectWithCopy Bit_0 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
@@ -388,6 +428,7 @@ singleByteMainRegsIYCB =
         , ( 0xC4, ( \offset z80_main -> SetBitIndirectWithCopy Bit_0 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xC5, ( \offset z80_main -> SetBitIndirectWithCopy Bit_0 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xC6, ( \offset z80_main -> IndirectBitSet Bit_0 (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0xC7, ( \offset z80_main -> SetBitIndirectA Bit_0 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         -- set bit1
         , ( 0xC8, ( \offset z80_main -> SetBitIndirectWithCopy Bit_1 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
@@ -397,6 +438,7 @@ singleByteMainRegsIYCB =
         , ( 0xCC, ( \offset z80_main -> SetBitIndirectWithCopy Bit_1 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xCD, ( \offset z80_main -> SetBitIndirectWithCopy Bit_1 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xCE, ( \offset z80_main -> IndirectBitSet Bit_1 (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0xCF, ( \offset z80_main -> SetBitIndirectA Bit_1 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         -- set bit2
         , ( 0xD0, ( \offset z80_main -> SetBitIndirectWithCopy Bit_2 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
@@ -406,6 +448,7 @@ singleByteMainRegsIYCB =
         , ( 0xD4, ( \offset z80_main -> SetBitIndirectWithCopy Bit_2 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xD5, ( \offset z80_main -> SetBitIndirectWithCopy Bit_2 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xD6, ( \offset z80_main -> IndirectBitSet Bit_2 (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0xD7, ( \offset z80_main -> SetBitIndirectA Bit_2 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         -- set bit3
         , ( 0xD8, ( \offset z80_main -> SetBitIndirectWithCopy Bit_3 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
@@ -415,6 +458,7 @@ singleByteMainRegsIYCB =
         , ( 0xDC, ( \offset z80_main -> SetBitIndirectWithCopy Bit_3 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xDD, ( \offset z80_main -> SetBitIndirectWithCopy Bit_3 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xDE, ( \offset z80_main -> IndirectBitSet Bit_3 (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0xDF, ( \offset z80_main -> SetBitIndirectA Bit_3 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         -- set bit4
         , ( 0xE0, ( \offset z80_main -> SetBitIndirectWithCopy Bit_4 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
@@ -424,6 +468,7 @@ singleByteMainRegsIYCB =
         , ( 0xE4, ( \offset z80_main -> SetBitIndirectWithCopy Bit_4 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xE5, ( \offset z80_main -> SetBitIndirectWithCopy Bit_4 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xE6, ( \offset z80_main -> IndirectBitSet Bit_4 (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0xE7, ( \offset z80_main -> SetBitIndirectA Bit_4 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         -- set bit5
         , ( 0xE8, ( \offset z80_main -> SetBitIndirectWithCopy Bit_5 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
@@ -433,6 +478,7 @@ singleByteMainRegsIYCB =
         , ( 0xEC, ( \offset z80_main -> SetBitIndirectWithCopy Bit_5 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xED, ( \offset z80_main -> SetBitIndirectWithCopy Bit_5 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xEE, ( \offset z80_main -> IndirectBitSet Bit_5 (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0xEF, ( \offset z80_main -> SetBitIndirectA Bit_5 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         -- set bit6
         , ( 0xF0, ( \offset z80_main -> SetBitIndirectWithCopy Bit_6 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
@@ -442,6 +488,7 @@ singleByteMainRegsIYCB =
         , ( 0xF4, ( \offset z80_main -> SetBitIndirectWithCopy Bit_6 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xF5, ( \offset z80_main -> SetBitIndirectWithCopy Bit_6 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xF6, ( \offset z80_main -> IndirectBitSet Bit_6 (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0xF7, ( \offset z80_main -> SetBitIndirectA Bit_6 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         -- set bit7
         , ( 0xF8, ( \offset z80_main -> SetBitIndirectWithCopy Bit_7 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
@@ -451,6 +498,7 @@ singleByteMainRegsIYCB =
         , ( 0xFC, ( \offset z80_main -> SetBitIndirectWithCopy Bit_7 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xFD, ( \offset z80_main -> SetBitIndirectWithCopy Bit_7 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xFE, ( \offset z80_main -> IndirectBitSet Bit_7 (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0xFF, ( \offset z80_main -> SetBitIndirectA Bit_7 (z80_main.iy + byte offset), TwentyThreeTStates ) )
         ]
 
 
@@ -490,12 +538,12 @@ makeEnvMainDict ix_func =
 
 singleEnvMainRegsIXCB : Dict Int ( MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )
 singleEnvMainRegsIXCB =
-    makeEnvMainDict (\z80_main -> z80_main.ix)
+    makeEnvMainDict .ix
 
 
 singleEnvMainRegsIYCB : Dict Int ( MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )
 singleEnvMainRegsIYCB =
-    makeEnvMainDict (\z80_main -> z80_main.iy)
+    makeEnvMainDict .iy
 
 
 resetIXbit : BitTest -> Int -> MainWithIndexRegisters -> RegisterChange
