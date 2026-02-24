@@ -46,6 +46,9 @@ type RegisterChange
     | RegisterIndirectWithShifter Shifter ChangeMainRegister Int
     | SetBitIndirectWithCopy BitTest ChangeMainRegister Int
     | ResetBitIndirectWithCopy BitTest ChangeMainRegister Int
+    | FlagsIndirectWithShifter Shifter Int
+    | SetBitIndirectA BitTest Int
+    | ResetBitIndirectA BitTest Int
 
 
 type SixteenBit

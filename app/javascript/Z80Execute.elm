@@ -6,7 +6,7 @@ import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRe
 import GroupED exposing (adc_hl_sp, cpir, execute_ED70, execute_ED78, inirOtirFlags, ldir, rld, rrd, sbc_hl)
 import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), RegisterChange(..), Shifter(..), SixteenBit(..))
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
-import SingleEnvWithMain exposing (SingleEnvMainChange, add_hl_sp, applySingleEnvMainChange)
+import SingleEnvWithMain exposing (SingleEnvMainChange, applySingleEnvMainChange)
 import SingleNoParams exposing (NoParamChange(..), RstChange, applyNoParamsDelta, applyRstDelta)
 import SingleWith8BitParameter exposing (JumpChange(..), Single8BitChange(..), applySimple8BitChange)
 import TripleByte exposing (TripleByteChange(..), TripleByteRegister(..))
@@ -360,12 +360,6 @@ applyPureDelta clockTime z80changeData z80 =
 
                         RegisterE ->
                             { z80_main | e = intWithFlags.value }
-
-                --ChangeMainH ->
-                --    { z80_main | hl = Bitwise.or (intWithFlags.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF) }
-                --
-                --ChangeMainL ->
-                --    { z80_main | hl = Bitwise.or intWithFlags.value (Bitwise.and z80_main.hl 0xFF00) }
             in
             { z80 | flags = intWithFlags.flags, main = new_main }
 
@@ -742,6 +736,86 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                     env |> setMem addr value input.time
             in
             { z80_core | main = new_main, env = env_2 } |> CoreOnly
+
+        FlagsIndirectWithShifter shifterFunc raw_addr ->
+            let
+                address =
+                    raw_addr |> Bitwise.and 0xFFFF
+
+                value =
+                    z80_core.env |> mem address clockTime rom48k
+
+                result =
+                    case shifterFunc of
+                        Shifter0 ->
+                            z80_core.flags |> shifter0 value.value
+
+                        Shifter1 ->
+                            z80_core.flags |> shifter1 value.value
+
+                        Shifter2 ->
+                            z80_core.flags |> shifter2 value.value
+
+                        Shifter3 ->
+                            z80_core.flags |> shifter3 value.value
+
+                        Shifter4 ->
+                            z80_core.flags |> shifter4 value.value
+
+                        Shifter5 ->
+                            z80_core.flags |> shifter5 value.value
+
+                        Shifter6 ->
+                            z80_core.flags |> shifter6 value.value
+
+                        Shifter7 ->
+                            z80_core.flags |> shifter7 value.value
+
+                ( env_2, newTime2 ) =
+                    z80_core.env |> setMem address result.value value.time
+
+                newFlags =
+                    result.flags
+            in
+            { z80_core | flags = { newFlags | a = result.value }, env = env_2 } |> CoreOnly
+
+        SetBitIndirectA bitTest raw_addr ->
+            let
+                addr =
+                    raw_addr |> Bitwise.and 0xFFFF
+
+                input =
+                    env |> mem addr clockTime rom48k
+
+                value =
+                    input.value |> setBit bitTest
+
+                flags =
+                    z80_core.flags
+
+                ( env_2, newTime2 ) =
+                    env |> setMem addr value input.time
+            in
+            { z80_core | flags = { flags | a = value }, env = env_2 } |> CoreOnly
+
+        ResetBitIndirectA bitTest raw_addr ->
+            let
+                addr =
+                    raw_addr |> Bitwise.and 0xFFFF
+
+                input =
+                    env |> mem addr clockTime rom48k
+
+                value =
+                    input.value |> clearBit bitTest
+
+                flags =
+                    z80_core.flags
+
+                ( env_2, newTime2 ) =
+                    env |> setMem addr value input.time
+            in
+            { z80_core | flags = { flags | a = value }, env = env_2 } |> CoreOnly
 
 
 applyShifter : Shifter -> Int -> CpuTimeCTime -> Z80ROM -> Z80Core -> Z80Core

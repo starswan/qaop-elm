@@ -50,7 +50,7 @@ RSpec.describe "Game" do
           measure_speed_in_hz
         },
         flags.name => lambda { |spectrum|
-          [2350, 4710, 5900, 7200, 8200, 8780, 9100, 9550].each do |t|
+          [2350, 4710, 5900, 7300, 8200, 8780, 9100, 9550].each do |t|
             delay_and_send_just(spectrum, t, "y")
           end
 
@@ -59,7 +59,8 @@ RSpec.describe "Game" do
           measure_speed_in_hz
         },
         regs.name => lambda { |spectrum|
-          [4390, 8960, 11350, 13980, 15850, 16750, 17400, 18150].each do |t|
+          # 19    42    63?
+          [4390, 8950, 11350, 13980, 15950, 16850, 17500, 18250].each do |t|
             delay_and_send_just(spectrum, t, "y")
           end
 
@@ -68,7 +69,7 @@ RSpec.describe "Game" do
           measure_speed_in_hz
         },
         full_flags.name => lambda { |spectrum|
-          [2550, 5090, 6650, 8200, 9300, 9900, 10240, 10500].each do |t|
+          [2550, 5190, 6750, 8300, 9400, 10000, 10340, 10600].each do |t|
             delay_and_send_just(spectrum, t, "y")
           end
 
@@ -121,45 +122,36 @@ RSpec.describe "Game" do
     end
 
     # Flags: 013 of 160 tests failed.
-    # 052 SRO (XY), R (DD CB 00 00) 334E5D5A expected 0AF8B1A8
-    # 074 BIT N,(XY)- DD CB xx 40-47 (undoc?) E3DC0E5A exp 6870B827
-    # 089 LDIR-> NOP' (copying X -> X) 4182F56F expected A4DE6FAA
-    # 090 LDDR ->NOP',
     # 098 INI
     # 099 IND
     # 100 INIR
     # 101 INDR
-    # 102 INIR NOP
-    # 103 INDR NOP
+    # 102 INIR NOP'
+    # 103 INDR NOP'
     # 107 OUTI
     # 108 OUTD
     # 109 OTIR
     # 110 OTDR
     # 157 LD A,R
     #
-    # Regs: 018 of 160 tests failed.
-    # 52 SRO (XY) ,R     F783EB33 expected 31DC0D48
-    # 74 BIT N,(XY),-    BB3CB5FB expected 62003A45
-    # 79 SET N,(XY),R    F0BFA05E expected 02392678
-    # 84 RES N,(XY),R    84AFC43A expected 54E6DA74
-    # 89 LDIR->NOP'      83DCFE53 expected EF3C3C61
-    # 90 LDDR->NOP',     25AB70C9 expected 5210121F
-    # 98 INI
+    # Regs: 014 of 160 tests failed.
+    # 98 INI             DB9A76D8E1E expected 07D1B0D1
     # 99 IND
     # 100 INIR
     # 101 INDR
     # 102 INIR NOP'
     # 103 INDR NOP'
     # 105 OUT (C), R
-    # 107 OUTI
+    # 107 OUTI           F6A55EE0 expected 58C80D63
     # 108 OUTD
     # 109 OTIR
     # 110 OTDR
     # 122 RETN
     # 123 RETI
     # 124 RETI/RETN
+    # 157 LD A,R
     #
-    # FullFlags - 019 of 160 tests failed
+    # FullFlags - 017 of 160 tests failed
     # 1. 001 SCF 958E3E1E expected 3EC05634
     # 2. 002 CCF F06C5F84 expected 5B2237AE
     # 3. 005 SCF (ST) 958E3E1E expected C62AF5EE
