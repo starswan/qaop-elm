@@ -1,5 +1,6 @@
 module ED40Test exposing (..)
 
+import Dict
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Triple
@@ -45,7 +46,7 @@ suite =
             { z80env = z80.env, time = clock.clockTime }
 
         z80rom =
-            Z80Rom.constructor
+            Z80Rom.constructor Dict.empty
     in
     describe "0xEn instructions"
         -- Nest as many descriptions as you like.

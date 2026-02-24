@@ -2,7 +2,7 @@ module Spectrum exposing (..)
 
 import Bitwise exposing (complement, shiftRightBy)
 import CpuTimeCTime exposing (reset_cpu_time)
-import Dict
+import Dict exposing (Dict)
 import Keyboard exposing (KeyEvent, Keyboard, update_keyboard)
 import SingleNoParams exposing (ex_af)
 import Tapfile exposing (Tapfile, tapfileDataToList)
@@ -138,10 +138,10 @@ type alias Spectrum =
     }
 
 
-constructor : Spectrum
-constructor =
+constructor : Dict Int Int -> Spectrum
+constructor z80rom =
     --Spectrum Z80.constructor True 1 Nothing Audio new_screen_refresh new_border_refresh
-    Spectrum Z80.constructor Z80Rom.constructor True False 1 Nothing new_screen_refresh new_border_refresh
+    Spectrum Z80.constructor (Z80Rom.constructor z80rom) True False 1 Nothing new_screen_refresh new_border_refresh
 
 
 
