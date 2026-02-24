@@ -370,40 +370,6 @@ frames keys speccy =
 
 
 
---case speccy.tape of
---    Just z80_tape ->
---        case maybePosition of
---            Just newPosition ->
---                { speccy | rom48k = new_rom, loading = new_loading, cpu = cpu, tape = Just { z80_tape | tapePos = newPosition } }
---
---            Nothing ->
---                { speccy | rom48k = new_rom, loading = new_loading, cpu = cpu, tape = Just z80_tape }
---
---    Nothing ->
---        { speccy | rom48k = new_rom, loading = new_loading, cpu = cpu }
---x = if spectrum.paused then
---       1
---   else
---       1
---(scr, bord) = refresh_new spectrum.screen_refresh spectrum.border_refresh
---z80 = if spectrum.paused then
---           spectrum.cpu
---         else
---           case spectrum.tape of
---               Just a ->
---                   let
---                       loaded = do_load tap tend spectrum.cpu
---                   in
---                       loaded
---               Nothing ->
---                   execute spectrum.cpu
---refresh_new: ScreenRefresh -> BorderRefresh -> (ScreenRefresh, BorderRefresh)
---refresh_new screen_refresh border_refresh =
---    let
---        new_border = { border_refresh | refrb_x = -c_Mh, refrb_y = -8*c_Mv, refrb_t = c_BORDER_START }
---    in
---        ({ screen_refresh | refrs_t = 0, refrs_b = 0, refrs_s = c_Mv*c_W + c_Mh, refrs_a = 0x1800}, new_border)
---
 --	boolean paused = true;
 --	int want_pause = 1;
 --
@@ -1426,22 +1392,6 @@ doLoad2 full_cpu z80rom tape =
                                             --			continue;
                                             --		}
                                             a_rf_f_break_3 =
-                                                --if not break2 && Bitwise.and state.f c_FZ == 0 then
-                                                --    let
-                                                --        new_a =
-                                                --            Bitwise.xor a l
-                                                --    in
-                                                --    if new_a /= 0 then
-                                                --        let
-                                                --            fff =
-                                                --                debugLog "new a non zero" "" Nothing
-                                                --        in
-                                                --        { z80_env = state.z80_env, a = new_a, rf = 0, break = True, f = state.f, continue = False }
-                                                --
-                                                --    else
-                                                --        { z80_env = state.z80_env, a = new_a, rf = rf2, break = break2, f = Bitwise.or state.f c_FZ, continue = True }
-                                                --
-                                                --else
                                                 { z80_env = state.z80_env, a = a, rf = rf2, break = break2, f = state.f, continue = False }
 
                                             --		if((f&cpu.FC)!=0)
