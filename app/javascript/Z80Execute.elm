@@ -360,12 +360,6 @@ applyPureDelta clockTime z80changeData z80 =
 
                         RegisterE ->
                             { z80_main | e = intWithFlags.value }
-
-                --ChangeHRegister ->
-                --    { z80_main | hl = Bitwise.or (intWithFlags.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF) }
-                --
-                --ChangeLRegister ->
-                --    { z80_main | hl = Bitwise.or intWithFlags.value (Bitwise.and z80_main.hl 0xFF00) }
             in
             { z80 | flags = intWithFlags.flags, main = new_main }
 
