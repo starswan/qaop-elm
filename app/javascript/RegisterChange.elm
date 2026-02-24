@@ -21,9 +21,7 @@ type Shifter
 type RegisterChange
     = ChangeRegisterBC Int Int
     | ChangeRegisterDE Int Int
-    | ChangeRegisterHL Int
-    | ChangeRegisterIX Int
-    | ChangeRegisterIY Int
+    | ChangeRegisterHL IXIYHL Int
     | ChangeRegisterIXH Int
     | ChangeRegisterIXL Int
     | ChangeRegisterIYH Int
@@ -42,7 +40,8 @@ type RegisterChange
     | RegChangeNoOp
     | SingleEnvFlagFunc FlagFunc Int
     | ExchangeTopOfStackWith IXIYHL
-    | SingleRegisterChange ChangeOneRegister Int
+    | SingleRegisterChange ChangeMainRegister Int
+    | RegisterChangeA Int
     | RegisterIndirectWithShifter Shifter ChangeMainRegister Int
     | SetBitIndirectWithCopy BitTest ChangeMainRegister Int
     | ResetBitIndirectWithCopy BitTest ChangeMainRegister Int

@@ -21,7 +21,7 @@ import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, f_szh0n
 import Z80Mem exposing (mem, mem16, z80_pop)
 import Z80Registers exposing (ChangeMainRegister(..), ChangeOneRegister(..), CoreRegister(..))
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (InterruptRegisters, MainWithIndexRegisters, get_bc, get_de, get_xy, set_bc_main, set_de_main, set_xy)
+import Z80Types exposing (IXIYHL(..), InterruptRegisters, MainWithIndexRegisters, get_bc, get_de, get_xy, set_bc_main, set_de_main, set_xy)
 
 
 type DeltaWithChanges
@@ -387,29 +387,23 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
             { z80_core | main = { z80_main | d = reg_d, e = reg_e } }
                 |> CoreOnly
 
-        ChangeRegisterHL int ->
+        ChangeRegisterHL ixiyhl int ->
             let
                 z80_main =
                     z80_core.main
-            in
-            { z80_core | main = { z80_main | hl = int } }
-                |> CoreOnly
 
-        ChangeRegisterIX int ->
-            let
-                z80_main =
-                    z80_core.main
-            in
-            { z80_core | main = { z80_main | ix = int } }
-                |> CoreOnly
+                main =
+                    case ixiyhl of
+                        IX ->
+                            { z80_main | ix = int }
 
-        ChangeRegisterIY int ->
-            let
-                z80_main =
-                    z80_core.main
+                        IY ->
+                            { z80_main | iy = int }
+
+                        HL ->
+                            { z80_main | hl = int }
             in
-            { z80_core | main = { z80_main | iy = int } }
-                |> CoreOnly
+            { z80_core | main = main } |> CoreOnly
 
         ChangeRegisterIXH int ->
             let
@@ -565,37 +559,37 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                     z80_core.main
             in
             case changeOneRegister of
-                ChangeBRegister ->
+                ChangeMainB ->
                     { z80_core | main = { z80_main | b = int } }
                         |> CoreOnly
 
-                ChangeCRegister ->
+                ChangeMainC ->
                     { z80_core | main = { z80_main | c = int } }
                         |> CoreOnly
 
-                ChangeARegister ->
-                    let
-                        z80_flags =
-                            z80_core.flags
-                    in
-                    { z80_core | flags = { z80_flags | a = int } }
-                        |> CoreOnly
-
-                ChangeDRegister ->
+                ChangeMainD ->
                     { z80_core | main = { z80_main | d = int } }
                         |> CoreOnly
 
-                ChangeERegister ->
+                ChangeMainE ->
                     { z80_core | main = { z80_main | e = int } }
                         |> CoreOnly
 
-                ChangeHRegister ->
+                ChangeMainH ->
                     { z80_core | main = { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 int) } }
                         |> CoreOnly
 
-                ChangeLRegister ->
+                ChangeMainL ->
                     { z80_core | main = { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) int } }
                         |> CoreOnly
+
+        RegisterChangeA int ->
+            let
+                z80_flags =
+                    z80_core.flags
+            in
+            { z80_core | flags = { z80_flags | a = int } }
+                |> CoreOnly
 
         RegisterIndirectWithShifter shifterFunc changeOneRegister raw_addr ->
             let
