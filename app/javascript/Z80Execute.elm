@@ -557,39 +557,35 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
             let
                 z80_main =
                     z80_core.main
+
+                main =
+                    case changeOneRegister of
+                        ChangeMainB ->
+                            { z80_main | b = int }
+
+                        ChangeMainC ->
+                            { z80_main | c = int }
+
+                        ChangeMainD ->
+                            { z80_main | d = int }
+
+                        ChangeMainE ->
+                            { z80_main | e = int }
+
+                        ChangeMainH ->
+                            { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 int) }
+
+                        ChangeMainL ->
+                            { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) int }
             in
-            case changeOneRegister of
-                ChangeMainB ->
-                    { z80_core | main = { z80_main | b = int } }
-                        |> CoreOnly
-
-                ChangeMainC ->
-                    { z80_core | main = { z80_main | c = int } }
-                        |> CoreOnly
-
-                ChangeMainD ->
-                    { z80_core | main = { z80_main | d = int } }
-                        |> CoreOnly
-
-                ChangeMainE ->
-                    { z80_core | main = { z80_main | e = int } }
-                        |> CoreOnly
-
-                ChangeMainH ->
-                    { z80_core | main = { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 int) } }
-                        |> CoreOnly
-
-                ChangeMainL ->
-                    { z80_core | main = { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) int } }
-                        |> CoreOnly
+            { z80_core | main = main } |> CoreOnly
 
         RegisterChangeA int ->
             let
                 z80_flags =
                     z80_core.flags
             in
-            { z80_core | flags = { z80_flags | a = int } }
-                |> CoreOnly
+            { z80_core | flags = { z80_flags | a = int } } |> CoreOnly
 
         RegisterIndirectWithShifter shifterFunc changeOneRegister raw_addr ->
             let
