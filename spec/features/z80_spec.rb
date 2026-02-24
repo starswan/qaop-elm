@@ -151,7 +151,7 @@ RSpec.describe "Game" do
     # 124 RETI/RETN
     # 157 LD A,R
     #
-    # FullFlags - 019 of 160 tests failed
+    # FullFlags - 017 of 160 tests failed
     # 1. 001 SCF 958E3E1E expected 3EC05634
     # 2. 002 CCF F06C5F84 expected 5B2237AE
     # 3. 005 SCF (ST) 958E3E1E expected C62AF5EE
