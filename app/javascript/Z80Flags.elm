@@ -406,8 +406,8 @@ z80_xor b flagRegs =
 --}
 
 
-cpl : FlagRegisters -> FlagRegisters
-cpl flagRegs =
+z80_cpl : FlagRegisters -> FlagRegisters
+z80_cpl flagRegs =
     let
         new_a =
             Bitwise.xor flagRegs.a 0xFF
@@ -665,8 +665,8 @@ scf_ccf x flagRegs =
 --	}
 
 
-daa : FlagRegisters -> FlagRegisters
-daa flagRegs =
+z80_daa : FlagRegisters -> FlagRegisters
+z80_daa flagRegs =
     let
         h =
             Bitwise.and (Bitwise.xor (Bitwise.xor (Bitwise.xor flagRegs.fr flagRegs.fa) flagRegs.fb) (shiftRightBy8 flagRegs.fb)) c_FH

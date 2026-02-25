@@ -2,6 +2,7 @@ module TripleByte exposing (..)
 
 import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
+import Z80Types exposing (MainWithIndexRegisters)
 
 
 type TripleByteRegister
@@ -12,15 +13,20 @@ type TripleByteRegister
 
 type TripleByteChange
     = NewHLIndirect Int
-    | NewIXRegister Int
-    | NewIXIndirect Int
-    | NewIYRegister Int
-    | NewIYIndirect Int
     | NewSPRegister Int
     | NewAIndirect Int
     | NewTripleRegister Int TripleByteRegister
     | TripleSetIndirectFromA Int
     | Store16BitFromHL Int
+
+
+type TripleByteIndexChange
+    = NewIXRegister Int
+    | NewIXIndirect Int
+    | NewIYRegister Int
+    | NewIYIndirect Int
+    | Store16BitValue Int (MainWithIndexRegisters -> Int)
+    | Store8BitValue Int (MainWithIndexRegisters -> Int) Int
 
 
 tripleByteWith16BitParam : Dict Int ( Int -> TripleByteChange, InstructionDuration )
@@ -37,7 +43,7 @@ tripleByteWith16BitParam =
         ]
 
 
-tripleByteWith16BitParamDD : Dict Int ( Int -> TripleByteChange, InstructionDuration )
+tripleByteWith16BitParamDD : Dict Int ( Int -> TripleByteIndexChange, InstructionDuration )
 tripleByteWith16BitParamDD =
     Dict.fromList
         [ ( 0x21, ( ld_ix_nn, TwentyTStates ) )
@@ -45,7 +51,7 @@ tripleByteWith16BitParamDD =
         ]
 
 
-tripleByteWith16BitParamFD : Dict Int ( Int -> TripleByteChange, InstructionDuration )
+tripleByteWith16BitParamFD : Dict Int ( Int -> TripleByteIndexChange, InstructionDuration )
 tripleByteWith16BitParamFD =
     Dict.fromList
         [ ( 0x21, ( ld_iy_nn, TwentyTStates ) )
@@ -72,16 +78,14 @@ ld_hl_nn param16 =
     NewTripleRegister param16 TripleByteHL
 
 
-ld_ix_nn : Int -> TripleByteChange
+ld_ix_nn : Int -> TripleByteIndexChange
 ld_ix_nn param16 =
-    -- case 0x21: HL=imm16(); break;
     -- case 0x21: xy=imm16(); break;
     NewIXRegister param16
 
 
-ld_iy_nn : Int -> TripleByteChange
+ld_iy_nn : Int -> TripleByteIndexChange
 ld_iy_nn param16 =
-    -- case 0x21: HL=imm16(); break;
     -- case 0x21: xy=imm16(); break;
     NewIYRegister param16
 
@@ -98,13 +102,13 @@ ld_hl_indirect_nn param16 =
     NewHLIndirect param16
 
 
-ld_ix_indirect_nn : Int -> TripleByteChange
+ld_ix_indirect_nn : Int -> TripleByteIndexChange
 ld_ix_indirect_nn param16 =
     -- case 0x2A: MP=(v=imm16())+1; xy=env.mem16(v); time+=6; break;
     NewIXIndirect param16
 
 
-ld_iy_indirect_nn : Int -> TripleByteChange
+ld_iy_indirect_nn : Int -> TripleByteIndexChange
 ld_iy_indirect_nn param16 =
     -- case 0x2A: MP=(v=imm16())+1; xy=env.mem16(v); time+=6; break;
     NewIYIndirect param16
