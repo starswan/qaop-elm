@@ -1,16 +1,6 @@
 module Z80Registers exposing (..)
 
 
-type ChangeOneRegister
-    = ChangeARegister
-    | ChangeBRegister
-    | ChangeCRegister
-    | ChangeDRegister
-    | ChangeERegister
-    | ChangeHRegister
-    | ChangeLRegister
-
-
 type ChangeMainRegister
     = ChangeMainB
     | ChangeMainC
@@ -18,6 +8,11 @@ type ChangeMainRegister
     | ChangeMainE
     | ChangeMainH
     | ChangeMainL
+
+
+type ChangeSingle
+    = ChangeSingleH
+    | ChangeSingleL
 
 
 type CoreRegister
