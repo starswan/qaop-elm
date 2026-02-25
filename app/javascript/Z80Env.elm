@@ -32,6 +32,24 @@ type alias EnvWithPCAndValue =
     }
 
 
+type alias Z80EnvWithValue =
+    { env : Z80Env
+    , value : Int
+    }
+
+
+type alias Z80EnvWithPC =
+    { env : Z80Env
+    , pc : Int
+    }
+
+
+type alias ValueWithTime =
+    { value : Int
+    , cpu_time : Int
+    }
+
+
 z80env_constructor =
     Z80Env Dict.empty 0
 

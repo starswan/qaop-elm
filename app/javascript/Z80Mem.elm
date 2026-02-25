@@ -7,7 +7,7 @@ import Utils exposing (shiftLeftBy8)
 import Z80Core exposing (Z80Core)
 import Z80Env exposing (Z80Env)
 import Z80Ram exposing (getRamValue)
-import Z80Rom exposing (Z80ROM, getROMValue)
+import Z80Rom exposing (CompiledZ80ROM, CpuInstruction(..), Z80ROM, getROMInstruction, getROMValue)
 
 
 
@@ -35,7 +35,7 @@ import Z80Rom exposing (Z80ROM, getROMValue)
 --}
 
 
-m1 : Int -> Int -> Z80ROM -> CpuTimeCTime -> Z80Env -> CpuTimeAndValue
+m1 : Int -> Int -> CompiledZ80ROM -> CpuTimeCTime -> Z80Env -> CpuInstruction
 m1 addr ir rom48k clockTime z80env =
     let
         z80env_time =
@@ -71,15 +71,19 @@ m1 addr ir rom48k clockTime z80env =
             else
                 NoCont
 
+        clockTime2 =
+            { z80env_1_time | ctime = ctime }
+
         value =
             if ramAddr >= 0 then
-                z80env |> getRamValue ramAddr rom48k
+                UncompiledOpcode (z80env |> getRamValue ramAddr rom48k.z80rom) clockTime2
 
             else
                 -- not implementing IF1 switching for now
-                rom48k |> getROMValue addr
+                rom48k |> getROMInstruction addr clockTime2
     in
-    CpuTimeAndValue { z80env_1_time | ctime = ctime } value
+    --CpuTimeAndValue { z80env_1_time | ctime = ctime } value
+    value
 
 
 

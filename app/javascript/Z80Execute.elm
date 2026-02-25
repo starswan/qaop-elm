@@ -16,7 +16,7 @@ import Utils exposing (bitMaskFromBit, clearBit, inverseBitMaskFromBit, setBit, 
 import Z80Change exposing (FlagChange(..), Z80Change(..))
 import Z80Core exposing (CoreChange(..), DirectionForLDIR(..), RepeatPCOffset(..), Z80Core)
 import Z80Debug exposing (debugLog, debugTodo)
-import Z80Env exposing (Z80Env, setMem, setMem16, z80_in, z80_out, z80_push)
+import Z80Env exposing (Z80Env, Z80EnvWithPC, setMem, setMem16, z80_in, z80_out, z80_push)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, f_szh0n0p, inc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
 import Z80Mem exposing (mem, mem16, z80_pop)
 import Z80Registers exposing (ChangeMainRegister(..), ChangeOneRegister(..), CoreRegister(..))
@@ -72,7 +72,7 @@ apply_delta z80 rom48k clockTime z80delta =
             z80 |> applyEnvChangeDelta singleByteEnvChange |> CoreOnly
 
         MainWithEnvDelta singleEnvMainChange ->
-            z80 |> applySingleEnvMainChange clockTime singleEnvMainChange rom48k |> CoreOnly
+            z80 |> applySingleEnvMainChange clockTime singleEnvMainChange rom48k
 
         TripleMainChangeDelta cpuTimeCTime tripleMainChange ->
             let

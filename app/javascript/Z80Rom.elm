@@ -3,9 +3,12 @@ module Z80Rom exposing (..)
 import Array exposing (Array)
 import Bytes exposing (Bytes)
 import Bytes.Decode exposing (Decoder, Step(..), andThen, loop, map, succeed, unsignedInt8)
+import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration)
 import Dict exposing (Dict)
 import Keyboard exposing (Keyboard)
+import PCIncrement exposing (PCIncrement)
 import Utils exposing (listToDict, toHexString)
+import Z80Core exposing (CoreChange, Z80Core)
 import Z80Debug exposing (debugTodo)
 import Z80Ram exposing (Z80Ram)
 
@@ -17,7 +20,20 @@ type alias Z80ROM =
     }
 
 
-constructor : Z80ROM
+type alias CompiledZ80ROM =
+    { z80rom : Z80ROM
+
+    --, compiled : Dict Int ( CpuTimeCTime -> Z80ROM -> Z80Core -> CoreChange, InstructionDuration, PCIncrement )
+    , compiled : Dict Int CpuInstruction
+    }
+
+
+type CpuInstruction
+    = UncompiledOpcode Int CpuTimeCTime
+    | Z80Compiled (CpuTimeCTime -> Z80ROM -> Z80Core -> CoreChange) InstructionDuration PCIncrement
+
+
+constructor : CompiledZ80ROM
 constructor =
     let
         rom48k =
@@ -29,7 +45,24 @@ constructor =
         rom_dict =
             Dict.fromList rom_list
     in
-    Z80ROM rom_dict Keyboard.constructor Z80Ram.constructor
+    CompiledZ80ROM { rom48k = rom_dict, keyboard = Keyboard.constructor, z80ram = Z80Ram.constructor } Dict.empty
+
+
+getROMInstruction : Int -> CpuTimeCTime -> CompiledZ80ROM -> CpuInstruction
+getROMInstruction addr clockTime z80rom =
+    case z80rom.compiled |> Dict.get addr of
+        --Just ( f, duration, length ) ->
+        --    Z80Compiled f duration length
+        Just inst ->
+            inst
+
+        Nothing ->
+            case Dict.get addr z80rom.z80rom.rom48k of
+                Just a ->
+                    UncompiledOpcode a clockTime
+
+                Nothing ->
+                    debugTodo "getROMValue" (String.fromInt addr) UncompiledOpcode -1 clockTime
 
 
 getROMValue : Int -> Z80ROM -> Int
@@ -173,6 +206,14 @@ romRoutineNames =
         , ( 0x0806, "REPORT-R" )
         , ( 0x0767, "LD-LOOK-H" )
         , ( 0x07CB, "VR-CONTRL" )
+        , ( 0x198B, "EACH-STMT" )
+        , ( 0x1990, "EACH-S-1" )
+        , ( 0x1998, "EACH-S-2" )
+        , ( 0x199A, "EACH-S-3" )
+        , ( 0x19A5, "EACH-S-4" )
+        , ( 0x19AD, "EACH-S-5" )
+        , ( 0x19B1, "EACH-S-6" )
+        , ( 0x18B6, "NUMBER" )
         ]
 
 

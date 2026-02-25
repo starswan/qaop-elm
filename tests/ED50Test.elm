@@ -90,7 +90,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem16 0x6545 z80rom clock.clockTime |> .value16
+                            new_z80.env |> mem16 0x6545 z80rom.z80rom clock.clockTime |> .value16
                     in
                     Expect.equal ( addr + 4, 0x20F5 ) ( new_pc, mem_value )
             , test "0xED 0x58 IN E, (C)" <|

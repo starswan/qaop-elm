@@ -8,6 +8,7 @@ module Main exposing (..)
 import Bitwise exposing (complement)
 import Browser
 import Browser.Events
+import Compiler exposing (compileRom)
 import Delay
 import Dict exposing (Dict)
 import Html exposing (Attribute, Html, button, div, h2, span, text)
@@ -31,8 +32,9 @@ import Utils exposing (speed_in_hz, time_display)
 import Vector24 exposing (Vector24)
 import Vector32
 import Vector8 exposing (Vector8)
+import Z80Core exposing (CoreChange, Z80Core)
 import Z80Debug exposing (debugLog)
-import Z80Rom exposing (Z80ROM)
+import Z80Rom exposing (CpuInstruction(..), Z80ROM)
 import Z80Screen exposing (ScreenColourRun, mapScreenLine)
 
 
@@ -209,7 +211,7 @@ view : Model -> Html Message
 view model =
     let
         screen =
-            model.qaop.spectrum.rom48k.z80ram.screen
+            model.qaop.spectrum.rom48k.z80rom.z80ram.screen
 
         load_disabled =
             case model.qaop.spectrum.tape of
@@ -487,10 +489,25 @@ gotRom qaop result =
                 oldCompiledRom =
                     speccy.rom48k
 
-                newRom =
-                    { oldCompiledRom | rom48k = value }
+                oldRom =
+                    oldCompiledRom.z80rom
+
+                romWithDict =
+                    { oldCompiledRom | z80rom = { oldRom | rom48k = value } }
+
+                romDict =
+                    -- convert compiled ROM directly into CpuInstructions
+                    compileRom romWithDict.z80rom speccy.cpu.coreWithClock.core.env
+                        |> Dict.map
+                            (\_ triple ->
+                                let
+                                    ( c, d, e ) =
+                                        triple
+                                in
+                                Z80Compiled c d e
+                            )
             in
-            { qaop | spectrum = { speccy | rom48k = newRom } } |> run
+            { qaop | spectrum = { speccy | rom48k = { romWithDict | compiled = romDict } } } |> run
 
         Err _ ->
             ( qaop, Cmd.none )

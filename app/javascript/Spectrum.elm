@@ -15,7 +15,7 @@ import Z80Env exposing (Z80Env, setMemIgnoringTime)
 import Z80Flags exposing (c_FC, c_FZ, getFlags, setFlags)
 import Z80Mem exposing (mem, mem16, z80_pop)
 import Z80Ram exposing (foldDictIntoRam)
-import Z80Rom exposing (Z80ROM)
+import Z80Rom exposing (CompiledZ80ROM, Z80ROM)
 import Z80Tape exposing (TapePosition, Z80Tape)
 import Z80Types exposing (get_de)
 
@@ -127,7 +127,7 @@ new_tape tapfileList spectrum =
 
 type alias Spectrum =
     { cpu : Z80
-    , rom48k : Z80ROM
+    , rom48k : CompiledZ80ROM
     , paused : Bool
     , loading : Bool
     , want_pause : Int
@@ -273,8 +273,11 @@ frames keys speccy =
         clock_1 =
             { clock | clockTime = reset_cpu_time }
 
-        rom =
+        compiledRom =
             speccy.rom48k
+
+        rom =
+            compiledRom.z80rom
 
         new_rom =
             { rom | keyboard = keys |> update_keyboard }
@@ -306,7 +309,7 @@ frames keys speccy =
                         Just z80_tape ->
                             let
                                 ( new_z80, z80_load, tape_position ) =
-                                    doLoad z80 speccy.rom48k z80_tape
+                                    doLoad z80 rom z80_tape
 
                                 core_2 =
                                     new_z80.coreWithClock.core
@@ -330,7 +333,7 @@ frames keys speccy =
                         new_z80 =
                             cpu1
                                 |> interrupt 0xFF rom
-                                |> execute rom
+                                |> execute compiledRom
 
                         clock_2 =
                             new_z80.coreWithClock
@@ -355,18 +358,21 @@ frames keys speccy =
                     , pos = Nothing
                     , rom = rom_2
                     }
+
+        newCompiled =
+            { compiledRom | z80rom = loadz80posrom.rom }
     in
     case speccy.tape of
         Just z80_tape ->
             case loadz80posrom.pos of
                 Just newPosition ->
-                    { speccy | rom48k = loadz80posrom.rom, loading = loadz80posrom.load, cpu = loadz80posrom.z80, tape = Just { z80_tape | tapePos = newPosition } }
+                    { speccy | rom48k = newCompiled, loading = loadz80posrom.load, cpu = loadz80posrom.z80, tape = Just { z80_tape | tapePos = newPosition } }
 
                 Nothing ->
-                    { speccy | rom48k = loadz80posrom.rom, loading = loadz80posrom.load, cpu = loadz80posrom.z80, tape = Just z80_tape }
+                    { speccy | rom48k = newCompiled, loading = loadz80posrom.load, cpu = loadz80posrom.z80, tape = Just z80_tape }
 
         Nothing ->
-            { speccy | rom48k = loadz80posrom.rom, loading = loadz80posrom.load, cpu = loadz80posrom.z80 }
+            { speccy | rom48k = newCompiled, loading = loadz80posrom.load, cpu = loadz80posrom.z80 }
 
 
 
@@ -1080,10 +1086,10 @@ checkLoad spectrum =
                 if pc1 >= 0x05E3 then
                     let
                         ( pc2, sp2 ) =
-                            ( cpu.coreWithClock.core.env |> mem16 sp1 spectrum.rom48k cpu.coreWithClock.clockTime |> .value16, char sp1 + 2 )
+                            ( cpu.coreWithClock.core.env |> mem16 sp1 spectrum.rom48k.z80rom cpu.coreWithClock.clockTime |> .value16, char sp1 + 2 )
                     in
                     if pc2 == 0x05E6 then
-                        ( cpu.coreWithClock.core.env |> mem16 sp2 spectrum.rom48k cpu.coreWithClock.clockTime |> .value16, char sp2 + 2 )
+                        ( cpu.coreWithClock.core.env |> mem16 sp2 spectrum.rom48k.z80rom cpu.coreWithClock.clockTime |> .value16, char sp2 + 2 )
 
                     else
                         ( pc2, sp2 )
