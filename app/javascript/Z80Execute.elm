@@ -17,7 +17,7 @@ import Z80Change exposing (FlagChange(..), Z80Change(..))
 import Z80Core exposing (CoreChange(..), DirectionForLDIR(..), RepeatPCOffset(..), Z80Core)
 import Z80Debug exposing (debugLog, debugTodo)
 import Z80Env exposing (Z80Env, setMem, setMem16, z80_in, z80_out, z80_push)
-import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, f_szh0n0p, inc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
+import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, f_szh0n0p, get_af, inc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
 import Z80Mem exposing (mem, mem16, z80_pop)
 import Z80Registers exposing (ChangeMainRegister(..), ChangeOneRegister(..), CoreRegister(..))
 import Z80Rom exposing (Z80ROM)
@@ -228,50 +228,25 @@ applyFlagDelta clockTime z80_flags rom48k z80_core =
         OnlyFlags flagRegisters ->
             { z80_core | flags = flagRegisters } |> CoreOnly
 
-        FlagChange8Bit register value ->
-            let
-                main =
-                    z80_core.main
-            in
-            case register of
-                RegisterB ->
-                    { z80_core | main = { main | b = value } } |> CoreOnly
+        FlagChangeFunc f ->
+            { z80_core | flags = f z80_core.flags } |> CoreOnly
 
-                RegisterC ->
-                    { z80_core | main = { main | c = value } } |> CoreOnly
+        FlagChangeMain f ->
+            { z80_core | main = z80_core.main |> f z80_core.flags } |> CoreOnly
 
-                RegisterD ->
-                    { z80_core | main = { main | d = value } } |> CoreOnly
+        ConditionalReturn f ->
+            if f z80_core.flags then
+                let
+                    result =
+                        z80_core.env |> z80_pop rom48k clockTime
 
-                RegisterE ->
-                    { z80_core | main = { main | e = value } } |> CoreOnly
+                    env1 =
+                        z80_core.env
+                in
+                { z80_core | env = { env1 | sp = result.sp } } |> CoreWithPC result.value16
 
-        FlagChangeH int ->
-            let
-                main =
-                    z80_core.main
-            in
-            { z80_core | main = { main | hl = Bitwise.or (shiftLeftBy8 int) (Bitwise.and main.hl 0xFF) } } |> CoreOnly
-
-        FlagChangeL int ->
-            let
-                main =
-                    z80_core.main
-            in
-            { z80_core | main = { main | hl = Bitwise.or int (Bitwise.and main.hl 0xFF00) } } |> CoreOnly
-
-        ReturnWithPop ->
-            let
-                result =
-                    z80_core.env |> z80_pop rom48k clockTime
-
-                env1 =
-                    z80_core.env
-            in
-            { z80_core | env = { env1 | sp = result.sp } } |> CoreWithPC result.value16
-
-        EmptyFlagChange ->
-            NoCore
+            else
+                NoCore
 
         FlagNewRValue int ->
             let
@@ -290,8 +265,8 @@ applyFlagDelta clockTime z80_flags rom48k z80_core =
             in
             { z80_core | interrupts = { ints | ir = new_ir } } |> CoreOnly
 
-        FlagChangePush int ->
-            { z80_core | env = z80_core.env |> z80_push int clockTime } |> CoreOnly
+        FlagsPushAF ->
+            { z80_core | env = z80_core.env |> z80_push (z80_core.flags |> get_af) clockTime } |> CoreOnly
 
 
 applyPureDelta : CpuTimeCTime -> Z80Change -> Z80Core -> Z80Core

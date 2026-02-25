@@ -372,7 +372,7 @@ runOrdinary ct_value instrTime rom48k pc z80_core =
         Nothing ->
             case singleByteFlags |> Dict.get ct_value of
                 Just ( flagFunc, duration ) ->
-                    ( FlagDelta (flagFunc z80_core.flags), instrTime |> addDuration duration, IncrementByOne )
+                    ( FlagDelta flagFunc, instrTime |> addDuration duration, IncrementByOne )
 
                 Nothing ->
                     let
@@ -475,7 +475,7 @@ runIndexIX param rom48k pc z80 =
         Nothing ->
             case singleByteFlagsDD |> Dict.get param.value of
                 Just ( flagFunc, duration ) ->
-                    ( FlagDelta (flagFunc z80.flags), param.time |> addDuration duration, IncrementByTwo )
+                    ( FlagDelta flagFunc, param.time |> addDuration duration, IncrementByTwo )
 
                 Nothing ->
                     let
@@ -552,7 +552,7 @@ runIndexIY param rom48k pc z80 =
         Nothing ->
             case singleByteFlagsFD |> Dict.get param.value of
                 Just ( flagFunc, duration ) ->
-                    ( FlagDelta (flagFunc z80.flags), param.time |> addDuration duration, IncrementByTwo )
+                    ( FlagDelta flagFunc, param.time |> addDuration duration, IncrementByTwo )
 
                 Nothing ->
                     let
