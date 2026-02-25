@@ -346,47 +346,8 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
             z80_core.env
     in
     case z80changeData of
-        ChangeRegisterBC reg_b reg_c ->
-            let
-                z80_main =
-                    z80_core.main
-            in
-            { z80_core | main = { z80_main | b = reg_b, c = reg_c } }
-                |> CoreOnly
-
-        ChangeRegisterDE reg_d reg_e ->
-            let
-                z80_main =
-                    z80_core.main
-            in
-            { z80_core | main = { z80_main | d = reg_d, e = reg_e } }
-                |> CoreOnly
-
-        ChangeRegisterHL ixiyhl int ->
-            let
-                z80_main =
-                    z80_core.main
-
-                main =
-                    case ixiyhl of
-                        IX ->
-                            { z80_main | ix = int }
-
-                        IY ->
-                            { z80_main | iy = int }
-
-                        HL ->
-                            { z80_main | hl = int }
-            in
-            { z80_core | main = main } |> CoreOnly
-
-        ChangeRegisterIXH int ->
-            let
-                main =
-                    z80_core.main
-            in
-            { z80_core | main = { main | ix = Bitwise.or (Bitwise.and main.ix 0xFF) (int |> shiftLeftBy8) } }
-                |> CoreOnly
+        TransformMainRegisters f ->
+            { z80_core | main = z80_core.main |> f } |> CoreOnly
 
         ChangeRegisterIXL int ->
             let
@@ -457,14 +418,6 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                     env |> setMem addr value clockTime
             in
             { z80_core | env = env_2 } |> CoreOnly
-
-        ChangeRegisterDEAndHL de hl ->
-            let
-                main =
-                    z80_core.main
-            in
-            { z80_core | main = { main | hl = hl } |> set_de_main de }
-                |> CoreOnly
 
         RegisterChangeShifter shifter addr ->
             z80_core |> applyShifter shifter addr clockTime rom48k |> CoreOnly

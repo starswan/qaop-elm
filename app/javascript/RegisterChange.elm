@@ -4,7 +4,7 @@ import Utils exposing (BitTest)
 import Z80Core exposing (DirectionForLDIR)
 import Z80Flags exposing (FlagFunc)
 import Z80Registers exposing (ChangeMainRegister, ChangeOneRegister)
-import Z80Types exposing (IXIYHL, InterruptMode)
+import Z80Types exposing (IXIYHL, InterruptMode, MainWithIndexRegisters)
 
 
 type Shifter
@@ -19,11 +19,7 @@ type Shifter
 
 
 type RegisterChange
-    = ChangeRegisterBC Int Int
-    | ChangeRegisterDE Int Int
-    | ChangeRegisterHL IXIYHL Int
-    | ChangeRegisterIXH Int
-    | ChangeRegisterIXL Int
+    = ChangeRegisterIXL Int
     | ChangeRegisterIYH Int
     | ChangeRegisterIYL Int
     | PushedValue Int
@@ -32,7 +28,6 @@ type RegisterChange
     | DecrementIndirect Int
     | RegisterChangeJump Int
     | SetIndirect Int Int
-    | ChangeRegisterDEAndHL Int Int
     | RegisterChangeShifter Shifter Int
     | RegisterChangeIndexShifter Shifter Int
     | IndirectBitReset BitTest Int
@@ -48,6 +43,7 @@ type RegisterChange
     | FlagsIndirectWithShifter Shifter Int
     | SetBitIndirectA BitTest Int
     | ResetBitIndirectA BitTest Int
+    | TransformMainRegisters (MainWithIndexRegisters -> MainWithIndexRegisters)
 
 
 type SixteenBit

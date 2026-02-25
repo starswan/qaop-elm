@@ -4,31 +4,31 @@ import Bitwise
 import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
 import RegisterChange exposing (RegisterChange(..), Shifter(..))
-import Utils exposing (BitTest(..), shiftRightBy8)
+import Utils exposing (BitTest(..), shiftLeftBy8, shiftRightBy8)
 import Z80Flags exposing (FlagFunc(..))
 import Z80Registers exposing (ChangeMainRegister(..))
-import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, get_bc, get_de)
+import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, get_bc, get_de, set_de_main)
 
 
 singleByteMainRegs : Dict Int ( MainWithIndexRegisters -> RegisterChange, InstructionDuration )
 singleByteMainRegs =
     Dict.fromList
-        [ ( 0x03, ( inc_bc, SixTStates ) )
-        , ( 0x0B, ( dec_bc, SixTStates ) )
-        , ( 0x13, ( inc_de, SixTStates ) )
-        , ( 0x1B, ( dec_de, SixTStates ) )
-        , ( 0x23, ( inc_hl, SixTStates ) )
-        , ( 0x2B, ( dec_hl, SixTStates ) )
+        [ ( 0x03, ( \z80_main -> TransformMainRegisters inc_bc, SixTStates ) )
+        , ( 0x0B, ( \z80_main -> TransformMainRegisters dec_bc, SixTStates ) )
+        , ( 0x13, ( \z80_main -> TransformMainRegisters inc_de, SixTStates ) )
+        , ( 0x1B, ( \z80_main -> TransformMainRegisters dec_de, SixTStates ) )
+        , ( 0x23, ( \z80_main -> TransformMainRegisters inc_hl, SixTStates ) )
+        , ( 0x2B, ( \z80_main -> TransformMainRegisters dec_hl, SixTStates ) )
         , ( 0x34, ( inc_indirect_hl, ElevenTStates ) )
         , ( 0x35, ( dec_indirect_hl, ElevenTStates ) )
-        , ( 0x41, ( ld_b_c, FourTStates ) )
-        , ( 0x42, ( ld_b_d, FourTStates ) )
-        , ( 0x43, ( ld_b_e, FourTStates ) )
+        , ( 0x41, ( \z80_main -> TransformMainRegisters ld_b_c, FourTStates ) )
+        , ( 0x42, ( \z80_main -> TransformMainRegisters ld_b_d, FourTStates ) )
+        , ( 0x43, ( \z80_main -> TransformMainRegisters ld_b_e, FourTStates ) )
         , ( 0x44, ( \z80_main -> ld_b_h z80_main.hl, FourTStates ) )
         , ( 0x45, ( ld_b_l, FourTStates ) )
-        , ( 0x48, ( ld_c_b, FourTStates ) )
-        , ( 0x4A, ( ld_c_d, FourTStates ) )
-        , ( 0x4B, ( ld_c_e, FourTStates ) )
+        , ( 0x48, ( \z80_main -> TransformMainRegisters ld_c_b, FourTStates ) )
+        , ( 0x4A, ( \z80_main -> TransformMainRegisters ld_c_d, FourTStates ) )
+        , ( 0x4B, ( \z80_main -> TransformMainRegisters ld_c_e, FourTStates ) )
         , ( 0x4C, ( ld_c_h, FourTStates ) )
         , ( 0x4D, ( ld_c_l, FourTStates ) )
         , ( 0x50, ( ld_d_b, FourTStates ) )
@@ -68,7 +68,7 @@ singleByteMainRegs =
         , ( 0xE3, ( ex_indirect_sp_hl, NineteenTStates ) )
         , ( 0xE5, ( \z80_main -> PushedValue z80_main.hl, ElevenTStates ) )
         , ( 0xE9, ( jp_hl, FourTStates ) )
-        , ( 0xEB, ( ex_de_hl, FourTStates ) )
+        , ( 0xEB, ( \z80_main -> TransformMainRegisters ex_de_hl, FourTStates ) )
 
         -- case 0xF9: SP=HL; time+=2; break;
         , ( 0xF9, ( \z80_main -> RegChangeNewSP z80_main.hl, SixTStates ) )
@@ -79,13 +79,13 @@ commonDDFDOps : Dict Int ( MainWithIndexRegisters -> RegisterChange, Instruction
 commonDDFDOps =
     Dict.fromList
         [ ( 0x40, ( \_ -> RegChangeNoOp, EightTStates ) )
-        , ( 0x41, ( ld_b_c, EightTStates ) )
-        , ( 0x42, ( ld_b_d, EightTStates ) )
-        , ( 0x43, ( ld_b_e, EightTStates ) )
-        , ( 0x48, ( ld_c_b, EightTStates ) )
+        , ( 0x41, ( \z80_main -> TransformMainRegisters ld_b_c, EightTStates ) )
+        , ( 0x42, ( \z80_main -> TransformMainRegisters ld_b_d, EightTStates ) )
+        , ( 0x43, ( \z80_main -> TransformMainRegisters ld_b_e, EightTStates ) )
+        , ( 0x48, ( \z80_main -> TransformMainRegisters ld_c_b, EightTStates ) )
         , ( 0x49, ( \_ -> RegChangeNoOp, EightTStates ) )
-        , ( 0x4A, ( ld_c_d, EightTStates ) )
-        , ( 0x4B, ( ld_c_e, EightTStates ) )
+        , ( 0x4A, ( \z80_main -> TransformMainRegisters ld_c_d, EightTStates ) )
+        , ( 0x4B, ( \z80_main -> TransformMainRegisters ld_c_e, EightTStates ) )
         , ( 0x50, ( ld_d_b, EightTStates ) )
         , ( 0x51, ( ld_d_c, EightTStates ) )
         , ( 0x52, ( \_ -> RegChangeNoOp, EightTStates ) )
@@ -105,15 +105,15 @@ commonDDFDOps =
 
         -- DD 7F and FD 7F are both No-ops
         , ( 0x7F, ( \_ -> RegChangeNoOp, EightTStates ) )
-        , ( 0xEB, ( ex_de_hl, FourTStates ) )
+        , ( 0xEB, ( \z80_main -> TransformMainRegisters ex_de_hl, FourTStates ) )
         ]
 
 
 singleByteMainRegsFD : Dict Int ( MainWithIndexRegisters -> RegisterChange, InstructionDuration )
 singleByteMainRegsFD =
     Dict.fromList
-        [ ( 0x23, ( inc_iy, TenTStates ) )
-        , ( 0x2B, ( dec_iy, TenTStates ) )
+        [ ( 0x23, ( \z80_main -> TransformMainRegisters inc_iy, TenTStates ) )
+        , ( 0x2B, ( \z80_main -> TransformMainRegisters dec_iy, TenTStates ) )
         , ( 0x44, ( \z80_main -> ld_b_h z80_main.iy, FourTStates ) )
         , ( 0x45, ( ld_b_iyl, EightTStates ) )
         , ( 0x4C, ( ld_c_iyh, EightTStates ) )
@@ -163,8 +163,8 @@ singleByteMainRegsFD =
 singleByteMainRegsDD : Dict Int ( MainWithIndexRegisters -> RegisterChange, InstructionDuration )
 singleByteMainRegsDD =
     Dict.fromList
-        [ ( 0x23, ( inc_ix, TenTStates ) )
-        , ( 0x2B, ( dec_ix, TenTStates ) )
+        [ ( 0x23, ( \z80_main -> TransformMainRegisters inc_ix, TenTStates ) )
+        , ( 0x2B, ( \z80_main -> TransformMainRegisters dec_ix, TenTStates ) )
         , ( 0x44, ( \z80_main -> ld_b_h z80_main.ix, FourTStates ) )
         , ( 0x45, ( ld_b_ixl, EightTStates ) )
         , ( 0x4C, ( ld_c_ixh, EightTStates ) )
@@ -173,11 +173,11 @@ singleByteMainRegsDD =
         , ( 0x55, ( ld_d_ix_l, EightTStates ) )
         , ( 0x5C, ( ld_e_ix_h, EightTStates ) )
         , ( 0x5D, ( ld_e_ix_l, EightTStates ) )
-        , ( 0x60, ( \z80_main -> ChangeRegisterIXH z80_main.b, EightTStates ) )
-        , ( 0x61, ( \z80_main -> ChangeRegisterIXH z80_main.c, EightTStates ) )
-        , ( 0x62, ( \z80_main -> ChangeRegisterIXH z80_main.d, EightTStates ) )
-        , ( 0x63, ( \z80_main -> ChangeRegisterIXH z80_main.e, EightTStates ) )
-        , ( 0x65, ( \z80_main -> ChangeRegisterIXH (Bitwise.and z80_main.ix 0xFF), EightTStates ) )
+        , ( 0x60, ( \z80_main -> TransformMainRegisters (\main -> main |> set_ix_h main.b), EightTStates ) )
+        , ( 0x61, ( \z80_main -> TransformMainRegisters (\main -> main |> set_ix_h main.c), EightTStates ) )
+        , ( 0x62, ( \z80_main -> TransformMainRegisters (\main -> main |> set_ix_h main.d), EightTStates ) )
+        , ( 0x63, ( \z80_main -> TransformMainRegisters (\main -> main |> set_ix_h main.e), EightTStates ) )
+        , ( 0x65, ( \z80_main -> TransformMainRegisters (\main -> main |> set_ix_h (Bitwise.and main.ix 0xFF)), EightTStates ) )
         , ( 0x68, ( \z80_main -> ChangeRegisterIXL z80_main.b, EightTStates ) )
         , ( 0x69, ( \z80_main -> ChangeRegisterIXL z80_main.c, EightTStates ) )
         , ( 0x6A, ( \z80_main -> ChangeRegisterIXL z80_main.d, EightTStates ) )
@@ -211,33 +211,43 @@ singleByteMainRegsDD =
         |> Dict.union commonDDFDOps
 
 
-inc_bc : MainWithIndexRegisters -> RegisterChange
+set_ix_h : Int -> MainWithIndexRegisters -> MainWithIndexRegisters
+set_ix_h int main =
+    { main | ix = Bitwise.or (Bitwise.and main.ix 0xFF) (int |> shiftLeftBy8) }
+
+
+inc_bc : MainWithIndexRegisters -> MainWithIndexRegisters
 inc_bc z80_main =
     -- case 0x03: if(++C==256) {B=B+1&0xFF;C=0;} time+=2; break;
-    ----{ z80 | main = { z80_main | b = reg_b, c = reg_c } } |> add_cpu_time 2
+    --if z80_main.c == 0xFF then
+    --    ChangeRegisterBC (Bitwise.and (z80_main.b + 1) 0xFF) 0
+    --
+    --else
+    --    SingleRegisterChange ChangeMainC (z80_main.c + 1)
     if z80_main.c == 0xFF then
-        ChangeRegisterBC (Bitwise.and (z80_main.b + 1) 0xFF) 0
+        { z80_main | b = Bitwise.and (z80_main.b + 1) 0xFF, c = 0 }
 
     else
-        SingleRegisterChange ChangeMainC (z80_main.c + 1)
+        { z80_main | c = z80_main.c + 1 }
 
 
-dec_bc : MainWithIndexRegisters -> RegisterChange
+dec_bc : MainWithIndexRegisters -> MainWithIndexRegisters
 dec_bc z80_main =
     -- case 0x0B: if(--C<0) B=B-1&(C=0xFF); time+=2; break;
-    --{ z80 | main = { z80_main | b = reg_b, c = reg_c }} |> add_cpu_time 2
     let
         tmp_c =
             z80_main.c - 1
     in
     if tmp_c < 0 then
-        ChangeRegisterBC (Bitwise.and (z80_main.b - 1) 0xFF) 0xFF
+        { z80_main | b = Bitwise.and (z80_main.b - 1) 0xFF, c = 0xFF }
+        --ChangeRegisterBC (Bitwise.and (z80_main.b - 1) 0xFF) 0xFF
 
     else
-        SingleRegisterChange ChangeMainC tmp_c
+        --SingleRegisterChange ChangeMainC tmp_c
+        { z80_main | c = tmp_c }
 
 
-inc_de : MainWithIndexRegisters -> RegisterChange
+inc_de : MainWithIndexRegisters -> MainWithIndexRegisters
 inc_de z80_main =
     -- case 0x13: if(++E==256) {D=D+1&0xFF;E=0;} time+=2; break;
     let
@@ -245,13 +255,15 @@ inc_de z80_main =
             z80_main.e + 1
     in
     if new_e == 256 then
-        ChangeRegisterDE (Bitwise.and (z80_main.d + 1) 0xFF) 0
+        --ChangeRegisterDE (Bitwise.and (z80_main.d + 1) 0xFF) 0
+        { z80_main | d = Bitwise.and (z80_main.d + 1) 0xFF, e = 0 }
 
     else
-        SingleRegisterChange ChangeMainE new_e
+        --SingleRegisterChange ChangeMainE new_e
+        { z80_main | e = new_e }
 
 
-dec_de : MainWithIndexRegisters -> RegisterChange
+dec_de : MainWithIndexRegisters -> MainWithIndexRegisters
 dec_de z80_main =
     -- case 0x1B: if(--E<0) D=D-1&(E=0xFF); time+=2; break;
     let
@@ -259,79 +271,74 @@ dec_de z80_main =
             z80_main.e - 1
     in
     if new_e < 0 then
-        ChangeRegisterDE (Bitwise.and (z80_main.d - 1) 0xFF) 0xFF
+        --ChangeRegisterDE (Bitwise.and (z80_main.d - 1) 0xFF) 0xFF
+        { z80_main | d = Bitwise.and (z80_main.d - 1) 0xFF, e = 0xFF }
 
     else
-        SingleRegisterChange ChangeMainE new_e
+        --SingleRegisterChange ChangeMainE new_e
+        { z80_main | e = new_e }
 
 
-inc_hl : MainWithIndexRegisters -> RegisterChange
+inc_hl : MainWithIndexRegisters -> MainWithIndexRegisters
 inc_hl z80_main =
     -- case 0x23: HL=(char)(HL+1); time+=2; break;
-    ChangeRegisterHL HL (Bitwise.and (z80_main.hl + 1) 0xFFFF)
+    --ChangeRegisterHL HL (Bitwise.and (z80_main.hl + 1) 0xFFFF)
+    { z80_main | hl = Bitwise.and (z80_main.hl + 1) 0xFFFF }
 
 
-inc_ix : MainWithIndexRegisters -> RegisterChange
+inc_ix : MainWithIndexRegisters -> MainWithIndexRegisters
 inc_ix z80_main =
     -- case 0x23: xy=(char)(xy+1); time+=2; break;
-    ChangeRegisterHL IX (Bitwise.and (z80_main.ix + 1) 0xFFFF)
+    { z80_main | ix = Bitwise.and (z80_main.ix + 1) 0xFFFF }
 
 
-inc_iy : MainWithIndexRegisters -> RegisterChange
+inc_iy : MainWithIndexRegisters -> MainWithIndexRegisters
 inc_iy z80_main =
     -- case 0x23: xy=(char)(xy+1); time+=2; break;
-    ChangeRegisterHL IY (Bitwise.and (z80_main.iy + 1) 0xFFFF)
+    --ChangeRegisterHL IY (Bitwise.and (z80_main.iy + 1) 0xFFFF)
+    { z80_main | iy = Bitwise.and (z80_main.iy + 1) 0xFFFF }
 
 
-dec_hl : MainWithIndexRegisters -> RegisterChange
+dec_hl : MainWithIndexRegisters -> MainWithIndexRegisters
 dec_hl z80_main =
     -- case 0x2B: HL=(char)(HL-1); time+=2; break;
-    let
-        new_xy =
-            Bitwise.and (z80_main.hl - 1) 0xFFFF
-    in
-    ChangeRegisterHL HL new_xy
+    --ChangeRegisterHL HL (Bitwise.and (z80_main.hl - 1) 0xFFFF)
+    { z80_main | hl = Bitwise.and (z80_main.hl - 1) 0xFFFF }
 
 
-dec_ix : MainWithIndexRegisters -> RegisterChange
+dec_ix : MainWithIndexRegisters -> MainWithIndexRegisters
 dec_ix z80_main =
     -- case 0x2B: xy=(char)(xy-1); time+=2; break;
-    let
-        new_xy =
-            Bitwise.and (z80_main.ix - 1) 0xFFFF
-    in
-    ChangeRegisterHL IX new_xy
+    --ChangeRegisterHL IX (Bitwise.and (z80_main.ix - 1) 0xFFFF)
+    { z80_main | ix = Bitwise.and (z80_main.ix - 1) 0xFFFF }
 
 
-dec_iy : MainWithIndexRegisters -> RegisterChange
+dec_iy : MainWithIndexRegisters -> MainWithIndexRegisters
 dec_iy z80_main =
     -- case 0x2B: xy=(char)(xy-1); time+=2; break;
-    let
-        new_xy =
-            Bitwise.and (z80_main.iy - 1) 0xFFFF
-    in
-    ChangeRegisterHL IY new_xy
+    --ChangeRegisterHL IY (Bitwise.and (z80_main.iy - 1) 0xFFFF)
+    { z80_main | iy = Bitwise.and (z80_main.iy - 1) 0xFFFF }
 
 
-ld_b_c : MainWithIndexRegisters -> RegisterChange
+ld_b_c : MainWithIndexRegisters -> MainWithIndexRegisters
 ld_b_c z80_main =
     -- case 0x41: B=C; break;
-    --z80 |> set_b z80.main.c
-    SingleRegisterChange ChangeMainB z80_main.c
+    --SingleRegisterChange ChangeMainB z80_main.c
+    { z80_main | b = z80_main.c }
 
 
-ld_b_d : MainWithIndexRegisters -> RegisterChange
+ld_b_d : MainWithIndexRegisters -> MainWithIndexRegisters
 ld_b_d z80_main =
     -- case 0x42: B=D; break;
-    --z80 |> set_b z80.main.d
-    SingleRegisterChange ChangeMainB z80_main.d
+    --SingleRegisterChange ChangeMainB z80_main.d
+    { z80_main | b = z80_main.d }
 
 
-ld_b_e : MainWithIndexRegisters -> RegisterChange
+ld_b_e : MainWithIndexRegisters -> MainWithIndexRegisters
 ld_b_e z80_main =
     -- case 0x43: B=E; break;
-    --z80 |> set_b z80.main.e
-    SingleRegisterChange ChangeMainB z80_main.e
+    --SingleRegisterChange ChangeMainB z80_main.e
+    { z80_main | b = z80_main.e }
 
 
 ld_b_h : Int -> RegisterChange
@@ -384,22 +391,25 @@ ld_c_iyl z80_main =
     SingleRegisterChange ChangeMainC (Bitwise.and z80_main.iy 0xFF)
 
 
-ld_c_b : MainWithIndexRegisters -> RegisterChange
+ld_c_b : MainWithIndexRegisters -> MainWithIndexRegisters
 ld_c_b z80_main =
     -- case 0x48: C=B; break;
-    SingleRegisterChange ChangeMainC z80_main.b
+    --SingleRegisterChange ChangeMainC z80_main.b
+    { z80_main | c = z80_main.b }
 
 
-ld_c_d : MainWithIndexRegisters -> RegisterChange
+ld_c_d : MainWithIndexRegisters -> MainWithIndexRegisters
 ld_c_d z80_main =
     -- case 0x4A: C=D; break;
-    SingleRegisterChange ChangeMainC z80_main.d
+    --SingleRegisterChange ChangeMainC z80_main.d
+    { z80_main | c = z80_main.d }
 
 
-ld_c_e : MainWithIndexRegisters -> RegisterChange
+ld_c_e : MainWithIndexRegisters -> MainWithIndexRegisters
 ld_c_e z80_main =
     -- case 0x4B: C=E; break;
-    SingleRegisterChange ChangeMainC z80_main.e
+    --SingleRegisterChange ChangeMainC z80_main.e
+    { z80_main | c = z80_main.e }
 
 
 ld_c_h : MainWithIndexRegisters -> RegisterChange
@@ -595,14 +605,6 @@ push_de z80_main =
     z80_main |> get_de |> PushedValue
 
 
-
---push_hl : MainWithIndexRegisters -> RegisterChange
---push_hl z80_main =
---    -- case 0xE5: push(HL); break;
---    -- case 0xE5: push(xy); break;
---    PushedValue z80_main.hl
-
-
 inc_indirect_hl : MainWithIndexRegisters -> RegisterChange
 inc_indirect_hl z80_main =
     -- case 0x34: v=inc(env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
@@ -680,10 +682,11 @@ ld_indirect_hl_l z80_main =
     SetIndirect z80_main.hl (z80_main.hl |> Bitwise.and 0xFF)
 
 
-ex_de_hl : MainWithIndexRegisters -> RegisterChange
+ex_de_hl : MainWithIndexRegisters -> MainWithIndexRegisters
 ex_de_hl z80_main =
     -- case 0xEB: v=HL; HL=D<<8|E; D=v>>>8; E=v&0xFF; break;
-    ChangeRegisterDEAndHL z80_main.hl (z80_main |> get_de)
+    --ChangeRegisterDEAndHL z80_main.hl (z80_main |> get_de)
+    { z80_main | hl = z80_main |> get_de } |> set_de_main z80_main.hl
 
 
 ld_d_ix_h : MainWithIndexRegisters -> RegisterChange
