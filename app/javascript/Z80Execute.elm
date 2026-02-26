@@ -509,12 +509,12 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
             in
             { z80_core | main = main } |> CoreOnly
 
-        RegisterChangeA int ->
+        RegisterChangeA mainf ->
             let
                 z80_flags =
                     z80_core.flags
             in
-            { z80_core | flags = { z80_flags | a = int } } |> CoreOnly
+            { z80_core | flags = { z80_flags | a = z80_core.main |> mainf } } |> CoreOnly
 
         RegisterIndirectWithShifter shifterFunc changeOneRegister raw_addr ->
             let

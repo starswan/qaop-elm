@@ -35,7 +35,7 @@ type RegisterChange
     | SingleEnvFlagFunc FlagFunc Int
     | ExchangeTopOfStackWith IXIYHL
     | SingleRegisterChange ChangeSingle Int
-    | RegisterChangeA Int
+    | RegisterChangeA (MainWithIndexRegisters -> Int)
     | RegisterIndirectWithShifter Shifter ChangeMainRegister Int
     | SetBitIndirectWithCopy BitTest ChangeMainRegister Int
     | ResetBitIndirectWithCopy BitTest ChangeMainRegister Int

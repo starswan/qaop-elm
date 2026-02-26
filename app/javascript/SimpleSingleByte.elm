@@ -7,7 +7,7 @@ import RegisterChange exposing (RegisterChange(..), Shifter(..))
 import Utils exposing (BitTest(..), shiftLeftBy8, shiftRightBy8)
 import Z80Flags exposing (FlagFunc(..))
 import Z80Registers exposing (ChangeMainRegister(..), ChangeSingle(..))
-import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, get_bc, get_de, get_h, get_l, set_de_main)
+import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, get_bc, get_de, get_h, get_ixh, get_ixl, get_iyh, get_iyl, get_l, set_de_main)
 
 
 singleByteMainRegs : Dict Int ( MainWithIndexRegisters -> RegisterChange, InstructionDuration )
@@ -70,7 +70,10 @@ singleByteMainRegs =
         , ( 0x6A, ( \z80_main -> TransformMainRegisters (ld_l_b .d), FourTStates ) )
         , ( 0x6B, ( \z80_main -> TransformMainRegisters (ld_l_b .e), FourTStates ) )
         , ( 0x6C, ( \z80_main -> TransformMainRegisters (ld_l_b get_h), FourTStates ) )
-        , ( 0x70, ( ld_indirect_hl_b, SevenTStates ) )
+
+        -- case 0x70: env.mem(HL,B); time+=3; break;
+        -- case 0x70: env.mem(getd(xy),B); time+=3; break;
+        , ( 0x70, ( \z80_main -> SetIndirect .hl .b, SevenTStates ) )
         , ( 0x71, ( ld_indirect_hl_c, SevenTStates ) )
         , ( 0x72, ( ld_indirect_hl_d, SevenTStates ) )
         , ( 0x73, ( ld_indirect_hl_e, SevenTStates ) )
@@ -159,8 +162,10 @@ singleByteMainRegsFD =
         , ( 0x6A, ( \z80_main -> ChangeRegisterIYL z80_main.d, EightTStates ) )
         , ( 0x6B, ( \z80_main -> ChangeRegisterIYL z80_main.e, EightTStates ) )
         , ( 0x6C, ( \z80_main -> ChangeRegisterIYL (z80_main.iy |> shiftRightBy8), EightTStates ) )
-        , ( 0x7C, ( \z80_main -> RegisterChangeA (z80_main.iy |> shiftRightBy8), EightTStates ) )
-        , ( 0x7D, ( \z80_main -> RegisterChangeA (z80_main.iy |> Bitwise.and 0xFF), EightTStates ) )
+
+        -- case 0x7C: A=xy>>>8; break;
+        , ( 0x7C, ( \z80_main -> RegisterChangeA get_iyh, EightTStates ) )
+        , ( 0x7D, ( \z80_main -> RegisterChangeA get_iyl, EightTStates ) )
         , ( 0x84, ( \z80_main -> SingleEnvFlagFunc AddA (z80_main.iy |> shiftRightBy8), EightTStates ) )
         , ( 0x85, ( \z80_main -> SingleEnvFlagFunc AddA (z80_main.iy |> Bitwise.and 0xFF), EightTStates ) )
         , ( 0x8C, ( \z80_main -> SingleEnvFlagFunc AdcA (z80_main.iy |> shiftRightBy8), EightTStates ) )
@@ -212,8 +217,8 @@ singleByteMainRegsDD =
         , ( 0x6A, ( \z80_main -> TransformMainRegisters (\main -> main |> set_ix_l main.d), EightTStates ) )
         , ( 0x6B, ( \z80_main -> TransformMainRegisters (\main -> main |> set_ix_l main.e), EightTStates ) )
         , ( 0x6C, ( \z80_main -> TransformMainRegisters (\main -> main |> set_ix_l (main.ix |> shiftRightBy8)), EightTStates ) )
-        , ( 0x7C, ( \z80_main -> RegisterChangeA (z80_main.ix |> shiftRightBy8), EightTStates ) )
-        , ( 0x7D, ( \z80_main -> RegisterChangeA (z80_main.ix |> Bitwise.and 0xFF), EightTStates ) )
+        , ( 0x7C, ( \z80_main -> RegisterChangeA get_ixh, EightTStates ) )
+        , ( 0x7D, ( \z80_main -> RegisterChangeA get_ixl, EightTStates ) )
         , ( 0x84, ( \z80_main -> SingleEnvFlagFunc AddA (z80_main.ix |> shiftRightBy8), EightTStates ) )
         , ( 0x85, ( \z80_main -> SingleEnvFlagFunc AddA (z80_main.ix |> Bitwise.and 0xFF), EightTStates ) )
         , ( 0x8C, ( \z80_main -> SingleEnvFlagFunc AdcA (z80_main.ix |> shiftRightBy8), EightTStates ) )
@@ -588,46 +593,39 @@ ld_l_h z80_main =
 ld_a_b : MainWithIndexRegisters -> RegisterChange
 ld_a_b z80_main =
     -- case 0x78: A=B; break;
-    RegisterChangeA z80_main.b
+    RegisterChangeA .b
 
 
 ld_a_c : MainWithIndexRegisters -> RegisterChange
 ld_a_c z80_main =
     -- case 0x79: A=C; break;
-    RegisterChangeA z80_main.c
+    RegisterChangeA .c
 
 
 ld_a_d : MainWithIndexRegisters -> RegisterChange
 ld_a_d z80_main =
     -- case 0x7A: A=D; break;
-    RegisterChangeA z80_main.d
+    RegisterChangeA .d
 
 
 ld_a_e : MainWithIndexRegisters -> RegisterChange
 ld_a_e z80_main =
     -- case 0x7B: A=E; break;
-    RegisterChangeA z80_main.e
+    RegisterChangeA .e
 
 
 ld_a_h : MainWithIndexRegisters -> RegisterChange
 ld_a_h z80_main =
     -- case 0x7C: A=HL>>>8; break;
     -- case 0x7C: A=xy>>>8; break;
-    RegisterChangeA (shiftRightBy8 z80_main.hl)
+    RegisterChangeA get_h
 
 
 ld_a_l : MainWithIndexRegisters -> RegisterChange
 ld_a_l z80_main =
     -- case 0x7D: A=HL&0xFF; break;
     -- case 0x7D: A=xy&0xFF; break;
-    RegisterChangeA (Bitwise.and z80_main.hl 0xFF)
-
-
-ld_indirect_hl_b : MainWithIndexRegisters -> RegisterChange
-ld_indirect_hl_b z80_main =
-    -- case 0x70: env.mem(HL,B); time+=3; break;
-    -- case 0x70: env.mem(getd(xy),B); time+=3; break;
-    SetIndirect .hl .b
+    RegisterChangeA get_l
 
 
 ld_indirect_hl_c : MainWithIndexRegisters -> RegisterChange
