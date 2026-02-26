@@ -78,8 +78,12 @@ singleByteMainRegs =
         , ( 0x7B, ( ld_a_e, FourTStates ) )
         , ( 0x7C, ( ld_a_h, FourTStates ) )
         , ( 0x7D, ( ld_a_l, FourTStates ) )
-        , ( 0xC5, ( push_bc, ElevenTStates ) )
-        , ( 0xD5, ( push_de, ElevenTStates ) )
+
+        -- case 0xC5: push(B<<8|C); break;
+        , ( 0xC5, ( \z80_main -> PushedValue get_bc, ElevenTStates ) )
+
+        -- case 0xD5: push(D<<8|E); break;
+        , ( 0xD5, ( \z80_main -> PushedValue get_de, ElevenTStates ) )
 
         -- case 0xE3: v=pop(); push(HL); MP=HL=v; time+=2; break;
         , ( 0xE3, ( \z80_main -> ExchangeTopOfStackWith HL, NineteenTStates ) )
@@ -608,20 +612,6 @@ ld_a_l z80_main =
     -- case 0x7D: A=HL&0xFF; break;
     -- case 0x7D: A=xy&0xFF; break;
     RegisterChangeA (Bitwise.and z80_main.hl 0xFF)
-
-
-push_bc : MainWithIndexRegisters -> RegisterChange
-push_bc z80_main =
-    -- case 0xC5: push(B<<8|C); break;
-    --z80_main |> get_bc |> PushedValue
-    PushedValue get_bc
-
-
-push_de : MainWithIndexRegisters -> RegisterChange
-push_de z80_main =
-    -- case 0xD5: push(D<<8|E); break;
-    --z80_main |> get_de |> PushedValue
-    PushedValue get_de
 
 
 ld_indirect_hl_b : MainWithIndexRegisters -> RegisterChange
