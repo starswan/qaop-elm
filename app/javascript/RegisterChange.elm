@@ -3,7 +3,7 @@ module RegisterChange exposing (..)
 import Utils exposing (BitTest)
 import Z80Core exposing (DirectionForLDIR)
 import Z80Flags exposing (FlagFunc)
-import Z80Registers exposing (ChangeMainRegister, ChangeOneRegister)
+import Z80Registers exposing (ChangeMainRegister, ChangeSingle)
 import Z80Types exposing (IXIYHL, InterruptMode, MainWithIndexRegisters)
 
 
@@ -22,9 +22,9 @@ type RegisterChange
     = ChangeRegisterIYH Int
     | ChangeRegisterIYL Int
     | PushedValue (MainWithIndexRegisters -> Int)
-    | RegChangeNewSP Int
-    | IncrementIndirect Int
-    | DecrementIndirect Int
+    | RegChangeNewSP (MainWithIndexRegisters -> Int)
+    | IncrementIndirect (MainWithIndexRegisters -> Int)
+    | DecrementIndirect (MainWithIndexRegisters -> Int)
     | RegisterChangeJump (MainWithIndexRegisters -> Int)
     | SetIndirect Int Int
     | RegisterChangeShifter Shifter Int
@@ -34,7 +34,7 @@ type RegisterChange
     | RegChangeNoOp
     | SingleEnvFlagFunc FlagFunc Int
     | ExchangeTopOfStackWith IXIYHL
-    | SingleRegisterChange ChangeMainRegister Int
+    | SingleRegisterChange ChangeSingle Int
     | RegisterChangeA Int
     | RegisterIndirectWithShifter Shifter ChangeMainRegister Int
     | SetBitIndirectWithCopy BitTest ChangeMainRegister Int

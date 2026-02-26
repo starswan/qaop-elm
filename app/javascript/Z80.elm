@@ -236,6 +236,9 @@ executeAndApplyDelta ct rom48k z80clock =
         CoreOnly z80Core ->
             { z80clock | core = z80Core, clockTime = clockTime, pc = pcAfter }
 
+        MainOnly z80_main ->
+            { z80clock | core = { z80_core | main = z80_main }, clockTime = clockTime, pc = pcAfter }
+
         CoreWithTime shortDelay z80Core ->
             { z80clock | core = z80Core, clockTime = clockTime |> addExtraCpuTime shortDelay, pc = pcAfter }
 
@@ -758,6 +761,9 @@ executeCoreInstruction rom48k pc z80_core =
     case deltaWithChanges |> apply_delta z80_core rom48k clockTime of
         CoreOnly z80Core ->
             ( z80Core, clockTime, pcAfter )
+
+        MainOnly z80_main ->
+            ( { z80_core | main = z80_main }, clockTime, pcAfter )
 
         CoreWithTime shortDelay z80Core ->
             ( z80Core, clockTime |> addExtraCpuTime shortDelay, pcAfter )

@@ -19,7 +19,7 @@ import Z80Debug exposing (debugLog, debugTodo)
 import Z80Env exposing (Z80Env, setMem, setMem16, z80_in, z80_out, z80_push)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, f_szh0n0p, get_af, inc, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
 import Z80Mem exposing (mem, mem16, z80_pop)
-import Z80Registers exposing (ChangeMainRegister(..), ChangeOneRegister(..), CoreRegister(..))
+import Z80Registers exposing (ChangeMainRegister(..), ChangeSingle(..), CoreRegister(..))
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIYHL(..), InterruptRegisters, MainWithIndexRegisters, get_bc, get_de, get_xy, set_bc_main, set_de_main, set_xy)
 
@@ -369,13 +369,16 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
             { z80_core | env = z80_core.env |> z80_push (z80_core.main |> f) clockTime }
                 |> CoreOnly
 
-        RegChangeNewSP int ->
-            { z80_core | env = { env | sp = int } }
+        RegChangeNewSP f ->
+            { z80_core | env = { env | sp = z80_core.main |> f } }
                 |> CoreOnly
 
-        IncrementIndirect addr ->
+        IncrementIndirect f ->
             -- This should be a primitive operation on Z80Env to increment a stored value
             let
+                addr =
+                    z80_core.main |> f
+
                 value =
                     z80_core.env |> mem addr clockTime rom48k
 
@@ -387,9 +390,12 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
             in
             { z80_core | env = env_3, flags = flags.flags } |> CoreOnly
 
-        DecrementIndirect addr ->
+        DecrementIndirect f ->
             -- This should be a primitive operation on Z80Env to decrement a stored value
             let
+                addr =
+                    z80_core.main |> f
+
                 value =
                     z80_core.env |> mem addr clockTime rom48k
 
@@ -480,22 +486,16 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
 
                 main =
                     case changeOneRegister of
-                        ChangeMainB ->
-                            { z80_main | b = int }
-
-                        ChangeMainC ->
-                            { z80_main | c = int }
-
-                        ChangeMainD ->
+                        ChangeSingleD ->
                             { z80_main | d = int }
 
-                        ChangeMainE ->
+                        ChangeSingleE ->
                             { z80_main | e = int }
 
-                        ChangeMainH ->
+                        ChangeSingleH ->
                             { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 int) }
 
-                        ChangeMainL ->
+                        ChangeSingleL ->
                             { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) int }
             in
             { z80_core | main = main } |> CoreOnly
