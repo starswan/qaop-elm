@@ -32,7 +32,7 @@ type RegisterChange
     | IndirectBitReset BitTest Int
     | IndirectBitSet BitTest Int
     | RegChangeNoOp
-    | SingleEnvFlagFunc FlagFunc Int
+    | SingleEnvFlagFunc FlagFunc (MainWithIndexRegisters -> Int)
     | ExchangeTopOfStackWith IXIYHL
     | SingleRegisterChange ChangeSingle Int
     | RegisterChangeA (MainWithIndexRegisters -> Int)

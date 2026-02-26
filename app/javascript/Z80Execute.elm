@@ -464,10 +464,13 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
         RegChangeNoOp ->
             NoCore
 
-        SingleEnvFlagFunc flagFunc value ->
+        SingleEnvFlagFunc flagFunc valueFunc ->
             let
                 z80_flags =
                     z80_core.flags
+
+                value =
+                    z80_core.main |> valueFunc
             in
             { z80_core | flags = z80_flags |> changeFlags flagFunc value }
                 |> CoreOnly
