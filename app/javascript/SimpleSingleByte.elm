@@ -61,10 +61,10 @@ singleByteMainRegs =
         -- case 0x63: xy=xy&0xFF|E<<8; break;
         , ( 0x63, ( \z80_main -> TransformMainRegisters (ld_h_b .e), FourTStates ) )
         , ( 0x65, ( ld_h_l, FourTStates ) )
-        , ( 0x68, ( ld_l_b, FourTStates ) )
-        , ( 0x69, ( ld_l_c, FourTStates ) )
-        , ( 0x6A, ( ld_l_d, FourTStates ) )
-        , ( 0x6B, ( ld_l_e, FourTStates ) )
+        , ( 0x68, ( \z80_main -> TransformMainRegisters (ld_l_b .b), FourTStates ) )
+        , ( 0x69, ( \z80_main -> TransformMainRegisters (ld_l_b .c), FourTStates ) )
+        , ( 0x6A, ( \z80_main -> TransformMainRegisters (ld_l_b .d), FourTStates ) )
+        , ( 0x6B, ( \z80_main -> TransformMainRegisters (ld_l_b .e), FourTStates ) )
         , ( 0x6C, ( ld_l_h, FourTStates ) )
         , ( 0x70, ( ld_indirect_hl_b, SevenTStates ) )
         , ( 0x71, ( ld_indirect_hl_c, SevenTStates ) )
@@ -536,11 +536,12 @@ ld_h_l z80_main =
     SingleRegisterChange ChangeSingleH (Bitwise.and z80_main.hl 0xFF)
 
 
-ld_l_b : MainWithIndexRegisters -> RegisterChange
-ld_l_b z80_main =
+ld_l_b : (MainWithIndexRegisters -> Int) -> MainWithIndexRegisters -> MainWithIndexRegisters
+ld_l_b bfunc z80_main =
     -- case 0x68: HL=HL&0xFF00|B; break;
     -- case 0x68: xy=xy&0xFF00|B; break;
-    SingleRegisterChange ChangeSingleL z80_main.b
+    --SingleRegisterChange ChangeSingleL z80_main.b
+    { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) (z80_main |> bfunc) }
 
 
 ld_l_c : MainWithIndexRegisters -> RegisterChange
