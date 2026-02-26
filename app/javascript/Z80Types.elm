@@ -92,6 +92,12 @@ get_de z80 =
     z80.d |> shiftLeftBy8 |> Bitwise.or z80.e
 
 
+get_l : MainWithIndexRegisters -> Int
+get_l z80_main =
+    Bitwise.and z80_main.hl 0xFF
+
+\z80_main -> TransformMainRegister
+
 set_bc_main : Int -> MainWithIndexRegisters -> MainWithIndexRegisters
 set_bc_main v z80_main =
     { z80_main | b = v |> shiftRightBy8, c = Bitwise.and v 0xFF }

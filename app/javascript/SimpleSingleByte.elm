@@ -7,7 +7,7 @@ import RegisterChange exposing (RegisterChange(..), Shifter(..))
 import Utils exposing (BitTest(..), shiftLeftBy8, shiftRightBy8)
 import Z80Flags exposing (FlagFunc(..))
 import Z80Registers exposing (ChangeMainRegister(..), ChangeSingle(..))
-import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, get_bc, get_de, set_de_main)
+import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, get_bc, get_de, get_l, set_de_main)
 
 
 singleByteMainRegs : Dict Int ( MainWithIndexRegisters -> RegisterChange, InstructionDuration )
@@ -60,7 +60,7 @@ singleByteMainRegs =
         -- case 0x63: HL=HL&0xFF|E<<8; break;
         -- case 0x63: xy=xy&0xFF|E<<8; break;
         , ( 0x63, ( \z80_main -> TransformMainRegisters (ld_h_b .e), FourTStates ) )
-        , ( 0x65, ( ld_h_l, FourTStates ) )
+        , ( 0x65, ( \z80_main -> TransformMainRegisters (ld_h_l get_l), FourTStates ) )
         , ( 0x68, ( \z80_main -> TransformMainRegisters (ld_l_b .b), FourTStates ) )
         , ( 0x69, ( \z80_main -> TransformMainRegisters (ld_l_b .c), FourTStates ) )
         , ( 0x6A, ( \z80_main -> TransformMainRegisters (ld_l_b .d), FourTStates ) )
@@ -533,11 +533,12 @@ ld_h_b b_func z80_main =
     { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (z80_main |> b_func |> shiftLeftBy8) }
 
 
-ld_h_l : MainWithIndexRegisters -> RegisterChange
-ld_h_l z80_main =
+ld_h_l : (MainWithIndexRegisters -> Int) -> MainWithIndexRegisters -> MainWithIndexRegisters
+ld_h_l bfunc z80_main =
     -- case 0x65: HL=HL&0xFF|(HL&0xFF)<<8; break;
     -- case 0x65: xy=xy&0xFF|(xy&0xFF)<<8; break;
-    SingleRegisterChange ChangeSingleH (Bitwise.and z80_main.hl 0xFF)
+    --SingleRegisterChange ChangeSingleH (Bitwise.and z80_main.hl 0xFF)
+    { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 (z80_main |> bfunc)) }
 
 
 ld_l_b : (MainWithIndexRegisters -> Int) -> MainWithIndexRegisters -> MainWithIndexRegisters
