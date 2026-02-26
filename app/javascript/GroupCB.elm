@@ -87,7 +87,7 @@ singleByteMainRegsCB =
         , ( 0x3E, ( srl_indirect_hl, FifteenTStates ) )
 
         -- reset bit0
-        , ( 0x80, ( resetBbit Bit_0, EightTStates ) )
+        , ( 0x80, ( \z80_main -> TransformMainRegisters (resetBbit Bit_0), EightTStates ) )
         , ( 0x81, ( resetCbit Bit_0, EightTStates ) )
         , ( 0x82, ( resetDbit Bit_0, EightTStates ) )
         , ( 0x83, ( resetEbit Bit_0, EightTStates ) )
@@ -96,7 +96,7 @@ singleByteMainRegsCB =
         , ( 0x86, ( resetHLbit Bit_0, EightTStates ) )
 
         -- reset bit1
-        , ( 0x88, ( resetBbit Bit_1, EightTStates ) )
+        , ( 0x88, ( \z80_main -> TransformMainRegisters (resetBbit Bit_1), EightTStates ) )
         , ( 0x89, ( resetCbit Bit_1, EightTStates ) )
         , ( 0x8A, ( resetDbit Bit_1, EightTStates ) )
         , ( 0x8B, ( resetEbit Bit_1, EightTStates ) )
@@ -105,7 +105,7 @@ singleByteMainRegsCB =
         , ( 0x8E, ( resetHLbit Bit_1, EightTStates ) )
 
         -- reset bit2
-        , ( 0x90, ( resetBbit Bit_2, EightTStates ) )
+        , ( 0x90, ( \z80_main -> TransformMainRegisters (resetBbit Bit_2), EightTStates ) )
         , ( 0x91, ( resetCbit Bit_2, EightTStates ) )
         , ( 0x92, ( resetDbit Bit_2, EightTStates ) )
         , ( 0x93, ( resetEbit Bit_2, EightTStates ) )
@@ -114,7 +114,7 @@ singleByteMainRegsCB =
         , ( 0x96, ( resetHLbit Bit_2, EightTStates ) )
 
         -- reset bit3
-        , ( 0x98, ( resetBbit Bit_3, EightTStates ) )
+        , ( 0x98, ( \z80_main -> TransformMainRegisters (resetBbit Bit_3), EightTStates ) )
         , ( 0x99, ( resetCbit Bit_3, EightTStates ) )
         , ( 0x9A, ( resetDbit Bit_3, EightTStates ) )
         , ( 0x9B, ( resetEbit Bit_3, EightTStates ) )
@@ -123,7 +123,7 @@ singleByteMainRegsCB =
         , ( 0x9E, ( resetHLbit Bit_3, EightTStates ) )
 
         -- reset bit4
-        , ( 0xA0, ( resetBbit Bit_4, EightTStates ) )
+        , ( 0xA0, ( \z80_main -> TransformMainRegisters (resetBbit Bit_4), EightTStates ) )
         , ( 0xA1, ( resetCbit Bit_4, EightTStates ) )
         , ( 0xA2, ( resetDbit Bit_4, EightTStates ) )
         , ( 0xA3, ( resetEbit Bit_4, EightTStates ) )
@@ -132,7 +132,7 @@ singleByteMainRegsCB =
         , ( 0xA6, ( resetHLbit Bit_4, EightTStates ) )
 
         -- reset bit5
-        , ( 0xA8, ( resetBbit Bit_5, EightTStates ) )
+        , ( 0xA8, ( \z80_main -> TransformMainRegisters (resetBbit Bit_5), EightTStates ) )
         , ( 0xA9, ( resetCbit Bit_5, EightTStates ) )
         , ( 0xAA, ( resetDbit Bit_5, EightTStates ) )
         , ( 0xAB, ( resetEbit Bit_5, EightTStates ) )
@@ -141,7 +141,7 @@ singleByteMainRegsCB =
         , ( 0xAE, ( resetHLbit Bit_5, EightTStates ) )
 
         -- reset bit6
-        , ( 0xB0, ( resetBbit Bit_6, EightTStates ) )
+        , ( 0xB0, ( \z80_main -> TransformMainRegisters (resetBbit Bit_6), EightTStates ) )
         , ( 0xB1, ( resetCbit Bit_6, EightTStates ) )
         , ( 0xB2, ( resetDbit Bit_6, EightTStates ) )
         , ( 0xB3, ( resetEbit Bit_6, EightTStates ) )
@@ -150,7 +150,7 @@ singleByteMainRegsCB =
         , ( 0xB6, ( resetHLbit Bit_6, EightTStates ) )
 
         -- reset bit7
-        , ( 0xB8, ( resetBbit Bit_7, EightTStates ) )
+        , ( 0xB8, ( \z80_main -> TransformMainRegisters (resetBbit Bit_7), EightTStates ) )
         , ( 0xB9, ( resetCbit Bit_7, EightTStates ) )
         , ( 0xBA, ( resetDbit Bit_7, EightTStates ) )
         , ( 0xBB, ( resetEbit Bit_7, EightTStates ) )
@@ -280,11 +280,11 @@ srl_indirect_hl z80_main =
     RegisterChangeShifter Shifter7 z80_main.hl
 
 
-resetBbit : BitTest -> MainWithIndexRegisters -> RegisterChange
+resetBbit : BitTest -> MainWithIndexRegisters -> MainWithIndexRegisters
 resetBbit bitMask z80_main =
-    --Bitwise.and raw.value (1 |> shiftLeftBy o |> complement)
     -- case 0x80: B=B&~(1<<o); break;
-    SingleRegisterChange ChangeMainB (bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.b)
+    --SingleRegisterChange ChangeMainB (bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.b)
+    { z80_main | b = bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.b }
 
 
 resetCbit : BitTest -> MainWithIndexRegisters -> RegisterChange

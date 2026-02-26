@@ -19,14 +19,13 @@ type Shifter
 
 
 type RegisterChange
-    = ChangeRegisterIXL Int
-    | ChangeRegisterIYH Int
+    = ChangeRegisterIYH Int
     | ChangeRegisterIYL Int
-    | PushedValue Int
+    | PushedValue (MainWithIndexRegisters -> Int)
     | RegChangeNewSP Int
     | IncrementIndirect Int
     | DecrementIndirect Int
-    | RegisterChangeJump Int
+    | RegisterChangeJump (MainWithIndexRegisters -> Int)
     | SetIndirect Int Int
     | RegisterChangeShifter Shifter Int
     | RegisterChangeIndexShifter Shifter Int

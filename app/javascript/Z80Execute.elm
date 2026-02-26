@@ -349,14 +349,6 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
         TransformMainRegisters f ->
             { z80_core | main = z80_core.main |> f } |> CoreOnly
 
-        ChangeRegisterIXL int ->
-            let
-                main =
-                    z80_core.main
-            in
-            { z80_core | main = { main | ix = Bitwise.or (Bitwise.and main.ix 0xFF00) int } }
-                |> CoreOnly
-
         ChangeRegisterIYH int ->
             let
                 main =
@@ -373,8 +365,8 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
             { z80_core | main = { main | iy = Bitwise.or (Bitwise.and main.iy 0xFF00) int } }
                 |> CoreOnly
 
-        PushedValue int ->
-            { z80_core | env = z80_core.env |> z80_push int clockTime }
+        PushedValue f ->
+            { z80_core | env = z80_core.env |> z80_push (z80_core.main |> f) clockTime }
                 |> CoreOnly
 
         RegChangeNewSP int ->
@@ -409,8 +401,8 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
             in
             { z80_core | env = env_3, flags = flags.flags } |> CoreOnly
 
-        RegisterChangeJump int ->
-            JumpOnlyPC int
+        RegisterChangeJump f ->
+            JumpOnlyPC (z80_core.main |> f)
 
         SetIndirect addr value ->
             let
