@@ -410,8 +410,17 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
         RegisterChangeJump f ->
             JumpOnlyPC (z80_core.main |> f)
 
-        SetIndirect addr value ->
+        SetIndirect addrfunc valuefunc ->
             let
+                main =
+                    z80_core.main
+
+                addr =
+                    main |> addrfunc
+
+                value =
+                    main |> valuefunc
+
                 ( env_2, newTime ) =
                     env |> setMem addr value clockTime
             in

@@ -96,7 +96,11 @@ get_l : MainWithIndexRegisters -> Int
 get_l z80_main =
     Bitwise.and z80_main.hl 0xFF
 
-\z80_main -> TransformMainRegister
+
+get_h : MainWithIndexRegisters -> Int
+get_h z80_main =
+    z80_main.hl |> shiftRightBy8
+
 
 set_bc_main : Int -> MainWithIndexRegisters -> MainWithIndexRegisters
 set_bc_main v z80_main =
