@@ -4,8 +4,8 @@ import Bitwise
 import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, InstructionDuration)
 import Dict exposing (Dict)
 import RegisterChange exposing (RegisterFlagChange)
-import SimpleFlagOps exposing (singleByteFlags)
-import SimpleSingleByte exposing (singleByteMainRegs)
+import SimpleFlagOps exposing (singleByteFlags, singleByteFlagsDD, singleByteFlagsFD)
+import SimpleSingleByte exposing (singleByteMainRegs, singleByteMainRegsDD, singleByteMainRegsFD)
 import Z80Core exposing (Z80Core)
 import Z80Mem exposing (m1)
 import Z80Rom exposing (Z80ROM)
@@ -15,6 +15,16 @@ import Z80Types exposing (MainWithIndexRegisters)
 singleByteMainFlagsRegs : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleByteMainFlagsRegs =
     singleByteMainRegs |> Dict.union singleByteFlags
+
+
+singleByteMainFlagsRegsIY : Dict Int ( RegisterFlagChange, InstructionDuration )
+singleByteMainFlagsRegsIY =
+    singleByteFlagsFD |> Dict.union singleByteMainRegsFD
+
+
+singleByteMainFlagsRegsIX : Dict Int ( RegisterFlagChange, InstructionDuration )
+singleByteMainFlagsRegsIX =
+    singleByteFlagsDD |> Dict.union singleByteMainRegsDD
 
 
 fetchInstruction : Int -> Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> CpuTimeAndValue
