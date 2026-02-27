@@ -370,7 +370,7 @@ runOrdinary : Int -> CpuTimeCTime -> Z80ROM -> Int -> Z80Core -> ( DeltaWithChan
 runOrdinary ct_value instrTime rom48k pc z80_core =
     case singleByteMainRegs |> Dict.get ct_value of
         Just ( mainRegFunc, duration ) ->
-            ( RegisterChangeDelta (mainRegFunc z80_core.main), instrTime |> addDuration duration, IncrementByOne )
+            ( RegisterChangeDelta mainRegFunc, instrTime |> addDuration duration, IncrementByOne )
 
         Nothing ->
             case singleByteFlags |> Dict.get ct_value of
@@ -473,7 +473,7 @@ runIndexIX : CpuTimeAndValue -> Z80ROM -> Int -> Z80Core -> ( DeltaWithChanges, 
 runIndexIX param rom48k pc z80 =
     case singleByteMainRegsDD |> Dict.get param.value of
         Just ( mainRegFunc, duration ) ->
-            ( RegisterChangeDelta (mainRegFunc z80.main), param.time |> addDuration duration, IncrementByTwo )
+            ( RegisterChangeDelta mainRegFunc, param.time |> addDuration duration, IncrementByTwo )
 
         Nothing ->
             case singleByteFlagsDD |> Dict.get param.value of
@@ -550,7 +550,7 @@ runIndexIY : CpuTimeAndValue -> Z80ROM -> Int -> Z80Core -> ( DeltaWithChanges, 
 runIndexIY param rom48k pc z80 =
     case singleByteMainRegsFD |> Dict.get param.value of
         Just ( mainRegFunc, duration ) ->
-            ( RegisterChangeDelta (mainRegFunc z80.main), param.time |> addDuration duration, IncrementByTwo )
+            ( RegisterChangeDelta mainRegFunc, param.time |> addDuration duration, IncrementByTwo )
 
         Nothing ->
             case singleByteFlagsFD |> Dict.get param.value of

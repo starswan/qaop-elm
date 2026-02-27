@@ -349,18 +349,24 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
         TransformMainRegisters f ->
             { z80_core | main = z80_core.main |> f } |> CoreOnly
 
-        ChangeRegisterIYH int ->
+        ChangeRegisterIYH intf ->
             let
                 main =
                     z80_core.main
+
+                int =
+                    main |> intf
             in
             { z80_core | main = { main | iy = Bitwise.or (Bitwise.and main.iy 0xFF) (int |> shiftLeftBy8) } }
                 |> CoreOnly
 
-        ChangeRegisterIYL int ->
+        ChangeRegisterIYL intf ->
             let
                 main =
                     z80_core.main
+
+                int =
+                    main |> intf
             in
             { z80_core | main = { main | iy = Bitwise.or (Bitwise.and main.iy 0xFF00) int } }
                 |> CoreOnly

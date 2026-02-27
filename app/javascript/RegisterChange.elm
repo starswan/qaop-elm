@@ -19,8 +19,8 @@ type Shifter
 
 
 type RegisterChange
-    = ChangeRegisterIYH Int
-    | ChangeRegisterIYL Int
+    = ChangeRegisterIYH (MainWithIndexRegisters -> Int)
+    | ChangeRegisterIYL (MainWithIndexRegisters -> Int)
     | PushedValue (MainWithIndexRegisters -> Int)
     | RegChangeNewSP (MainWithIndexRegisters -> Int)
     | IncrementIndirect (MainWithIndexRegisters -> Int)
