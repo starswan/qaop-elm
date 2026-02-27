@@ -67,6 +67,9 @@ singleByteMainRegs =
 
         -- case 0x69: HL=HL&0xFF00|C; break;
         , ( 0x69, ( TransformMainRegisters (ld_l_b .c), FourTStates ) )
+
+        -- case 0x6A: HL=HL&0xFF00|D; break;
+        -- case 0x6A: xy=xy&0xFF00|D; break;
         , ( 0x6A, ( TransformMainRegisters (ld_l_b .d), FourTStates ) )
         , ( 0x6B, ( TransformMainRegisters (ld_l_b .e), FourTStates ) )
         , ( 0x6C, ( TransformMainRegisters (ld_l_b get_h), FourTStates ) )
@@ -81,7 +84,9 @@ singleByteMainRegs =
         , ( 0x73, ( SetIndirect (\main -> ( main.hl, main.e )), SevenTStates ) )
         , ( 0x74, ( SetIndirect (\main -> ( main.hl, main |> get_h )), SevenTStates ) )
         , ( 0x75, ( SetIndirect (\main -> ( main.hl, main |> get_l )), SevenTStates ) )
-        , ( 0x78, ( ld_a_b, FourTStates ) )
+
+        -- case 0x78: A=B; break;
+        , ( 0x78, ( RegisterChangeA .b, FourTStates ) )
         , ( 0x79, ( ld_a_c, FourTStates ) )
         , ( 0x7A, ( ld_a_d, FourTStates ) )
         , ( 0x7B, ( ld_a_e, FourTStates ) )
@@ -124,7 +129,9 @@ commonDDFDOps =
         , ( 0x59, ( TransformMainRegisters ld_e_c, EightTStates ) )
         , ( 0x5A, ( TransformMainRegisters ld_e_d, EightTStates ) )
         , ( 0x5B, ( RegChangeNoOp, EightTStates ) )
-        , ( 0x78, ( ld_a_b, EightTStates ) )
+
+        -- case 0x78: A=B; break;
+        , ( 0x78, ( RegisterChangeA .b, EightTStates ) )
         , ( 0x79, ( ld_a_c, EightTStates ) )
         , ( 0x7A, ( ld_a_d, EightTStates ) )
         , ( 0x7B, ( ld_a_e, EightTStates ) )
@@ -161,6 +168,9 @@ singleByteMainRegsFD =
 
         -- case 0x69: xy=xy&0xFF00|C; break;
         , ( 0x69, ( ChangeRegisterIYL .c, EightTStates ) )
+
+        -- case 0x6A: HL=HL&0xFF00|D; break;
+        -- case 0x6A: xy=xy&0xFF00|D; break;
         , ( 0x6A, ( ChangeRegisterIYL .d, EightTStates ) )
         , ( 0x6B, ( ChangeRegisterIYL .e, EightTStates ) )
         , ( 0x6C, ( ChangeRegisterIYL get_iyh, EightTStates ) )
@@ -566,20 +576,6 @@ ld_l_b bfunc z80_main =
     { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) (z80_main |> bfunc) }
 
 
-ld_l_c : MainWithIndexRegisters -> RegisterFlagChange
-ld_l_c z80_main =
-    -- case 0x69: HL=HL&0xFF00|C; break;
-    -- case 0x69: xy=xy&0xFF00|C; break;
-    SingleRegisterChange ChangeSingleL z80_main.c
-
-
-ld_l_d : MainWithIndexRegisters -> RegisterFlagChange
-ld_l_d z80_main =
-    -- case 0x6A: HL=HL&0xFF00|D; break;
-    -- case 0x6A: xy=xy&0xFF00|D; break;
-    SingleRegisterChange ChangeSingleL z80_main.d
-
-
 ld_l_e : MainWithIndexRegisters -> RegisterFlagChange
 ld_l_e z80_main =
     -- case 0x6B: HL=HL&0xFF00|E; break;
@@ -592,12 +588,6 @@ ld_l_h z80_main =
     -- case 0x6C: HL=HL&0xFF00|HL>>>8; break;
     -- case 0x6C: xy=xy&0xFF00|xy>>>8; break;
     SingleRegisterChange ChangeSingleL (shiftRightBy8 z80_main.hl)
-
-
-ld_a_b : RegisterFlagChange
-ld_a_b =
-    -- case 0x78: A=B; break;
-    RegisterChangeA .b
 
 
 ld_a_c : RegisterFlagChange
