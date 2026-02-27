@@ -132,11 +132,11 @@ mapLineToSvg y_index ( start, linedata ) =
 
 
 backgroundNode : Z80Screen -> Svg Message
-backgroundNode screen =
+backgroundNode env =
     let
         -- border colour is never bright
         border_colour =
-            borderColour screen.border
+            borderColour env.border
     in
     rect [ height "100%", width "100%", fill border_colour, rx "15" ] []
 
