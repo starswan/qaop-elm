@@ -35,9 +35,9 @@ RSpec.describe "Game" do
       {
         matchday.name => lambda { |spectrum|
           delay_and_send(spectrum, 200, "")
-          delay_and_send(spectrum, 750, "")
+          delay_and_send(spectrum, 780, "")
           # Start 1 player match day (with kempston, so kicks all the time)
-          delay_and_send(spectrum, 850, "")
+          delay_and_send(spectrum, 880, "")
 
           measure_speed_in_hz 180
         },
