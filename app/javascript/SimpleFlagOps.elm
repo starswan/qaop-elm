@@ -3,13 +3,13 @@ module SimpleFlagOps exposing (..)
 import Bitwise exposing (complement)
 import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
+import RegisterChange exposing (RegisterFlagChange(..))
 import Utils exposing (BitTest(..), bitMaskFromBit, inverseBitMaskFromBit, shiftLeftBy8, shiftRightBy8)
-import Z80Change exposing (FlagChange(..))
-import Z80Flags exposing (FlagRegisters, IntWithFlags, adc, c_FP, c_FS, dec, getFlags, get_af, inc, rot, sbc, scf_ccf, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit, z80_add, z80_cp, z80_cpl, z80_daa, z80_or, z80_sub, z80_xor)
+import Z80Flags exposing (FlagRegisters, IntWithFlags, adc, c_FP, c_FS, dec, getFlags, inc, rot, sbc, scf_ccf, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit, z80_add, z80_cp, z80_cpl, z80_daa, z80_or, z80_sub, z80_xor)
 import Z80Types exposing (MainWithIndexRegisters)
 
 
-singleByteFlags : Dict Int ( FlagChange, InstructionDuration )
+singleByteFlags : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleByteFlags =
     Dict.fromList
         [ ( 0x07, ( FlagChangeFunc rlca, FourTStates ) )
@@ -59,7 +59,7 @@ singleByteFlags =
         ]
 
 
-singleByteFlagsDD : Dict Int ( FlagChange, InstructionDuration )
+singleByteFlagsDD : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleByteFlagsDD =
     Dict.fromList
         [ ( 0x47, ( FlagChangeMain ld_b_a, EightTStates ) )
@@ -69,7 +69,7 @@ singleByteFlagsDD =
         ]
 
 
-singleByteFlagsFD : Dict Int ( FlagChange, InstructionDuration )
+singleByteFlagsFD : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleByteFlagsFD =
     Dict.fromList
         [ ( 0x47, ( FlagChangeMain ld_b_a, EightTStates ) )
@@ -79,7 +79,7 @@ singleByteFlagsFD =
         ]
 
 
-singleByteFlagsCB : Dict Int ( FlagRegisters -> FlagChange, InstructionDuration )
+singleByteFlagsCB : Dict Int ( FlagRegisters -> RegisterFlagChange, InstructionDuration )
 singleByteFlagsCB =
     Dict.fromList
         [ ( 0x07, ( rlc_a, EightTStates ) )
@@ -276,31 +276,31 @@ cp_a z80_flags =
     z80_flags |> z80_cp z80_flags.a
 
 
-ret_po : FlagChange
+ret_po : RegisterFlagChange
 ret_po =
     -- case 0xE0: time++; if((flags()&FP)==0) MP=PC=pop(); break;
     ConditionalReturn (\flags -> Bitwise.and (flags |> getFlags) c_FP == 0)
 
 
-ret_pe : FlagChange
+ret_pe : RegisterFlagChange
 ret_pe =
     -- case 0xE8: time++; if((flags()&FP)!=0) MP=PC=pop(); break;
     ConditionalReturn (\flags -> Bitwise.and (flags |> getFlags) c_FP /= 0)
 
 
-ret_p : FlagChange
+ret_p : RegisterFlagChange
 ret_p =
     -- case 0xF0: time++; if((Ff&FS)==0) MP=PC=pop(); break;
     ConditionalReturn (\flags -> Bitwise.and flags.ff c_FS == 0)
 
 
-ret_m : FlagChange
+ret_m : RegisterFlagChange
 ret_m =
     -- case 0xF8: time++; if((Ff&FS)!=0) MP=PC=pop(); break;
     ConditionalReturn (\flags -> Bitwise.and flags.ff c_FS /= 0)
 
 
-applyFlagShifter : (Int -> FlagRegisters -> IntWithFlags) -> FlagRegisters -> FlagChange
+applyFlagShifter : (Int -> FlagRegisters -> IntWithFlags) -> FlagRegisters -> RegisterFlagChange
 applyFlagShifter shifter z80_flags =
     --case 0x07: A=shifter(o,A); break;
     let
@@ -313,42 +313,42 @@ applyFlagShifter shifter z80_flags =
     OnlyFlags { new_flags | a = value.value }
 
 
-rlc_a : FlagRegisters -> FlagChange
+rlc_a : FlagRegisters -> RegisterFlagChange
 rlc_a z80_flags =
     applyFlagShifter shifter0 z80_flags
 
 
-rrc_a : FlagRegisters -> FlagChange
+rrc_a : FlagRegisters -> RegisterFlagChange
 rrc_a z80_flags =
     applyFlagShifter shifter1 z80_flags
 
 
-rl_a : FlagRegisters -> FlagChange
+rl_a : FlagRegisters -> RegisterFlagChange
 rl_a z80_flags =
     applyFlagShifter shifter2 z80_flags
 
 
-rr_a : FlagRegisters -> FlagChange
+rr_a : FlagRegisters -> RegisterFlagChange
 rr_a z80_flags =
     applyFlagShifter shifter3 z80_flags
 
 
-sla_a : FlagRegisters -> FlagChange
+sla_a : FlagRegisters -> RegisterFlagChange
 sla_a z80_flags =
     applyFlagShifter shifter4 z80_flags
 
 
-sra_a : FlagRegisters -> FlagChange
+sra_a : FlagRegisters -> RegisterFlagChange
 sra_a z80_flags =
     applyFlagShifter shifter5 z80_flags
 
 
-sll_a : FlagRegisters -> FlagChange
+sll_a : FlagRegisters -> RegisterFlagChange
 sll_a z80_flags =
     applyFlagShifter shifter6 z80_flags
 
 
-srl_a : FlagRegisters -> FlagChange
+srl_a : FlagRegisters -> RegisterFlagChange
 srl_a z80_flags =
     applyFlagShifter shifter7 z80_flags
 

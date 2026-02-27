@@ -3,14 +3,14 @@ module SimpleSingleByte exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
-import RegisterChange exposing (RegisterChange(..), Shifter(..))
+import RegisterChange exposing (RegisterFlagChange(..), Shifter(..))
 import Utils exposing (BitTest(..), shiftLeftBy8, shiftRightBy8)
 import Z80Flags exposing (FlagFunc(..))
 import Z80Registers exposing (ChangeMainRegister(..), ChangeSingle(..))
 import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, get_bc, get_de, get_h, get_ixh, get_ixl, get_iyh, get_iyl, get_l, set_de_main)
 
 
-singleByteMainRegs : Dict Int ( RegisterChange, InstructionDuration )
+singleByteMainRegs : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleByteMainRegs =
     Dict.fromList
         [ ( 0x03, ( TransformMainRegisters inc_bc, SixTStates ) )
@@ -105,7 +105,7 @@ singleByteMainRegs =
         ]
 
 
-commonDDFDOps : Dict Int ( RegisterChange, InstructionDuration )
+commonDDFDOps : Dict Int ( RegisterFlagChange, InstructionDuration )
 commonDDFDOps =
     Dict.fromList
         [ ( 0x40, ( RegChangeNoOp, EightTStates ) )
@@ -139,7 +139,7 @@ commonDDFDOps =
         ]
 
 
-singleByteMainRegsFD : Dict Int ( RegisterChange, InstructionDuration )
+singleByteMainRegsFD : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleByteMainRegsFD =
     Dict.fromList
         [ ( 0x23, ( TransformMainRegisters inc_iy, TenTStates ) )
@@ -196,7 +196,7 @@ singleByteMainRegsFD =
         |> Dict.union commonDDFDOps
 
 
-singleByteMainRegsDD : Dict Int ( RegisterChange, InstructionDuration )
+singleByteMainRegsDD : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleByteMainRegsDD =
     Dict.fromList
         [ ( 0x23, ( TransformMainRegisters inc_ix, TenTStates ) )
@@ -566,66 +566,66 @@ ld_l_b bfunc z80_main =
     { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) (z80_main |> bfunc) }
 
 
-ld_l_c : MainWithIndexRegisters -> RegisterChange
+ld_l_c : MainWithIndexRegisters -> RegisterFlagChange
 ld_l_c z80_main =
     -- case 0x69: HL=HL&0xFF00|C; break;
     -- case 0x69: xy=xy&0xFF00|C; break;
     SingleRegisterChange ChangeSingleL z80_main.c
 
 
-ld_l_d : MainWithIndexRegisters -> RegisterChange
+ld_l_d : MainWithIndexRegisters -> RegisterFlagChange
 ld_l_d z80_main =
     -- case 0x6A: HL=HL&0xFF00|D; break;
     -- case 0x6A: xy=xy&0xFF00|D; break;
     SingleRegisterChange ChangeSingleL z80_main.d
 
 
-ld_l_e : MainWithIndexRegisters -> RegisterChange
+ld_l_e : MainWithIndexRegisters -> RegisterFlagChange
 ld_l_e z80_main =
     -- case 0x6B: HL=HL&0xFF00|E; break;
     -- case 0x6B: xy=xy&0xFF00|E; break;
     SingleRegisterChange ChangeSingleL z80_main.e
 
 
-ld_l_h : MainWithIndexRegisters -> RegisterChange
+ld_l_h : MainWithIndexRegisters -> RegisterFlagChange
 ld_l_h z80_main =
     -- case 0x6C: HL=HL&0xFF00|HL>>>8; break;
     -- case 0x6C: xy=xy&0xFF00|xy>>>8; break;
     SingleRegisterChange ChangeSingleL (shiftRightBy8 z80_main.hl)
 
 
-ld_a_b : RegisterChange
+ld_a_b : RegisterFlagChange
 ld_a_b =
     -- case 0x78: A=B; break;
     RegisterChangeA .b
 
 
-ld_a_c : RegisterChange
+ld_a_c : RegisterFlagChange
 ld_a_c =
     -- case 0x79: A=C; break;
     RegisterChangeA .c
 
 
-ld_a_d : RegisterChange
+ld_a_d : RegisterFlagChange
 ld_a_d =
     -- case 0x7A: A=D; break;
     RegisterChangeA .d
 
 
-ld_a_e : RegisterChange
+ld_a_e : RegisterFlagChange
 ld_a_e =
     -- case 0x7B: A=E; break;
     RegisterChangeA .e
 
 
-ld_a_h : RegisterChange
+ld_a_h : RegisterFlagChange
 ld_a_h =
     -- case 0x7C: A=HL>>>8; break;
     -- case 0x7C: A=xy>>>8; break;
     RegisterChangeA get_h
 
 
-ld_a_l : RegisterChange
+ld_a_l : RegisterFlagChange
 ld_a_l =
     -- case 0x7D: A=HL&0xFF; break;
     -- case 0x7D: A=xy&0xFF; break;

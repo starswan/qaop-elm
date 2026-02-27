@@ -14,13 +14,3 @@ type Z80Change
     | Z80ChangeSetIndirect Int Int
     | JustIXRegister Int
     | JustIYRegister Int
-
-
-type FlagChange
-    = OnlyFlags FlagRegisters
-    | FlagNewRValue Int
-    | FlagNewIValue Int
-    | FlagChangeFunc (FlagRegisters -> FlagRegisters)
-    | FlagChangeMain (FlagRegisters -> MainWithIndexRegisters -> MainWithIndexRegisters)
-    | ConditionalReturn (FlagRegisters -> Bool)
-    | FlagsPushAF

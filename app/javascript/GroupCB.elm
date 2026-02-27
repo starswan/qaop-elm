@@ -3,7 +3,7 @@ module GroupCB exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
-import RegisterChange exposing (RegisterChange(..), Shifter(..))
+import RegisterChange exposing (RegisterFlagChange(..), Shifter(..))
 import SingleEnvWithMain exposing (SingleEnvMainChange(..))
 import Utils exposing (BitTest(..), bitMaskFromBit, inverseBitMaskFromBit, shiftLeftBy8, shiftRightBy8)
 import Z80Change exposing (Z80Change(..))
@@ -74,7 +74,7 @@ bit_7_indirect_hl z80_main =
     IndirectBitTest Bit_7 z80_main.hl
 
 
-singleByteMainRegsCB : Dict Int ( MainWithIndexRegisters -> RegisterChange, InstructionDuration )
+singleByteMainRegsCB : Dict Int ( MainWithIndexRegisters -> RegisterFlagChange, InstructionDuration )
 singleByteMainRegsCB =
     Dict.fromList
         [ ( 0x06, ( rlc_indirect_hl, FifteenTStates ) )
@@ -232,49 +232,49 @@ singleByteMainRegsCB =
         ]
 
 
-rlc_indirect_hl : MainWithIndexRegisters -> RegisterChange
+rlc_indirect_hl : MainWithIndexRegisters -> RegisterFlagChange
 rlc_indirect_hl z80_main =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     RegisterChangeShifter Shifter0 z80_main.hl
 
 
-rrc_indirect_hl : MainWithIndexRegisters -> RegisterChange
+rrc_indirect_hl : MainWithIndexRegisters -> RegisterFlagChange
 rrc_indirect_hl z80_main =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     RegisterChangeShifter Shifter1 z80_main.hl
 
 
-rl_indirect_hl : MainWithIndexRegisters -> RegisterChange
+rl_indirect_hl : MainWithIndexRegisters -> RegisterFlagChange
 rl_indirect_hl z80_main =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     RegisterChangeShifter Shifter2 z80_main.hl
 
 
-rr_indirect_hl : MainWithIndexRegisters -> RegisterChange
+rr_indirect_hl : MainWithIndexRegisters -> RegisterFlagChange
 rr_indirect_hl z80_main =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     RegisterChangeShifter Shifter3 z80_main.hl
 
 
-sla_indirect_hl : MainWithIndexRegisters -> RegisterChange
+sla_indirect_hl : MainWithIndexRegisters -> RegisterFlagChange
 sla_indirect_hl z80_main =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     RegisterChangeShifter Shifter4 z80_main.hl
 
 
-sra_indirect_hl : MainWithIndexRegisters -> RegisterChange
+sra_indirect_hl : MainWithIndexRegisters -> RegisterFlagChange
 sra_indirect_hl z80_main =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     RegisterChangeShifter Shifter5 z80_main.hl
 
 
-sll_indirect_hl : MainWithIndexRegisters -> RegisterChange
+sll_indirect_hl : MainWithIndexRegisters -> RegisterFlagChange
 sll_indirect_hl z80_main =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     RegisterChangeShifter Shifter6 z80_main.hl
 
 
-srl_indirect_hl : MainWithIndexRegisters -> RegisterChange
+srl_indirect_hl : MainWithIndexRegisters -> RegisterFlagChange
 srl_indirect_hl z80_main =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     RegisterChangeShifter Shifter7 z80_main.hl
@@ -294,31 +294,31 @@ resetCbit bitMask z80_main =
     { z80_main | c = bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.c }
 
 
-resetDbit : BitTest -> MainWithIndexRegisters -> RegisterChange
+resetDbit : BitTest -> MainWithIndexRegisters -> RegisterFlagChange
 resetDbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
     SingleRegisterChange ChangeSingleD (bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.d)
 
 
-resetEbit : BitTest -> MainWithIndexRegisters -> RegisterChange
+resetEbit : BitTest -> MainWithIndexRegisters -> RegisterFlagChange
 resetEbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
     SingleRegisterChange ChangeSingleE (bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.e)
 
 
-resetHbit : BitTest -> MainWithIndexRegisters -> RegisterChange
+resetHbit : BitTest -> MainWithIndexRegisters -> RegisterFlagChange
 resetHbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
     SingleRegisterChange ChangeSingleH (bitMask |> inverseBitMaskFromBit |> Bitwise.and (z80_main.hl |> shiftRightBy8))
 
 
-resetLbit : BitTest -> MainWithIndexRegisters -> RegisterChange
+resetLbit : BitTest -> MainWithIndexRegisters -> RegisterFlagChange
 resetLbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
     SingleRegisterChange ChangeSingleL (bitMask |> inverseBitMaskFromBit |> Bitwise.and (z80_main.hl |> Bitwise.and 0xFF))
 
 
-resetHLbit : BitTest -> MainWithIndexRegisters -> RegisterChange
+resetHLbit : BitTest -> MainWithIndexRegisters -> RegisterFlagChange
 resetHLbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
     IndirectBitReset bitMask z80_main.hl
@@ -338,31 +338,31 @@ setCbit bitMask z80_main =
     { z80_main | c = bitMask |> bitMaskFromBit |> Bitwise.or z80_main.c }
 
 
-setDbit : BitTest -> MainWithIndexRegisters -> RegisterChange
+setDbit : BitTest -> MainWithIndexRegisters -> RegisterFlagChange
 setDbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
     SingleRegisterChange ChangeSingleD (bitMask |> bitMaskFromBit |> Bitwise.or z80_main.d)
 
 
-setEbit : BitTest -> MainWithIndexRegisters -> RegisterChange
+setEbit : BitTest -> MainWithIndexRegisters -> RegisterFlagChange
 setEbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
     SingleRegisterChange ChangeSingleE (bitMask |> bitMaskFromBit |> Bitwise.or z80_main.e)
 
 
-setHbit : BitTest -> MainWithIndexRegisters -> RegisterChange
+setHbit : BitTest -> MainWithIndexRegisters -> RegisterFlagChange
 setHbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
     SingleRegisterChange ChangeSingleH (bitMask |> bitMaskFromBit |> Bitwise.or (z80_main.hl |> shiftRightBy8))
 
 
-setLbit : BitTest -> MainWithIndexRegisters -> RegisterChange
+setLbit : BitTest -> MainWithIndexRegisters -> RegisterFlagChange
 setLbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
     SingleRegisterChange ChangeSingleL (bitMask |> bitMaskFromBit |> Bitwise.or (z80_main.hl |> Bitwise.and 0xFF))
 
 
-setHLbit : BitTest -> MainWithIndexRegisters -> RegisterChange
+setHLbit : BitTest -> MainWithIndexRegisters -> RegisterFlagChange
 setHLbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
     IndirectBitSet bitMask z80_main.hl

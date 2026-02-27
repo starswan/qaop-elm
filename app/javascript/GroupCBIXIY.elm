@@ -3,7 +3,7 @@ module GroupCBIXIY exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
-import RegisterChange exposing (RegisterChange(..), Shifter(..))
+import RegisterChange exposing (RegisterFlagChange(..), Shifter(..))
 import SingleEnvWithMain exposing (SingleEnvMainChange(..))
 import Utils exposing (BitTest(..), byte)
 import Z80Env exposing (Z80Env)
@@ -12,7 +12,7 @@ import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (MainWithIndexRegisters)
 
 
-singleByteMainRegsIXCB : Dict Int ( Int -> MainWithIndexRegisters -> RegisterChange, InstructionDuration )
+singleByteMainRegsIXCB : Dict Int ( Int -> MainWithIndexRegisters -> RegisterFlagChange, InstructionDuration )
 singleByteMainRegsIXCB =
     Dict.fromList
         [ --shifter0
@@ -257,7 +257,7 @@ singleByteMainRegsIXCB =
         ]
 
 
-singleByteMainRegsIYCB : Dict Int ( Int -> MainWithIndexRegisters -> RegisterChange, InstructionDuration )
+singleByteMainRegsIYCB : Dict Int ( Int -> MainWithIndexRegisters -> RegisterFlagChange, InstructionDuration )
 singleByteMainRegsIYCB =
     Dict.fromList
         [ --shifter0
@@ -546,13 +546,13 @@ singleEnvMainRegsIYCB =
     makeEnvMainDict .iy
 
 
-resetIXbit : BitTest -> Int -> MainWithIndexRegisters -> RegisterChange
+resetIXbit : BitTest -> Int -> MainWithIndexRegisters -> RegisterFlagChange
 resetIXbit bitMask offset z80_main =
     -- case 0x81: C=C&~(1<<o); break;
     IndirectBitReset bitMask ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF)
 
 
-resetIYbit : BitTest -> Int -> MainWithIndexRegisters -> RegisterChange
+resetIYbit : BitTest -> Int -> MainWithIndexRegisters -> RegisterFlagChange
 resetIYbit bitMask offset z80_main =
     -- case 0x81: C=C&~(1<<o); break;
     IndirectBitReset bitMask ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF)

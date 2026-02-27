@@ -2,7 +2,7 @@ module RegisterChange exposing (..)
 
 import Utils exposing (BitTest)
 import Z80Core exposing (DirectionForLDIR)
-import Z80Flags exposing (FlagFunc)
+import Z80Flags exposing (FlagFunc, FlagRegisters)
 import Z80Registers exposing (ChangeMainRegister, ChangeSingle)
 import Z80Types exposing (IXIYHL, InterruptMode, MainWithIndexRegisters)
 
@@ -18,7 +18,7 @@ type Shifter
     | Shifter7
 
 
-type RegisterChange
+type RegisterFlagChange
     = ChangeRegisterIYH (MainWithIndexRegisters -> Int)
     | ChangeRegisterIYL (MainWithIndexRegisters -> Int)
     | PushedValue (MainWithIndexRegisters -> Int)
@@ -43,6 +43,13 @@ type RegisterChange
     | SetBitIndirectA BitTest Int
     | ResetBitIndirectA BitTest Int
     | TransformMainRegisters (MainWithIndexRegisters -> MainWithIndexRegisters)
+    | OnlyFlags FlagRegisters
+    | FlagNewRValue Int
+    | FlagNewIValue Int
+    | FlagChangeFunc (FlagRegisters -> FlagRegisters)
+    | FlagChangeMain (FlagRegisters -> MainWithIndexRegisters -> MainWithIndexRegisters)
+    | ConditionalReturn (FlagRegisters -> Bool)
+    | FlagsPushAF
 
 
 type SixteenBit

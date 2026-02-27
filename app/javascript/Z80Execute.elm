@@ -4,7 +4,7 @@ import Bitwise exposing (shiftLeftBy)
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
 import GroupED exposing (adc_hl_sp, cpir, execute_ED70, execute_ED78, inirOtirFlags, ldir, rld, rrd, sbc_hl)
-import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), RegisterChange(..), Shifter(..), SixteenBit(..))
+import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), RegisterFlagChange(..), Shifter(..), SixteenBit(..))
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
 import SingleEnvWithMain exposing (SingleEnvMainChange, applySingleEnvMainChange)
 import SingleNoParams exposing (NoParamChange(..), RstChange, applyNoParamsDelta, applyRstDelta)
@@ -13,7 +13,7 @@ import TripleByte exposing (TripleByteChange(..), TripleByteRegister(..))
 import TripleWithFlags exposing (TripleWithFlagsChange(..))
 import TripleWithMain exposing (TripleMainChange, applyTripleMainChange)
 import Utils exposing (bitMaskFromBit, clearBit, inverseBitMaskFromBit, setBit, shiftLeftBy8, toHexString2)
-import Z80Change exposing (FlagChange(..), Z80Change(..))
+import Z80Change exposing (Z80Change(..))
 import Z80Core exposing (CoreChange(..), DirectionForLDIR(..), RepeatPCOffset(..), Z80Core)
 import Z80Debug exposing (debugLog, debugTodo)
 import Z80Env exposing (Z80Env, setMem, setMem16, z80_in, z80_out, z80_push)
@@ -27,8 +27,7 @@ import Z80Types exposing (IXIYHL(..), InterruptRegisters, MainWithIndexRegisters
 type DeltaWithChanges
     = PureDelta Z80Change
     | InterruptDelta InterruptChange
-    | FlagDelta FlagChange
-    | RegisterChangeDelta RegisterChange
+    | RegisterChangeDelta RegisterFlagChange
     | EDChangeDelta EDRegisterChange
     | EDFourByteDelta EDFourByteChange
     | Simple8BitDelta Single8BitChange
@@ -49,9 +48,6 @@ apply_delta z80 rom48k clockTime z80delta =
     case z80delta of
         PureDelta z80ChangeData ->
             z80 |> applyPureDelta clockTime z80ChangeData |> CoreOnly
-
-        FlagDelta flagRegisters ->
-            z80 |> applyFlagDelta clockTime flagRegisters rom48k
 
         RegisterChangeDelta registerChange ->
             z80 |> applyRegisterDelta clockTime registerChange rom48k
@@ -222,53 +218,6 @@ applyInterruptChange chaange z80 =
             { z80 | flags = flags }
 
 
-applyFlagDelta : CpuTimeCTime -> FlagChange -> Z80ROM -> Z80Core -> CoreChange
-applyFlagDelta clockTime z80_flags rom48k z80_core =
-    case z80_flags of
-        OnlyFlags flagRegisters ->
-            { z80_core | flags = flagRegisters } |> CoreOnly
-
-        FlagChangeFunc f ->
-            { z80_core | flags = f z80_core.flags } |> CoreOnly
-
-        FlagChangeMain f ->
-            { z80_core | main = z80_core.main |> f z80_core.flags } |> CoreOnly
-
-        ConditionalReturn f ->
-            if f z80_core.flags then
-                let
-                    result =
-                        z80_core.env |> z80_pop rom48k clockTime
-
-                    env1 =
-                        z80_core.env
-                in
-                { z80_core | env = { env1 | sp = result.sp } } |> CoreWithPC result.value16
-
-            else
-                NoCore
-
-        FlagNewRValue int ->
-            let
-                ints =
-                    z80_core.interrupts
-            in
-            { z80_core | interrupts = { ints | r = int } } |> CoreOnly
-
-        FlagNewIValue int ->
-            let
-                ints =
-                    z80_core.interrupts
-
-                new_ir =
-                    ints.ir |> Bitwise.and 0xFF |> Bitwise.or (int |> shiftLeftBy8)
-            in
-            { z80_core | interrupts = { ints | ir = new_ir } } |> CoreOnly
-
-        FlagsPushAF ->
-            { z80_core | env = z80_core.env |> z80_push (z80_core.flags |> get_af) clockTime } |> CoreOnly
-
-
 applyPureDelta : CpuTimeCTime -> Z80Change -> Z80Core -> Z80Core
 applyPureDelta clockTime z80changeData z80 =
     case z80changeData of
@@ -339,7 +288,7 @@ applyPureDelta clockTime z80changeData z80 =
             { z80 | flags = intWithFlags.flags, main = new_main }
 
 
-applyRegisterDelta : CpuTimeCTime -> RegisterChange -> Z80ROM -> Z80Core -> CoreChange
+applyRegisterDelta : CpuTimeCTime -> RegisterFlagChange -> Z80ROM -> Z80Core -> CoreChange
 applyRegisterDelta clockTime z80changeData rom48k z80_core =
     let
         env =
@@ -741,6 +690,49 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                     env |> setMem addr value input.time
             in
             { z80_core | flags = { flags | a = value }, env = env_2 } |> CoreOnly
+
+        OnlyFlags flagRegisters ->
+            { z80_core | flags = flagRegisters } |> CoreOnly
+
+        FlagChangeFunc f ->
+            { z80_core | flags = f z80_core.flags } |> CoreOnly
+
+        FlagChangeMain f ->
+            { z80_core | main = z80_core.main |> f z80_core.flags } |> CoreOnly
+
+        ConditionalReturn f ->
+            if f z80_core.flags then
+                let
+                    result =
+                        z80_core.env |> z80_pop rom48k clockTime
+
+                    env1 =
+                        z80_core.env
+                in
+                { z80_core | env = { env1 | sp = result.sp } } |> CoreWithPC result.value16
+
+            else
+                NoCore
+
+        FlagNewRValue int ->
+            let
+                ints =
+                    z80_core.interrupts
+            in
+            { z80_core | interrupts = { ints | r = int } } |> CoreOnly
+
+        FlagNewIValue int ->
+            let
+                ints =
+                    z80_core.interrupts
+
+                new_ir =
+                    ints.ir |> Bitwise.and 0xFF |> Bitwise.or (int |> shiftLeftBy8)
+            in
+            { z80_core | interrupts = { ints | ir = new_ir } } |> CoreOnly
+
+        FlagsPushAF ->
+            { z80_core | env = z80_core.env |> z80_push (z80_core.flags |> get_af) clockTime } |> CoreOnly
 
 
 applyShifter : Shifter -> Int -> CpuTimeCTime -> Z80ROM -> Z80Core -> Z80Core
