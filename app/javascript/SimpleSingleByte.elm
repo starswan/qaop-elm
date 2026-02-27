@@ -73,12 +73,14 @@ singleByteMainRegs =
 
         -- case 0x70: env.mem(HL,B); time+=3; break;
         -- case 0x70: env.mem(getd(xy),B); time+=3; break;
-        , ( 0x70, ( \z80_main -> SetIndirect .hl .b, SevenTStates ) )
-        , ( 0x71, ( ld_indirect_hl_c, SevenTStates ) )
-        , ( 0x72, ( ld_indirect_hl_d, SevenTStates ) )
-        , ( 0x73, ( ld_indirect_hl_e, SevenTStates ) )
-        , ( 0x74, ( ld_indirect_hl_h, SevenTStates ) )
-        , ( 0x75, ( ld_indirect_hl_l, SevenTStates ) )
+        , ( 0x70, ( \z80_main -> SetIndirect (\main -> ( main.hl, main.b )), SevenTStates ) )
+
+        -- case 0x71: env.mem(HL,C); time+=3; break;
+        , ( 0x71, ( \z80_main -> SetIndirect (\main -> ( main.hl, main.c )), SevenTStates ) )
+        , ( 0x72, ( \z80_main -> SetIndirect (\main -> ( main.hl, main.d )), SevenTStates ) )
+        , ( 0x73, ( \z80_main -> SetIndirect (\main -> ( main.hl, main.e )), SevenTStates ) )
+        , ( 0x74, ( \z80_main -> SetIndirect (\main -> ( main.hl, main |> get_h )), SevenTStates ) )
+        , ( 0x75, ( \z80_main -> SetIndirect (\main -> ( main.hl, main |> get_l )), SevenTStates ) )
         , ( 0x78, ( ld_a_b, FourTStates ) )
         , ( 0x79, ( ld_a_c, FourTStates ) )
         , ( 0x7A, ( ld_a_d, FourTStates ) )
@@ -630,39 +632,32 @@ ld_a_l z80_main =
     RegisterChangeA get_l
 
 
-ld_indirect_hl_c : MainWithIndexRegisters -> RegisterChange
-ld_indirect_hl_c z80_main =
-    -- case 0x71: env.mem(HL,C); time+=3; break;
-    -- case 0x71: env.mem(getd(xy),C); time+=3; break;
-    SetIndirect .hl .c
 
-
-ld_indirect_hl_d : MainWithIndexRegisters -> RegisterChange
-ld_indirect_hl_d z80_main =
-    -- case 0x72: env.mem(HL,D); time+=3; break;
-    -- case 0x72: env.mem(getd(xy),D); time+=3; break;
-    SetIndirect .hl .d
-
-
-ld_indirect_hl_e : MainWithIndexRegisters -> RegisterChange
-ld_indirect_hl_e z80_main =
-    -- case 0x73: env.mem(HL,E); time+=3; break;
-    -- case 0x73: env.mem(getd(xy),E); time+=3; break;
-    SetIndirect .hl .e
-
-
-ld_indirect_hl_h : MainWithIndexRegisters -> RegisterChange
-ld_indirect_hl_h z80_main =
-    -- case 0x74: env.mem(HL,HL>>>8); time+=3; break;
-    -- case 0x74: env.mem(getd(xy),HL>>>8); time+=3; break;
-    SetIndirect .hl get_h
-
-
-ld_indirect_hl_l : MainWithIndexRegisters -> RegisterChange
-ld_indirect_hl_l z80_main =
-    -- case 0x75: env.mem(HL,HL&0xFF); time+=3; break;
-    -- case 0x75: env.mem(getd(xy),HL&0xFF); time+=3; break;
-    SetIndirect .hl get_l
+--ld_indirect_hl_c : MainWithIndexRegisters -> RegisterChange
+--ld_indirect_hl_c z80_main =
+-- case 0x71: env.mem(HL,C); time+=3; break;
+-- case 0x71: env.mem(getd(xy),C); time+=3; break;
+--SetIndirect .hl .c
+--ld_indirect_hl_d : MainWithIndexRegisters -> RegisterChange
+--ld_indirect_hl_d z80_main =
+-- case 0x72: env.mem(HL,D); time+=3; break;
+-- case 0x72: env.mem(getd(xy),D); time+=3; break;
+--SetIndirect .hl .d
+--ld_indirect_hl_e : MainWithIndexRegisters -> RegisterChange
+--ld_indirect_hl_e z80_main =
+-- case 0x73: env.mem(HL,E); time+=3; break;
+-- case 0x73: env.mem(getd(xy),E); time+=3; break;
+--SetIndirect .hl .e
+--ld_indirect_hl_h : MainWithIndexRegisters -> RegisterChange
+--ld_indirect_hl_h z80_main =
+-- case 0x74: env.mem(HL,HL>>>8); time+=3; break;
+-- case 0x74: env.mem(getd(xy),HL>>>8); time+=3; break;
+--SetIndirect .hl get_h
+--ld_indirect_hl_l : MainWithIndexRegisters -> RegisterChange
+--ld_indirect_hl_l z80_main =
+-- case 0x75: env.mem(HL,HL&0xFF); time+=3; break;
+-- case 0x75: env.mem(getd(xy),HL&0xFF); time+=3; break;
+--SetIndirect .hl get_l
 
 
 ex_de_hl : MainWithIndexRegisters -> MainWithIndexRegisters

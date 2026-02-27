@@ -26,7 +26,7 @@ type RegisterChange
     | IncrementIndirect (MainWithIndexRegisters -> Int)
     | DecrementIndirect (MainWithIndexRegisters -> Int)
     | RegisterChangeJump (MainWithIndexRegisters -> Int)
-    | SetIndirect (MainWithIndexRegisters -> Int) (MainWithIndexRegisters -> Int)
+    | SetIndirect (MainWithIndexRegisters -> ( Int, Int ))
     | RegisterChangeShifter Shifter Int
     | RegisterChangeIndexShifter Shifter Int
     | IndirectBitReset BitTest Int
