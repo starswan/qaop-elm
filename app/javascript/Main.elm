@@ -32,7 +32,6 @@ import Vector24 exposing (Vector24)
 import Vector32
 import Vector8 exposing (Vector8)
 import Z80Debug exposing (debugLog)
-import Z80Env exposing (Z80Env)
 import Z80Rom exposing (Z80ROM)
 import Z80Screen exposing (ScreenColourRun, mapScreenLine)
 
@@ -132,12 +131,12 @@ mapLineToSvg y_index ( start, linedata ) =
         []
 
 
-backgroundNode : Z80Env -> Svg Message
+backgroundNode : Z80Screen -> Svg Message
 backgroundNode env =
     let
         -- border colour is never bright
         border_colour =
-            borderColour env.borderColour
+            borderColour env.border
     in
     rect [ height "100%", width "100%", fill border_colour, rx "15" ] []
 
@@ -184,8 +183,8 @@ screenDataNodeList flash screenLines =
             )
 
 
-svgNode : Z80Screen -> Z80Env -> Bool -> Html Message
-svgNode screen env flash =
+svgNode : Z80Screen -> Bool -> Html Message
+svgNode screen flash =
     let
         nodelist =
             screenDataNodeList flash
@@ -199,7 +198,7 @@ svgNode screen env flash =
         , viewBox "0 0 352 272"
         ]
         --<rect width="100%" height="100%" fill="green" />
-        [ Svg.Lazy.lazy backgroundNode env
+        [ Svg.Lazy.lazy backgroundNode screen
 
         --, g [] (screenDataNodes screen)
         , g [] screenLines
@@ -211,9 +210,6 @@ view model =
     let
         screen =
             model.qaop.spectrum.rom48k.z80ram.screen
-
-        z80_env =
-            model.qaop.spectrum.cpu.coreWithClock.core.env
 
         load_disabled =
             case model.qaop.spectrum.tape of
@@ -262,7 +258,7 @@ view model =
             , preventDefaultOn "keydown" (Decode.map alwaysPreventDefault keyDownDecoder)
             , preventDefaultOn "keyup" (Decode.map alwaysPreventDefault keyUpDecoder)
             ]
-            [ Svg.Lazy.lazy3 svgNode screen z80_env model.globalFlash
+            [ Svg.Lazy.lazy2 svgNode screen model.globalFlash
             ]
 
         --,svg [style "height" "192px", style "width" "256px"] (List.indexedMap lineListToSvg lines |> List.concat)

@@ -344,8 +344,19 @@ frames keys speccy =
                         newRam =
                             rom.z80ram |> foldDictIntoRam env_2.ram
 
+                        screen =
+                            newRam.screen
+
+                        z80_ram =
+                            if env_2.borderColour /= screen.border then
+                                { newRam | screen = { screen | border = env_2.borderColour } }
+
+                            else
+                                newRam
+
+                        rom_2 : Z80ROM
                         rom_2 =
-                            { new_rom | z80ram = newRam }
+                            { new_rom | z80ram = z80_ram }
 
                         new_core =
                             { core_2 | env = { env_2 | ram = Dict.empty } }
