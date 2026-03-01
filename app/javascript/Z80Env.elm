@@ -9,13 +9,15 @@ import Bitwise
 import CpuTimeCTime exposing (CTime(..), CpuTimeAnd16BitValue, CpuTimeAndValue, CpuTimeCTime, CpuTimeSpAnd16BitValue, cont, cont1, cont_port)
 import Dict exposing (Dict)
 import Keyboard exposing (Keyboard, z80_keyboard_input)
+import SpectrumColour exposing (BorderColour(..), SpectrumColourValue(..), intToBorderColour)
 import Utils exposing (shiftRightBy8)
+import Z80Debug exposing (debugLog)
 
 
 type alias Z80Env =
-    { -- changing this to an array results in a recursion error in the browser :-(
-      ram : Dict Int Int
+    { ram : Dict Int Int
     , sp : Int
+    , borderColour : BorderColour
     }
 
 
@@ -33,7 +35,7 @@ type alias EnvWithPCAndValue =
 
 
 z80env_constructor =
-    Z80Env Dict.empty 0
+    Z80Env Dict.empty 0 BorderWhite
 
 
 setRam : Int -> Int -> Z80Env -> Z80Env
@@ -180,9 +182,10 @@ setMem16WithTime z80_addr value z80env =
     { z80env = env2, time = time }
 
 
-setMem16IgnoringTime : Int -> Int -> CpuTimeCTime -> Z80Env -> Z80Env
-setMem16IgnoringTime addr value time_input z80env =
-    setMem16 addr value time_input z80env |> Tuple.first
+
+--setMem16IgnoringTime : Int -> Int -> CpuTimeCTime -> Z80Env -> Z80Env
+--setMem16IgnoringTime addr value time_input z80env =
+--    setMem16 addr value time_input z80env |> Tuple.first
 
 
 setMem16 : Int -> Int -> CpuTimeCTime -> Z80Env -> ( Z80Env, CpuTimeCTime )
@@ -267,12 +270,27 @@ setMem16 addr value time_input z80env =
 
 
 z80_out : Int -> Int -> CpuTimeCTime -> Z80Env -> ( Z80Env, CpuTimeCTime )
-z80_out portnum _ clockTime env_in =
+z80_out portnum value clockTime env_in =
     let
         newTime =
             clockTime |> cont_port portnum
     in
-    ( env_in, newTime )
+    if (portnum |> Bitwise.and 0x01) == 0 then
+        let
+            border =
+                value |> Bitwise.and 0x07
+
+            borderColour =
+                border |> intToBorderColour
+        in
+        if borderColour /= env_in.borderColour then
+            ( debugLog "border" (border |> String.fromInt) { env_in | borderColour = borderColour }, newTime )
+
+        else
+            ( env_in, newTime )
+
+    else
+        ( env_in, newTime )
 
 
 z80_in : Int -> Keyboard -> CpuTimeCTime -> Z80Env -> CpuTimeAndValue
