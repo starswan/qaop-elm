@@ -17,7 +17,7 @@ import Z80Debug exposing (debugLog)
 type alias Z80Env =
     { ram : Dict Int Int
     , sp : Int
-    , borderColour : BorderColour
+    , borderColour : Int
     }
 
 
@@ -35,7 +35,7 @@ type alias EnvWithPCAndValue =
 
 
 z80env_constructor =
-    Z80Env Dict.empty 0 BorderWhite
+    Z80Env Dict.empty 0 7
 
 
 setRam : Int -> Int -> Z80Env -> Z80Env
@@ -279,12 +279,9 @@ z80_out portnum value clockTime env_in =
         let
             border =
                 value |> Bitwise.and 0x07
-
-            borderColour =
-                border |> intToBorderColour
         in
-        if borderColour /= env_in.borderColour then
-            ( debugLog "border" (border |> String.fromInt) { env_in | borderColour = borderColour }, newTime )
+        if border /= env_in.borderColour then
+            ( debugLog "border" (border |> String.fromInt) { env_in | borderColour = border }, newTime )
 
         else
             ( env_in, newTime )

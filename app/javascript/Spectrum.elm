@@ -5,6 +5,7 @@ import CpuTimeCTime exposing (reset_cpu_time)
 import Dict
 import Keyboard exposing (KeyEvent, Keyboard, update_keyboard)
 import SingleNoParams exposing (ex_af)
+import SpectrumColour exposing (intToBorderColour)
 import Tapfile exposing (Tapfile, tapfileDataToList)
 import Utils exposing (char, shiftLeftBy8, shiftRightBy8, toHexString, toHexString2)
 import Vector8
@@ -346,12 +347,16 @@ frames keys speccy =
 
                         rom_2 : Z80ROM
                         rom_2 =
-                            if env_2.borderColour /= newRam.screen.border then
+                            let
+                                newBorder =
+                                    env_2.borderColour |> intToBorderColour
+                            in
+                            if newBorder /= newRam.screen.border then
                                 let
                                     screen =
                                         newRam.screen
                                 in
-                                { new_rom | z80ram = { newRam | screen = { screen | border = env_2.borderColour } } }
+                                { new_rom | z80ram = { newRam | screen = { screen | border = newBorder } } }
 
                             else
                                 { new_rom | z80ram = newRam }
