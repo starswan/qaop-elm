@@ -1,5 +1,6 @@
 module SpectrumColour exposing (..)
 
+import Array
 import Dict
 import Maybe exposing (withDefault)
 
@@ -13,6 +14,15 @@ type BorderColour
     | BorderCyan
     | BorderYellow
     | BorderWhite
+
+
+borders =
+    Array.fromList [ BorderBlack, BorderBlue, BorderRed, BorderMagenta, BorderGreen, BorderCyan, BorderYellow, BorderWhite ]
+
+
+intToBorderColour : Int -> BorderColour
+intToBorderColour value =
+    borders |> Array.get value |> withDefault BorderWhite
 
 
 type SpectrumColourValue

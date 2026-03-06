@@ -5,6 +5,7 @@ import CpuTimeCTime exposing (reset_cpu_time)
 import Dict
 import Keyboard exposing (KeyEvent, Keyboard, update_keyboard)
 import SingleNoParams exposing (ex_af)
+import SpectrumColour exposing (intToBorderColour)
 import Tapfile exposing (Tapfile, tapfileDataToList)
 import Utils exposing (char, shiftLeftBy8, shiftRightBy8, toHexString, toHexString2)
 import Vector8
@@ -344,8 +345,21 @@ frames keys speccy =
                         newRam =
                             rom.z80ram |> foldDictIntoRam env_2.ram
 
+                        rom_2 : Z80ROM
                         rom_2 =
-                            { new_rom | z80ram = newRam }
+                            let
+                                newBorder =
+                                    env_2.borderColour |> intToBorderColour
+                            in
+                            if newBorder /= newRam.screen.border then
+                                let
+                                    screen =
+                                        newRam.screen
+                                in
+                                { new_rom | z80ram = { newRam | screen = { screen | border = newBorder } } }
+
+                            else
+                                { new_rom | z80ram = newRam }
 
                         new_core =
                             { core_2 | env = { env_2 | ram = Dict.empty } }
