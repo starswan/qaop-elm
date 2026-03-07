@@ -92,6 +92,36 @@ get_de z80 =
     z80.d |> shiftLeftBy8 |> Bitwise.or z80.e
 
 
+get_l : MainWithIndexRegisters -> Int
+get_l z80_main =
+    Bitwise.and z80_main.hl 0xFF
+
+
+get_h : MainWithIndexRegisters -> Int
+get_h z80_main =
+    z80_main.hl |> shiftRightBy8
+
+
+get_ixl : MainWithIndexRegisters -> Int
+get_ixl z80_main =
+    Bitwise.and z80_main.ix 0xFF
+
+
+get_ixh : MainWithIndexRegisters -> Int
+get_ixh z80_main =
+    z80_main.ix |> shiftRightBy8
+
+
+get_iyl : MainWithIndexRegisters -> Int
+get_iyl z80_main =
+    Bitwise.and z80_main.iy 0xFF
+
+
+get_iyh : MainWithIndexRegisters -> Int
+get_iyh z80_main =
+    z80_main.iy |> shiftRightBy8
+
+
 set_bc_main : Int -> MainWithIndexRegisters -> MainWithIndexRegisters
 set_bc_main v z80_main =
     { z80_main | b = v |> shiftRightBy8, c = Bitwise.and v 0xFF }

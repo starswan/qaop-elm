@@ -8,7 +8,7 @@ import Z80Core exposing (Z80Core)
 import Z80Env exposing (setMem)
 import Z80Flags exposing (FlagFunc(..), changeFlags, dec, inc)
 import Z80Mem exposing (mem)
-import Z80Registers exposing (ChangeMainRegister(..), ChangeOneRegister)
+import Z80Registers exposing (ChangeMainRegister(..))
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (MainWithIndexRegisters)
 
