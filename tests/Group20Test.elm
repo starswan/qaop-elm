@@ -182,12 +182,12 @@ suite =
                                 |> Triple.dropSecond
 
                         lo_value =
-                            new_z80.env |> mem 0x5577 clock.clockTime z80rom
+                            new_z80.env |> mem 0x5577 clock.clockTime z80rom |> Tuple.second
 
                         high_value =
-                            new_z80.env |> mem 0x5578 clock.clockTime z80rom
+                            new_z80.env |> mem 0x5578 clock.clockTime z80rom |> Tuple.second
                     in
-                    ( new_pc, lo_value.value, high_value.value ) |> Expect.equal ( addr + 3, 0x8F, 0x4D )
+                    ( new_pc, lo_value, high_value ) |> Expect.equal ( addr + 3, 0x8F, 0x4D )
             , test "0xDD 22 LD (nn), IX" <|
                 \_ ->
                     let
@@ -210,12 +210,12 @@ suite =
                                 |> Triple.dropSecond
 
                         lo_value =
-                            new_z80.env |> mem 0x5577 clock.clockTime z80rom
+                            new_z80.env |> mem 0x5577 clock.clockTime z80rom |> Tuple.second
 
                         high_value =
-                            new_z80.env |> mem 0x5578 clock.clockTime z80rom
+                            new_z80.env |> mem 0x5578 clock.clockTime z80rom |> Tuple.second
                     in
-                    Expect.equal ( addr + 4, 0x8F, 0x4D ) ( new_pc, lo_value.value, high_value.value )
+                    Expect.equal ( addr + 4, 0x8F, 0x4D ) ( new_pc, lo_value, high_value )
             , test "0xFD 22 LD (nn), IY" <|
                 \_ ->
                     let
@@ -238,12 +238,12 @@ suite =
                                 |> Triple.dropSecond
 
                         lo_value =
-                            new_z80.env |> mem 0x5577 clock.clockTime z80rom
+                            new_z80.env |> mem 0x5577 clock.clockTime z80rom |> Tuple.second
 
                         high_value =
-                            new_z80.env |> mem 0x5578 clock.clockTime z80rom
+                            new_z80.env |> mem 0x5578 clock.clockTime z80rom |> Tuple.second
                     in
-                    Expect.equal ( addr + 4, 0x8F, 0x4D ) ( new_pc, lo_value.value, high_value.value )
+                    Expect.equal ( addr + 4, 0x8F, 0x4D ) ( new_pc, lo_value, high_value )
             ]
         , describe "0x23 INC HL variants"
             [ test "0x23 INC HL" <|

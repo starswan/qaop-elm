@@ -88,11 +88,11 @@ suite =
                             |> Triple.dropSecond
 
                     mem_vals =
-                        [ (mem 0x6000 clock.clockTime z80rom new_z80.env).value
-                        , (mem 0x6001 clock.clockTime z80rom new_z80.env).value
-                        , (mem 0x6002 clock.clockTime z80rom new_z80.env).value
-                        , (mem 0x6003 clock.clockTime z80rom new_z80.env).value
-                        , (mem 0x6004 clock.clockTime z80rom new_z80.env).value
+                        [ mem 0x6000 clock.clockTime z80rom new_z80.env |> Tuple.second
+                        , mem 0x6001 clock.clockTime z80rom new_z80.env |> Tuple.second
+                        , mem 0x6002 clock.clockTime z80rom new_z80.env |> Tuple.second
+                        , mem 0x6003 clock.clockTime z80rom new_z80.env |> Tuple.second
+                        , mem 0x6004 clock.clockTime z80rom new_z80.env |> Tuple.second
                         ]
                 in
                 Expect.equal { pc = addr + 2, b = 0x00, c = 0x00, d = 0x60, e = 0x05, hl = 0x5055, mem = [ 0xA0, 0xA5, 0xAA, 0xBA, 0xB5 ] }
@@ -118,7 +118,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom |> .value
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom |> Tuple.second
                     in
                     Expect.equal { pc = addr + 2, hl = 0x6546, b = 0x00, mem = 0xFF } { pc = new_pc, hl = new_z80.main.hl, b = new_z80.main.b, mem = mem_value }
             , test "Looping" <|
@@ -141,7 +141,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom |> .value
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom |> Tuple.second
                     in
                     Expect.equal { pc = addr, hl = 0x6546, b = 0x01, mem = 0xFF } { pc = new_pc, hl = new_z80.main.hl, b = new_z80.main.b, mem = mem_value }
             ]
@@ -208,7 +208,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom |> .value
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom |> Tuple.second
                     in
                     Expect.equal { pc = addr + 2, hl = 0x6544, b = 0x00, mem = 0xFF } { pc = new_pc, hl = new_z80.main.hl, b = new_z80.main.b, mem = mem_value }
             , test "Looping" <|
@@ -231,7 +231,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom |> .value
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom |> Tuple.second
                     in
                     Expect.equal { pc = addr, hl = 0x6544, b = 0x01, mem = 0xFF } { pc = new_pc, hl = new_z80.main.hl, b = new_z80.main.b, mem = mem_value }
             ]

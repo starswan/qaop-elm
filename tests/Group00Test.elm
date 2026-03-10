@@ -80,7 +80,7 @@ suite =
                         ( new_z80, new_pc ) =
                             z80inc |> Z80.executeCoreInstruction z80rom addr |> Triple.dropSecond
                     in
-                    Expect.equal ( addr + 1, 0x27 ) ( new_pc, new_z80.env |> mem 0x4534 clock.clockTime z80rom |> .value )
+                    Expect.equal ( addr + 1, 0x27 ) ( new_pc, new_z80.env |> mem 0x4534 clock.clockTime z80rom |> Tuple.second )
             ]
         , describe "0x03 INC BC"
             [ test "execute INC BC" <|

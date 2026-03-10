@@ -6,10 +6,9 @@
 module Z80Env exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CTime(..), CpuTimeAnd16BitValue, CpuTimeAndValue, CpuTimeCTime, CpuTimeSpAnd16BitValue, cont, cont1, cont_port)
+import CpuTimeCTime exposing (CTime(..), CpuTimeAnd16BitValue, CpuTimeCTime, CpuTimeSpAnd16BitValue, cont, cont1, cont_port)
 import Dict exposing (Dict)
 import Keyboard exposing (Keyboard, z80_keyboard_input)
-import SpectrumColour exposing (BorderColour(..), SpectrumColourValue(..), intToBorderColour)
 import Utils exposing (shiftRightBy8)
 import Z80Debug exposing (debugLog)
 
@@ -290,7 +289,7 @@ z80_out portnum value clockTime env_in =
         ( env_in, newTime )
 
 
-z80_in : Int -> Keyboard -> CpuTimeCTime -> Z80Env -> CpuTimeAndValue
+z80_in : Int -> Keyboard -> CpuTimeCTime -> Z80Env -> ( CpuTimeCTime, Int )
 z80_in portnum keyboard clockTime _ =
     let
         newTime =
@@ -310,7 +309,7 @@ z80_in portnum keyboard clockTime _ =
         --    else
         --        value
     in
-    CpuTimeAndValue newTime value
+    ( newTime, value )
 
 
 
