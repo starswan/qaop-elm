@@ -880,7 +880,7 @@ executeCore rom48k z80 =
             core_2.interrupts
 
         z80_1 =
-            { z80 | coreWithClock = { clock_2 | core = { core_2 | interrupts = { core_ints | r = new_r } } } }
+            { z80 | coreWithClock = { clock_2 | clockTime = ct1_time, core = { core_2 | interrupts = { core_ints | r = new_r } } } }
     in
     case nonCoreFuncs |> Dict.get ct1_value of
         Just ( f, duration ) ->
