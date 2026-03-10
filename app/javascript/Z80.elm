@@ -227,11 +227,7 @@ executeAndApplyDelta ( clockTime, z80opcode ) rom48k z80clock =
 
                 IncrementByFour ->
                     Bitwise.and (z80clock.pc + 4) 0xFFFF
-
-        --new_core =
-        --    delta |> apply_delta z80_core rom48k clockTime
     in
-    --{ z80clock | core = new_core, clockTime = clockTime }
     case delta |> apply_delta z80_core rom48k newClockTime of
         CoreOnly z80Core ->
             { z80clock | core = z80Core, clockTime = newClockTime, pc = pcAfter }
