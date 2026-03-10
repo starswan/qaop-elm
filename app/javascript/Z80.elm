@@ -862,6 +862,7 @@ executeCore rom48k z80 =
         z80_core =
             z80_clock.core
 
+        execute_f : ( Z80CoreWithClockTime, ( CpuTimeCTime, Int ), Int ) -> ( Z80CoreWithClockTime, ( CpuTimeCTime, Int ), Int )
         execute_f =
             \( clock, ct, r_register ) ->
                 let
