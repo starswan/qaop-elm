@@ -872,7 +872,7 @@ executeCore rom48k z80 =
             z80_clock.core
 
         ( initialTime, initialOpcode ) =
-            fetchInstruction z80_clock.pc rom48k z80_clock.clockTime z80_clock.core.interrupts.r z80_core
+            fetchInstruction z80_clock.pc rom48k z80_clock.clockTime z80_core.interrupts.r z80_core
 
         ( clock_2, ct1_value, new_r ) =
             Loop.while coreLooping execute_f ( { z80_clock | clockTime = initialTime }, initialOpcode, z80_core.interrupts.r )
