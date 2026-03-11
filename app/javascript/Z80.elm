@@ -205,6 +205,25 @@ type SpecialExecutionType
     | EDMisc ( CpuTimeCTime, Int )
 
 
+
+--type alias ClockTimeWithPC =
+--    { clockTime : CpuTimeCTime
+--    , pc : Int
+--    }
+
+
+executeAndFetch : Z80ROM -> ( Z80CoreWithClockTime, Int, Int ) -> ( Z80CoreWithClockTime, Int, Int )
+executeAndFetch z80rom ( clock, ct_opcode, r_register ) =
+    let
+        core_1_clock =
+            clock.core |> executeAndApplyDelta clock.clockTime ct_opcode z80rom clock.pc
+
+        ( newTime, newOpCode ) =
+            fetchInstruction core_1_clock.pc z80rom core_1_clock.clockTime r_register core_1_clock.core
+    in
+    ( { core_1_clock | clockTime = newTime }, newOpCode, r_register + 1 )
+
+
 executeAndApplyDelta : CpuTimeCTime -> Int -> Z80ROM -> Int -> Z80Core -> Z80CoreWithClockTime
 executeAndApplyDelta clockTime z80opcode rom48k pc z80_core =
     let
@@ -853,18 +872,6 @@ coreLooping ( z80core, value, _ ) =
 executeCore : Z80ROM -> Z80 -> Z80
 executeCore rom48k z80 =
     let
-        execute_f : ( Z80CoreWithClockTime, Int, Int ) -> ( Z80CoreWithClockTime, Int, Int )
-        execute_f =
-            \( clock, ct_opcode, r_register ) ->
-                let
-                    core_1_clock =
-                        clock.core |> executeAndApplyDelta clock.clockTime ct_opcode rom48k clock.pc
-
-                    ( newTime, newOpCode ) =
-                        fetchInstruction core_1_clock.pc rom48k core_1_clock.clockTime r_register core_1_clock.core
-                in
-                ( { core_1_clock | clockTime = newTime }, newOpCode, r_register + 1 )
-
         z80_clock =
             z80.coreWithClock
 
@@ -875,7 +882,7 @@ executeCore rom48k z80 =
             fetchInstruction z80_clock.pc rom48k z80_clock.clockTime z80_core.interrupts.r z80_core
 
         ( clock_2, ct1_value, new_r ) =
-            Loop.while coreLooping execute_f ( { z80_clock | clockTime = initialTime }, initialOpcode, z80_core.interrupts.r )
+            Loop.while coreLooping (executeAndFetch rom48k) ( { z80_clock | clockTime = initialTime }, initialOpcode, z80_core.interrupts.r )
 
         core_2 =
             clock_2.core
