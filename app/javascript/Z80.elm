@@ -460,13 +460,13 @@ runOrdinary ct_value instrTime rom48k pc z80_core =
                                                                                             case singleWith8BitParam |> Dict.get ct_value of
                                                                                                 Just ( f, duration ) ->
                                                                                                     let
-                                                                                                        paramTimeValue =
+                                                                                                        ( paramTime, paramValue ) =
                                                                                                             z80_core.env |> mem (Bitwise.and (pc + 1) 0xFFFF) instrTime rom48k
 
                                                                                                         instrTime2 =
-                                                                                                            paramTimeValue.time |> addDuration duration
+                                                                                                            paramTime |> addDuration duration
                                                                                                     in
-                                                                                                    ( Simple8BitDelta (f paramTimeValue.value), instrTime2, IncrementByTwo )
+                                                                                                    ( Simple8BitDelta (f paramValue), instrTime2, IncrementByTwo )
 
                                                                                                 Nothing ->
                                                                                                     ( UnknownInstruction "runOrdinary" ct_value, instrTime, IncrementByOne )
