@@ -845,37 +845,37 @@ stillLooping z80core =
     c_TIME_LIMIT > z80core.clockTime.cpu_time
 
 
-coreLooping : ( Z80CoreWithClockTime, ( CpuTimeCTime, Int ), Int ) -> Bool
-coreLooping ( z80core, ( time, value ), _ ) =
+coreLooping : ( Z80CoreWithClockTime, Int, Int ) -> Bool
+coreLooping ( z80core, value, _ ) =
     isCoreOpCode value && (z80core |> stillLooping)
 
 
 executeCore : Z80ROM -> Z80 -> Z80
 executeCore rom48k z80 =
     let
+        execute_f : ( Z80CoreWithClockTime, Int, Int ) -> ( Z80CoreWithClockTime, Int, Int )
+        execute_f =
+            \( clock, ct_opcode, r_register ) ->
+                let
+                    core_1_clock =
+                        clock.core |> executeAndApplyDelta clock.clockTime ct_opcode rom48k clock.pc
+
+                    ( newTime, newOpCode ) =
+                        fetchInstruction core_1_clock.pc rom48k core_1_clock.clockTime r_register core_1_clock.core
+                in
+                ( { core_1_clock | clockTime = newTime }, newOpCode, r_register + 1 )
+
         z80_clock =
             z80.coreWithClock
 
         z80_core =
             z80_clock.core
 
-        execute_f : ( Z80CoreWithClockTime, ( CpuTimeCTime, Int ), Int ) -> ( Z80CoreWithClockTime, ( CpuTimeCTime, Int ), Int )
-        execute_f =
-            \( clock, ( ct_time, ct_opcode ), r_register ) ->
-                let
-                    core_1_clock =
-                        clock.core |> executeAndApplyDelta ct_time ct_opcode rom48k clock.pc
-
-                    ( newTime, newOpCode ) =
-                        fetchInstruction core_1_clock.pc rom48k core_1_clock.clockTime r_register core_1_clock.core
-                in
-                ( core_1_clock, ( newTime, newOpCode ), r_register + 1 )
-
         ( initialTime, initialOpcode ) =
-            fetchInstruction z80_clock.pc rom48k z80_clock.clockTime z80_clock.core.interrupts.r z80_clock.core
+            fetchInstruction z80_clock.pc rom48k z80_clock.clockTime z80_clock.core.interrupts.r z80_core
 
-        ( clock_2, ( ct1_time, ct1_value ), new_r ) =
-            Loop.while coreLooping execute_f ( z80_clock, ( initialTime, initialOpcode ), z80_core.interrupts.r )
+        ( clock_2, ct1_value, new_r ) =
+            Loop.while coreLooping execute_f ( { z80_clock | clockTime = initialTime }, initialOpcode, z80_core.interrupts.r )
 
         core_2 =
             clock_2.core
@@ -884,7 +884,7 @@ executeCore rom48k z80 =
             core_2.interrupts
 
         z80_1 =
-            { z80 | coreWithClock = { clock_2 | clockTime = ct1_time, core = { core_2 | interrupts = { core_ints | r = new_r } } } }
+            { z80 | coreWithClock = { clock_2 | core = { core_2 | interrupts = { core_ints | r = new_r } } } }
     in
     case nonCoreFuncs |> Dict.get ct1_value of
         Just ( f, duration ) ->
