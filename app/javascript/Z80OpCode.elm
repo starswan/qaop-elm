@@ -6,6 +6,7 @@ import Dict exposing (Dict)
 import RegisterChange exposing (RegisterFlagChange(..))
 import SimpleFlagOps exposing (singleByteFlags, singleByteFlagsDD, singleByteFlagsFD)
 import SimpleSingleByte exposing (singleByteMainRegs, singleByteMainRegsDD, singleByteMainRegsFD)
+import SingleByteWithEnv exposing (singleByteZ80Env)
 import SingleEnvWithMain exposing (singleEnvMainRegs, singleEnvMainRegsIX, singleEnvMainRegsIY)
 import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters, singleByteMainAndFlagRegistersIX, singleByteMainAndFlagRegistersIY)
 import SingleNoParams exposing (singleNoParamCalls, singleWithNoParam, singleWithNoParamDD, singleWithNoParamFD)
@@ -23,6 +24,7 @@ singleByteMainFlagsRegs =
         |> Dict.union singleNoParamCalls
         |> Dict.union (singleByteMainAndFlagRegisters |> Dict.map (\_ ( f, duration ) -> ( RegisterZ80Change f, duration )))
         |> Dict.union (singleEnvMainRegs |> Dict.map (\_ ( f, duration ) -> ( RegisterEnvMainChangeWithClockTime f, duration )))
+        |> Dict.union (singleByteZ80Env |> Dict.map (\_ ( f, duration ) -> ( RegisterSingleByteEnv f, duration )))
 
 
 singleByteMainFlagsRegsIY : Dict Int ( RegisterFlagChange, InstructionDuration )

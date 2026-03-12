@@ -32,7 +32,6 @@ type DeltaWithChanges
     | Simple8BitDelta Single8BitChange
     | DoubleWithRegistersDelta DoubleWithRegisterChange
     | JumpChangeDelta JumpChange
-    | SingleEnvDelta SingleByteEnvChange
     | MainWithEnvDelta SingleEnvMainChange
     | TripleMainChangeDelta CpuTimeCTime TripleMainChange
     | Triple16ParamDelta TripleByteChange
@@ -57,11 +56,6 @@ apply_delta z80 rom48k clockTime z80delta =
 
         JumpChangeDelta jumpChange ->
             z80 |> applyJumpChangeDelta jumpChange
-
-        --NoParamsDelta noParamChange ->
-        --    z80 |> applyNoParamsDelta clockTime noParamChange rom48k
-        SingleEnvDelta singleByteEnvChange ->
-            z80 |> applyEnvChangeDelta singleByteEnvChange |> CoreOnly
 
         MainWithEnvDelta singleEnvMainChange ->
             z80 |> applySingleEnvMainChange clockTime singleEnvMainChange rom48k |> CoreOnly
@@ -283,13 +277,19 @@ applyPureDelta clockTime z80changeData z80 =
 
 applyRegisterDelta : CpuTimeCTime -> RegisterFlagChange -> Z80ROM -> Z80Core -> CoreChange
 applyRegisterDelta clockTime z80changeData rom48k z80_core =
-    let
-        old_env =
-            z80_core.env
-    in
     case z80changeData of
+        RegisterSingleByteEnv f ->
+            let
+                old_env =
+                    z80_core.env
+            in
+            z80_core |> applyEnvChangeDelta (f old_env) |> CoreOnly
+
         RegisterEnvMainChange f ->
             let
+                old_env =
+                    z80_core.env
+
                 singleEnvMainChange =
                     f z80_core.main rom48k old_env
             in
@@ -297,6 +297,9 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
 
         RegisterEnvMainChangeWithClockTime f ->
             let
+                old_env =
+                    z80_core.env
+
                 singleEnvMainChange =
                     f z80_core.main rom48k clockTime old_env
             in
@@ -315,6 +318,9 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
 
         PopBC ->
             let
+                old_env =
+                    z80_core.env
+
                 v =
                     old_env |> z80_pop rom48k clockTime
             in
@@ -322,6 +328,9 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
 
         PopHL ->
             let
+                old_env =
+                    z80_core.env
+
                 v =
                     old_env |> z80_pop rom48k clockTime
 
@@ -336,6 +345,9 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
 
         PopIX ->
             let
+                old_env =
+                    z80_core.env
+
                 v =
                     old_env |> z80_pop rom48k clockTime
 
@@ -350,6 +362,9 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
 
         PopIY ->
             let
+                old_env =
+                    z80_core.env
+
                 v =
                     old_env |> z80_pop rom48k clockTime
 
@@ -365,6 +380,9 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
         PopAF ->
             -- case 0xF1: af(pop()); break;
             let
+                old_env =
+                    z80_core.env
+
                 v =
                     old_env |> z80_pop rom48k clockTime
             in
@@ -377,6 +395,9 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
         PopDE ->
             -- case 0xD1: v=pop(); D=v>>>8; E=v&0xFF; break;
             let
+                old_env =
+                    z80_core.env
+
                 v =
                     old_env |> z80_pop rom48k clockTime
             in
@@ -389,6 +410,9 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
         Ret ->
             -- case 0xC9: MP=PC=pop(); break;
             let
+                old_env =
+                    z80_core.env
+
                 a =
                     z80_core.env |> z80_pop rom48k clockTime
             in
@@ -403,11 +427,18 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 |> CoreOnly
 
         RegChangeNewSP f ->
+            let
+                old_env =
+                    z80_core.env
+            in
             { z80_core | env = { old_env | sp = z80_core.main |> f } } |> CoreOnly
 
         IncrementIndirect f ->
             -- This should be a primitive operation on Z80Env to increment a stored value
             let
+                old_env =
+                    z80_core.env
+
                 addr =
                     z80_core.main |> f
 
@@ -434,6 +465,9 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 flags =
                     z80_core.flags |> dec value.value
 
+                old_env =
+                    z80_core.env
+
                 ( env_3, newNew ) =
                     old_env |> setMem addr flags.value clockTime
             in
@@ -444,6 +478,9 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
 
         SetIndirect addrvaluefunc ->
             let
+                old_env =
+                    z80_core.env
+
                 main =
                     z80_core.main
 
@@ -463,6 +500,9 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
 
         IndirectBitReset bitMask addr ->
             let
+                old_env =
+                    z80_core.env
+
                 value =
                     old_env |> mem addr clockTime rom48k
 
@@ -476,6 +516,9 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
 
         IndirectBitSet bitMask raw_addr ->
             let
+                old_env =
+                    z80_core.env
+
                 addr =
                     raw_addr |> Bitwise.and 0xFFFF
 
@@ -505,6 +548,9 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
 
         ExchangeTopOfStackWith ixiyhl ->
             let
+                old_env =
+                    z80_core.env
+
                 popped =
                     old_env |> z80_pop rom48k clockTime
 
@@ -598,6 +644,9 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                         ChangeMainL ->
                             { main | hl = Bitwise.or value.value (Bitwise.and z80_core.main.hl 0xFF00) }
 
+                old_env =
+                    z80_core.env
+
                 ( env_2, newNew ) =
                     old_env |> setMem addr value.value input.time
             in
@@ -605,6 +654,9 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
 
         SetBitIndirectWithCopy bitTest changeOneRegister raw_addr ->
             let
+                old_env =
+                    z80_core.env
+
                 addr =
                     raw_addr |> Bitwise.and 0xFFFF
 
@@ -644,6 +696,9 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
 
         ResetBitIndirectWithCopy bitTest changeOneRegister raw_addr ->
             let
+                old_env =
+                    z80_core.env
+
                 addr =
                     raw_addr |> Bitwise.and 0xFFFF
 
@@ -725,6 +780,9 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
 
         SetBitIndirectA bitTest raw_addr ->
             let
+                old_env =
+                    z80_core.env
+
                 addr =
                     raw_addr |> Bitwise.and 0xFFFF
 
@@ -744,6 +802,9 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
 
         ResetBitIndirectA bitTest raw_addr ->
             let
+                old_env =
+                    z80_core.env
+
                 addr =
                     raw_addr |> Bitwise.and 0xFFFF
 
