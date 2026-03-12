@@ -288,6 +288,20 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
             z80_core.env
     in
     case z80changeData of
+        RegisterEnvMainChange f ->
+            let
+                singleEnvMainChange =
+                    f z80_core.main rom48k old_env
+            in
+            z80_core |> applySingleEnvMainChange clockTime singleEnvMainChange rom48k |> CoreOnly
+
+        RegisterEnvMainChangeWithClockTime f ->
+            let
+                singleEnvMainChange =
+                    f z80_core.main rom48k clockTime old_env
+            in
+            z80_core |> applySingleEnvMainChange clockTime singleEnvMainChange rom48k |> CoreOnly
+
         RegisterZ80Change f ->
             let
                 z80change =

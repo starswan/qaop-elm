@@ -6,6 +6,7 @@ import Dict exposing (Dict)
 import RegisterChange exposing (RegisterFlagChange(..))
 import SimpleFlagOps exposing (singleByteFlags, singleByteFlagsDD, singleByteFlagsFD)
 import SimpleSingleByte exposing (singleByteMainRegs, singleByteMainRegsDD, singleByteMainRegsFD)
+import SingleEnvWithMain exposing (singleEnvMainRegs, singleEnvMainRegsIX, singleEnvMainRegsIY)
 import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters, singleByteMainAndFlagRegistersIX, singleByteMainAndFlagRegistersIY)
 import SingleNoParams exposing (singleNoParamCalls, singleWithNoParam, singleWithNoParamDD, singleWithNoParamFD)
 import Z80Core exposing (Z80Core)
@@ -21,6 +22,7 @@ singleByteMainFlagsRegs =
         |> Dict.union singleWithNoParam
         |> Dict.union singleNoParamCalls
         |> Dict.union (singleByteMainAndFlagRegisters |> Dict.map (\_ ( f, duration ) -> ( RegisterZ80Change f, duration )))
+        |> Dict.union (singleEnvMainRegs |> Dict.map (\_ ( f, duration ) -> ( RegisterEnvMainChangeWithClockTime f, duration )))
 
 
 singleByteMainFlagsRegsIY : Dict Int ( RegisterFlagChange, InstructionDuration )
@@ -29,6 +31,7 @@ singleByteMainFlagsRegsIY =
         |> Dict.union singleByteMainRegsFD
         |> Dict.union singleWithNoParamFD
         |> Dict.union (singleByteMainAndFlagRegistersIY |> Dict.map (\_ ( f, duration ) -> ( RegisterZ80Change f, duration )))
+        |> Dict.union (singleEnvMainRegsIY |> Dict.map (\_ ( f, duration ) -> ( RegisterEnvMainChange f, duration )))
 
 
 singleByteMainFlagsRegsIX : Dict Int ( RegisterFlagChange, InstructionDuration )
@@ -37,6 +40,7 @@ singleByteMainFlagsRegsIX =
         |> Dict.union singleByteMainRegsDD
         |> Dict.union singleWithNoParamDD
         |> Dict.union (singleByteMainAndFlagRegistersIX |> Dict.map (\_ ( f, duration ) -> ( RegisterZ80Change f, duration )))
+        |> Dict.union (singleEnvMainRegsIX |> Dict.map (\_ ( f, duration ) -> ( RegisterEnvMainChange f, duration )))
 
 
 fetchInstruction : Int -> Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> CpuTimeAndValue

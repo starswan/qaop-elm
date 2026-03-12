@@ -1,10 +1,14 @@
 module RegisterChange exposing (..)
 
+import CpuTimeCTime exposing (CpuTimeCTime)
+import SingleEnvWithMain exposing (SingleEnvMainChange)
 import Utils exposing (BitTest)
 import Z80Change exposing (Z80Change)
 import Z80Core exposing (DirectionForLDIR)
+import Z80Env exposing (Z80Env)
 import Z80Flags exposing (FlagFunc, FlagRegisters)
 import Z80Registers exposing (ChangeMainRegister, ChangeSingle)
+import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIYHL, InterruptMode, MainWithIndexRegisters)
 
 
@@ -57,6 +61,8 @@ type RegisterFlagChange
     | Ret
     | Rst Int
     | RegisterZ80Change (MainWithIndexRegisters -> FlagRegisters -> Z80Change)
+    | RegisterEnvMainChangeWithClockTime (MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange)
+    | RegisterEnvMainChange (MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange)
 
 
 type SixteenBit
