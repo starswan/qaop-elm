@@ -393,7 +393,7 @@ runOrdinary ct_value instrTime rom48k pc z80_core =
                                 param =
                                     z80_core.env |> mem (Bitwise.and (pc + 1) 0xFFFF) time rom48k
                             in
-                            ( DoubleWithRegistersDelta (f z80_core.main param.value), param.time, IncrementByTwo )
+                            ( Simple16BitDelta (f z80_core.main param.value), param.time, IncrementByTwo )
 
                         Nothing ->
                             let

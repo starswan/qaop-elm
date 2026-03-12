@@ -13,10 +13,13 @@ import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (MainWithIndexRegisters)
 
 
-type DoubleWithRegisterChange
-    = DoubleRegChangeStoreIndirect Int Int
+type SimpleDoubleWithRegisterChange
+    = RegChangeStoreIndirect Int Int
     | NewHLRegisterValue Int
-    | NewIXRegisterValue Int
+
+
+type DoubleWithRegisterChange
+    = NewIXRegisterValue Int
     | NewIYRegisterValue Int
     | NewARegisterIndirect Int
     | SetARegisterIndirect Int
@@ -26,7 +29,7 @@ type DoubleWithRegisterChange
     | NewRegisterIndirect ChangeMainRegister Int
 
 
-doubleWithRegisters : Dict Int ( MainWithIndexRegisters -> Int -> DoubleWithRegisterChange, InstructionDuration )
+doubleWithRegisters : Dict Int ( MainWithIndexRegisters -> Int -> SimpleDoubleWithRegisterChange, InstructionDuration )
 doubleWithRegisters =
     Dict.fromList
         [ ( 0x26, ( ld_h_n, SevenTStates ) )
@@ -111,7 +114,7 @@ doubleWithRegistersIY =
         ]
 
 
-ld_h_n : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
+ld_h_n : MainWithIndexRegisters -> Int -> SimpleDoubleWithRegisterChange
 ld_h_n z80_main param =
     -- case 0x26: HL=HL&0xFF|imm8()<<8; break;
     Bitwise.or (param |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF) |> NewHLRegisterValue
@@ -129,7 +132,7 @@ ld_iy_h_n z80_main param =
     Bitwise.or (param |> shiftLeftBy8) (Bitwise.and z80_main.iy 0xFF) |> NewIYRegisterValue
 
 
-ld_l_n : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
+ld_l_n : MainWithIndexRegisters -> Int -> SimpleDoubleWithRegisterChange
 ld_l_n z80_main param =
     -- case 0x2E: HL=HL&0xFF00|imm8(); break;
     Bitwise.or param (Bitwise.and z80_main.hl 0xFF00) |> NewHLRegisterValue
@@ -179,11 +182,11 @@ ld_a_indirect_iy z80_main param =
     NewARegisterIndirect address
 
 
-ld_indirect_hl_n : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
+ld_indirect_hl_n : MainWithIndexRegisters -> Int -> SimpleDoubleWithRegisterChange
 ld_indirect_hl_n z80_main param =
     -- case 0x36: env.mem(HL,imm8()); time+=3; break;
     -- case 0x36: {int a=(char)(xy+(byte)env.mem(PC)); time+=3;
-    DoubleRegChangeStoreIndirect z80_main.hl param
+    RegChangeStoreIndirect z80_main.hl param
 
 
 inc_indirect_ix : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
@@ -216,20 +219,6 @@ dec_indirect_iy z80_main param =
 applyDoubleWithRegistersDelta : CpuTimeCTime -> DoubleWithRegisterChange -> Z80ROM -> Z80Core -> Z80Core
 applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
     case z80changeData of
-        DoubleRegChangeStoreIndirect addr value ->
-            let
-                ( env_1, newTime ) =
-                    z80.env |> setMem addr value cpu_time
-            in
-            { z80 | env = env_1 }
-
-        NewHLRegisterValue int ->
-            let
-                main =
-                    z80.main
-            in
-            { z80 | main = { main | hl = int } }
-
         NewIXRegisterValue int ->
             let
                 main =
@@ -362,3 +351,21 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
 
             else
                 z80
+
+
+applySimpleWithRegistersDelta : CpuTimeCTime -> SimpleDoubleWithRegisterChange -> Z80ROM -> Z80Core -> Z80Core
+applySimpleWithRegistersDelta cpu_time z80changeData rom48k z80 =
+    case z80changeData of
+        RegChangeStoreIndirect addr value ->
+            let
+                ( env_1, newTime ) =
+                    z80.env |> setMem addr value cpu_time
+            in
+            { z80 | env = env_1 }
+
+        NewHLRegisterValue int ->
+            let
+                main =
+                    z80.main
+            in
+            { z80 | main = { main | hl = int } }

@@ -2,7 +2,7 @@ module Z80Execute exposing (..)
 
 import Bitwise exposing (shiftLeftBy)
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
-import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
+import DoubleWithRegisters exposing (DoubleWithRegisterChange, SimpleDoubleWithRegisterChange, applyDoubleWithRegistersDelta, applySimpleWithRegistersDelta)
 import GroupED exposing (adc_hl_sp, cpir, execute_ED70, execute_ED78, inirOtirFlags, ldir, rld, rrd, sbc_hl)
 import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), RegisterFlagChange(..), Shifter(..), SixteenBit(..), TwoByteChange(..))
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
@@ -31,6 +31,7 @@ type DeltaWithChanges
     | EDFourByteDelta EDFourByteChange
     | TwoByteDelta TwoByteChange
     | DoubleWithRegistersDelta DoubleWithRegisterChange
+    | Simple16BitDelta SimpleDoubleWithRegisterChange
     | MainWithEnvDelta SingleEnvMainChange
     | TripleMainChangeDelta CpuTimeCTime TripleMainChange
     | Triple16ParamDelta TripleByteChange
@@ -49,6 +50,9 @@ apply_delta z80 rom48k clockTime z80delta =
 
         DoubleWithRegistersDelta doubleWithRegisterChange ->
             z80 |> applyDoubleWithRegistersDelta clockTime doubleWithRegisterChange rom48k |> CoreOnly
+
+        Simple16BitDelta doubleWithRegisterChange ->
+            z80 |> applySimpleWithRegistersDelta clockTime doubleWithRegisterChange rom48k |> CoreOnly
 
         MainWithEnvDelta singleEnvMainChange ->
             z80 |> applySingleEnvMainChange clockTime singleEnvMainChange rom48k |> CoreOnly
