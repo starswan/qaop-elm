@@ -288,6 +288,13 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
             z80_core.env
     in
     case z80changeData of
+        RegisterZ80Change f ->
+            let
+                z80change =
+                    f z80_core.main z80_core.flags
+            in
+            z80_core |> applyPureDelta clockTime z80change |> CoreOnly
+
         Rst new_pc ->
             --case 0xC7:push(PC); PC=c-199; break;
             CallWithPC new_pc

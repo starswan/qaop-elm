@@ -1,6 +1,7 @@
 module RegisterChange exposing (..)
 
 import Utils exposing (BitTest)
+import Z80Change exposing (Z80Change)
 import Z80Core exposing (DirectionForLDIR)
 import Z80Flags exposing (FlagFunc, FlagRegisters)
 import Z80Registers exposing (ChangeMainRegister, ChangeSingle)
@@ -55,6 +56,7 @@ type RegisterFlagChange
     | PopAF
     | Ret
     | Rst Int
+    | RegisterZ80Change (MainWithIndexRegisters -> FlagRegisters -> Z80Change)
 
 
 type SixteenBit
