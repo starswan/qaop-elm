@@ -12,6 +12,7 @@ import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters, singleByteM
 import SingleNoParams exposing (singleNoParamCalls, singleWithNoParam, singleWithNoParamDD, singleWithNoParamFD)
 import SingleWith8BitParameter exposing (maybeRelativeJump, singleWith8BitParam)
 import TripleByte exposing (TripleByteChange, tripleByteWith16BitParam)
+import TripleWithFlags exposing (triple16bitJumps)
 import Z80Core exposing (Z80Core)
 import Z80Mem exposing (m1)
 import Z80Rom exposing (Z80ROM)
@@ -38,7 +39,9 @@ twoByteInstructions =
 
 threeByteInstructions : Dict Int ( Int -> ThreeByteChange, InstructionDuration )
 threeByteInstructions =
-    tripleByteWith16BitParam |> Dict.map (\_ ( f, duration ) -> ( \param -> ThreeBytePlain (f param), duration ))
+    tripleByteWith16BitParam
+        |> Dict.map (\_ ( f, duration ) -> ( \param -> ThreeBytePlain (f param), duration ))
+        |> Dict.union (triple16bitJumps |> Dict.map (\_ ( f, duration ) -> ( \param -> ThreeByteFlags (f param), duration )))
 
 
 singleByteMainFlagsRegsIY : Dict Int ( RegisterFlagChange, InstructionDuration )

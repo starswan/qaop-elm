@@ -392,11 +392,7 @@ runOrdinary ct_value instrTime rom48k pc z80_core =
                             ( Simple16BitDelta (f z80_core.main param.value), param.time, IncrementByTwo )
 
                         Nothing ->
-                            let
-                                triple16 =
-                                    threeByteInstructions |> Dict.get ct_value
-                            in
-                            case triple16 of
+                            case threeByteInstructions |> Dict.get ct_value of
                                 Just ( f, duration ) ->
                                     let
                                         env =
@@ -411,22 +407,7 @@ runOrdinary ct_value instrTime rom48k pc z80_core =
                                     ( ThreeByteDelta (f doubleParam.value16), doubleParam.time, IncrementByThree )
 
                                 Nothing ->
-                                    case triple16bitJumps |> Dict.get ct_value of
-                                        Just ( f, duration ) ->
-                                            let
-                                                env =
-                                                    z80_core.env
-
-                                                doubleParam =
-                                                    env |> mem16 (Bitwise.and (pc + 1) 0xFFFF) rom48k instrTime
-
-                                                newTime =
-                                                    doubleParam.time |> addDuration duration
-                                            in
-                                            ( Triple16FlagsDelta (f doubleParam.value16), newTime, IncrementByThree )
-
-                                        Nothing ->
-                                            ( UnknownInstruction "runOrdinary" ct_value, instrTime, IncrementByOne )
+                                    ( UnknownInstruction "runOrdinary" ct_value, instrTime, IncrementByOne )
 
 
 runIndexIX : CpuTimeAndValue -> Z80ROM -> Int -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
@@ -436,21 +417,14 @@ runIndexIX param rom48k pc z80 =
             ( RegisterChangeDelta mainRegFunc, param.time |> addDuration duration, IncrementByTwo )
 
         Nothing ->
-            let
-                ( triple16, instrTime ) =
-                    ( tripleByteWith16BitParamDD |> Dict.get param.value, param.time )
-            in
-            case triple16 of
+            case tripleByteWith16BitParamDD |> Dict.get param.value of
                 Just ( f, duration ) ->
                     let
-                        env =
-                            z80.env
-
                         env_1 =
-                            instrTime |> addDuration duration
+                            param.time |> addDuration duration
 
                         doubleParam =
-                            env |> mem16 (Bitwise.and (pc + 2) 0xFFFF) rom48k env_1
+                            z80.env |> mem16 (Bitwise.and (pc + 2) 0xFFFF) rom48k env_1
                     in
                     ( Triple16ParamDelta (f doubleParam.value16), doubleParam.time, IncrementByFour )
 
@@ -459,7 +433,7 @@ runIndexIX param rom48k pc z80 =
                         Just ( f, duration ) ->
                             let
                                 time =
-                                    instrTime |> addDuration duration
+                                    param.time |> addDuration duration
 
                                 doubleParamTimeValue =
                                     z80.env |> mem (Bitwise.and (pc + 2) 0xFFFF) time rom48k
@@ -471,13 +445,10 @@ runIndexIX param rom48k pc z80 =
                                 Just ( f, pcInc, duration ) ->
                                     let
                                         time =
-                                            instrTime |> addDuration duration
-
-                                        env =
-                                            z80.env
+                                            param.time |> addDuration duration
 
                                         doubleParam =
-                                            env |> mem16 (Bitwise.and (pc + 2) 0xFFFF) rom48k time
+                                            z80.env |> mem16 (Bitwise.and (pc + 2) 0xFFFF) rom48k time
                                     in
                                     ( TripleMainChangeDelta doubleParam.time (f doubleParam.value16 z80.main), doubleParam.time, pcInc )
 
