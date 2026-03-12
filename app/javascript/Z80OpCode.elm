@@ -6,7 +6,7 @@ import Dict exposing (Dict)
 import RegisterChange exposing (RegisterFlagChange(..))
 import SimpleFlagOps exposing (singleByteFlags, singleByteFlagsDD, singleByteFlagsFD)
 import SimpleSingleByte exposing (singleByteMainRegs, singleByteMainRegsDD, singleByteMainRegsFD)
-import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters)
+import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters, singleByteMainAndFlagRegistersIX)
 import SingleNoParams exposing (singleNoParamCalls, singleWithNoParam, singleWithNoParamDD, singleWithNoParamFD)
 import Z80Core exposing (Z80Core)
 import Z80Mem exposing (m1)
@@ -30,7 +30,10 @@ singleByteMainFlagsRegsIY =
 
 singleByteMainFlagsRegsIX : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleByteMainFlagsRegsIX =
-    singleByteFlagsDD |> Dict.union singleByteMainRegsDD |> Dict.union singleWithNoParamDD
+    singleByteFlagsDD
+        |> Dict.union singleByteMainRegsDD
+        |> Dict.union singleWithNoParamDD
+        |> Dict.union (singleByteMainAndFlagRegistersIX |> Dict.map (\_ ( f, duration ) -> ( RegisterZ80Change f, duration )))
 
 
 fetchInstruction : Int -> Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> CpuTimeAndValue
