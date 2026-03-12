@@ -56,6 +56,11 @@ type IXIYHL
     | HL
 
 
+type IXIY
+    = IXIY_IX
+    | IXIY_IY
+
+
 get_xy : IXIYHL -> MainWithIndexRegisters -> Int
 get_xy ixiyhl z80_main =
     case ixiyhl of
