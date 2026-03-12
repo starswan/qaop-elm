@@ -29,7 +29,7 @@ import Z80Env exposing (Z80Env, z80_push, z80env_constructor)
 import Z80Execute exposing (DeltaWithChanges(..), apply_delta)
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
 import Z80Mem exposing (mem, mem16)
-import Z80OpCode exposing (fetchInstruction, singleByteMainFlagsRegs, singleByteMainFlagsRegsIX, singleByteMainFlagsRegsIY)
+import Z80OpCode exposing (fetchInstruction, singleByteInstructions, singleByteMainFlagsRegsIX, singleByteMainFlagsRegsIY)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IntWithFlagsTimeAndPC, InterruptMode(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
 
@@ -367,45 +367,45 @@ execute_delta ct rom48k pc z80 =
 
 runOrdinary : Int -> CpuTimeCTime -> Z80ROM -> Int -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
 runOrdinary ct_value instrTime rom48k pc z80_core =
-    case singleByteMainFlagsRegs |> Dict.get ct_value of
+    case singleByteInstructions |> Dict.get ct_value of
         Just ( mainRegFunc, duration ) ->
             ( RegisterChangeDelta mainRegFunc, instrTime |> addDuration duration, IncrementByOne )
 
         Nothing ->
-            case maybeRelativeJump |> Dict.get ct_value of
+            case singleWith8BitParam |> Dict.get ct_value of
                 Just ( f, duration ) ->
                     let
-                        newTime =
-                            instrTime |> addDuration duration
+                        paramTimeValue =
+                            z80_core.env |> mem (Bitwise.and (pc + 1) 0xFFFF) instrTime rom48k
 
-                        param =
-                            z80_core.env |> mem (Bitwise.and (pc + 1) 0xFFFF) newTime rom48k
+                        instrTime2 =
+                            paramTimeValue.time |> addDuration duration
                     in
-                    ( JumpChangeDelta (f param.value), param.time, IncrementByTwo )
+                    ( Simple8BitDelta (f paramTimeValue.value), instrTime2, IncrementByTwo )
 
                 Nothing ->
-                    case doubleWithRegisters |> Dict.get ct_value of
+                    case maybeRelativeJump |> Dict.get ct_value of
                         Just ( f, duration ) ->
                             let
-                                time =
+                                newTime =
                                     instrTime |> addDuration duration
 
                                 param =
-                                    z80_core.env |> mem (Bitwise.and (pc + 1) 0xFFFF) time rom48k
+                                    z80_core.env |> mem (Bitwise.and (pc + 1) 0xFFFF) newTime rom48k
                             in
-                            ( DoubleWithRegistersDelta (f z80_core.main param.value), param.time, IncrementByTwo )
+                            ( JumpChangeDelta (f param.value), param.time, IncrementByTwo )
 
                         Nothing ->
-                            case singleWith8BitParam |> Dict.get ct_value of
+                            case doubleWithRegisters |> Dict.get ct_value of
                                 Just ( f, duration ) ->
                                     let
-                                        paramTimeValue =
-                                            z80_core.env |> mem (Bitwise.and (pc + 1) 0xFFFF) instrTime rom48k
+                                        time =
+                                            instrTime |> addDuration duration
 
-                                        instrTime2 =
-                                            paramTimeValue.time |> addDuration duration
+                                        param =
+                                            z80_core.env |> mem (Bitwise.and (pc + 1) 0xFFFF) time rom48k
                                     in
-                                    ( Simple8BitDelta (f paramTimeValue.value), instrTime2, IncrementByTwo )
+                                    ( DoubleWithRegistersDelta (f z80_core.main param.value), param.time, IncrementByTwo )
 
                                 Nothing ->
                                     let

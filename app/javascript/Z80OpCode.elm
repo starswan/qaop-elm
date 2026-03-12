@@ -16,8 +16,8 @@ import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (MainWithIndexRegisters)
 
 
-singleByteMainFlagsRegs : Dict Int ( RegisterFlagChange, InstructionDuration )
-singleByteMainFlagsRegs =
+singleByteInstructions : Dict Int ( RegisterFlagChange, InstructionDuration )
+singleByteInstructions =
     singleByteMainRegs
         |> Dict.union singleByteFlags
         |> Dict.union singleWithNoParam
