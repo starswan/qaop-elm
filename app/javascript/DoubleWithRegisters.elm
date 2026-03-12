@@ -27,6 +27,7 @@ type DoubleWithRegisterChange
     | IndexedIndirectDecrement Int Int
     | FlagOpIndexedIndirect FlagFunc Int
     | NewRegisterIndirect ChangeMainRegister Int
+    | RegStore8BitValue Int Int
 
 
 doubleWithRegisters : Dict Int ( MainWithIndexRegisters -> Int -> SimpleDoubleWithRegisterChange, InstructionDuration )
@@ -225,6 +226,13 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
                     z80.main
             in
             { z80 | main = { main | ix = int } }
+
+        RegStore8BitValue address value ->
+            let
+                ( env1, clockTime ) =
+                    z80.env |> setMem address value cpu_time
+            in
+            { z80 | env = env1 }
 
         NewIYRegisterValue int ->
             let
