@@ -112,10 +112,10 @@ applyJumpChangeDelta z80changeData z80 =
                     z80.main
             in
             if b /= 0 then
-                { z80 | main = { main | b = b } } |> CoreWithOffsetAndDelay offset shortDelay
+                { main | b = b } |> MainWithOffsetAndDelay offset shortDelay
 
             else
-                { z80 | main = { main | b = b } } |> CoreOnly
+                { main | b = b } |> MainOnly
 
 
 applySimple8BitDelta : CpuTimeCTime -> Single8BitChange -> Z80ROM -> Z80Core -> Z80Core

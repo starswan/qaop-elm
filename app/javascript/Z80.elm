@@ -244,8 +244,8 @@ executeAndApplyDelta ct rom48k z80clock =
         CoreWithPC new_pc z80Core ->
             { z80clock | core = z80Core, clockTime = clockTime, pc = new_pc }
 
-        CoreWithOffsetAndDelay offset shortDelay z80Core ->
-            { z80clock | core = z80Core, pc = (pcAfter + offset) |> Bitwise.and 0xFFFF, clockTime = clockTime |> addExtraCpuTime shortDelay }
+        MainWithOffsetAndDelay offset shortDelay z80_main ->
+            { z80clock | core = { z80_core | main = z80_main }, pc = (pcAfter + offset) |> Bitwise.and 0xFFFF, clockTime = clockTime |> addExtraCpuTime shortDelay }
 
         JumpOnlyPC int ->
             { z80clock | clockTime = clockTime, pc = int }
@@ -675,8 +675,8 @@ executeCoreInstruction rom48k pc z80_core =
         CoreWithPC new_pc z80Core ->
             ( z80Core, clockTime, new_pc )
 
-        CoreWithOffsetAndDelay offset shortDelay z80Core ->
-            ( z80Core, clockTime |> addExtraCpuTime shortDelay, (pcAfter + offset) |> Bitwise.and 0xFFFF )
+        MainWithOffsetAndDelay offset shortDelay z80_main ->
+            ( { z80_core | main = z80_main }, clockTime |> addExtraCpuTime shortDelay, (pcAfter + offset) |> Bitwise.and 0xFFFF )
 
         JumpOnlyPC int ->
             ( z80_core, clockTime, int )
