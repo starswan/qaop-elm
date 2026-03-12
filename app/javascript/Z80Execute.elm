@@ -29,7 +29,6 @@ type DeltaWithChanges
     | RegisterChangeDelta RegisterFlagChange
     | EDChangeDelta EDRegisterChange
     | EDFourByteDelta EDFourByteChange
-    | Simple8BitDelta Single8BitChange
     | TwoByteDelta TwoByteChange
     | DoubleWithRegistersDelta DoubleWithRegisterChange
     | JumpChangeDelta JumpChange
@@ -48,9 +47,6 @@ apply_delta z80 rom48k clockTime z80delta =
 
         RegisterChangeDelta registerChange ->
             z80 |> applyRegisterDelta clockTime registerChange rom48k
-
-        Simple8BitDelta single8BitChange ->
-            z80 |> applySimple8BitDelta clockTime single8BitChange rom48k |> CoreOnly
 
         DoubleWithRegistersDelta doubleWithRegisterChange ->
             z80 |> applyDoubleWithRegistersDelta clockTime doubleWithRegisterChange rom48k |> CoreOnly
