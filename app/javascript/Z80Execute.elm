@@ -4,7 +4,7 @@ import Bitwise exposing (shiftLeftBy)
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
 import GroupED exposing (adc_hl_sp, cpir, execute_ED70, execute_ED78, inirOtirFlags, ldir, rld, rrd, sbc_hl)
-import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), RegisterFlagChange(..), Shifter(..), SixteenBit(..))
+import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), RegisterFlagChange(..), Shifter(..), SixteenBit(..), TwoByteChange(..))
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
 import SingleEnvWithMain exposing (SingleEnvMainChange, applySingleEnvMainChange)
 import SingleWith8BitParameter exposing (JumpChange(..), Single8BitChange(..), applySimple8BitChange)
@@ -30,6 +30,7 @@ type DeltaWithChanges
     | EDChangeDelta EDRegisterChange
     | EDFourByteDelta EDFourByteChange
     | Simple8BitDelta Single8BitChange
+    | TwoByteDelta TwoByteChange
     | DoubleWithRegistersDelta DoubleWithRegisterChange
     | JumpChangeDelta JumpChange
     | MainWithEnvDelta SingleEnvMainChange
@@ -84,6 +85,14 @@ apply_delta z80 rom48k clockTime z80delta =
 
         EDFourByteDelta fourByteChnage ->
             z80 |> applyEdFourByte clockTime fourByteChnage rom48k
+
+        TwoByteDelta twoByteChange ->
+            case twoByteChange of
+                TwoByte8Bit single8BitChange ->
+                    z80 |> applySimple8BitDelta clockTime single8BitChange rom48k |> CoreOnly
+
+                TwoByteJump jumpChange ->
+                    z80 |> applyJumpChangeDelta jumpChange
 
 
 applyJumpChangeDelta : JumpChange -> Z80Core -> CoreChange

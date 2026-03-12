@@ -3,6 +3,7 @@ module RegisterChange exposing (..)
 import CpuTimeCTime exposing (CpuTimeCTime)
 import SingleByteWithEnv exposing (SingleByteEnvChange)
 import SingleEnvWithMain exposing (SingleEnvMainChange)
+import SingleWith8BitParameter exposing (JumpChange, Single8BitChange)
 import Utils exposing (BitTest)
 import Z80Change exposing (Z80Change)
 import Z80Core exposing (DirectionForLDIR)
@@ -97,3 +98,8 @@ type EDFourByteChange
 
 type InterruptChange
     = LoadAFromIR Int
+
+
+type TwoByteChange
+    = TwoByte8Bit Single8BitChange
+    | TwoByteJump JumpChange
