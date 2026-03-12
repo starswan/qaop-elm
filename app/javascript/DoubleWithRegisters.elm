@@ -249,28 +249,28 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
                 main =
                     z80.main
 
-                new_b =
+                ( new_b_time, new_b_value ) =
                     z80.env |> mem addr cpu_time rom48k
 
                 new_main =
                     case changeOneRegister of
                         ChangeMainB ->
-                            { main | b = new_b.value }
+                            { main | b = new_b_value }
 
                         ChangeMainC ->
-                            { main | c = new_b.value }
+                            { main | c = new_b_value }
 
                         ChangeMainD ->
-                            { main | d = new_b.value }
+                            { main | d = new_b_value }
 
                         ChangeMainE ->
-                            { main | e = new_b.value }
+                            { main | e = new_b_value }
 
                         ChangeMainH ->
-                            { main | hl = Bitwise.or (main.hl |> Bitwise.and 0xFF) (new_b.value |> shiftLeftBy8) }
+                            { main | hl = Bitwise.or (main.hl |> Bitwise.and 0xFF) (new_b_value |> shiftLeftBy8) }
 
                         ChangeMainL ->
-                            { main | hl = Bitwise.or (main.hl |> Bitwise.and 0xFF00) (new_b.value |> Bitwise.and 0xFF) }
+                            { main | hl = Bitwise.or (main.hl |> Bitwise.and 0xFF00) (new_b_value |> Bitwise.and 0xFF) }
             in
             { z80
                 | main = new_main
@@ -281,11 +281,11 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
                 flags =
                     z80.flags
 
-                new_a =
+                ( new_a_time, new_a_value ) =
                     z80.env |> mem addr cpu_time rom48k
             in
             { z80
-                | flags = { flags | a = new_a.value }
+                | flags = { flags | a = new_a_value }
             }
 
         SetARegisterIndirect addr ->
@@ -302,11 +302,11 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
                 flags =
                     z80.flags
 
-                value =
+                ( value_time, value_value ) =
                     z80.env |> mem address cpu_time rom48k
             in
             { z80
-                | flags = flags |> changeFlags flagFunc value.value
+                | flags = flags |> changeFlags flagFunc value_value
             }
 
         IndexedIndirectIncrement inAddr offset ->
@@ -319,14 +319,14 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
             in
             if ramAddr >= 0 then
                 let
-                    value =
+                    ( value_time, value_value ) =
                         z80.env |> mem base_addr cpu_time rom48k
 
                     valueWithFlags =
-                        z80.flags |> inc value.value
+                        z80.flags |> inc value_value
 
                     ( env_1, newTime ) =
-                        z80.env |> setMem base_addr valueWithFlags.value value.time
+                        z80.env |> setMem base_addr valueWithFlags.value value_time
                 in
                 { z80
                     | env = env_1
@@ -346,14 +346,14 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
             in
             if ramAddr >= 0 then
                 let
-                    value =
+                    ( value_time, value_value ) =
                         z80.env |> mem base_addr cpu_time rom48k
 
                     valueWithFlags =
-                        z80.flags |> dec value.value
+                        z80.flags |> dec value_value
 
                     ( env_1, newTime ) =
-                        z80.env |> setMem base_addr valueWithFlags.value value.time
+                        z80.env |> setMem base_addr valueWithFlags.value value_time
                 in
                 { z80
                     | env = env_1

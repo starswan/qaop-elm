@@ -1475,7 +1475,7 @@ doLoad2 full_cpu z80rom tape =
                                                     else
                                                         let
                                                             new_a =
-                                                                Bitwise.xor (mem state.ix cpu.clockTime z80rom z80_core.env |> .value) l
+                                                                Bitwise.xor (mem state.ix cpu.clockTime z80rom z80_core.env |> Tuple.second) l
                                                         in
                                                         if new_a /= 0 then
                                                             { a_rf_f_break_3 | a = new_a, rf = Just 0, break = True }

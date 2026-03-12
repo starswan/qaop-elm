@@ -6,7 +6,7 @@ import Triple
 import Z80 exposing (executeCoreInstruction)
 import Z80CoreWithClockTime
 import Z80Env exposing (setMemWithTime)
-import Z80Mem exposing (m1, mem)
+import Z80Mem exposing (mem)
 import Z80Rom
 
 
@@ -78,14 +78,14 @@ suite =
                                 |> setMemWithTime (addr + 2) 0x34
                                 |> .z80env
 
-                        ( new_z80, new_pc ) =
+                        new_pc =
                             executeCoreInstruction z80rom
                                 addr
                                 { z80
                                     | env = new_env
                                     , flags = { flags | a = 0x39, ff = 0x0100 }
                                 }
-                                |> Triple.dropSecond
+                                |> Triple.third
                     in
                     Expect.equal (addr + 3) new_pc
             , test "Jump" <|
@@ -292,10 +292,10 @@ suite =
                             |> Triple.dropSecond
 
                     lo_value =
-                        mem 0xFF75 clock.clockTime z80rom new_z80.env |> .value
+                        mem 0xFF75 clock.clockTime z80rom new_z80.env |> Tuple.second
 
                     hi_value =
-                        mem 0xFF76 clock.clockTime z80rom new_z80.env |> .value
+                        mem 0xFF76 clock.clockTime z80rom new_z80.env |> Tuple.second
                 in
                 Expect.equal { pc = 0x18, sp = 0xFF75, lowmem = 1, highmem = 0x80 } { sp = new_z80.env.sp, pc = new_pc, lowmem = lo_value, highmem = hi_value }
         ]
