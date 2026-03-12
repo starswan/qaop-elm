@@ -417,13 +417,13 @@ runOrdinary ct_value instrTime rom48k pc z80_core =
                                                         env =
                                                             z80_core.env
 
-                                                        env_1 =
-                                                            instrTime |> addDuration duration
-
                                                         doubleParam =
-                                                            env |> mem16 (Bitwise.and (pc + 1) 0xFFFF) rom48k env_1
+                                                            env |> mem16 (Bitwise.and (pc + 1) 0xFFFF) rom48k instrTime
+
+                                                        newTime =
+                                                            doubleParam.time |> addDuration duration
                                                     in
-                                                    ( Triple16FlagsDelta (f doubleParam.value16), doubleParam.time, IncrementByThree )
+                                                    ( Triple16FlagsDelta (f doubleParam.value16), newTime, IncrementByThree )
 
                                                 Nothing ->
                                                     case singleByteMainAndFlagRegisters |> Dict.get ct_value of
@@ -458,9 +458,16 @@ runOrdinary ct_value instrTime rom48k pc z80_core =
                                                                                             ( RstDelta f, instrTime |> addDuration duration, IncrementByOne )
 
                                                                                         Nothing ->
-                                                                                            case singleByte instrTime ct_value z80_core rom48k pc of
-                                                                                                Just ( deltaThing, clockTime, inc ) ->
-                                                                                                    ( deltaThing, clockTime, inc )
+                                                                                            case singleWith8BitParam |> Dict.get ct_value of
+                                                                                                Just ( f, duration ) ->
+                                                                                                    let
+                                                                                                        paramTimeValue =
+                                                                                                            z80_core.env |> mem (Bitwise.and (pc + 1) 0xFFFF) instrTime rom48k
+
+                                                                                                        instrTime2 =
+                                                                                                            paramTimeValue.time |> addDuration duration
+                                                                                                    in
+                                                                                                    ( Simple8BitDelta (f paramTimeValue.value), instrTime2, IncrementByTwo )
 
                                                                                                 Nothing ->
                                                                                                     ( UnknownInstruction "runOrdinary" ct_value, instrTime, IncrementByOne )
@@ -479,8 +486,8 @@ runIndexIX param rom48k pc z80 =
 
                 Nothing ->
                     let
-                        ( triple16, instrTime, paramOffset ) =
-                            ( tripleByteWith16BitParamDD |> Dict.get param.value, param.time, 2 )
+                        ( triple16, instrTime ) =
+                            ( tripleByteWith16BitParamDD |> Dict.get param.value, param.time )
                     in
                     case triple16 of
                         Just ( f, duration ) ->
@@ -492,14 +499,14 @@ runIndexIX param rom48k pc z80 =
                                     instrTime |> addDuration duration
 
                                 doubleParam =
-                                    env |> mem16 (Bitwise.and (pc + paramOffset) 0xFFFF) rom48k env_1
+                                    env |> mem16 (Bitwise.and (pc + 2) 0xFFFF) rom48k env_1
                             in
                             ( Triple16ParamDelta (f doubleParam.value16), doubleParam.time, IncrementByFour )
 
                         Nothing ->
                             case singleEnvMainRegsIX |> Dict.get param.value of
                                 Just ( f, duration ) ->
-                                    ( MainWithEnvDelta (f z80.main rom48k z80.env), param.time |> addDuration duration, IncrementByTwo )
+                                    ( MainWithEnvDelta (f z80.main rom48k z80.env), instrTime |> addDuration duration, IncrementByTwo )
 
                                 Nothing ->
                                     case singleByteMainAndFlagRegistersIX |> Dict.get param.value of
@@ -513,10 +520,10 @@ runIndexIX param rom48k pc z80 =
                                                         time =
                                                             instrTime |> addDuration duration
 
-                                                        doubleParam =
+                                                        doubleParamTimeValue =
                                                             z80.env |> mem (Bitwise.and (pc + 2) 0xFFFF) time rom48k
                                                     in
-                                                    ( DoubleWithRegistersDelta (f z80.main doubleParam.value), doubleParam.time, IncrementByThree )
+                                                    ( DoubleWithRegistersDelta (f z80.main doubleParamTimeValue.value), doubleParamTimeValue.time, IncrementByThree )
 
                                                 Nothing ->
                                                     case tripleMainRegsIX |> Dict.get param.value of
@@ -529,7 +536,7 @@ runIndexIX param rom48k pc z80 =
                                                                     z80.env
 
                                                                 doubleParam =
-                                                                    env |> mem16 (Bitwise.and (pc + paramOffset) 0xFFFF) rom48k time
+                                                                    env |> mem16 (Bitwise.and (pc + 2) 0xFFFF) rom48k time
                                                             in
                                                             ( TripleMainChangeDelta doubleParam.time (f doubleParam.value16 z80.main), doubleParam.time, pcInc )
 
@@ -556,8 +563,8 @@ runIndexIY param rom48k pc z80 =
 
                 Nothing ->
                     let
-                        ( triple16, instrTime, paramOffset ) =
-                            ( tripleByteWith16BitParamFD |> Dict.get param.value, param.time, 2 )
+                        ( triple16, instrTime ) =
+                            ( tripleByteWith16BitParamFD |> Dict.get param.value, param.time )
                     in
                     case triple16 of
                         Just ( f, duration ) ->
@@ -566,22 +573,22 @@ runIndexIY param rom48k pc z80 =
                                     z80.env
 
                                 env_1 =
-                                    param.time |> addDuration duration
+                                    instrTime |> addDuration duration
 
                                 doubleParam =
-                                    env |> mem16 (Bitwise.and (pc + paramOffset) 0xFFFF) rom48k env_1
+                                    env |> mem16 (Bitwise.and (pc + 2) 0xFFFF) rom48k env_1
                             in
                             ( Triple16ParamDelta (f doubleParam.value16), doubleParam.time, IncrementByFour )
 
                         Nothing ->
                             case singleEnvMainRegsIY |> Dict.get param.value of
                                 Just ( f, duration ) ->
-                                    ( MainWithEnvDelta (f z80.main rom48k z80.env), param.time |> addDuration duration, IncrementByTwo )
+                                    ( MainWithEnvDelta (f z80.main rom48k z80.env), instrTime |> addDuration duration, IncrementByTwo )
 
                                 Nothing ->
                                     case singleByteMainAndFlagRegistersIY |> Dict.get param.value of
                                         Just ( f, duration ) ->
-                                            ( PureDelta (f z80.main z80.flags), param.time |> addDuration duration, IncrementByTwo )
+                                            ( PureDelta (f z80.main z80.flags), instrTime |> addDuration duration, IncrementByTwo )
 
                                         Nothing ->
                                             case doubleWithRegistersIY |> Dict.get param.value of
@@ -606,7 +613,7 @@ runIndexIY param rom48k pc z80 =
                                                                     z80.env
 
                                                                 doubleParam =
-                                                                    env |> mem16 (Bitwise.and (pc + paramOffset) 0xFFFF) rom48k time
+                                                                    env |> mem16 (Bitwise.and (pc + 2) 0xFFFF) rom48k time
                                                             in
                                                             ( TripleMainChangeDelta doubleParam.time (f doubleParam.value16 z80.main), doubleParam.time, pcInc )
 
@@ -705,31 +712,12 @@ runSpecial specialType rom48k pc z80_core =
 
 
 
---UnknownInstruction "execute ED" param.value
---UnknownInstruction "execute IYCB" param.value
 -- case 0xD4: call((Ff&0x100)==0); break;
 -- case 0xE4: call((flags()&FP)==0); break;
 -- case 0xEC: call((flags()&FP)!=0); break;
 -- case 0xF4: call((Ff&FS)==0); break;
 -- case 0xFC: call((Ff&FS)!=0); break;
 -- case 0xF3: IFF=0; break;
-
-
-singleByte : CpuTimeCTime -> Int -> Z80Core -> Z80ROM -> Int -> Maybe ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
-singleByte ctime instrCode tmp_z80 rom48k pc =
-    case singleWith8BitParam |> Dict.get instrCode of
-        Just ( f, duration ) ->
-            let
-                instrTime =
-                    ctime |> addDuration duration
-
-                param =
-                    tmp_z80.env |> mem (Bitwise.and (pc + 1) 0xFFFF) instrTime rom48k
-            in
-            Just ( Simple8BitDelta (f param.value), param.time, IncrementByTwo )
-
-        Nothing ->
-            Nothing
 
 
 executeCoreInstruction : Z80ROM -> Int -> Z80Core -> ( Z80Core, CpuTimeCTime, Int )
