@@ -31,7 +31,6 @@ type DeltaWithChanges
     | EDFourByteDelta EDFourByteChange
     | TwoByteDelta TwoByteChange
     | DoubleWithRegistersDelta DoubleWithRegisterChange
-    | JumpChangeDelta JumpChange
     | MainWithEnvDelta SingleEnvMainChange
     | TripleMainChangeDelta CpuTimeCTime TripleMainChange
     | Triple16ParamDelta TripleByteChange
@@ -50,9 +49,6 @@ apply_delta z80 rom48k clockTime z80delta =
 
         DoubleWithRegistersDelta doubleWithRegisterChange ->
             z80 |> applyDoubleWithRegistersDelta clockTime doubleWithRegisterChange rom48k |> CoreOnly
-
-        JumpChangeDelta jumpChange ->
-            z80 |> applyJumpChangeDelta jumpChange
 
         MainWithEnvDelta singleEnvMainChange ->
             z80 |> applySingleEnvMainChange clockTime singleEnvMainChange rom48k |> CoreOnly
@@ -116,12 +112,10 @@ applyJumpChangeDelta z80changeData z80 =
                     z80.main
             in
             if b /= 0 then
-                { z80 | main = { main | b = b } }
-                    |> CoreWithOffsetAndDelay offset shortDelay
+                { z80 | main = { main | b = b } } |> CoreWithOffsetAndDelay offset shortDelay
 
             else
-                { z80 | main = { main | b = b } }
-                    |> CoreOnly
+                { z80 | main = { main | b = b } } |> CoreOnly
 
 
 applySimple8BitDelta : CpuTimeCTime -> Single8BitChange -> Z80ROM -> Z80Core -> Z80Core

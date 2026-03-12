@@ -10,7 +10,7 @@ import SingleByteWithEnv exposing (singleByteZ80Env)
 import SingleEnvWithMain exposing (singleEnvMainRegs, singleEnvMainRegsIX, singleEnvMainRegsIY)
 import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters, singleByteMainAndFlagRegistersIX, singleByteMainAndFlagRegistersIY)
 import SingleNoParams exposing (singleNoParamCalls, singleWithNoParam, singleWithNoParamDD, singleWithNoParamFD)
-import SingleWith8BitParameter exposing (singleWith8BitParam)
+import SingleWith8BitParameter exposing (maybeRelativeJump, singleWith8BitParam)
 import Z80Core exposing (Z80Core)
 import Z80Mem exposing (m1)
 import Z80Rom exposing (Z80ROM)
@@ -28,14 +28,11 @@ singleByteInstructions =
         |> Dict.union (singleByteZ80Env |> Dict.map (\_ ( f, duration ) -> ( RegisterSingleByteEnv f, duration )))
 
 
-
---Dict Int ( Int -> Single8BitChange, InstructionDuration )
---Dict Int ( Int -> JumpChange, InstructionDuration )
-
-
 twoByteInstructions : Dict Int ( Int -> TwoByteChange, InstructionDuration )
 twoByteInstructions =
-    singleWith8BitParam |> Dict.map (\_ ( f, duration ) -> ( \param -> TwoByte8Bit (f param), duration ))
+    singleWith8BitParam
+        |> Dict.map (\_ ( f, duration ) -> ( \param -> TwoByte8Bit (f param), duration ))
+        |> Dict.union (maybeRelativeJump |> Dict.map (\_ ( f, duration ) -> ( \param -> TwoByteJump (f param), duration )))
 
 
 singleByteMainFlagsRegsIY : Dict Int ( RegisterFlagChange, InstructionDuration )
