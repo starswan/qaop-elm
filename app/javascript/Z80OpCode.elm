@@ -3,7 +3,7 @@ module Z80OpCode exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, InstructionDuration)
 import Dict exposing (Dict)
-import RegisterChange exposing (RegisterFlagChange(..), TwoByteChange(..))
+import RegisterChange exposing (RegisterFlagChange(..), ThreeByteChange(..), TwoByteChange(..))
 import SimpleFlagOps exposing (singleByteFlags, singleByteFlagsDD, singleByteFlagsFD)
 import SimpleSingleByte exposing (singleByteMainRegs, singleByteMainRegsDD, singleByteMainRegsFD)
 import SingleByteWithEnv exposing (singleByteZ80Env)
@@ -11,6 +11,7 @@ import SingleEnvWithMain exposing (singleEnvMainRegs, singleEnvMainRegsIX, singl
 import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters, singleByteMainAndFlagRegistersIX, singleByteMainAndFlagRegistersIY)
 import SingleNoParams exposing (singleNoParamCalls, singleWithNoParam, singleWithNoParamDD, singleWithNoParamFD)
 import SingleWith8BitParameter exposing (maybeRelativeJump, singleWith8BitParam)
+import TripleByte exposing (TripleByteChange, tripleByteWith16BitParam)
 import Z80Core exposing (Z80Core)
 import Z80Mem exposing (m1)
 import Z80Rom exposing (Z80ROM)
@@ -33,6 +34,11 @@ twoByteInstructions =
     singleWith8BitParam
         |> Dict.map (\_ ( f, duration ) -> ( \param -> TwoByte8Bit (f param), duration ))
         |> Dict.union (maybeRelativeJump |> Dict.map (\_ ( f, duration ) -> ( \param -> TwoByteJump (f param), duration )))
+
+
+threeByteInstructions : Dict Int ( Int -> ThreeByteChange, InstructionDuration )
+threeByteInstructions =
+    tripleByteWith16BitParam |> Dict.map (\_ ( f, duration ) -> ( \param -> ThreeBytePlain (f param), duration ))
 
 
 singleByteMainFlagsRegsIY : Dict Int ( RegisterFlagChange, InstructionDuration )

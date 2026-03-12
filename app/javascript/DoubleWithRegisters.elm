@@ -15,7 +15,7 @@ import Z80Types exposing (MainWithIndexRegisters)
 
 type SimpleDoubleWithRegisterChange
     = RegChangeStoreIndirect Int Int
-    | NewHLRegisterValue Int
+    | SimpleNewHLRegisterValue Int
 
 
 type DoubleWithRegisterChange
@@ -117,7 +117,7 @@ doubleWithRegistersIY =
 ld_h_n : MainWithIndexRegisters -> Int -> SimpleDoubleWithRegisterChange
 ld_h_n z80_main param =
     -- case 0x26: HL=HL&0xFF|imm8()<<8; break;
-    Bitwise.or (param |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF) |> NewHLRegisterValue
+    Bitwise.or (param |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF) |> SimpleNewHLRegisterValue
 
 
 ld_ix_h_n : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
@@ -135,7 +135,7 @@ ld_iy_h_n z80_main param =
 ld_l_n : MainWithIndexRegisters -> Int -> SimpleDoubleWithRegisterChange
 ld_l_n z80_main param =
     -- case 0x2E: HL=HL&0xFF00|imm8(); break;
-    Bitwise.or param (Bitwise.and z80_main.hl 0xFF00) |> NewHLRegisterValue
+    Bitwise.or param (Bitwise.and z80_main.hl 0xFF00) |> SimpleNewHLRegisterValue
 
 
 ld_ix_l_n : MainWithIndexRegisters -> Int -> DoubleWithRegisterChange
@@ -363,7 +363,7 @@ applySimpleWithRegistersDelta cpu_time z80changeData rom48k z80 =
             in
             { z80 | env = env_1 }
 
-        NewHLRegisterValue int ->
+        SimpleNewHLRegisterValue int ->
             let
                 main =
                     z80.main

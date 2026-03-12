@@ -15,12 +15,8 @@ import GroupED exposing (edWithInterrupts, fourByteMainED, singleByteFlagsED, si
 import Loop
 import PCIncrement exposing (PCIncrement(..))
 import SimpleFlagOps exposing (singleByteFlagsCB)
-import SingleByteWithEnv exposing (singleByteZ80Env)
-import SingleEnvWithMain exposing (singleEnvMainRegs, singleEnvMainRegsIX, singleEnvMainRegsIY)
-import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters, singleByteMainAndFlagRegistersIX, singleByteMainAndFlagRegistersIY)
 import SingleNoParams exposing (ex_af, execute_0x76_halt, exx)
-import SingleWith8BitParameter exposing (maybeRelativeJump, singleWith8BitParam)
-import TripleByte exposing (tripleByteWith16BitParam, tripleByteWith16BitParamDD, tripleByteWith16BitParamFD)
+import TripleByte exposing (tripleByteWith16BitParamDD, tripleByteWith16BitParamFD)
 import TripleWithFlags exposing (triple16bitJumps)
 import TripleWithMain exposing (tripleMainRegsIX, tripleMainRegsIY)
 import Z80Core exposing (CoreChange(..), RepeatPCOffset(..), Z80Core)
@@ -29,7 +25,7 @@ import Z80Env exposing (Z80Env, z80_push, z80env_constructor)
 import Z80Execute exposing (DeltaWithChanges(..), apply_delta)
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
 import Z80Mem exposing (mem, mem16)
-import Z80OpCode exposing (fetchInstruction, singleByteInstructions, singleByteMainFlagsRegsIX, singleByteMainFlagsRegsIY, twoByteInstructions)
+import Z80OpCode exposing (fetchInstruction, singleByteInstructions, singleByteMainFlagsRegsIX, singleByteMainFlagsRegsIY, threeByteInstructions, twoByteInstructions)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IntWithFlagsTimeAndPC, InterruptMode(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
 
@@ -398,7 +394,7 @@ runOrdinary ct_value instrTime rom48k pc z80_core =
                         Nothing ->
                             let
                                 triple16 =
-                                    tripleByteWith16BitParam |> Dict.get ct_value
+                                    threeByteInstructions |> Dict.get ct_value
                             in
                             case triple16 of
                                 Just ( f, duration ) ->
@@ -412,7 +408,7 @@ runOrdinary ct_value instrTime rom48k pc z80_core =
                                         doubleParam =
                                             env |> mem16 (Bitwise.and (pc + 1) 0xFFFF) rom48k newTime
                                     in
-                                    ( Triple16ParamDelta (f doubleParam.value16), doubleParam.time, IncrementByThree )
+                                    ( ThreeByteDelta (f doubleParam.value16), doubleParam.time, IncrementByThree )
 
                                 Nothing ->
                                     case triple16bitJumps |> Dict.get ct_value of

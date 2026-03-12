@@ -4,7 +4,7 @@ import Bitwise exposing (shiftLeftBy)
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, SimpleDoubleWithRegisterChange, applyDoubleWithRegistersDelta, applySimpleWithRegistersDelta)
 import GroupED exposing (adc_hl_sp, cpir, execute_ED70, execute_ED78, inirOtirFlags, ldir, rld, rrd, sbc_hl)
-import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), RegisterFlagChange(..), Shifter(..), SixteenBit(..), TwoByteChange(..))
+import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), RegisterFlagChange(..), Shifter(..), SixteenBit(..), ThreeByteChange(..), TwoByteChange(..))
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
 import SingleEnvWithMain exposing (SingleEnvMainChange, applySingleEnvMainChange)
 import SingleWith8BitParameter exposing (JumpChange(..), Single8BitChange(..), applySimple8BitChange)
@@ -36,6 +36,7 @@ type DeltaWithChanges
     | TripleMainChangeDelta CpuTimeCTime TripleMainChange
     | Triple16ParamDelta TripleByteChange
     | Triple16FlagsDelta TripleWithFlagsChange
+    | ThreeByteDelta ThreeByteChange
     | UnknownInstruction String Int
 
 
@@ -66,6 +67,14 @@ apply_delta z80 rom48k clockTime z80delta =
 
         Triple16ParamDelta tripleByteChange ->
             z80 |> applyTripleChangeDelta rom48k clockTime tripleByteChange
+
+        ThreeByteDelta threeByteChange ->
+            case threeByteChange of
+                ThreeByteFlags tripleWithFlagsChange ->
+                    z80 |> applyTripleFlagChange tripleWithFlagsChange
+
+                ThreeBytePlain tripleByteChange ->
+                    z80 |> applyTripleChangeDelta rom48k clockTime tripleByteChange
 
         Triple16FlagsDelta tripleWithFlagsChange ->
             z80 |> applyTripleFlagChange tripleWithFlagsChange
