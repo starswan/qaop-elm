@@ -64,8 +64,8 @@ server "arthur.broadband",
        roles: %w{web app db}
 
 set :deploy_to, "#{ENV['HOME']}/retroelm"
-set :rvm_type, :system
-set :rvm_custom_path, "/usr/share/rvm"
+# set :rvm_type, :system
+# set :rvm_custom_path, "/usr/share/rvm"
 # set :rails_env, "arthur"
 set :rails_env, "production"
 set :rvm_ruby_version, "3.3.9@retroelm"
