@@ -3,6 +3,7 @@ module Z80OpCode exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, InstructionDuration)
 import Dict exposing (Dict)
+import DoubleWithRegisters exposing (DoubleWithRegisterChange, doubleWithRegistersIX, doubleWithRegistersIY)
 import RegisterChange exposing (RegisterFlagChange(..), ThreeByteChange(..), TwoByteChange(..))
 import SimpleFlagOps exposing (singleByteFlags, singleByteFlagsDD, singleByteFlagsFD)
 import SimpleSingleByte exposing (singleByteMainRegs, singleByteMainRegsDD, singleByteMainRegsFD)
@@ -13,6 +14,7 @@ import SingleNoParams exposing (singleNoParamCalls, singleWithNoParam, singleWit
 import SingleWith8BitParameter exposing (maybeRelativeJump, singleWith8BitParam)
 import TripleByte exposing (TripleByteChange, tripleByteWith16BitParam)
 import TripleWithFlags exposing (triple16bitJumps)
+import TripleWithMain exposing (tripleMainRegsIXThree, tripleMainRegsIYThree)
 import Z80Core exposing (Z80Core)
 import Z80Mem exposing (m1)
 import Z80Rom exposing (Z80ROM)
@@ -60,6 +62,16 @@ singleByteMainFlagsRegsIX =
         |> Dict.union singleWithNoParamDD
         |> Dict.union (singleByteMainAndFlagRegistersIX |> Dict.map (\_ ( f, duration ) -> ( RegisterZ80Change f, duration )))
         |> Dict.union (singleEnvMainRegsIX |> Dict.map (\_ ( f, duration ) -> ( RegisterEnvMainChange f, duration )))
+
+
+twoByteWithRegistersIX : Dict Int ( Int -> MainWithIndexRegisters -> DoubleWithRegisterChange, InstructionDuration )
+twoByteWithRegistersIX =
+    doubleWithRegistersIX |> Dict.union tripleMainRegsIXThree
+
+
+twoByteWithRegistersIY : Dict Int ( Int -> MainWithIndexRegisters -> DoubleWithRegisterChange, InstructionDuration )
+twoByteWithRegistersIY =
+    doubleWithRegistersIY |> Dict.union tripleMainRegsIYThree
 
 
 fetchInstruction : Int -> Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> CpuTimeAndValue
