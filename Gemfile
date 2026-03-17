@@ -9,6 +9,7 @@ gem "base64", "< 0.3"
 # gem "bigdecimal"
 # gem "drb"
 # gem "mutex_m"
+gem "stringio", ">= 3.2"
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '~> 7.1', '< 7.2'
