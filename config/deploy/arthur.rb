@@ -68,7 +68,7 @@ set :deploy_to, "#{ENV['HOME']}/retroelm"
 # set :rvm_custom_path, "/usr/share/rvm"
 # set :rails_env, "arthur"
 set :rails_env, "production"
-set :rvm_ruby_version, "3.3.9@retroelm"
+set :rvm_ruby_version, "3.3.10@retroelm"
 
 # append :linked_files, ".env.arthur"
 
