@@ -1,14 +1,14 @@
 module Z80OpCode exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, InstructionDuration)
+import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration)
 import Z80Core exposing (Z80Core)
 import Z80Mem exposing (m1)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (MainWithIndexRegisters)
 
 
-fetchInstruction : Int -> Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> CpuTimeAndValue
+fetchInstruction : Int -> Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( CpuTimeCTime, Int )
 fetchInstruction pc_value rom48k clockTime r_register z80_core =
     --let
     --pc_value =

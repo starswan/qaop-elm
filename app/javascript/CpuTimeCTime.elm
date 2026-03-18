@@ -56,10 +56,11 @@ type alias CpuTimeCTime =
     }
 
 
-type alias CpuTimeAndValue =
-    { time : CpuTimeCTime
-    , value : Int
-    }
+
+--type alias CpuTimeAndValue =
+--    { time : CpuTimeCTime
+--    , value : Int
+--    }
 
 
 type alias CpuTimeAnd16BitValue =

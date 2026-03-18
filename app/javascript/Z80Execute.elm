@@ -171,10 +171,10 @@ applySimple8BitDelta cpu_time z80changeData rom48k z80 =
                 portNum =
                     Bitwise.or param (shiftLeftBy8 flags.a)
 
-                new_a =
+                ( value_time, value_value ) =
                     z80.env |> z80_in portNum rom48k.keyboard cpu_time
             in
-            { z80 | flags = { flags | a = new_a.value } }
+            { z80 | flags = { flags | a = value_value } }
 
         Z80Out param ->
             let
@@ -448,25 +448,25 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
         IncrementIndirect addr ->
             -- This should be a primitive operation on Z80Env to increment a stored value
             let
-                value =
+                ( value_time, value_value ) =
                     z80_core.env |> mem addr clockTime rom48k
 
                 flags =
-                    z80_core.flags |> inc value.value
+                    z80_core.flags |> inc value_value
 
                 ( env_3, newNew ) =
-                    env |> setMem addr flags.value value.time
+                    env |> setMem addr flags.value value_time
             in
             { z80_core | env = env_3, flags = flags.flags } |> CoreOnly
 
         DecrementIndirect addr ->
             -- This should be a primitive operation on Z80Env to decrement a stored value
             let
-                value =
+                ( value_time, value_value ) =
                     z80_core.env |> mem addr clockTime rom48k
 
                 flags =
-                    z80_core.flags |> dec value.value
+                    z80_core.flags |> dec value_value
 
                 ( env_3, newNew ) =
                     env |> setMem addr flags.value clockTime
@@ -499,14 +499,14 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
 
         IndirectBitReset bitMask addr ->
             let
-                value =
+                ( value_time, value_value ) =
                     env |> mem addr clockTime rom48k
 
                 new_value =
-                    bitMask |> inverseBitMaskFromBit |> Bitwise.and value.value
+                    bitMask |> inverseBitMaskFromBit |> Bitwise.and value_value
 
                 ( env_3, newNewTime ) =
-                    env |> setMem addr new_value value.time
+                    env |> setMem addr new_value value_time
             in
             { z80_core | env = env_3 } |> CoreOnly
 
@@ -515,14 +515,14 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 addr =
                     raw_addr |> Bitwise.and 0xFFFF
 
-                value =
+                ( value_time, value_value ) =
                     z80_core.env |> mem addr clockTime rom48k
 
                 new_value =
-                    bitMask |> bitMaskFromBit |> Bitwise.or value.value
+                    bitMask |> bitMaskFromBit |> Bitwise.or value_value
 
                 ( env_3, newNewTime ) =
-                    env |> setMem addr new_value value.time
+                    env |> setMem addr new_value value_time
             in
             { z80_core | env = env_3 } |> CoreOnly
 
@@ -592,34 +592,34 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 addr =
                     raw_addr |> Bitwise.and 0xFFFF
 
-                input =
+                ( inputTime, inputValue ) =
                     z80_core.env |> mem addr clockTime rom48k
 
                 value =
                     case shifterFunc of
                         Shifter0 ->
-                            shifter0 input.value z80_core.flags
+                            shifter0 inputValue z80_core.flags
 
                         Shifter1 ->
-                            shifter1 input.value z80_core.flags
+                            shifter1 inputValue z80_core.flags
 
                         Shifter2 ->
-                            shifter2 input.value z80_core.flags
+                            shifter2 inputValue z80_core.flags
 
                         Shifter3 ->
-                            shifter3 input.value z80_core.flags
+                            shifter3 inputValue z80_core.flags
 
                         Shifter4 ->
-                            shifter4 input.value z80_core.flags
+                            shifter4 inputValue z80_core.flags
 
                         Shifter5 ->
-                            shifter5 input.value z80_core.flags
+                            shifter5 inputValue z80_core.flags
 
                         Shifter6 ->
-                            shifter6 input.value z80_core.flags
+                            shifter6 inputValue z80_core.flags
 
                         Shifter7 ->
-                            shifter7 input.value z80_core.flags
+                            shifter7 inputValue z80_core.flags
 
                 main =
                     z80_core.main
@@ -645,7 +645,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                             { main | hl = Bitwise.or value.value (Bitwise.and z80_core.main.hl 0xFF00) }
 
                 ( env_2, newNew ) =
-                    env |> setMem addr value.value input.time
+                    env |> setMem addr value.value inputTime
             in
             { z80_core | main = new_main, flags = value.flags, env = env_2 } |> CoreOnly
 
@@ -654,11 +654,11 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 addr =
                     raw_addr |> Bitwise.and 0xFFFF
 
-                input =
+                ( value_time, value_value ) =
                     env |> mem addr clockTime rom48k
 
                 value =
-                    input.value |> setBit bitTest
+                    value_value |> setBit bitTest
 
                 main =
                     z80_core.main
@@ -684,7 +684,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                             { main | hl = Bitwise.or value (Bitwise.and z80_core.main.hl 0xFF00) }
 
                 ( env_2, newTime2 ) =
-                    env |> setMem addr value input.time
+                    env |> setMem addr value value_time
             in
             { z80_core | main = new_main, env = env_2 } |> CoreOnly
 
@@ -693,11 +693,11 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 addr =
                     raw_addr |> Bitwise.and 0xFFFF
 
-                input =
+                ( value_time, value_value ) =
                     env |> mem addr clockTime rom48k
 
                 value =
-                    input.value |> clearBit bitTest
+                    value_value |> clearBit bitTest
 
                 main =
                     z80_core.main
@@ -723,7 +723,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                             { main | hl = Bitwise.or value (Bitwise.and z80_core.main.hl 0xFF00) }
 
                 ( env_2, newTime ) =
-                    env |> setMem addr value input.time
+                    env |> setMem addr value value_time
             in
             { z80_core | main = new_main, env = env_2 } |> CoreOnly
 
@@ -732,37 +732,37 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 address =
                     raw_addr |> Bitwise.and 0xFFFF
 
-                value =
+                ( value_time, value_value ) =
                     z80_core.env |> mem address clockTime rom48k
 
                 result =
                     case shifterFunc of
                         Shifter0 ->
-                            z80_core.flags |> shifter0 value.value
+                            z80_core.flags |> shifter0 value_value
 
                         Shifter1 ->
-                            z80_core.flags |> shifter1 value.value
+                            z80_core.flags |> shifter1 value_value
 
                         Shifter2 ->
-                            z80_core.flags |> shifter2 value.value
+                            z80_core.flags |> shifter2 value_value
 
                         Shifter3 ->
-                            z80_core.flags |> shifter3 value.value
+                            z80_core.flags |> shifter3 value_value
 
                         Shifter4 ->
-                            z80_core.flags |> shifter4 value.value
+                            z80_core.flags |> shifter4 value_value
 
                         Shifter5 ->
-                            z80_core.flags |> shifter5 value.value
+                            z80_core.flags |> shifter5 value_value
 
                         Shifter6 ->
-                            z80_core.flags |> shifter6 value.value
+                            z80_core.flags |> shifter6 value_value
 
                         Shifter7 ->
-                            z80_core.flags |> shifter7 value.value
+                            z80_core.flags |> shifter7 value_value
 
                 ( env_2, newTime2 ) =
-                    z80_core.env |> setMem address result.value value.time
+                    z80_core.env |> setMem address result.value value_time
 
                 newFlags =
                     result.flags
@@ -774,17 +774,17 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 addr =
                     raw_addr |> Bitwise.and 0xFFFF
 
-                input =
+                ( value_time, value_value ) =
                     env |> mem addr clockTime rom48k
 
                 value =
-                    input.value |> setBit bitTest
+                    value_value |> setBit bitTest
 
                 flags =
                     z80_core.flags
 
                 ( env_2, newTime2 ) =
-                    env |> setMem addr value input.time
+                    env |> setMem addr value value_time
             in
             { z80_core | flags = { flags | a = value }, env = env_2 } |> CoreOnly
 
@@ -793,17 +793,17 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 addr =
                     raw_addr |> Bitwise.and 0xFFFF
 
-                input =
+                ( value_time, value_value ) =
                     env |> mem addr clockTime rom48k
 
                 value =
-                    input.value |> clearBit bitTest
+                    value_value |> clearBit bitTest
 
                 flags =
                     z80_core.flags
 
                 ( env_2, newTime2 ) =
-                    env |> setMem addr value input.time
+                    env |> setMem addr value value_time
             in
             { z80_core | flags = { flags | a = value }, env = env_2 } |> CoreOnly
 
@@ -811,37 +811,37 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
 applyShifter : Shifter -> Int -> CpuTimeCTime -> Z80ROM -> Z80Core -> Z80Core
 applyShifter shifterFunc addr cpu_time rom48k z80 =
     let
-        value =
+        ( value_time, value_value ) =
             z80.env |> mem addr cpu_time rom48k
 
         result =
             case shifterFunc of
                 Shifter0 ->
-                    z80.flags |> shifter0 value.value
+                    z80.flags |> shifter0 value_value
 
                 Shifter1 ->
-                    z80.flags |> shifter1 value.value
+                    z80.flags |> shifter1 value_value
 
                 Shifter2 ->
-                    z80.flags |> shifter2 value.value
+                    z80.flags |> shifter2 value_value
 
                 Shifter3 ->
-                    z80.flags |> shifter3 value.value
+                    z80.flags |> shifter3 value_value
 
                 Shifter4 ->
-                    z80.flags |> shifter4 value.value
+                    z80.flags |> shifter4 value_value
 
                 Shifter5 ->
-                    z80.flags |> shifter5 value.value
+                    z80.flags |> shifter5 value_value
 
                 Shifter6 ->
-                    z80.flags |> shifter6 value.value
+                    z80.flags |> shifter6 value_value
 
                 Shifter7 ->
-                    z80.flags |> shifter7 value.value
+                    z80.flags |> shifter7 value_value
 
         ( env_2, newTime2 ) =
-            z80.env |> setMem addr result.value value.time
+            z80.env |> setMem addr result.value value_time
     in
     { z80 | flags = result.flags, env = env_2 }
 
@@ -920,14 +920,14 @@ applyTripleChangeDelta rom48k cpu_time z80changeData z80 =
 
         NewAIndirect int ->
             let
-                value =
+                ( value_time, value_value ) =
                     env |> mem int cpu_time rom48k
 
                 flags =
                     z80.flags
             in
             { z80
-                | flags = { flags | a = value.value }
+                | flags = { flags | a = value_value }
             }
                 |> CoreOnly
 
@@ -1154,11 +1154,11 @@ applyEdRegisterDelta clockTime z80changeData rom48k z80_core =
                         Backwards ->
                             main.hl - 1 |> Bitwise.and 0xFFFF
 
-                in_value =
+                ( value_time, value_value ) =
                     z80_core.env |> z80_in (main |> get_bc) rom48k.keyboard clockTime
 
                 ( env_2, newTme2 ) =
-                    env |> setMem main.hl in_value.value in_value.time
+                    env |> setMem main.hl value_value value_time
 
                 pc2 =
                     if repeat && new_b /= 0 then
@@ -1179,7 +1179,7 @@ applyEdRegisterDelta clockTime z80changeData rom48k z80_core =
                             (new_main |> get_bc) - 1 |> Bitwise.and 0xFFFF
 
                 flags =
-                    z80_core.flags |> inirOtirFlags d_flag (new_main |> get_bc) in_value.value
+                    z80_core.flags |> inirOtirFlags d_flag (new_main |> get_bc) value_value
             in
             { z80_core | env = env_2, flags = flags, main = new_main } |> Looper pc2
 
@@ -1199,7 +1199,7 @@ applyEdRegisterDelta clockTime z80changeData rom48k z80_core =
                         Backwards ->
                             main.hl - 1 |> Bitwise.and 0xFFFF
 
-                outvalue =
+                ( value_time, value_value ) =
                     z80_core.env |> mem main.hl clockTime rom48k
 
                 main_2 =
@@ -1209,7 +1209,7 @@ applyEdRegisterDelta clockTime z80changeData rom48k z80_core =
                     main_2 |> get_bc
 
                 ( env2, newTime2 ) =
-                    z80_core.env |> z80_out new_bc outvalue.value outvalue.time
+                    z80_core.env |> z80_out new_bc value_value value_time
 
                 pc2 =
                     if repeat && new_b /= 0 then
@@ -1219,7 +1219,7 @@ applyEdRegisterDelta clockTime z80changeData rom48k z80_core =
                         NoOffset
 
                 flags =
-                    z80_core.flags |> inirOtirFlags new_hl new_bc outvalue.value
+                    z80_core.flags |> inirOtirFlags new_hl new_bc value_value
             in
             { z80_core | env = env2, flags = flags, main = main_2 } |> Looper pc2
 
@@ -1231,27 +1231,27 @@ applyEdRegisterDelta clockTime z80changeData rom48k z80_core =
                 z80_flags =
                     z80_core.flags
 
-                in_value =
+                ( value_time, in_value_value ) =
                     z80_core.env |> z80_in (z80_main |> get_bc) rom48k.keyboard clockTime
 
                 main =
                     case changeMainRegister of
                         ChangeMainB ->
-                            { z80_main | b = in_value.value }
+                            { z80_main | b = in_value_value }
 
                         ChangeMainC ->
-                            { z80_main | c = in_value.value }
+                            { z80_main | c = in_value_value }
 
                         ChangeMainD ->
-                            { z80_main | d = in_value.value }
+                            { z80_main | d = in_value_value }
 
                         ChangeMainE ->
-                            { z80_main | e = in_value.value }
+                            { z80_main | e = in_value_value }
 
                         ChangeMainH ->
-                            { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 in_value.value) }
+                            { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 in_value_value) }
 
                         ChangeMainL ->
-                            { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) in_value.value }
+                            { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) in_value_value }
             in
-            { z80_core | flags = z80_flags |> f_szh0n0p in_value.value, main = main } |> CoreOnly
+            { z80_core | flags = z80_flags |> f_szh0n0p in_value_value, main = main } |> CoreOnly

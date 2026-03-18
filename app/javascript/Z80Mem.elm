@@ -1,10 +1,9 @@
 module Z80Mem exposing (..)
 
 import Bitwise exposing (shiftRightBy)
-import CpuTimeCTime exposing (CTime(..), CpuTimeAnd16BitValue, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAnd16BitValue, CpuTimeSpAnd16BitValue, addCpuTimeTime, cont, cont1)
+import CpuTimeCTime exposing (CTime(..), CpuTimeAnd16BitValue, CpuTimeCTime, CpuTimePcAnd16BitValue, CpuTimeSpAnd16BitValue, addCpuTimeTime, cont, cont1)
 import Dict
 import Utils exposing (shiftLeftBy8)
-import Z80Core exposing (Z80Core)
 import Z80Env exposing (Z80Env)
 import Z80Ram exposing (getRamValue)
 import Z80Rom exposing (Z80ROM, getROMValue)
@@ -35,7 +34,7 @@ import Z80Rom exposing (Z80ROM, getROMValue)
 --}
 
 
-m1 : Int -> Int -> Z80ROM -> CpuTimeCTime -> Z80Env -> CpuTimeAndValue
+m1 : Int -> Int -> Z80ROM -> CpuTimeCTime -> Z80Env -> ( CpuTimeCTime, Int )
 m1 addr ir rom48k clockTime z80env =
     let
         z80env_time =
@@ -79,7 +78,7 @@ m1 addr ir rom48k clockTime z80env =
                 -- not implementing IF1 switching for now
                 rom48k |> getROMValue addr
     in
-    CpuTimeAndValue { z80env_1_time | ctime = ctime } value
+    ( { z80env_1_time | ctime = ctime }, value )
 
 
 
@@ -100,7 +99,7 @@ m1 addr ir rom48k clockTime z80env =
 --}
 
 
-mem : Int -> CpuTimeCTime -> Z80ROM -> Z80Env -> CpuTimeAndValue
+mem : Int -> CpuTimeCTime -> Z80ROM -> Z80Env -> ( CpuTimeCTime, Int )
 mem base_addr time rom48k ram =
     let
         z80env_time =
@@ -137,7 +136,7 @@ mem base_addr time rom48k ram =
             else
                 ( z80env_time, NoCont, rom48k |> getROMValue base_addr )
     in
-    CpuTimeAndValue { new_time | ctime = ctime } value
+    ( { new_time | ctime = ctime }, value )
 
 
 
@@ -295,16 +294,17 @@ getRamValue addr z80rom z80env =
             z80rom.z80ram |> Z80Ram.getRamValue addr
 
 
-imm16 : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> CpuTimePcAnd16BitValue
-imm16 rom48k clockTime pc_in z80 =
-    let
-        v =
-            z80.env |> mem16 pc_in rom48k clockTime
 
-        pc =
-            Bitwise.and (pc_in + 2) 0xFFFF
-
-        env =
-            v.time |> addCpuTimeTime 6
-    in
-    CpuTimePcAnd16BitValue env pc v.value16
+--imm16 : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> CpuTimePcAnd16BitValue
+--imm16 rom48k clockTime pc_in z80 =
+--    let
+--        v =
+--            z80.env |> mem16 pc_in rom48k clockTime
+--
+--        pc =
+--            Bitwise.and (pc_in + 2) 0xFFFF
+--
+--        env =
+--            v.time |> addCpuTimeTime 6
+--    in
+--    CpuTimePcAnd16BitValue env pc v.value16
