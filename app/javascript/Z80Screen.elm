@@ -85,23 +85,29 @@ type alias ScreenColourRun =
 intToColour : Bool -> Int -> Bool -> SpectrumColour
 intToColour globalFlash raw_colour bitValue =
     let
-        colour_byte =
-            Byte.fromInt raw_colour
-
-        bright =
-            --(raw_colour |> Bitwise.and 0x40) /= 0
-            colour_byte |> getBit 6
-
+        --colour_byte =
+        --    Byte.fromInt raw_colour
+        --bright =
+        --    (raw_colour |> Bitwise.and 0x40) /= 0
+        --colour_byte |> getBit 6
         --
-        flash =
-            --(raw_colour |> Bitwise.and 0x80) /= 0
-            colour_byte |> getBit 7
-
+        --flash =
+        --    (raw_colour |> Bitwise.and 0x80) /= 0
+        --colour_byte |> getBit 7
         --(flash, bright) = case raw_colour |> Bitwise.and 0xC0 of
         --    0 -> (False, False)
-        --    1 -> (False, True)
-        --    2 -> (True, False)
+        --    0x40 -> (False, True)
+        --    0x80 -> (True, False)
         --    _ -> (True, True)
+        flashbright =
+            raw_colour |> Bitwise.and 0xC0
+
+        flash =
+            flashbright == 0x80 || flashbright == 0xC0
+
+        bright =
+            flashbright == 0x40 || flashbright == 0xC0
+
         value =
             if flash && globalFlash then
                 not bitValue
