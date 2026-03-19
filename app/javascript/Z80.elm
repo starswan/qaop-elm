@@ -230,6 +230,9 @@ executeAndApplyDelta ct rom48k z80clock =
         MainOnly z80_main ->
             { z80clock | core = { z80_core | main = z80_main }, clockTime = clockTime, pc = pcAfter }
 
+        FlagsOnly z80_flags ->
+            { z80clock | core = { z80_core | flags = z80_flags }, clockTime = clockTime, pc = pcAfter }
+
         CoreWithTime shortDelay z80Core ->
             { z80clock | core = z80Core, clockTime = clockTime |> addExtraCpuTime shortDelay, pc = pcAfter }
 
@@ -588,6 +591,9 @@ executeCoreInstruction rom48k pc z80_core =
 
         MainOnly z80_main ->
             ( { z80_core | main = z80_main }, clockTime, pcAfter )
+
+        FlagsOnly z80_flags ->
+            ( { z80_core | flags = z80_flags }, clockTime, pcAfter )
 
         CoreWithTime shortDelay z80Core ->
             ( z80Core, clockTime |> addExtraCpuTime shortDelay, pcAfter )

@@ -135,7 +135,7 @@ applyJumpChangeDelta cpu_time z80changeData z80 =
                 int =
                     Bitwise.or (param |> shiftLeftBy8) (Bitwise.and main.hl 0xFF)
             in
-            { z80 | main = { main | hl = int } } |> CoreOnly
+            { main | hl = int } |> MainOnly
 
         SimpleNewLValue param ->
             let
@@ -145,7 +145,7 @@ applyJumpChangeDelta cpu_time z80changeData z80 =
                 int =
                     Bitwise.or param (Bitwise.and main.hl 0xFF00)
             in
-            { z80 | main = { main | hl = int } } |> CoreOnly
+            { main | hl = int } |> MainOnly
 
 
 applySimple8BitDelta : CpuTimeCTime -> Single8BitChange -> Z80ROM -> Z80Core -> Z80Core
@@ -377,11 +377,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 main =
                     z80_core.main
             in
-            { z80_core
-                | main = { main | hl = v.value16 }
-                , env = { old_env | sp = v.sp }
-            }
-                |> CoreOnly
+            { z80_core | main = { main | hl = v.value16 }, env = { old_env | sp = v.sp } } |> CoreOnly
 
         PopIX ->
             let
@@ -394,11 +390,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 main =
                     z80_core.main
             in
-            { z80_core
-                | main = { main | ix = v.value16 }
-                , env = { old_env | sp = v.sp }
-            }
-                |> CoreOnly
+            { z80_core | main = { main | ix = v.value16 }, env = { old_env | sp = v.sp } } |> CoreOnly
 
         PopIY ->
             let
@@ -609,23 +601,20 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
             let
                 z80_main =
                     z80_core.main
-
-                main =
-                    case changeOneRegister of
-                        ChangeSingleH ->
-                            { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 int) }
-
-                        ChangeSingleL ->
-                            { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) int }
             in
-            { z80_core | main = main } |> CoreOnly
+            case changeOneRegister of
+                ChangeSingleH ->
+                    { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 int) } |> MainOnly
+
+                ChangeSingleL ->
+                    { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) int } |> MainOnly
 
         RegisterChangeA mainf ->
             let
                 z80_flags =
                     z80_core.flags
             in
-            { z80_core | flags = { z80_flags | a = z80_core.main |> mainf } } |> CoreOnly
+            { z80_flags | a = z80_core.main |> mainf } |> FlagsOnly
 
         RegisterIndirectWithShifter shifterFunc changeOneRegister raw_addr ->
             let
@@ -863,10 +852,10 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
             { z80_core | flags = { flags | a = value }, env = env_2 } |> CoreOnly
 
         FlagChangeFunc f ->
-            { z80_core | flags = f z80_core.flags } |> CoreOnly
+            f z80_core.flags |> FlagsOnly
 
         FlagChangeMain f ->
-            { z80_core | main = z80_core.main |> f z80_core.flags } |> CoreOnly
+            z80_core.main |> f z80_core.flags |> MainOnly
 
         ConditionalReturn f ->
             if f z80_core.flags then

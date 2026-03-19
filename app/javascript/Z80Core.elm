@@ -32,6 +32,7 @@ type CoreChange
     | Looper RepeatPCOffset Z80Core
     | LooperWithDelay RepeatPCOffset ShortDelay Z80Core
     | MainOnly MainWithIndexRegisters
+    | FlagsOnly FlagRegisters
     | MainWithOffsetAndDelay Int ShortDelay MainWithIndexRegisters
 
 
