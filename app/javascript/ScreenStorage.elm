@@ -1,7 +1,7 @@
 module ScreenStorage exposing (..)
 
 import Bitwise exposing (shiftLeftBy, shiftRightBy)
-import SpectrumColour exposing (BorderColour(..))
+import SpectrumColour exposing (BorderColour(..), ScreenAttribute, attributeFromInt)
 import Vector24 exposing (Vector24)
 import Vector32 exposing (Vector32)
 import Vector8 exposing (Vector8)
@@ -10,7 +10,7 @@ import Z80MemoryDict exposing (Z80MemoryDict, getMemValue, setMemValue)
 
 type alias ScreenLine =
     { data : Z80MemoryDict
-    , attrs : Vector32 Int
+    , attrs : Vector32 ScreenAttribute
     }
 
 
@@ -31,7 +31,7 @@ type alias Z80Screen =
 
 
 type alias RawScreenData =
-    { colour : Int
+    { colour : ScreenAttribute
     , data : Int
     }
 
@@ -44,7 +44,7 @@ constructor =
 
         --for(int i=6144;i<6912;i++) ram[i] = 070; // white
         attr_line =
-            Vector32.repeat 0x38
+            Vector32.repeat (0x38 |> attributeFromInt)
 
         line =
             { attrs = attr_line, data = screen_line }
@@ -125,7 +125,7 @@ getScreenDataIndex addr =
 
 
 setScreenValue : Int -> Int -> Z80Screen -> Z80Screen
-setScreenValue addr value z80screen =
+setScreenValue addr intValue z80screen =
     if addr < 0x1800 then
         let
             ( lineNumber, addr32, line32 ) =
@@ -137,13 +137,13 @@ setScreenValue addr value z80screen =
             line =
                 z80screen.lines |> Vector24.get lineNumber
         in
-        if (line.data |> getMemValue lineOffset) == value then
+        if (line.data |> getMemValue lineOffset) == intValue then
             z80screen
 
         else
             let
                 newLine =
-                    { line | data = line.data |> setMemValue lineOffset value }
+                    { line | data = line.data |> setMemValue lineOffset intValue }
 
                 newData =
                     z80screen.lines |> Vector24.set lineNumber newLine
@@ -155,24 +155,27 @@ setScreenValue addr value z80screen =
             offset =
                 addr - 0x1800
 
-            row =
+            rowIndex =
                 offset // 32 |> Vector24.intToIndex |> Maybe.withDefault Vector24.Index0
 
             oldrow =
-                z80screen.lines |> Vector24.get row
+                z80screen.lines |> Vector24.get rowIndex
 
             col =
                 offset |> remainderBy 32 |> Vector32.intToIndex |> Maybe.withDefault Vector32.Index0
         in
-        if (oldrow.attrs |> Vector32.get col) == value then
+        if (oldrow.attrs |> Vector32.get col |> .value) == intValue then
             z80screen
 
         else
             let
+                value =
+                    intValue |> attributeFromInt
+
                 new_row =
                     { oldrow | attrs = oldrow.attrs |> Vector32.set col value }
             in
-            { z80screen | lines = z80screen.lines |> Vector24.set row new_row }
+            { z80screen | lines = z80screen.lines |> Vector24.set rowIndex new_row }
 
 
 getScreenValue : Int -> Z80Screen -> Int
@@ -204,7 +207,7 @@ getScreenValue addr z80screen =
             col =
                 offset |> remainderBy 32 |> Vector32.intToIndex |> Maybe.withDefault Vector32.Index0
         in
-        oldrow.attrs |> Vector32.get col
+        oldrow.attrs |> Vector32.get col |> .value
 
 
 memoryRow : Z80MemoryDict -> Vector8.Index -> Vector32 Int

@@ -1,17 +1,16 @@
 module Z80Screen exposing (..)
 
 import Array exposing (Array)
-import Bitwise exposing (shiftRightBy)
 import Byte exposing (Byte, getBit)
 import Maybe
 import ScreenStorage exposing (RawScreenData, ScreenLine, Z80Screen, memoryRow)
-import SpectrumColour exposing (SpectrumColour, spectrumColour)
+import SpectrumColour exposing (ScreenAttribute, SpectrumColour)
 import Vector32 exposing (Vector32)
 import Vector8 exposing (Vector8)
 
 
 type alias ScreenData =
-    { colour : Int
+    { colour : ScreenAttribute
     , data : List Int
     }
 
@@ -82,50 +81,22 @@ type alias ScreenColourRun =
     }
 
 
-intToColour : Bool -> Int -> Bool -> SpectrumColour
-intToColour globalFlash raw_colour bitValue =
+pairToColour : Bool -> ScreenAttribute -> RunCount -> ScreenColourRun
+pairToColour globalFlash screenAttr runcount =
     let
-        colour_byte =
-            Byte.fromInt raw_colour
-
-        bright =
-            --(raw_colour |> Bitwise.and 0x40) /= 0
-            colour_byte |> getBit 6
-
-        --
-        flash =
-            --(raw_colour |> Bitwise.and 0x80) /= 0
-            colour_byte |> getBit 7
-
-        --(flash, bright) = case raw_colour |> Bitwise.and 0xC0 of
-        --    0 -> (False, False)
-        --    1 -> (False, True)
-        --    2 -> (True, False)
-        --    _ -> (True, True)
         value =
-            if flash && globalFlash then
-                not bitValue
+            if screenAttr.flash && globalFlash then
+                not runcount.value
 
             else
-                bitValue
+                runcount.value
 
         colour =
             if value then
-                -- ink
-                Bitwise.and raw_colour 0x07
+                screenAttr.inkColour
 
             else
-                --paper
-                Bitwise.and raw_colour 0x38 |> shiftRightBy 3
-    in
-    spectrumColour colour bright
-
-
-pairToColour : Bool -> Int -> RunCount -> ScreenColourRun
-pairToColour globalFlash raw_colour runcount =
-    let
-        colour =
-            intToColour globalFlash raw_colour runcount.value
+                screenAttr.paperColour
     in
     ScreenColourRun runcount.count colour
 
