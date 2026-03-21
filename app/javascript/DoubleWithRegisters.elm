@@ -23,7 +23,7 @@ type DoubleWithRegisterChange
     | SetARegisterIndirect (MainWithIndexRegisters -> Int) Int
     | IndexedIndirectIncrement Int Int
     | IndexedIndirectDecrement Int Int
-    | FlagOpIndexedIndirect FlagFunc Int
+    | FlagOpIndexedIndirect FlagFunc (MainWithIndexRegisters -> Int) Int
     | NewRegisterIndirect ChangeMainRegister (MainWithIndexRegisters -> Int) Int
     | RegStore8BitValue Int (MainWithIndexRegisters -> Int) Int
 
@@ -62,14 +62,14 @@ doubleWithRegistersIX =
 
         -- case 0x6E: HL=HL&0xFF00|env.mem(getd(xy)); time+=3; break;
         , ( 0x6E, ( \param z80_main -> NewRegisterIndirect ChangeMainL .ix param, NineteenTStates ) )
-        , ( 0x86, ( \param z80_main -> FlagOpIndexedIndirect AddA (z80_main.ix + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
-        , ( 0x8E, ( \param z80_main -> FlagOpIndexedIndirect AdcA (z80_main.ix + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
-        , ( 0x96, ( \param z80_main -> FlagOpIndexedIndirect SubA (z80_main.ix + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
-        , ( 0x9E, ( \param z80_main -> FlagOpIndexedIndirect SbcA (z80_main.ix + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
-        , ( 0xA6, ( \param z80_main -> FlagOpIndexedIndirect AndA (z80_main.ix + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
-        , ( 0xAE, ( \param z80_main -> FlagOpIndexedIndirect XorA (z80_main.ix + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
-        , ( 0xB6, ( \param z80_main -> FlagOpIndexedIndirect OrA (z80_main.ix + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
-        , ( 0xBE, ( \param z80_main -> FlagOpIndexedIndirect CpA (z80_main.ix + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
+        , ( 0x86, ( \param z80_main -> FlagOpIndexedIndirect AddA .ix param, NineteenTStates ) )
+        , ( 0x8E, ( \param z80_main -> FlagOpIndexedIndirect AdcA .ix param, NineteenTStates ) )
+        , ( 0x96, ( \param z80_main -> FlagOpIndexedIndirect SubA .ix param, NineteenTStates ) )
+        , ( 0x9E, ( \param z80_main -> FlagOpIndexedIndirect SbcA .ix param, NineteenTStates ) )
+        , ( 0xA6, ( \param z80_main -> FlagOpIndexedIndirect AndA .ix param, NineteenTStates ) )
+        , ( 0xAE, ( \param z80_main -> FlagOpIndexedIndirect XorA .ix param, NineteenTStates ) )
+        , ( 0xB6, ( \param z80_main -> FlagOpIndexedIndirect OrA .ix param, NineteenTStates ) )
+        , ( 0xBE, ( \param z80_main -> FlagOpIndexedIndirect CpA .ix param, NineteenTStates ) )
         , ( 0x77, ( ld_indirect_ix_a, NineteenTStates ) )
         , ( 0x7E, ( ld_a_indirect_ix, NineteenTStates ) )
         ]
@@ -100,14 +100,14 @@ doubleWithRegistersIY =
 
         -- case 0x6E: HL=HL&0xFF00|env.mem(getd(xy)); time+=3; break;
         , ( 0x6E, ( \param z80_main -> NewRegisterIndirect ChangeMainL .iy param, NineteenTStates ) )
-        , ( 0x86, ( \param z80_main -> FlagOpIndexedIndirect AddA (z80_main.iy + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
-        , ( 0x8E, ( \param z80_main -> FlagOpIndexedIndirect AdcA (z80_main.iy + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
-        , ( 0x96, ( \param z80_main -> FlagOpIndexedIndirect SubA (z80_main.iy + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
-        , ( 0x9E, ( \param z80_main -> FlagOpIndexedIndirect SbcA (z80_main.iy + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
-        , ( 0xA6, ( \param z80_main -> FlagOpIndexedIndirect AndA (z80_main.iy + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
-        , ( 0xAE, ( \param z80_main -> FlagOpIndexedIndirect XorA (z80_main.iy + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
-        , ( 0xB6, ( \param z80_main -> FlagOpIndexedIndirect OrA (z80_main.iy + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
-        , ( 0xBE, ( \param z80_main -> FlagOpIndexedIndirect CpA (z80_main.iy + byte param |> Bitwise.and 0xFFFF), NineteenTStates ) )
+        , ( 0x86, ( \param z80_main -> FlagOpIndexedIndirect AddA .iy param, NineteenTStates ) )
+        , ( 0x8E, ( \param z80_main -> FlagOpIndexedIndirect AdcA .iy param, NineteenTStates ) )
+        , ( 0x96, ( \param z80_main -> FlagOpIndexedIndirect SubA .iy param, NineteenTStates ) )
+        , ( 0x9E, ( \param z80_main -> FlagOpIndexedIndirect SbcA .iy param, NineteenTStates ) )
+        , ( 0xA6, ( \param z80_main -> FlagOpIndexedIndirect AndA .iy param, NineteenTStates ) )
+        , ( 0xAE, ( \param z80_main -> FlagOpIndexedIndirect XorA .iy param, NineteenTStates ) )
+        , ( 0xB6, ( \param z80_main -> FlagOpIndexedIndirect OrA .iy param, NineteenTStates ) )
+        , ( 0xBE, ( \param z80_main -> FlagOpIndexedIndirect CpA .iy param, NineteenTStates ) )
         , ( 0x77, ( ld_indirect_iy_a, NineteenTStates ) )
         , ( 0x7E, ( ld_a_indirect_iy, NineteenTStates ) )
         ]
@@ -331,10 +331,13 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
                 | env = env_1
             }
 
-        FlagOpIndexedIndirect flagFunc address ->
+        FlagOpIndexedIndirect flagFunc address_f offset ->
             let
                 flags =
                     z80.flags
+
+                address =
+                    (z80.main |> address_f) + byte offset |> Bitwise.and 0xFFFF
 
                 value =
                     z80.env |> mem address cpu_time rom48k
