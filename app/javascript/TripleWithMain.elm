@@ -9,15 +9,15 @@ import Utils exposing (shiftRightBy8)
 import Z80Types exposing (MainWithIndexRegisters)
 
 
-tripleMainRegsIXThree : Dict Int ( Int -> MainWithIndexRegisters -> DoubleWithRegisterChange, InstructionDuration )
+tripleMainRegsIXThree : Dict Int ( Int -> DoubleWithRegisterChange, InstructionDuration )
 tripleMainRegsIXThree =
     Dict.fromList
-        [ ( 0x70, ( \offset z80_main -> store_reg_indirect offset .ix z80_main.b, NineteenTStates ) )
-        , ( 0x71, ( \param16 z80_main -> store_reg_indirect param16 .ix z80_main.c, NineteenTStates ) )
-        , ( 0x72, ( \param16 z80_main -> store_reg_indirect param16 .ix z80_main.d, NineteenTStates ) )
-        , ( 0x73, ( \param16 z80_main -> store_reg_indirect param16 .ix z80_main.e, NineteenTStates ) )
-        , ( 0x74, ( \param16 z80_main -> store_reg_indirect param16 .ix (z80_main.hl |> shiftRightBy8), NineteenTStates ) )
-        , ( 0x75, ( \param16 z80_main -> store_reg_indirect param16 .ix (z80_main.hl |> Bitwise.and 0xFF), NineteenTStates ) )
+        [ ( 0x70, ( \offset -> store_reg_indirect offset .ix .b, NineteenTStates ) )
+        , ( 0x71, ( \param16 -> store_reg_indirect param16 .ix .c, NineteenTStates ) )
+        , ( 0x72, ( \param16 -> store_reg_indirect param16 .ix .d, NineteenTStates ) )
+        , ( 0x73, ( \param16 -> store_reg_indirect param16 .ix .e, NineteenTStates ) )
+        , ( 0x74, ( \param16 -> store_reg_indirect param16 .ix (\z80_main -> z80_main.hl |> shiftRightBy8), NineteenTStates ) )
+        , ( 0x75, ( \param16 -> store_reg_indirect param16 .ix (\z80_main -> z80_main.hl |> Bitwise.and 0xFF), NineteenTStates ) )
         ]
 
 
@@ -29,15 +29,15 @@ tripleMainRegsIXFour =
         ]
 
 
-tripleMainRegsIYThree : Dict Int ( Int -> MainWithIndexRegisters -> DoubleWithRegisterChange, InstructionDuration )
+tripleMainRegsIYThree : Dict Int ( Int -> DoubleWithRegisterChange, InstructionDuration )
 tripleMainRegsIYThree =
     Dict.fromList
-        [ ( 0x70, ( \offset z80_main -> store_reg_indirect offset .iy z80_main.b, NineteenTStates ) )
-        , ( 0x71, ( \offset z80_main -> store_reg_indirect offset .iy z80_main.c, NineteenTStates ) )
-        , ( 0x72, ( \param16 z80_main -> store_reg_indirect param16 .iy z80_main.d, NineteenTStates ) )
-        , ( 0x73, ( \param16 z80_main -> store_reg_indirect param16 .iy z80_main.e, NineteenTStates ) )
-        , ( 0x74, ( \param16 z80_main -> store_reg_indirect param16 .iy (z80_main.hl |> shiftRightBy8), NineteenTStates ) )
-        , ( 0x75, ( \param16 z80_main -> store_reg_indirect param16 .iy (z80_main.hl |> Bitwise.and 0xFF), NineteenTStates ) )
+        [ ( 0x70, ( \offset -> store_reg_indirect offset .iy .b, NineteenTStates ) )
+        , ( 0x71, ( \offset -> store_reg_indirect offset .iy .c, NineteenTStates ) )
+        , ( 0x72, ( \param16 -> store_reg_indirect param16 .iy .d, NineteenTStates ) )
+        , ( 0x73, ( \param16 -> store_reg_indirect param16 .iy .e, NineteenTStates ) )
+        , ( 0x74, ( \param16 -> store_reg_indirect param16 .iy (\z80_main -> z80_main.hl |> shiftRightBy8), NineteenTStates ) )
+        , ( 0x75, ( \param16 -> store_reg_indirect param16 .iy (\z80_main -> z80_main.hl |> Bitwise.and 0xFF), NineteenTStates ) )
         ]
 
 
@@ -87,7 +87,7 @@ ld_indirect_iy_n param16 =
     Store8BitValue offset .iy value
 
 
-store_reg_indirect : Int -> (MainWithIndexRegisters -> Int) -> Int -> DoubleWithRegisterChange
+store_reg_indirect : Int -> (MainWithIndexRegisters -> Int) -> (MainWithIndexRegisters -> Int) -> DoubleWithRegisterChange
 store_reg_indirect param source dest =
     -- case 0x70: env.mem(getd(xy),B); time+=3; break;
     --let

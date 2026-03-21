@@ -65,7 +65,7 @@ singleByteMainFlagsRegsIX =
         |> Dict.union (singleEnvMainRegsIX |> Dict.map (\_ ( f, duration ) -> ( RegisterEnvMainChange f, duration )))
 
 
-twoByteWithRegistersIX : Dict Int ( Int -> MainWithIndexRegisters -> DoubleWithRegisterChange, InstructionDuration )
+twoByteWithRegistersIX : Dict Int ( Int -> DoubleWithRegisterChange, InstructionDuration )
 twoByteWithRegistersIX =
     doubleWithRegistersIX |> Dict.union tripleMainRegsIXThree
 
@@ -80,7 +80,7 @@ threeByteWithRegistersIY =
     tripleByteWith16BitParamFD |> Dict.union tripleMainRegsIYFour
 
 
-twoByteWithRegistersIY : Dict Int ( Int -> MainWithIndexRegisters -> DoubleWithRegisterChange, InstructionDuration )
+twoByteWithRegistersIY : Dict Int ( Int -> DoubleWithRegisterChange, InstructionDuration )
 twoByteWithRegistersIY =
     doubleWithRegistersIY |> Dict.union tripleMainRegsIYThree
 
