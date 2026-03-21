@@ -1,5 +1,6 @@
 module CB70Test exposing (..)
 
+import Dict
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Triple
@@ -46,7 +47,7 @@ suite =
             { z80env = z80.env |> setMem addr 0xCB clock.clockTime |> Tuple.first, time = clock.clockTime }
 
         z80rom =
-            Z80Rom.constructor
+            Z80Rom.constructor Dict.empty
     in
     describe "Bit instructions (CB)"
         [ describe "0xCB 0x70 BIT 6,B"
