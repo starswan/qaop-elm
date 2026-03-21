@@ -4,9 +4,9 @@ import Bitwise exposing (complement, shiftLeftBy, shiftRightBy)
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), ShortDelay(..))
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
-import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), SixteenBit(..))
+import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), RegisterFlagChange(..), SixteenBit(..))
 import Utils exposing (char, shiftLeftBy8, shiftRightBy8, toHexString2)
-import Z80Change exposing (FlagChange(..), Z80Change(..))
+import Z80Change exposing (Z80Change(..))
 import Z80Core exposing (DirectionForLDIR(..), RepeatPCOffset(..), Z80Core)
 import Z80Debug exposing (debugLog)
 import Z80Env exposing (Z80Env, setMem, setMemIgnoringTime, z80_in)
@@ -668,27 +668,27 @@ singleByteMainRegsED =
         ]
 
 
-singleByteFlagsED : Dict Int ( FlagRegisters -> FlagChange, InstructionDuration )
+singleByteFlagsED : Dict Int ( FlagRegisters -> RegisterFlagChange, InstructionDuration )
 singleByteFlagsED =
     Dict.fromList
-        [ ( 0x44, ( ed_44_neg, EightTStates ) )
+        [ ( 0x44, ( \flags -> FlagChangeFunc ed_44_neg, EightTStates ) )
 
         -- case 0x47: i(A); time++; break;
         , ( 0x47, ( \z80_flags -> FlagNewIValue z80_flags.a, NineTStates ) )
-        , ( 0x4C, ( ed_44_neg, EightTStates ) )
+        , ( 0x4C, ( \z80_flags -> FlagChangeFunc ed_44_neg, EightTStates ) )
 
         -- case 0x4F: r(A); time++; break;
         , ( 0x4F, ( \z80_flags -> FlagNewRValue z80_flags.a, NineTStates ) )
-        , ( 0x54, ( ed_44_neg, EightTStates ) )
-        , ( 0x5C, ( ed_44_neg, EightTStates ) )
-        , ( 0x64, ( ed_44_neg, EightTStates ) )
-        , ( 0x6C, ( ed_44_neg, EightTStates ) )
-        , ( 0x74, ( ed_44_neg, EightTStates ) )
-        , ( 0x7C, ( ed_44_neg, EightTStates ) )
+        , ( 0x54, ( \z80_flags -> FlagChangeFunc ed_44_neg, EightTStates ) )
+        , ( 0x5C, ( \z80_flags -> FlagChangeFunc ed_44_neg, EightTStates ) )
+        , ( 0x64, ( \z80_flags -> FlagChangeFunc ed_44_neg, EightTStates ) )
+        , ( 0x6C, ( \z80_flags -> FlagChangeFunc ed_44_neg, EightTStates ) )
+        , ( 0x74, ( \z80_flags -> FlagChangeFunc ed_44_neg, EightTStates ) )
+        , ( 0x7C, ( \z80_flags -> FlagChangeFunc ed_44_neg, EightTStates ) )
         ]
 
 
-ed_44_neg : FlagRegisters -> FlagChange
+ed_44_neg : FlagRegisters -> FlagRegisters
 ed_44_neg z80_flags =
     -- All these other ED codes are 'undocumented' and do interesting things,
     -- but point back to ED44 in Qaop Java version
@@ -707,7 +707,7 @@ ed_44_neg z80_flags =
         new_flags =
             { z80_flags | a = 0 } |> z80_sub v
     in
-    OnlyFlags new_flags
+    new_flags
 
 
 singleByteMainAndFlagsED : Dict Int ( MainWithIndexRegisters -> FlagRegisters -> Z80Change, PCIncrement, InstructionDuration )

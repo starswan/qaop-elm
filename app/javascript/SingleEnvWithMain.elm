@@ -69,9 +69,7 @@ applySingleEnvMainChange clockTime z80changeData rom48k z80 =
                 flags =
                     z80.flags
             in
-            { z80
-                | flags = { flags | a = int }
-            }
+            { z80 | flags = { flags | a = int } }
 
         SingleEnv8BitMain eightBit int cpuTimeCTime ->
             let
