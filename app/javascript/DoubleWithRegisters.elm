@@ -4,6 +4,7 @@ import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import Dict exposing (Dict)
 import MemoryAddress exposing (MemoryAddress(..), RamAddress(..))
+import SingleWith8BitParameter exposing (JumpChange(..))
 import Utils exposing (byte, shiftLeftBy8)
 import Z80Core exposing (Z80Core)
 import Z80Env exposing (getRamMemoryValue, setMem, setRamMemoryValue)
