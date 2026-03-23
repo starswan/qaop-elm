@@ -185,9 +185,9 @@ RSpec.describe "Game" do
       end
       spectrum.send_keys [:enter]
 
-      script = scripts.fetch(z80_game, lambda { |spectrum|
+      script = scripts.fetch(z80_game, lambda { |speccy|
         measure_speed_in_hz do
-          spectrum.send_keys 'y'
+          speccy.send_keys 'y'
         end
       })
 
