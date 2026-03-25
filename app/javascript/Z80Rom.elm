@@ -17,11 +17,6 @@ type alias Z80ROM =
     }
 
 
-constructor : Dict Int Int -> Z80ROM
-constructor rom_dict =
-    Z80ROM rom_dict Keyboard.constructor Z80Ram.constructor
-
-
 getROMValue : Int -> Z80ROM -> Int
 getROMValue addr z80rom =
     case Dict.get addr z80rom.rom48k of
