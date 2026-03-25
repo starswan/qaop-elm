@@ -164,7 +164,7 @@ viewQaop : QaopModel -> Int -> Html QaopMessage
 viewQaop model tickInterval =
     let
         screen =
-            model.qaop.spectrum.rom48k.z80ram.screen
+            model.qaop.spectrum.rom48k.z80rom.z80ram.screen
 
         load_disabled =
             case model.qaop.spectrum.tape of

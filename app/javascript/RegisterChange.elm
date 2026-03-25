@@ -2,7 +2,6 @@ module RegisterChange exposing (..)
 
 import CpuTimeCTime exposing (CpuTimeCTime)
 import SingleByteWithEnv exposing (SingleByteEnvChange)
-import SingleEnvWithMain exposing (SingleEnvMainChange)
 import SingleWith8BitParameter exposing (JumpChange, Single8BitChange)
 import TripleByte exposing (TripleByteChange, TripleByteIndexChange)
 import TripleWithFlags exposing (TripleWithFlagsChange)
@@ -11,9 +10,8 @@ import Z80Change exposing (IndexedZ80Change, Z80Change)
 import Z80Core exposing (DirectionForLDIR)
 import Z80Env exposing (Z80Env)
 import Z80Flags exposing (FlagFunc, FlagRegisters)
-import Z80Registers exposing (ChangeMainRegister, ChangeSingle)
-import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIYHL, InterruptMode, MainWithIndexRegisters)
+import Z80Registers exposing (ChangeMainRegister, ChangeSingle, CoreRegister)
+import Z80Types exposing (IXIYHL, InterruptMode, MainWithIndexRegisters, Z80ROM)
 
 
 type Shifter
@@ -25,6 +23,29 @@ type Shifter
     | Shifter5
     | Shifter6
     | Shifter7
+
+
+type DoubleWithRegisterChange
+    = NewIXHRegisterValue Int
+    | NewIXLRegisterValue Int
+    | NewIYHRegisterValue Int
+    | NewIYLRegisterValue Int
+    | NewARegisterIndirect (MainWithIndexRegisters -> Int) Int
+    | SetARegisterIndirect (MainWithIndexRegisters -> Int) Int
+    | IndexedIndirectIncrement (MainWithIndexRegisters -> Int) Int
+    | IndexedIndirectDecrement (MainWithIndexRegisters -> Int) Int
+    | FlagOpIndexedIndirect FlagFunc (MainWithIndexRegisters -> Int) Int
+    | NewRegisterIndirect ChangeMainRegister (MainWithIndexRegisters -> Int) Int
+    | RegStore8BitValue Int (MainWithIndexRegisters -> Int) (MainWithIndexRegisters -> Int)
+
+
+type SingleEnvMainChange
+    = SingleEnvNewARegister Int CpuTimeCTime
+    | SingleEnv8BitMain CoreRegister Int CpuTimeCTime
+    | SingleEnvNewHLRegister Int CpuTimeCTime
+    | IndirectBitTest BitTest Int
+    | SingleEnvMainFlagFunc FlagFunc Int CpuTimeCTime
+    | SingleEnvNewHL16BitAdd IXIYHL Int Int
 
 
 type RegisterFlagChange

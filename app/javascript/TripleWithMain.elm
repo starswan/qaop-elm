@@ -3,7 +3,7 @@ module TripleWithMain exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import Dict exposing (Dict)
-import DoubleWithRegisters exposing (DoubleWithRegisterChange(..))
+import RegisterChange exposing (DoubleWithRegisterChange(..))
 import TripleByte exposing (TripleByteIndexChange(..))
 import Utils exposing (shiftRightBy8)
 import Z80Types exposing (MainWithIndexRegisters)

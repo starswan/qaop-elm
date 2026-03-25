@@ -3,13 +3,11 @@ module GroupCBIXIY exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
-import RegisterChange exposing (RegisterFlagChange(..), Shifter(..))
-import SingleEnvWithMain exposing (SingleEnvMainChange(..))
+import RegisterChange exposing (RegisterFlagChange(..), Shifter(..), SingleEnvMainChange(..))
 import Utils exposing (BitTest(..), byte)
 import Z80Env exposing (Z80Env)
 import Z80Registers exposing (ChangeMainRegister(..))
-import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (MainWithIndexRegisters)
+import Z80Types exposing (MainWithIndexRegisters, Z80ROM)
 
 
 singleByteMainRegsIXCB : Dict Int ( Int -> MainWithIndexRegisters -> RegisterFlagChange, InstructionDuration )
