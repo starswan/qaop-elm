@@ -1,10 +1,10 @@
 module MessageHandler exposing (..)
 
-import Bytes exposing (Bytes)
+import Bytes exposing (Bytes, Endianness(..))
 import Dict exposing (Dict)
 import Http exposing (Error(..), Expect, Metadata, Response)
 import Tapfile exposing (Tapfile, parseTapFile)
-import Z80Rom exposing (Z80ROM, parseRomFile)
+import Z80Rom exposing (parseRomFile)
 
 
 bytesToTap : Response Bytes -> Result Error (List Tapfile)

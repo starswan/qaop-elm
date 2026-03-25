@@ -1,6 +1,7 @@
 module GroupC0Test exposing (..)
 
 import Bitwise exposing (shiftRightBy)
+import Compiler exposing (createCompiledRom)
 import Dict
 import Expect
 import Test exposing (..)
@@ -43,7 +44,7 @@ suite =
             z80.main
 
         z80rom =
-            Z80Rom.constructor Dict.empty
+            createCompiledRom Dict.empty
     in
     describe "Z80.execute_instruction"
         -- Nest as many descriptions as you like.
@@ -241,10 +242,10 @@ suite =
                                 |> Triple.dropSecond
 
                         lo_value =
-                            z80_1.env |> mem stackp clock.clockTime z80rom |> .value
+                            z80_1.env |> mem stackp clock.clockTime z80rom.z80rom |> .value
 
                         high_value =
-                            z80_1.env |> mem (stackp + 1) clock.clockTime z80rom |> .value
+                            z80_1.env |> mem (stackp + 1) clock.clockTime z80rom.z80rom |> .value
 
                         ( z80_2, final_pc ) =
                             z80_1 |> executeCoreInstruction z80rom new_pc |> Triple.dropSecond
