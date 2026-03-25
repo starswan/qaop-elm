@@ -4,8 +4,7 @@ import Bitwise exposing (shiftLeftBy)
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
 import GroupED exposing (adc_hl_sp, cpir, execute_ED70, execute_ED78, inirOtirFlags, ldir, rld, rrd, sbc_hl)
-import JumpChange exposing (applyJumpChangeDelta, applyTripleFlagChange)
-import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), RegisterFlagChange(..), Shifter(..), SingleEnvMainChange(..), SixteenBit(..), ThreeByteChange(..), TwoByteChange(..))
+import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), RegisterFlagChange(..), Shifter(..), SingleEnvMainChange, SixteenBit(..), ThreeByteChange(..), TwoByteChange(..))
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
 import SingleEnvWithMain exposing (applySingleEnvMainChange)
 import SingleWith8BitParameter exposing (JumpChange(..), Single8BitChange(..), applySimple8BitChange)
@@ -15,7 +14,7 @@ import Utils exposing (bitMaskFromBit, byte, clearBit, inverseBitMaskFromBit, se
 import Z80Change exposing (IndexedZ80Change(..), Z80Change(..))
 import Z80Core exposing (CoreChange(..), DirectionForLDIR(..), RepeatPCOffset(..), Z80Core)
 import Z80Debug exposing (debugLog, debugTodo)
-import Z80Env exposing (Z80Env, Z80EnvWithPC, setMem, setMem16, z80_in, z80_out, z80_push)
+import Z80Env exposing (Z80Env, setMem, setMem16, z80_in, z80_out, z80_push)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, f_szh0n0p, get_af, inc, set_af, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
 import Z80Mem exposing (mem, mem16, z80_pop)
 import Z80Registers exposing (ChangeMainRegister(..), ChangeSingle(..), CoreRegister(..))
@@ -85,6 +84,67 @@ apply_delta z80 rom48k clockTime z80delta =
 
                 TwoByteJump jumpChange ->
                     z80 |> applyJumpChangeDelta clockTime jumpChange
+
+
+applyJumpChangeDelta : CpuTimeCTime -> JumpChange -> Z80Core -> CoreChange
+applyJumpChangeDelta cpu_time z80changeData z80 =
+    case z80changeData of
+        ActualJumpOffset offset ->
+            JumpWithOffset offset
+
+        ConditionalJumpOffset offset shortDelay function ->
+            if z80.flags |> function then
+                JumpOffsetWithDelay offset shortDelay
+
+            else
+                NoCore
+
+        DJNZOffset offset shortDelay ->
+            let
+                --case 0x10: {time++; v=PC; byte d=(byte)env.mem(v++); time+=3;
+                --if((B=B-1&0xFF)!=0) {time+=5; MP=v+=d;}
+                --PC=(char)v;} break;
+                b =
+                    Bitwise.and (z80.main.b - 1) 0xFF
+
+                main =
+                    z80.main
+            in
+            if b /= 0 then
+                { main | b = b } |> MainWithOffsetAndDelay offset shortDelay
+
+            else
+                { main | b = b } |> MainOnly
+
+        RegChangeStoreIndirect addr_f value ->
+            let
+                addr =
+                    z80.main |> addr_f
+
+                ( env_1, newTime ) =
+                    z80.env |> setMem addr value cpu_time
+            in
+            { z80 | env = env_1 } |> CoreOnly
+
+        SimpleNewHValue param ->
+            let
+                main =
+                    z80.main
+
+                int =
+                    Bitwise.or (param |> shiftLeftBy8) (Bitwise.and main.hl 0xFF)
+            in
+            { main | hl = int } |> MainOnly
+
+        SimpleNewLValue param ->
+            let
+                main =
+                    z80.main
+
+                int =
+                    Bitwise.or param (Bitwise.and main.hl 0xFF00)
+            in
+            { main | hl = int } |> MainOnly
 
 
 applySimple8BitDelta : CpuTimeCTime -> Single8BitChange -> Z80ROM -> Z80Core -> Z80Core
@@ -1023,6 +1083,30 @@ applyTripleChangeDelta rom48k cpu_time z80changeData z80 =
                 | main = { main | iy = value.value16 }
             }
                 |> CoreOnly
+
+
+applyTripleFlagChange : TripleWithFlagsChange -> Z80Core -> CoreChange
+applyTripleFlagChange z80changeData z80 =
+    case z80changeData of
+        Conditional16BitJump int function ->
+            if z80.flags |> function then
+                JumpOnlyPC int
+
+            else
+                z80 |> CoreOnly
+
+        Conditional16BitCall address shortdelay function ->
+            if z80.flags |> function then
+                CallWithPCAndDelay address shortdelay
+
+            else
+                z80 |> CoreOnly
+
+        CallImmediate int ->
+            CallWithPC int
+
+        NewPCRegister int ->
+            JumpOnlyPC int
 
 
 applyEdFourByte : CpuTimeCTime -> EDFourByteChange -> Z80ROM -> Z80Core -> CoreChange

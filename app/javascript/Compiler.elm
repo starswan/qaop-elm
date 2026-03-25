@@ -4,7 +4,7 @@ import Bitwise
 import CompiledZ80ROM exposing (CompiledZ80ROM)
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), reset_cpu_time)
 import Dict exposing (Dict)
-import JumpChange exposing (applyJumpChangeDelta, applyTripleFlagChange)
+import JumpChange exposing (applyTripleFlagChange)
 import Keyboard
 import PCIncrement exposing (PCIncrement(..), TriplePCIncrement(..))
 import RegisterChange exposing (RegisterFlagChange(..))
@@ -18,6 +18,7 @@ import Utils exposing (toHexString, toHexString2, toPlainHexString2)
 import Z80Core exposing (CoreChange, Z80Core)
 import Z80Debug exposing (debugLog, debugTodo)
 import Z80Env exposing (Z80Env, z80env_constructor)
+import Z80Execute exposing (applyJumpChangeDelta)
 import Z80Mem exposing (mem, mem16)
 import Z80OpCode exposing (lengthAndDuration)
 import Z80Ram
