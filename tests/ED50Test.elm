@@ -1,6 +1,7 @@
 module ED50Test exposing (..)
 
 import Array
+import Compiler exposing (createCompiledRom)
 import CpuTimeCTime exposing (reset_cpu_time)
 import Dict
 import Expect exposing (Expectation)
@@ -47,7 +48,7 @@ suite =
             { z80env = z80.env, time = reset_cpu_time }
 
         z80rom =
-            Z80Rom.constructor Array.empty
+            createCompiledRom Array.empty
     in
     describe "0xEn instructions"
         -- Nest as many descriptions as you like.
@@ -93,7 +94,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem16 0x6545 z80rom reset_cpu_time |> .value16
+                            new_z80.env |> mem16 0x6545 z80rom.z80rom reset_cpu_time |> .value16
                     in
                     Expect.equal ( addr + 4, 0x20F5 ) ( new_pc, mem_value )
             , test "0xED 0x58 IN E, (C)" <|

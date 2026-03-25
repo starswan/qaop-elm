@@ -1,15 +1,14 @@
 module Z80Test exposing (..)
 
 import Array
+import Compiler exposing (createCompiledRom)
 import CpuTimeCTime exposing (reset_cpu_time)
-import Dict
 import Expect
 import Test exposing (..)
 import Triple
 import Z80 exposing (executeCoreInstruction)
 import Z80CoreWithClockTime
 import Z80Env exposing (setMemWithTime)
-import Z80Rom
 
 
 suite : Test
@@ -39,7 +38,7 @@ suite =
             z80.main
 
         z80rom =
-            Z80Rom.constructor Array.empty
+            createCompiledRom Array.empty
     in
     describe "Z80.execute_instruction"
         -- Nest as many descriptions as you like.
