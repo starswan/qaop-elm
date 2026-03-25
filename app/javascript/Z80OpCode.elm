@@ -140,7 +140,7 @@ lengthAndDuration pc rom48k z80env =
                                                 ( IncrementByFour
                                                 , duration
                                                 , \cpuClock z80rom z80_core ->
-                                                    z80_core |> applySingleEnvMainChange cpuClock (f z80_core.main cboffset rom48k z80_core.env) z80rom
+                                                    z80_core |> applySingleEnvMainChange cpuClock (f z80_core.main cboffset rom48k z80_core.env) z80rom |> CoreOnly
                                                 )
                                             )
                                 ]
@@ -340,7 +340,7 @@ lengthAndDuration pc rom48k z80env =
                                 ( IncrementByOne
                                 , duration
                                 , \cpuClock z80rom z80core ->
-                                    z80core |> applySingleEnvMainChange cpuClock (f z80core.main z80rom cpuClock z80core.env) z80rom
+                                    z80core |> applySingleEnvMainChange cpuClock (f z80core.main z80rom cpuClock z80core.env) z80rom |> CoreOnly
                                 )
                             )
                 ]

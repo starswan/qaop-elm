@@ -2,6 +2,7 @@ module RegisterChange exposing (..)
 
 import CpuTimeCTime exposing (CpuTimeCTime)
 import SingleByteWithEnv exposing (SingleByteEnvChange)
+import SingleEnvWithMain exposing (SingleEnvMainChange)
 import SingleWith8BitParameter exposing (JumpChange, Single8BitChange)
 import TripleByte exposing (TripleByteChange, TripleByteIndexChange)
 import TripleWithFlags exposing (TripleWithFlagsChange)
@@ -23,15 +24,6 @@ type Shifter
     | Shifter5
     | Shifter6
     | Shifter7
-
-
-type SingleEnvMainChange
-    = SingleEnvNewARegister Int CpuTimeCTime
-    | SingleEnv8BitMain CoreRegister Int CpuTimeCTime
-    | SingleEnvNewHLRegister Int CpuTimeCTime
-    | IndirectBitTest BitTest Int
-    | SingleEnvMainFlagFunc FlagFunc Int CpuTimeCTime
-    | SingleEnvNewHL16BitAdd IXIYHL Int Int
 
 
 type RegisterFlagChange

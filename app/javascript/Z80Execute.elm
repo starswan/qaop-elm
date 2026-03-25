@@ -4,9 +4,9 @@ import Bitwise exposing (shiftLeftBy)
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
 import GroupED exposing (adc_hl_sp, cpir, execute_ED70, execute_ED78, inirOtirFlags, ldir, rld, rrd, sbc_hl)
-import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), RegisterFlagChange(..), Shifter(..), SingleEnvMainChange, SixteenBit(..), ThreeByteChange(..), TwoByteChange(..))
+import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), RegisterFlagChange(..), Shifter(..), SixteenBit(..), ThreeByteChange(..), TwoByteChange(..))
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
-import SingleEnvWithMain exposing (applySingleEnvMainChange)
+import SingleEnvWithMain exposing (SingleEnvMainChange, applySingleEnvMainChange)
 import SingleWith8BitParameter exposing (JumpChange(..), Single8BitChange(..), applySimple8BitChange)
 import TripleByte exposing (TripleByteChange(..), TripleByteIndexChange(..), TripleByteRegister(..))
 import TripleWithFlags exposing (TripleWithFlagsChange(..))
@@ -49,7 +49,7 @@ apply_delta z80 rom48k clockTime z80delta =
             z80 |> applyDoubleWithRegistersDelta clockTime doubleWithRegisterChange rom48k |> CoreOnly
 
         MainWithEnvDelta singleEnvMainChange ->
-            z80 |> applySingleEnvMainChange clockTime singleEnvMainChange rom48k
+            z80 |> applySingleEnvMainChange clockTime singleEnvMainChange rom48k |> CoreOnly
 
         Triple16ParamDelta tripleByteChange ->
             z80 |> applyTripleChangeDelta rom48k clockTime tripleByteChange
@@ -325,7 +325,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 singleEnvMainChange =
                     f z80_core.main rom48k old_env
             in
-            z80_core |> applySingleEnvMainChange clockTime singleEnvMainChange rom48k
+            z80_core |> applySingleEnvMainChange clockTime singleEnvMainChange rom48k |> CoreOnly
 
         RegisterEnvMainChangeWithClockTime f ->
             let
@@ -335,7 +335,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 singleEnvMainChange =
                     f z80_core.main rom48k clockTime old_env
             in
-            z80_core |> applySingleEnvMainChange clockTime singleEnvMainChange rom48k
+            z80_core |> applySingleEnvMainChange clockTime singleEnvMainChange rom48k |> CoreOnly
 
         RegisterZ80Change f ->
             let
