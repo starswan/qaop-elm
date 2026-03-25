@@ -1,6 +1,7 @@
 module CB60Test exposing (..)
 
 import Array
+import Compiler exposing (createCompiledRom)
 import CpuTimeCTime exposing (reset_cpu_time)
 import Dict
 import Expect exposing (Expectation)
@@ -49,7 +50,7 @@ suite =
             { z80env = z80.env |> setMem addr 0xCB reset_cpu_time |> Tuple.first, time = reset_cpu_time }
 
         z80rom =
-            Z80Rom.constructor Array.empty
+            createCompiledRom Array.empty
     in
     describe "Bit instructions (CB)"
         [ describe "0xCB 0x60 BIT 4,B"

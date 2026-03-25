@@ -91,24 +91,24 @@ RSpec.describe "Game" do
         },
         football_manager.name => lambda { |spectrum|
           # Player name
-          delay_and_send(spectrum, 480, FFaker::Name.first_name.first(5))
+          delay_and_send(spectrum, 420, FFaker::Name.first_name.first(5))
           # select Plymouth Argyle
-          delay_and_send(spectrum, 890, "99")
-          delay_and_send(spectrum, 1070, "99")
-          delay_and_send(spectrum, 1210, "44")
+          delay_and_send(spectrum, 1150, "99")
+          delay_and_send(spectrum, 1360, "99")
+          delay_and_send(spectrum, 1570, "44")
           # select beginner
-          delay_and_send(spectrum, 1330, "1")
+          delay_and_send(spectrum, 1705, "1")
           # select white team colours
-          delay_and_send(spectrum, 1410, "7")
+          delay_and_send(spectrum, 1780, "7")
           # continue from main menu
-          delay_and_send(spectrum, 1790, "99")
+          delay_and_send(spectrum, 2470, "99")
           #  Hit ENTER to start first match
-          delay_and_send(spectrum, 1980, "")
+          delay_and_send(spectrum, 2680, "")
           # continue into match
-          delay_and_send(spectrum, 2260, "99")
+          delay_and_send(spectrum, 3170, "99")
 
           # wait for match to actually start properly
-          sleep 3
+          sleep 4
 
           measure_speed_in_hz do
             spectrum.send_keys :enter
@@ -172,7 +172,7 @@ RSpec.describe "Game" do
       cpu_count = find("#cyclecount")
       # wait for Spectrum ROM to initialize so that
       # we can send LOAD "" to load the tape
-      while cpu_count.text.to_i < 100
+      while cpu_count.text.to_i < 200
         sleep 0.5
       end
 
@@ -202,7 +202,7 @@ RSpec.describe "Game" do
       spectrum.send_keys k
       # sleep just long enough for Spectrum to see down and up
       # before sending the next keystroke
-      sleep 0.05
+      sleep 0.1
     end
   end
 

@@ -8,7 +8,7 @@ import Bytes.Decode.Extra as BDE
 import Dict exposing (Dict)
 import Http exposing (Error(..))
 import Keyboard exposing (Keyboard)
-import Utils exposing (toHexString)
+import Utils exposing (listToDict, toHexString)
 import Z80Debug exposing (debugTodo)
 import Z80Ram exposing (Z80Ram)
 
