@@ -1,5 +1,6 @@
 module CBA0Test exposing (..)
 
+import Compiler exposing (createCompiledRom)
 import Dict
 import Expect exposing (Expectation)
 import Test exposing (..)
@@ -41,7 +42,7 @@ suite =
             { z80env = z80.env, time = clock.clockTime }
 
         z80rom =
-            Z80Rom.constructor Dict.empty
+            createCompiledRom Dict.empty
     in
     describe "Bit instructions (CB)"
         [ test "0xCB A0 RES 4,B" <|

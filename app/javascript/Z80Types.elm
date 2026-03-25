@@ -43,6 +43,11 @@ type IXIYHL
     | HL
 
 
+type IXIY
+    = IXIY_IX
+    | IXIY_IY
+
+
 type alias Z80ROM =
     { rom48k : Dict Int Int
     , keyboard : Keyboard

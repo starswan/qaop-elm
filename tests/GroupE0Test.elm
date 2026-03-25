@@ -1,5 +1,6 @@
 module GroupE0Test exposing (..)
 
+import Compiler exposing (createCompiledRom)
 import Dict
 import Expect
 import Test exposing (..)
@@ -45,7 +46,7 @@ suite =
             { z80env = z80.env, time = clock.clockTime }
 
         z80rom =
-            Z80Rom.constructor Dict.empty
+            createCompiledRom Dict.empty
     in
     describe "Z80.execute_instruction"
         -- Nest as many descriptions as you like.
@@ -134,10 +135,10 @@ suite =
                                 |> Triple.dropSecond
 
                         top_lo =
-                            (new_z80.env |> mem sp clock.clockTime z80rom).value
+                            (new_z80.env |> mem sp clock.clockTime z80rom.z80rom).value
 
                         top_hi =
-                            (new_z80.env |> mem (sp + 1) clock.clockTime z80rom).value
+                            (new_z80.env |> mem (sp + 1) clock.clockTime z80rom.z80rom).value
                     in
                     Expect.equal
                         { pc = new_pc, sp = new_z80.env.sp, hl = new_z80.main.hl, top_lo = top_lo, top_hi = top_hi }
@@ -163,7 +164,7 @@ suite =
                                 |> Triple.dropSecond
                     in
                     Expect.equal
-                        { pc = new_pc, sp = new_z80.env.sp, ix = new_z80.main.ix, top = (new_z80.env |> mem16 sp z80rom clock.clockTime).value16 }
+                        { pc = new_pc, sp = new_z80.env.sp, ix = new_z80.main.ix, top = (new_z80.env |> mem16 sp z80rom.z80rom clock.clockTime).value16 }
                         { pc = addr + 2, sp = sp, ix = 0x3445, top = 0xA000 }
             , test "0xFD 0xE3 EX (SP),IY" <|
                 \_ ->
@@ -186,7 +187,7 @@ suite =
                                 |> Triple.dropSecond
                     in
                     Expect.equal
-                        { pc = new_pc, sp = new_z80.env.sp, iy = new_z80.main.iy, top = (new_z80.env |> mem16 sp z80rom clock.clockTime).value16 }
+                        { pc = new_pc, sp = new_z80.env.sp, iy = new_z80.main.iy, top = (new_z80.env |> mem16 sp z80rom.z80rom clock.clockTime).value16 }
                         { pc = addr + 2, sp = sp, iy = 0x3445, top = 0xA000 }
             ]
         , test "0xE5 PUSH HL" <|
@@ -207,7 +208,7 @@ suite =
                             |> Triple.dropSecond
                 in
                 Expect.equal
-                    { pc = new_pc, sp = new_z80.env.sp, top = (new_z80.env |> mem16 (sp - 2) z80rom clock.clockTime).value16 }
+                    { pc = new_pc, sp = new_z80.env.sp, top = (new_z80.env |> mem16 (sp - 2) z80rom.z80rom clock.clockTime).value16 }
                     { pc = addr + 1, sp = sp - 2, top = 0xA000 }
         , test "0xFD 0xE5 PUSH IY" <|
             \_ ->
@@ -228,7 +229,7 @@ suite =
                             |> Triple.dropSecond
                 in
                 Expect.equal
-                    { pc = new_pc, sp = new_z80.env.sp, top = (new_z80.env |> mem16 (sp - 2) z80rom clock.clockTime).value16 }
+                    { pc = new_pc, sp = new_z80.env.sp, top = (new_z80.env |> mem16 (sp - 2) z80rom.z80rom clock.clockTime).value16 }
                     { pc = addr + 2, sp = sp - 2, top = 0xA000 }
         , test "0xEB (EX DE, HL)" <|
             \_ ->
