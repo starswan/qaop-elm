@@ -16,7 +16,7 @@ import Loop
 import OpcodeTables exposing (singleByteInstructions, singleByteMainFlagsRegsIX, singleByteMainFlagsRegsIY, threeByteInstructions, threeByteWithRegistersIX, threeByteWithRegistersIY, twoByteInstructions, twoByteWithRegistersIX, twoByteWithRegistersIY)
 import PCIncrement exposing (PCIncrement(..), TriplePCIncrement(..))
 import SimpleFlagOps exposing (singleByteFlagsCB)
-import WholeZ80Ops exposing (ex_af, execute_0x76_halt, exx)
+import SingleNoParams exposing (ex_af, execute_0x76_halt, exx)
 import Z80Core exposing (CoreChange(..), RepeatPCOffset(..), Z80Core)
 import Z80CoreWithClockTime exposing (Z80, Z80CoreWithClockTime, di_0xF3, ei_0xFB)
 import Z80Env exposing (Z80Env, z80_push, z80env_constructor)
