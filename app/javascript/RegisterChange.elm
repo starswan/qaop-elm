@@ -25,20 +25,6 @@ type Shifter
     | Shifter7
 
 
-type DoubleWithRegisterChange
-    = NewIXHRegisterValue Int
-    | NewIXLRegisterValue Int
-    | NewIYHRegisterValue Int
-    | NewIYLRegisterValue Int
-    | NewARegisterIndirect (MainWithIndexRegisters -> Int) Int
-    | SetARegisterIndirect (MainWithIndexRegisters -> Int) Int
-    | IndexedIndirectIncrement (MainWithIndexRegisters -> Int) Int
-    | IndexedIndirectDecrement (MainWithIndexRegisters -> Int) Int
-    | FlagOpIndexedIndirect FlagFunc (MainWithIndexRegisters -> Int) Int
-    | NewRegisterIndirect ChangeMainRegister (MainWithIndexRegisters -> Int) Int
-    | RegStore8BitValue Int (MainWithIndexRegisters -> Int) (MainWithIndexRegisters -> Int)
-
-
 type SingleEnvMainChange
     = SingleEnvNewARegister Int CpuTimeCTime
     | SingleEnv8BitMain CoreRegister Int CpuTimeCTime
