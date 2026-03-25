@@ -1,6 +1,7 @@
 module CBA8Test exposing (..)
 
 import Array
+import Compiler exposing (createCompiledRom)
 import CpuTimeCTime exposing (reset_cpu_time)
 import Dict
 import Expect exposing (Expectation)
@@ -10,7 +11,6 @@ import Z80 exposing (executeCoreInstruction)
 import Z80CoreWithClockTime
 import Z80Env exposing (setMemWithTime)
 import Z80Mem exposing (getMem8)
-import Z80Rom
 
 
 suite : Test
@@ -44,7 +44,7 @@ suite =
             { z80env = z80.env, time = reset_cpu_time }
 
         z80rom =
-            Z80Rom.constructor Array.empty
+            createCompiledRom Array.empty
     in
     describe "Bit instructions (CB)"
         [ test "0xCB A8 RES 5,B" <|
@@ -88,7 +88,7 @@ suite =
                             |> Triple.dropSecond
 
                     mem_value =
-                        new_z80.env |> getMem8 0xA07E reset_cpu_time z80rom |> Tuple.first
+                        new_z80.env |> getMem8 0xA07E reset_cpu_time z80rom.z80rom |> Tuple.first
                 in
                 Expect.equal ( addr + 4, 0xDF ) ( new_pc, mem_value )
         ]
