@@ -2,6 +2,7 @@ module Z80OpCode exposing (..)
 
 import Array
 import Bitwise
+import CompiledZ80ROM exposing (CompiledZ80ROM, CpuInstruction)
 import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, InstructionDuration, reset_cpu_time)
 import Dict exposing (Dict)
 import DoubleWithRegisters exposing (applyDoubleWithRegistersDelta, doubleWithRegistersIX, doubleWithRegistersIY)
@@ -26,7 +27,7 @@ import Z80Mem exposing (getMem8, m1, mem16)
 import Z80Rom exposing (Z80ROM)
 
 
-fetchInstruction : Int -> Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> CpuTimeAndValue
+fetchInstruction : Int -> CompiledZ80ROM -> CpuTimeCTime -> Int -> Z80Core -> ( CpuInstruction, CpuTimeCTime )
 fetchInstruction pc_value rom48k clockTime r_register z80_core =
     --let
     --case romRoutineNames |> Dict.get z80.pc of
