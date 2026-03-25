@@ -4,22 +4,9 @@ import Array exposing (Array)
 import Bytes exposing (Bytes)
 import Bytes.Decode exposing (Decoder, Step(..), andThen, loop, map, succeed, unsignedInt8)
 import Dict exposing (Dict)
-import Keyboard exposing (Keyboard)
 import Utils exposing (listToDict, toHexString)
 import Z80Debug exposing (debugTodo)
-import Z80Ram exposing (Z80Ram)
-
-
-type alias Z80ROM =
-    { rom48k : Dict Int Int
-    , keyboard : Keyboard
-    , z80ram : Z80Ram
-    }
-
-
-constructor : Dict Int Int -> Z80ROM
-constructor rom_dict =
-    Z80ROM rom_dict Keyboard.constructor Z80Ram.constructor
+import Z80Types exposing (Z80ROM)
 
 
 getROMValue : Int -> Z80ROM -> Int
