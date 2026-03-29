@@ -82,8 +82,8 @@ type alias ScreenColourRun =
     }
 
 
-intToColour : Bool -> Int -> Bool -> SpectrumColour
-intToColour globalFlash raw_colour bitValue =
+pairToColour : Bool -> Int -> RunCount -> ScreenColourRun
+pairToColour globalFlash raw_colour runcount =
     let
         -- This has been benchmarked as the fastest implementation
         ( flash, bright ) =
@@ -100,22 +100,14 @@ intToColour globalFlash raw_colour bitValue =
                 _ ->
                     ( True, True )
 
-        --flashbright =
-        --    raw_colour |> Bitwise.and 0xC0
-        --
-        --flash =
-        --    flashbright == 0x80 || flashbright == 0xC0
-        --
-        --bright =
-        --    flashbright == 0x40 || flashbright == 0xC0
         value =
             if flash && globalFlash then
-                not bitValue
+                not runcount.value
 
             else
-                bitValue
+                runcount.value
 
-        colour =
+        colour_value =
             if value then
                 -- ink
                 Bitwise.and raw_colour 0x07
@@ -123,15 +115,9 @@ intToColour globalFlash raw_colour bitValue =
             else
                 --paper
                 Bitwise.and raw_colour 0x38 |> shiftRightBy 3
-    in
-    spectrumColour colour bright
 
-
-pairToColour : Bool -> Int -> RunCount -> ScreenColourRun
-pairToColour globalFlash raw_colour runcount =
-    let
         colour =
-            intToColour globalFlash raw_colour runcount.value
+            spectrumColour colour_value bright
     in
     ScreenColourRun runcount.count colour
 

@@ -94,6 +94,7 @@ backgroundNode screen =
 mapScreenLineToSvg : Bool -> Vector24.Index -> ScreenLine -> Svg QaopMessage
 mapScreenLineToSvg flash index24 screenLine =
     let
+        -- list of startIndex, length, colour
         scrFolded : Vector8 (List ( Int, ScreenColourRun ))
         scrFolded =
             screenLine
