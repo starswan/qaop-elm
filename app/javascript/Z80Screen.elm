@@ -77,13 +77,13 @@ foldBoolRunCounts item list =
 
 
 type alias ScreenColourRun =
-    { length : Int
+    { runcount : RunCount
     , colour : SpectrumColour
     }
 
 
-intToColour : Bool -> Int -> Bool -> SpectrumColour
-intToColour globalFlash raw_colour bitValue =
+pairToColour : Bool -> Int -> RunCount -> ScreenColourRun
+pairToColour globalFlash raw_colour runcount =
     let
         -- This has been benchmarked as the fastest implementation
         ( flash, bright ) =
@@ -100,22 +100,14 @@ intToColour globalFlash raw_colour bitValue =
                 _ ->
                     ( True, True )
 
-        --flashbright =
-        --    raw_colour |> Bitwise.and 0xC0
-        --
-        --flash =
-        --    flashbright == 0x80 || flashbright == 0xC0
-        --
-        --bright =
-        --    flashbright == 0x40 || flashbright == 0xC0
         value =
             if flash && globalFlash then
-                not bitValue
+                not runcount.value
 
             else
-                bitValue
+                runcount.value
 
-        colour =
+        colour_value =
             if value then
                 -- ink
                 Bitwise.and raw_colour 0x07
@@ -123,17 +115,11 @@ intToColour globalFlash raw_colour bitValue =
             else
                 --paper
                 Bitwise.and raw_colour 0x38 |> shiftRightBy 3
-    in
-    spectrumColour colour bright
 
-
-pairToColour : Bool -> Int -> RunCount -> ScreenColourRun
-pairToColour globalFlash raw_colour runcount =
-    let
         colour =
-            intToColour globalFlash raw_colour runcount.value
+            spectrumColour colour_value bright
     in
-    ScreenColourRun runcount.count colour
+    ScreenColourRun runcount colour
 
 
 runCounts0to255 : Array (List RunCount)
@@ -169,45 +155,9 @@ foldRunCounts item list =
             List.singleton item
 
 
-toDrawn : Bool -> ScreenData -> List ScreenColourRun -> List ScreenColourRun
-toDrawn globalFlash screendata linelist =
-    let
-        list2 : List RunCount
-        list2 =
-            screendata.data
-                |> List.map intToRcList
-                |> List.concat
-                |> List.foldr foldRunCounts []
-
-        newList : List ScreenColourRun
-        newList =
-            list2
-                |> List.map (pairToColour globalFlash screendata.colour)
-    in
-    newList ++ linelist
-
-
-foldUp : RawScreenData -> List ScreenData -> List ScreenData
-foldUp raw list =
-    case list of
-        head :: tail ->
-            if head.colour == raw.colour then
-                ScreenData raw.colour (raw.data :: head.data) :: tail
-
-            else
-                ScreenData raw.colour [ raw.data ] :: list
-
-        _ ->
-            [ ScreenData raw.colour [ raw.data ] ]
-
-
 mapScreenLine : Bool -> ScreenLine -> Vector8 (List ( Int, ScreenColourRun ))
 mapScreenLine globalFlash screenLine =
     let
-        foldDrawn : ScreenData -> List ScreenColourRun -> List ScreenColourRun
-        foldDrawn =
-            toDrawn globalFlash
-
         rawData : Vector8 (Vector32 RawScreenData)
         rawData =
             Vector8.indices
@@ -222,40 +172,54 @@ mapScreenLine globalFlash screenLine =
                         in
                         Vector32.map2 (\data attr -> { colour = attr, data = data }) dataRow attr_row
                     )
-
-        --foldedLines : Vector8 (List ScreenData)
-        --foldedLines =
-        --    rawData |> Vector8.map (\v32 -> v32 |> Vector32.foldr foldUp [])
-        --drawnFolded : Vector8 (List ScreenColourRun)
-        --drawnFolded =
-        --    rawData
-        --    |> Vector8.map (\v32 -> v32 |> Vector32.foldr foldUp []) |> Vector8.map (\v32 -> v32 |> List.foldr foldDrawn [])
-        --scrFolded : Vector8 (List ( Int, ScreenColourRun ))
-        --scrFolded =
-        --    rawData
-        --        |> Vector8.map (\v32 -> v32 |> Vector32.foldr foldUp [])
-        --        |> Vector8.map (\v32 -> v32 |> List.foldr foldDrawn [])
-        --        |> Vector8.map (\scrList -> scrList |> List.foldl foldScr [] |> List.reverse)
-        scrFolded : Vector8 (List ( Int, ScreenColourRun ))
-        scrFolded =
-            rawData
-                |> Vector8.map
-                    (\v32 ->
-                        v32
-                            |> Vector32.foldr foldUp []
-                            |> List.foldr foldDrawn []
-                            |> List.foldl foldScr []
-                            |> List.reverse
-                    )
     in
-    scrFolded
+    rawData
+        |> Vector8.map
+            (\v32 ->
+                v32
+                    |> Vector32.foldr
+                        (\raw list ->
+                            case list of
+                                head :: tail ->
+                                    if head.colour == raw.colour then
+                                        ScreenData raw.colour (raw.data :: head.data) :: tail
 
+                                    else
+                                        ScreenData raw.colour [ raw.data ] :: list
 
-foldScr : ScreenColourRun -> List ( Int, ScreenColourRun ) -> List ( Int, ScreenColourRun )
-foldScr item list =
-    case list |> List.head of
-        Just ( head, headItem ) ->
-            ( head + headItem.length, item ) :: list
+                                _ ->
+                                    [ ScreenData raw.colour [ raw.data ] ]
+                        )
+                        []
+                    |> List.foldr
+                        (\screendata linelist ->
+                            let
+                                list2 : List RunCount
+                                list2 =
+                                    screendata.data
+                                        |> List.map intToRcList
+                                        |> List.concat
+                                        |> List.foldr foldRunCounts []
 
-        Nothing ->
-            List.singleton ( 0, item )
+                                newList : List ScreenColourRun
+                                newList =
+                                    list2
+                                        |> List.map (pairToColour globalFlash screendata.colour)
+                            in
+                            newList ++ linelist
+                        )
+                        []
+                    |> List.foldl
+                        (\item list ->
+                            case list |> List.head of
+                                Just ( head, headItem ) ->
+                                    ( head + headItem.runcount.count, item ) :: list
+
+                                Nothing ->
+                                    List.singleton ( 0, item )
+                        )
+                        []
+                    -- spike - filter out the background nodes
+                    --|> List.filter (\( _, colourRun ) -> colourRun.runcount.value)
+                    |> List.reverse
+            )

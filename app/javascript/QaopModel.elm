@@ -74,7 +74,7 @@ mapLineToSvg y_index ( start, linedata ) =
     line
         [ x1 (48 + start |> String.fromInt)
         , y1 (40 + y_index |> String.fromInt)
-        , x2 ((48 + start + linedata.length) |> String.fromInt)
+        , x2 ((48 + start + linedata.runcount.count) |> String.fromInt)
         , y2 (40 + y_index |> String.fromInt)
         , stroke (linedata.colour |> .colour)
         ]
@@ -94,6 +94,7 @@ backgroundNode screen =
 mapScreenLineToSvg : Bool -> Vector24.Index -> ScreenLine -> Svg QaopMessage
 mapScreenLineToSvg flash index24 screenLine =
     let
+        -- list of startIndex, length, colour
         scrFolded : Vector8 (List ( Int, ScreenColourRun ))
         scrFolded =
             screenLine
