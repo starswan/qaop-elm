@@ -168,6 +168,8 @@ mapScanLine globalFlash v32 =
                             |> List.map intToRcList
                             |> List.concat
                             |> List.foldr
+                                -- This is a bit too generic - technically we only need to merge the last
+                                -- runcount in a byte with the head of the next one - all the others are already unique
                                 (\item list ->
                                     case list of
                                         runcount :: tail ->
