@@ -141,20 +141,6 @@ intToRcList index =
     runCounts0to255 |> Array.get index |> Maybe.withDefault []
 
 
-foldRunCounts : RunCount -> List RunCount -> List RunCount
-foldRunCounts item list =
-    case list of
-        runcount :: tail ->
-            if item.value == runcount.value then
-                RunCount runcount.value (runcount.count + item.count) :: tail
-
-            else
-                item :: list
-
-        _ ->
-            List.singleton item
-
-
 mapScanLine : Bool -> Vector32 RawScreenData -> List ( Int, ScreenColourRun )
 mapScanLine globalFlash v32 =
     v32
@@ -181,7 +167,20 @@ mapScanLine globalFlash v32 =
                         screendata.data
                             |> List.map intToRcList
                             |> List.concat
-                            |> List.foldr foldRunCounts []
+                            |> List.foldr
+                                (\item list ->
+                                    case list of
+                                        runcount :: tail ->
+                                            if item.value == runcount.value then
+                                                RunCount runcount.value (runcount.count + item.count) :: tail
+
+                                            else
+                                                item :: list
+
+                                        _ ->
+                                            List.singleton item
+                                )
+                                []
 
                     newList : List ScreenColourRun
                     newList =
