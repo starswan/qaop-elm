@@ -74,7 +74,7 @@ mapLineToSvg y_index ( start, linedata ) =
     line
         [ x1 (48 + start |> String.fromInt)
         , y1 (40 + y_index |> String.fromInt)
-        , x2 ((48 + start + linedata.length) |> String.fromInt)
+        , x2 ((48 + start + linedata.runcount.count) |> String.fromInt)
         , y2 (40 + y_index |> String.fromInt)
         , stroke (linedata.colour |> .colour)
         ]

@@ -77,7 +77,7 @@ foldBoolRunCounts item list =
 
 
 type alias ScreenColourRun =
-    { length : Int
+    { runcount : RunCount
     , colour : SpectrumColour
     }
 
@@ -119,7 +119,7 @@ pairToColour globalFlash raw_colour runcount =
         colour =
             spectrumColour colour_value bright
     in
-    ScreenColourRun runcount.count colour
+    ScreenColourRun runcount colour
 
 
 runCounts0to255 : Array (List RunCount)
@@ -231,6 +231,8 @@ mapScreenLine globalFlash screenLine =
                             |> Vector32.foldr foldUp []
                             |> List.foldr foldDrawn []
                             |> List.foldl foldScr []
+                            -- spike - filter out the background nodes
+                            |> List.filter (\( _, colourRun ) -> colourRun.runcount.value)
                             |> List.reverse
                     )
     in
@@ -241,7 +243,7 @@ foldScr : ScreenColourRun -> List ( Int, ScreenColourRun ) -> List ( Int, Screen
 foldScr item list =
     case list |> List.head of
         Just ( head, headItem ) ->
-            ( head + headItem.length, item ) :: list
+            ( head + headItem.runcount.count, item ) :: list
 
         Nothing ->
             List.singleton ( 0, item )
