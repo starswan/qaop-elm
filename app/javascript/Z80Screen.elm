@@ -170,6 +170,58 @@ mapScanLine globalFlash v32 =
         |> List.reverse
 
 
+mapScanLine : Bool -> Vector32 RawScreenData -> List ( Int, ScreenColourRun )
+mapScanLine globalFlash v32 =
+    v32
+        |> Vector32.foldr
+            (\raw list ->
+                case list of
+                    head :: tail ->
+                        if head.colour == raw.colour then
+                            ScreenData raw.colour (raw.data :: head.data) :: tail
+
+                        else
+                            ScreenData raw.colour [ raw.data ] :: list
+
+                    _ ->
+                        [ ScreenData raw.colour [ raw.data ] ]
+            )
+            []
+        --    compacted list of ScreenData (colour + list of data bytes with that colour]
+        |> List.foldr
+            (\screendata linelist ->
+                let
+                    list2 : List RunCount
+                    list2 =
+                        screendata.data
+                            |> List.map intToRcList
+                            |> List.concat
+                            |> List.foldr foldRunCounts []
+
+                    newList : List ScreenColourRun
+                    newList =
+                        list2
+                            |> List.map (pairToColour globalFlash screendata.colour)
+                in
+                newList ++ linelist
+            )
+            []
+        --  list of pairs - add count to get the start position of the next item in the list
+        |> List.foldl
+            (\item list ->
+                case list |> List.head of
+                    Just ( head, headItem ) ->
+                        ( head + headItem.runcount.count, item ) :: list
+
+                    Nothing ->
+                        List.singleton ( 0, item )
+            )
+            []
+        -- spike - filter out the background nodes
+        --|> List.filter (\( _, colourRun ) -> colourRun.runcount.value)
+        |> List.reverse
+
+
 mapScreenLine : Bool -> ScreenLine -> Vector8 (List ( Int, ScreenColourRun ))
 mapScreenLine globalFlash screenLine =
     let
