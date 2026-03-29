@@ -173,20 +173,6 @@ toDrawn globalFlash screendata linelist =
     newList ++ linelist
 
 
-foldUp : RawScreenData -> List ScreenData -> List ScreenData
-foldUp raw list =
-    case list of
-        head :: tail ->
-            if head.colour == raw.colour then
-                ScreenData raw.colour (raw.data :: head.data) :: tail
-
-            else
-                ScreenData raw.colour [ raw.data ] :: list
-
-        _ ->
-            [ ScreenData raw.colour [ raw.data ] ]
-
-
 mapScreenLine : Bool -> ScreenLine -> Vector8 (List ( Int, ScreenColourRun ))
 mapScreenLine globalFlash screenLine =
     let
@@ -228,7 +214,20 @@ mapScreenLine globalFlash screenLine =
                 |> Vector8.map
                     (\v32 ->
                         v32
-                            |> Vector32.foldr foldUp []
+                            |> Vector32.foldr
+                                (\raw list ->
+                                    case list of
+                                        head :: tail ->
+                                            if head.colour == raw.colour then
+                                                ScreenData raw.colour (raw.data :: head.data) :: tail
+
+                                            else
+                                                ScreenData raw.colour [ raw.data ] :: list
+
+                                        _ ->
+                                            [ ScreenData raw.colour [ raw.data ] ]
+                                )
+                                []
                             |> List.foldr foldDrawn []
                             |> List.foldl foldScr []
                             -- spike - filter out the background nodes
