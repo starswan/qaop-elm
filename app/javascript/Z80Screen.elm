@@ -139,7 +139,8 @@ intToRcList index =
 mapScanLine : Bool -> Vector32 RawScreenData -> List ( Int, ScreenColourRun )
 mapScanLine globalFlash v32 =
     v32
-        |> Vector32.foldr
+        |> Vector32.toList
+        |> List.foldr
             (\raw list ->
                 case list of
                     head :: tail ->
