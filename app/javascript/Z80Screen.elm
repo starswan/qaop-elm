@@ -27,20 +27,6 @@ type alias RunCount =
     }
 
 
-ints0to255 =
-    List.range 0 255
-
-
-intToBoolsCache : Array (Vector8 Bool)
-intToBoolsCache =
-    ints0to255 |> List.map bitsToLines |> Array.fromList
-
-
-intToBools : Int -> Vector8 Bool
-intToBools index =
-    intToBoolsCache |> Array.get index |> Maybe.withDefault (Vector8.initializeFromInt (\_ -> False))
-
-
 foldBoolRunCounts : Bool -> List RunCount -> List RunCount
 foldBoolRunCounts item list =
     case list of
@@ -111,11 +97,11 @@ pairToColour globalFlash raw_colour runcount =
 runCounts0to255 : Array (List RunCount)
 runCounts0to255 =
     -- lookup of data byte to [rc1, rc2, rc3]
-    ints0to255
+    List.range 0 255
         |> List.map
             (\value ->
                 value
-                    |> intToBools
+                    |> bitsToLines
                     |> Vector8.foldl foldBoolRunCounts []
                     |> List.reverse
             )
