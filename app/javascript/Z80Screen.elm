@@ -139,16 +139,31 @@ intToRcList index =
 mapScanLine : Bool -> Vector32 RawScreenData -> List ( Int, ScreenColourRun )
 mapScanLine globalFlash v32 =
     v32
-        |> Vector32.toList
-        |> LE.groupWhile (\left right -> left.colour == right.colour)
-        |> List.map
-            (\( head, list ) ->
-                let
-                    data =
-                        list |> List.map (\x -> x.data)
-                in
-                ScreenData head.colour (head.data :: data)
+        |> Vector32.foldr
+            (\raw list ->
+                case list of
+                    head :: tail ->
+                        if head.colour == raw.colour then
+                            ScreenData raw.colour (raw.data :: head.data) :: tail
+
+                        else
+                            ScreenData raw.colour [ raw.data ] :: list
+
+                    _ ->
+                        [ ScreenData raw.colour [ raw.data ] ]
             )
+            []
+        --    This version looks tidy but is way too slow (20.4Hz vs 24.1Hz)
+        --|> Vector32.toList
+        --|> LE.groupWhile (\left right -> left.colour == right.colour)
+        --|> List.map
+        --    (\( head, list ) ->
+        --        let
+        --            data =
+        --                list |> List.map (\x -> x.data)
+        --        in
+        --        ScreenData head.colour (head.data :: data)
+        --    )
         --    compacted list of ScreenData (colour + list of data bytes with that colour]
         |> List.foldr
             (\screendata linelist ->
