@@ -7,6 +7,7 @@ import Maybe
 import ScreenStorage exposing (RawScreenData, ScreenLine, Z80Screen, memoryRow)
 import SpectrumColour exposing (SpectrumColour, spectrumColour)
 import Vector32 exposing (Vector32)
+import Vector7
 import Vector8 exposing (Vector8)
 
 
@@ -81,7 +82,7 @@ pairToColour globalFlash raw_colour runcount =
     ScreenColourRun runcount colour
 
 
-runCounts0to255 : Array (List RunCount)
+runCounts0to255 : Array ( RunCount, List RunCount )
 runCounts0to255 =
     -- lookup of data byte to [rc1, rc2, rc3]
     List.range 0 255
@@ -89,17 +90,50 @@ runCounts0to255 =
             (\value ->
                 value
                     |> bitsToLines
-                    |> Vector8.toList
-                    |> LE.group
+                    |> (\v8 ->
+                            let
+                                ( item, vec7 ) =
+                                    v8 |> Vector8.uncons
+                            in
+                            ( item, vec7 )
+                       )
+                    --|> Vector8.toList
+                    |> (\( boolitem, v7list ) ->
+                            let
+                                v7group : List ( Bool, List Bool )
+                                v7group =
+                                    v7list |> Vector7.toList |> LE.group
+                            in
+                            case v7group of
+                                [] ->
+                                    -- degenerate case, can't happen as 7 list can never be empty
+                                    ( ( boolitem, [] ), [] )
+
+                                ( first, flist ) :: rest ->
+                                    if boolitem == first then
+                                        ( ( boolitem, boolitem :: flist ), rest )
+
+                                    else
+                                        ( ( boolitem, [] ), v7group )
+                       )
+                    --   ((Bool, List Bool), List (Bool, List Bool))
+                    --|> LE.group
                     -- This should be madelled as a non-empty list somehow
-                    |> List.map (\( first, rest ) -> RunCount first (1 + (rest |> List.length)))
+                    --|> List.map (\( first, rest ) -> RunCount first (1 + (rest |> List.length)))
+                    |> (\( ( bhead, blist ), listbpair ) ->
+                            let
+                                x =
+                                    listbpair |> List.map (\( bool, listbool ) -> RunCount bool (1 + (listbool |> List.length)))
+                            in
+                            ( RunCount bhead (1 + (blist |> List.length)), x )
+                       )
             )
         |> Array.fromList
 
 
-intToRcList : Int -> List RunCount
+intToRcList : Int -> ( RunCount, List RunCount )
 intToRcList index =
-    runCounts0to255 |> Array.get index |> Maybe.withDefault []
+    runCounts0to255 |> Array.get index |> Maybe.withDefault ( RunCount True 0, [] )
 
 
 mapScanLine : Bool -> Vector32 RawScreenData -> List ( Int, ScreenColourRun )
@@ -127,6 +161,12 @@ mapScanLine globalFlash v32 =
                     list2 =
                         screendata.data
                             |> List.map intToRcList
+                            --|> List.concat
+                            --RunCount, List RunCount
+                            |> List.map
+                                (\( rc, rclist ) ->
+                                    rc :: rclist
+                                )
                             |> List.concat
                             |> List.foldr
                                 -- This is a bit too generic - technically we only need to merge the last

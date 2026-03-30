@@ -2,34 +2,50 @@ module ScreenTest exposing (..)
 
 import Expect
 import Test exposing (..)
-import Z80Screen exposing (intToRcList)
+import Z80Screen exposing (RunCount, intToRcList)
 
 
 suite : Test
 suite =
     describe "things"
         [ describe "intToRcList"
-            [ test "80" <|
+            [ test "00" <|
                 \_ ->
                     let
-                        a =
-                            intToRcList 0x80
+                        --a : RunCount
+                        --b : List RunCount
+                        ( a, b ) =
+                            intToRcList 0x00
                     in
                     Expect.equal
-                        [ { count = 1, value = True }
-                        , { count = 7, value = False }
+                        [ { count = 8, value = False }
                         ]
-                        a
+                        (a :: b)
             , test "03" <|
                 \_ ->
                     let
-                        a =
+                        --a : RunCount
+                        --b : List RunCount
+                        ( a, b ) =
                             intToRcList 0x03
                     in
                     Expect.equal
                         [ { count = 6, value = False }
                         , { count = 2, value = True }
                         ]
-                        a
+                        (a :: b)
+            , test "80" <|
+                \_ ->
+                    let
+                        --a : RunCount
+                        --b : List RunCount
+                        ( a, b ) =
+                            intToRcList 0x80
+                    in
+                    Expect.equal
+                        [ { count = 1, value = True }
+                        , { count = 7, value = False }
+                        ]
+                        (a :: b)
             ]
         ]
