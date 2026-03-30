@@ -2,6 +2,7 @@ module Z80Screen exposing (..)
 
 import Array exposing (Array)
 import Bitwise exposing (shiftLeftBy, shiftRightBy)
+import List.Extra as LE
 import Maybe
 import ScreenStorage exposing (RawScreenData, ScreenLine, Z80Screen, memoryRow)
 import SpectrumColour exposing (SpectrumColour, spectrumColour)
@@ -25,20 +26,6 @@ type alias RunCount =
     { value : Bool
     , count : Int
     }
-
-
-foldBoolRunCounts : Bool -> List RunCount -> List RunCount
-foldBoolRunCounts item list =
-    case list of
-        runcount :: tail ->
-            if item == runcount.value then
-                RunCount runcount.value (runcount.count + 1) :: tail
-
-            else
-                RunCount item 1 :: list
-
-        _ ->
-            [ RunCount item 1 ]
 
 
 
@@ -102,8 +89,10 @@ runCounts0to255 =
             (\value ->
                 value
                     |> bitsToLines
-                    |> Vector8.foldl foldBoolRunCounts []
-                    |> List.reverse
+                    |> Vector8.toList
+                    |> LE.group
+                    -- This should be madelled as a non-empty list somehow
+                    |> List.map (\( first, rest ) -> RunCount first (1 + (rest |> List.length)))
             )
         |> Array.fromList
 
