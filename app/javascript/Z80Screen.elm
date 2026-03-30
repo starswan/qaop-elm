@@ -1,8 +1,7 @@
 module Z80Screen exposing (..)
 
 import Array exposing (Array)
-import Bitwise exposing (shiftRightBy)
-import Byte exposing (Byte, getBit)
+import Bitwise exposing (shiftLeftBy, shiftRightBy)
 import Maybe
 import ScreenStorage exposing (RawScreenData, ScreenLine, Z80Screen, memoryRow)
 import SpectrumColour exposing (SpectrumColour, spectrumColour)
@@ -16,9 +15,21 @@ type alias ScreenData =
     }
 
 
-bitsToLines : Int -> List Bool
+bitsToLines : Int -> Vector8 Bool
 bitsToLines datum =
-    [ 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 ] |> List.map (\value -> (value |> Bitwise.and datum) /= 0)
+    Vector8.indices
+        |> Vector8.reverse
+        |> Vector8.map
+            (\index ->
+                let
+                    shift =
+                        index |> Vector8.indexToInt
+
+                    mask =
+                        1 |> shiftLeftBy shift
+                in
+                (mask |> Bitwise.and datum) /= 0
+            )
 
 
 type alias RunCount =
@@ -31,18 +42,14 @@ ints0to255 =
     List.range 0 255
 
 
-bytes0to255 =
-    ints0to255 |> List.map Byte.fromInt
-
-
-intToBoolsCache : Array (List Bool)
+intToBoolsCache : Array (Vector8 Bool)
 intToBoolsCache =
     ints0to255 |> List.map bitsToLines |> Array.fromList
 
 
-intToBools : Int -> List Bool
+intToBools : Int -> Vector8 Bool
 intToBools index =
-    intToBoolsCache |> Array.get index |> Maybe.withDefault []
+    intToBoolsCache |> Array.get index |> Maybe.withDefault (Vector8.initializeFromInt (\_ -> False))
 
 
 foldBoolRunCounts : Bool -> List RunCount -> List RunCount
@@ -120,7 +127,7 @@ runCounts0to255 =
             (\value ->
                 value
                     |> intToBools
-                    |> List.foldl foldBoolRunCounts []
+                    |> Vector8.foldl foldBoolRunCounts []
                     |> List.reverse
             )
         |> Array.fromList
