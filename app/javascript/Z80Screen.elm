@@ -17,19 +17,8 @@ type alias ScreenData =
 
 bitsToLines : Int -> Vector8 Bool
 bitsToLines datum =
-    Vector8.indices
-        |> Vector8.reverse
-        |> Vector8.map
-            (\index ->
-                let
-                    shift =
-                        index |> Vector8.indexToInt
-
-                    mask =
-                        1 |> shiftLeftBy shift
-                in
-                (mask |> Bitwise.and datum) /= 0
-            )
+    Vector8.initializeFromInt (\index -> 1 |> shiftLeftBy (7 - index))
+        |> Vector8.map (\mask -> (mask |> Bitwise.and datum) /= 0)
 
 
 type alias RunCount =
