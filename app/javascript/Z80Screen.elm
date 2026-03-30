@@ -16,19 +16,9 @@ type alias ScreenData =
     }
 
 
-
--- line definition - length colour (3 bits) and brightness
--- ignore flash for now
-
-
-isBitSet : Byte -> Int -> Bool
-isBitSet value shift =
-    getBit shift value
-
-
-bitsToLines : Byte -> List Bool
+bitsToLines : Int -> List Bool
 bitsToLines datum =
-    [ 7, 6, 5, 4, 3, 2, 1, 0 ] |> List.map (isBitSet datum)
+    [ 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 ] |> List.map (\value -> (value |> Bitwise.and datum) /= 0)
 
 
 type alias RunCount =
@@ -47,7 +37,7 @@ bytes0to255 =
 
 intToBoolsCache : Array (List Bool)
 intToBoolsCache =
-    bytes0to255 |> List.map bitsToLines |> Array.fromList
+    ints0to255 |> List.map bitsToLines |> Array.fromList
 
 
 intToBools : Int -> List Bool
