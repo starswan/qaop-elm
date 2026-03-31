@@ -172,7 +172,7 @@ mapScanLine globalFlash v32 =
                     list2 =
                         screendata.data
                             |> List.map intToRcList
-                            --RunCount, List RunCount
+                            --List (RunCount, List RunCount)
                             |> List.map
                                 (\( rc, rclist ) ->
                                     rc :: rclist
