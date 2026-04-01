@@ -44,7 +44,7 @@ type alias RunCountList =
 
 
 type alias ScreenColourRun =
-    { runcount : RunCount
+    { count : Int
     , colour : SpectrumColour
     }
 
@@ -86,7 +86,7 @@ pairToColour globalFlash raw_colour runcount =
         colour =
             spectrumColour colour_value bright
     in
-    ScreenColourRun runcount colour
+    ScreenColourRun runcount.count colour
 
 
 runCounts0to255 : Array RunCountList
@@ -232,7 +232,7 @@ mapScanLine globalFlash v32 =
             (\item list ->
                 case list |> List.head of
                     Just ( head, headItem ) ->
-                        ( head + headItem.runcount.count, item ) :: list
+                        ( head + headItem.count, item ) :: list
 
                     Nothing ->
                         List.singleton ( 0, item )
