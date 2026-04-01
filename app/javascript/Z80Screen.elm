@@ -29,6 +29,13 @@ type alias RunCount =
     }
 
 
+type alias RunCountList =
+    { initialValue : Bool
+    , firstCount : Int
+    , counts : List Int
+    }
+
+
 
 -- need to work out how to filter out lines of background colour
 -- This isn't quite right - the colour is the attribute value
@@ -82,7 +89,7 @@ pairToColour globalFlash raw_colour runcount =
     ScreenColourRun runcount colour
 
 
-runCounts0to255 : Array ( RunCount, List RunCount )
+runCounts0to255 : Array RunCountList
 runCounts0to255 =
     -- lookup of data byte to [rc1, rc2, rc3]
     List.range 0 255
@@ -125,15 +132,15 @@ runCounts0to255 =
                                 x =
                                     listbpair |> List.map (\( bool, listbool ) -> RunCount bool (1 + (listbool |> List.length)))
                             in
-                            ( RunCount bhead (1 + (blist |> List.length)), x )
+                            RunCountList bhead (1 + (blist |> List.length)) (x |> List.map (\rc -> rc.count))
                        )
             )
         |> Array.fromList
 
 
-intToRcList : Int -> ( RunCount, List RunCount )
+intToRcList : Int -> RunCountList
 intToRcList index =
-    runCounts0to255 |> Array.get index |> Maybe.withDefault ( RunCount True 0, [] )
+    runCounts0to255 |> Array.get index |> Maybe.withDefault (RunCountList True 0 [])
 
 
 mapScanLine : Bool -> Vector32 RawScreenData -> List ( Int, ScreenColourRun )
@@ -172,10 +179,25 @@ mapScanLine globalFlash v32 =
                     list2 =
                         screendata.data
                             |> List.map intToRcList
-                            --List (RunCount, List RunCount)
+                            --List (RunCountList)
                             |> List.map
-                                (\( rc, rclist ) ->
-                                    rc :: rclist
+                                (\rclist ->
+                                    let
+                                        head =
+                                            RunCount rclist.initialValue rclist.firstCount
+
+                                        tail =
+                                            rclist.counts
+                                                |> List.indexedMap
+                                                    (\index count ->
+                                                        if (index |> Bitwise.and 0x01) /= 0 then
+                                                            RunCount rclist.initialValue count
+
+                                                        else
+                                                            RunCount (rclist.initialValue |> not) count
+                                                    )
+                                    in
+                                    head :: tail
                                 )
                             |> List.concat
                             |> List.foldr
