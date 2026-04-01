@@ -191,11 +191,11 @@ mapScanLine globalFlash v32 =
                                             rclist.counts
                                                 |> List.indexedMap
                                                     (\index count ->
-                                                        if (index |> Bitwise.and 0x01) /= 0 then
-                                                            RunCount rclist.initialValue count
+                                                        if (index |> modBy 2) == 0 then
+                                                            RunCount (rclist.initialValue |> not) count
 
                                                         else
-                                                            RunCount (rclist.initialValue |> not) count
+                                                            RunCount rclist.initialValue count
                                                     )
                                     in
                                     head :: tail
