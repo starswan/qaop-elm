@@ -176,11 +176,41 @@ mapScanLine globalFlash v32 =
             (\screendata linelist ->
                 let
                     -- This should be convertible to a RunCountList
-                    list2 : List RunCount
-                    list2 =
+                    list1 : List RunCountList
+                    list1 =
                         screendata.data
                             |> List.map intToRcList
-                            --List (RunCountList)
+                            |> List.foldr
+                                (\item list ->
+                                    case list of
+                                        runcount :: tail ->
+                                            let
+                                                lastValue =
+                                                    if (item.counts |> List.length |> modBy 2) /= 0 then
+                                                        item.initialValue
+
+                                                    else
+                                                        item.initialValue |> not
+                                            in
+                                            if lastValue == runcount.initialValue then
+                                                let
+                                                    newhead =
+                                                        RunCountList item.initialValue item.firstCount (item.counts ++ [ runcount.firstCount ] ++ runcount.counts)
+                                                in
+                                                newhead :: tail
+
+                                            else
+                                                --[]
+                                                item :: list
+
+                                        _ ->
+                                            List.singleton item
+                                )
+                                []
+
+                    list2 : List RunCount
+                    list2 =
+                        list1
                             |> List.map
                                 (\rclist ->
                                     let
@@ -201,23 +231,6 @@ mapScanLine globalFlash v32 =
                                     head :: tail
                                 )
                             |> List.concat
-                            |> List.foldr
-                                -- This is a bit too generic - technically we only need to merge the last
-                                -- runcount in a byte with the head of the next one - all the others are already unique
-                                -- so we're calling List.concat a little too early.
-                                (\item list ->
-                                    case list of
-                                        runcount :: tail ->
-                                            if item.value == runcount.value then
-                                                RunCount runcount.value (runcount.count + item.count) :: tail
-
-                                            else
-                                                item :: list
-
-                                        _ ->
-                                            List.singleton item
-                                )
-                                []
 
                     newList : List ScreenColourRun
                     newList =
