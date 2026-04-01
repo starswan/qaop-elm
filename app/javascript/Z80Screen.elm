@@ -217,14 +217,20 @@ mapScanLine globalFlash v32 =
 
                                         tail =
                                             rclist.counts
-                                                |> List.indexedMap
-                                                    (\index count ->
-                                                        if (index |> modBy 2) == 0 then
-                                                            pairToColour globalFlash screendata.colour (rclist.initialValue |> not) count
+                                                |> List.foldr
+                                                    (\item ( bool, list ) ->
+                                                        let
+                                                            new =
+                                                                if bool then
+                                                                    pairToColour globalFlash screendata.colour rclist.initialValue item
 
-                                                        else
-                                                            pairToColour globalFlash screendata.colour rclist.initialValue count
+                                                                else
+                                                                    pairToColour globalFlash screendata.colour (rclist.initialValue |> not) item
+                                                        in
+                                                        ( bool |> not, new :: list )
                                                     )
+                                                    ( rclist.initialValue |> not, [] )
+                                                |> Tuple.second
                                     in
                                     head :: tail
                                 )
