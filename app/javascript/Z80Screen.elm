@@ -199,7 +199,6 @@ mapScanLine globalFlash v32 =
                                                 newhead :: tail
 
                                             else
-                                                --[]
                                                 item :: list
 
                                         _ ->
