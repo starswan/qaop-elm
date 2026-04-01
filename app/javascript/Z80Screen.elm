@@ -49,8 +49,8 @@ type alias ScreenColourRun =
     }
 
 
-pairToColour : Bool -> Int -> RunCount -> ScreenColourRun
-pairToColour globalFlash raw_colour runcount =
+pairToColour : Bool -> Int -> Bool -> Int -> ScreenColourRun
+pairToColour globalFlash raw_colour rcvalue rccount =
     let
         -- This has been benchmarked as the fastest implementation
         ( flash, bright ) =
@@ -69,10 +69,10 @@ pairToColour globalFlash raw_colour runcount =
 
         value =
             if flash && globalFlash then
-                not runcount.value
+                not rcvalue
 
             else
-                runcount.value
+                rcvalue
 
         colour_value =
             if value then
@@ -86,7 +86,7 @@ pairToColour globalFlash raw_colour runcount =
         colour =
             spectrumColour colour_value bright
     in
-    ScreenColourRun runcount.count colour
+    ScreenColourRun rccount colour
 
 
 runCounts0to255 : Array RunCountList
@@ -207,34 +207,29 @@ mapScanLine globalFlash v32 =
                                 )
                                 []
 
-                    list2 : List RunCount
-                    list2 =
+                    newList : List ScreenColourRun
+                    newList =
                         list1
                             |> List.map
                                 (\rclist ->
                                     let
                                         head =
-                                            RunCount rclist.initialValue rclist.firstCount
+                                            pairToColour globalFlash screendata.colour rclist.initialValue rclist.firstCount
 
                                         tail =
                                             rclist.counts
                                                 |> List.indexedMap
                                                     (\index count ->
                                                         if (index |> modBy 2) == 0 then
-                                                            RunCount (rclist.initialValue |> not) count
+                                                            pairToColour globalFlash screendata.colour (rclist.initialValue |> not) count
 
                                                         else
-                                                            RunCount rclist.initialValue count
+                                                            pairToColour globalFlash screendata.colour rclist.initialValue count
                                                     )
                                     in
                                     head :: tail
                                 )
                             |> List.concat
-
-                    newList : List ScreenColourRun
-                    newList =
-                        list2
-                            |> List.map (pairToColour globalFlash screendata.colour)
                 in
                 newList ++ linelist
             )
