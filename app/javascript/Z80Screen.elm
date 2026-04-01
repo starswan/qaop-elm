@@ -217,14 +217,29 @@ mapScanLine globalFlash v32 =
 
                                         tail =
                                             rclist.counts
-                                                |> List.indexedMap
-                                                    (\index count ->
-                                                        if (index |> modBy 2) == 0 then
-                                                            pairToColour globalFlash screendata.colour (rclist.initialValue |> not) count
+                                                --|> List.indexedMap
+                                                --    (\index count ->
+                                                --        if (index |> modBy 2) == 0 then
+                                                --            pairToColour globalFlash screendata.colour (rclist.initialValue |> not) count
+                                                --
+                                                --        else
+                                                --            pairToColour globalFlash screendata.colour rclist.initialValue count
+                                                --    )
+                                                |> List.foldl
+                                                    (\count ( bool, list ) ->
+                                                        let
+                                                            new =
+                                                                if bool then
+                                                                    pairToColour globalFlash screendata.colour (rclist.initialValue |> not) count
 
-                                                        else
-                                                            pairToColour globalFlash screendata.colour rclist.initialValue count
+                                                                else
+                                                                    pairToColour globalFlash screendata.colour rclist.initialValue count
+                                                        in
+                                                        ( bool |> not, new :: list )
                                                     )
+                                                    ( True, [] )
+                                                |> Tuple.second
+                                                |> List.reverse
                                     in
                                     head :: tail
                                 )
