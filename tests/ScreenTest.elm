@@ -2,24 +2,34 @@ module ScreenTest exposing (..)
 
 import Expect
 import Test exposing (..)
-import Z80Screen exposing (foldBoolRunCounts)
+import Z80Screen exposing (intToRcList)
 
 
 suite : Test
 suite =
     describe "things"
-        [ describe "rawToLines"
-            [ test "foldBoolRunCounts" <|
+        [ describe "intToRcList"
+            [ test "80" <|
                 \_ ->
                     let
                         a =
-                            [ 0x80, 0x03 ] |> List.concatMap Z80Screen.intToBools
+                            intToRcList 0x80
                     in
                     Expect.equal
                         [ { count = 1, value = True }
-                        , { count = 13, value = False }
+                        , { count = 7, value = False }
+                        ]
+                        a
+            , test "03" <|
+                \_ ->
+                    let
+                        a =
+                            intToRcList 0x03
+                    in
+                    Expect.equal
+                        [ { count = 6, value = False }
                         , { count = 2, value = True }
                         ]
-                        (a |> List.foldl foldBoolRunCounts [] |> List.reverse)
+                        a
             ]
         ]

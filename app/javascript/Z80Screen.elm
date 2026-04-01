@@ -1,8 +1,8 @@
 module Z80Screen exposing (..)
 
 import Array exposing (Array)
-import Bitwise exposing (shiftRightBy)
-import Byte exposing (Byte, getBit)
+import Bitwise exposing (shiftLeftBy, shiftRightBy)
+import List.Extra as LE
 import Maybe
 import ScreenStorage exposing (RawScreenData, ScreenLine, Z80Screen, memoryRow)
 import SpectrumColour exposing (SpectrumColour, spectrumColour)
@@ -16,57 +16,16 @@ type alias ScreenData =
     }
 
 
-
--- line definition - length colour (3 bits) and brightness
--- ignore flash for now
-
-
-isBitSet : Byte -> Int -> Bool
-isBitSet value shift =
-    getBit shift value
-
-
-bitsToLines : Byte -> List Bool
+bitsToLines : Int -> Vector8 Bool
 bitsToLines datum =
-    [ 7, 6, 5, 4, 3, 2, 1, 0 ] |> List.map (isBitSet datum)
+    Vector8.initializeFromInt (\index -> 1 |> shiftLeftBy (7 - index))
+        |> Vector8.map (\mask -> (mask |> Bitwise.and datum) /= 0)
 
 
 type alias RunCount =
     { value : Bool
     , count : Int
     }
-
-
-ints0to255 =
-    List.range 0 255
-
-
-bytes0to255 =
-    ints0to255 |> List.map Byte.fromInt
-
-
-intToBoolsCache : Array (List Bool)
-intToBoolsCache =
-    bytes0to255 |> List.map bitsToLines |> Array.fromList
-
-
-intToBools : Int -> List Bool
-intToBools index =
-    intToBoolsCache |> Array.get index |> Maybe.withDefault []
-
-
-foldBoolRunCounts : Bool -> List RunCount -> List RunCount
-foldBoolRunCounts item list =
-    case list of
-        runcount :: tail ->
-            if item == runcount.value then
-                RunCount runcount.value (runcount.count + 1) :: tail
-
-            else
-                RunCount item 1 :: list
-
-        _ ->
-            [ RunCount item 1 ]
 
 
 
@@ -125,13 +84,15 @@ pairToColour globalFlash raw_colour runcount =
 runCounts0to255 : Array (List RunCount)
 runCounts0to255 =
     -- lookup of data byte to [rc1, rc2, rc3]
-    ints0to255
+    List.range 0 255
         |> List.map
             (\value ->
                 value
-                    |> intToBools
-                    |> List.foldl foldBoolRunCounts []
-                    |> List.reverse
+                    |> bitsToLines
+                    |> Vector8.toList
+                    |> LE.group
+                    -- This should be madelled as a non-empty list somehow
+                    |> List.map (\( first, rest ) -> RunCount first (1 + (rest |> List.length)))
             )
         |> Array.fromList
 
@@ -141,18 +102,72 @@ intToRcList index =
     runCounts0to255 |> Array.get index |> Maybe.withDefault []
 
 
-foldRunCounts : RunCount -> List RunCount -> List RunCount
-foldRunCounts item list =
-    case list of
-        runcount :: tail ->
-            if item.value == runcount.value then
-                RunCount runcount.value (runcount.count + item.count) :: tail
+mapScanLine : Bool -> Vector32 RawScreenData -> List ( Int, ScreenColourRun )
+mapScanLine globalFlash v32 =
+    v32
+        |> Vector32.foldr
+            (\raw list ->
+                case list of
+                    head :: tail ->
+                        if head.colour == raw.colour then
+                            ScreenData raw.colour (raw.data :: head.data) :: tail
 
-            else
-                item :: list
+                        else
+                            ScreenData raw.colour [ raw.data ] :: list
 
-        _ ->
-            List.singleton item
+                    _ ->
+                        [ ScreenData raw.colour [ raw.data ] ]
+            )
+            []
+        --    compacted list of ScreenData (colour + list of data bytes with that colour]
+        |> List.foldr
+            (\screendata linelist ->
+                let
+                    list2 : List RunCount
+                    list2 =
+                        screendata.data
+                            |> List.map intToRcList
+                            |> List.concat
+                            |> List.foldr
+                                -- This is a bit too generic - technically we only need to merge the last
+                                -- runcount in a byte with the head of the next one - all the others are already unique
+                                -- so we're calling List.concat a little too early.
+                                (\item list ->
+                                    case list of
+                                        runcount :: tail ->
+                                            if item.value == runcount.value then
+                                                RunCount runcount.value (runcount.count + item.count) :: tail
+
+                                            else
+                                                item :: list
+
+                                        _ ->
+                                            List.singleton item
+                                )
+                                []
+
+                    newList : List ScreenColourRun
+                    newList =
+                        list2
+                            |> List.map (pairToColour globalFlash screendata.colour)
+                in
+                newList ++ linelist
+            )
+            []
+        --  list of pairs - add count to get the start position of the next item in the list
+        |> List.foldl
+            (\item list ->
+                case list |> List.head of
+                    Just ( head, headItem ) ->
+                        ( head + headItem.runcount.count, item ) :: list
+
+                    Nothing ->
+                        List.singleton ( 0, item )
+            )
+            []
+        -- spike - filter out the background nodes
+        --|> List.filter (\( _, colourRun ) -> colourRun.runcount.value)
+        |> List.reverse
 
 
 mapScreenLine : Bool -> ScreenLine -> Vector8 (List ( Int, ScreenColourRun ))
@@ -174,52 +189,4 @@ mapScreenLine globalFlash screenLine =
                     )
     in
     rawData
-        |> Vector8.map
-            (\v32 ->
-                v32
-                    |> Vector32.foldr
-                        (\raw list ->
-                            case list of
-                                head :: tail ->
-                                    if head.colour == raw.colour then
-                                        ScreenData raw.colour (raw.data :: head.data) :: tail
-
-                                    else
-                                        ScreenData raw.colour [ raw.data ] :: list
-
-                                _ ->
-                                    [ ScreenData raw.colour [ raw.data ] ]
-                        )
-                        []
-                    |> List.foldr
-                        (\screendata linelist ->
-                            let
-                                list2 : List RunCount
-                                list2 =
-                                    screendata.data
-                                        |> List.map intToRcList
-                                        |> List.concat
-                                        |> List.foldr foldRunCounts []
-
-                                newList : List ScreenColourRun
-                                newList =
-                                    list2
-                                        |> List.map (pairToColour globalFlash screendata.colour)
-                            in
-                            newList ++ linelist
-                        )
-                        []
-                    |> List.foldl
-                        (\item list ->
-                            case list |> List.head of
-                                Just ( head, headItem ) ->
-                                    ( head + headItem.runcount.count, item ) :: list
-
-                                Nothing ->
-                                    List.singleton ( 0, item )
-                        )
-                        []
-                    -- spike - filter out the background nodes
-                    --|> List.filter (\( _, colourRun ) -> colourRun.runcount.value)
-                    |> List.reverse
-            )
+        |> Vector8.map (mapScanLine globalFlash)
