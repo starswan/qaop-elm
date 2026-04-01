@@ -222,10 +222,10 @@ mapScanLine globalFlash v32 =
                                                         let
                                                             new =
                                                                 if bool then
-                                                                    pairToColour globalFlash screendata.colour rclist.initialValue item
+                                                                    pairToColour globalFlash screendata.colour (rclist.initialValue |> not) item
 
                                                                 else
-                                                                    pairToColour globalFlash screendata.colour (rclist.initialValue |> not) item
+                                                                    pairToColour globalFlash screendata.colour rclist.initialValue item
                                                         in
                                                         ( bool |> not, new :: list )
                                                     )
