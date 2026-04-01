@@ -175,6 +175,7 @@ mapScanLine globalFlash v32 =
         |> List.foldr
             (\screendata linelist ->
                 let
+                    -- This should be convertible to a RunCountList
                     list2 : List RunCount
                     list2 =
                         screendata.data
