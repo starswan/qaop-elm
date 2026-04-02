@@ -7,6 +7,7 @@ import Maybe
 import ScreenStorage exposing (RawScreenData, ScreenLine, Z80Screen, memoryRow)
 import SpectrumColour exposing (SpectrumColour, spectrumColour)
 import Vector32 exposing (Vector32)
+import Vector7
 import Vector8 exposing (Vector8)
 
 
@@ -28,6 +29,13 @@ type alias RunCount =
     }
 
 
+type alias RunCountList =
+    { initialValue : Bool
+    , firstCount : Int
+    , counts : List Int
+    }
+
+
 
 -- need to work out how to filter out lines of background colour
 -- This isn't quite right - the colour is the attribute value
@@ -36,13 +44,13 @@ type alias RunCount =
 
 
 type alias ScreenColourRun =
-    { runcount : RunCount
+    { count : Int
     , colour : SpectrumColour
     }
 
 
-pairToColour : Bool -> Int -> RunCount -> ScreenColourRun
-pairToColour globalFlash raw_colour runcount =
+pairToColour : Bool -> Int -> Bool -> Int -> ScreenColourRun
+pairToColour globalFlash raw_colour rcvalue rccount =
     let
         -- This has been benchmarked as the fastest implementation
         ( flash, bright ) =
@@ -61,10 +69,10 @@ pairToColour globalFlash raw_colour runcount =
 
         value =
             if flash && globalFlash then
-                not runcount.value
+                not rcvalue
 
             else
-                runcount.value
+                rcvalue
 
         colour_value =
             if value then
@@ -78,10 +86,10 @@ pairToColour globalFlash raw_colour runcount =
         colour =
             spectrumColour colour_value bright
     in
-    ScreenColourRun runcount colour
+    ScreenColourRun rccount colour
 
 
-runCounts0to255 : Array (List RunCount)
+runCounts0to255 : Array RunCountList
 runCounts0to255 =
     -- lookup of data byte to [rc1, rc2, rc3]
     List.range 0 255
@@ -89,17 +97,50 @@ runCounts0to255 =
             (\value ->
                 value
                     |> bitsToLines
-                    |> Vector8.toList
-                    |> LE.group
+                    |> (\v8 ->
+                            let
+                                ( item, vec7 ) =
+                                    v8 |> Vector8.uncons
+                            in
+                            ( item, vec7 )
+                       )
+                    --|> Vector8.toList
+                    |> (\( boolitem, v7list ) ->
+                            let
+                                v7group : List ( Bool, List Bool )
+                                v7group =
+                                    v7list |> Vector7.toList |> LE.group
+                            in
+                            case v7group of
+                                [] ->
+                                    -- degenerate case, can't happen as 7 list can never be empty
+                                    ( ( boolitem, [] ), [] )
+
+                                ( first, flist ) :: rest ->
+                                    if boolitem == first then
+                                        ( ( boolitem, boolitem :: flist ), rest )
+
+                                    else
+                                        ( ( boolitem, [] ), v7group )
+                       )
+                    --   ((Bool, List Bool), List (Bool, List Bool))
+                    --|> LE.group
                     -- This should be madelled as a non-empty list somehow
-                    |> List.map (\( first, rest ) -> RunCount first (1 + (rest |> List.length)))
+                    --|> List.map (\( first, rest ) -> RunCount first (1 + (rest |> List.length)))
+                    |> (\( ( bhead, blist ), listbpair ) ->
+                            let
+                                x =
+                                    listbpair |> List.map (\( bool, listbool ) -> RunCount bool (1 + (listbool |> List.length)))
+                            in
+                            RunCountList bhead (1 + (blist |> List.length)) (x |> List.map (\rc -> rc.count))
+                       )
             )
         |> Array.fromList
 
 
-intToRcList : Int -> List RunCount
+intToRcList : Int -> RunCountList
 intToRcList index =
-    runCounts0to255 |> Array.get index |> Maybe.withDefault []
+    runCounts0to255 |> Array.get index |> Maybe.withDefault (RunCountList True 0 [])
 
 
 mapScanLine : Bool -> Vector32 RawScreenData -> List ( Int, ScreenColourRun )
@@ -119,24 +160,43 @@ mapScanLine globalFlash v32 =
                         [ ScreenData raw.colour [ raw.data ] ]
             )
             []
+        --    This version looks tidy but is way too slow (20.4Hz vs 24.1Hz)
+        --|> Vector32.toList
+        --|> LE.groupWhile (\left right -> left.colour == right.colour)
+        --|> List.map
+        --    (\( head, list ) ->
+        --        let
+        --            data =
+        --                list |> List.map (\x -> x.data)
+        --        in
+        --        ScreenData head.colour (head.data :: data)
+        --    )
         --    compacted list of ScreenData (colour + list of data bytes with that colour]
         |> List.foldr
             (\screendata linelist ->
                 let
-                    list2 : List RunCount
-                    list2 =
+                    list1 : List RunCountList
+                    list1 =
                         screendata.data
                             |> List.map intToRcList
-                            |> List.concat
                             |> List.foldr
-                                -- This is a bit too generic - technically we only need to merge the last
-                                -- runcount in a byte with the head of the next one - all the others are already unique
-                                -- so we're calling List.concat a little too early.
                                 (\item list ->
                                     case list of
                                         runcount :: tail ->
-                                            if item.value == runcount.value then
-                                                RunCount runcount.value (runcount.count + item.count) :: tail
+                                            let
+                                                lastValue =
+                                                    if (item.counts |> List.length |> modBy 2) /= 0 then
+                                                        item.initialValue
+
+                                                    else
+                                                        item.initialValue |> not
+                                            in
+                                            if lastValue == runcount.initialValue then
+                                                let
+                                                    newhead =
+                                                        RunCountList item.initialValue item.firstCount (item.counts ++ [ runcount.firstCount ] ++ runcount.counts)
+                                                in
+                                                newhead :: tail
 
                                             else
                                                 item :: list
@@ -148,8 +208,42 @@ mapScanLine globalFlash v32 =
 
                     newList : List ScreenColourRun
                     newList =
-                        list2
-                            |> List.map (pairToColour globalFlash screendata.colour)
+                        list1
+                            |> List.map
+                                (\rclist ->
+                                    let
+                                        head =
+                                            pairToColour globalFlash screendata.colour rclist.initialValue rclist.firstCount
+
+                                        tail =
+                                            rclist.counts
+                                                --|> List.indexedMap
+                                                --    (\index count ->
+                                                --        if (index |> modBy 2) == 0 then
+                                                --            pairToColour globalFlash screendata.colour (rclist.initialValue |> not) count
+                                                --
+                                                --        else
+                                                --            pairToColour globalFlash screendata.colour rclist.initialValue count
+                                                --    )
+                                                |> List.foldl
+                                                    (\count ( bool, list ) ->
+                                                        let
+                                                            new =
+                                                                if bool then
+                                                                    pairToColour globalFlash screendata.colour (rclist.initialValue |> not) count
+
+                                                                else
+                                                                    pairToColour globalFlash screendata.colour rclist.initialValue count
+                                                        in
+                                                        ( bool |> not, new :: list )
+                                                    )
+                                                    ( True, [] )
+                                                |> Tuple.second
+                                                |> List.reverse
+                                    in
+                                    head :: tail
+                                )
+                            |> List.concat
                 in
                 newList ++ linelist
             )
@@ -159,7 +253,7 @@ mapScanLine globalFlash v32 =
             (\item list ->
                 case list |> List.head of
                     Just ( head, headItem ) ->
-                        ( head + headItem.runcount.count, item ) :: list
+                        ( head + headItem.count, item ) :: list
 
                     Nothing ->
                         List.singleton ( 0, item )
