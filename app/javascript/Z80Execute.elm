@@ -18,8 +18,7 @@ import Z80Env exposing (Z80Env, setMem, setMem16, z80_in, z80_out, z80_push)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, f_szh0n0p, get_af, inc, set_af, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
 import Z80Mem exposing (mem, mem16, z80_pop)
 import Z80Registers exposing (ChangeMainRegister(..), ChangeSingle(..), CoreRegister(..))
-import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIYHL(..), InterruptRegisters, MainWithIndexRegisters, get_bc, get_de, get_xy, set_bc_main, set_de_main, set_xy)
+import Z80Types exposing (IXIYHL(..), InterruptRegisters, MainWithIndexRegisters, Z80ROM, get_bc, get_de, get_xy, set_bc_main, set_de_main, set_xy)
 
 
 type DeltaWithChanges

@@ -1,5 +1,6 @@
 module Group10Test exposing (..)
 
+import Compiler exposing (createCompiledRom)
 import Dict
 import Expect exposing (Expectation)
 import Test exposing (..)
@@ -34,7 +35,7 @@ suite =
             z80.main
 
         z80rom =
-            Z80Rom.constructor Dict.empty
+            createCompiledRom Dict.empty
     in
     describe "Z80.execute_instruction"
         -- Nest as many descriptions as you like.
@@ -99,7 +100,7 @@ suite =
                             |> Triple.dropSecond
 
                     mem_value =
-                        new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                        new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                 in
                 Expect.equal ( addr + 1, 0x38 ) ( new_pc, mem_value.value )
         , test "0x13 INC DE" <|
