@@ -27,7 +27,6 @@ jobs:
 
     env:
       ELM_HOME: ${{ github.workspace }}/.elm
-      HZ: 46.387
     steps:
       - uses: actions/checkout@v4
       - name: Set up Ruby
@@ -73,5 +72,6 @@ jobs:
       - name: Ruby tests compiled for production mode
         env:
           NODE_ENV: production
+          HZ: 49.387
           Z80TEST: MatchDay
         run: xvfb-run -a bundle exec rake spec
