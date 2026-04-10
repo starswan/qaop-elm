@@ -73,4 +73,5 @@ jobs:
       - name: Ruby tests compiled for production mode
         env:
           NODE_ENV: production
+          Z80TEST: MatchDay
         run: xvfb-run -a bundle exec rake spec
