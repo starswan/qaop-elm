@@ -11,9 +11,8 @@ import Z80Change exposing (IndexedZ80Change, Z80Change)
 import Z80Core exposing (DirectionForLDIR)
 import Z80Env exposing (Z80Env)
 import Z80Flags exposing (FlagFunc, FlagRegisters)
-import Z80Registers exposing (ChangeMainRegister, ChangeSingle)
-import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIYHL, InterruptMode, MainWithIndexRegisters)
+import Z80Registers exposing (ChangeMainRegister, ChangeSingle, CoreRegister)
+import Z80Types exposing (IXIYHL, InterruptMode, MainWithIndexRegisters, Z80ROM)
 
 
 type Shifter
