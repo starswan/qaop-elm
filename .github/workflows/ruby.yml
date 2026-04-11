@@ -73,5 +73,4 @@ jobs:
         env:
           NODE_ENV: production
           HZ: 49.387
-          Z80TEST: CyrusChess
         run: xvfb-run -a bundle exec rake spec
