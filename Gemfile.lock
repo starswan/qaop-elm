@@ -96,7 +96,7 @@ GEM
       activesupport (>= 3.0.0)
       ruby2_keywords (>= 0.0.2)
     ast (2.4.3)
-    base64 (0.2.0)
+    base64 (0.3.0)
     bcrypt_pbkdf (1.1.2)
     benchmark (0.5.0)
     bigdecimal (4.1.2)
@@ -471,7 +471,7 @@ PLATFORMS
 
 DEPENDENCIES
   activeadmin
-  base64 (< 0.3)
+  base64 (< 0.4)
   bcrypt_pbkdf
   byebug
   capistrano (>= 3)
