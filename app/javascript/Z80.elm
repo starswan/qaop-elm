@@ -809,7 +809,7 @@ executeCore rom48k z80 =
                                         { clock | clockTime = clockTime |> addExtraCpuTime shortDelay, pc = (pcAfter + int) |> Bitwise.and 0xFFFF }
 
                                     JumpWithOffset int ->
-                                        { clock | pc = (pcAfter + int) |> Bitwise.and 0xFFFF }
+                                        { clock | clockTime = clockTime, pc = (pcAfter + int) |> Bitwise.and 0xFFFF }
 
                                     MainOnly mainWithIndexRegisters ->
                                         { core = { core | main = mainWithIndexRegisters }, pc = pcAfter, clockTime = clockTime }
