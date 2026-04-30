@@ -14,7 +14,7 @@ import GroupCBIXIY exposing (singleByteMainRegsIXCB, singleByteMainRegsIYCB, sin
 import GroupED exposing (edWithInterrupts, fourByteMainED, singleByteFlagsED, singleByteMainAndFlagsED, singleByteMainRegsED)
 import Loop
 import OpcodeTables exposing (singleByteInstructions, singleByteMainFlagsRegsIX, singleByteMainFlagsRegsIY, threeByteInstructions, threeByteWithRegistersIX, threeByteWithRegistersIY, twoByteInstructions, twoByteWithRegistersIX, twoByteWithRegistersIY)
-import PCIncrement exposing (PCIncrement(..), TriplePCIncrement(..))
+import PCIncrement exposing (PCIncrement(..))
 import SimpleFlagOps exposing (singleByteFlagsCB)
 import SingleNoParams exposing (ex_af, execute_0x76_halt, exx)
 import Z80Core exposing (CoreChange(..), RepeatPCOffset(..), Z80Core)

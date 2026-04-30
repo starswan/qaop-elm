@@ -6,7 +6,7 @@ import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), reset_cpu_t
 import Dict exposing (Dict)
 import JumpChange exposing (applyTripleFlagChange)
 import Keyboard
-import PCIncrement exposing (PCIncrement(..), TriplePCIncrement(..))
+import PCIncrement exposing (PCIncrement(..))
 import RegisterChange exposing (RegisterFlagChange(..))
 import Set exposing (Set)
 import SingleMainWithFlags exposing (singleByteMainAndFlagRegistersIY)
