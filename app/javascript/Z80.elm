@@ -206,19 +206,22 @@ executeAndApplyDelta opCode cpuClock rom48k z80clock =
         ( delta, clockTime, pc_inc ) =
             z80_core |> execute_delta cpuClock opCode rom48k z80clock.pc
 
-        pcAfter =
+        rawPc =
             case pc_inc of
                 IncrementByOne ->
-                    Bitwise.and (z80clock.pc + 1) 0xFFFF
+                    z80clock.pc + 1
 
                 IncrementByTwo ->
-                    Bitwise.and (z80clock.pc + 2) 0xFFFF
+                    z80clock.pc + 2
 
                 IncrementByThree ->
-                    Bitwise.and (z80clock.pc + 3) 0xFFFF
+                    z80clock.pc + 3
 
                 IncrementByFour ->
-                    Bitwise.and (z80clock.pc + 4) 0xFFFF
+                    z80clock.pc + 4
+
+        pcAfter =
+            Bitwise.and rawPc 0xFFFF
     in
     case delta |> apply_delta z80_core rom48k clockTime of
         CoreOnly z80Core ->

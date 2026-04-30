@@ -109,7 +109,7 @@ compileRunning nesting rom48k z80env key value input =
                             Just ( relJump, duration ) ->
                                 let
                                     dictVal =
-                                        CompiledInstruction (\_ _ z80core -> z80core |> applyJumpChangeDelta clockTime relJump) duration IncrementByTwo
+                                        CompiledInstruction (\clock _ z80core -> z80core |> applyJumpChangeDelta clock relJump) duration IncrementByTwo
                                 in
                                 case relJump of
                                     ActualJumpOffset offset ->
