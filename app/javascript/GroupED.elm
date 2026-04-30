@@ -13,8 +13,7 @@ import Z80Env exposing (Z80Env, setMem, setMemIgnoringTime, z80_in)
 import Z80Flags exposing (FlagRegisters, c_F3, c_F5, c_F53, c_FC, c_FH, f_szh0n0p, z80_sub)
 import Z80Mem exposing (mem)
 import Z80Registers exposing (ChangeMainRegister(..))
-import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (InterruptMode(..), InterruptRegisters, MainWithIndexRegisters, get_bc, get_de, set_bc_main, set_de_main)
+import Z80Types exposing (InterruptMode(..), InterruptRegisters, MainWithIndexRegisters, Z80ROM, get_bc, get_de, set_bc_main, set_de_main)
 
 
 execute_ED78 : Z80ROM -> CpuTimeCTime -> Z80Core -> Z80Core

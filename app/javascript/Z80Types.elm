@@ -2,8 +2,11 @@ module Z80Types exposing (..)
 
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimePcAnd16BitValue)
+import Dict exposing (Dict)
+import Keyboard exposing (Keyboard)
 import Utils exposing (shiftLeftBy8, shiftRightBy8)
 import Z80Flags exposing (FlagRegisters)
+import Z80Ram exposing (Z80Ram)
 
 
 type alias MainRegisters =
@@ -54,6 +57,18 @@ type IXIYHL
     = IX
     | IY
     | HL
+
+
+type IXIY
+    = IXIY_IX
+    | IXIY_IY
+
+
+type alias Z80ROM =
+    { rom48k : Dict Int Int
+    , keyboard : Keyboard
+    , z80ram : Z80Ram
+    }
 
 
 get_xy : IXIYHL -> MainWithIndexRegisters -> Int
