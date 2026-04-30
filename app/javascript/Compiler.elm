@@ -427,6 +427,7 @@ createCompiledRom rom_dict =
         dummyenv =
             z80env_constructor
 
+        dict : Dict Int CompiledInstruction
         dict =
             compileRom z80rom dummyenv
     in
