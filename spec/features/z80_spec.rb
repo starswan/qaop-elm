@@ -90,19 +90,19 @@ RSpec.describe "Game" do
           # Player name
           delay_and_send(spectrum, 170, FFaker::Name.first_name.first(5))
           # select Plymouth Argyle
-          delay_and_send(spectrum, 650, "99")
-          delay_and_send(spectrum, 830, "99")
-          delay_and_send(spectrum, 970, "44")
+          delay_and_send(spectrum, 630, "99")
+          delay_and_send(spectrum, 790, "99")
+          delay_and_send(spectrum, 950, "44")
           # select beginner
-          delay_and_send(spectrum, 1110, "1")
+          delay_and_send(spectrum, 1090, "1")
           # select white team colours
-          delay_and_send(spectrum, 1310, "7")
+          delay_and_send(spectrum, 1230, "7")
           # continue from main menu
-          delay_and_send(spectrum, 1810, "99")
+          delay_and_send(spectrum, 1720, "99")
           #  Hit ENTER to start first match
-          delay_and_send(spectrum, 1980, "")
+          delay_and_send(spectrum, 1920, "")
           # continue into match
-          delay_and_send(spectrum, 2280, "99")
+          delay_and_send(spectrum, 2260, "99")
 
           # wait for match to actually start properly
           sleep 4
