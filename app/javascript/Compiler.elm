@@ -1,7 +1,7 @@
 module Compiler exposing (..)
 
 import Bitwise
-import CompiledZ80ROM exposing (CompiledZ80ROM)
+import CompiledZ80ROM exposing (CompiledInstruction, CompiledZ80ROM)
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), reset_cpu_time)
 import Dict exposing (Dict)
 import JumpChange exposing (applyTripleFlagChange)
@@ -15,7 +15,6 @@ import SingleWith8BitParameter exposing (JumpChange(..), maybeRelativeJump)
 import TripleWithFlags exposing (TripleWithFlagsChange(..), triple16bitJumps)
 import TripleWithMain exposing (tripleMainRegsIYThree)
 import Utils exposing (toHexString, toHexString2, toPlainHexString2)
-import Z80Core exposing (CoreChange, Z80Core)
 import Z80Debug exposing (debugLog, debugTodo)
 import Z80Env exposing (Z80Env, z80env_constructor)
 import Z80Execute exposing (applyJumpChangeDelta)
@@ -38,7 +37,7 @@ type alias CompileRunning =
     { seen : Set Int
 
     -- Dict of instruction to function with time and size
-    , compiled : Dict Int ( CpuTimeCTime -> Z80ROM -> Z80Core -> CoreChange, InstructionDuration, PCIncrement )
+    , compiled : Dict Int CompiledInstruction
     , state : CompilerState
     }
 
@@ -110,7 +109,7 @@ compileRunning nesting rom48k z80env key value input =
                             Just ( relJump, duration ) ->
                                 let
                                     dictVal =
-                                        ( \_ _ z80core -> z80core |> applyJumpChangeDelta clockTime relJump, duration, IncrementByTwo )
+                                        CompiledInstruction (\_ _ z80core -> z80core |> applyJumpChangeDelta clockTime relJump) duration IncrementByTwo
                                 in
                                 case relJump of
                                     ActualJumpOffset offset ->
@@ -202,7 +201,7 @@ compileRunning nesting rom48k z80env key value input =
                                             Just ( aLongJump, duration ) ->
                                                 let
                                                     dictVal =
-                                                        ( \_ _ z80core -> z80core |> applyTripleFlagChange aLongJump, duration, IncrementByThree )
+                                                        CompiledInstruction (\_ _ z80core -> z80core |> applyTripleFlagChange aLongJump) duration IncrementByThree
                                                 in
                                                 case aLongJump of
                                                     NewPCRegister _ ->
@@ -305,7 +304,7 @@ compileRunning nesting rom48k z80env key value input =
                                 --keyVal =
                                 --    debugLog ((nesting |> String.fromInt) ++ " compiled " ++ (key |> subName)) (value |> toHexString2) key
                             in
-                            { running | compiled = running.compiled |> Dict.insert key ( f, duration, length ), state = state }
+                            { running | compiled = running.compiled |> Dict.insert key (CompiledInstruction f duration length), state = state }
 
                         Nothing ->
                             -- single byte unavailable (e.g. DI/EI etc) 33 INC SP, 3B DEC SP or  - EX AF, AF' 0x76 = HALT D9 = EXX
@@ -398,7 +397,7 @@ entryPoints =
         ++ [ 0x353B, 0x3014, 0x352D, 0x353B, 0x359C, 0x35DE, 0x34BC, 0x3645, 0x346E, 0x3669, 0x3674, 0x37B5, 0x37AA ]
 
 
-compileRom : Z80ROM -> Z80Env -> Dict Int ( CpuTimeCTime -> Z80ROM -> Z80Core -> CoreChange, InstructionDuration, PCIncrement )
+compileRom : Z80ROM -> Z80Env -> Dict Int CompiledInstruction
 compileRom rom48k z80env =
     let
         result =

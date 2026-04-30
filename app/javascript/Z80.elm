@@ -574,8 +574,8 @@ executeCoreInstruction rom48k pc z80_core =
                     in
                     ( deltaWithChanges |> apply_delta z80_core rom48k.z80rom cpuClock, pc_inc, cpuClock )
 
-                Z80Compiled f _ length ->
-                    ( z80_core |> f reset_cpu_time rom48k.z80rom, length, reset_cpu_time )
+                Z80Compiled compiled ->
+                    ( z80_core |> compiled.function reset_cpu_time rom48k.z80rom, compiled.length, reset_cpu_time )
 
         pcAfter =
             case pcInc of
@@ -712,7 +712,7 @@ coreLooping ( z80core, ct, _ ) =
         UncompiledOpcode int _ ->
             isCoreOpCode int && (z80core |> stillLooping)
 
-        Z80Compiled _ _ _ ->
+        Z80Compiled _ ->
             z80core |> stillLooping
 
 
@@ -734,16 +734,16 @@ executeCore rom48k z80 =
                             UncompiledOpcode opCode clockTime ->
                                 clock |> executeAndApplyDelta opCode clockTime rom48k.z80rom
 
-                            Z80Compiled function duration length ->
+                            Z80Compiled compiled ->
                                 let
                                     core =
                                         clock.core
 
                                     clockTime =
-                                        clock.clockTime |> addDuration duration
+                                        clock.clockTime |> addDuration compiled.duration
 
                                     pcAfter =
-                                        case length of
+                                        case compiled.length of
                                             IncrementByOne ->
                                                 Bitwise.and (clock.pc + 1) 0xFFFF
 
@@ -756,7 +756,7 @@ executeCore rom48k z80 =
                                             IncrementByFour ->
                                                 Bitwise.and (clock.pc + 4) 0xFFFF
                                 in
-                                case core |> function clockTime rom48k.z80rom of
+                                case core |> compiled.function clockTime rom48k.z80rom of
                                     CoreOnly z80Core ->
                                         { core = z80Core, clockTime = clockTime, pc = pcAfter }
 
@@ -860,7 +860,7 @@ executeCore rom48k z80 =
                     z80_1
 
         -- non-core functions are not compiled (the compile target is specifically Z80Core -> Z80Core)
-        Z80Compiled _ _ _ ->
+        Z80Compiled _ ->
             z80_1
 
 

@@ -8,27 +8,30 @@ import Z80Debug exposing (debugTodo)
 import Z80Types exposing (Z80ROM)
 
 
+type alias CompiledInstruction =
+    { function : CpuTimeCTime -> Z80ROM -> Z80Core -> CoreChange
+    , duration : InstructionDuration
+    , length : PCIncrement
+    }
+
+
 type alias CompiledZ80ROM =
     { z80rom : Z80ROM
-    , compiled : Dict Int ( CpuTimeCTime -> Z80ROM -> Z80Core -> CoreChange, InstructionDuration, PCIncrement )
-
-    --, compiled : Dict Int CpuInstruction
+    , compiled : Dict Int CompiledInstruction
     }
 
 
 type CpuInstruction
     = UncompiledOpcode Int CpuTimeCTime
-    | Z80Compiled (CpuTimeCTime -> Z80ROM -> Z80Core -> CoreChange) InstructionDuration PCIncrement
+    | Z80Compiled CompiledInstruction
 
 
 getROMInstruction : Int -> CpuTimeCTime -> CompiledZ80ROM -> CpuInstruction
 getROMInstruction addr clockTime z80rom =
     case z80rom.compiled |> Dict.get addr of
-        Just ( f, duration, length ) ->
-            Z80Compiled f duration length
+        Just compiled ->
+            Z80Compiled compiled
 
-        --Just inst ->
-        --    inst
         Nothing ->
             case Dict.get addr z80rom.z80rom.rom48k of
                 Just a ->
