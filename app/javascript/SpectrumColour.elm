@@ -58,7 +58,7 @@ c_BLACK =
 
 c_BRIGHT_BLUE =
     --"#0200FD"
-    Color.blue
+    Color.rgb255 0x02 0x00 0xFD
 
 
 c_BRIGHT_RED =
@@ -68,7 +68,7 @@ c_BRIGHT_RED =
 
 c_BRIGHT_MAGENTA =
     --"#FF02FD"
-    Color.rgb 0xFF 0x02 0xFD
+    Color.rgb255 0xFF 0x02 0xFD
 
 
 c_BRIGHT_GREEN =
@@ -78,7 +78,7 @@ c_BRIGHT_GREEN =
 
 c_BRIGHT_CYAN =
     --"#02FFFF"
-    Color.rgb 0x02 0xFF 0xFF
+    Color.rgb255 0x02 0xFF 0xFF
 
 
 c_BRIGHT_YELLOW =
@@ -93,7 +93,7 @@ c_WHITE =
 
 c_DULL_BLUE =
     --"#0100CE"
-    Color.darkBlue
+    Color.rgb255 0x01 0x00 0xCE
 
 
 c_DULL_RED =
@@ -103,7 +103,7 @@ c_DULL_RED =
 
 c_DULL_MAGENTA =
     --"#CF01CE"
-    Color.rgb 0xCF 0x01 0xCE
+    Color.rgb255 0xCF 0x01 0xCE
 
 
 c_DULL_GREEN =
@@ -113,7 +113,7 @@ c_DULL_GREEN =
 
 c_DULL_CYAN =
     --"#01CFCF"
-    Color.rgb 0x01 0xCF 0xCF
+    Color.rgb255 0x01 0xCF 0xCF
 
 
 c_DULL_YELLOW =
@@ -123,7 +123,7 @@ c_DULL_YELLOW =
 
 c_DULL_WHITE =
     --"#CFCFCF"
-    Color.rgb 0xCF 0xCF 0xCF
+    Color.rgb255 0xCF 0xCF 0xCF
 
 
 spectrumColours =

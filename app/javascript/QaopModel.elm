@@ -146,8 +146,8 @@ svgNode screen flash =
             screen.lines |> nodelist |> Vector24.toList
     in
     svg
-        [ height (272 * c_SCALEFACTOR |> Px)
-        , width (352 * c_SCALEFACTOR |> Px)
+        [ height (272 * c_SCALEFACTOR |> Num)
+        , width (352 * c_SCALEFACTOR |> Num)
         , viewBox 0 0 352 272
         ]
         --<rect width="100%" height="100%" fill="green" />
