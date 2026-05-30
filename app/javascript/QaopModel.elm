@@ -14,11 +14,13 @@ import Qaop exposing (Qaop, pause)
 import ScreenStorage exposing (ScreenLine, Z80Screen)
 import Spectrum exposing (frames, new_tape)
 import SpectrumColour exposing (borderColour)
-import Svg exposing (Svg, g, line, rect, svg)
-import Svg.Attributes exposing (fill, height, rx, stroke, viewBox, width, x1, x2, y1, y2)
 import Svg.Lazy
 import Tapfile exposing (Tapfile)
 import Time exposing (posixToMillis)
+import TypedSvg exposing (g, line, rect, svg)
+import TypedSvg.Attributes exposing (fill, height, rx, stroke, viewBox, width, x1, x2, y1, y2)
+import TypedSvg.Core exposing (Svg)
+import TypedSvg.Types exposing (Length(..), Paint(..))
 import Utils exposing (speed_in_hz, time_display)
 import Vector24 exposing (Vector24)
 import Vector32
@@ -72,11 +74,11 @@ type QaopMessage
 mapLineToSvg : Int -> ( Int, ScreenColourRun ) -> Svg QaopMessage
 mapLineToSvg y_index ( start, linedata ) =
     line
-        [ x1 (48 + start |> String.fromInt)
-        , y1 (40 + y_index |> String.fromInt)
-        , x2 ((48 + start + linedata.runcount.count) |> String.fromInt)
-        , y2 (40 + y_index |> String.fromInt)
-        , stroke (linedata.colour |> .colour)
+        [ x1 ((48 + start) |> toFloat |> Num)
+        , y1 ((40 + y_index) |> toFloat |> Num)
+        , x2 ((48 + start + linedata.runcount.count) |> toFloat |> Num)
+        , y2 ((40 + y_index) |> toFloat |> Num)
+        , stroke (linedata.colour |> .colour |> Paint)
         ]
         []
 
@@ -88,7 +90,7 @@ backgroundNode screen =
         border_colour =
             borderColour screen.border
     in
-    rect [ height "100%", width "100%", fill border_colour, rx "15" ] []
+    rect [ height (Percent 100.0), width (Percent 100.0), fill (Paint border_colour), rx (Num 15) ] []
 
 
 mapScreenLineToSvg : Bool -> Vector24.Index -> ScreenLine -> Svg QaopMessage
@@ -144,9 +146,9 @@ svgNode screen flash =
             screen.lines |> nodelist |> Vector24.toList
     in
     svg
-        [ height (272 * c_SCALEFACTOR |> String.fromInt)
-        , width (352 * c_SCALEFACTOR |> String.fromInt)
-        , viewBox "0 0 352 272"
+        [ height (272 * c_SCALEFACTOR |> Px)
+        , width (352 * c_SCALEFACTOR |> Px)
+        , viewBox 0 0 352 272
         ]
         --<rect width="100%" height="100%" fill="green" />
         [ Svg.Lazy.lazy backgroundNode screen

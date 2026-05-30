@@ -1,6 +1,7 @@
 module SpectrumColour exposing (..)
 
 import Array
+import Color exposing (Color)
 import Dict
 import Maybe exposing (withDefault)
 
@@ -45,69 +46,84 @@ type SpectrumColourValue
 
 type alias SpectrumColour =
     { value : SpectrumColourValue
-    , colour : String
+    , colour : Color
     }
 
 
 c_BLACK =
     -- from https://en.wikipedia.org/wiki/ZX_Spectrum_graphic_modes
-    "#000000"
+    --"#000000"
+    Color.black
 
 
 c_BRIGHT_BLUE =
-    "#0200FD"
+    --"#0200FD"
+    Color.blue
 
 
 c_BRIGHT_RED =
-    "#FF0201"
+    --"#FF0201"
+    Color.lightRed
 
 
 c_BRIGHT_MAGENTA =
-    "#FF02FD"
+    --"#FF02FD"
+    Color.rgb 0xFF 0x02 0xFD
 
 
 c_BRIGHT_GREEN =
-    "#00FF1C"
+    --"#00FF1C"
+    Color.lightGreen
 
 
 c_BRIGHT_CYAN =
-    "#02FFFF"
+    --"#02FFFF"
+    Color.rgb 0x02 0xFF 0xFF
 
 
 c_BRIGHT_YELLOW =
-    "#FFFF1D"
+    --"#FFFF1D"
+    Color.lightYellow
 
 
 c_WHITE =
-    "#FFFFFF"
+    --"#FFFFFF"
+    Color.white
 
 
 c_DULL_BLUE =
-    "#0100CE"
+    --"#0100CE"
+    Color.darkBlue
 
 
 c_DULL_RED =
-    "#CF0100"
+    --"#CF0100"
+    Color.darkRed
 
 
 c_DULL_MAGENTA =
-    "#CF01CE"
+    --"#CF01CE"
+    Color.rgb 0xCF 0x01 0xCE
 
 
 c_DULL_GREEN =
-    "#00CF15"
+    --"#00CF15"
+    Color.darkGreen
 
 
 c_DULL_CYAN =
-    "#01CFCF"
+    --"#01CFCF"
+    Color.rgb 0x01 0xCF 0xCF
 
 
 c_DULL_YELLOW =
-    "#CFCF15"
+    --"#CFCF15"
+    Color.darkYellow
 
 
 c_DULL_WHITE =
-    "#CFCFCF"
+    --"#CFCFCF"
+    Color.rgb 0xCF 0xCF 0xCF
 
 
 spectrumColours =
@@ -136,7 +152,7 @@ spectrumBrightColours =
         ]
 
 
-borderColour : BorderColour -> String
+borderColour : BorderColour -> Color
 borderColour border =
     -- borderColours are never bright
     case border of
