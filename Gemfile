@@ -28,7 +28,7 @@ gem "passenger", "~> 5.0"
 # Use SCSS for stylesheets
 # gem 'sass-rails', '>= 6'
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
-gem 'jbuilder', '~> 2.14'
+gem 'jbuilder', '~> 2.15'
 # Use Active Model has_secure_password
 # gem 'bcrypt', '~> 3.1.7'
 
