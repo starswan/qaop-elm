@@ -164,6 +164,9 @@ RSpec.describe "Game" do
 
     it "loads the emulator", :js do
       click_on z80_game
+
+      sleep 100
+
       # check that Elm is running
       expect(page).to have_content 'Refresh Interval'
 
