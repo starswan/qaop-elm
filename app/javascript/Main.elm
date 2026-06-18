@@ -7,7 +7,7 @@ module Main exposing (..)
 
 import Browser
 import Html exposing (Attribute, Html, div)
-import LoadingModel exposing (Flags, InitMessage(..), LoadResult(..), LoadingModel, SpectrumRom(..), loadingInit, loadingSubs, updateLoading)
+import LoadingModel exposing (Flags, InitMessage(..), LoadResult(..), LoadingModel, loadingInit, loadingSubs, updateLoading)
 import QaopModel exposing (QaopMessage, QaopModel, qaopSubs, updateQaop, viewQaop)
 
 
@@ -114,7 +114,8 @@ subscriptions : Model -> Sub Message
 subscriptions model =
     case model.state of
         Loading _ ->
-            loadingSubs model.tickInterval |> Sub.map LoadingMessage
+            --loadingSubs model.tickInterval |> Sub.map LoadingMessage
+            Sub.none
 
         Running qaopModel ->
             qaopSubs qaopModel model.tickInterval |> Sub.map RunningMessage
