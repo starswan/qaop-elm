@@ -11,17 +11,6 @@ import Time
 import Z80Debug exposing (debugLog)
 
 
-
---type SpectrumRom
---    = RomURL String
---    | ROM (Dict Int Int)
---type alias LoadingModel =
---    { rom : SpectrumRom
---    , maybeTime : Maybe Time.Posix
---    , tapUrl : String
---    }
-
-
 type alias LoadingModel =
     { tapUrl : String
     , state : LoadingState
@@ -32,10 +21,6 @@ type LoadingState
     = Initial
     | OnlyTime Time.Posix
     | ROM (Dict Int Int)
-
-
-
---| Complete (Dict Int Int) Time.Posix
 
 
 type InitMessage
@@ -63,7 +48,6 @@ loadingInit data =
         tick =
             Task.perform InitTick Time.now
     in
-    --( LoadingModel (RomURL data.rom) Nothing data.tape, Cmd.batch [ load, tick ] )
     ( LoadingModel data.tape Initial, Cmd.batch [ load, tick ] )
 
 
@@ -112,11 +96,7 @@ updateLoading initMessage loadingModel =
         InitTick posix ->
             case loadingModel.state of
                 Initial ->
-                    let
-                        model =
-                            { loadingModel | state = OnlyTime posix }
-                    in
-                    ( StillLoading model, Cmd.none )
+                    ( StillLoading { loadingModel | state = OnlyTime posix }, Cmd.none )
 
                 OnlyTime _ ->
                     ( StillLoading loadingModel, Cmd.none )
@@ -134,4 +114,4 @@ updateLoading initMessage loadingModel =
 
 loadingSubs : Int -> Sub InitMessage
 loadingSubs tickInterval =
-    Time.every (tickInterval |> toFloat) (\posix -> InitTick posix)
+    Sub.none
