@@ -31,6 +31,7 @@ RSpec.describe "Game" do
     let(:programs_by_name) {
       [flags, regs, miner, matchday, full_flags, full, cyrus, football_manager].index_by(&:name)
     }
+    let(:game_id) { Game.find_by!(name: z80_game).id }
     let(:scripts) {
       {
         matchday.name => lambda { |spectrum|
@@ -163,7 +164,7 @@ RSpec.describe "Game" do
     # 3. 84 RES N, (XY), R       DD CB xx 80
 
     it "loads the emulator", :js do
-      click_on z80_game
+      find("#game_#{game_id}").click
       # check that Elm is running
       expect(page).to have_content 'Refresh Interval'
 
