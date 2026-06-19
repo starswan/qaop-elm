@@ -32,7 +32,11 @@ set :passenger_restart_with_touch, true
 
 # Default value for linked_dirs is []
 # append :linked_dirs, "log", "tmp/pids", "tmp/cache", "tmp/sockets", "public/system", "vendor", "storage"
-append :linked_dirs, "log", "tmp/pids", "tmp/cache", "tmp/sockets", "public/system", "vendor", "storage", "node_modules"
+append :linked_dirs,
+       "log", "tmp/pids", "tmp/cache", "tmp/sockets", "public/system",
+       "vendor", "storage", "node_modules", 'public/vite'
+
+append :assets_manifests, "public/vite/.vite/manifest*.*"
 
 # Default value for default_env is {}
 # set :default_env, { path: "/opt/ruby/bin:$PATH" }

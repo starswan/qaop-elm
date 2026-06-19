@@ -63,14 +63,22 @@ jobs:
 
       - name: Yarn install
         run: yarn install
+
+      - name: Undebug
+        run: cp app/helpers/Undebug.elm app/javascript/Z80Debug.elm
+
+      - name: Precompile assets
+        env:
+          RAILS_ENV: test
+        run: bundle exec rake assets:precompile
+
       # Run elm tests for correctness before speed tests
       - name: Run Elm tests
         run: yarn run elm-test
-      - name: Undebug
-        run: cp app/helpers/Undebug.elm app/javascript/Z80Debug.elm
 
       # Run ruby tests in headless mode
       - name: Ruby tests compiled for production mode
         env:
+          VITE_RUBY_AUTO_BUILD: false
           NODE_ENV: production
         run: xvfb-run -a bundle exec rake spec
