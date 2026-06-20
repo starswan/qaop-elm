@@ -3,7 +3,7 @@ module Z80Core exposing (..)
 import CpuTimeCTime exposing (CpuTimeCTime, CpuTimePcAnd16BitValue, ShortDelay)
 import Interrupts exposing (IFFValue, InterruptRegisters)
 import Z80Env exposing (Z80Env)
-import Z80Flags exposing (FlagRegisters)
+import Z80Flags exposing (FlagRegisters, IntWithFlags)
 import Z80Types exposing (MainRegisters, MainWithIndexRegisters)
 
 
@@ -20,11 +20,26 @@ type RepeatPCOffset
     | JumpBack
 
 
-type CoreChange
+
+-- SetStackPointer can be used for a pop/return so useful to have its own type
+
+
+type RareCoreChange
     = CoreOnly Z80Core
-    | NoCore
+    | NewEnv Z80Env
     | CoreWithTime ShortDelay Z80Core
-    | CoreWithPC Int Z80Core
+
+
+
+-- NoCore can be jumps not taken or calls not made
+
+
+type CoreChange
+    = SetMem8 Int Int
+    | NoCore
+    | SetMem16 Int Int
+    | SetStackPointer Int
+    | Push16BitValue Int
     | JumpOnlyPC Int
     | JumpWithOffset Int
     | JumpOffsetWithDelay Int ShortDelay
@@ -35,6 +50,11 @@ type CoreChange
     | MainOnly MainWithIndexRegisters
     | FlagsOnly FlagRegisters
     | MainWithOffsetAndDelay Int ShortDelay MainWithIndexRegisters
+    | RareChange RareCoreChange
+    | PopIntoPC
+    | SetMem8Flags Int IntWithFlags
+    | ChangeMainAndFlags MainWithIndexRegisters FlagRegisters
+    | ChangeMainAndSP MainWithIndexRegisters Int
 
 
 type DirectionForLDIR
