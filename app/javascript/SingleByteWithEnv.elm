@@ -3,7 +3,7 @@ module SingleByteWithEnv exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import Dict exposing (Dict)
-import Z80Core exposing (Z80Core)
+import Z80Core exposing (CoreChange(..), Z80Core)
 import Z80Env exposing (Z80Env)
 
 
@@ -19,7 +19,7 @@ singleByteZ80Env =
         ]
 
 
-applyEnvChangeDelta : SingleByteEnvChange -> Z80Core -> Z80Core
+applyEnvChangeDelta : SingleByteEnvChange -> Z80Core -> CoreChange
 applyEnvChangeDelta z80changeData z80 =
     case z80changeData of
         NewSPValue int ->
@@ -27,7 +27,7 @@ applyEnvChangeDelta z80changeData z80 =
                 env =
                     z80.env
             in
-            { z80 | env = { env | sp = int } }
+            NewEnv { env | sp = int }
 
 
 inc_sp : Z80Env -> SingleByteEnvChange

@@ -42,16 +42,16 @@ apply_delta : Z80Core -> Z80ROM -> CpuTimeCTime -> DeltaWithChanges -> CoreChang
 apply_delta z80 rom48k clockTime z80delta =
     case z80delta of
         PureDelta z80ChangeData ->
-            z80 |> applyPureDelta clockTime z80ChangeData |> CoreOnly
+            z80 |> applyPureDelta clockTime z80ChangeData
 
         RegisterChangeDelta registerChange ->
             z80 |> applyRegisterDelta clockTime registerChange rom48k
 
         DoubleWithRegistersDelta doubleWithRegisterChange ->
-            z80 |> applyDoubleWithRegistersDelta clockTime doubleWithRegisterChange rom48k |> CoreOnly
+            z80 |> applyDoubleWithRegistersDelta clockTime doubleWithRegisterChange rom48k
 
         MainWithEnvDelta singleEnvMainChange ->
-            z80 |> applySingleEnvMainChange clockTime singleEnvMainChange rom48k |> CoreOnly
+            z80 |> applySingleEnvMainChange clockTime singleEnvMainChange rom48k
 
         Triple16ParamDelta tripleByteChange ->
             z80 |> applyTripleChangeDelta rom48k clockTime tripleByteChange
@@ -82,7 +82,7 @@ apply_delta z80 rom48k clockTime z80delta =
         TwoByteDelta twoByteChange ->
             case twoByteChange of
                 TwoByte8Bit single8BitChange ->
-                    z80 |> applySimple8BitDelta clockTime single8BitChange rom48k |> CoreOnly
+                    z80 |> applySimple8BitDelta clockTime single8BitChange rom48k
 
                 TwoByteJump jumpChange ->
                     z80 |> applyJumpChangeDelta clockTime jumpChange
@@ -126,7 +126,7 @@ applyJumpChangeDelta cpu_time z80changeData z80 =
                 ( env_1, newTime ) =
                     z80.env |> setMem addr value cpu_time
             in
-            { z80 | env = env_1 } |> CoreOnly
+            NewEnv env_1
 
         SimpleNewHValue param ->
             let
@@ -149,31 +149,21 @@ applyJumpChangeDelta cpu_time z80changeData z80 =
             { main | hl = int } |> MainOnly
 
 
-applySimple8BitDelta : CpuTimeCTime -> Single8BitChange -> Z80ROM -> Z80Core -> Z80Core
+applySimple8BitDelta : CpuTimeCTime -> Single8BitChange -> Z80ROM -> Z80Core -> CoreChange
 applySimple8BitDelta cpu_time z80changeData rom48k z80 =
     case z80changeData of
         NewRegister coreRegister int ->
-            let
-                main =
-                    z80.main |> applySimple8BitChange coreRegister int
-            in
-            { z80 | main = main }
+            z80.main |> applySimple8BitChange coreRegister int |> MainOnly
 
         NewARegister new_a ->
             let
                 flags =
                     z80.flags
             in
-            { z80
-                | flags = { flags | a = new_a }
-            }
+            { flags | a = new_a } |> FlagsOnly
 
         FlagJump operation param ->
-            let
-                flags =
-                    z80.flags |> changeFlags operation param
-            in
-            { z80 | flags = flags }
+            z80.flags |> changeFlags operation param |> FlagsOnly
 
         Z80In param ->
             -- case 0xDB: MP=(v=imm8()|A<<8)+1; A=env.in(v); time+=4; break;
@@ -187,7 +177,7 @@ applySimple8BitDelta cpu_time z80changeData rom48k z80 =
                 new_a =
                     z80.env |> z80_in portNum rom48k.keyboard cpu_time
             in
-            { z80 | flags = { flags | a = new_a.value } }
+            { flags | a = new_a.value } |> FlagsOnly
 
         Z80Out param ->
             let
@@ -198,7 +188,7 @@ applySimple8BitDelta cpu_time z80changeData rom48k z80 =
                 ( env, newTime ) =
                     z80.env |> z80_out portNum z80.flags.a cpu_time
             in
-            { z80 | env = env }
+            NewEnv env
 
 
 applyInterruptChange : InterruptChange -> Z80Core -> Z80Core
@@ -240,7 +230,7 @@ applyInterruptChange chaange z80 =
             { z80 | flags = flags }
 
 
-applyPureDelta : CpuTimeCTime -> Z80Change -> Z80Core -> Z80Core
+applyPureDelta : CpuTimeCTime -> Z80Change -> Z80Core -> CoreChange
 applyPureDelta clockTime z80changeData z80 =
     case z80changeData of
         FlagsWithHLRegister flagRegisters int ->
@@ -248,17 +238,17 @@ applyPureDelta clockTime z80changeData z80 =
                 main =
                     z80.main
             in
-            { z80 | flags = flagRegisters, main = { main | hl = int } }
+            { z80 | flags = flagRegisters, main = { main | hl = int } } |> CoreOnly
 
         Z80ChangeFlags flagRegisters ->
-            { z80 | flags = flagRegisters }
+            FlagsOnly flagRegisters
 
         Z80ChangeSetIndirect addr int ->
             let
                 ( env, clockTime2 ) =
                     z80.env |> setMem addr int clockTime
             in
-            { z80 | env = env }
+            NewEnv env
 
         FlagsWithRegisterChange changeMainRegister intWithFlags ->
             let
@@ -279,10 +269,10 @@ applyPureDelta clockTime z80changeData z80 =
                         RegisterE ->
                             { z80_main | e = intWithFlags.value }
             in
-            { z80 | flags = intWithFlags.flags, main = new_main }
+            { z80 | flags = intWithFlags.flags, main = new_main } |> CoreOnly
 
 
-applyIndexedPureDelta : IndexedZ80Change -> Z80Core -> Z80Core
+applyIndexedPureDelta : IndexedZ80Change -> Z80Core -> CoreChange
 applyIndexedPureDelta z80changeData z80 =
     case z80changeData of
         FlagsWithIXRegister flagRegisters int ->
@@ -290,28 +280,28 @@ applyIndexedPureDelta z80changeData z80 =
                 main =
                     z80.main
             in
-            { z80 | flags = flagRegisters, main = { main | ix = int } }
+            { z80 | flags = flagRegisters, main = { main | ix = int } } |> CoreOnly
 
         FlagsWithIYRegister flagRegisters int ->
             let
                 main =
                     z80.main
             in
-            { z80 | flags = flagRegisters, main = { main | iy = int } }
+            { z80 | flags = flagRegisters, main = { main | iy = int } } |> CoreOnly
 
         JustIXRegister int ->
             let
                 main =
                     z80.main
             in
-            { z80 | main = { main | ix = int } }
+            { main | ix = int } |> MainOnly
 
         JustIYRegister int ->
             let
                 main =
                     z80.main
             in
-            { z80 | main = { main | iy = int } }
+            { main | iy = int } |> MainOnly
 
 
 applyRegisterDelta : CpuTimeCTime -> RegisterFlagChange -> Z80ROM -> Z80Core -> CoreChange
@@ -322,7 +312,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 old_env =
                     z80_core.env
             in
-            z80_core |> applyEnvChangeDelta (f old_env) |> CoreOnly
+            z80_core |> applyEnvChangeDelta (f old_env)
 
         RegisterEnvMainChange f ->
             let
@@ -332,7 +322,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 singleEnvMainChange =
                     f z80_core.main rom48k old_env
             in
-            z80_core |> applySingleEnvMainChange clockTime singleEnvMainChange rom48k |> CoreOnly
+            z80_core |> applySingleEnvMainChange clockTime singleEnvMainChange rom48k
 
         RegisterEnvMainChangeWithClockTime f ->
             let
@@ -342,21 +332,21 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 singleEnvMainChange =
                     f z80_core.main rom48k clockTime old_env
             in
-            z80_core |> applySingleEnvMainChange clockTime singleEnvMainChange rom48k |> CoreOnly
+            z80_core |> applySingleEnvMainChange clockTime singleEnvMainChange rom48k
 
         RegisterZ80Change f ->
             let
                 z80change =
                     f z80_core.main z80_core.flags
             in
-            z80_core |> applyPureDelta clockTime z80change |> CoreOnly
+            z80_core |> applyPureDelta clockTime z80change
 
         IndexedRegisterZ80Change f ->
             let
                 z80change =
                     f z80_core.main z80_core.flags
             in
-            z80_core |> applyIndexedPureDelta z80change |> CoreOnly
+            z80_core |> applyIndexedPureDelta z80change
 
         Rst new_pc ->
             --case 0xC7:push(PC); PC=c-199; break;
@@ -461,15 +451,16 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
             z80_core.main |> f |> MainOnly
 
         Pushed16BitValue f ->
-            { z80_core | env = z80_core.env |> z80_push (z80_core.main |> f) clockTime }
-                |> CoreOnly
+            z80_core.env
+                |> z80_push (z80_core.main |> f) clockTime
+                |> NewEnv
 
         RegChangeNewSP f ->
             let
                 old_env =
                     z80_core.env
             in
-            { z80_core | env = { old_env | sp = z80_core.main |> f } } |> CoreOnly
+            { old_env | sp = z80_core.main |> f } |> NewEnv
 
         IncrementIndirect f ->
             -- This should be a primitive operation on Z80Env to increment a stored value
@@ -528,7 +519,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 ( env_2, newTime ) =
                     old_env |> setMem addr value clockTime
             in
-            { z80_core | env = env_2 } |> CoreOnly
+            NewEnv env_2
 
         RegisterChangeShifter shifter addr ->
             z80_core |> applyShifter shifter (z80_core.main |> addr) clockTime rom48k |> CoreOnly
@@ -550,7 +541,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 ( env_3, newNewTime ) =
                     old_env |> setMem addr new_value value.time
             in
-            { z80_core | env = env_3 } |> CoreOnly
+            NewEnv env_3
 
         IndirectBitSet bitMask raw_addr ->
             let
@@ -569,7 +560,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 ( env_3, newNewTime ) =
                     old_env |> setMem addr new_value value.time
             in
-            { z80_core | env = env_3 } |> CoreOnly
+            NewEnv env_3
 
         RegChangeNoOp ->
             NoCore
@@ -582,7 +573,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 value =
                     z80_core.main |> valueFunc
             in
-            { z80_core | flags = z80_flags |> changeFlags flagFunc value } |> CoreOnly
+            z80_flags |> changeFlags flagFunc value |> FlagsOnly
 
         ExchangeTopOfStackWith ixiyhl ->
             let
@@ -895,7 +886,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
             { z80_core | interrupts = { ints | ir = new_ir } } |> CoreOnly
 
         FlagsPushAF ->
-            { z80_core | env = z80_core.env |> z80_push (z80_core.flags |> get_af) clockTime } |> CoreOnly
+            z80_core.env |> z80_push (z80_core.flags |> get_af) clockTime |> NewEnv
 
 
 applyShifter : Shifter -> Int -> CpuTimeCTime -> Z80ROM -> Z80Core -> Z80Core
@@ -944,10 +935,7 @@ applySimpleTripleChangeDelta rom48k cpu_time z80changeData z80 =
     in
     case z80changeData of
         NewSPRegister int ->
-            { z80
-                | env = { env | sp = int }
-            }
-                |> CoreOnly
+            { env | sp = int } |> NewEnv
 
         NewHLIndirect int ->
             let
@@ -957,10 +945,7 @@ applySimpleTripleChangeDelta rom48k cpu_time z80changeData z80 =
                 value =
                     env |> mem16 int rom48k cpu_time
             in
-            { z80
-                | main = { main | hl = value.value16 }
-            }
-                |> CoreOnly
+            { main | hl = value.value16 } |> MainOnly
 
         NewAIndirect int ->
             let
@@ -970,17 +955,14 @@ applySimpleTripleChangeDelta rom48k cpu_time z80changeData z80 =
                 flags =
                     z80.flags
             in
-            { z80
-                | flags = { flags | a = value.value }
-            }
-                |> CoreOnly
+            { flags | a = value.value } |> FlagsOnly
 
         TripleSetIndirectFromA addr ->
             let
                 ( env2, time2 ) =
                     env |> setMem addr z80.flags.a cpu_time
             in
-            { z80 | env = env2 } |> CoreOnly
+            NewEnv env2
 
         NewTripleRegister int tripleByteRegister ->
             let
@@ -999,10 +981,7 @@ applySimpleTripleChangeDelta rom48k cpu_time z80changeData z80 =
                             in
                             { main | hl = int }
             in
-            { z80
-                | main = z80_main
-            }
-                |> CoreOnly
+            MainOnly z80_main
 
         Store16BitFromHL address ->
             let
@@ -1012,10 +991,7 @@ applySimpleTripleChangeDelta rom48k cpu_time z80changeData z80 =
                 ( env1, clockTime ) =
                     env |> setMem16 address value cpu_time
             in
-            { z80
-                | env = env1
-            }
-                |> CoreOnly
+            NewEnv env1
 
 
 applyTripleChangeDelta : Z80ROM -> CpuTimeCTime -> TripleByteIndexChange -> Z80Core -> CoreChange
@@ -1033,7 +1009,7 @@ applyTripleChangeDelta rom48k cpu_time z80changeData z80 =
                 ( env1, clockTime ) =
                     z80.env |> setMem16 address value cpu_time
             in
-            { z80 | env = env1 } |> CoreOnly
+            NewEnv env1
 
         Store8BitValue offset address_f value ->
             let
@@ -1043,27 +1019,21 @@ applyTripleChangeDelta rom48k cpu_time z80changeData z80 =
                 ( env1, clockTime ) =
                     z80.env |> setMem address value cpu_time
             in
-            { z80 | env = env1 } |> CoreOnly
+            NewEnv env1
 
         NewIXRegister int ->
             let
                 main =
                     z80.main
             in
-            { z80
-                | main = { main | ix = int }
-            }
-                |> CoreOnly
+            { main | ix = int } |> MainOnly
 
         NewIYRegister int ->
             let
                 main =
                     z80.main
             in
-            { z80
-                | main = { main | iy = int }
-            }
-                |> CoreOnly
+            { main | iy = int } |> MainOnly
 
         NewIXIndirect int ->
             let
@@ -1073,10 +1043,7 @@ applyTripleChangeDelta rom48k cpu_time z80changeData z80 =
                 value =
                     env |> mem16 int rom48k cpu_time
             in
-            { z80
-                | main = { main | ix = value.value16 }
-            }
-                |> CoreOnly
+            { main | ix = value.value16 } |> MainOnly
 
         NewIYIndirect int ->
             let
@@ -1086,10 +1053,7 @@ applyTripleChangeDelta rom48k cpu_time z80changeData z80 =
                 value =
                     env |> mem16 int rom48k cpu_time
             in
-            { z80
-                | main = { main | iy = value.value16 }
-            }
-                |> CoreOnly
+            { main | iy = value.value16 } |> MainOnly
 
 
 applyTripleFlagChange : TripleWithFlagsChange -> Z80Core -> CoreChange
@@ -1100,14 +1064,14 @@ applyTripleFlagChange z80changeData z80 =
                 JumpOnlyPC int
 
             else
-                z80 |> CoreOnly
+                NoCore
 
         Conditional16BitCall address shortdelay function ->
             if z80.flags |> function then
                 CallWithPCAndDelay address shortdelay
 
             else
-                z80 |> CoreOnly
+                NoCore
 
         CallImmediate int ->
             CallWithPC int
@@ -1138,47 +1102,33 @@ applyEdFourByte clockTime z80changeData rom48k z80_core =
                 ( env, newTime ) =
                     z80_core.env |> setMem16 int reg clockTime
             in
-            { z80_core | env = env } |> CoreOnly
+            NewEnv env
 
         GetFromMem int sixteenBit ->
             let
                 value =
                     z80_core.env |> mem16 int rom48k clockTime
-
-                core =
-                    case sixteenBit of
-                        RegHL ->
-                            let
-                                z80_main =
-                                    z80_core.main
-
-                                main =
-                                    { z80_main | hl = value.value16 }
-                            in
-                            { z80_core | main = main }
-
-                        RegDE ->
-                            let
-                                main =
-                                    z80_core.main |> set_de_main value.value16
-                            in
-                            { z80_core | main = main }
-
-                        RegBC ->
-                            let
-                                main =
-                                    z80_core.main |> set_bc_main value.value16
-                            in
-                            { z80_core | main = main }
-
-                        RegSP ->
-                            let
-                                env =
-                                    z80_core.env
-                            in
-                            { z80_core | env = { env | sp = value.value16 } }
             in
-            core |> CoreOnly
+            case sixteenBit of
+                RegHL ->
+                    let
+                        z80_main =
+                            z80_core.main
+                    in
+                    MainOnly { z80_main | hl = value.value16 }
+
+                RegDE ->
+                    z80_core.main |> set_de_main value.value16 |> MainOnly
+
+                RegBC ->
+                    z80_core.main |> set_bc_main value.value16 |> MainOnly
+
+                RegSP ->
+                    let
+                        env =
+                            z80_core.env
+                    in
+                    NewEnv { env | sp = value.value16 }
 
 
 applyEdRegisterDelta : CpuTimeCTime -> EDRegisterChange -> Z80ROM -> Z80Core -> CoreChange
@@ -1189,7 +1139,7 @@ applyEdRegisterDelta clockTime z80changeData rom48k z80_core =
     in
     case z80changeData of
         EDNoOp ->
-            z80_core |> CoreOnly
+            NoCore
 
         RRD ->
             z80_core |> rrd rom48k clockTime |> CoreOnly

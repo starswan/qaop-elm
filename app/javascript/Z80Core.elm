@@ -23,6 +23,7 @@ type RepeatPCOffset
 type CoreChange
     = CoreOnly Z80Core
     | NoCore
+    | NewEnv Z80Env
     | CoreWithTime ShortDelay Z80Core
     | CoreWithPC Int Z80Core
     | JumpOnlyPC Int
