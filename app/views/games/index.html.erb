@@ -14,7 +14,11 @@
               </span>
             </td>
           <% else %>
-            <td><%= link_to game.name, game_path(game) %></td>
+            <td>
+              <span id="<%= "game_#{game.id}" %>">
+                <%= link_to game.name, game_path(game) %>
+              </span>
+            </td>
           <% end %>
         <% end %>
       </tr>
