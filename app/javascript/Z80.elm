@@ -17,13 +17,14 @@ import OpcodeTables exposing (singleByteInstructions, singleByteMainFlagsRegsIX,
 import PCIncrement exposing (PCIncrement(..))
 import SimpleFlagOps exposing (singleByteFlagsCB)
 import SingleNoParams exposing (ex_af, execute_0x76_halt, exx)
-import Z80Core exposing (CoreChange(..), RepeatPCOffset(..), Z80Core)
+import Z80Core exposing (CoreChange(..), RareCoreChange(..), RepeatPCOffset(..), Z80Core)
 import Z80CoreWithClockTime exposing (Z80, Z80CoreWithClockTime, di_0xF3, ei_0xFB)
-import Z80Env exposing (Z80Env, z80_push, z80env_constructor)
+import Z80Env exposing (Z80Env, setMem, setMem16, z80_push, z80env_constructor)
 import Z80Execute exposing (DeltaWithChanges(..), apply_delta)
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
-import Z80Mem exposing (mem, mem16)
+import Z80Mem exposing (mem, mem16, z80_pop)
 import Z80OpCode exposing (fetchInstruction)
+import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IntWithFlagsTimeAndPC, MainRegisters, MainWithIndexRegisters, Z80ROM)
 
 
@@ -209,11 +210,11 @@ executeAndApplyDelta opCode cpuClock iff rom48k z80clock =
         coreChange =
             delta |> apply_delta z80_core iff rom48k clockTime
     in
-    z80_core |> applyCoreChange coreChange clockTime pc_inc z80clock.pc
+    z80_core |> applyCoreChange coreChange clockTime pc_inc z80clock.pc rom48k
 
 
-applyCoreChange : CoreChange -> CpuTimeCTime -> PCIncrement -> Int -> Z80Core -> Z80CoreWithClockTime
-applyCoreChange coreChange clockTime pc_inc pc z80_core =
+applyCoreChange : CoreChange -> CpuTimeCTime -> PCIncrement -> Int -> Z80ROM -> Z80Core -> Z80CoreWithClockTime
+applyCoreChange coreChange clockTime pc_inc pc rom48k z80_core =
     let
         rawPc =
             case pc_inc of
@@ -233,23 +234,65 @@ applyCoreChange coreChange clockTime pc_inc pc z80_core =
             Bitwise.and rawPc 0xFFFF
     in
     case coreChange of
-        CoreOnly z80Core ->
-            { core = z80Core, clockTime = clockTime, pc = pcAfter }
+        SetStackPointer new_sp ->
+            let
+                env =
+                    z80_core.env
+
+                new_env =
+                    { ram = env.ram, sp = new_sp, borderColour = env.borderColour }
+            in
+            { core = { main = z80_core.main, env = new_env, interrupts = z80_core.interrupts, flags = z80_core.flags }, clockTime = clockTime, pc = pcAfter }
+
+        Push16BitValue int ->
+            let
+                env =
+                    z80_core.env |> z80_push int clockTime
+            in
+            { core = { main = z80_core.main, env = env, flags = z80_core.flags, interrupts = z80_core.interrupts }, clockTime = clockTime, pc = pcAfter }
 
         MainOnly z80_main ->
-            { core = { z80_core | main = z80_main }, clockTime = clockTime, pc = pcAfter }
+            { core = { main = z80_main, env = z80_core.env, flags = z80_core.flags, interrupts = z80_core.interrupts }, clockTime = clockTime, pc = pcAfter }
 
         FlagsOnly z80_flags ->
-            { core = { z80_core | flags = z80_flags }, clockTime = clockTime, pc = pcAfter }
+            { core = { main = z80_core.main, env = z80_core.env, flags = z80_flags, interrupts = z80_core.interrupts }, clockTime = clockTime, pc = pcAfter }
 
-        CoreWithTime shortDelay z80Core ->
-            { core = z80Core, clockTime = clockTime |> addExtraCpuTime shortDelay, pc = pcAfter }
+        ChangeMainAndFlags z80_main z80_flags ->
+            { core = { main = z80_main, env = z80_core.env, flags = z80_flags, interrupts = z80_core.interrupts }, clockTime = clockTime, pc = pcAfter }
 
-        CoreWithPC new_pc z80Core ->
-            { core = z80Core, clockTime = clockTime, pc = new_pc }
+        ChangeMainAndSP z80_main sp ->
+            let
+                z80env =
+                    z80_core.env
+            in
+            { core = { main = z80_main, env = { ram = z80env.ram, sp = sp, borderColour = z80env.borderColour }, flags = z80_core.flags, interrupts = z80_core.interrupts }, clockTime = clockTime, pc = pcAfter }
+
+        PopIntoPC ->
+            let
+                env =
+                    z80_core.env
+
+                a =
+                    env |> z80_pop rom48k clockTime
+
+                new_env =
+                    { ram = env.ram, sp = a.sp, borderColour = env.borderColour }
+            in
+            { core = { main = z80_core.main, flags = z80_core.flags, interrupts = z80_core.interrupts, env = new_env }, clockTime = clockTime, pc = a.value16 }
+
+        RareChange rareChange ->
+            case rareChange of
+                CoreOnly z80Core ->
+                    { core = z80Core, clockTime = clockTime, pc = pcAfter }
+
+                NewEnv z80env ->
+                    { core = { z80_core | env = z80env }, clockTime = clockTime, pc = pcAfter }
+
+                CoreWithTime shortDelay z80Core ->
+                    { core = z80Core, clockTime = clockTime |> addExtraCpuTime shortDelay, pc = pcAfter }
 
         MainWithOffsetAndDelay offset shortDelay z80_main ->
-            { core = { z80_core | main = z80_main }, pc = (pcAfter + offset) |> Bitwise.and 0xFFFF, clockTime = clockTime |> addExtraCpuTime shortDelay }
+            { core = { main = z80_main, env = z80_core.env, flags = z80_core.flags, interrupts = z80_core.interrupts }, pc = (pcAfter + offset) |> Bitwise.and 0xFFFF, clockTime = clockTime |> addExtraCpuTime shortDelay }
 
         JumpOnlyPC int ->
             { core = z80_core, clockTime = clockTime, pc = int }
@@ -262,14 +305,14 @@ applyCoreChange coreChange clockTime pc_inc pc z80_core =
                 env =
                     z80_core.env |> z80_push pcAfter clockTime
             in
-            { core = { z80_core | env = env }, pc = int, clockTime = clockTime |> addExtraCpuTime shortDelay }
+            { core = { main = z80_core.main, env = env, flags = z80_core.flags, interrupts = z80_core.interrupts }, pc = int, clockTime = clockTime |> addExtraCpuTime shortDelay }
 
         CallWithPC int ->
             let
                 env =
                     z80_core.env |> z80_push pcAfter clockTime
             in
-            { core = { z80_core | env = env }, pc = int, clockTime = clockTime }
+            { core = { main = z80_core.main, env = env, flags = z80_core.flags, interrupts = z80_core.interrupts }, pc = int, clockTime = clockTime }
 
         Looper repeatPCOffset z80Core ->
             case repeatPCOffset of
@@ -277,7 +320,7 @@ applyCoreChange coreChange clockTime pc_inc pc z80_core =
                     { core = z80Core, clockTime = clockTime, pc = pcAfter }
 
                 JumpBack ->
-                    { pc = pc, core = z80Core, clockTime = clockTime }
+                    { core = z80Core, clockTime = clockTime, pc = pc }
 
         LooperWithDelay repeatPCOffset shortDelay z80Core ->
             case repeatPCOffset of
@@ -285,13 +328,34 @@ applyCoreChange coreChange clockTime pc_inc pc z80_core =
                     { core = z80Core, clockTime = clockTime, pc = pcAfter }
 
                 JumpBack ->
-                    { pc = pc, core = z80Core, clockTime = clockTime |> addExtraCpuTime shortDelay }
+                    { core = z80Core, clockTime = clockTime |> addExtraCpuTime shortDelay, pc = pc }
 
         NoCore ->
             { core = z80_core, clockTime = clockTime, pc = pcAfter }
 
         JumpOffsetWithDelay int shortDelay ->
             { core = z80_core, clockTime = clockTime |> addExtraCpuTime shortDelay, pc = (pcAfter + int) |> Bitwise.and 0xFFFF }
+
+        SetMem8 address value ->
+            let
+                ( z80env, time ) =
+                    z80_core.env |> setMem address value clockTime
+            in
+            { core = { main = z80_core.main, env = z80env, flags = z80_core.flags, interrupts = z80_core.interrupts }, clockTime = clockTime, pc = pcAfter }
+
+        SetMem8Flags address flags ->
+            let
+                ( z80env, time ) =
+                    z80_core.env |> setMem address flags.value clockTime
+            in
+            { core = { main = z80_core.main, env = z80env, flags = flags.flags, interrupts = z80_core.interrupts }, clockTime = clockTime, pc = pcAfter }
+
+        SetMem16 address value ->
+            let
+                ( z80env, time ) =
+                    z80_core.env |> setMem16 address value clockTime
+            in
+            { core = { main = z80_core.main, env = z80env, flags = z80_core.flags, interrupts = z80_core.interrupts }, clockTime = clockTime, pc = pcAfter }
 
 
 execute_delta : CpuTimeCTime -> Int -> Z80ROM -> Int -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )

@@ -87,7 +87,7 @@ updateLoading initMessage loadingModel =
                             in
                             ( NowRunning qaopModel, tapLoad loadingModel.tapUrl )
 
-                        ROM z80ROM ->
+                        ROM _ ->
                             ( StillLoading loadingModel, Cmd.none )
 
                 Err _ ->
