@@ -2,6 +2,8 @@
 
 rake yarn:install
 yarn build
+branch=$(git status | head -1 | awk '{ print $3 }')
+echo "Branch $branch"
 count=$1
 timings=()
 for i in $(seq $count)
