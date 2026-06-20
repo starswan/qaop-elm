@@ -16,6 +16,7 @@ RSpec.describe "Game" do
       end
     }
     let(:cyrus) { build(:game, :cyrus) }
+    let(:frogger) { build(:game, :frogger) }
     let(:football_manager) { build(:game, :football_manager) }
     let(:flags) { build(:game, :z80_test_flags) }
     let(:regs) { build(:game, :z80_test_doc) }
@@ -29,7 +30,7 @@ RSpec.describe "Game" do
     # let(:z80_game) { ENV.fetch("Z80TEST", matchday.name) }
 
     let(:programs_by_name) {
-      [flags, regs, miner, matchday, full_flags, full, cyrus, football_manager].index_by(&:name)
+      [flags, regs, miner, matchday, full_flags, full, cyrus, football_manager, frogger].index_by(&:name)
     }
     let(:game_id) { Game.find_by!(name: z80_game).id }
     let(:scripts) {

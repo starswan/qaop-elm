@@ -81,5 +81,13 @@ FactoryBot.define do
       picture_url { "https://worldofspectrum.net/pub/sinclair/screens/in-game/f/FootballManager.gif" }
       download_url { "https://worldofspectrum.net/pub/sinclair/games/f/FootballManager.tap.zip" }
     end
+
+    trait :frogger do
+      name { "CTechFrogger" }
+      filename { "FROGGER.TAP" }
+      picture_url { "https://worldofspectrum.org//pub/sinclair/screens/in-game/f/Frogger(C-Tech).gif" }
+      download_url { "https://www.worldofspectrum.org//pub/sinclair/games/f/Frogger_2.tap.zip" }
+      filetype { "TAP" }
+    end
   end
 end
