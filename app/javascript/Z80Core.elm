@@ -24,6 +24,7 @@ type CoreChange
     = CoreOnly Z80Core
     | NoCore
     | NewEnv Z80Env
+    | SetMem8 Int Int
     | CoreWithTime ShortDelay Z80Core
     | CoreWithPC Int Z80Core
     | JumpOnlyPC Int

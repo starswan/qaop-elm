@@ -18,7 +18,7 @@ import SimpleFlagOps exposing (singleByteFlagsCB)
 import SingleNoParams exposing (ex_af, execute_0x76_halt, exx)
 import Z80Core exposing (CoreChange(..), RepeatPCOffset(..), Z80Core)
 import Z80CoreWithClockTime exposing (Z80, Z80CoreWithClockTime, di_0xF3, ei_0xFB)
-import Z80Env exposing (Z80Env, z80_push, z80env_constructor)
+import Z80Env exposing (Z80Env, setMem, z80_push, z80env_constructor)
 import Z80Execute exposing (DeltaWithChanges(..), apply_delta)
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
 import Z80Mem exposing (mem, mem16)
@@ -287,6 +287,13 @@ executeAndApplyDelta ct rom48k z80clock =
 
         JumpOffsetWithDelay int shortDelay ->
             { z80clock | clockTime = clockTime |> addExtraCpuTime shortDelay, pc = (pcAfter + int) |> Bitwise.and 0xFFFF }
+
+        SetMem8 address value ->
+            let
+                ( z80env, time ) =
+                    z80_core.env |> setMem address value clockTime
+            in
+            { z80clock | core = { z80_core | env = z80env }, clockTime = clockTime, pc = pcAfter }
 
 
 execute_delta : CpuTimeAndValue -> Z80ROM -> Int -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
@@ -601,6 +608,13 @@ executeCoreInstruction rom48k pc z80_core =
 
         NewEnv z80_env ->
             ( { z80_core | env = z80_env }, clockTime, pcAfter )
+
+        SetMem8 address value ->
+            let
+                ( z80env, time ) =
+                    z80_core.env |> setMem address value clockTime
+            in
+            ( { z80_core | env = z80env }, clockTime, pcAfter )
 
         CoreWithTime shortDelay z80Core ->
             ( z80Core, clockTime |> addExtraCpuTime shortDelay, pcAfter )
