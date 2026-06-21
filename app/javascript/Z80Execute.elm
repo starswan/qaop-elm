@@ -85,11 +85,11 @@ apply_delta z80 rom48k clockTime z80delta =
                     z80 |> applySimple8BitDelta clockTime single8BitChange rom48k
 
                 TwoByteJump jumpChange ->
-                    z80 |> applyJumpChangeDelta clockTime jumpChange
+                    z80 |> applyJumpChangeDelta jumpChange
 
 
-applyJumpChangeDelta : CpuTimeCTime -> JumpChange -> Z80Core -> CoreChange
-applyJumpChangeDelta cpu_time z80changeData z80 =
+applyJumpChangeDelta : JumpChange -> Z80Core -> CoreChange
+applyJumpChangeDelta z80changeData z80 =
     case z80changeData of
         ActualJumpOffset offset ->
             JumpWithOffset offset
