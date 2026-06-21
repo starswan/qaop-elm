@@ -122,11 +122,7 @@ applyJumpChangeDelta z80changeData z80 =
             let
                 addr =
                     z80.main |> addr_f
-
-                --( env_1, newTime ) =
-                --    z80.env |> setMem addr value cpu_time
             in
-            --NewEnv env_1
             SetMem8 addr value
 
         SimpleNewHValue param ->
@@ -245,11 +241,6 @@ applyPureDelta clockTime z80changeData z80 =
             FlagsOnly flagRegisters
 
         Z80ChangeSetIndirect addr int ->
-            --let
-            --    ( env, clockTime2 ) =
-            --        z80.env |> setMem addr int clockTime
-            --in
-            --NewEnv env
             SetMem8 addr int
 
         FlagsWithRegisterChange changeMainRegister intWithFlags ->
@@ -517,11 +508,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
 
                 ( addr, value ) =
                     main |> addrvaluefunc
-
-                --( env_2, newTime ) =
-                --    old_env |> setMem addr value clockTime
             in
-            --NewEnv env_2
             SetMem8 addr value
 
         RegisterChangeShifter shifter addr ->
@@ -540,11 +527,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
 
                 new_value =
                     bitMask |> inverseBitMaskFromBit |> Bitwise.and value.value
-
-                --( env_3, newNewTime ) =
-                --    old_env |> setMem addr new_value value.time
             in
-            --NewEnv env_3
             SetMem8 addr new_value
 
         IndirectBitSet bitMask raw_addr ->
@@ -560,11 +543,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
 
                 new_value =
                     bitMask |> bitMaskFromBit |> Bitwise.or value.value
-
-                --( env_3, newNewTime ) =
-                --    old_env |> setMem addr new_value value.time
             in
-            --NewEnv env_3
             SetMem8 addr new_value
 
         RegChangeNoOp ->
@@ -963,11 +942,6 @@ applySimpleTripleChangeDelta rom48k cpu_time z80changeData z80 =
             { flags | a = value.value } |> FlagsOnly
 
         TripleSetIndirectFromA addr ->
-            --let
-            --    ( env2, time2 ) =
-            --        env |> setMem addr z80.flags.a cpu_time
-            --in
-            --NewEnv env2
             SetMem8 addr z80.flags.a
 
         NewTripleRegister int tripleByteRegister ->
@@ -1021,11 +995,7 @@ applyTripleChangeDelta rom48k cpu_time z80changeData z80 =
             let
                 address =
                     (z80.main |> address_f) + byte offset |> Bitwise.and 0xFFFF
-
-                --( env1, clockTime ) =
-                --    z80.env |> setMem address value cpu_time
             in
-            --NewEnv env1
             SetMem8 address value
 
         NewIXRegister int ->

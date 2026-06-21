@@ -266,11 +266,7 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
 
                 address =
                     ((main |> address_f) + (offset |> byte)) |> Bitwise.and 0xFFFF
-
-                --( env1, clockTime ) =
-                --    z80.env |> setMem address (main |> value_f) cpu_time
             in
-            --NewEnv env1
             SetMem8 address (main |> value_f)
 
         NewRegisterIndirect changeOneRegister addr_f offsetparam ->
@@ -323,11 +319,7 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
             let
                 addr =
                     (z80.main |> addr_f) + byte param
-
-                --( env_1, newTime ) =
-                --    z80.env |> setMem addr z80.flags.a cpu_time
             in
-            --NewEnv env_1
             SetMem8 addr z80.flags.a
 
         FlagOpIndexedIndirect flagFunc address_f offset ->
