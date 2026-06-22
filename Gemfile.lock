@@ -506,7 +506,6 @@ DEPENDENCIES
   rubyzip (< 4)
   simplecov
   sqlite3 (~> 2.9)
-  stringio (< 3.2.1)
   tzinfo-data
 
 BUNDLED WITH
