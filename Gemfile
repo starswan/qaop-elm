@@ -5,7 +5,7 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
 gem "activeadmin"
 
-gem "base64", "< 0.3"
+gem "base64", "< 0.4"
 # gem "bigdecimal"
 # gem "drb"
 # gem "mutex_m"
