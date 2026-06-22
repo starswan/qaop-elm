@@ -7,7 +7,7 @@ import Z80Env exposing (z80_push, z80env_constructor)
 import Z80Flags exposing (FlagRegisters)
 import Z80Mem exposing (mem16)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (InterruptMode(..), MainRegisters)
+import Z80Types exposing (IFFValue(..), InterruptMode(..), MainRegisters)
 
 
 type alias Z80CoreWithClockTime =
@@ -29,7 +29,7 @@ constructor =
         --alt_flags =
         --    FlagRegisters 0 0 0 0 0
         interrupts =
-            Z80Types.InterruptRegisters IM0 False 0 0 0
+            Z80Types.InterruptRegisters IM0 False IFF_0 0 0
 
         time =
             reset_cpu_time
@@ -83,14 +83,11 @@ interrupt bus rom48k full_z80 =
         main =
             z80_core.main
     in
-    if Bitwise.and ints.iff 1 == 0 then
-        full_z80
-
-    else
+    if full_z80 |> get_ei then
         let
             --z81 = debug_log "interrupt" "keyboard scan" z80
             z80_1 =
-                { z80_core | interrupts = { ints | halted = False, iff = 0 } }
+                { z80_core | interrupts = { ints | halted = False, iff = IFF_0 } }
 
             pushed =
                 z80_1.env |> z80_push z80Clock.pc z80Clock.clockTime
@@ -130,6 +127,9 @@ interrupt bus rom48k full_z80 =
                         { newClock | pc = env_and_pc.value16, core = new_core, clockTime = env_and_pc.time |> addCpuTimeTime 6 }
                 in
                 { new_z80 | coreWithClock = newClock1 }
+
+    else
+        full_z80
 
 
 
@@ -179,7 +179,7 @@ set_pc pc z80 =
 get_ei : Z80 -> Bool
 get_ei z80 =
     --	boolean ei() {return (IFF&1)!=0;}
-    Bitwise.and z80.coreWithClock.core.interrupts.iff 1 /= 0
+    z80.coreWithClock.core.interrupts.iff == IFF_3
 
 
 di_0xF3 : Z80 -> Z80
@@ -193,7 +193,7 @@ di_0xF3 full_z80 =
             clock.core
 
         ints =
-            z80_core |> set_iff 0
+            z80_core |> set_iff IFF_0
 
         new_core =
             { z80_core | interrupts = ints }
@@ -212,7 +212,7 @@ ei_0xFB full_z80 =
             clock.core
 
         ints =
-            z80 |> set_iff 3
+            z80 |> set_iff IFF_3
 
         new_core =
             { z80 | interrupts = ints }

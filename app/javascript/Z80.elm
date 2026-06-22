@@ -23,7 +23,7 @@ import Z80Flags exposing (FlagRegisters, IntWithFlags)
 import Z80Mem exposing (mem, mem16)
 import Z80OpCode exposing (fetchInstruction, singleByteInstructions, singleByteMainFlagsRegsIX, singleByteMainFlagsRegsIY, threeByteInstructions, threeByteWithRegistersIX, threeByteWithRegistersIY, twoByteInstructions, twoByteWithRegistersIX, twoByteWithRegistersIY)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IntWithFlagsTimeAndPC, InterruptMode(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
+import Z80Types exposing (IFFValue(..), IntWithFlagsTimeAndPC, InterruptMode(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
 
 
 constructor : Z80
@@ -39,7 +39,7 @@ constructor =
             FlagRegisters 0 0 0 0 0
 
         interrupts =
-            InterruptRegisters IM0 False 0 0 0
+            InterruptRegisters IM0 False IFF_0 0 0
 
         time =
             reset_cpu_time

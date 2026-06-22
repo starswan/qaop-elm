@@ -1,6 +1,6 @@
 module Z80Execute exposing (..)
 
-import Bitwise exposing (shiftLeftBy)
+import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
 import GroupED exposing (adc_hl_sp, cpir, execute_ED70, execute_ED78, inirOtirFlags, ldir, rld, rrd, sbc_hl)
@@ -19,7 +19,7 @@ import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, f_szh0n
 import Z80Mem exposing (mem, mem16, z80_pop)
 import Z80Registers exposing (ChangeMainRegister(..), ChangeSingle(..), CoreRegister(..))
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIYHL(..), InterruptRegisters, MainWithIndexRegisters, get_bc, get_de, get_xy, set_bc_main, set_de_main, set_xy)
+import Z80Types exposing (IFFValue(..), IXIYHL(..), InterruptRegisters, MainWithIndexRegisters, get_bc, get_de, get_xy, set_bc_main, set_de_main, set_xy)
 
 
 type DeltaWithChanges
@@ -226,7 +226,12 @@ applyInterruptChange chaange z80 =
                         1
 
                 fab =
-                    z80.interrupts.iff |> shiftLeftBy 6 |> Bitwise.and 0x80
+                    case z80.interrupts.iff of
+                        IFF_0 ->
+                            0
+
+                        IFF_3 ->
+                            0x80
 
                 flags =
                     { z80_flags | a = value, ff = ff, fr = fr, fa = fab, fb = fab }

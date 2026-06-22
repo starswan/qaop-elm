@@ -3,7 +3,7 @@ module Z80Core exposing (..)
 import CpuTimeCTime exposing (CpuTimeCTime, CpuTimePcAnd16BitValue, ShortDelay)
 import Z80Env exposing (Z80Env)
 import Z80Flags exposing (FlagRegisters)
-import Z80Types exposing (InterruptMode(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
+import Z80Types exposing (IFFValue, InterruptMode(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
 
 
 type alias Z80Core =
@@ -64,7 +64,7 @@ type DirectionForLDIR
 --    CpuTimePcAnd16BitValue env pc v.value16
 
 
-set_iff : Int -> Z80Core -> InterruptRegisters
+set_iff : IFFValue -> Z80Core -> InterruptRegisters
 set_iff value z80 =
     let
         --logging this can be noisy
