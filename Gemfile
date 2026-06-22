@@ -9,7 +9,7 @@ gem "base64", "< 0.4"
 # gem "bigdecimal"
 # gem "drb"
 # gem "mutex_m"
-gem "stringio", "< 3.2.1"
+gem "stringio", "< 3.1.2"
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '~> 7.1', '< 7.2'
@@ -22,7 +22,7 @@ gem "propshaft"
 # mysql in production
 # gem 'mysql2'
 # Use Passenger as the app server
-gem "passenger", "~> 5.0"
+gem "passenger", "~> 6.0"
 # Use Puma as the app server
 # gem 'puma', '~> 4.1'
 # Use SCSS for stylesheets
