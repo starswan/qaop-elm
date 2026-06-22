@@ -3,6 +3,7 @@ module GroupED exposing (..)
 import Bitwise exposing (complement, shiftLeftBy, shiftRightBy)
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), ShortDelay(..))
 import Dict exposing (Dict)
+import Interrupts exposing (InterruptMode(..), InterruptRegisters)
 import PCIncrement exposing (PCIncrement(..))
 import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), RegisterFlagChange(..), SixteenBit(..))
 import Utils exposing (char, shiftLeftBy8, shiftRightBy8, toHexString2)
@@ -14,7 +15,7 @@ import Z80Flags exposing (FlagRegisters, c_F3, c_F5, c_F53, c_FC, c_FH, f_szh0n0
 import Z80Mem exposing (mem)
 import Z80Registers exposing (ChangeMainRegister(..))
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (InterruptMode(..), InterruptRegisters, MainWithIndexRegisters, get_bc, get_de, set_bc_main, set_de_main)
+import Z80Types exposing (MainWithIndexRegisters, get_bc, get_de, set_bc_main, set_de_main)
 
 
 execute_ED78 : Z80ROM -> CpuTimeCTime -> Z80Core -> Z80Core

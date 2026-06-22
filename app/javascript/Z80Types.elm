@@ -26,22 +26,6 @@ type alias MainWithIndexRegisters =
     }
 
 
-type InterruptMode
-    = IM0
-    | IM1
-    | IM2
-
-
-type alias InterruptRegisters =
-    { --mp:  Int, -- /* MEMPTR, the hidden register emulated according to memptr_eng.txt */
-      iM : InterruptMode
-    , halted : Bool
-    , iff : Int
-    , ir : Int
-    , r : Int
-    }
-
-
 type alias IntWithFlagsTimeAndPC =
     { value : Int
     , flags : FlagRegisters
