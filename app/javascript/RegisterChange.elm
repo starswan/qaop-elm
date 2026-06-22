@@ -1,6 +1,7 @@
 module RegisterChange exposing (..)
 
 import CpuTimeCTime exposing (CpuTimeCTime)
+import Interrupts exposing (InterruptMode)
 import SingleByteWithEnv exposing (SingleByteEnvChange)
 import SingleEnvWithMain exposing (SingleEnvMainChange)
 import SingleWith8BitParameter exposing (JumpChange, Single8BitChange)
@@ -13,7 +14,7 @@ import Z80Env exposing (Z80Env)
 import Z80Flags exposing (FlagFunc, FlagRegisters)
 import Z80Registers exposing (ChangeMainRegister, ChangeSingle)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IXIYHL, InterruptMode, MainWithIndexRegisters)
+import Z80Types exposing (IXIYHL, MainWithIndexRegisters)
 
 
 type Shifter

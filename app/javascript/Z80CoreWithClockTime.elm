@@ -2,12 +2,13 @@ module Z80CoreWithClockTime exposing (..)
 
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, addCpuTimeTime, reset_cpu_time)
+import Interrupts exposing (IFFValue(..), InterruptMode(..))
 import Z80Core exposing (Z80Core, set_iff)
 import Z80Env exposing (z80_push, z80env_constructor)
 import Z80Flags exposing (FlagRegisters)
 import Z80Mem exposing (mem16)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IFFValue(..), InterruptMode(..), MainRegisters)
+import Z80Types exposing (MainRegisters)
 
 
 type alias Z80CoreWithClockTime =
@@ -29,7 +30,7 @@ constructor =
         --alt_flags =
         --    FlagRegisters 0 0 0 0 0
         interrupts =
-            Z80Types.InterruptRegisters IM0 False IFF_0 0 0
+            Interrupts.InterruptRegisters IM0 False IFF_0 0 0
 
         time =
             reset_cpu_time

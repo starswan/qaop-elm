@@ -4,6 +4,7 @@ import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
 import GroupED exposing (adc_hl_sp, cpir, execute_ED70, execute_ED78, inirOtirFlags, ldir, rld, rrd, sbc_hl)
+import Interrupts exposing (IFFValue(..))
 import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), RegisterFlagChange(..), Shifter(..), SixteenBit(..), ThreeByteChange(..), TwoByteChange(..))
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
 import SingleEnvWithMain exposing (SingleEnvMainChange, applySingleEnvMainChange)
@@ -19,7 +20,7 @@ import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, f_szh0n
 import Z80Mem exposing (mem, mem16, z80_pop)
 import Z80Registers exposing (ChangeMainRegister(..), ChangeSingle(..), CoreRegister(..))
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IFFValue(..), IXIYHL(..), InterruptRegisters, MainWithIndexRegisters, get_bc, get_de, get_xy, set_bc_main, set_de_main, set_xy)
+import Z80Types exposing (IXIYHL(..), MainWithIndexRegisters, get_bc, get_de, get_xy, set_bc_main, set_de_main, set_xy)
 
 
 type DeltaWithChanges

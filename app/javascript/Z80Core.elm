@@ -1,9 +1,10 @@
 module Z80Core exposing (..)
 
 import CpuTimeCTime exposing (CpuTimeCTime, CpuTimePcAnd16BitValue, ShortDelay)
+import Interrupts exposing (IFFValue, InterruptRegisters)
 import Z80Env exposing (Z80Env)
 import Z80Flags exposing (FlagRegisters)
-import Z80Types exposing (IFFValue, InterruptMode(..), InterruptRegisters, MainRegisters, MainWithIndexRegisters)
+import Z80Types exposing (MainRegisters, MainWithIndexRegisters)
 
 
 type alias Z80Core =
