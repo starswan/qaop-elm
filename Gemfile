@@ -5,12 +5,6 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
 gem "activeadmin"
 
-gem "base64", ">= 0.4"
-# gem "bigdecimal"
-# gem "drb"
-# gem "mutex_m"
-gem "stringio", ">= 3.1.2"
-
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '~> 7.1', '< 7.2'
 # Use sqlite3 as the database for Active Record
