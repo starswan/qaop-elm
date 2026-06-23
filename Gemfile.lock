@@ -473,7 +473,6 @@ PLATFORMS
 
 DEPENDENCIES
   activeadmin
-  base64 (< 0.4)
   bcrypt_pbkdf
   byebug
   capistrano (>= 3)
@@ -508,7 +507,6 @@ DEPENDENCIES
   rubyzip (< 4)
   simplecov
   sqlite3 (~> 2.9)
-  stringio (< 3.1.2)
   tzinfo-data
 
 BUNDLED WITH
