@@ -568,7 +568,7 @@ executeCoreInstruction rom48k pc z80_core =
             { core = z80_core, pc = pc, clockTime = reset_cpu_time }
 
         newClock =
-            clock |> executeAndApplyDelta ct rom48k
+            clock |> executeAndApplyDelta ct IFF_0 rom48k
     in
     ( newClock.core, newClock.clockTime, newClock.pc )
 
