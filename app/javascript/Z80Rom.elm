@@ -163,6 +163,14 @@ romRoutineNames =
         , ( 0x0806, "REPORT-R" )
         , ( 0x0767, "LD-LOOK-H" )
         , ( 0x07CB, "VR-CONTRL" )
+        , ( 0x198B, "EACH-STMT" )
+        , ( 0x1990, "EACH-S-1" )
+        , ( 0x1998, "EACH-S-2" )
+        , ( 0x199A, "EACH-S-3" )
+        , ( 0x19A5, "EACH-S-4" )
+        , ( 0x19AD, "EACH-S-5" )
+        , ( 0x19B1, "EACH-S-6" )
+        , ( 0x18B6, "NUMBER" )
         ]
 
 

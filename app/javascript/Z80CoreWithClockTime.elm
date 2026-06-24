@@ -7,8 +7,7 @@ import Z80Core exposing (Z80Core)
 import Z80Env exposing (z80_push, z80env_constructor)
 import Z80Flags exposing (FlagRegisters)
 import Z80Mem exposing (mem16)
-import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (MainRegisters)
+import Z80Types exposing (MainRegisters, Z80ROM)
 
 
 type alias Z80CoreWithClockTime =
