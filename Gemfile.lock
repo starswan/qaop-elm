@@ -284,7 +284,7 @@ GEM
     parser (3.3.11.1)
       ast (~> 2.4.1)
       racc
-    passenger (6.1.5)
+    passenger (6.1.6)
       logger (>= 1.7.0)
       rack (>= 1.6.13)
       rackup (>= 1.0.1)
@@ -495,7 +495,7 @@ DEPENDENCIES
   jsbundling-rails
   net-smtp
   nokogiri (< 1.20)
-  passenger (~> 6.0)
+  passenger (~> 6.1)
   propshaft
   puma
   rails (~> 7.1, < 7.2)
