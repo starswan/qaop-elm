@@ -7,25 +7,18 @@ import Qaop exposing (Qaop)
 import QaopModel exposing (QaopMessage, QaopModel, tapLoad)
 import Spectrum
 import Task
-import Time
+import Time exposing (Posix, millisToPosix)
 import Z80Debug exposing (debugLog)
 
 
 type alias LoadingModel =
     { tapUrl : String
-    , state : LoadingState
+    , currentTime : Posix
     }
-
-
-type LoadingState
-    = Initial
-    | OnlyTime Time.Posix
-    | ROM (Dict Int Int)
 
 
 type InitMessage
     = GotRom (Result Http.Error (Dict Int Int))
-    | InitTick Time.Posix
 
 
 type LoadResult
@@ -36,6 +29,7 @@ type LoadResult
 type alias Flags =
     { rom : String
     , tape : String
+    , time : Int
     }
 
 
@@ -44,11 +38,8 @@ loadingInit data =
     let
         load =
             romLoad data.rom
-
-        tick =
-            Task.perform InitTick Time.now
     in
-    ( LoadingModel data.tape Initial, Cmd.batch [ load, tick ] )
+    ( LoadingModel data.tape (data.time |> millisToPosix), load )
 
 
 romLoad : String -> Cmd InitMessage
@@ -69,47 +60,17 @@ updateLoading initMessage loadingModel =
         GotRom result ->
             case result of
                 Ok z80rom ->
-                    case loadingModel.state of
-                        Initial ->
-                            let
-                                newModel =
-                                    { loadingModel | state = ROM z80rom }
-                            in
-                            ( StillLoading newModel, Cmd.none )
+                    let
+                        qaop =
+                            Qaop (Spectrum.constructor z80rom) 0 []
 
-                        OnlyTime posix ->
-                            let
-                                qaop =
-                                    Qaop (Spectrum.constructor z80rom) 0 []
-
-                                qaopModel =
-                                    QaopModel qaop 0 0 posix False False
-                            in
-                            ( NowRunning qaopModel, tapLoad loadingModel.tapUrl )
-
-                        ROM z80ROM ->
-                            ( StillLoading loadingModel, Cmd.none )
+                        qaopModel =
+                            QaopModel qaop 0 0 loadingModel.currentTime False False
+                    in
+                    ( NowRunning qaopModel, tapLoad loadingModel.tapUrl )
 
                 Err _ ->
                     ( StillLoading loadingModel, Cmd.none )
-
-        InitTick posix ->
-            case loadingModel.state of
-                Initial ->
-                    ( StillLoading { loadingModel | state = OnlyTime posix }, Cmd.none )
-
-                OnlyTime _ ->
-                    ( StillLoading loadingModel, Cmd.none )
-
-                ROM z80ROM ->
-                    let
-                        qaop =
-                            Qaop (Spectrum.constructor z80ROM) 0 []
-
-                        qaopModel =
-                            QaopModel qaop 0 0 posix False False
-                    in
-                    ( NowRunning qaopModel, tapLoad loadingModel.tapUrl )
 
 
 loadingSubs : Int -> Sub InitMessage
