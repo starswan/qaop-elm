@@ -16,9 +16,9 @@ import Z80Env exposing (Z80Env, setMemIgnoringTime)
 import Z80Flags exposing (c_FC, c_FZ, getFlags, setFlags)
 import Z80Mem exposing (mem, mem16, z80_pop)
 import Z80Ram exposing (foldDictIntoRam)
-import Z80Rom exposing (Z80ROM)
+import Z80Rom
 import Z80Tape exposing (TapePosition, Z80Tape)
-import Z80Types exposing (get_de)
+import Z80Types exposing (Z80ROM, get_de)
 
 
 type alias Audio =
@@ -274,6 +274,9 @@ frames keys speccy =
         clock_1 =
             { clock | clockTime = reset_cpu_time }
 
+        compiledRom =
+            speccy.rom48k
+
         rom =
             speccy.rom48k
 
@@ -307,7 +310,7 @@ frames keys speccy =
                         Just z80_tape ->
                             let
                                 ( new_z80, z80_load, tape_position ) =
-                                    doLoad z80 speccy.rom48k z80_tape
+                                    doLoad z80 rom z80_tape
 
                                 core_2 =
                                     new_z80.coreWithClock.core
@@ -331,7 +334,7 @@ frames keys speccy =
                         new_z80 =
                             cpu1
                                 |> interrupt 0xFF rom
-                                |> execute rom
+                                |> execute compiledRom
 
                         clock_2 =
                             new_z80.coreWithClock
