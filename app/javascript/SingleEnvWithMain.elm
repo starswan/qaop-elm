@@ -5,7 +5,7 @@ import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, InstructionDuration
 import Dict exposing (Dict)
 import PCIncrement exposing (PCIncrement(..))
 import Utils exposing (BitTest, shiftLeftBy8, shiftRightBy8)
-import Z80Core exposing (Z80Core)
+import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
 import Z80Env exposing (Z80Env)
 import Z80Flags exposing (FlagFunc(..), add16, c_F53, changeFlags, testBit)
 import Z80Mem exposing (mem)
@@ -61,7 +61,7 @@ singleEnvMainRegsIY =
         ]
 
 
-applySingleEnvMainChange : CpuTimeCTime -> SingleEnvMainChange -> Z80ROM -> Z80Core -> Z80Core
+applySingleEnvMainChange : CpuTimeCTime -> SingleEnvMainChange -> Z80ROM -> Z80Core -> CoreChange
 applySingleEnvMainChange clockTime z80changeData rom48k z80 =
     case z80changeData of
         SingleEnvNewARegister int cpuTimeCTime ->
@@ -69,39 +69,32 @@ applySingleEnvMainChange clockTime z80changeData rom48k z80 =
                 flags =
                     z80.flags
             in
-            { z80 | flags = { flags | a = int } }
+            { flags | a = int } |> FlagsOnly
 
         SingleEnv8BitMain eightBit int cpuTimeCTime ->
             let
                 main =
                     z80.main
-
-                main_1 =
-                    case eightBit of
-                        RegisterB ->
-                            { main | b = int }
-
-                        RegisterC ->
-                            { main | c = int }
-
-                        RegisterD ->
-                            { main | d = int }
-
-                        RegisterE ->
-                            { main | e = int }
             in
-            { z80
-                | main = main_1
-            }
+            case eightBit of
+                RegisterB ->
+                    { main | b = int } |> MainOnly
+
+                RegisterC ->
+                    { main | c = int } |> MainOnly
+
+                RegisterD ->
+                    { main | d = int } |> MainOnly
+
+                RegisterE ->
+                    { main | e = int } |> MainOnly
 
         SingleEnvNewHLRegister int cpuTimeCTime ->
             let
                 main =
                     z80.main
             in
-            { z80
-                | main = { main | hl = int }
-            }
+            { main | hl = int } |> MainOnly
 
         IndirectBitTest bitTest mp_address ->
             -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
@@ -112,28 +105,24 @@ applySingleEnvMainChange clockTime z80changeData rom48k z80 =
                 new_flags =
                     z80.flags |> testBit bitTest value.value
             in
-            { z80
-                | flags = { new_flags | ff = new_flags.ff |> Bitwise.and (Bitwise.complement c_F53) |> Bitwise.or (mp_address |> shiftRightBy8 |> Bitwise.and c_F53) }
+            { new_flags
+                | ff = new_flags.ff |> Bitwise.and (Bitwise.complement c_F53) |> Bitwise.or (mp_address |> shiftRightBy8 |> Bitwise.and c_F53)
             }
+                |> FlagsOnly
 
         SingleEnvFlagFunc flagFunc int cpuTimeCTime ->
             let
                 flags =
                     z80.flags
             in
-            { z80
-                | flags = flags |> changeFlags flagFunc int
-            }
+            flags |> changeFlags flagFunc int |> FlagsOnly
 
         SingleEnvNewHL16BitAdd ixiyhl hl sp ->
             let
                 new_xy =
                     add16 hl sp z80.flags
             in
-            { z80
-                | flags = new_xy.flags
-                , main = z80.main |> set_xy new_xy.value ixiyhl
-            }
+            ChangeMainAndFlags (z80.main |> set_xy new_xy.value ixiyhl) new_xy.flags
 
 
 ld_a_indirect_bc : MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange
@@ -159,8 +148,6 @@ ld_a_indirect_de z80_main rom48k clockTime z80_env =
         new_a =
             z80_env |> mem addr clockTime rom48k
     in
-    --{ z80 | env = new_a.env, flags = new_flags } |> add_cpu_time 3
-    --CpuTimeWithFlags env_1 new_flags
     SingleEnvNewARegister new_a.value new_a.time
 
 

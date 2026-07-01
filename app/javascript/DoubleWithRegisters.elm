@@ -5,7 +5,7 @@ import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import Dict exposing (Dict)
 import SingleWith8BitParameter exposing (JumpChange(..))
 import Utils exposing (byte, shiftLeftBy8)
-import Z80Core exposing (Z80Core)
+import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
 import Z80Env exposing (setMem)
 import Z80Flags exposing (FlagFunc(..), changeFlags, dec, inc)
 import Z80Mem exposing (mem)
@@ -216,7 +216,7 @@ dec_indirect_iy param =
     IndexedIndirectDecrement .iy param
 
 
-applyDoubleWithRegistersDelta : CpuTimeCTime -> DoubleWithRegisterChange -> Z80ROM -> Z80Core -> Z80Core
+applyDoubleWithRegistersDelta : CpuTimeCTime -> DoubleWithRegisterChange -> Z80ROM -> Z80Core -> CoreChange
 applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
     case z80changeData of
         NewIXHRegisterValue param ->
@@ -227,7 +227,7 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
                 int =
                     Bitwise.or (param |> shiftLeftBy8) (Bitwise.and z80_main.ix 0xFF)
             in
-            { z80 | main = { z80_main | ix = int } }
+            { z80_main | ix = int } |> MainOnly
 
         NewIXLRegisterValue param ->
             let
@@ -237,7 +237,7 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
                 int =
                     Bitwise.or param (Bitwise.and main.ix 0xFF00)
             in
-            { z80 | main = { main | ix = int } }
+            { main | ix = int } |> MainOnly
 
         NewIYHRegisterValue param ->
             let
@@ -247,7 +247,7 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
                 int =
                     Bitwise.or (param |> shiftLeftBy8) (Bitwise.and z80_main.iy 0xFF)
             in
-            { z80 | main = { z80_main | iy = int } }
+            { z80_main | iy = int } |> MainOnly
 
         NewIYLRegisterValue param ->
             let
@@ -257,7 +257,7 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
                 int =
                     Bitwise.or param (Bitwise.and main.iy 0xFF00)
             in
-            { z80 | main = { main | iy = int } }
+            { main | iy = int } |> MainOnly
 
         RegStore8BitValue offset address_f value_f ->
             let
@@ -266,11 +266,8 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
 
                 address =
                     ((main |> address_f) + (offset |> byte)) |> Bitwise.and 0xFFFF
-
-                ( env1, clockTime ) =
-                    z80.env |> setMem address (main |> value_f) cpu_time
             in
-            { z80 | env = env1 }
+            SetMem8 address (main |> value_f)
 
         NewRegisterIndirect changeOneRegister addr_f offsetparam ->
             let
@@ -303,9 +300,7 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
                         ChangeMainL ->
                             { main | hl = Bitwise.or (main.hl |> Bitwise.and 0xFF00) (new_b.value |> Bitwise.and 0xFF) }
             in
-            { z80
-                | main = new_main
-            }
+            MainOnly new_main
 
         NewARegisterIndirect addr_f offset ->
             let
@@ -318,21 +313,14 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
                 new_a =
                     z80.env |> mem addr cpu_time rom48k
             in
-            { z80
-                | flags = { flags | a = new_a.value }
-            }
+            { flags | a = new_a.value } |> FlagsOnly
 
         SetARegisterIndirect addr_f param ->
             let
                 addr =
                     (z80.main |> addr_f) + byte param
-
-                ( env_1, newTime ) =
-                    z80.env |> setMem addr z80.flags.a cpu_time
             in
-            { z80
-                | env = env_1
-            }
+            SetMem8 addr z80.flags.a
 
         FlagOpIndexedIndirect flagFunc address_f offset ->
             let
@@ -345,9 +333,7 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
                 value =
                     z80.env |> mem address cpu_time rom48k
             in
-            { z80
-                | flags = flags |> changeFlags flagFunc value.value
-            }
+            flags |> changeFlags flagFunc value.value |> FlagsOnly
 
         IndexedIndirectIncrement inAddr_f offset ->
             let
@@ -364,17 +350,11 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
 
                     valueWithFlags =
                         z80.flags |> inc value.value
-
-                    ( env_1, newTime ) =
-                        z80.env |> setMem base_addr valueWithFlags.value value.time
                 in
-                { z80
-                    | env = env_1
-                    , flags = valueWithFlags.flags
-                }
+                SetMem8Flags base_addr valueWithFlags
 
             else
-                z80
+                NoCore
 
         IndexedIndirectDecrement inAddr_f offset ->
             let
@@ -391,14 +371,8 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
 
                     valueWithFlags =
                         z80.flags |> dec value.value
-
-                    ( env_1, newTime ) =
-                        z80.env |> setMem base_addr valueWithFlags.value value.time
                 in
-                { z80
-                    | env = env_1
-                    , flags = valueWithFlags.flags
-                }
+                SetMem8Flags base_addr valueWithFlags
 
             else
-                z80
+                NoCore

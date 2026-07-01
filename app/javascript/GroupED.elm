@@ -8,9 +8,9 @@ import PCIncrement exposing (PCIncrement(..))
 import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), RegisterFlagChange(..), SixteenBit(..))
 import Utils exposing (char, shiftLeftBy8, shiftRightBy8, toHexString2)
 import Z80Change exposing (Z80Change(..))
-import Z80Core exposing (DirectionForLDIR(..), RepeatPCOffset(..), Z80Core)
+import Z80Core exposing (CoreChange(..), DirectionForLDIR(..), RareCoreChange(..), RepeatPCOffset(..), Z80Core)
 import Z80Debug exposing (debugLog)
-import Z80Env exposing (Z80Env, setMem, setMemIgnoringTime, z80_in)
+import Z80Env exposing (Z80Env, setMem, z80_in)
 import Z80Flags exposing (FlagRegisters, c_F3, c_F5, c_F53, c_FC, c_FH, f_szh0n0p, z80_sub)
 import Z80Mem exposing (mem)
 import Z80Registers exposing (ChangeMainRegister(..))
@@ -52,7 +52,7 @@ execute_ED78 rom48k clockTime z80 =
 -- case 0x7E: IM = c>>3&3; break;
 
 
-adc_hl_sp : Z80ROM -> CpuTimeCTime -> Z80Core -> Z80Core
+adc_hl_sp : Z80ROM -> CpuTimeCTime -> Z80Core -> CoreChange
 adc_hl_sp _ clockTime z80 =
     -- case 0x7A: adc_hl(SP); break;
     z80 |> adc_hl z80.env.sp
@@ -282,7 +282,7 @@ ldir incOrDec repeat rom48k clockTime z80 =
 --  }
 
 
-adc_hl : Int -> Z80Core -> Z80Core
+adc_hl : Int -> Z80Core -> CoreChange
 adc_hl b z80 =
     let
         z80_main =
@@ -292,7 +292,8 @@ adc_hl b z80 =
             ed_adc_hl b z80_main z80.flags
     in
     --( FlagsWithPCMainAndCpuTime flags { z80_main | hl = hl }, clockTime |> addCpuTimeTime 7, IncrementByTwo )
-    { z80 | flags = flags, main = { z80_main | hl = hl } }
+    --{ z80 | flags = flags, main = { z80_main | hl = hl } }
+    ChangeMainAndFlags { z80_main | hl = hl } flags
 
 
 
@@ -413,7 +414,7 @@ cpir incOrDec repeat rom48k clockTime z80_core =
 --  }
 
 
-rld : Z80ROM -> CpuTimeCTime -> Z80Core -> Z80Core
+rld : Z80ROM -> CpuTimeCTime -> Z80Core -> CoreChange
 rld rom48k clockTime z80 =
     let
         v_lhs_1 =
@@ -436,11 +437,8 @@ rld rom48k clockTime z80 =
 
         new_flags =
             { flags | a = new_a } |> f_szh0n0p new_a
-
-        ( env_1, newClock ) =
-            z80.env |> setMem z80.main.hl (Bitwise.and v 0xFF) v_lhs_1.time
     in
-    { z80 | env = env_1, flags = new_flags }
+    SetMem8Flags z80.main.hl { flags = new_flags, value = Bitwise.and v 0xFF }
 
 
 
@@ -455,7 +453,7 @@ rld rom48k clockTime z80 =
 --}
 
 
-rrd : Z80ROM -> CpuTimeCTime -> Z80Core -> Z80Core
+rrd : Z80ROM -> CpuTimeCTime -> Z80Core -> CoreChange
 rrd rom48k clockTime z80 =
     let
         v_lhs =
@@ -475,11 +473,8 @@ rrd rom48k clockTime z80 =
 
         new_flags =
             { flags | a = new_a } |> f_szh0n0p new_a
-
-        env_1 =
-            z80.env |> setMemIgnoringTime z80.main.hl (Bitwise.and (v |> shiftRightBy 4) 0xFF) v_lhs.time
     in
-    { z80 | env = env_1, flags = new_flags }
+    SetMem8Flags z80.main.hl { flags = new_flags, value = Bitwise.and (v |> shiftRightBy 4) 0xFF }
 
 
 fourByteMainED : Dict Int ( MainWithIndexRegisters -> Int -> EDFourByteChange, InstructionDuration )
