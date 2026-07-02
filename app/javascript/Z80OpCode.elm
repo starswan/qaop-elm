@@ -18,7 +18,7 @@ import SingleWith8BitParameter exposing (maybeRelativeJump, singleWith8BitParam)
 import TripleByte exposing (TripleByteIndexChange, tripleByteWith16BitParam, tripleByteWith16BitParamDD, tripleByteWith16BitParamFD)
 import TripleWithFlags exposing (triple16bitJumps)
 import TripleWithMain exposing (tripleMainRegsIYFour)
-import Z80Core exposing (CoreChange(..), Z80Core)
+import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
 import Z80Env exposing (Z80Env)
 import Z80Execute exposing (applyEdRegisterDelta, applyJumpChangeDelta, applyPureDelta, applyRegisterDelta, applySimple8BitDelta, applySimpleTripleChangeDelta, applyTripleChangeDelta)
 import Z80Mem exposing (m1, mem, mem16)
@@ -78,7 +78,6 @@ lengthAndDuration pc rom48k z80env =
                                 , \cpuClock z80rom z80core ->
                                     z80core
                                         |> applyDoubleWithRegistersDelta cpuClock (f doubleParam.value) z80rom
-                                        |> CoreOnly
                                 )
                             )
                 , \fdinstruction ->
@@ -133,7 +132,7 @@ lengthAndDuration pc rom48k z80env =
                                                 ( IncrementByFour
                                                 , duration
                                                 , \cpuClock z80rom z80_core ->
-                                                    z80_core |> applySingleEnvMainChange cpuClock (f z80_core.main cboffset rom48k z80_core.env) z80rom |> CoreOnly
+                                                    z80_core |> applySingleEnvMainChange cpuClock (f z80_core.main cboffset rom48k z80_core.env) z80rom
                                                 )
                                             )
                                 ]
@@ -170,7 +169,6 @@ lengthAndDuration pc rom48k z80env =
                                 , \cpuClock z80rom z80core ->
                                     z80core
                                         |> applyDoubleWithRegistersDelta cpuClock (f doubleParam.value) z80rom
-                                        |> CoreOnly
                                 )
                             )
                 , \fdinstruction ->
@@ -211,8 +209,8 @@ lengthAndDuration pc rom48k z80env =
                             (\( f, pcInc, duration ) ->
                                 ( pcInc
                                 , duration
-                                , \cpuClock _ z80core ->
-                                    z80core |> applyPureDelta cpuClock (f z80core.main z80core.flags) |> CoreOnly
+                                , \_ _ z80core ->
+                                    z80core |> applyPureDelta (f z80core.main z80core.flags)
                                 )
                             )
                 ]
@@ -254,7 +252,7 @@ lengthAndDuration pc rom48k z80env =
                         |> Dict.get instruction
                         |> Maybe.map
                             (\( f, duration ) ->
-                                ( IncrementByOne, duration, \cpuClock _ z80core -> z80core |> applyPureDelta cpuClock (f z80core.main z80core.flags) |> CoreOnly )
+                                ( IncrementByOne, duration, \_ _ z80core -> z80core |> applyPureDelta (f z80core.main z80core.flags) )
                             )
                 , \instruction ->
                     singleByteMainRegs
@@ -276,7 +274,7 @@ lengthAndDuration pc rom48k z80env =
                                     param =
                                         z80env |> mem (Bitwise.and (pc + 1) 0xFFFF) clockTime rom48k
                                 in
-                                ( IncrementByTwo, duration, \cpuClock z80rom z80core -> z80core |> applySimple8BitDelta cpuClock (f param.value) z80rom |> CoreOnly )
+                                ( IncrementByTwo, duration, \cpuClock z80rom z80core -> z80core |> applySimple8BitDelta cpuClock (f param.value) z80rom )
                             )
                 , \instruction ->
                     singleByteFlags
@@ -298,9 +296,9 @@ lengthAndDuration pc rom48k z80env =
                                 in
                                 ( IncrementByTwo
                                 , duration
-                                , \cpuClock _ z80core ->
+                                , \_ _ z80core ->
                                     z80core
-                                        |> applyJumpChangeDelta cpuClock (f param.value)
+                                        |> applyJumpChangeDelta (f param.value)
                                 )
                             )
                 , \instruction ->
@@ -323,7 +321,7 @@ lengthAndDuration pc rom48k z80env =
                                     param =
                                         z80env |> mem (Bitwise.and (pc + 1) 0xFFFF) clockTime rom48k
                                 in
-                                ( IncrementByTwo, duration, \_ _ z80core -> z80core |> applyJumpChangeDelta clockTime (f param.value) )
+                                ( IncrementByTwo, duration, \_ _ z80core -> z80core |> applyJumpChangeDelta (f param.value) )
                             )
                 , \instruction ->
                     singleEnvMainRegs
@@ -333,7 +331,7 @@ lengthAndDuration pc rom48k z80env =
                                 ( IncrementByOne
                                 , duration
                                 , \cpuClock z80rom z80core ->
-                                    z80core |> applySingleEnvMainChange cpuClock (f z80core.main z80rom cpuClock z80core.env) z80rom |> CoreOnly
+                                    z80core |> applySingleEnvMainChange cpuClock (f z80core.main z80rom cpuClock z80core.env) z80rom
                                 )
                             )
                 ]
