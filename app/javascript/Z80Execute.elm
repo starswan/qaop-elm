@@ -1,7 +1,7 @@
 module Z80Execute exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
+import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), ShortDelay(..))
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
 import GroupED exposing (adc_hl_sp, cpir, execute_ED70, execute_ED78, inirOtirFlags, ldir, rld, rrd, sbc_hl)
 import Interrupts exposing (IFFValue(..))
@@ -16,7 +16,7 @@ import Z80Change exposing (IndexedZ80Change(..), Z80Change(..))
 import Z80Core exposing (CoreChange(..), DirectionForLDIR(..), RareCoreChange(..), RepeatPCOffset(..), Z80Core)
 import Z80Debug exposing (debugLog, debugTodo)
 import Z80Env exposing (Z80Env, setMem, z80_in, z80_out, z80_push)
-import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, f_szh0n0p, get_af, inc, set_af, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
+import Z80Flags exposing (FlagRegisters, IntWithFlags, always_jump, changeFlags, dec, f_szh0n0p, get_af, inc, set_af, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
 import Z80Mem exposing (mem, mem16, z80_pop)
 import Z80Registers exposing (ChangeMainRegister(..), ChangeSingle(..), CoreRegister(..))
 import Z80Types exposing (IXIYHL(..), MainWithIndexRegisters, Z80ROM, get_bc, get_de, get_xy, set_bc_main, set_de_main, set_xy)
@@ -75,8 +75,8 @@ apply_delta z80 iff rom48k clockTime z80delta =
         EDChangeDelta eDRegisterChange ->
             z80 |> applyEdRegisterDelta clockTime eDRegisterChange rom48k
 
-        EDFourByteDelta fourByteChnage ->
-            z80 |> applyEdFourByte clockTime fourByteChnage rom48k
+        EDFourByteDelta fourByteChange ->
+            z80 |> applyEdFourByte clockTime fourByteChange rom48k
 
         TwoByteDelta twoByteChange ->
             case twoByteChange of
@@ -93,9 +93,6 @@ apply_delta z80 iff rom48k clockTime z80delta =
 applyJumpChangeDelta : JumpChange -> Z80Core -> CoreChange
 applyJumpChangeDelta z80changeData z80 =
     case z80changeData of
-        ActualJumpOffset offset ->
-            JumpWithOffset offset
-
         ConditionalJumpOffset offset shortDelay function ->
             if z80.flags |> function then
                 JumpOffsetWithDelay offset shortDelay
@@ -350,7 +347,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
 
         Rst new_pc ->
             --case 0xC7:push(PC); PC=c-199; break;
-            CallWithPC new_pc
+            CallWithPCAndDelay new_pc SevenExtraTStates
 
         PopBC ->
             let
@@ -444,9 +441,6 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
         IncrementIndirect f ->
             -- This should be a primitive operation on Z80Env to increment a stored value
             let
-                old_env =
-                    z80_core.env
-
                 addr =
                     z80_core.main |> f
 
@@ -1000,9 +994,8 @@ applyTripleFlagChange z80changeData z80 =
             else
                 NoCore
 
-        CallImmediate int ->
-            CallWithPC int
-
+        --CallImmediate int ->
+        --    CallWithPC int
         NewPCRegister int ->
             JumpOnlyPC int
 
@@ -1052,11 +1045,6 @@ applyEdFourByte clockTime z80changeData rom48k z80_core =
                     z80_core.main |> set_bc_main value.value16 |> MainOnly
 
                 RegSP ->
-                    let
-                        env =
-                            z80_core.env
-                    in
-                    --NewEnv { env | sp = value.value16 }
                     SetStackPointer value.value16
 
 

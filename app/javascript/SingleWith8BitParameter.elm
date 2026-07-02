@@ -3,7 +3,7 @@ module SingleWith8BitParameter exposing (..)
 import CpuTimeCTime exposing (InstructionDuration(..), ShortDelay(..))
 import Dict exposing (Dict)
 import Utils exposing (byte)
-import Z80Flags exposing (FlagFunc(..), FlagRegisters, jump_c, jump_nc, jump_nz, jump_z)
+import Z80Flags exposing (FlagFunc(..), FlagRegisters, always_jump, jump_c, jump_nc, jump_nz, jump_z)
 import Z80Registers exposing (CoreRegister(..))
 import Z80Types exposing (MainWithIndexRegisters)
 
@@ -41,7 +41,7 @@ maybeRelativeJump : Dict Int ( Int -> JumpChange, InstructionDuration )
 maybeRelativeJump =
     Dict.fromList
         [ ( 0x10, ( djnz, FourTStates ) )
-        , ( 0x18, ( jr_n, TwelveTStates ) )
+        , ( 0x18, ( jr_n, SevenTStates ) )
         , ( 0x20, ( jr_nz_d, SevenTStates ) )
         , ( 0x28, ( jr_z_d, SevenTStates ) )
         , ( 0x30, ( jr_nc_d, SevenTStates ) )
@@ -50,8 +50,7 @@ maybeRelativeJump =
 
 
 type JumpChange
-    = ActualJumpOffset Int
-    | ConditionalJumpOffset Int ShortDelay (FlagRegisters -> Bool)
+    = ConditionalJumpOffset Int ShortDelay (FlagRegisters -> Bool)
     | DJNZOffset Int ShortDelay
 
 
@@ -104,7 +103,7 @@ ld_e_n param =
 jr_n : Int -> JumpChange
 jr_n param =
     -- case 0x18: MP=PC=(char)(PC+1+(byte)env.mem(PC)); time+=8; break;
-    ActualJumpOffset (byte param)
+    ConditionalJumpOffset (byte param) FiveExtraTStates always_jump
 
 
 jr_nz_d : Int -> JumpChange

@@ -50,14 +50,14 @@ singleWithNoParam =
 singleNoParamCalls : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleNoParamCalls =
     Dict.fromList
-        [ ( 0xC7, ( Rst 0x00, ElevenTStates ) )
-        , ( 0xCF, ( Rst 0x08, ElevenTStates ) )
-        , ( 0xD7, ( Rst 0x10, ElevenTStates ) )
-        , ( 0xDF, ( Rst 0x18, ElevenTStates ) )
-        , ( 0xE7, ( Rst 0x20, ElevenTStates ) )
-        , ( 0xEF, ( Rst 0x28, ElevenTStates ) )
-        , ( 0xF7, ( Rst 0x30, ElevenTStates ) )
-        , ( 0xFF, ( Rst 0x38, ElevenTStates ) )
+        [ ( 0xC7, ( Rst 0x00, FourTStates ) )
+        , ( 0xCF, ( Rst 0x08, FourTStates ) )
+        , ( 0xD7, ( Rst 0x10, FourTStates ) )
+        , ( 0xDF, ( Rst 0x18, FourTStates ) )
+        , ( 0xE7, ( Rst 0x20, FourTStates ) )
+        , ( 0xEF, ( Rst 0x28, FourTStates ) )
+        , ( 0xF7, ( Rst 0x30, FourTStates ) )
+        , ( 0xFF, ( Rst 0x38, FourTStates ) )
         ]
 
 
