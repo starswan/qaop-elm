@@ -1,7 +1,7 @@
 module JumpChange exposing (..)
 
 import TripleWithFlags exposing (TripleWithFlagsChange(..))
-import Z80Core exposing (CoreChange(..), Z80Core)
+import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
 
 
 applyTripleFlagChange : TripleWithFlagsChange -> Z80Core -> CoreChange
@@ -12,14 +12,14 @@ applyTripleFlagChange z80changeData z80 =
                 JumpOnlyPC int
 
             else
-                z80 |> CoreOnly
+                z80 |> CoreOnly |> RareChange
 
         Conditional16BitCall address shortdelay function ->
             if z80.flags |> function then
                 CallWithPCAndDelay address shortdelay
 
             else
-                z80 |> CoreOnly
+                z80 |> CoreOnly |> RareChange
 
         CallImmediate int ->
             CallWithPC int

@@ -817,8 +817,6 @@ ld_indirect_bc_a z80_main z80_flags =
         addr =
             shiftLeftBy8 z80_main.b + z80_main.c
     in
-    --{ z80 | env = z80.env |> set_mem addr z80.flags.a |> add_cpu_time_env 3 }
-    --SetMem8WithTime addr z80.flags.a 3
     Z80ChangeSetIndirect addr z80_flags.a
 
 
@@ -829,8 +827,6 @@ ld_indirect_de_a z80_main z80_flags =
         addr =
             shiftLeftBy8 z80_main.d + z80_main.e
     in
-    --z80.env |> set_mem addr z80.flags.a |> add_cpu_time_env 3 |> OnlyEnv
-    --SetMem8WithTime addr z80.flags.a 3
     Z80ChangeSetIndirect addr z80_flags.a
 
 
