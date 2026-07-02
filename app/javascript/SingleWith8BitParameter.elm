@@ -53,7 +53,10 @@ type JumpChange
     = ActualJumpOffset Int
     | ConditionalJumpOffset Int ShortDelay (FlagRegisters -> Bool)
     | DJNZOffset Int ShortDelay
-    | RegChangeStoreIndirect (MainWithIndexRegisters -> Int) Int
+
+
+type NoJumpChange
+    = RegChangeStoreIndirect (MainWithIndexRegisters -> Int) Int
     | SimpleNewHValue Int
     | SimpleNewLValue Int
 
