@@ -6,7 +6,6 @@ import Dict exposing (Dict)
 import RegisterChange exposing (RegisterFlagChange(..), Shifter(..))
 import Utils exposing (BitTest(..), shiftLeftBy8, shiftRightBy8)
 import Z80Flags exposing (FlagFunc(..))
-import Z80Registers exposing (ChangeMainRegister(..), ChangeSingle(..))
 import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, get_bc, get_de, get_h, get_ixh, get_ixl, get_iyh, get_iyl, get_l, set_de_main)
 
 

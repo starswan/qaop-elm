@@ -8,8 +8,7 @@ import SingleEnvWithMain exposing (SingleEnvMainChange(..))
 import Utils exposing (BitTest(..), byte)
 import Z80Env exposing (Z80Env)
 import Z80Registers exposing (ChangeMainRegister(..))
-import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (MainWithIndexRegisters)
+import Z80Types exposing (MainWithIndexRegisters, Z80ROM)
 
 
 singleByteMainRegsIXCB : Dict Int ( Int -> MainWithIndexRegisters -> RegisterFlagChange, InstructionDuration )

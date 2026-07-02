@@ -7,7 +7,8 @@ import Utils exposing (shiftLeftBy8)
 import Z80Core exposing (Z80Core)
 import Z80Env exposing (Z80Env)
 import Z80Ram exposing (getRamValue)
-import Z80Rom exposing (Z80ROM, getROMValue)
+import Z80Rom exposing (getROMValue)
+import Z80Types exposing (Z80ROM)
 
 
 

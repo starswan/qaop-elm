@@ -10,8 +10,7 @@ import Z80Env exposing (setMem)
 import Z80Flags exposing (FlagFunc(..), changeFlags, dec, inc)
 import Z80Mem exposing (mem)
 import Z80Registers exposing (ChangeMainRegister(..))
-import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (MainWithIndexRegisters)
+import Z80Types exposing (MainWithIndexRegisters, Z80ROM)
 
 
 type DoubleWithRegisterChange
