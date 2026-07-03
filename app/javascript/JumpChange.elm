@@ -21,8 +21,5 @@ applyTripleFlagChange z80changeData z80 =
             else
                 z80 |> CoreOnly |> RareChange
 
-        CallImmediate int ->
-            CallWithPC int
-
         NewPCRegister int ->
             JumpOnlyPC int

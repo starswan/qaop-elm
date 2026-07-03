@@ -307,13 +307,6 @@ applyCoreChange coreChange clockTime pc_inc pc rom48k z80_core =
             in
             { core = { main = z80_core.main, env = env, flags = z80_core.flags, interrupts = z80_core.interrupts }, pc = int, clockTime = clockTime |> addExtraCpuTime shortDelay }
 
-        CallWithPC int ->
-            let
-                env =
-                    z80_core.env |> z80_push pcAfter clockTime
-            in
-            { core = { main = z80_core.main, env = env, flags = z80_core.flags, interrupts = z80_core.interrupts }, pc = int, clockTime = clockTime }
-
         Looper repeatPCOffset z80Core ->
             case repeatPCOffset of
                 NoOffset ->

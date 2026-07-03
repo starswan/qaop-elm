@@ -774,6 +774,11 @@ changeFlags flagFunc int flags =
             flags |> z80_cp int
 
 
+always_jump : FlagRegisters -> Bool
+always_jump _ =
+    True
+
+
 jump_nz : FlagRegisters -> Bool
 jump_nz z80_flags =
     z80_flags.fr /= 0

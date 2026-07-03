@@ -44,7 +44,6 @@ type CoreChange
     | JumpWithOffset Int
     | JumpOffsetWithDelay Int ShortDelay
     | CallWithPCAndDelay Int ShortDelay
-    | CallWithPC Int
     | Looper RepeatPCOffset Z80Core
     | LooperWithDelay RepeatPCOffset ShortDelay Z80Core
     | MainOnly MainWithIndexRegisters
