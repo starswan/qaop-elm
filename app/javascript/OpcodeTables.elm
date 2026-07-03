@@ -32,7 +32,7 @@ twoByteInstructions =
     singleWith8BitParam
         |> Dict.map (\_ ( f, duration ) -> ( \param -> TwoByte8Bit (f param), duration ))
         |> Dict.union (maybeRelativeJump |> Dict.map (\_ ( f, duration ) -> ( \param -> TwoByteJump (f param), duration )))
-        |> Dict.union (doubleWithRegisters |> Dict.map (\_ ( f, duration ) -> ( \param -> TwoByteJump (f param), duration )))
+        |> Dict.union (doubleWithRegisters |> Dict.map (\_ ( f, duration ) -> ( \param -> NotAJump (f param), duration )))
 
 
 threeByteInstructions : Dict Int ( Int -> ThreeByteChange, InstructionDuration )

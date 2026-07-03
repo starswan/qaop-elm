@@ -3,10 +3,9 @@ module DoubleWithRegisters exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import Dict exposing (Dict)
-import SingleWith8BitParameter exposing (JumpChange(..))
+import SingleWith8BitParameter exposing (JumpChange(..), NoJumpChange(..))
 import Utils exposing (byte, shiftLeftBy8)
 import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
-import Z80Env exposing (setMem)
 import Z80Flags exposing (FlagFunc(..), changeFlags, dec, inc)
 import Z80Mem exposing (mem)
 import Z80Registers exposing (ChangeMainRegister(..))
@@ -27,7 +26,7 @@ type DoubleWithRegisterChange
     | RegStore8BitValue Int (MainWithIndexRegisters -> Int) (MainWithIndexRegisters -> Int)
 
 
-doubleWithRegisters : Dict Int ( Int -> JumpChange, InstructionDuration )
+doubleWithRegisters : Dict Int ( Int -> NoJumpChange, InstructionDuration )
 doubleWithRegisters =
     Dict.fromList
         [ ( 0x26, ( ld_h_n, SevenTStates ) )
@@ -112,7 +111,7 @@ doubleWithRegistersIY =
         ]
 
 
-ld_h_n : Int -> JumpChange
+ld_h_n : Int -> NoJumpChange
 ld_h_n param =
     -- case 0x26: HL=HL&0xFF|imm8()<<8; break;
     SimpleNewHValue param
@@ -130,7 +129,7 @@ ld_iy_h_n param =
     NewIYHRegisterValue param
 
 
-ld_l_n : Int -> JumpChange
+ld_l_n : Int -> NoJumpChange
 ld_l_n param =
     -- case 0x2E: HL=HL&0xFF00|imm8(); break;
     SimpleNewLValue param
@@ -181,7 +180,7 @@ ld_a_indirect_iy param =
     NewARegisterIndirect .iy param
 
 
-ld_indirect_hl_n : Int -> JumpChange
+ld_indirect_hl_n : Int -> NoJumpChange
 ld_indirect_hl_n param =
     -- case 0x36: env.mem(HL,imm8()); time+=3; break;
     -- case 0x36: {int a=(char)(xy+(byte)env.mem(PC)); time+=3;

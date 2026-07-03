@@ -8,7 +8,7 @@ import Interrupts exposing (IFFValue(..))
 import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), RegisterFlagChange(..), Shifter(..), SixteenBit(..), ThreeByteChange(..), TwoByteChange(..))
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
 import SingleEnvWithMain exposing (SingleEnvMainChange, applySingleEnvMainChange)
-import SingleWith8BitParameter exposing (JumpChange(..), Single8BitChange(..), applySimple8BitChange)
+import SingleWith8BitParameter exposing (JumpChange(..), NoJumpChange(..), Single8BitChange(..), applySimple8BitChange)
 import TripleByte exposing (TripleByteChange(..), TripleByteIndexChange(..), TripleByteRegister(..))
 import TripleWithFlags exposing (TripleWithFlagsChange(..))
 import Utils exposing (bitMaskFromBit, byte, clearBit, inverseBitMaskFromBit, setBit, shiftLeftBy8, toHexString2)
@@ -86,6 +86,9 @@ apply_delta z80 iff rom48k clockTime z80delta =
                 TwoByteJump jumpChange ->
                     z80 |> applyJumpChangeDelta jumpChange
 
+                NotAJump jumpChange ->
+                    z80 |> applyNoJumpChangeDelta jumpChange
+
 
 applyJumpChangeDelta : JumpChange -> Z80Core -> CoreChange
 applyJumpChangeDelta z80changeData z80 =
@@ -117,6 +120,10 @@ applyJumpChangeDelta z80changeData z80 =
             else
                 { main | b = b } |> MainOnly
 
+
+applyNoJumpChangeDelta : NoJumpChange -> Z80Core -> CoreChange
+applyNoJumpChangeDelta z80changeData z80 =
+    case z80changeData of
         RegChangeStoreIndirect addr_f value ->
             let
                 addr =

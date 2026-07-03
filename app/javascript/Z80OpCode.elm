@@ -20,7 +20,7 @@ import TripleWithFlags exposing (triple16bitJumps)
 import TripleWithMain exposing (tripleMainRegsIYFour)
 import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
 import Z80Env exposing (Z80Env)
-import Z80Execute exposing (applyEdRegisterDelta, applyJumpChangeDelta, applyPureDelta, applyRegisterDelta, applySimple8BitDelta, applySimpleTripleChangeDelta, applyTripleChangeDelta)
+import Z80Execute exposing (applyEdRegisterDelta, applyJumpChangeDelta, applyNoJumpChangeDelta, applyPureDelta, applyRegisterDelta, applySimple8BitDelta, applySimpleTripleChangeDelta, applyTripleChangeDelta)
 import Z80Mem exposing (m1, mem, mem16)
 import Z80Types exposing (MainWithIndexRegisters, Z80ROM)
 
@@ -298,7 +298,7 @@ lengthAndDuration pc rom48k z80env =
                                 , duration
                                 , \_ _ z80core ->
                                     z80core
-                                        |> applyJumpChangeDelta (f param.value)
+                                        |> applyNoJumpChangeDelta (f param.value)
                                 )
                             )
                 , \instruction ->
