@@ -3,7 +3,7 @@ module DoubleWithRegisters exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import Dict exposing (Dict)
-import SingleWith8BitParameter exposing (JumpChange(..), NoJumpChange(..))
+import SingleWith8BitParameter exposing (JumpChange(..), Single8BitChange(..))
 import Utils exposing (byte, shiftLeftBy8)
 import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
 import Z80Flags exposing (FlagFunc(..), changeFlags, dec, inc)
@@ -24,15 +24,6 @@ type DoubleWithRegisterChange
     | FlagOpIndexedIndirect FlagFunc (MainWithIndexRegisters -> Int) Int
     | NewRegisterIndirect ChangeMainRegister (MainWithIndexRegisters -> Int) Int
     | RegStore8BitValue Int (MainWithIndexRegisters -> Int) (MainWithIndexRegisters -> Int)
-
-
-doubleWithRegisters : Dict Int ( Int -> NoJumpChange, InstructionDuration )
-doubleWithRegisters =
-    Dict.fromList
-        [ ( 0x26, ( ld_h_n, SevenTStates ) )
-        , ( 0x2E, ( ld_l_n, SevenTStates ) )
-        , ( 0x36, ( ld_indirect_hl_n, TenTStates ) )
-        ]
 
 
 doubleWithRegistersIX : Dict Int ( Int -> DoubleWithRegisterChange, InstructionDuration )
@@ -111,12 +102,6 @@ doubleWithRegistersIY =
         ]
 
 
-ld_h_n : Int -> NoJumpChange
-ld_h_n param =
-    -- case 0x26: HL=HL&0xFF|imm8()<<8; break;
-    SimpleNewHValue param
-
-
 ld_ix_h_n : Int -> DoubleWithRegisterChange
 ld_ix_h_n param =
     -- case 0x26: xy=xy&0xFF|imm8()<<8; break;
@@ -127,12 +112,6 @@ ld_iy_h_n : Int -> DoubleWithRegisterChange
 ld_iy_h_n param =
     -- case 0x26: xy=xy&0xFF|imm8()<<8; break;
     NewIYHRegisterValue param
-
-
-ld_l_n : Int -> NoJumpChange
-ld_l_n param =
-    -- case 0x2E: HL=HL&0xFF00|imm8(); break;
-    SimpleNewLValue param
 
 
 ld_ix_l_n : Int -> DoubleWithRegisterChange
@@ -178,13 +157,6 @@ ld_a_indirect_iy param =
     --        z80_main.iy + byte param
     --in
     NewARegisterIndirect .iy param
-
-
-ld_indirect_hl_n : Int -> NoJumpChange
-ld_indirect_hl_n param =
-    -- case 0x36: env.mem(HL,imm8()); time+=3; break;
-    -- case 0x36: {int a=(char)(xy+(byte)env.mem(PC)); time+=3;
-    RegChangeStoreIndirect .hl param
 
 
 inc_indirect_ix : Int -> DoubleWithRegisterChange

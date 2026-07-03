@@ -3,7 +3,7 @@ module Z80OpCode exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, InstructionDuration, reset_cpu_time)
 import Dict exposing (Dict)
-import DoubleWithRegisters exposing (applyDoubleWithRegistersDelta, doubleWithRegisters, doubleWithRegistersIX, doubleWithRegistersIY)
+import DoubleWithRegisters exposing (applyDoubleWithRegistersDelta, doubleWithRegistersIX, doubleWithRegistersIY)
 import GroupCBIXIY exposing (singleByteMainRegsIYCB, singleEnvMainRegsIYCB)
 import GroupED exposing (singleByteMainAndFlagsED, singleByteMainRegsED)
 import JumpChange exposing (applyTripleFlagChange)
@@ -20,7 +20,7 @@ import TripleWithFlags exposing (triple16bitJumps)
 import TripleWithMain exposing (tripleMainRegsIYFour)
 import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
 import Z80Env exposing (Z80Env)
-import Z80Execute exposing (applyEdRegisterDelta, applyJumpChangeDelta, applyNoJumpChangeDelta, applyPureDelta, applyRegisterDelta, applySimple8BitDelta, applySimpleTripleChangeDelta, applyTripleChangeDelta)
+import Z80Execute exposing (applyEdRegisterDelta, applyJumpChangeDelta, applyPureDelta, applyRegisterDelta, applySimple8BitDelta, applySimpleTripleChangeDelta, applyTripleChangeDelta)
 import Z80Mem exposing (m1, mem, mem16)
 import Z80Types exposing (MainWithIndexRegisters, Z80ROM)
 
@@ -285,22 +285,6 @@ lengthAndDuration pc rom48k z80env =
                             )
 
                 -- These not supported by tests (yet)
-                , \instruction ->
-                    doubleWithRegisters
-                        |> Dict.get instruction
-                        |> Maybe.map
-                            (\( f, duration ) ->
-                                let
-                                    param =
-                                        z80env |> mem (Bitwise.and (pc + 1) 0xFFFF) clockTime rom48k
-                                in
-                                ( IncrementByTwo
-                                , duration
-                                , \_ _ z80core ->
-                                    z80core
-                                        |> applyNoJumpChangeDelta (f param.value)
-                                )
-                            )
                 , \instruction ->
                     triple16bitJumps
                         |> Dict.get instruction

@@ -4,7 +4,7 @@ import CpuTimeCTime exposing (CpuTimeCTime)
 import Interrupts exposing (InterruptMode)
 import SingleByteWithEnv exposing (SingleByteEnvChange)
 import SingleEnvWithMain exposing (SingleEnvMainChange)
-import SingleWith8BitParameter exposing (JumpChange, NoJumpChange, Single8BitChange)
+import SingleWith8BitParameter exposing (JumpChange, Single8BitChange)
 import TripleByte exposing (TripleByteChange, TripleByteIndexChange)
 import TripleWithFlags exposing (TripleWithFlagsChange)
 import Utils exposing (BitTest)
@@ -106,7 +106,6 @@ type InterruptChange
 type TwoByteChange
     = TwoByte8Bit Single8BitChange
     | TwoByteJump JumpChange
-    | NotAJump NoJumpChange
 
 
 type ThreeByteChange
