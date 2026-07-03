@@ -14,6 +14,9 @@ type Single8BitChange
     | Z80Out Int
     | NewARegister Int
     | FlagJump FlagFunc Int
+    | RegChangeStoreIndirect (MainWithIndexRegisters -> Int) Int
+    | SimpleNewHValue Int
+    | SimpleNewLValue Int
 
 
 singleWith8BitParam : Dict Int ( Int -> Single8BitChange, InstructionDuration )
@@ -34,6 +37,9 @@ singleWith8BitParam =
         , ( 0xEE, ( xor_n, SevenTStates ) )
         , ( 0xF6, ( or_n, SevenTStates ) )
         , ( 0xFE, ( cp_n, SevenTStates ) )
+        , ( 0x26, ( ld_h_n, SevenTStates ) )
+        , ( 0x2E, ( ld_l_n, SevenTStates ) )
+        , ( 0x36, ( ld_indirect_hl_n, TenTStates ) )
         ]
 
 
@@ -52,12 +58,6 @@ maybeRelativeJump =
 type JumpChange
     = ConditionalJumpOffset Int ShortDelay (FlagRegisters -> Bool)
     | DJNZOffset Int ShortDelay
-
-
-type NoJumpChange
-    = RegChangeStoreIndirect (MainWithIndexRegisters -> Int) Int
-    | SimpleNewHValue Int
-    | SimpleNewLValue Int
 
 
 applySimple8BitChange : CoreRegister -> Int -> MainWithIndexRegisters -> MainWithIndexRegisters
@@ -202,3 +202,22 @@ in_a_n : Int -> Single8BitChange
 in_a_n param =
     -- case 0xDB: MP=(v=imm8()|A<<8)+1; A=env.in(v); time+=4; break;
     Z80In param
+
+
+ld_h_n : Int -> Single8BitChange
+ld_h_n param =
+    -- case 0x26: HL=HL&0xFF|imm8()<<8; break;
+    SimpleNewHValue param
+
+
+ld_l_n : Int -> Single8BitChange
+ld_l_n param =
+    -- case 0x2E: HL=HL&0xFF00|imm8(); break;
+    SimpleNewLValue param
+
+
+ld_indirect_hl_n : Int -> Single8BitChange
+ld_indirect_hl_n param =
+    -- case 0x36: env.mem(HL,imm8()); time+=3; break;
+    -- case 0x36: {int a=(char)(xy+(byte)env.mem(PC)); time+=3;
+    RegChangeStoreIndirect .hl param
