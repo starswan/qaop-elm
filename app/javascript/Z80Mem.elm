@@ -279,11 +279,8 @@ z80_pop z80rom clockTime z80_env =
     let
         v =
             z80_env |> mem16 z80_env.sp z80rom clockTime
-
-        time =
-            v.time |> addCpuTimeTime 6
     in
-    CpuTimeSpAnd16BitValue time (Bitwise.and (z80_env.sp + 2) 0xFFFF) v.value16
+    CpuTimeSpAnd16BitValue v.time (Bitwise.and (z80_env.sp + 2) 0xFFFF) v.value16
 
 
 getRamValue : Int -> Z80ROM -> Z80Env -> Int
@@ -294,18 +291,3 @@ getRamValue addr z80rom z80env =
 
         Nothing ->
             z80rom.z80ram |> Z80Ram.getRamValue addr
-
-
-imm16 : Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> CpuTimePcAnd16BitValue
-imm16 rom48k clockTime pc_in z80 =
-    let
-        v =
-            z80.env |> mem16 pc_in rom48k clockTime
-
-        pc =
-            Bitwise.and (pc_in + 2) 0xFFFF
-
-        env =
-            v.time |> addCpuTimeTime 6
-    in
-    CpuTimePcAnd16BitValue env pc v.value16

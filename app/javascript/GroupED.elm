@@ -36,7 +36,6 @@ execute_ED78 rom48k clockTime z80 =
         new_flags =
             { flags | a = new_a.value } |> f_szh0n0p new_a.value
     in
-    --( DeltaFlags new_flags, new_a.time |> addCpuTimeTime 4, IncrementByTwo )
     { z80 | flags = new_flags }
 
 
@@ -69,7 +68,6 @@ execute_ED70 rom48k clockTime z80 =
         new_flags =
             debugLog "ED70 - IN (C)" ( new_a.value, z80.main.b |> toHexString2, z80.main.c |> toHexString2 ) z80.flags |> f_szh0n0p new_a.value
     in
-    --( DeltaFlags new_flags, new_a.time |> addCpuTimeTime 4, IncrementByTwo )
     { z80 | flags = new_flags }
 
 
@@ -290,8 +288,6 @@ adc_hl b z80 =
         ( flags, hl ) =
             ed_adc_hl b z80_main z80.flags
     in
-    --( FlagsWithPCMainAndCpuTime flags { z80_main | hl = hl }, clockTime |> addCpuTimeTime 7, IncrementByTwo )
-    --{ z80 | flags = flags, main = { z80_main | hl = hl } }
     ChangeMainAndFlags { z80_main | hl = hl } flags
 
 

@@ -272,13 +272,13 @@ applyCoreChange coreChange clockTime pc_inc pc rom48k z80_core =
                 env =
                     z80_core.env
 
-                a =
+                popped =
                     env |> z80_pop rom48k clockTime
 
                 new_env =
-                    { ram = env.ram, sp = a.sp, borderColour = env.borderColour }
+                    { ram = env.ram, sp = popped.sp, borderColour = env.borderColour }
             in
-            { core = { main = z80_core.main, flags = z80_core.flags, interrupts = z80_core.interrupts, env = new_env }, clockTime = clockTime, pc = a.value16 }
+            { core = { main = z80_core.main, flags = z80_core.flags, interrupts = z80_core.interrupts, env = new_env }, clockTime = popped.time, pc = popped.value16 }
 
         RareChange rareChange ->
             case rareChange of
@@ -334,21 +334,21 @@ applyCoreChange coreChange clockTime pc_inc pc rom48k z80_core =
                 ( z80env, time ) =
                     z80_core.env |> setMem address value clockTime
             in
-            { core = { main = z80_core.main, env = z80env, flags = z80_core.flags, interrupts = z80_core.interrupts }, clockTime = clockTime, pc = pcAfter }
+            { core = { main = z80_core.main, env = z80env, flags = z80_core.flags, interrupts = z80_core.interrupts }, clockTime = time, pc = pcAfter }
 
         SetMem8Flags address flags ->
             let
                 ( z80env, time ) =
                     z80_core.env |> setMem address flags.value clockTime
             in
-            { core = { main = z80_core.main, env = z80env, flags = flags.flags, interrupts = z80_core.interrupts }, clockTime = clockTime, pc = pcAfter }
+            { core = { main = z80_core.main, env = z80env, flags = flags.flags, interrupts = z80_core.interrupts }, clockTime = time, pc = pcAfter }
 
         SetMem16 address value ->
             let
                 ( z80env, time ) =
                     z80_core.env |> setMem16 address value clockTime
             in
-            { core = { main = z80_core.main, env = z80env, flags = z80_core.flags, interrupts = z80_core.interrupts }, clockTime = clockTime, pc = pcAfter }
+            { core = { main = z80_core.main, env = z80env, flags = z80_core.flags, interrupts = z80_core.interrupts }, clockTime = time, pc = pcAfter }
 
 
 execute_delta : CpuTimeCTime -> Int -> Z80ROM -> Int -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
@@ -802,38 +802,6 @@ execute rom48k z80 =
 --			PC = (char)(PC+1); time += 4;
 --			switch(c) {
 --// -------------- >8 xy
---group_xy : IXIY -> Z80ROM -> Z80Core -> Z80Delta
---group_xy ixiy rom48k old_z80 =
---    let
---        c =
---            old_z80.env |> m1 old_z80.pc (or old_z80.interrupts.ir (and old_z80.r 0x7F)) rom48k
---
---        --intr = old_z80.interrupts
---        env =
---            old_z80.env
---
---        z80_1 =
---            { old_z80 | env = { env | time = c.time }, r = old_z80.r + 1 }
---
---        new_pc =
---            z80_1 |> inc_pc
---
---        z80 =
---            { z80_1 | pc = new_pc } |> add_cpu_time 4
---
---        ltc0 =
---            z80 |> execute_ltC0_xy c.value ixiy rom48k
---    in
---    case ltc0 of
---        Just z_z80 ->
---            z_z80
---
---        Nothing ->
---            --debugTodo "group_xy" (c.value |> toHexString) z80 |> Whole
---            UnknownIntValue "group_xy" c.value
---_ -> case ixiy of
---        IXIY_IX -> execute_gtc0 c.value IX z80
---        IXIY_IY -> execute_gtc0 c.value IY z80
 --      case c.value of
 -- case 0xED: group_ed(); break;
 -- case 0xC0: time++; if(Fr!=0) MP=PC=pop(); break;
@@ -916,60 +884,3 @@ execute rom48k z80 =
 --		af(SP = 0xFFFF);
 --	}
 --}
-
-
-
---interrupt : Int -> Z80ROM -> Z80 -> Z80
---interrupt bus rom48k full_z80 =
---    let
---        z80_core =
---            full_z80.core
---
---        ints =
---            z80_core.interrupts
---
---        main =
---            z80_core.main
---    in
---    if Bitwise.and ints.iff 1 == 0 then
---        full_z80
---
---    else
---        let
---            --z81 = debug_log "interrupt" "keyboard scan" z80
---            z80_1 =
---                { z80_core | interrupts = { ints | halted = False, iff = 0 } }
---
---            pushed =
---                z80_1.env |> z80_push z80_1.pc z80_1.clockTime
---
---            new_core =
---                { z80_1 | env = pushed, clockTime = z80_1.clockTime |> addCpuTimeTime 6 }
---
---            new_z80 =
---                { full_z80 | core = new_core }
---        in
---        case ints.iM of
---            IM0 ->
---                new_z80 |> im0 bus
---
---            --1 ->
---            --    new_z80 |> im0 bus
---            IM1 ->
---                new_z80 |> set_pc 0x38
---
---            IM2 ->
---                let
---                    new_ir =
---                        Bitwise.and ints.ir 0xFF00
---
---                    addr =
---                        Bitwise.or new_ir bus
---
---                    env_and_pc =
---                        z80_core.env |> mem16 addr rom48k z80_1.clockTime
---
---                    core_1 =
---                        { new_core | clockTime = env_and_pc.time |> addCpuTimeTime 6, pc = env_and_pc.value16 }
---                in
---                { new_z80 | core = core_1 }

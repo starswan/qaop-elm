@@ -12,14 +12,14 @@ applyTripleFlagChange z80changeData z80 =
                 JumpOnlyPC int
 
             else
-                z80 |> CoreOnly |> RareChange
+                NoCore
 
         Conditional16BitCall address shortdelay function ->
             if z80.flags |> function then
                 CallWithPCAndDelay address shortdelay
 
             else
-                z80 |> CoreOnly |> RareChange
+                NoCore
 
         NewPCRegister int ->
             JumpOnlyPC int
