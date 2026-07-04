@@ -8,10 +8,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const target = document.getElementById('applet');
   const load = target.dataset.load;
   const rom = target.dataset.rom;
-  const flags = 'rom=' + rom + ' tape=' + load;
+  const timeInMillis = parseInt(target.dataset.timeinmillis, 10);
+  // const flags = 'rom=' + rom + ' tape=' + load;
   // const flags = 'rom=' + rom;
   Elm.Main.init({
     node: target,
-    flags: {rom: rom, tape: load}
+    flags: {rom: rom, tape: load, timeInMillis: timeInMillis}
   })
 });
