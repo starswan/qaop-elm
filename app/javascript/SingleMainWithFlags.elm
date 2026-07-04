@@ -358,7 +358,6 @@ add_hl_hl z80_main z80_flags =
         new_xy =
             add16 z80_main.hl z80_main.hl z80_flags
     in
-    --{ z80 | main = new_z80, flags = new_xy.flags } |> add_cpu_time new_xy.time
     FlagsWithHLRegister new_xy.flags new_xy.value
 
 
@@ -369,7 +368,6 @@ add_ix_ix z80_main z80_flags =
         new_xy =
             add16 z80_main.ix z80_main.ix z80_flags
     in
-    --{ z80 | main = new_z80, flags = new_xy.flags } |> add_cpu_time new_xy.time
     FlagsWithIXRegister new_xy.flags new_xy.value
 
 
@@ -380,7 +378,6 @@ add_iy_iy z80_main z80_flags =
         new_xy =
             add16 z80_main.iy z80_main.iy z80_flags
     in
-    --{ z80 | main = new_z80, flags = new_xy.flags } |> add_cpu_time new_xy.time
     FlagsWithIYRegister new_xy.flags new_xy.value
 
 
@@ -791,7 +788,6 @@ add_ix_de z80_main z80_flags =
         new_xy =
             add16 xy (get_de z80_main) z80_flags
     in
-    --{ z80 | main = new_z80, flags = new_xy.flags} |> add_cpu_time new_xy.time
     FlagsWithIXRegister new_xy.flags new_xy.value
 
 
@@ -806,7 +802,6 @@ add_iy_de z80_main z80_flags =
         new_xy =
             add16 xy (get_de z80_main) z80_flags
     in
-    --{ z80 | main = new_z80, flags = new_xy.flags} |> add_cpu_time new_xy.time
     FlagsWithIYRegister new_xy.flags new_xy.value
 
 

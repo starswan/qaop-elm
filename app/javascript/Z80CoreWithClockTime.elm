@@ -34,7 +34,6 @@ constructor =
         time =
             reset_cpu_time
     in
-    --Z80 z80env_constructor 0 main main_flags alternate alt_flags 0 interrupts
     Z80CoreWithClockTime (Z80Core z80env_constructor main flags interrupts) time 0
 
 
@@ -50,7 +49,6 @@ add_cpu_time : Int -> Z80CoreWithClockTime -> Z80CoreWithClockTime
 add_cpu_time value z80 =
     let
         env =
-            --z80.env |> addCpuTimeEnv value
             z80.clockTime |> addCpuTimeTime value
     in
     { z80 | clockTime = env }
@@ -122,8 +120,6 @@ interrupt bus rom48k full_z80 =
                     env_and_pc =
                         new_core.env |> mem16 addr rom48k newClock.clockTime
 
-                    --core_1 =
-                    --    { new_core | pc = env_and_pc.value16 }
                     newClock1 =
                         { newClock | pc = env_and_pc.value16, core = new_core, clockTime = env_and_pc.time |> addCpuTimeTime 6 }
                 in
