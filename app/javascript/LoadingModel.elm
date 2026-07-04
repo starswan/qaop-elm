@@ -29,7 +29,7 @@ type LoadResult
 type alias Flags =
     { rom : String
     , tape : String
-    , time : Int
+    , timeInMillis : Int
     }
 
 
@@ -39,7 +39,7 @@ loadingInit data =
         load =
             romLoad data.rom
     in
-    ( LoadingModel data.tape (data.time |> millisToPosix), load )
+    ( LoadingModel data.tape (data.timeInMillis |> millisToPosix), load )
 
 
 romLoad : String -> Cmd InitMessage

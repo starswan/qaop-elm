@@ -14,7 +14,7 @@
   <div>
     <%= content_tag :canvas, 'Game', width: 512, height: 384, id: 'applet',
                     class: 'applet',
-                    data: { time: Time.now.utc.to_f * 1000,
+                    data: { time: Time.now.utc.to_f * 1000, # Elm time in ms, Ruby time is sec
                             load: "#{request.protocol}#{request.host_with_port}/games/#{@game.id}/download",
                             rom: "#{request.protocol}#{request.host_with_port}/spec48.rom" } %>
   </div>
