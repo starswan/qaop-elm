@@ -26,13 +26,6 @@ type alias Z80EnvWithTime =
     }
 
 
-type alias EnvWithPCAndValue =
-    { env : Z80Env
-    , pc : Int
-    , value : Int
-    }
-
-
 z80env_constructor =
     Z80Env Dict.empty 0 7
 
@@ -46,7 +39,7 @@ setRam addr value z80env =
     --    --    else
     --    --       Nothing
     --    --in
-    { z80env | ram = z80env.ram |> Dict.insert addr value }
+    { sp = z80env.sp, borderColour = z80env.borderColour, ram = z80env.ram |> Dict.insert addr value }
 
 
 
