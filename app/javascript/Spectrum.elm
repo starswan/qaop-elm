@@ -59,18 +59,19 @@ type alias BorderRefresh =
     }
 
 
-new_screen_refresh : ScreenRefresh
-new_screen_refresh =
-    let
-        scrchg =
-            List.repeat 24 0
-    in
-    ScreenRefresh scrchg 0 0 0 0
 
-
-new_border_refresh : BorderRefresh
-new_border_refresh =
-    BorderRefresh 0 0 0 0
+--new_screen_refresh : ScreenRefresh
+--new_screen_refresh =
+--    let
+--        scrchg =
+--            List.repeat 24 0
+--    in
+--    ScreenRefresh scrchg 0 0 0 0
+--
+--
+--new_border_refresh : BorderRefresh
+--new_border_refresh =
+--    BorderRefresh 0 0 0 0
 
 
 new_tape : List Tapfile -> Spectrum -> Spectrum
@@ -133,16 +134,18 @@ type alias Spectrum =
     , loading : Bool
     , want_pause : Int
     , tape : Maybe Z80Tape
-    , --audio: Audio,
-      screen_refresh : ScreenRefresh
-    , border_refresh : BorderRefresh
+
+    --, --audio: Audio,
+    --screen_refresh : ScreenRefresh
+    --, border_refresh : BorderRefresh
     }
 
 
 constructor : Dict Int Int -> Spectrum
 constructor z80rom =
     --Spectrum Z80.constructor True 1 Nothing Audio new_screen_refresh new_border_refresh
-    Spectrum Z80.constructor (Z80Rom.constructor z80rom) True False 1 Nothing new_screen_refresh new_border_refresh
+    --Spectrum Z80.constructor (Z80Rom.constructor z80rom) True False 1 Nothing new_screen_refresh new_border_refresh
+    Spectrum Z80.constructor (Z80Rom.constructor z80rom) True False 1 Nothing
 
 
 
