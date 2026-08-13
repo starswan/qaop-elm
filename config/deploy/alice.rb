@@ -65,7 +65,7 @@ server "alice",
 
 set :deploy_to, "/home/starswan/html/retro"
 set :rails_env, "production"
-set :rvm_ruby_version, "3.3.10@retroelm"
+set :rvm_ruby_version, "3.3.12@retroelm"
 # # Try to speed up ruby compilation on Raspberry Pi 2
 # # set :rvm_install_ruby_threads, 5
 # set :default_environment,
