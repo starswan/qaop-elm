@@ -437,7 +437,7 @@ GEM
     securerandom (0.4.1)
     shellany (0.0.1)
     simplecov (1.1.1)
-    sqlite3 (2.9.5-x86_64-linux-gnu)
+    sqlite3 (2.9.6-x86_64-linux-gnu)
     sshkit (1.25.0)
       base64
       logger
