@@ -29,7 +29,7 @@ import QaopModel exposing (QaopMessage, QaopModel, qaopSubs, updateQaop, viewQao
 
 
 c_TICKTIME =
-    20
+    10
 
 
 
