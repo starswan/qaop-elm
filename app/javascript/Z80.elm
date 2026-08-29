@@ -267,6 +267,13 @@ applyCoreChange coreChange clockTime pc_inc pc rom48k z80_core =
             in
             { core = { main = z80_main, env = { ram = z80env.ram, sp = sp, borderColour = z80env.borderColour }, flags = z80_core.flags, interrupts = z80_core.interrupts }, clockTime = clockTime, pc = pcAfter }
 
+        ChangeFlagsAndSP z80_flags sp ->
+            let
+                z80env =
+                    z80_core.env
+            in
+            { core = { main = z80_core.main, env = { ram = z80env.ram, sp = sp, borderColour = z80env.borderColour }, flags = z80_flags, interrupts = z80_core.interrupts }, clockTime = clockTime, pc = pcAfter }
+
         PopIntoPC ->
             let
                 env =
@@ -285,9 +292,6 @@ applyCoreChange coreChange clockTime pc_inc pc rom48k z80_core =
                 CoreOnly z80Core ->
                     { core = z80Core, clockTime = clockTime, pc = pcAfter }
 
-                CoreWithTime shortDelay z80Core ->
-                    { core = z80Core, clockTime = clockTime |> addExtraCpuTime shortDelay, pc = pcAfter }
-
                 Z80OutChange portNum ->
                     let
                         env =
@@ -297,6 +301,9 @@ applyCoreChange coreChange clockTime pc_inc pc rom48k z80_core =
                             env |> z80_out portNum z80_core.flags.a clockTime
                     in
                     { core = { z80_core | env = z80env }, clockTime = newTime, pc = pcAfter }
+
+                NewInterrupts interruptRegisters ->
+                    { core = { z80_core | interrupts = interruptRegisters }, clockTime = clockTime, pc = pcAfter }
 
         MainWithOffsetAndDelay offset shortDelay z80_main ->
             { core = { main = z80_main, env = z80_core.env, flags = z80_core.flags, interrupts = z80_core.interrupts }, pc = (pcAfter + offset) |> Bitwise.and 0xFFFF, clockTime = clockTime |> addExtraCpuTime shortDelay }

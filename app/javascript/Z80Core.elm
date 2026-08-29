@@ -26,8 +26,8 @@ type RepeatPCOffset
 
 type RareCoreChange
     = CoreOnly Z80Core
-    | CoreWithTime ShortDelay Z80Core
     | Z80OutChange Int
+    | NewInterrupts InterruptRegisters
 
 
 
@@ -54,6 +54,7 @@ type CoreChange
     | SetMem8Flags Int IntWithFlags
     | ChangeMainAndFlags MainWithIndexRegisters FlagRegisters
     | ChangeMainAndSP MainWithIndexRegisters Int
+    | ChangeFlagsAndSP FlagRegisters Int
 
 
 type DirectionForLDIR

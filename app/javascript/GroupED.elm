@@ -17,7 +17,7 @@ import Z80Registers exposing (ChangeMainRegister(..))
 import Z80Types exposing (MainWithIndexRegisters, Z80ROM, get_bc, get_de, set_bc_main, set_de_main)
 
 
-execute_ED78 : Z80ROM -> CpuTimeCTime -> Z80Core -> Z80Core
+execute_ED78 : Z80ROM -> CpuTimeCTime -> Z80Core -> FlagRegisters
 execute_ED78 rom48k clockTime z80 =
     --  case 0x78: MP=(v=B<<8|C)+1; f_szh0n0p(A=env.in(v)); time+=4; break;
     let
@@ -36,7 +36,7 @@ execute_ED78 rom48k clockTime z80 =
         new_flags =
             { flags | a = new_a.value } |> f_szh0n0p new_a.value
     in
-    { z80 | flags = new_flags }
+    new_flags
 
 
 
@@ -56,7 +56,7 @@ adc_hl_sp _ clockTime z80 =
     z80 |> adc_hl z80.env.sp
 
 
-execute_ED70 : Z80ROM -> CpuTimeCTime -> Z80Core -> Z80Core
+execute_ED70 : Z80ROM -> CpuTimeCTime -> Z80Core -> FlagRegisters
 execute_ED70 rom48k clockTime z80 =
     let
         v =
@@ -68,7 +68,7 @@ execute_ED70 rom48k clockTime z80 =
         new_flags =
             debugLog "ED70 - IN (C)" ( new_a.value, z80.main.b |> toHexString2, z80.main.c |> toHexString2 ) z80.flags |> f_szh0n0p new_a.value
     in
-    { z80 | flags = new_flags }
+    new_flags
 
 
 
