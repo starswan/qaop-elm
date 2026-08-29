@@ -3,10 +3,9 @@ module SingleEnvWithMain exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, InstructionDuration(..))
 import Dict exposing (Dict)
-import Utils exposing (BitTest, shiftRightBy8)
-import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
+import Z80Core exposing (CoreChange(..), CoreChangeWithoutPC(..), RareCoreChange(..), Z80Core)
 import Z80Env exposing (Z80Env)
-import Z80Flags exposing (FlagRegisters, add16, c_F53, testBit)
+import Z80Flags exposing (FlagRegisters, add16)
 import Z80Mem exposing (getMem8)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIYHL(..), MainWithIndexRegisters, get_bc, get_de, set_xy)
@@ -47,14 +46,14 @@ applySingleEnvMainChange : CpuTimeCTime -> SingleEnvMainChange -> Z80ROM -> Z80C
 applySingleEnvMainChange clockTime z80changeData rom48k z80 =
     case z80changeData of
         NewSPValue int ->
-            SetStackPointer int |> RareChange
+            SetStackPointer int |> RareChange |> CoreWithoutJump
 
         SingleEnvNewHL16BitAdd ixiyhl hl sp ->
             let
                 new_xy =
                     add16 hl sp z80.flags
             in
-            ChangeMainAndFlags (z80.main |> set_xy new_xy.value ixiyhl) new_xy.flags
+            ChangeMainAndFlags (z80.main |> set_xy new_xy.value ixiyhl) new_xy.flags |> CoreWithoutJump
 
         SingleEnvLoadAIndirect function ->
             let
@@ -67,7 +66,7 @@ applySingleEnvMainChange clockTime z80changeData rom48k z80 =
                 ( value, newTime ) =
                     z80.env |> getMem8 v clockTime rom48k
             in
-            { flags | a = value } |> FlagsOnly
+            { flags | a = value } |> FlagsOnly |> CoreWithoutJump
 
 
 ld_a_indirect_bc : MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange

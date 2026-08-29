@@ -28,12 +28,11 @@ type RareCoreChange
     | SetStackPointer Int
 
 
-type CoreChange
+type CoreChangeWithoutPC
     = SetMem8 Int Int
     | NoCore
     | SetMem16 Int Int
     | Push16BitValue Int
-    | JumpOnlyPC Int
     | JumpWithOffset Int
     | JumpOffsetWithDelay Int ShortDelay
     | CallWithPCAndDelay Int ShortDelay
@@ -45,7 +44,12 @@ type CoreChange
     | ChangeMainAndFlags MainWithIndexRegisters FlagRegisters
     | ChangeMainAndSP MainWithIndexRegisters Int
     | ChangeFlagsAndSP FlagRegisters Int
+
+
+type CoreChange
+    = CoreWithoutJump CoreChangeWithoutPC
     | PopIntoPC
+    | JumpOnlyPC Int
     | LooperJumpBack Z80Core
     | LooperWithDelayJumpBack ShortDelay Z80Core
 
