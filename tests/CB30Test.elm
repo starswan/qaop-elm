@@ -1,5 +1,6 @@
 module CB30Test exposing (..)
 
+import Compiler exposing (createCompiledRom)
 import Dict
 import Expect exposing (Expectation)
 import Test exposing (..)
@@ -45,7 +46,7 @@ suite =
             { z80env = z80.env, time = clock.clockTime }
 
         z80rom =
-            Z80Rom.constructor Dict.empty
+            createCompiledRom Dict.empty
     in
     describe "Bit instructions (CB)"
         [ describe "SLL B"
@@ -90,7 +91,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                     in
                     Expect.equal ( addr + 4, 0xA1, 0xA1 ) ( new_pc, new_z80.main.b, mem_value.value )
             , test "0xFD 0xCB d 0x30 SLL (IY + d), B" <|
@@ -115,7 +116,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                     in
                     Expect.equal ( addr + 4, 0xA1, 0xA1 ) ( new_pc, new_z80.main.b, mem_value.value )
             ]
@@ -161,7 +162,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                     in
                     Expect.equal ( addr + 4, 0xA1, 0xA1 ) ( new_pc, new_z80.main.c, mem_value.value )
             , test "0xFD 0xCB d 0x31 SLL (IY + d), C" <|
@@ -186,7 +187,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                     in
                     Expect.equal ( addr + 4, 0xA1, 0xA1 ) ( new_pc, new_z80.main.c, mem_value.value )
             ]
@@ -233,7 +234,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                     in
                     Expect.equal ( addr + 4, 0xA1, 0xA1 ) ( new_pc, new_z80.main.d, mem_value.value )
             , test "0xFD 0xCB d 0x32 SLL (IY + d), D" <|
@@ -258,7 +259,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                     in
                     Expect.equal ( addr + 4, 0xA1, 0xA1 ) ( new_pc, new_z80.main.d, mem_value.value )
             ]
@@ -305,7 +306,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                     in
                     Expect.equal ( addr + 4, 0xA1, 0xA1 ) ( new_pc, new_z80.main.e, mem_value.value )
             , test "0xFD 0xCB d 0x33 SLL (IY + d), E" <|
@@ -330,7 +331,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                     in
                     Expect.equal ( addr + 4, 0xA1, 0xA1 ) ( new_pc, new_z80.main.e, mem_value.value )
             ]
@@ -376,7 +377,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                     in
                     Expect.equal ( addr + 4, 0xA150, 0xA1 ) ( new_pc, new_z80.main.hl, mem_value.value )
             , test "0xFD 0xCB d 0x34 SLL (IY + d), H" <|
@@ -401,7 +402,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                     in
                     Expect.equal ( addr + 4, 0xA150, 0xA1 ) ( new_pc, new_z80.main.hl, mem_value.value )
             ]
@@ -448,7 +449,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                     in
                     Expect.equal ( addr + 4, 0x50A1, 0xA1 ) ( new_pc, new_z80.main.hl, mem_value.value )
             , test "0xFD 0xCB d 0x35 SLL (IY + d), L" <|
@@ -473,7 +474,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                     in
                     Expect.equal ( addr + 4, 0x50A1, 0xA1 ) ( new_pc, new_z80.main.hl, mem_value.value )
             ]
@@ -498,7 +499,7 @@ suite =
                             |> Triple.dropSecond
 
                     mem_value =
-                        new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                        new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                 in
                 Expect.equal ( addr + 2, 0x63 ) ( new_pc, mem_value.value )
         , test "0xDD 0xCB 0x45 0x36 SLL (IX + d)" <|
@@ -524,7 +525,7 @@ suite =
                             |> Triple.dropSecond
 
                     mem_value =
-                        new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                        new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                 in
                 Expect.equal ( addr + 4, 0x63 ) ( new_pc, mem_value.value )
         , test "0xFD 0xCB 0x45 0x36 SLL (IY + d)" <|
@@ -550,7 +551,7 @@ suite =
                             |> Triple.dropSecond
 
                     mem_value =
-                        new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                        new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                 in
                 Expect.equal ( addr + 4, 0x63 ) ( new_pc, mem_value.value )
         , test "0xCB 0x37 SLL A" <|
@@ -616,7 +617,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                     in
                     Expect.equal ( addr + 4, 0x28, 0x28 ) ( new_pc, new_z80.main.b, mem_value.value )
             , test "0xFD 0xCB d 0x38 SRL (IY + d), B" <|
@@ -641,7 +642,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                     in
                     Expect.equal ( addr + 4, 0x28, 0x28 ) ( new_pc, new_z80.main.b, mem_value.value )
             ]
@@ -688,7 +689,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                     in
                     Expect.equal ( addr + 4, 0x28, 0x28 ) ( new_pc, new_z80.main.c, mem_value.value )
             , test "0xFD 0xCB d 0x39 SRL (IY + d), C" <|
@@ -713,7 +714,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                     in
                     Expect.equal ( addr + 4, 0x28, 0x28 ) ( new_pc, new_z80.main.c, mem_value.value )
             ]
@@ -760,7 +761,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                     in
                     Expect.equal ( addr + 4, 0x28, 0x28 ) ( new_pc, new_z80.main.d, mem_value.value )
             , test "0xFD 0xCB d 0x3A SRL (IY + d), D" <|
@@ -785,7 +786,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                     in
                     Expect.equal ( addr + 4, 0x28, 0x28 ) ( new_pc, new_z80.main.d, mem_value.value )
             ]
@@ -833,7 +834,7 @@ suite =
                             |> Triple.dropSecond
 
                     mem_value =
-                        new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                        new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                 in
                 Expect.equal ( addr + 4, 0x28, 0x28 ) ( new_pc, new_z80.main.e, mem_value.value )
         , test "0xFD 0xCB d 0x3B SRL (IY + d), E" <|
@@ -858,7 +859,7 @@ suite =
                             |> Triple.dropSecond
 
                     mem_value =
-                        new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                        new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                 in
                 Expect.equal ( addr + 4, 0x28, 0x28 ) ( new_pc, new_z80.main.e, mem_value.value )
         , describe "SRL H"
@@ -904,7 +905,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                     in
                     Expect.equal ( addr + 4, 0x2850, 0x28 ) ( new_pc, new_z80.main.hl, mem_value.value )
             , test "0xFD 0xCB d 0x3C SRL (IY + d), L" <|
@@ -929,7 +930,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                     in
                     Expect.equal ( addr + 4, 0x2850, 0x28 ) ( new_pc, new_z80.main.hl, mem_value.value )
             ]
@@ -976,7 +977,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                     in
                     Expect.equal ( addr + 4, 0x5028, 0x28 ) ( new_pc, new_z80.main.hl, mem_value.value )
             , test "0xFD 0xCB d 0x3D SRL (IY + d), L" <|
@@ -1001,7 +1002,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                     in
                     Expect.equal ( addr + 4, 0x5028, 0x28 ) ( new_pc, new_z80.main.hl, mem_value.value )
             ]
@@ -1027,7 +1028,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                     in
                     Expect.equal ( addr + 2, 0x28 ) ( new_pc, mem_value.value )
             , test "0xDD 0xCB 0x3E 0x45 SRL (IX + d)" <|
@@ -1053,7 +1054,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                     in
                     Expect.equal ( addr + 4, 0x28 ) ( new_pc, mem_value.value )
             , test "0xFD 0xCB 0x3E 0x45 SRL (IY + d)" <|
@@ -1079,7 +1080,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                            new_z80.env |> mem 0x6545 clock.clockTime z80rom.z80rom
                     in
                     Expect.equal ( addr + 4, 0x28 ) ( new_pc, mem_value.value )
             ]

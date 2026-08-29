@@ -1,5 +1,6 @@
 module CB58Test exposing (..)
 
+import Compiler exposing (createCompiledRom)
 import Dict
 import Expect exposing (Expectation)
 import Test exposing (..)
@@ -47,7 +48,7 @@ suite =
             { z80env = z80.env |> setMem addr 0xCB clock.clockTime |> Tuple.first, time = clock.clockTime }
 
         z80rom =
-            Z80Rom.constructor Dict.empty
+            createCompiledRom Dict.empty
     in
     describe "Bit instructions (CB)"
         [ describe "0xCB 0x58 BIT 3,B"
