@@ -20,18 +20,11 @@ type RepeatPCOffset
     | JumpBack
 
 
-
--- SetStackPointer can be used for a pop/return so useful to have its own type
-
-
 type RareCoreChange
     = CoreOnly Z80Core
     | Z80OutChange Int
     | NewInterrupts InterruptRegisters
-
-
-
--- NoCore can be jumps not taken or calls not made
+    | LooperNoOffset Z80Core
 
 
 type CoreChange
@@ -44,22 +37,27 @@ type CoreChange
     | JumpWithOffset Int
     | JumpOffsetWithDelay Int ShortDelay
     | CallWithPCAndDelay Int ShortDelay
-    | Looper RepeatPCOffset Z80Core
-    | LooperWithDelay RepeatPCOffset ShortDelay Z80Core
     | MainOnly MainWithIndexRegisters
     | FlagsOnly FlagRegisters
     | MainWithOffsetAndDelay Int ShortDelay MainWithIndexRegisters
     | RareChange RareCoreChange
-    | PopIntoPC
     | SetMem8Flags Int IntWithFlags
     | ChangeMainAndFlags MainWithIndexRegisters FlagRegisters
     | ChangeMainAndSP MainWithIndexRegisters Int
     | ChangeFlagsAndSP FlagRegisters Int
+    | PopIntoPC
+    | LooperJumpBack Z80Core
+    | LooperWithDelayJumpBack ShortDelay Z80Core
 
 
 type DirectionForLDIR
     = Forwards
     | Backwards
+
+
+type LDIRLoop
+    = NoLDIRLoop
+    | JumpBackWithFiveDelay
 
 
 

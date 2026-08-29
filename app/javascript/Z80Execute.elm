@@ -13,7 +13,7 @@ import SingleWith8BitParameter exposing (Single8BitChange(..), applySimple8BitCh
 import TripleByte exposing (TripleByteChange(..), TripleByteIndexChange(..), TripleByteRegister(..))
 import Utils exposing (bitMaskFromBit, byte, clearBit, inverseBitMaskFromBit, setBit, shiftLeftBy8, toHexString2)
 import Z80Change exposing (IndexedZ80Change(..), Z80Change(..))
-import Z80Core exposing (CoreChange(..), DirectionForLDIR(..), RareCoreChange(..), RepeatPCOffset(..), Z80Core)
+import Z80Core exposing (CoreChange(..), DirectionForLDIR(..), LDIRLoop(..), RareCoreChange(..), RepeatPCOffset(..), Z80Core)
 import Z80Debug exposing (debugLog, debugTodo)
 import Z80Env exposing (Z80Env, setMem, z80_in, z80_out, z80_push)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, f_szh0n0p, get_af, inc, set_af, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
@@ -1027,7 +1027,12 @@ applyEdRegisterDelta clockTime z80changeData rom48k z80_core =
                 ( core2, newTime, newpc ) =
                     z80_core |> cpir direction repeat rom48k clockTime
             in
-            core2 |> Looper newpc
+            case newpc of
+                NoOffset ->
+                    core2 |> LooperNoOffset |> RareChange
+
+                JumpBack ->
+                    core2 |> LooperJumpBack
 
         SbcHL reg16type ->
             let
@@ -1052,22 +1057,24 @@ applyEdRegisterDelta clockTime z80changeData rom48k z80_core =
 
         Ldir direction repeat ->
             let
-                ( result, maybeDelay, new_pc ) =
+                ( result, maybeDelayWithJump ) =
                     z80_core |> ldir direction repeat rom48k clockTime
             in
-            case maybeDelay of
-                Just a ->
-                    result |> LooperWithDelay new_pc a
+            case maybeDelayWithJump of
+                NoLDIRLoop ->
+                    result |> LooperNoOffset |> RareChange
 
-                Nothing ->
-                    result |> Looper new_pc
+                JumpBackWithFiveDelay ->
+                    result |> LooperWithDelayJumpBack FiveExtraTStates
 
         RegChangeIm intMode ->
             let
                 interrupts =
                     debugLog "SetInterruptMode" intMode z80_core.interrupts
             in
-            { interrupts | iM = intMode } |> NewInterrupts |> RareChange
+            { interrupts | iM = intMode }
+                |> NewInterrupts
+                |> RareChange
 
         Z80InI direction repeat ->
             let
@@ -1091,13 +1098,6 @@ applyEdRegisterDelta clockTime z80changeData rom48k z80_core =
                 ( env_2, newTme2 ) =
                     env |> setMem main.hl in_value.value in_value.time
 
-                pc2 =
-                    if repeat && new_b /= 0 then
-                        JumpBack
-
-                    else
-                        NoOffset
-
                 new_main =
                     { main | hl = new_hl, b = new_b }
 
@@ -1115,7 +1115,11 @@ applyEdRegisterDelta clockTime z80changeData rom48k z80_core =
                 flags =
                     z80_core.flags |> inirOtirFlags d_flag new_bc in_value.value
             in
-            { z80_core | env = env_2, flags = flags, main = new_main } |> Looper pc2
+            if repeat && new_b /= 0 then
+                { z80_core | env = env_2, flags = flags, main = new_main } |> LooperJumpBack
+
+            else
+                { z80_core | env = env_2, flags = flags, main = new_main } |> LooperNoOffset |> RareChange
 
         Z80OutI direction repeat ->
             let
@@ -1145,17 +1149,14 @@ applyEdRegisterDelta clockTime z80changeData rom48k z80_core =
                 ( env2, newTime2 ) =
                     z80_core.env |> z80_out new_bc outvalue.value outvalue.time
 
-                pc2 =
-                    if repeat && new_b /= 0 then
-                        JumpBack
-
-                    else
-                        NoOffset
-
                 flags =
                     z80_core.flags |> inirOtirFlags new_hl new_bc outvalue.value
             in
-            { z80_core | env = env2, flags = flags, main = main_2 } |> Looper pc2
+            if repeat && new_b /= 0 then
+                { z80_core | env = env2, flags = flags, main = main_2 } |> LooperJumpBack
+
+            else
+                { z80_core | env = env2, flags = flags, main = main_2 } |> LooperNoOffset |> RareChange
 
         InRC changeMainRegister ->
             let
