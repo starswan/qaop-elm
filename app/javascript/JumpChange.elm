@@ -1,7 +1,14 @@
 module JumpChange exposing (..)
 
-import TripleWithFlags exposing (TripleWithFlagsChange(..))
-import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
+import CpuTimeCTime exposing (ShortDelay)
+import Z80Core exposing (CoreChange(..), Z80Core)
+import Z80Flags exposing (FlagRegisters)
+
+
+type TripleWithFlagsChange
+    = Conditional16BitJump Int (FlagRegisters -> Bool)
+    | Conditional16BitCall Int ShortDelay (FlagRegisters -> Bool)
+    | NewPCRegister Int
 
 
 applyTripleFlagChange : TripleWithFlagsChange -> Z80Core -> CoreChange

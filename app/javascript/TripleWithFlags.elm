@@ -2,13 +2,8 @@ module TripleWithFlags exposing (..)
 
 import CpuTimeCTime exposing (InstructionDuration(..), ShortDelay(..))
 import Dict exposing (Dict)
+import JumpChange exposing (TripleWithFlagsChange(..))
 import Z80Flags exposing (FlagRegisters, always_jump, jump_c, jump_m, jump_nc, jump_nz, jump_p, jump_pe, jump_po, jump_z)
-
-
-type TripleWithFlagsChange
-    = Conditional16BitJump Int (FlagRegisters -> Bool)
-    | Conditional16BitCall Int ShortDelay (FlagRegisters -> Bool)
-    | NewPCRegister Int
 
 
 triple16bitJumps : Dict Int ( Int -> TripleWithFlagsChange, InstructionDuration )
