@@ -26,8 +26,8 @@ type RepeatPCOffset
 
 type RareCoreChange
     = CoreOnly Z80Core
-    | NewEnv Z80Env
     | CoreWithTime ShortDelay Z80Core
+    | Z80OutChange Int
 
 
 
