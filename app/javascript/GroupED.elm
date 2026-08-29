@@ -8,7 +8,7 @@ import PCIncrement exposing (PCIncrement(..))
 import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), RegisterFlagChange(..), SixteenBit(..))
 import Utils exposing (char, shiftLeftBy8, shiftRightBy8, toHexString2)
 import Z80Change exposing (Z80Change(..))
-import Z80Core exposing (CoreChange(..), DirectionForLDIR(..), LDIRLoop(..), RareCoreChange(..), RepeatPCOffset(..), Z80Core)
+import Z80Core exposing (CoreChange(..), CoreChangeWithoutPC(..), DirectionForLDIR(..), LDIRLoop(..), RareCoreChange(..), RepeatPCOffset(..), Z80Core)
 import Z80Debug exposing (debugLog)
 import Z80Env exposing (Z80Env, setMem, z80_in)
 import Z80Flags exposing (FlagRegisters, c_F3, c_F5, c_F53, c_FC, c_FH, f_szh0n0p, z80_sub)
@@ -287,7 +287,7 @@ adc_hl b z80 =
         ( flags, hl ) =
             ed_adc_hl b z80_main z80.flags
     in
-    ChangeMainAndFlags { z80_main | hl = hl } flags
+    ChangeMainAndFlags { z80_main | hl = hl } flags |> CoreWithoutJump
 
 
 
@@ -429,7 +429,7 @@ rld rom48k clockTime z80 =
         new_flags =
             { flags | a = new_a } |> f_szh0n0p new_a
     in
-    SetMem8Flags z80.main.hl { flags = new_flags, value = Bitwise.and v 0xFF }
+    SetMem8Flags z80.main.hl { flags = new_flags, value = Bitwise.and v 0xFF } |> CoreWithoutJump
 
 
 
@@ -465,7 +465,7 @@ rrd rom48k clockTime z80 =
         new_flags =
             { flags | a = new_a } |> f_szh0n0p new_a
     in
-    SetMem8Flags z80.main.hl { flags = new_flags, value = Bitwise.and (v |> shiftRightBy 4) 0xFF }
+    SetMem8Flags z80.main.hl { flags = new_flags, value = Bitwise.and (v |> shiftRightBy 4) 0xFF } |> CoreWithoutJump
 
 
 fourByteMainED : Dict Int ( MainWithIndexRegisters -> Int -> EDFourByteChange, InstructionDuration )
