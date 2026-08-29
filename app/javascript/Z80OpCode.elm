@@ -294,7 +294,7 @@ lengthAndDuration pc rom48k z80env =
                                     doubleParam =
                                         z80env |> mem16 (Bitwise.and (pc + 1) 0xFFFF) rom48k clockTime
                                 in
-                                ( IncrementByThree, duration, \_ _ z80core -> z80core |> applyTripleFlagChange (f doubleParam.value16) )
+                                ( IncrementByThree, duration, \_ _ z80core -> z80core.flags |> applyTripleFlagChange (f doubleParam.value16) )
                             )
                 , \instruction ->
                     maybeRelativeJump
