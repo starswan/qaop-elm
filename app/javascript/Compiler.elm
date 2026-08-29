@@ -4,14 +4,14 @@ import Bitwise
 import CompiledZ80ROM exposing (CompiledInstruction, CompiledZ80ROM)
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), reset_cpu_time)
 import Dict exposing (Dict)
-import JumpChange exposing (TripleWithFlagsChange(..), applyTripleFlagChange)
+import JumpChange exposing (JumpChange(..), TripleWithFlagsChange(..), applyTripleFlagChange)
 import Keyboard
 import PCIncrement exposing (PCIncrement(..))
 import RegisterChange exposing (RegisterFlagChange(..))
 import Set exposing (Set)
 import SingleMainWithFlags exposing (singleByteMainAndFlagRegistersIY)
 import SingleNoParams exposing (singleNoParamCalls)
-import SingleWith8BitParameter exposing (JumpChange(..), maybeRelativeJump)
+import SingleWith8BitParameter exposing (maybeRelativeJump)
 import TripleWithFlags exposing (triple16bitJumps)
 import TripleWithMain exposing (tripleMainRegsIYThree)
 import Utils exposing (toHexString, toHexString2, toPlainHexString2)
@@ -187,7 +187,7 @@ compileRunning nesting rom48k z80env key value input =
                                             Just ( aLongJump, duration ) ->
                                                 let
                                                     dictVal =
-                                                        CompiledInstruction (\_ _ z80core -> z80core |> applyTripleFlagChange aLongJump) duration IncrementByThree
+                                                        CompiledInstruction (\_ _ z80core -> z80core.flags |> applyTripleFlagChange aLongJump) duration IncrementByThree
                                                 in
                                                 case aLongJump of
                                                     NewPCRegister _ ->
