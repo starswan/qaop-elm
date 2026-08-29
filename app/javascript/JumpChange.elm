@@ -11,18 +11,23 @@ type TripleWithFlagsChange
     | NewPCRegister Int
 
 
-applyTripleFlagChange : TripleWithFlagsChange -> Z80Core -> CoreChange
-applyTripleFlagChange z80changeData z80 =
+type JumpChange
+    = ConditionalJumpOffset Int ShortDelay (FlagRegisters -> Bool)
+    | DJNZOffset Int ShortDelay
+
+
+applyTripleFlagChange : TripleWithFlagsChange -> FlagRegisters -> CoreChange
+applyTripleFlagChange z80changeData z80_flags =
     case z80changeData of
         Conditional16BitJump int function ->
-            if z80.flags |> function then
+            if z80_flags |> function then
                 JumpOnlyPC int
 
             else
                 NoCore
 
         Conditional16BitCall address shortdelay function ->
-            if z80.flags |> function then
+            if z80_flags |> function then
                 CallWithPCAndDelay address shortdelay
 
             else

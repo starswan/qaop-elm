@@ -5,11 +5,11 @@ import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), ShortDelay(
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
 import GroupED exposing (adc_hl_sp, cpir, execute_ED70, execute_ED78, inirOtirFlags, ldir, rld, rrd, sbc_hl)
 import Interrupts exposing (IFFValue(..))
-import JumpChange exposing (TripleWithFlagsChange(..))
+import JumpChange exposing (JumpChange(..), TripleWithFlagsChange(..), applyTripleFlagChange)
 import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), RegisterFlagChange(..), Shifter(..), SixteenBit(..), ThreeByteChange(..), TwoByteChange(..))
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
 import SingleEnvWithMain exposing (SingleEnvMainChange, applySingleEnvMainChange)
-import SingleWith8BitParameter exposing (JumpChange(..), Single8BitChange(..), applySimple8BitChange)
+import SingleWith8BitParameter exposing (Single8BitChange(..), applySimple8BitChange)
 import TripleByte exposing (TripleByteChange(..), TripleByteIndexChange(..), TripleByteRegister(..))
 import Utils exposing (bitMaskFromBit, byte, clearBit, inverseBitMaskFromBit, setBit, shiftLeftBy8, toHexString2)
 import Z80Change exposing (IndexedZ80Change(..), Z80Change(..))
@@ -58,13 +58,13 @@ apply_delta z80 iff rom48k clockTime z80delta =
         ThreeByteDelta threeByteChange ->
             case threeByteChange of
                 ThreeByteFlags tripleWithFlagsChange ->
-                    z80 |> applyTripleFlagChange tripleWithFlagsChange
+                    z80.flags |> applyTripleFlagChange tripleWithFlagsChange
 
                 ThreeBytePlain tripleByteChange ->
                     z80 |> applySimpleTripleChangeDelta rom48k clockTime tripleByteChange
 
         Triple16FlagsDelta tripleWithFlagsChange ->
-            z80 |> applyTripleFlagChange tripleWithFlagsChange
+            z80.flags |> applyTripleFlagChange tripleWithFlagsChange
 
         UnknownInstruction string int ->
             debugTodo string (int |> toHexString2) z80 |> CoreOnly |> RareChange
@@ -951,29 +951,6 @@ applyTripleChangeDelta rom48k cpu_time z80changeData z80 =
                     env |> mem16 int rom48k cpu_time
             in
             { main | iy = value.value16 } |> MainOnly
-
-
-applyTripleFlagChange : TripleWithFlagsChange -> Z80Core -> CoreChange
-applyTripleFlagChange z80changeData z80 =
-    case z80changeData of
-        Conditional16BitJump int function ->
-            if z80.flags |> function then
-                JumpOnlyPC int
-
-            else
-                NoCore
-
-        Conditional16BitCall address shortdelay function ->
-            if z80.flags |> function then
-                CallWithPCAndDelay address shortdelay
-
-            else
-                NoCore
-
-        --CallImmediate int ->
-        --    CallWithPC int
-        NewPCRegister int ->
-            JumpOnlyPC int
 
 
 applyEdFourByte : CpuTimeCTime -> EDFourByteChange -> Z80ROM -> Z80Core -> CoreChange

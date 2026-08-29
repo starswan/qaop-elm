@@ -2,6 +2,7 @@ module SingleWith8BitParameter exposing (..)
 
 import CpuTimeCTime exposing (InstructionDuration(..), ShortDelay(..))
 import Dict exposing (Dict)
+import JumpChange exposing (JumpChange(..))
 import Utils exposing (byte)
 import Z80Flags exposing (FlagFunc(..), FlagRegisters, always_jump, jump_c, jump_nc, jump_nz, jump_z)
 import Z80Registers exposing (CoreRegister(..))
@@ -53,11 +54,6 @@ maybeRelativeJump =
         , ( 0x30, ( jr_nc_d, SevenTStates ) )
         , ( 0x38, ( jr_c_d, SevenTStates ) )
         ]
-
-
-type JumpChange
-    = ConditionalJumpOffset Int ShortDelay (FlagRegisters -> Bool)
-    | DJNZOffset Int ShortDelay
 
 
 applySimple8BitChange : CoreRegister -> Int -> MainWithIndexRegisters -> MainWithIndexRegisters
