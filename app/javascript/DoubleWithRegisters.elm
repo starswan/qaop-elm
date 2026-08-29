@@ -3,7 +3,6 @@ module DoubleWithRegisters exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import Dict exposing (Dict)
-import SingleWith8BitParameter exposing (JumpChange(..), Single8BitChange(..))
 import Utils exposing (byte, shiftLeftBy8)
 import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
 import Z80Flags exposing (FlagFunc(..), changeFlags, dec, inc)

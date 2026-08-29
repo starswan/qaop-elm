@@ -19,7 +19,7 @@ import SimpleFlagOps exposing (singleByteFlagsCB)
 import SingleNoParams exposing (ex_af, execute_0x76_halt, exx)
 import Z80Core exposing (CoreChange(..), RareCoreChange(..), RepeatPCOffset(..), Z80Core)
 import Z80CoreWithClockTime exposing (Z80, Z80CoreWithClockTime, di_0xF3, ei_0xFB)
-import Z80Env exposing (Z80Env, setMem, setMem16, z80_push, z80env_constructor)
+import Z80Env exposing (Z80Env, setMem, setMem16, z80_out, z80_push, z80env_constructor)
 import Z80Execute exposing (DeltaWithChanges(..), apply_delta)
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
 import Z80Mem exposing (mem, mem16, z80_pop)
@@ -285,11 +285,18 @@ applyCoreChange coreChange clockTime pc_inc pc rom48k z80_core =
                 CoreOnly z80Core ->
                     { core = z80Core, clockTime = clockTime, pc = pcAfter }
 
-                NewEnv z80env ->
-                    { core = { z80_core | env = z80env }, clockTime = clockTime, pc = pcAfter }
-
                 CoreWithTime shortDelay z80Core ->
                     { core = z80Core, clockTime = clockTime |> addExtraCpuTime shortDelay, pc = pcAfter }
+
+                Z80OutChange portNum ->
+                    let
+                        env =
+                            z80_core.env
+
+                        ( z80env, newTime ) =
+                            env |> z80_out portNum z80_core.flags.a clockTime
+                    in
+                    { core = { z80_core | env = z80env }, clockTime = newTime, pc = pcAfter }
 
         MainWithOffsetAndDelay offset shortDelay z80_main ->
             { core = { main = z80_main, env = z80_core.env, flags = z80_core.flags, interrupts = z80_core.interrupts }, pc = (pcAfter + offset) |> Bitwise.and 0xFFFF, clockTime = clockTime |> addExtraCpuTime shortDelay }

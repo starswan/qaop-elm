@@ -5,18 +5,18 @@ import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), ShortDelay(
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
 import GroupED exposing (adc_hl_sp, cpir, execute_ED70, execute_ED78, inirOtirFlags, ldir, rld, rrd, sbc_hl)
 import Interrupts exposing (IFFValue(..))
+import JumpChange exposing (TripleWithFlagsChange(..))
 import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), RegisterFlagChange(..), Shifter(..), SixteenBit(..), ThreeByteChange(..), TwoByteChange(..))
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
 import SingleEnvWithMain exposing (SingleEnvMainChange, applySingleEnvMainChange)
 import SingleWith8BitParameter exposing (JumpChange(..), Single8BitChange(..), applySimple8BitChange)
 import TripleByte exposing (TripleByteChange(..), TripleByteIndexChange(..), TripleByteRegister(..))
-import TripleWithFlags exposing (TripleWithFlagsChange(..))
 import Utils exposing (bitMaskFromBit, byte, clearBit, inverseBitMaskFromBit, setBit, shiftLeftBy8, toHexString2)
 import Z80Change exposing (IndexedZ80Change(..), Z80Change(..))
 import Z80Core exposing (CoreChange(..), DirectionForLDIR(..), RareCoreChange(..), RepeatPCOffset(..), Z80Core)
 import Z80Debug exposing (debugLog, debugTodo)
 import Z80Env exposing (Z80Env, setMem, z80_in, z80_out, z80_push)
-import Z80Flags exposing (FlagRegisters, IntWithFlags, always_jump, changeFlags, dec, f_szh0n0p, get_af, inc, set_af, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
+import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, f_szh0n0p, get_af, inc, set_af, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
 import Z80Mem exposing (mem, mem16, z80_pop)
 import Z80Registers exposing (ChangeMainRegister(..), ChangeSingle(..), CoreRegister(..))
 import Z80Types exposing (IXIYHL(..), MainWithIndexRegisters, Z80ROM, get_bc, get_de, get_xy, set_bc_main, set_de_main, set_xy)
@@ -177,11 +177,8 @@ applySimple8BitDelta cpu_time z80changeData rom48k z80 =
                 -- case 0xD3: env.out(v=imm8()|A<<8,A); MP=v+1&0xFF|v&0xFF00; time+=4; break;
                 portNum =
                     Bitwise.or param (shiftLeftBy8 z80.flags.a)
-
-                ( env, newTime ) =
-                    z80.env |> z80_out portNum z80.flags.a cpu_time
             in
-            NewEnv env |> RareChange
+            Z80OutChange portNum |> RareChange
 
 
 applyInterruptChange : InterruptChange -> IFFValue -> Z80Core -> Z80Core
@@ -853,7 +850,6 @@ applySimpleTripleChangeDelta rom48k cpu_time z80changeData z80 =
     in
     case z80changeData of
         NewSPRegister int ->
-            --{ env | sp = int } |> NewEnv
             SetStackPointer int
 
         NewHLIndirect int ->
@@ -899,14 +895,6 @@ applySimpleTripleChangeDelta rom48k cpu_time z80changeData z80 =
             MainOnly z80_main
 
         Store16BitFromHL address ->
-            --let
-            --    value =
-            --        z80.main.hl
-            --
-            --    --( env1, clockTime ) =
-            --    --    env |> setMem16 address value cpu_time
-            --in
-            --NewEnv env1
             SetMem16 address z80.main.hl
 
 
@@ -921,11 +909,7 @@ applyTripleChangeDelta rom48k cpu_time z80changeData z80 =
             let
                 value =
                     z80.main |> value_f
-
-                --( env1, clockTime ) =
-                --    z80.env |> setMem16 address value cpu_time
             in
-            --NewEnv env1
             SetMem16 address value
 
         Store8BitValue offset address_f value ->
@@ -1011,11 +995,7 @@ applyEdFourByte clockTime z80changeData rom48k z80_core =
 
                         RegSP ->
                             z80_core.env.sp
-
-                --( env, newTime ) =
-                --    z80_core.env |> setMem16 int reg clockTime
             in
-            --NewEnv env
             SetMem16 int reg
 
         GetFromMem int sixteenBit ->

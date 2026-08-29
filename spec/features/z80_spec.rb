@@ -56,13 +56,13 @@ RSpec.describe "Game" do
             delay_and_send_just(spectrum, t, "y")
           end
 
-          sleep 5
+          sleep 3
 
           measure_speed_in_hz
         },
         regs.name => lambda { |spectrum|
           # 19    42    63?
-          [4350, 8950, 11350, 13980, 15950, 16850, 17500, 18250].each do |t|
+          [4350, 8950, 11350, 13980, 15950, 16850, 17500, 18350].each do |t|
             delay_and_send_just(spectrum, t, "y")
           end
 
@@ -123,7 +123,7 @@ RSpec.describe "Game" do
       visit '/'
     end
 
-    # Flags: 013 of 160 tests failed.
+    # Flags: 011 of 160 tests failed.
     # 098 INI
     # 099 IND
     # 100 INIR
@@ -138,16 +138,15 @@ RSpec.describe "Game" do
     #
     # Regs: 014 of 160 tests failed.
     # 98 INI             DB9A76D8E1E expected 07D1B0D1
-    # 99 IND
+    # 99 IND             E18D43F3 expected 3DC685FA
     # 100 INIR
     # 101 INDR
     # 102 INIR NOP'
     # 103 INDR NOP'
-    # 105 OUT (C), R
     # 107 OUTI           F6A55EE0 expected 58C80D63
     # 108 OUTD
     # 109 OTIR
-    # 110 OTDR
+    # 110 OTDR           7B0E7D30 expected 23B5.....
     # 122 RETN
     # 123 RETI
     # 124 RETI/RETN
