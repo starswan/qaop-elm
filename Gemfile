@@ -6,7 +6,7 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 gem "activeadmin"
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '~> 7.1', '< 7.2'
+gem 'rails', '~> 7.2', '< 8'
 # Use sqlite3 as the database for Active Record
 gem 'sqlite3', '~> 2.9'
 gem "cssbundling-rails"
