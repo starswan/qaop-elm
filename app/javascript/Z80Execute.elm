@@ -70,7 +70,7 @@ apply_delta z80 iff rom48k clockTime z80delta =
             debugTodo string (int |> toHexString2) z80 |> CoreOnly |> RareChange
 
         InterruptDelta interruptChange ->
-            z80 |> applyInterruptChange interruptChange iff |> CoreOnly |> RareChange
+            z80.flags |> applyInterruptChange interruptChange iff |> FlagsOnly
 
         EDChangeDelta eDRegisterChange ->
             z80 |> applyEdRegisterDelta clockTime eDRegisterChange rom48k
@@ -181,9 +181,9 @@ applySimple8BitDelta cpu_time z80changeData rom48k z80 =
             Z80OutChange portNum |> RareChange
 
 
-applyInterruptChange : InterruptChange -> IFFValue -> Z80Core -> Z80Core
-applyInterruptChange chaange iff z80 =
-    case chaange of
+applyInterruptChange : InterruptChange -> IFFValue -> FlagRegisters -> FlagRegisters
+applyInterruptChange change iff z80_flags =
+    case change of
         LoadAFromIR value ->
             --private void ld_a_ir(int v)
             --{
@@ -193,9 +193,6 @@ applyInterruptChange chaange iff z80 =
             --	time++;
             --}
             let
-                z80_flags =
-                    z80.flags
-
                 ff =
                     z80_flags.ff |> Bitwise.and (Bitwise.complement 0xFF) |> Bitwise.or value
 
@@ -214,11 +211,8 @@ applyInterruptChange chaange iff z80 =
 
                         IFF_3 ->
                             0x80
-
-                flags =
-                    { z80_flags | a = value, ff = ff, fr = fr, fa = fab, fb = fab }
             in
-            { z80 | flags = flags }
+            { a = value, ff = ff, fr = fr, fa = fab, fb = fab }
 
 
 applyPureDelta : Z80Change -> Z80Core -> CoreChange
@@ -396,14 +390,19 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
 
                 v =
                     old_env |> z80_pop rom48k clockTime
-            in
-            { z80_core
-                | flags = set_af v.value16
-                , env = { old_env | sp = v.sp }
-            }
-                |> CoreOnly
-                |> RareChange
 
+                flags =
+                    set_af v.value16
+            in
+            ChangeFlagsAndSP flags v.sp
+
+        --v.sp
+        --{ z80_core
+        --    | flags = set_af v.value16
+        --    , env = { old_env | sp = v.sp }
+        --}
+        --|> CoreOnly
+        --|> RareChange
         PopDE ->
             -- case 0xD1: v=pop(); D=v>>>8; E=v&0xFF; break;
             let
@@ -790,7 +789,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 ints =
                     z80_core.interrupts
             in
-            { z80_core | interrupts = { ints | r = int } } |> CoreOnly |> RareChange
+            { ints | r = int } |> NewInterrupts |> RareChange
 
         FlagNewIValue int ->
             let
@@ -800,7 +799,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 new_ir =
                     ints.ir |> Bitwise.and 0xFF |> Bitwise.or (int |> shiftLeftBy8)
             in
-            { z80_core | interrupts = { ints | ir = new_ir } } |> CoreOnly |> RareChange
+            { ints | ir = new_ir } |> NewInterrupts |> RareChange
 
         FlagsPushAF ->
             (z80_core.flags |> get_af) |> Push16BitValue
@@ -1038,10 +1037,10 @@ applyEdRegisterDelta clockTime z80changeData rom48k z80_core =
             z80_core |> rld rom48k clockTime
 
         IN_C ->
-            z80_core |> execute_ED70 rom48k clockTime |> CoreOnly |> RareChange
+            z80_core |> execute_ED70 rom48k clockTime |> FlagsOnly
 
         IN_A_C ->
-            z80_core |> execute_ED78 rom48k clockTime |> CoreOnly |> RareChange
+            z80_core |> execute_ED78 rom48k clockTime |> FlagsOnly
 
         AdcHLSP ->
             z80_core |> adc_hl_sp rom48k clockTime
@@ -1091,11 +1090,7 @@ applyEdRegisterDelta clockTime z80changeData rom48k z80_core =
                 interrupts =
                     debugLog "SetInterruptMode" intMode z80_core.interrupts
             in
-            { z80_core
-                | interrupts = { interrupts | iM = intMode }
-            }
-                |> CoreOnly
-                |> RareChange
+            { interrupts | iM = intMode } |> NewInterrupts |> RareChange
 
         Z80InI direction repeat ->
             let
@@ -1129,16 +1124,19 @@ applyEdRegisterDelta clockTime z80changeData rom48k z80_core =
                 new_main =
                     { main | hl = new_hl, b = new_b }
 
+                new_bc =
+                    new_main |> get_bc
+
                 d_flag =
                     case direction of
                         Forwards ->
-                            (new_main |> get_bc) + 1 |> Bitwise.and 0xFFFF
+                            new_bc + 1 |> Bitwise.and 0xFFFF
 
                         Backwards ->
-                            (new_main |> get_bc) - 1 |> Bitwise.and 0xFFFF
+                            new_bc - 1 |> Bitwise.and 0xFFFF
 
                 flags =
-                    z80_core.flags |> inirOtirFlags d_flag (new_main |> get_bc) in_value.value
+                    z80_core.flags |> inirOtirFlags d_flag new_bc in_value.value
             in
             { z80_core | env = env_2, flags = flags, main = new_main } |> Looper pc2
 
