@@ -3,7 +3,7 @@ module SingleByteWithEnv exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import Dict exposing (Dict)
-import Z80Core exposing (CoreChange(..), Z80Core)
+import Z80Core exposing (CoreChange(..), CoreChangeWithoutPC(..), Z80Core)
 import Z80Env exposing (Z80Env)
 
 
@@ -23,7 +23,7 @@ applyEnvChangeDelta : SingleByteEnvChange -> CoreChange
 applyEnvChangeDelta z80changeData =
     case z80changeData of
         NewSPValue int ->
-            SetStackPointer int
+            SetStackPointer int |> CoreWithoutJump
 
 
 inc_sp : Z80Env -> SingleByteEnvChange
