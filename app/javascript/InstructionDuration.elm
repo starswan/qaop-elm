@@ -1,6 +1,6 @@
 module InstructionDuration exposing (..)
 
-import CpuTimeCTime exposing (CpuTimeCTime)
+import MemoryContentionDelay exposing (CpuTimeCTime)
 
 
 type InstructionDuration
