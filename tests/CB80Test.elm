@@ -7,7 +7,7 @@ import Triple
 import Z80 exposing (executeCoreInstruction)
 import Z80CoreWithClockTime
 import Z80Env exposing (setMemWithTime)
-import Z80Mem exposing (mem)
+import Z80Mem exposing (getMem8)
 import Z80Rom
 
 
@@ -90,9 +90,9 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                            new_z80.env |> getMem8 0x6545 clock.clockTime z80rom |> Tuple.first
                     in
-                    Expect.equal ( addr + 4, 0xFE, 0xFE ) ( new_pc, new_z80.main.b, mem_value.value )
+                    Expect.equal ( addr + 4, 0xFE, 0xFE ) ( new_pc, new_z80.main.b, mem_value )
             , test "0xFD 0xCB d 0x80 RES 0 (IY + d), B" <|
                 \_ ->
                     let
@@ -115,9 +115,9 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                            new_z80.env |> getMem8 0x6545 clock.clockTime z80rom |> Tuple.first
                     in
-                    Expect.equal ( addr + 4, 0xFE, 0xFE ) ( new_pc, new_z80.main.b, mem_value.value )
+                    Expect.equal ( addr + 4, 0xFE, 0xFE ) ( new_pc, new_z80.main.b, mem_value )
             ]
         , test "0xCB 81 RES 0,C" <|
             \_ ->
@@ -234,9 +234,9 @@ suite =
                             |> Triple.dropSecond
 
                     mem_value =
-                        new_z80.env |> mem 0xA07E clock.clockTime z80rom
+                        new_z80.env |> getMem8 0xA07E clock.clockTime z80rom |> Tuple.first
                 in
-                Expect.equal ( addr + 2, 0xFE ) ( new_pc, mem_value.value )
+                Expect.equal ( addr + 2, 0xFE ) ( new_pc, mem_value )
         , test "0xCB 87 RES 0,A" <|
             \_ ->
                 let

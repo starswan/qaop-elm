@@ -12,7 +12,7 @@ import Z80Core exposing (CoreChange(..), DirectionForLDIR(..), LDIRLoop(..), Rar
 import Z80Debug exposing (debugLog)
 import Z80Env exposing (Z80Env, setMem, z80_in)
 import Z80Flags exposing (FlagRegisters, c_F3, c_F5, c_F53, c_FC, c_FH, f_szh0n0p, z80_sub)
-import Z80Mem exposing (mem)
+import Z80Mem exposing (getMem8)
 import Z80Registers exposing (ChangeMainRegister(..))
 import Z80Types exposing (MainWithIndexRegisters, Z80ROM, get_bc, get_de, set_bc_main, set_de_main)
 
@@ -172,14 +172,14 @@ ldir incOrDec repeat rom48k clockTime z80 =
         main =
             z80.main
 
-        v1 =
-            z80.env |> mem main.hl clockTime rom48k
+        ( v1, newTime ) =
+            z80.env |> getMem8 main.hl clockTime rom48k
 
         de =
             main |> get_de
 
         ( env_1, newClock ) =
-            z80.env |> setMem de v1.value v1.time
+            z80.env |> setMem de v1 newTime
 
         ( new_hl, new_de ) =
             case incOrDec of
@@ -207,7 +207,7 @@ ldir incOrDec repeat rom48k clockTime z80 =
 
         --v += A;
         v2 =
-            v1.value + z80_2.flags.a
+            v1 + z80_2.flags.a
 
         --Ff = Ff&~F53 | v&F3 | v<<4&F5;
         --ff =
@@ -329,11 +329,11 @@ cpir incOrDec repeat rom48k clockTime z80_core =
         old_a =
             z80_core.main.hl
 
-        b =
-            z80_core.env |> mem old_a clockTime rom48k
+        ( b, newTime ) =
+            z80_core.env |> getMem8 old_a clockTime rom48k
 
         v =
-            z80_flags.a - b.value |> Bitwise.and 0xFF
+            z80_flags.a - b |> Bitwise.and 0xFF
 
         hl =
             case incOrDec of
@@ -347,7 +347,7 @@ cpir incOrDec repeat rom48k clockTime z80_core =
             Bitwise.or (v |> Bitwise.and 0x7F) (v |> shiftRightBy 7)
 
         fb =
-            b.value |> Bitwise.or 0x80 |> complement
+            b |> Bitwise.or 0x80 |> complement
 
         fa =
             z80_core.flags.a |> Bitwise.and 0x7F
@@ -374,7 +374,7 @@ cpir incOrDec repeat rom48k clockTime z80_core =
             Bitwise.or (z80_core.flags.ff |> Bitwise.and 0xFF00) (v |> Bitwise.and (c_F53 |> complement))
 
         new_v =
-            if (v |> Bitwise.xor b.value |> Bitwise.xor z80_core.flags.a |> Bitwise.and c_FH) /= 0 then
+            if (v |> Bitwise.xor b |> Bitwise.xor z80_core.flags.a |> Bitwise.and c_FH) /= 0 then
                 v - 1
 
             else
@@ -388,7 +388,7 @@ cpir incOrDec repeat rom48k clockTime z80_core =
     in
     --HLBCWithFlagsAndPc hl new_bc { z80_flags | ff = ff, fa = new_fa, fb = new_fb, fr = fr } new_pc
     ( { z80_core | main = { newMain | hl = hl }, flags = { z80_flags | ff = ff, fa = new_fa, fb = new_fb, fr = fr } }
-    , b.time
+    , newTime
     , new_pc
     )
 
@@ -408,14 +408,14 @@ cpir incOrDec repeat rom48k clockTime z80_core =
 rld : Z80ROM -> CpuTimeCTime -> Z80Core -> CoreChange
 rld rom48k clockTime z80 =
     let
-        v_lhs_1 =
-            z80.env |> mem z80.main.hl clockTime rom48k
+        ( v_lhs_1, newTime ) =
+            z80.env |> getMem8 z80.main.hl clockTime rom48k
 
         v_rhs =
             Bitwise.and z80.flags.a 0x0F
 
         v_lhs =
-            v_lhs_1.value |> shiftLeftBy 4
+            v_lhs_1 |> shiftLeftBy 4
 
         v =
             Bitwise.or v_lhs v_rhs
@@ -447,14 +447,14 @@ rld rom48k clockTime z80 =
 rrd : Z80ROM -> CpuTimeCTime -> Z80Core -> CoreChange
 rrd rom48k clockTime z80 =
     let
-        v_lhs =
-            z80.env |> mem z80.main.hl clockTime rom48k
+        ( v_lhs, newTime ) =
+            z80.env |> getMem8 z80.main.hl clockTime rom48k
 
         v_rhs =
             z80.flags.a |> shiftLeftBy8
 
         v =
-            Bitwise.or v_lhs.value v_rhs
+            Bitwise.or v_lhs v_rhs
 
         new_a =
             Bitwise.and z80.flags.a 0xF0 |> Bitwise.or (v |> Bitwise.and 0x0F)
