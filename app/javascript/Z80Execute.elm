@@ -17,7 +17,7 @@ import Z80Core exposing (CoreChange(..), DirectionForLDIR(..), RareCoreChange(..
 import Z80Debug exposing (debugLog, debugTodo)
 import Z80Env exposing (Z80Env, setMem, z80_in, z80_out, z80_push)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, f_szh0n0p, get_af, inc, set_af, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
-import Z80Mem exposing (getMem8, mem16, z80_pop)
+import Z80Mem exposing (addContention, getMem8, mem16, z80_pop)
 import Z80Registers exposing (ChangeMainRegister(..), ChangeSingle(..), CoreRegister(..))
 import Z80Types exposing (IXIYHL(..), MainWithIndexRegisters, Z80ROM, get_bc, get_de, get_xy, set_bc_main, set_de_main, set_xy)
 
@@ -612,7 +612,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                     z80_core.env
 
                 ( env_2, newNew ) =
-                    old_env |> setMem addr value.value newTime
+                    old_env |> setMem addr value.value (clockTime |> addContention newTime)
             in
             { z80_core | main = new_main, flags = value.flags, env = env_2 } |> CoreOnly |> RareChange
 
@@ -654,7 +654,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                             { main | hl = Bitwise.or value (Bitwise.and z80_core.main.hl 0xFF00) }
 
                 ( env_2, newTime2 ) =
-                    old_env |> setMem addr value newTime
+                    old_env |> setMem addr value (clockTime |> addContention newTime)
             in
             { z80_core | main = new_main, env = env_2 } |> CoreOnly |> RareChange
 
@@ -696,7 +696,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                             { main | hl = Bitwise.or value (Bitwise.and z80_core.main.hl 0xFF00) }
 
                 ( env_2, newTime ) =
-                    old_env |> setMem addr value newTime1
+                    old_env |> setMem addr value (clockTime |> addContention newTime1)
             in
             { z80_core | main = new_main, env = env_2 } |> CoreOnly |> RareChange
 
@@ -1143,7 +1143,7 @@ applyEdRegisterDelta clockTime z80changeData rom48k z80_core =
                     main_2 |> get_bc
 
                 ( env2, newTime2 ) =
-                    z80_core.env |> z80_out new_bc outvalue newTime
+                    z80_core.env |> z80_out new_bc outvalue (clockTime |> addContention newTime)
 
                 pc2 =
                     if repeat && new_b /= 0 then

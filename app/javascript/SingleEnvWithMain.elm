@@ -7,17 +7,17 @@ import Utils exposing (BitTest, shiftLeftBy8, shiftRightBy8)
 import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
 import Z80Env exposing (Z80Env)
 import Z80Flags exposing (FlagFunc(..), add16, c_F53, changeFlags, testBit)
-import Z80Mem exposing (getMem8)
+import Z80Mem exposing (MemoryContentionDelay, getMem8)
 import Z80Registers exposing (CoreRegister(..))
 import Z80Types exposing (IXIYHL(..), MainWithIndexRegisters, Z80ROM, set_xy)
 
 
 type SingleEnvMainChange
-    = SingleEnvNewARegister Int CpuTimeCTime
-    | SingleEnv8BitMain CoreRegister Int CpuTimeCTime
-    | SingleEnvNewHLRegister Int CpuTimeCTime
+    = SingleEnvNewARegister Int (Maybe MemoryContentionDelay)
+    | SingleEnv8BitMain CoreRegister Int (Maybe MemoryContentionDelay)
+    | SingleEnvNewHLRegister Int (Maybe MemoryContentionDelay)
     | IndirectBitTest BitTest Int
-    | SingleEnvFlagFunc FlagFunc Int CpuTimeCTime
+    | SingleEnvFlagFunc FlagFunc Int (Maybe MemoryContentionDelay)
     | SingleEnvNewHL16BitAdd IXIYHL Int Int
 
 

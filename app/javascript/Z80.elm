@@ -22,7 +22,7 @@ import Z80CoreWithClockTime exposing (Z80, Z80CoreWithClockTime, di_0xF3, ei_0xF
 import Z80Env exposing (Z80Env, setMem, setMem16, z80_out, z80_push, z80env_constructor)
 import Z80Execute exposing (DeltaWithChanges(..), apply_delta)
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
-import Z80Mem exposing (getMem8, mem16, z80_pop)
+import Z80Mem exposing (MemoryContentionDelay, addContention, getMem8, mem16, z80_pop)
 import Z80OpCode exposing (fetchInstruction)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IntWithFlagsTimeAndPC, MainRegisters, MainWithIndexRegisters, Z80ROM)
@@ -378,50 +378,62 @@ execute_delta ct_time ct_value rom48k pc z80 =
                         ( param, newTime ) =
                             z80.env |> getMem8 (Bitwise.and (pc + 1) 0xFFFF) ct_time rom48k
                     in
-                    Special (BitManipCB param newTime)
+                    Special (BitManipCB param (ct_time |> addContention newTime))
 
                 0xED ->
                     let
                         ( param, newTime ) =
                             z80.env |> getMem8 (Bitwise.and (pc + 1) 0xFFFF) ct_time rom48k
                     in
-                    Special (EDMisc param newTime)
+                    Special (EDMisc param (ct_time |> addContention newTime))
 
                 0xDD ->
                     let
                         ( param, newTime ) =
                             z80.env |> getMem8 (Bitwise.and (pc + 1) 0xFFFF) ct_time rom48k
+
+                        clock1 =
+                            ct_time |> addContention newTime
                     in
                     if param == 0xCB then
                         let
                             ( ixcboffset, offsetTime ) =
-                                z80.env |> getMem8 (Bitwise.and (pc + 2) 0xFFFF) newTime rom48k
+                                z80.env |> getMem8 (Bitwise.and (pc + 2) 0xFFFF) clock1 rom48k
+
+                            clock2 =
+                                clock1 |> addContention offsetTime
 
                             ( ixcbparam, paramTime ) =
-                                z80.env |> getMem8 (Bitwise.and (pc + 3) 0xFFFF) offsetTime rom48k
+                                z80.env |> getMem8 (Bitwise.and (pc + 3) 0xFFFF) clock2 rom48k
                         in
-                        Special (IXCB ixcboffset ixcbparam paramTime)
+                        Special (IXCB ixcboffset ixcbparam (ct_time |> addContention paramTime))
 
                     else
-                        IndexIX param newTime
+                        IndexIX param clock1
 
                 0xFD ->
                     let
                         ( param, newTime ) =
                             z80.env |> getMem8 (Bitwise.and (pc + 1) 0xFFFF) ct_time rom48k
+
+                        clock1 =
+                            ct_time |> addContention newTime
                     in
                     if param == 0xCB then
                         let
                             ( iycboffset, offsetTime ) =
-                                z80.env |> getMem8 (Bitwise.and (pc + 2) 0xFFFF) newTime rom48k
+                                z80.env |> getMem8 (Bitwise.and (pc + 2) 0xFFFF) clock1 rom48k
+
+                            clock2 =
+                                clock1 |> addContention offsetTime
 
                             ( iycbparam, paramTime ) =
-                                z80.env |> getMem8 (Bitwise.and (pc + 3) 0xFFFF) offsetTime rom48k
+                                z80.env |> getMem8 (Bitwise.and (pc + 3) 0xFFFF) clock2 rom48k
                         in
-                        Special (IYCB iycboffset iycbparam paramTime)
+                        Special (IYCB iycboffset iycbparam (ct_time |> addContention paramTime))
 
                     else
-                        IndexIY param newTime
+                        IndexIY param clock1
 
                 _ ->
                     Ordinary ct_value ct_time
@@ -454,7 +466,7 @@ runOrdinary ct_value instrTime rom48k pc z80_core =
                             z80_core.env |> getMem8 (Bitwise.and (pc + 1) 0xFFFF) instrTime rom48k
 
                         instrTime2 =
-                            paramTimeValue |> addDuration duration
+                            instrTime |> addContention paramTimeValue |> addDuration duration
                     in
                     ( TwoByteDelta (f param), instrTime2, IncrementByTwo )
 
@@ -493,7 +505,7 @@ runIndexIX param clockTime rom48k pc z80 =
                         ( doubleParam, dTimeValue ) =
                             z80.env |> getMem8 (Bitwise.and (pc + 2) 0xFFFF) time rom48k
                     in
-                    ( DoubleWithRegistersDelta (f doubleParam), dTimeValue, IncrementByThree )
+                    ( DoubleWithRegistersDelta (f doubleParam), time |> addContention dTimeValue, IncrementByThree )
 
                 Nothing ->
                     case threeByteWithRegistersIX |> Dict.get param of
@@ -527,7 +539,7 @@ runIndexIY param clockTime rom48k pc z80 =
                         ( doubleParam, dClockTime ) =
                             z80.env |> getMem8 (Bitwise.and (pc + 2) 0xFFFF) time rom48k
                     in
-                    ( DoubleWithRegistersDelta (f doubleParam), dClockTime, IncrementByThree )
+                    ( DoubleWithRegistersDelta (f doubleParam), time |> addContention dClockTime, IncrementByThree )
 
                 Nothing ->
                     case threeByteWithRegistersIY |> Dict.get param of
