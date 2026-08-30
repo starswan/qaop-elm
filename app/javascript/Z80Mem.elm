@@ -101,8 +101,8 @@ m1 addr ir rom48k clockTime z80env =
 --}
 
 
-mem : Int -> CpuTimeCTime -> Z80ROM -> Z80Env -> CpuTimeAndValue
-mem base_addr time rom48k ram =
+getMem8 : Int -> CpuTimeCTime -> Z80ROM -> Z80Env -> ( Int, CpuTimeCTime )
+getMem8 base_addr time rom48k ram =
     let
         z80env_time =
             case time.ctime of
@@ -138,7 +138,7 @@ mem base_addr time rom48k ram =
             else
                 ( z80env_time, NoCont, rom48k |> getROMValue base_addr )
     in
-    CpuTimeAndValue { new_time | ctime = ctime } value
+    ( value, { new_time | ctime = ctime } )
 
 
 

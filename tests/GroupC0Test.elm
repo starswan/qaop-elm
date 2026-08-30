@@ -8,7 +8,7 @@ import Triple
 import Z80 exposing (executeCoreInstruction)
 import Z80CoreWithClockTime
 import Z80Env exposing (setMemWithTime)
-import Z80Mem exposing (m1, mem)
+import Z80Mem exposing (getMem8)
 import Z80Rom
 
 
@@ -241,10 +241,10 @@ suite =
                                 |> Triple.dropSecond
 
                         lo_value =
-                            z80_1.env |> mem stackp clock.clockTime z80rom |> .value
+                            z80_1.env |> getMem8 stackp clock.clockTime z80rom |> Tuple.first
 
                         high_value =
-                            z80_1.env |> mem (stackp + 1) clock.clockTime z80rom |> .value
+                            z80_1.env |> getMem8 (stackp + 1) clock.clockTime z80rom |> Tuple.first
 
                         ( z80_2, final_pc ) =
                             z80_1 |> executeCoreInstruction z80rom new_pc |> Triple.dropSecond

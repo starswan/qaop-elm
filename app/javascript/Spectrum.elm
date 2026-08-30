@@ -14,7 +14,7 @@ import Z80CoreWithClockTime exposing (Z80, get_ei, interrupt)
 import Z80Debug exposing (debugLog)
 import Z80Env exposing (Z80Env, setMemIgnoringTime)
 import Z80Flags exposing (c_FC, c_FZ, getFlags, setFlags)
-import Z80Mem exposing (mem, mem16, z80_pop)
+import Z80Mem exposing (getMem8, mem16, z80_pop)
 import Z80Ram exposing (foldDictIntoRam)
 import Z80Rom
 import Z80Tape exposing (TapePosition, Z80Tape)
@@ -1481,7 +1481,7 @@ doLoad2 full_cpu z80rom tape =
                                                     else
                                                         let
                                                             new_a =
-                                                                Bitwise.xor (mem state.ix cpu.clockTime z80rom z80_core.env |> .value) l
+                                                                Bitwise.xor (getMem8 state.ix cpu.clockTime z80rom z80_core.env |> Tuple.first) l
                                                         in
                                                         if new_a /= 0 then
                                                             { a_rf_f_break_3 | a = new_a, rf = Just 0, break = True }

@@ -7,7 +7,7 @@ import Utils exposing (BitTest, shiftLeftBy8, shiftRightBy8)
 import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
 import Z80Env exposing (Z80Env)
 import Z80Flags exposing (FlagFunc(..), add16, c_F53, changeFlags, testBit)
-import Z80Mem exposing (mem)
+import Z80Mem exposing (getMem8)
 import Z80Registers exposing (CoreRegister(..))
 import Z80Types exposing (IXIYHL(..), MainWithIndexRegisters, Z80ROM, set_xy)
 
@@ -97,11 +97,11 @@ applySingleEnvMainChange clockTime z80changeData rom48k z80 =
         IndirectBitTest bitTest mp_address ->
             -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
             let
-                value =
-                    z80.env |> mem mp_address clockTime rom48k
+                ( value, newTime ) =
+                    z80.env |> getMem8 mp_address clockTime rom48k
 
                 new_flags =
-                    z80.flags |> testBit bitTest value.value
+                    z80.flags |> testBit bitTest value
             in
             { new_flags
                 | ff = new_flags.ff |> Bitwise.and (Bitwise.complement c_F53) |> Bitwise.or (mp_address |> shiftRightBy8 |> Bitwise.and c_F53)
@@ -130,10 +130,10 @@ ld_a_indirect_bc z80_main rom48k clockTime z80_env =
         v =
             Bitwise.or (shiftLeftBy8 z80_main.b) z80_main.c
 
-        new_a =
-            z80_env |> mem v clockTime rom48k
+        ( value, newTime ) =
+            z80_env |> getMem8 v clockTime rom48k
     in
-    SingleEnvNewARegister new_a.value new_a.time
+    SingleEnvNewARegister value newTime
 
 
 ld_a_indirect_de : MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange
@@ -143,10 +143,10 @@ ld_a_indirect_de z80_main rom48k clockTime z80_env =
         addr =
             Bitwise.or (shiftLeftBy8 z80_main.d) z80_main.e
 
-        new_a =
-            z80_env |> mem addr clockTime rom48k
+        ( value, newTime ) =
+            z80_env |> getMem8 addr clockTime rom48k
     in
-    SingleEnvNewARegister new_a.value new_a.time
+    SingleEnvNewARegister value newTime
 
 
 ld_b_indirect_hl : MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange
@@ -154,47 +154,47 @@ ld_b_indirect_hl z80_main rom48k clockTime z80_env =
     -- case 0x46: B=env.mem(HL); time+=3; break;
     -- case 0x46: B=env.mem(getd(xy)); time+=3; break;
     let
-        value =
-            z80_env |> mem z80_main.hl clockTime rom48k
+        ( value, newTime ) =
+            z80_env |> getMem8 z80_main.hl clockTime rom48k
     in
     --{ z80 | pc = value.pc, env = value.env } |> set_b value.value
-    SingleEnv8BitMain RegisterB value.value value.time
+    SingleEnv8BitMain RegisterB value newTime
 
 
 ld_c_indirect_hl : MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange
 ld_c_indirect_hl z80_main rom48k clockTime z80_env =
     -- case 0x4E: C=env.mem(HL); time+=3; break;
     let
-        value =
-            z80_env |> mem z80_main.hl clockTime rom48k
+        ( value, newTime ) =
+            z80_env |> getMem8 z80_main.hl clockTime rom48k
     in
     --{ z80 | pc = value.pc, env = value.env } |> set_c value.value
     --MainRegsWithPcAndCpuTime { main | c = value.value } value.pc value.time
-    SingleEnv8BitMain RegisterC value.value value.time
+    SingleEnv8BitMain RegisterC value newTime
 
 
 ld_d_indirect_hl : MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange
 ld_d_indirect_hl z80_main rom48k clockTime z80_env =
     -- case 0x56: D=env.mem(HL); time+=3; break;
     let
-        value =
-            z80_env |> mem z80_main.hl clockTime rom48k
+        ( value, newTime ) =
+            z80_env |> getMem8 z80_main.hl clockTime rom48k
     in
     --{ z80 | pc = value.pc, env = value.env } |> set_d value.value
     --MainRegsWithPcAndCpuTime { main | d = value.value } value.pc value.time
-    SingleEnv8BitMain RegisterD value.value value.time
+    SingleEnv8BitMain RegisterD value newTime
 
 
 ld_e_indirect_hl : MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange
 ld_e_indirect_hl z80_main rom48k clockTime z80_env =
     -- case 0x5E: E=env.mem(HL); time+=3; break;
     let
-        value =
-            z80_env |> mem z80_main.hl clockTime rom48k
+        ( value, newTime ) =
+            z80_env |> getMem8 z80_main.hl clockTime rom48k
     in
     --{ z80 | pc = value.pc, env = value.env } |> set_e value.value
     --MainRegsWithPcAndCpuTime { main | e = value.value } value.pc value.time
-    SingleEnv8BitMain RegisterE value.value value.time
+    SingleEnv8BitMain RegisterE value newTime
 
 
 ld_h_indirect_hl : MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange
@@ -202,13 +202,13 @@ ld_h_indirect_hl z80_main rom48k clockTime z80_env =
     -- case 0x66: HL=HL&0xFF|env.mem(HL)<<8; time+=3; break;
     -- case 0x66: HL=HL&0xFF|env.mem(getd(xy))<<8; time+=3; break;
     let
-        value =
-            z80_env |> mem z80_main.hl clockTime rom48k
+        ( value, newTime ) =
+            z80_env |> getMem8 z80_main.hl clockTime rom48k
 
         new_hl =
-            (z80_main.hl |> Bitwise.and 0xFF) |> Bitwise.or (value.value |> shiftLeftBy8)
+            (z80_main.hl |> Bitwise.and 0xFF) |> Bitwise.or (value |> shiftLeftBy8)
     in
-    SingleEnvNewHLRegister new_hl value.time
+    SingleEnvNewHLRegister new_hl newTime
 
 
 ld_l_indirect_hl : MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange
@@ -216,13 +216,13 @@ ld_l_indirect_hl z80_main rom48k clockTime z80_env =
     -- case 0x6E: HL=HL&0xFF00|env.mem(HL); time+=3; break;
     -- case 0x6E: HL=HL&0xFF00|env.mem(getd(xy)); time+=3; break;
     let
-        value =
-            z80_env |> mem z80_main.hl clockTime rom48k
+        ( value, newTime ) =
+            z80_env |> getMem8 z80_main.hl clockTime rom48k
 
         new_hl =
-            z80_main.hl |> Bitwise.and 0xFF00 |> Bitwise.or value.value
+            z80_main.hl |> Bitwise.and 0xFF00 |> Bitwise.or value
     in
-    SingleEnvNewHLRegister new_hl value.time
+    SingleEnvNewHLRegister new_hl newTime
 
 
 ld_a_indirect_hl : MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange
@@ -230,91 +230,91 @@ ld_a_indirect_hl z80_main rom48k clockTime z80_env =
     -- case 0x7E: A=env.mem(HL); time+=3; break;
     -- case 0x7E: A=env.mem(getd(xy)); time+=3; break;
     let
-        value =
-            z80_env |> mem z80_main.hl clockTime rom48k
+        ( value, newTime ) =
+            z80_env |> getMem8 z80_main.hl clockTime rom48k
     in
     --{ z80 | pc = value.pc, env = { env_1 | time = value.time } } |> set_a value.value
-    SingleEnvNewARegister value.value value.time
+    SingleEnvNewARegister value newTime
 
 
 add_a_indirect_hl : MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange
 add_a_indirect_hl z80_main rom48k clockTime z80_env =
     -- case 0x86: add(env.mem(HL)); time+=3; break;
     let
-        value =
-            z80_env |> mem z80_main.hl clockTime rom48k
+        ( value, newTime ) =
+            z80_env |> getMem8 z80_main.hl clockTime rom48k
     in
-    SingleEnvFlagFunc AddA value.value value.time
+    SingleEnvFlagFunc AddA value newTime
 
 
 adc_a_indirect_hl : MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange
 adc_a_indirect_hl z80_main rom48k clockTime z80_env =
     -- case 0x8E: adc(env.mem(HL)); time+=3; break;
     let
-        value =
-            z80_env |> mem z80_main.hl clockTime rom48k
+        ( value, newTime ) =
+            z80_env |> getMem8 z80_main.hl clockTime rom48k
     in
-    SingleEnvFlagFunc AdcA value.value value.time
+    SingleEnvFlagFunc AdcA value newTime
 
 
 sub_indirect_hl : MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange
 sub_indirect_hl z80_main rom48k clockTime z80_env =
     -- case 0x96: sub(env.mem(HL)); time+=3; break;
     let
-        value =
-            z80_env |> mem z80_main.hl clockTime rom48k
+        ( value, newTime ) =
+            z80_env |> getMem8 z80_main.hl clockTime rom48k
     in
-    SingleEnvFlagFunc SubA value.value value.time
+    SingleEnvFlagFunc SubA value newTime
 
 
 sbc_indirect_hl : MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange
 sbc_indirect_hl z80_main rom48k clockTime z80_env =
     -- case 0x9E: sbc(env.mem(HL)); time+=3; break;
     let
-        value =
-            z80_env |> mem z80_main.hl clockTime rom48k
+        ( value, newTime ) =
+            z80_env |> getMem8 z80_main.hl clockTime rom48k
     in
-    SingleEnvFlagFunc SbcA value.value value.time
+    SingleEnvFlagFunc SbcA value newTime
 
 
 and_indirect_hl : MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange
 and_indirect_hl z80_main rom48k clockTime z80_env =
     -- case 0x9E: sbc(env.mem(HL)); time+=3; break;
     let
-        value =
-            z80_env |> mem z80_main.hl clockTime rom48k
+        ( value, newTime ) =
+            z80_env |> getMem8 z80_main.hl clockTime rom48k
     in
-    SingleEnvFlagFunc AndA value.value value.time
+    SingleEnvFlagFunc AndA value newTime
 
 
 xor_indirect_hl : MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange
 xor_indirect_hl z80_main rom48k clockTime z80_env =
     -- case 0x9E: sbc(env.mem(HL)); time+=3; break;
     let
-        value =
-            z80_env |> mem z80_main.hl clockTime rom48k
+        ( value, newTime ) =
+            z80_env |> getMem8 z80_main.hl clockTime rom48k
     in
-    SingleEnvFlagFunc XorA value.value value.time
+    SingleEnvFlagFunc XorA value newTime
 
 
 or_indirect_hl : MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange
 or_indirect_hl z80_main rom48k clockTime z80_env =
     -- case 0x9E: sbc(env.mem(HL)); time+=3; break;
     let
-        value =
-            z80_env |> mem z80_main.hl clockTime rom48k
+        ( value, newTime ) =
+            z80_env |> getMem8 z80_main.hl clockTime rom48k
     in
-    SingleEnvFlagFunc OrA value.value value.time
+    SingleEnvFlagFunc OrA value newTime
 
 
 cp_indirect_hl : MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange
 cp_indirect_hl z80_main rom48k clockTime z80_env =
     -- case 0x9E: sbc(env.mem(HL)); time+=3; break;
     let
-        value =
-            z80_env |> mem z80_main.hl clockTime rom48k
+        ( value, newTime ) =
+            z80_env |> getMem8 z80_main.hl clockTime rom48k
     in
-    SingleEnvFlagFunc CpA value.value value.time
+    SingleEnvFlagFunc CpA value newTime
 
 
 add_hl_sp : MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange
