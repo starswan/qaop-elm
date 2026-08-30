@@ -1,9 +1,10 @@
 module SingleNoParams exposing (..)
 
 import Bitwise exposing (shiftRightBy)
-import CpuTimeCTime exposing (CpuTimeCTime, addCpuTimeTime, c_TIME_LIMIT)
+import CpuTimeCTime exposing (c_TIME_LIMIT)
 import Dict exposing (Dict)
 import InstructionDuration exposing (InstructionDuration(..))
+import MemoryContentionDelay exposing (CpuTimeCTime, addCpuTimeTime)
 import RegisterChange exposing (Pop16(..), RegisterFlagChange(..))
 import Z80Core exposing (CoreChange(..), Z80Core)
 import Z80CoreWithClockTime exposing (Z80)

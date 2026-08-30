@@ -221,6 +221,14 @@ viewQaop model tickInterval =
         ]
 
 
+
+-- This tiny sleep makes the keyboard work in capybara
+
+
+c_KEYDELAY =
+    1
+
+
 updateQaop : QaopMessage -> QaopModel -> ( QaopModel, Cmd QaopMessage )
 updateQaop message model =
     case message of
@@ -288,12 +296,11 @@ updateQaop message model =
             -- do nothing on repeating keys
             ( model, Cmd.none )
 
-        -- This tiny sleep makes the keyboard work in capybara
         CharacterKeyUp char ->
-            ( model, Delay.after 1 (CharacterUnKey char) )
+            ( model, Delay.after c_KEYDELAY (CharacterUnKey char) )
 
         ControlKeyUp str ->
-            ( model, Delay.after 1 (ControlUnKey str) )
+            ( model, Delay.after c_KEYDELAY (ControlUnKey str) )
 
         Autoload ->
             ( { model | loadPressed = True }, Cmd.batch loadingCommands )

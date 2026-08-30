@@ -1,8 +1,9 @@
 module Z80Mem exposing (..)
 
 import Bitwise exposing (shiftRightBy)
-import CpuTimeCTime exposing (CTime(..), CpuTimeAnd16BitValue, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAnd16BitValue, CpuTimeSpAnd16BitValue, addCpuTimeTime, cont, cont1)
+import CpuTimeCTime exposing (CpuTimeAnd16BitValue, CpuTimeAndValue, CpuTimePcAnd16BitValue, CpuTimeSpAnd16BitValue, cont, cont1)
 import Dict
+import MemoryContentionDelay exposing (CTime(..), CpuTimeCTime, MemoryContentionDelay, addContention, addCpuTimeTime)
 import Utils exposing (shiftLeftBy8)
 import Z80Env exposing (Z80Env)
 import Z80Ram exposing (getRamValue)
@@ -56,12 +57,15 @@ m1 addr ir rom48k clockTime z80env =
         ramAddr =
             addr - 0x4000
 
-        z80env_1_time =
+        z80env_1_time_cont =
             if Bitwise.and ramAddr 0xC000 == 0 then
                 z80env_time |> cont1 0
 
             else
-                z80env_time
+                Nothing
+
+        z80env_1_time =
+            z80env_time |> addContention z80env_1_time_cont
 
         ctime =
             if Bitwise.and ir 0xC000 == 0x4000 then
@@ -99,7 +103,7 @@ m1 addr ir rom48k clockTime z80env =
 --}
 
 
-getMem8 : Int -> CpuTimeCTime -> Z80ROM -> Z80Env -> ( Int, CpuTimeCTime )
+getMem8 : Int -> CpuTimeCTime -> Z80ROM -> Z80Env -> ( Int, Maybe MemoryContentionDelay )
 getMem8 base_addr time rom48k ram =
     let
         z80env_time =
@@ -125,8 +129,12 @@ getMem8 base_addr time rom48k ram =
             if addr >= 0 then
                 if addr < 0x4000 then
                     let
-                        new_z80_time =
+                        new_z80_time_cont : Maybe MemoryContentionDelay
+                        new_z80_time_cont =
                             z80env_time |> cont1 0
+
+                        new_z80_time =
+                            z80env_time |> addContention new_z80_time_cont
                     in
                     ( new_z80_time, ContUntil (new_z80_time.cpu_time + 3), ram |> getRamValue addr rom48k )
 
@@ -136,7 +144,7 @@ getMem8 base_addr time rom48k ram =
             else
                 ( z80env_time, NoCont, rom48k |> getROMValue base_addr )
     in
-    ( value, { new_time | ctime = ctime } )
+    ( value, Nothing )
 
 
 
@@ -213,7 +221,17 @@ mem16 addr rom48k clockTime z80env =
 
                 z80env_1_time =
                     if addr1 < 0x4000 then
-                        z80env_time |> cont1 0 |> cont1 3 |> addCpuTimeTime 6
+                        let
+                            cont1Time =
+                                z80env_time |> cont1 0
+
+                            newTime1 =
+                                z80env_time |> addContention cont1Time
+
+                            cont2TimeCont =
+                                newTime1 |> cont1 3
+                        in
+                        newTime1 |> addContention cont2TimeCont |> addCpuTimeTime 6
 
                     else
                         { z80env_time | ctime = NoCont }
@@ -227,8 +245,11 @@ mem16 addr rom48k clockTime z80env =
         in
         if addr1shift14 == 0 then
             let
-                new_z80_time =
+                new_z80_time_cont =
                     cont1 3 z80env_time
+
+                new_z80_time =
+                    z80env_time |> addContention new_z80_time_cont
 
                 low =
                     rom48k |> getROMValue addr
@@ -240,8 +261,11 @@ mem16 addr rom48k clockTime z80env =
 
         else if addr1shift14 == 1 then
             let
-                new_env_time =
+                new_env_time_cont =
                     z80env_time |> cont1 0
+
+                new_env_time =
+                    z80env_time |> addContention new_env_time_cont
 
                 low =
                     z80env |> getRamValue (addr - 0x4000) rom48k

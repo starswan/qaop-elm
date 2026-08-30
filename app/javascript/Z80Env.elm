@@ -6,9 +6,10 @@
 module Z80Env exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CTime(..), CpuTimeAnd16BitValue, CpuTimeAndValue, CpuTimeCTime, CpuTimeSpAnd16BitValue, cont, cont1, cont_port)
+import CpuTimeCTime exposing (CpuTimeAndValue, cont, cont1, cont_port)
 import Dict exposing (Dict)
 import Keyboard exposing (Keyboard, z80_keyboard_input)
+import MemoryContentionDelay exposing (CTime(..), CpuTimeCTime, addContention)
 import Utils exposing (shiftRightBy8, toHexString)
 import Z80Debug exposing (debugLog)
 
@@ -108,8 +109,11 @@ setMem z80_addr value time_input z80env =
 
                 else
                     let
-                        z80env_1_time =
+                        z80env_1_timecont =
                             z80env_time |> cont1 0
+
+                        z80env_1_time =
+                            z80env_time |> addContention z80env_1_timecont
 
                         new_time =
                             ContUntil (z80env_1_time.cpu_time + 3)
