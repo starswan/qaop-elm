@@ -12,7 +12,7 @@ import Z80Core exposing (CoreChange(..), DirectionForLDIR(..), RareCoreChange(..
 import Z80Debug exposing (debugLog)
 import Z80Env exposing (Z80Env, setMem, z80_in)
 import Z80Flags exposing (FlagRegisters, c_F3, c_F5, c_F53, c_FC, c_FH, f_szh0n0p, z80_sub)
-import Z80Mem exposing (getMem8)
+import Z80Mem exposing (MemoryContentionDelay, addContention, getMem8)
 import Z80Registers exposing (ChangeMainRegister(..))
 import Z80Types exposing (MainWithIndexRegisters, Z80ROM, get_bc, get_de, set_bc_main, set_de_main)
 
@@ -179,7 +179,7 @@ ldir incOrDec repeat rom48k clockTime z80 =
             main |> get_de
 
         ( env_1, newClock ) =
-            z80.env |> setMem de v1 newTime
+            z80.env |> setMem de v1 (clockTime |> addContention newTime)
 
         ( new_hl, new_de ) =
             case incOrDec of
@@ -321,7 +321,7 @@ adc_hl b z80 =
 --}
 
 
-cpir : DirectionForLDIR -> Bool -> Z80ROM -> CpuTimeCTime -> Z80Core -> ( Z80Core, CpuTimeCTime, RepeatPCOffset )
+cpir : DirectionForLDIR -> Bool -> Z80ROM -> CpuTimeCTime -> Z80Core -> ( Z80Core, Maybe MemoryContentionDelay, RepeatPCOffset )
 cpir incOrDec repeat rom48k clockTime z80_core =
     let
         z80_flags =

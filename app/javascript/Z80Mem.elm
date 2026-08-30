@@ -4,7 +4,6 @@ import Bitwise exposing (shiftRightBy)
 import CpuTimeCTime exposing (CTime(..), CpuTimeAnd16BitValue, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAnd16BitValue, CpuTimeSpAnd16BitValue, addCpuTimeTime, cont, cont1)
 import Dict
 import Utils exposing (shiftLeftBy8)
-import Z80Core exposing (Z80Core)
 import Z80Env exposing (Z80Env)
 import Z80Ram exposing (getRamValue)
 import Z80Rom exposing (getROMValue)
@@ -101,7 +100,18 @@ m1 addr ir rom48k clockTime z80env =
 --}
 
 
-getMem8 : Int -> CpuTimeCTime -> Z80ROM -> Z80Env -> ( Int, CpuTimeCTime )
+type MemoryContentionDelay
+    = One
+    | Two
+    | Three
+
+
+addContention : Maybe MemoryContentionDelay -> CpuTimeCTime -> CpuTimeCTime
+addContention contention clockTime =
+    clockTime
+
+
+getMem8 : Int -> CpuTimeCTime -> Z80ROM -> Z80Env -> ( Int, Maybe MemoryContentionDelay )
 getMem8 base_addr time rom48k ram =
     let
         z80env_time =
@@ -138,7 +148,7 @@ getMem8 base_addr time rom48k ram =
             else
                 ( z80env_time, NoCont, rom48k |> getROMValue base_addr )
     in
-    ( value, { new_time | ctime = ctime } )
+    ( value, Nothing )
 
 
 
