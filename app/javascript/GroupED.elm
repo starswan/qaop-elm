@@ -8,7 +8,7 @@ import PCIncrement exposing (PCIncrement(..))
 import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), RegisterFlagChange(..), SixteenBit(..))
 import Utils exposing (char, shiftLeftBy8, shiftRightBy8, toHexString2)
 import Z80Change exposing (Z80Change(..))
-import Z80Core exposing (CoreChange(..), DirectionForLDIR(..), RareCoreChange(..), RepeatPCOffset(..), Z80Core)
+import Z80Core exposing (CoreChange(..), DirectionForLDIR(..), LDIRLoop(..), RareCoreChange(..), RepeatPCOffset(..), Z80Core)
 import Z80Debug exposing (debugLog)
 import Z80Env exposing (Z80Env, setMem, z80_in)
 import Z80Flags exposing (FlagRegisters, c_F3, c_F5, c_F53, c_FC, c_FH, f_szh0n0p, z80_sub)
@@ -163,7 +163,7 @@ sbc_hl b z80 =
 -- return data, delay and PC
 
 
-ldir : DirectionForLDIR -> Bool -> Z80ROM -> CpuTimeCTime -> Z80Core -> ( Z80Core, Maybe ShortDelay, RepeatPCOffset )
+ldir : DirectionForLDIR -> Bool -> Z80ROM -> CpuTimeCTime -> Z80Core -> ( Z80Core, LDIRLoop )
 ldir incOrDec repeat rom48k clockTime z80 =
     --  private void ldir(int i, boolean r)
     let
@@ -230,16 +230,16 @@ ldir incOrDec repeat rom48k clockTime z80 =
         new_bc =
             Bitwise.and ((main |> get_bc) - 1) 0xFFFF
 
-        ( v, pc, time ) =
+        ( v, pctime ) =
             if new_bc /= 0 then
                 if repeat then
-                    ( 0x80, JumpBack, Just FiveExtraTStates )
+                    ( 0x80, JumpBackWithFiveDelay )
 
                 else
-                    ( 0x80, NoOffset, Nothing )
+                    ( 0x80, NoLDIRLoop )
 
             else
-                ( 0, NoOffset, Nothing )
+                ( 0, NoLDIRLoop )
 
         flags =
             z80_2.flags
@@ -248,8 +248,7 @@ ldir incOrDec repeat rom48k clockTime z80 =
         | main = z80_2.main |> set_bc_main new_bc
         , flags = { flags | fr = fr, ff = ff, fa = v, fb = v }
       }
-    , time
-    , pc
+    , pctime
     )
 
 
@@ -356,11 +355,8 @@ cpir incOrDec repeat rom48k clockTime z80_core =
         new_bc =
             (z80_core.main |> get_bc) - 1 |> Bitwise.and 0xFFFF
 
-        a =
-            new_bc
-
         ( new_fa, new_fb, new_pc ) =
-            if a /= 0 then
+            if new_bc /= 0 then
                 let
                     newish_pc =
                         if repeat && v /= 0 then
