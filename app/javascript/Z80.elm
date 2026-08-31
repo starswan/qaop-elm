@@ -184,20 +184,6 @@ constructor =
 --]
 
 
-type ExecutionType
-    = Ordinary Int CpuTimeCTime
-    | IndexIX CpuTimeAndValue
-    | IndexIY CpuTimeAndValue
-    | Special SpecialExecutionType
-
-
-type SpecialExecutionType
-    = BitManipCB CpuTimeAndValue
-    | IXCB Int CpuTimeAndValue
-    | IYCB Int CpuTimeAndValue
-    | EDMisc CpuTimeAndValue
-
-
 executeAndApplyDelta : Int -> CpuTimeCTime -> IFFValue -> Z80ROM -> Z80CoreWithClockTime -> Z80CoreWithClockTime
 executeAndApplyDelta opCode cpuClock iff rom48k z80clock =
     let
@@ -371,85 +357,59 @@ execute_delta ct_time ct_value rom48k pc z80 =
     --int v, c = env.m1(PC, IR|R++&0x7F);
     --PC = (char)(PC+1); time += 4;
     --switch(c) {
-    let
-        executionType =
-            case ct_value of
-                0xCB ->
-                    let
-                        param =
-                            z80.env |> mem (Bitwise.and (pc + 1) 0xFFFF) ct_time rom48k
-                    in
-                    Special (BitManipCB param)
+    case ct_value of
+        0xCB ->
+            let
+                param =
+                    z80.env |> mem (Bitwise.and (pc + 1) 0xFFFF) ct_time rom48k
+            in
+            runSpecialBitManipCB param rom48k pc z80
 
-                0xED ->
-                    let
-                        param =
-                            z80.env |> mem (Bitwise.and (pc + 1) 0xFFFF) ct_time rom48k
-                    in
-                    Special (EDMisc param)
+        0xED ->
+            let
+                param =
+                    z80.env |> mem (Bitwise.and (pc + 1) 0xFFFF) ct_time rom48k
+            in
+            runSpecialEDMisc param rom48k pc z80
 
-                0xDD ->
-                    let
-                        param =
-                            z80.env |> mem (Bitwise.and (pc + 1) 0xFFFF) ct_time rom48k
-                    in
-                    if param.value == 0xCB then
-                        let
-                            ixcboffset =
-                                z80.env |> mem (Bitwise.and (pc + 2) 0xFFFF) ct_time rom48k
+        0xDD ->
+            let
+                param =
+                    z80.env |> mem (Bitwise.and (pc + 1) 0xFFFF) ct_time rom48k
+            in
+            if param.value == 0xCB then
+                let
+                    ixcboffset =
+                        z80.env |> mem (Bitwise.and (pc + 2) 0xFFFF) param.time rom48k
 
-                            ixcbparam =
-                                z80.env |> mem (Bitwise.and (pc + 3) 0xFFFF) ct_time rom48k
-                        in
-                        Special (IXCB ixcboffset.value ixcbparam)
+                    ixcbparam =
+                        z80.env |> mem (Bitwise.and (pc + 3) 0xFFFF) ixcboffset.time rom48k
+                in
+                runSpecialIXCB ixcboffset.value ixcbparam rom48k pc z80
 
-                    else
-                        IndexIX param
+            else
+                runIndexIX param rom48k pc z80
 
-                0xFD ->
-                    let
-                        param =
-                            z80.env |> mem (Bitwise.and (pc + 1) 0xFFFF) ct_time rom48k
-                    in
-                    if param.value == 0xCB then
-                        let
-                            iycboffset =
-                                z80.env |> mem (Bitwise.and (pc + 2) 0xFFFF) ct_time rom48k
+        0xFD ->
+            let
+                param =
+                    z80.env |> mem (Bitwise.and (pc + 1) 0xFFFF) ct_time rom48k
+            in
+            if param.value == 0xCB then
+                let
+                    iycboffset =
+                        z80.env |> mem (Bitwise.and (pc + 2) 0xFFFF) param.time rom48k
 
-                            iycbparam =
-                                z80.env |> mem (Bitwise.and (pc + 3) 0xFFFF) ct_time rom48k
-                        in
-                        Special (IYCB iycboffset.value iycbparam)
+                    iycbparam =
+                        z80.env |> mem (Bitwise.and (pc + 3) 0xFFFF) iycboffset.time rom48k
+                in
+                runSpecialIYCB iycboffset.value iycbparam rom48k pc z80
 
-                    else
-                        IndexIY param
+            else
+                runIndexIY param rom48k pc z80
 
-                _ ->
-                    Ordinary ct_value ct_time
-    in
-    case executionType of
-        Ordinary int cpuTimeCTime ->
-            runOrdinary int cpuTimeCTime rom48k pc z80
-
-        IndexIX cpuTimeAndValue ->
-            runIndexIX cpuTimeAndValue rom48k pc z80
-
-        IndexIY cpuTimeAndValue ->
-            runIndexIY cpuTimeAndValue rom48k pc z80
-
-        Special specialExecutionType ->
-            case specialExecutionType of
-                BitManipCB cpuTimeAndValue ->
-                    runSpecialBitManipCB cpuTimeAndValue rom48k pc z80
-
-                IXCB int cpuTimeAndValue ->
-                    runSpecialIXCB int cpuTimeAndValue rom48k pc z80
-
-                IYCB int cpuTimeAndValue ->
-                    runSpecialIYCB int cpuTimeAndValue rom48k pc z80
-
-                EDMisc cpuTimeAndValue ->
-                    runSpecialEDMisc cpuTimeAndValue rom48k pc z80
+        _ ->
+            runOrdinary ct_value ct_time rom48k pc z80
 
 
 runOrdinary : Int -> CpuTimeCTime -> Z80ROM -> Int -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
