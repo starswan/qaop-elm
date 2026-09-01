@@ -353,11 +353,11 @@ applyCoreChange coreChange clockTime pc_inc pc rom48k z80_core =
 
 
 execute_delta : CpuTimeCTime -> Int -> Z80ROM -> Int -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
-execute_delta instrTime ct_value rom48k pc z80_core =
+execute_delta instrTime opCode rom48k pc z80_core =
     --int v, c = env.m1(PC, IR|R++&0x7F);
     --PC = (char)(PC+1); time += 4;
     --switch(c) {
-    case ct_value of
+    case opCode of
         0xCB ->
             let
                 param =
@@ -409,12 +409,12 @@ execute_delta instrTime ct_value rom48k pc z80_core =
                 runIndexIY param rom48k pc z80_core
 
         _ ->
-            case singleByteInstructions |> Dict.get ct_value of
+            case singleByteInstructions |> Dict.get opCode of
                 Just ( mainRegFunc, duration ) ->
                     ( RegisterChangeDelta mainRegFunc, instrTime |> addDuration duration, IncrementByOne )
 
                 Nothing ->
-                    case twoByteInstructions |> Dict.get ct_value of
+                    case twoByteInstructions |> Dict.get opCode of
                         Just ( f, duration ) ->
                             let
                                 paramTimeValue =
@@ -423,7 +423,7 @@ execute_delta instrTime ct_value rom48k pc z80_core =
                             ( TwoByteDelta (f paramTimeValue.value), paramTimeValue.time |> addDuration duration, IncrementByTwo )
 
                         Nothing ->
-                            case threeByteInstructions |> Dict.get ct_value of
+                            case threeByteInstructions |> Dict.get opCode of
                                 Just ( f, duration ) ->
                                     let
                                         env =
@@ -435,7 +435,7 @@ execute_delta instrTime ct_value rom48k pc z80_core =
                                     ( ThreeByteDelta (f doubleParam.value16), doubleParam.time |> addDuration duration, IncrementByThree )
 
                                 Nothing ->
-                                    ( UnknownInstruction "runOrdinary" ct_value, instrTime, IncrementByOne )
+                                    ( UnknownInstruction "runOrdinary" opCode, instrTime, IncrementByOne )
 
 
 runIndexIX : CpuTimeAndValue -> Z80ROM -> Int -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
