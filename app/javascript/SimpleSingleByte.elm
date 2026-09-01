@@ -12,12 +12,12 @@ import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, get
 singleByteMainRegs : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleByteMainRegs =
     Dict.fromList
-        [ ( 0x03, ( TransformMainRegisters inc_bc, SixTStates ) )
-        , ( 0x0B, ( TransformMainRegisters dec_bc, SixTStates ) )
-        , ( 0x13, ( TransformMainRegisters inc_de, SixTStates ) )
-        , ( 0x1B, ( TransformMainRegisters dec_de, SixTStates ) )
-        , ( 0x23, ( TransformMainRegisters inc_hl, SixTStates ) )
-        , ( 0x2B, ( TransformMainRegisters dec_hl, SixTStates ) )
+        [ ( 0x03, ( SimpleTransformMain inc_bc, SixTStates ) )
+        , ( 0x0B, ( SimpleTransformMain dec_bc, SixTStates ) )
+        , ( 0x13, ( SimpleTransformMain inc_de, SixTStates ) )
+        , ( 0x1B, ( SimpleTransformMain dec_de, SixTStates ) )
+        , ( 0x23, ( SimpleTransformMain inc_hl, SixTStates ) )
+        , ( 0x2B, ( SimpleTransformMain dec_hl, SixTStates ) )
 
         -- case 0x34: v=inc(env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
         -- case 0x34: {int a; v=inc(env.mem(a=getd(xy))); time+=4; env.mem(a,v); time+=3;} break;
@@ -26,58 +26,58 @@ singleByteMainRegs =
         -- case 0x35: v=dec(env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
         -- case 0x35: {int a; v=dec(env.mem(a=getd(xy))); time+=4; env.mem(a,v); time+=3;} break;
         , ( 0x35, ( DecrementIndirect .hl, ElevenTStates ) )
-        , ( 0x41, ( TransformMainRegisters ld_b_c, FourTStates ) )
-        , ( 0x42, ( TransformMainRegisters ld_b_d, FourTStates ) )
-        , ( 0x43, ( TransformMainRegisters ld_b_e, FourTStates ) )
-        , ( 0x44, ( TransformMainRegisters (ld_b_h .hl), FourTStates ) )
+        , ( 0x41, ( SimpleTransformMain ld_b_c, FourTStates ) )
+        , ( 0x42, ( SimpleTransformMain ld_b_d, FourTStates ) )
+        , ( 0x43, ( SimpleTransformMain ld_b_e, FourTStates ) )
+        , ( 0x44, ( SimpleTransformMain (ld_b_h .hl), FourTStates ) )
 
         -- case 0x45: B=xy&0xFF; break;
-        , ( 0x45, ( TransformMainRegisters (ld_b_l .hl), FourTStates ) )
-        , ( 0x48, ( TransformMainRegisters ld_c_b, FourTStates ) )
-        , ( 0x4A, ( TransformMainRegisters ld_c_d, FourTStates ) )
-        , ( 0x4B, ( TransformMainRegisters ld_c_e, FourTStates ) )
-        , ( 0x4C, ( TransformMainRegisters (ld_c_h .hl), FourTStates ) )
-        , ( 0x4D, ( TransformMainRegisters (ld_c_l .hl), FourTStates ) )
-        , ( 0x50, ( TransformMainRegisters ld_d_b, FourTStates ) )
-        , ( 0x51, ( TransformMainRegisters ld_d_c, FourTStates ) )
-        , ( 0x53, ( TransformMainRegisters ld_d_e, FourTStates ) )
-        , ( 0x54, ( TransformMainRegisters (ld_d_h .hl), FourTStates ) )
-        , ( 0x55, ( TransformMainRegisters (ld_d_l .hl), FourTStates ) )
-        , ( 0x58, ( TransformMainRegisters ld_e_b, FourTStates ) )
-        , ( 0x59, ( TransformMainRegisters ld_e_c, FourTStates ) )
-        , ( 0x5A, ( TransformMainRegisters ld_e_d, FourTStates ) )
-        , ( 0x5C, ( TransformMainRegisters ld_e_h, FourTStates ) )
-        , ( 0x5D, ( TransformMainRegisters ld_e_l, FourTStates ) )
-        , ( 0x60, ( TransformMainRegisters (ld_h_b .b), FourTStates ) )
+        , ( 0x45, ( SimpleTransformMain (ld_b_l .hl), FourTStates ) )
+        , ( 0x48, ( SimpleTransformMain ld_c_b, FourTStates ) )
+        , ( 0x4A, ( SimpleTransformMain ld_c_d, FourTStates ) )
+        , ( 0x4B, ( SimpleTransformMain ld_c_e, FourTStates ) )
+        , ( 0x4C, ( SimpleTransformMain (ld_c_h .hl), FourTStates ) )
+        , ( 0x4D, ( SimpleTransformMain (ld_c_l .hl), FourTStates ) )
+        , ( 0x50, ( SimpleTransformMain ld_d_b, FourTStates ) )
+        , ( 0x51, ( SimpleTransformMain ld_d_c, FourTStates ) )
+        , ( 0x53, ( SimpleTransformMain ld_d_e, FourTStates ) )
+        , ( 0x54, ( SimpleTransformMain (ld_d_h .hl), FourTStates ) )
+        , ( 0x55, ( SimpleTransformMain (ld_d_l .hl), FourTStates ) )
+        , ( 0x58, ( SimpleTransformMain ld_e_b, FourTStates ) )
+        , ( 0x59, ( SimpleTransformMain ld_e_c, FourTStates ) )
+        , ( 0x5A, ( SimpleTransformMain ld_e_d, FourTStates ) )
+        , ( 0x5C, ( SimpleTransformMain ld_e_h, FourTStates ) )
+        , ( 0x5D, ( SimpleTransformMain ld_e_l, FourTStates ) )
+        , ( 0x60, ( SimpleTransformMain (ld_h_b .b), FourTStates ) )
 
         -- case 0x61: HL=HL&0xFF|C<<8; break;
         -- case 0x61: xy=xy&0xFF|C<<8; break;
-        , ( 0x61, ( TransformMainRegisters (ld_h_b .c), FourTStates ) )
+        , ( 0x61, ( SimpleTransformMain (ld_h_b .c), FourTStates ) )
 
         -- case 0x62: HL=HL&0xFF|D<<8; break;
         -- case 0x62: xy=xy&0xFF|D<<8; break;
-        , ( 0x62, ( TransformMainRegisters (ld_h_b .d), FourTStates ) )
+        , ( 0x62, ( SimpleTransformMain (ld_h_b .d), FourTStates ) )
 
         -- case 0x63: HL=HL&0xFF|E<<8; break;
         -- case 0x63: xy=xy&0xFF|E<<8; break;
-        , ( 0x63, ( TransformMainRegisters (ld_h_b .e), FourTStates ) )
-        , ( 0x65, ( TransformMainRegisters (ld_h_l get_l), FourTStates ) )
-        , ( 0x68, ( TransformMainRegisters (ld_l_b .b), FourTStates ) )
+        , ( 0x63, ( SimpleTransformMain (ld_h_b .e), FourTStates ) )
+        , ( 0x65, ( SimpleTransformMain (ld_h_l get_l), FourTStates ) )
+        , ( 0x68, ( SimpleTransformMain (ld_l_b .b), FourTStates ) )
 
         -- case 0x69: HL=HL&0xFF00|C; break;
-        , ( 0x69, ( TransformMainRegisters (ld_l_b .c), FourTStates ) )
+        , ( 0x69, ( SimpleTransformMain (ld_l_b .c), FourTStates ) )
 
         -- case 0x6A: HL=HL&0xFF00|D; break;
         -- case 0x6A: xy=xy&0xFF00|D; break;
-        , ( 0x6A, ( TransformMainRegisters (ld_l_b .d), FourTStates ) )
+        , ( 0x6A, ( SimpleTransformMain (ld_l_b .d), FourTStates ) )
 
         -- case 0x6B: HL=HL&0xFF00|E; break;
         -- case 0x6B: xy=xy&0xFF00|E; break;
-        , ( 0x6B, ( TransformMainRegisters (ld_l_b .e), FourTStates ) )
+        , ( 0x6B, ( SimpleTransformMain (ld_l_b .e), FourTStates ) )
 
         -- case 0x6C: HL=HL&0xFF00|HL>>>8; break;
         -- case 0x6C: xy=xy&0xFF00|xy>>>8; break;
-        , ( 0x6C, ( TransformMainRegisters (ld_l_b get_h), FourTStates ) )
+        , ( 0x6C, ( SimpleTransformMain (ld_l_b get_h), FourTStates ) )
 
         -- case 0x70: env.mem(HL,B); time+=3; break;
         -- case 0x70: env.mem(getd(xy),B); time+=3; break;
@@ -108,7 +108,7 @@ singleByteMainRegs =
         , ( 0xE3, ( ExchangeTopOfStackWith HL, NineteenTStates ) )
         , ( 0xE5, ( Pushed16BitValue .hl, ElevenTStates ) )
         , ( 0xE9, ( RegisterChangeJump .hl, FourTStates ) )
-        , ( 0xEB, ( TransformMainRegisters ex_de_hl, FourTStates ) )
+        , ( 0xEB, ( SimpleTransformMain ex_de_hl, FourTStates ) )
 
         -- case 0xF9: SP=HL; time+=2; break;
         , ( 0xF9, ( RegChangeNewSP .hl, SixTStates ) )
@@ -119,20 +119,20 @@ commonDDFDOps : Dict Int ( RegisterFlagChange, InstructionDuration )
 commonDDFDOps =
     Dict.fromList
         [ ( 0x40, ( RegChangeNoOp, EightTStates ) )
-        , ( 0x41, ( TransformMainRegisters ld_b_c, EightTStates ) )
-        , ( 0x42, ( TransformMainRegisters ld_b_d, EightTStates ) )
-        , ( 0x43, ( TransformMainRegisters ld_b_e, EightTStates ) )
-        , ( 0x48, ( TransformMainRegisters ld_c_b, EightTStates ) )
+        , ( 0x41, ( SimpleTransformMain ld_b_c, EightTStates ) )
+        , ( 0x42, ( SimpleTransformMain ld_b_d, EightTStates ) )
+        , ( 0x43, ( SimpleTransformMain ld_b_e, EightTStates ) )
+        , ( 0x48, ( SimpleTransformMain ld_c_b, EightTStates ) )
         , ( 0x49, ( RegChangeNoOp, EightTStates ) )
-        , ( 0x4A, ( TransformMainRegisters ld_c_d, EightTStates ) )
-        , ( 0x4B, ( TransformMainRegisters ld_c_e, EightTStates ) )
-        , ( 0x50, ( TransformMainRegisters ld_d_b, EightTStates ) )
-        , ( 0x51, ( TransformMainRegisters ld_d_c, EightTStates ) )
+        , ( 0x4A, ( SimpleTransformMain ld_c_d, EightTStates ) )
+        , ( 0x4B, ( SimpleTransformMain ld_c_e, EightTStates ) )
+        , ( 0x50, ( SimpleTransformMain ld_d_b, EightTStates ) )
+        , ( 0x51, ( SimpleTransformMain ld_d_c, EightTStates ) )
         , ( 0x52, ( RegChangeNoOp, EightTStates ) )
-        , ( 0x53, ( TransformMainRegisters ld_d_e, EightTStates ) )
-        , ( 0x58, ( TransformMainRegisters ld_e_b, EightTStates ) )
-        , ( 0x59, ( TransformMainRegisters ld_e_c, EightTStates ) )
-        , ( 0x5A, ( TransformMainRegisters ld_e_d, EightTStates ) )
+        , ( 0x53, ( SimpleTransformMain ld_d_e, EightTStates ) )
+        , ( 0x58, ( SimpleTransformMain ld_e_b, EightTStates ) )
+        , ( 0x59, ( SimpleTransformMain ld_e_c, EightTStates ) )
+        , ( 0x5A, ( SimpleTransformMain ld_e_d, EightTStates ) )
         , ( 0x5B, ( RegChangeNoOp, EightTStates ) )
 
         -- case 0x78: A=B; break;
@@ -147,38 +147,38 @@ commonDDFDOps =
 
         -- DD 7F and FD 7F are both No-ops
         , ( 0x7F, ( RegChangeNoOp, EightTStates ) )
-        , ( 0xEB, ( TransformMainRegisters ex_de_hl, FourTStates ) )
+        , ( 0xEB, ( SimpleTransformMain ex_de_hl, FourTStates ) )
         ]
 
 
 singleByteMainRegsFD : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleByteMainRegsFD =
     Dict.fromList
-        [ ( 0x23, ( TransformMainRegisters inc_iy, TenTStates ) )
-        , ( 0x2B, ( TransformMainRegisters dec_iy, TenTStates ) )
-        , ( 0x44, ( TransformMainRegisters (ld_b_h .iy), EightTStates ) )
-        , ( 0x45, ( TransformMainRegisters (ld_b_l .iy), EightTStates ) )
-        , ( 0x4C, ( TransformMainRegisters (ld_c_h .iy), EightTStates ) )
-        , ( 0x4D, ( TransformMainRegisters (ld_c_l .iy), EightTStates ) )
-        , ( 0x54, ( TransformMainRegisters ld_d_iy_h, EightTStates ) )
-        , ( 0x55, ( TransformMainRegisters ld_d_iy_l, EightTStates ) )
-        , ( 0x5C, ( TransformMainRegisters ld_e_iy_h, EightTStates ) )
-        , ( 0x5D, ( TransformMainRegisters ld_e_iy_l, EightTStates ) )
-        , ( 0x60, ( TransformMainRegisters (\main -> main |> set_iy_h main.b), EightTStates ) )
-        , ( 0x61, ( TransformMainRegisters (\main -> main |> set_iy_h main.c), EightTStates ) )
-        , ( 0x62, ( TransformMainRegisters (\main -> main |> set_iy_h main.d), EightTStates ) )
-        , ( 0x63, ( TransformMainRegisters (\main -> main |> set_iy_h main.e), EightTStates ) )
-        , ( 0x65, ( TransformMainRegisters (\main -> main |> set_iy_h (Bitwise.and main.iy 0xFF)), EightTStates ) )
-        , ( 0x68, ( TransformMainRegisters (\main -> main |> set_iy_l main.b), EightTStates ) )
+        [ ( 0x23, ( SimpleTransformMain inc_iy, TenTStates ) )
+        , ( 0x2B, ( SimpleTransformMain dec_iy, TenTStates ) )
+        , ( 0x44, ( SimpleTransformMain (ld_b_h .iy), EightTStates ) )
+        , ( 0x45, ( SimpleTransformMain (ld_b_l .iy), EightTStates ) )
+        , ( 0x4C, ( SimpleTransformMain (ld_c_h .iy), EightTStates ) )
+        , ( 0x4D, ( SimpleTransformMain (ld_c_l .iy), EightTStates ) )
+        , ( 0x54, ( SimpleTransformMain ld_d_iy_h, EightTStates ) )
+        , ( 0x55, ( SimpleTransformMain ld_d_iy_l, EightTStates ) )
+        , ( 0x5C, ( SimpleTransformMain ld_e_iy_h, EightTStates ) )
+        , ( 0x5D, ( SimpleTransformMain ld_e_iy_l, EightTStates ) )
+        , ( 0x60, ( SimpleTransformMain (\main -> main |> set_iy_h main.b), EightTStates ) )
+        , ( 0x61, ( SimpleTransformMain (\main -> main |> set_iy_h main.c), EightTStates ) )
+        , ( 0x62, ( SimpleTransformMain (\main -> main |> set_iy_h main.d), EightTStates ) )
+        , ( 0x63, ( SimpleTransformMain (\main -> main |> set_iy_h main.e), EightTStates ) )
+        , ( 0x65, ( SimpleTransformMain (\main -> main |> set_iy_h (Bitwise.and main.iy 0xFF)), EightTStates ) )
+        , ( 0x68, ( SimpleTransformMain (\main -> main |> set_iy_l main.b), EightTStates ) )
 
         -- case 0x69: xy=xy&0xFF00|C; break;
-        , ( 0x69, ( TransformMainRegisters (\main -> main |> set_iy_l main.c), EightTStates ) )
+        , ( 0x69, ( SimpleTransformMain (\main -> main |> set_iy_l main.c), EightTStates ) )
 
         -- case 0x6A: HL=HL&0xFF00|D; break;
         -- case 0x6A: xy=xy&0xFF00|D; break;
-        , ( 0x6A, ( TransformMainRegisters (\main -> main |> set_iy_l main.d), EightTStates ) )
-        , ( 0x6B, ( TransformMainRegisters (\main -> main |> set_iy_l main.e), EightTStates ) )
-        , ( 0x6C, ( TransformMainRegisters (\main -> main |> set_iy_l (main.iy |> shiftRightBy8)), EightTStates ) )
+        , ( 0x6A, ( SimpleTransformMain (\main -> main |> set_iy_l main.d), EightTStates ) )
+        , ( 0x6B, ( SimpleTransformMain (\main -> main |> set_iy_l main.e), EightTStates ) )
+        , ( 0x6C, ( SimpleTransformMain (\main -> main |> set_iy_l (main.iy |> shiftRightBy8)), EightTStates ) )
 
         -- case 0x7C: A=xy>>>8; break;
         , ( 0x7C, ( RegisterChangeA get_iyh, EightTStates ) )
@@ -214,31 +214,31 @@ singleByteMainRegsFD =
 singleByteMainRegsDD : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleByteMainRegsDD =
     Dict.fromList
-        [ ( 0x23, ( TransformMainRegisters inc_ix, TenTStates ) )
-        , ( 0x2B, ( TransformMainRegisters dec_ix, TenTStates ) )
-        , ( 0x44, ( TransformMainRegisters (ld_b_h .ix), EightTStates ) )
-        , ( 0x45, ( TransformMainRegisters (ld_b_l .ix), EightTStates ) )
-        , ( 0x4C, ( TransformMainRegisters (ld_c_h .ix), EightTStates ) )
-        , ( 0x4D, ( TransformMainRegisters (ld_c_l .ix), EightTStates ) )
-        , ( 0x54, ( TransformMainRegisters ld_d_ix_h, EightTStates ) )
-        , ( 0x55, ( TransformMainRegisters ld_d_ix_l, EightTStates ) )
-        , ( 0x5C, ( TransformMainRegisters ld_e_ix_h, EightTStates ) )
-        , ( 0x5D, ( TransformMainRegisters ld_e_ix_l, EightTStates ) )
-        , ( 0x60, ( TransformMainRegisters (\main -> main |> set_ix_h main.b), EightTStates ) )
-        , ( 0x61, ( TransformMainRegisters (\main -> main |> set_ix_h main.c), EightTStates ) )
-        , ( 0x62, ( TransformMainRegisters (\main -> main |> set_ix_h main.d), EightTStates ) )
-        , ( 0x63, ( TransformMainRegisters (\main -> main |> set_ix_h main.e), EightTStates ) )
-        , ( 0x65, ( TransformMainRegisters (\main -> main |> set_ix_h (Bitwise.and main.ix 0xFF)), EightTStates ) )
-        , ( 0x68, ( TransformMainRegisters (\main -> main |> set_ix_l main.b), EightTStates ) )
+        [ ( 0x23, ( SimpleTransformMain inc_ix, TenTStates ) )
+        , ( 0x2B, ( SimpleTransformMain dec_ix, TenTStates ) )
+        , ( 0x44, ( SimpleTransformMain (ld_b_h .ix), EightTStates ) )
+        , ( 0x45, ( SimpleTransformMain (ld_b_l .ix), EightTStates ) )
+        , ( 0x4C, ( SimpleTransformMain (ld_c_h .ix), EightTStates ) )
+        , ( 0x4D, ( SimpleTransformMain (ld_c_l .ix), EightTStates ) )
+        , ( 0x54, ( SimpleTransformMain ld_d_ix_h, EightTStates ) )
+        , ( 0x55, ( SimpleTransformMain ld_d_ix_l, EightTStates ) )
+        , ( 0x5C, ( SimpleTransformMain ld_e_ix_h, EightTStates ) )
+        , ( 0x5D, ( SimpleTransformMain ld_e_ix_l, EightTStates ) )
+        , ( 0x60, ( SimpleTransformMain (\main -> main |> set_ix_h main.b), EightTStates ) )
+        , ( 0x61, ( SimpleTransformMain (\main -> main |> set_ix_h main.c), EightTStates ) )
+        , ( 0x62, ( SimpleTransformMain (\main -> main |> set_ix_h main.d), EightTStates ) )
+        , ( 0x63, ( SimpleTransformMain (\main -> main |> set_ix_h main.e), EightTStates ) )
+        , ( 0x65, ( SimpleTransformMain (\main -> main |> set_ix_h (Bitwise.and main.ix 0xFF)), EightTStates ) )
+        , ( 0x68, ( SimpleTransformMain (\main -> main |> set_ix_l main.b), EightTStates ) )
 
         -- case 0x69: xy=xy&0xFF00|C; break;
-        , ( 0x69, ( TransformMainRegisters (\main -> main |> set_ix_l main.c), EightTStates ) )
-        , ( 0x6A, ( TransformMainRegisters (\main -> main |> set_ix_l main.d), EightTStates ) )
+        , ( 0x69, ( SimpleTransformMain (\main -> main |> set_ix_l main.c), EightTStates ) )
+        , ( 0x6A, ( SimpleTransformMain (\main -> main |> set_ix_l main.d), EightTStates ) )
 
         -- case 0x6B: HL=HL&0xFF00|E; break;
         -- case 0x6B: xy=xy&0xFF00|E; break;
-        , ( 0x6B, ( TransformMainRegisters (\main -> main |> set_ix_l main.e), EightTStates ) )
-        , ( 0x6C, ( TransformMainRegisters (\main -> main |> set_ix_l (main.ix |> shiftRightBy8)), EightTStates ) )
+        , ( 0x6B, ( SimpleTransformMain (\main -> main |> set_ix_l main.e), EightTStates ) )
+        , ( 0x6C, ( SimpleTransformMain (\main -> main |> set_ix_l (main.ix |> shiftRightBy8)), EightTStates ) )
         , ( 0x7C, ( RegisterChangeA get_ixh, EightTStates ) )
         , ( 0x7D, ( RegisterChangeA get_ixl, EightTStates ) )
         , ( 0x84, ( SingleEnvFlagFunc z80_add get_ixh, EightTStates ) )
