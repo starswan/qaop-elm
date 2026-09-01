@@ -363,7 +363,7 @@ execute_delta instrTime opCode rom48k pc z80_core =
                 param =
                     z80_core.env |> mem (Bitwise.and (pc + 1) 0xFFFF) instrTime rom48k
             in
-            runSpecialBitManipCB param rom48k pc z80_core
+            runSpecialBitManipCB param z80_core
 
         0xED ->
             let
@@ -385,7 +385,7 @@ execute_delta instrTime opCode rom48k pc z80_core =
                     ixcbparam =
                         z80_core.env |> mem (Bitwise.and (pc + 3) 0xFFFF) ixcboffset.time rom48k
                 in
-                runSpecialIXCB ixcboffset.value ixcbparam rom48k pc z80_core
+                runSpecialIXCB ixcboffset.value ixcbparam rom48k z80_core
 
             else
                 runIndexIX param rom48k pc z80_core
@@ -403,7 +403,7 @@ execute_delta instrTime opCode rom48k pc z80_core =
                     iycbparam =
                         z80_core.env |> mem (Bitwise.and (pc + 3) 0xFFFF) iycboffset.time rom48k
                 in
-                runSpecialIYCB iycboffset.value iycbparam rom48k pc z80_core
+                runSpecialIYCB iycboffset.value iycbparam rom48k z80_core
 
             else
                 runIndexIY param rom48k pc z80_core
@@ -509,8 +509,8 @@ runIndexIY param rom48k pc z80 =
                             ( UnknownInstruction "execute IndexIY" param.value, param.time, IncrementByTwo )
 
 
-runSpecialBitManipCB : CpuTimeAndValue -> Z80ROM -> Int -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
-runSpecialBitManipCB param rom48k pc z80_core =
+runSpecialBitManipCB : CpuTimeAndValue -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
+runSpecialBitManipCB param z80_core =
     case singleByteMainRegsCB |> Dict.get param.value of
         Just ( mainRegFunc, duration ) ->
             ( RegisterChangeDelta (mainRegFunc z80_core.main), param.time |> addDuration duration, IncrementByTwo )
@@ -534,8 +534,8 @@ runSpecialBitManipCB param rom48k pc z80_core =
                                     ( UnknownInstruction "execute CB" param.value, param.time, IncrementByTwo )
 
 
-runSpecialIXCB : Int -> CpuTimeAndValue -> Z80ROM -> Int -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
-runSpecialIXCB offset param rom48k pc z80_core =
+runSpecialIXCB : Int -> CpuTimeAndValue -> Z80ROM -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
+runSpecialIXCB offset param rom48k z80_core =
     case singleByteMainRegsIXCB |> Dict.get param.value of
         Just ( mainRegFunc, duration ) ->
             ( RegisterChangeDelta (mainRegFunc offset z80_core.main), param.time |> addDuration duration, IncrementByFour )
@@ -549,8 +549,8 @@ runSpecialIXCB offset param rom48k pc z80_core =
                     ( UnknownInstruction "execute IXCB" param.value, param.time, IncrementByFour )
 
 
-runSpecialIYCB : Int -> CpuTimeAndValue -> Z80ROM -> Int -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
-runSpecialIYCB iycboffset param rom48k pc z80_core =
+runSpecialIYCB : Int -> CpuTimeAndValue -> Z80ROM -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
+runSpecialIYCB iycboffset param rom48k z80_core =
     case singleByteMainRegsIYCB |> Dict.get param.value |> Maybe.map (\( f, d ) -> ( f iycboffset, d )) of
         Just ( mainRegFunc, duration ) ->
             ( RegisterChangeDelta (mainRegFunc z80_core.main), param.time |> addDuration duration, IncrementByFour )
