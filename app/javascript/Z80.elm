@@ -410,8 +410,8 @@ execute_delta instrTime opCode rom48k pc z80_core =
 
         _ ->
             case singleByteInstructions |> Dict.get opCode of
-                Just ( mainRegFunc, duration ) ->
-                    ( RegisterChangeDelta mainRegFunc, instrTime |> addDuration duration, IncrementByOne )
+                Just ( flagChange, duration ) ->
+                    ( RegisterChangeDelta flagChange, instrTime |> addDuration duration, IncrementByOne )
 
                 Nothing ->
                     case twoByteInstructions |> Dict.get opCode of
@@ -513,7 +513,7 @@ runSpecialBitManipCB : Int -> CpuTimeCTime -> Z80Core -> ( DeltaWithChanges, Cpu
 runSpecialBitManipCB param clockTime z80_core =
     case singleByteMainRegsCB |> Dict.get param of
         Just ( mainRegFunc, duration ) ->
-            ( RegisterChangeDelta (mainRegFunc z80_core.main), clockTime |> addDuration duration, IncrementByTwo )
+            ( RegisterCBDelta mainRegFunc, clockTime |> addDuration duration, IncrementByTwo )
 
         Nothing ->
             case singleByteMainAndFlagRegistersCB |> Dict.get param of
@@ -538,7 +538,7 @@ runSpecialIXCB : Int -> CpuTimeCTime -> Int -> Z80ROM -> Z80Core -> ( DeltaWithC
 runSpecialIXCB offset clockTime param rom48k z80_core =
     case singleByteMainRegsIXCB |> Dict.get param of
         Just ( mainRegFunc, duration ) ->
-            ( RegisterChangeDelta (mainRegFunc offset z80_core.main), clockTime |> addDuration duration, IncrementByFour )
+            ( RegisterCBDelta (mainRegFunc offset z80_core.main), clockTime |> addDuration duration, IncrementByFour )
 
         Nothing ->
             case singleEnvMainRegsIXCB |> Dict.get param of
@@ -553,7 +553,7 @@ runSpecialIYCB : Int -> CpuTimeCTime -> Int -> Z80ROM -> Z80Core -> ( DeltaWithC
 runSpecialIYCB offset clockTime param rom48k z80_core =
     case singleByteMainRegsIYCB |> Dict.get param |> Maybe.map (\( f, d ) -> ( f offset, d )) of
         Just ( mainRegFunc, duration ) ->
-            ( RegisterChangeDelta (mainRegFunc z80_core.main), clockTime |> addDuration duration, IncrementByFour )
+            ( RegisterCBDelta (mainRegFunc z80_core.main), clockTime |> addDuration duration, IncrementByFour )
 
         Nothing ->
             case singleEnvMainRegsIYCB |> Dict.get param of
