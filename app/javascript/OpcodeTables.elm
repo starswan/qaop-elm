@@ -3,7 +3,7 @@ module OpcodeTables exposing (..)
 import CpuTimeCTime exposing (InstructionDuration)
 import Dict exposing (Dict)
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, doubleWithRegistersIX, doubleWithRegistersIY)
-import RegisterChange exposing (RegisterFlagChange(..), ThreeByteChange(..), TwoByteChange(..))
+import RegisterChange exposing (RegisterFlagChange(..), TwoByteChange(..))
 import SimpleFlagOps exposing (singleByteFlags, singleByteFlagsDD, singleByteFlagsFD)
 import SimpleSingleByte exposing (singleByteMainRegs, singleByteMainRegsDD, singleByteMainRegsFD)
 import SingleByteWithEnv exposing (singleByteZ80Env)
@@ -37,10 +37,6 @@ twoByteInstructions =
 threeByteInstructions : Dict Int ( Int -> TripleByteChange, InstructionDuration )
 threeByteInstructions =
     tripleByteWith16BitParam |> Dict.union triple16bitJumps
-
-
-
---|> Dict.map (\_ ( f, duration ) -> ( \param -> ThreeBytePlain (f param), duration ))
 
 
 singleByteMainFlagsRegsIY : Dict Int ( RegisterFlagChange, InstructionDuration )
