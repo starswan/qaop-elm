@@ -16,7 +16,7 @@ import Z80Change exposing (IndexedZ80Change(..), Z80Change(..))
 import Z80Core exposing (CoreChange(..), DirectionForLDIR(..), LDIRLoop(..), RareCoreChange(..), RepeatPCOffset(..), Z80Core)
 import Z80Debug exposing (debugLog, debugTodo)
 import Z80Env exposing (Z80Env, setMem, z80_in, z80_out, z80_push)
-import Z80Flags exposing (FlagRegisters, IntWithFlags, changeFlags, dec, f_szh0n0p, get_af, inc, set_af, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
+import Z80Flags exposing (FlagRegisters, IntWithFlags, dec, f_szh0n0p, get_af, inc, set_af, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
 import Z80Mem exposing (mem, mem16, z80_pop)
 import Z80Registers exposing (ChangeMainRegister(..), ChangeSingle(..), CoreRegister(..))
 import Z80Types exposing (IXIYHL(..), MainWithIndexRegisters, Z80ROM, get_bc, get_de, get_xy, set_bc_main, set_de_main, set_xy)
@@ -147,7 +147,7 @@ applySimple8BitDelta cpu_time z80changeData rom48k z80 =
             { flags | a = new_a } |> FlagsOnly
 
         FlagJump operation param ->
-            z80.flags |> changeFlags operation param |> FlagsOnly
+            z80.flags |> operation param |> FlagsOnly
 
         Z80In param ->
             -- case 0xDB: MP=(v=imm8()|A<<8)+1; A=env.in(v); time+=4; break;
@@ -496,13 +496,10 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
 
         SingleEnvFlagFunc flagFunc valueFunc ->
             let
-                z80_flags =
-                    z80_core.flags
-
                 value =
                     z80_core.main |> valueFunc
             in
-            z80_flags |> flagFunc value |> FlagsOnly
+            z80_core.flags |> flagFunc value |> FlagsOnly
 
         ExchangeTopOfStackWith ixiyhl ->
             let

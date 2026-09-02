@@ -10,7 +10,7 @@ import Utils exposing (BitTest)
 import Z80Change exposing (IndexedZ80Change, Z80Change)
 import Z80Core exposing (DirectionForLDIR)
 import Z80Env exposing (Z80Env)
-import Z80Flags exposing (FlagFunc, FlagRegisters)
+import Z80Flags exposing (FlagRegisters)
 import Z80Registers exposing (ChangeMainRegister, ChangeSingle, CoreRegister)
 import Z80Types exposing (IXIYHL, MainWithIndexRegisters, Z80ROM)
 
