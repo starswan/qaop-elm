@@ -432,7 +432,7 @@ execute_delta instrTime opCode rom48k pc z80_core =
                                         doubleParam =
                                             env |> mem16 (Bitwise.and (pc + 1) 0xFFFF) rom48k instrTime
                                     in
-                                    ( ThreeByteDelta (f doubleParam.value16), doubleParam.time |> addDuration duration, IncrementByThree )
+                                    ( ThreeBytePlainDelta (f doubleParam.value16), doubleParam.time |> addDuration duration, IncrementByThree )
 
                                 Nothing ->
                                     ( UnknownInstruction "runOrdinary" opCode, instrTime, IncrementByOne )

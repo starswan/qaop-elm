@@ -6,7 +6,6 @@ import Dict exposing (Dict)
 import DoubleWithRegisters exposing (applyDoubleWithRegistersDelta, doubleWithRegistersIX, doubleWithRegistersIY)
 import GroupCBIXIY exposing (singleByteMainRegsIYCB, singleEnvMainRegsIYCB)
 import GroupED exposing (singleByteMainAndFlagsED, singleByteMainRegsED)
-import JumpChange exposing (applyTripleFlagChange)
 import Maybe.Extra exposing (oneOf)
 import PCIncrement exposing (PCIncrement(..))
 import SimpleFlagOps exposing (singleByteFlags)
@@ -294,7 +293,7 @@ lengthAndDuration pc rom48k z80env =
                                     doubleParam =
                                         z80env |> mem16 (Bitwise.and (pc + 1) 0xFFFF) rom48k clockTime
                                 in
-                                ( IncrementByThree, duration, \_ _ z80core -> z80core.flags |> applyTripleFlagChange (f doubleParam.value16) )
+                                ( IncrementByThree, duration, \cpuClock z80rom z80core -> z80core |> applySimpleTripleChangeDelta z80rom cpuClock (f doubleParam.value16) )
                             )
                 , \instruction ->
                     maybeRelativeJump

@@ -11,7 +11,7 @@ import SingleEnvWithMain exposing (singleEnvMainRegs, singleEnvMainRegsIX, singl
 import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters, singleByteMainAndFlagRegistersIX, singleByteMainAndFlagRegistersIY)
 import SingleNoParams exposing (singleNoParamCalls, singleWithNoParam, singleWithNoParamDD, singleWithNoParamFD)
 import SingleWith8BitParameter exposing (maybeRelativeJump, singleWith8BitParam)
-import TripleByte exposing (TripleByteIndexChange, tripleByteWith16BitParam, tripleByteWith16BitParamDD, tripleByteWith16BitParamFD)
+import TripleByte exposing (TripleByteChange, TripleByteIndexChange, tripleByteWith16BitParam, tripleByteWith16BitParamDD, tripleByteWith16BitParamFD)
 import TripleWithFlags exposing (triple16bitJumps)
 import TripleWithMain exposing (tripleMainRegsIXFour, tripleMainRegsIXThree, tripleMainRegsIYFour, tripleMainRegsIYThree)
 
@@ -34,11 +34,13 @@ twoByteInstructions =
         |> Dict.union (maybeRelativeJump |> Dict.map (\_ ( f, duration ) -> ( \param -> TwoByteJump (f param), duration )))
 
 
-threeByteInstructions : Dict Int ( Int -> ThreeByteChange, InstructionDuration )
+threeByteInstructions : Dict Int ( Int -> TripleByteChange, InstructionDuration )
 threeByteInstructions =
-    tripleByteWith16BitParam
-        |> Dict.map (\_ ( f, duration ) -> ( \param -> ThreeBytePlain (f param), duration ))
-        |> Dict.union (triple16bitJumps |> Dict.map (\_ ( f, duration ) -> ( \param -> ThreeByteFlags (f param), duration )))
+    tripleByteWith16BitParam |> Dict.union triple16bitJumps
+
+
+
+--|> Dict.map (\_ ( f, duration ) -> ( \param -> ThreeBytePlain (f param), duration ))
 
 
 singleByteMainFlagsRegsIY : Dict Int ( RegisterFlagChange, InstructionDuration )
