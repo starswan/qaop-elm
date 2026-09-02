@@ -57,12 +57,6 @@ apply_delta z80 iff rom48k clockTime z80delta =
         ThreeBytePlainDelta tripleByteChange ->
             z80 |> applySimpleTripleChangeDelta rom48k clockTime tripleByteChange
 
-        UnknownInstruction string int ->
-            debugTodo string (int |> toHexString2) z80 |> CoreOnly |> RareChange
-
-        InterruptDelta interruptChange ->
-            z80.flags |> applyInterruptChange interruptChange iff |> FlagsOnly
-
         EDChangeDelta eDRegisterChange ->
             z80 |> applyEdRegisterDelta clockTime eDRegisterChange rom48k
 
@@ -76,6 +70,12 @@ apply_delta z80 iff rom48k clockTime z80delta =
 
                 TwoByteJump jumpChange ->
                     z80 |> applyJumpChangeDelta jumpChange
+
+        InterruptDelta interruptChange ->
+            z80.flags |> applyInterruptChange interruptChange iff |> FlagsOnly
+
+        UnknownInstruction string int ->
+            debugTodo string (int |> toHexString2) z80 |> CoreOnly |> RareChange
 
 
 applyJumpChangeDelta : JumpChange -> Z80Core -> CoreChange
