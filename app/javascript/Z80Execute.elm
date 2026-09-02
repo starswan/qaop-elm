@@ -502,7 +502,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 value =
                     z80_core.main |> valueFunc
             in
-            z80_flags |> changeFlags flagFunc value |> FlagsOnly
+            z80_flags |> flagFunc value |> FlagsOnly
 
         ExchangeTopOfStackWith ixiyhl ->
             let

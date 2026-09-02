@@ -6,7 +6,6 @@ import JumpChange exposing (JumpChange)
 import SingleByteWithEnv exposing (SingleByteEnvChange)
 import SingleEnvWithMain exposing (SingleEnvMainChange)
 import SingleWith8BitParameter exposing (Single8BitChange)
-import TripleByte exposing (TripleByteChange)
 import Utils exposing (BitTest)
 import Z80Change exposing (IndexedZ80Change, Z80Change)
 import Z80Core exposing (DirectionForLDIR)
@@ -39,7 +38,7 @@ type RegisterFlagChange
     | IndirectBitReset BitTest Int
     | IndirectBitSet BitTest Int
     | RegChangeNoOp
-    | SingleEnvFlagFunc FlagFunc (MainWithIndexRegisters -> Int)
+    | SingleEnvFlagFunc (Int -> FlagRegisters -> FlagRegisters) (MainWithIndexRegisters -> Int)
     | ExchangeTopOfStackWith IXIYHL
     | SingleRegisterChange ChangeSingle Int
     | RegisterChangeA (MainWithIndexRegisters -> Int)
@@ -106,7 +105,3 @@ type InterruptChange
 type TwoByteChange
     = TwoByte8Bit Single8BitChange
     | TwoByteJump JumpChange
-
-
-type ThreeByteChange
-    = ThreeBytePlain TripleByteChange
