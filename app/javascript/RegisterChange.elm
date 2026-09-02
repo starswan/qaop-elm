@@ -11,7 +11,7 @@ import Z80Change exposing (IndexedZ80Change, Z80Change)
 import Z80Core exposing (DirectionForLDIR)
 import Z80Env exposing (Z80Env)
 import Z80Flags exposing (FlagRegisters)
-import Z80Registers exposing (ChangeMainRegister, ChangeSingle, CoreRegister)
+import Z80Registers exposing (ChangeMainRegister, CoreRegister)
 import Z80Types exposing (IXIYHL, MainWithIndexRegisters, Z80ROM)
 
 
@@ -33,22 +33,10 @@ type RegisterFlagChange
     | DecrementIndirect (MainWithIndexRegisters -> Int)
     | RegisterChangeJump (MainWithIndexRegisters -> Int)
     | SetIndirect (MainWithIndexRegisters -> ( Int, Int ))
-    | RegisterChangeShifter Shifter (MainWithIndexRegisters -> Int)
-    | RegisterChangeIndexShifter Shifter Int
-    | IndirectBitReset BitTest Int
-    | IndirectBitSet BitTest Int
     | RegChangeNoOp
     | SingleEnvFlagFunc (Int -> FlagRegisters -> FlagRegisters) (MainWithIndexRegisters -> Int)
     | ExchangeTopOfStackWith IXIYHL
-    | SingleRegisterChange ChangeSingle Int
     | RegisterChangeA (MainWithIndexRegisters -> Int)
-    | RegisterIndirectWithShifter Shifter ChangeMainRegister Int
-    | SetBitIndirectWithCopy BitTest ChangeMainRegister Int
-    | ResetBitIndirectWithCopy BitTest ChangeMainRegister Int
-    | FlagsIndirectWithShifter Shifter Int
-    | SetBitIndirectA BitTest Int
-    | ResetBitIndirectA BitTest Int
-    | TransformMainRegisters (MainWithIndexRegisters -> MainWithIndexRegisters)
     | FlagNewRValue Int
     | FlagNewIValue Int
     | FlagChangeFunc (FlagRegisters -> FlagRegisters)
@@ -68,6 +56,21 @@ type RegisterFlagChange
     | RegisterSingleByteEnv (Z80Env -> SingleByteEnvChange)
     | RegisterEnvMainChangeWithClockTime (MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange)
     | RegisterEnvMainChange (MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange)
+    | SimpleTransformMain (MainWithIndexRegisters -> MainWithIndexRegisters)
+
+
+type CBRegisterFlagChange
+    = RegisterChangeShifter Shifter (MainWithIndexRegisters -> Int)
+    | TransformMainRegisters (MainWithIndexRegisters -> MainWithIndexRegisters)
+    | SetBitIndirectA BitTest Int
+    | SetBitIndirectWithCopy BitTest ChangeMainRegister Int
+    | FlagsIndirectWithShifter Shifter Int
+    | IndirectBitReset BitTest (MainWithIndexRegisters -> Int)
+    | ResetBitIndirectWithCopy BitTest ChangeMainRegister Int
+    | ResetBitIndirectA BitTest Int
+    | IndirectBitSet BitTest (MainWithIndexRegisters -> Int)
+    | RegisterIndirectWithShifter Shifter ChangeMainRegister Int
+    | RegisterChangeIndexShifter Shifter Int
 
 
 type SixteenBit

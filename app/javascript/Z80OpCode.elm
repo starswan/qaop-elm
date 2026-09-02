@@ -19,7 +19,7 @@ import TripleWithFlags exposing (triple16bitJumps)
 import TripleWithMain exposing (tripleMainRegsIYFour)
 import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
 import Z80Env exposing (Z80Env)
-import Z80Execute exposing (applyEdRegisterDelta, applyJumpChangeDelta, applyPureDelta, applyRegisterDelta, applySimple8BitDelta, applySimpleTripleChangeDelta, applyTripleChangeDelta)
+import Z80Execute exposing (applyCBRegisterDelta, applyEdRegisterDelta, applyJumpChangeDelta, applyPureDelta, applyRegisterDelta, applySimple8BitDelta, applySimpleTripleChangeDelta, applyTripleChangeDelta)
 import Z80Mem exposing (m1, mem, mem16)
 import Z80Types exposing (MainWithIndexRegisters, Z80ROM)
 
@@ -120,7 +120,7 @@ lengthAndDuration pc rom48k z80env =
                                                 ( IncrementByFour
                                                 , duration
                                                 , \cpuClock z80rom z80core ->
-                                                    z80core |> applyRegisterDelta cpuClock (mainRegFunc cboffset z80core.main) z80rom
+                                                    z80core |> applyCBRegisterDelta cpuClock (mainRegFunc cboffset z80core.main) z80rom
                                                 )
                                             )
                                 , \( cbparam, cboffset ) ->
