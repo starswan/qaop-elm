@@ -2,11 +2,11 @@ module RegisterChange exposing (..)
 
 import CpuTimeCTime exposing (CpuTimeCTime)
 import Interrupts exposing (InterruptMode)
-import JumpChange exposing (JumpChange, TripleWithFlagsChange)
+import JumpChange exposing (JumpChange)
 import SingleByteWithEnv exposing (SingleByteEnvChange)
 import SingleEnvWithMain exposing (SingleEnvMainChange)
 import SingleWith8BitParameter exposing (Single8BitChange)
-import TripleByte exposing (TripleByteChange, TripleByteIndexChange)
+import TripleByte exposing (TripleByteChange)
 import Utils exposing (BitTest)
 import Z80Change exposing (IndexedZ80Change, Z80Change)
 import Z80Core exposing (DirectionForLDIR)
@@ -109,5 +109,4 @@ type TwoByteChange
 
 
 type ThreeByteChange
-    = ThreeByteFlags TripleWithFlagsChange
-    | ThreeBytePlain TripleByteChange
+    = ThreeBytePlain TripleByteChange

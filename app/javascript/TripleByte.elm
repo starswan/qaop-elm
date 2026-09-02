@@ -1,7 +1,8 @@
 module TripleByte exposing (..)
 
-import CpuTimeCTime exposing (InstructionDuration(..))
+import CpuTimeCTime exposing (InstructionDuration(..), ShortDelay)
 import Dict exposing (Dict)
+import Z80Flags exposing (FlagRegisters)
 import Z80Types exposing (MainWithIndexRegisters)
 
 
@@ -18,6 +19,9 @@ type TripleByteChange
     | NewTripleRegister Int TripleByteRegister
     | TripleSetIndirectFromA Int
     | Store16BitFromHL Int
+    | Conditional16BitJump Int (FlagRegisters -> Bool)
+    | Conditional16BitCall Int ShortDelay (FlagRegisters -> Bool)
+    | NewPCRegister Int
 
 
 type TripleByteIndexChange
