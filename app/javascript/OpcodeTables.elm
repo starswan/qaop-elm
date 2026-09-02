@@ -39,10 +39,6 @@ threeByteInstructions =
     tripleByteWith16BitParam |> Dict.union triple16bitJumps
 
 
-
---|> Dict.map (\_ ( f, duration ) -> ( \param -> ThreeBytePlain (f param), duration ))
-
-
 singleByteMainFlagsRegsIY : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleByteMainFlagsRegsIY =
     singleByteFlagsFD
