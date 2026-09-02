@@ -5,7 +5,7 @@ import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
 import RegisterChange exposing (RegisterFlagChange(..), Shifter(..))
 import Utils exposing (BitTest(..), shiftLeftBy8, shiftRightBy8)
-import Z80Flags exposing (FlagFunc(..))
+import Z80Flags exposing (FlagFunc(..), adc, sbc, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
 import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, get_bc, get_de, get_h, get_ixh, get_ixl, get_iyh, get_iyl, get_l, set_de_main)
 
 
@@ -183,22 +183,22 @@ singleByteMainRegsFD =
         -- case 0x7C: A=xy>>>8; break;
         , ( 0x7C, ( RegisterChangeA get_iyh, EightTStates ) )
         , ( 0x7D, ( RegisterChangeA get_iyl, EightTStates ) )
-        , ( 0x84, ( SingleEnvFlagFunc AddA get_iyh, EightTStates ) )
-        , ( 0x85, ( SingleEnvFlagFunc AddA get_iyl, EightTStates ) )
-        , ( 0x8C, ( SingleEnvFlagFunc AdcA get_iyh, EightTStates ) )
-        , ( 0x8D, ( SingleEnvFlagFunc AdcA get_iyl, EightTStates ) )
-        , ( 0x94, ( SingleEnvFlagFunc SubA get_iyh, EightTStates ) )
-        , ( 0x95, ( SingleEnvFlagFunc SubA get_iyl, EightTStates ) )
-        , ( 0x9C, ( SingleEnvFlagFunc SbcA get_iyh, EightTStates ) )
-        , ( 0x9D, ( SingleEnvFlagFunc SbcA get_iyl, EightTStates ) )
-        , ( 0xA4, ( SingleEnvFlagFunc AndA get_iyh, EightTStates ) )
-        , ( 0xA5, ( SingleEnvFlagFunc AndA get_iyl, EightTStates ) )
-        , ( 0xAC, ( SingleEnvFlagFunc XorA get_iyh, EightTStates ) )
-        , ( 0xAD, ( SingleEnvFlagFunc XorA get_iyl, EightTStates ) )
-        , ( 0xB4, ( SingleEnvFlagFunc OrA get_iyh, EightTStates ) )
-        , ( 0xB5, ( SingleEnvFlagFunc OrA get_iyl, EightTStates ) )
-        , ( 0xBC, ( SingleEnvFlagFunc CpA get_iyh, EightTStates ) )
-        , ( 0xBD, ( SingleEnvFlagFunc CpA get_iyl, EightTStates ) )
+        , ( 0x84, ( SingleEnvFlagFunc z80_add get_iyh, EightTStates ) )
+        , ( 0x85, ( SingleEnvFlagFunc z80_add get_iyl, EightTStates ) )
+        , ( 0x8C, ( SingleEnvFlagFunc adc get_iyh, EightTStates ) )
+        , ( 0x8D, ( SingleEnvFlagFunc adc get_iyl, EightTStates ) )
+        , ( 0x94, ( SingleEnvFlagFunc z80_sub get_iyh, EightTStates ) )
+        , ( 0x95, ( SingleEnvFlagFunc z80_sub get_iyl, EightTStates ) )
+        , ( 0x9C, ( SingleEnvFlagFunc sbc get_iyh, EightTStates ) )
+        , ( 0x9D, ( SingleEnvFlagFunc sbc get_iyl, EightTStates ) )
+        , ( 0xA4, ( SingleEnvFlagFunc z80_and get_iyh, EightTStates ) )
+        , ( 0xA5, ( SingleEnvFlagFunc z80_and get_iyl, EightTStates ) )
+        , ( 0xAC, ( SingleEnvFlagFunc z80_xor get_iyh, EightTStates ) )
+        , ( 0xAD, ( SingleEnvFlagFunc z80_xor get_iyl, EightTStates ) )
+        , ( 0xB4, ( SingleEnvFlagFunc z80_or get_iyh, EightTStates ) )
+        , ( 0xB5, ( SingleEnvFlagFunc z80_or get_iyl, EightTStates ) )
+        , ( 0xBC, ( SingleEnvFlagFunc z80_cp get_iyh, EightTStates ) )
+        , ( 0xBD, ( SingleEnvFlagFunc z80_cp get_iyl, EightTStates ) )
 
         -- case 0xE3: v=pop(); push(xy); MP=xy=v; time+=2; break;
         , ( 0xE3, ( ExchangeTopOfStackWith IY, TwentyThreeTStates ) )
@@ -214,49 +214,49 @@ singleByteMainRegsFD =
 singleByteMainRegsDD : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleByteMainRegsDD =
     Dict.fromList
-        [ ( 0x23, ( TransformMainRegisters inc_ix, TenTStates ) )
-        , ( 0x2B, ( TransformMainRegisters dec_ix, TenTStates ) )
-        , ( 0x44, ( TransformMainRegisters (ld_b_h .ix), EightTStates ) )
-        , ( 0x45, ( TransformMainRegisters (ld_b_l .ix), EightTStates ) )
-        , ( 0x4C, ( TransformMainRegisters (ld_c_h .ix), EightTStates ) )
-        , ( 0x4D, ( TransformMainRegisters (ld_c_l .ix), EightTStates ) )
-        , ( 0x54, ( TransformMainRegisters ld_d_ix_h, EightTStates ) )
-        , ( 0x55, ( TransformMainRegisters ld_d_ix_l, EightTStates ) )
-        , ( 0x5C, ( TransformMainRegisters ld_e_ix_h, EightTStates ) )
-        , ( 0x5D, ( TransformMainRegisters ld_e_ix_l, EightTStates ) )
-        , ( 0x60, ( TransformMainRegisters (\main -> main |> set_ix_h main.b), EightTStates ) )
-        , ( 0x61, ( TransformMainRegisters (\main -> main |> set_ix_h main.c), EightTStates ) )
-        , ( 0x62, ( TransformMainRegisters (\main -> main |> set_ix_h main.d), EightTStates ) )
-        , ( 0x63, ( TransformMainRegisters (\main -> main |> set_ix_h main.e), EightTStates ) )
-        , ( 0x65, ( TransformMainRegisters (\main -> main |> set_ix_h (Bitwise.and main.ix 0xFF)), EightTStates ) )
-        , ( 0x68, ( TransformMainRegisters (\main -> main |> set_ix_l main.b), EightTStates ) )
+        [ ( 0x23, ( SimpleTransformMain inc_ix, TenTStates ) )
+        , ( 0x2B, ( SimpleTransformMain dec_ix, TenTStates ) )
+        , ( 0x44, ( SimpleTransformMain (ld_b_h .ix), EightTStates ) )
+        , ( 0x45, ( SimpleTransformMain (ld_b_l .ix), EightTStates ) )
+        , ( 0x4C, ( SimpleTransformMain (ld_c_h .ix), EightTStates ) )
+        , ( 0x4D, ( SimpleTransformMain (ld_c_l .ix), EightTStates ) )
+        , ( 0x54, ( SimpleTransformMain ld_d_ix_h, EightTStates ) )
+        , ( 0x55, ( SimpleTransformMain ld_d_ix_l, EightTStates ) )
+        , ( 0x5C, ( SimpleTransformMain ld_e_ix_h, EightTStates ) )
+        , ( 0x5D, ( SimpleTransformMain ld_e_ix_l, EightTStates ) )
+        , ( 0x60, ( SimpleTransformMain (\main -> main |> set_ix_h main.b), EightTStates ) )
+        , ( 0x61, ( SimpleTransformMain (\main -> main |> set_ix_h main.c), EightTStates ) )
+        , ( 0x62, ( SimpleTransformMain (\main -> main |> set_ix_h main.d), EightTStates ) )
+        , ( 0x63, ( SimpleTransformMain (\main -> main |> set_ix_h main.e), EightTStates ) )
+        , ( 0x65, ( SimpleTransformMain (\main -> main |> set_ix_h (Bitwise.and main.ix 0xFF)), EightTStates ) )
+        , ( 0x68, ( SimpleTransformMain (\main -> main |> set_ix_l main.b), EightTStates ) )
 
         -- case 0x69: xy=xy&0xFF00|C; break;
-        , ( 0x69, ( TransformMainRegisters (\main -> main |> set_ix_l main.c), EightTStates ) )
-        , ( 0x6A, ( TransformMainRegisters (\main -> main |> set_ix_l main.d), EightTStates ) )
+        , ( 0x69, ( SimpleTransformMain (\main -> main |> set_ix_l main.c), EightTStates ) )
+        , ( 0x6A, ( SimpleTransformMain (\main -> main |> set_ix_l main.d), EightTStates ) )
 
         -- case 0x6B: HL=HL&0xFF00|E; break;
         -- case 0x6B: xy=xy&0xFF00|E; break;
-        , ( 0x6B, ( TransformMainRegisters (\main -> main |> set_ix_l main.e), EightTStates ) )
-        , ( 0x6C, ( TransformMainRegisters (\main -> main |> set_ix_l (main.ix |> shiftRightBy8)), EightTStates ) )
+        , ( 0x6B, ( SimpleTransformMain (\main -> main |> set_ix_l main.e), EightTStates ) )
+        , ( 0x6C, ( SimpleTransformMain (\main -> main |> set_ix_l (main.ix |> shiftRightBy8)), EightTStates ) )
         , ( 0x7C, ( RegisterChangeA get_ixh, EightTStates ) )
         , ( 0x7D, ( RegisterChangeA get_ixl, EightTStates ) )
-        , ( 0x84, ( SingleEnvFlagFunc AddA get_ixh, EightTStates ) )
-        , ( 0x85, ( SingleEnvFlagFunc AddA get_ixl, EightTStates ) )
-        , ( 0x8C, ( SingleEnvFlagFunc AdcA get_ixh, EightTStates ) )
-        , ( 0x8D, ( SingleEnvFlagFunc AdcA get_ixl, EightTStates ) )
-        , ( 0x94, ( SingleEnvFlagFunc SubA get_ixh, EightTStates ) )
-        , ( 0x95, ( SingleEnvFlagFunc SubA get_ixl, EightTStates ) )
-        , ( 0x9C, ( SingleEnvFlagFunc SbcA get_ixh, EightTStates ) )
-        , ( 0x9D, ( SingleEnvFlagFunc SbcA get_ixl, EightTStates ) )
-        , ( 0xA4, ( SingleEnvFlagFunc AndA get_ixh, EightTStates ) )
-        , ( 0xA5, ( SingleEnvFlagFunc AndA get_ixl, EightTStates ) )
-        , ( 0xAC, ( SingleEnvFlagFunc XorA get_ixh, EightTStates ) )
-        , ( 0xAD, ( SingleEnvFlagFunc XorA get_ixl, EightTStates ) )
-        , ( 0xB4, ( SingleEnvFlagFunc OrA get_ixh, EightTStates ) )
-        , ( 0xB5, ( SingleEnvFlagFunc OrA get_ixl, EightTStates ) )
-        , ( 0xBC, ( SingleEnvFlagFunc CpA get_ixh, EightTStates ) )
-        , ( 0xBD, ( SingleEnvFlagFunc CpA get_ixl, EightTStates ) )
+        , ( 0x84, ( SingleEnvFlagFunc z80_add get_ixh, EightTStates ) )
+        , ( 0x85, ( SingleEnvFlagFunc z80_add get_ixl, EightTStates ) )
+        , ( 0x8C, ( SingleEnvFlagFunc adc get_ixh, EightTStates ) )
+        , ( 0x8D, ( SingleEnvFlagFunc adc get_ixl, EightTStates ) )
+        , ( 0x94, ( SingleEnvFlagFunc z80_sub get_ixh, EightTStates ) )
+        , ( 0x95, ( SingleEnvFlagFunc z80_sub get_ixl, EightTStates ) )
+        , ( 0x9C, ( SingleEnvFlagFunc sbc get_ixh, EightTStates ) )
+        , ( 0x9D, ( SingleEnvFlagFunc sbc get_ixl, EightTStates ) )
+        , ( 0xA4, ( SingleEnvFlagFunc z80_and get_ixh, EightTStates ) )
+        , ( 0xA5, ( SingleEnvFlagFunc z80_and get_ixl, EightTStates ) )
+        , ( 0xAC, ( SingleEnvFlagFunc z80_xor get_ixh, EightTStates ) )
+        , ( 0xAD, ( SingleEnvFlagFunc z80_xor get_ixl, EightTStates ) )
+        , ( 0xB4, ( SingleEnvFlagFunc z80_or get_ixh, EightTStates ) )
+        , ( 0xB5, ( SingleEnvFlagFunc z80_or get_ixl, EightTStates ) )
+        , ( 0xBC, ( SingleEnvFlagFunc z80_cp get_ixh, EightTStates ) )
+        , ( 0xBD, ( SingleEnvFlagFunc z80_cp get_ixl, EightTStates ) )
 
         -- case 0xE3: v=pop(); push(xy); MP=xy=v; time+=2; break;
         , ( 0xE3, ( ExchangeTopOfStackWith IX, TwentyThreeTStates ) )
@@ -292,11 +292,6 @@ set_iy_l int main =
 inc_bc : MainWithIndexRegisters -> MainWithIndexRegisters
 inc_bc z80_main =
     -- case 0x03: if(++C==256) {B=B+1&0xFF;C=0;} time+=2; break;
-    --if z80_main.c == 0xFF then
-    --    ChangeRegisterBC (Bitwise.and (z80_main.b + 1) 0xFF) 0
-    --
-    --else
-    --    SingleRegisterChange ChangeSingleC (z80_main.c + 1)
     if z80_main.c == 0xFF then
         { z80_main | b = Bitwise.and (z80_main.b + 1) 0xFF, c = 0 }
 
@@ -313,10 +308,8 @@ dec_bc z80_main =
     in
     if tmp_c < 0 then
         { z80_main | b = Bitwise.and (z80_main.b - 1) 0xFF, c = 0xFF }
-        --ChangeRegisterBC (Bitwise.and (z80_main.b - 1) 0xFF) 0xFF
 
     else
-        --SingleRegisterChange ChangeMainC tmp_c
         { z80_main | c = tmp_c }
 
 
@@ -328,11 +321,9 @@ inc_de z80_main =
             z80_main.e + 1
     in
     if new_e == 256 then
-        --ChangeRegisterDE (Bitwise.and (z80_main.d + 1) 0xFF) 0
         { z80_main | d = Bitwise.and (z80_main.d + 1) 0xFF, e = 0 }
 
     else
-        -- SingleRegisterChange ChangeSingleE new_e
         { z80_main | e = new_e }
 
 
@@ -527,19 +518,6 @@ ld_l_b bfunc z80_main =
     -- case 0x68: HL=HL&0xFF00|B; break;
     -- case 0x68: xy=xy&0xFF00|B; break;
     { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) (z80_main |> bfunc) }
-
-
-
---ld_l_e : MainWithIndexRegisters -> RegisterFlagChange
---ld_l_e z80_main =
---    SingleRegisterChange ChangeSingleL z80_main.e
---
---
---ld_l_h : MainWithIndexRegisters -> RegisterFlagChange
---ld_l_h z80_main =
---    -- case 0x6C: HL=HL&0xFF00|HL>>>8; break;
---    -- case 0x6C: xy=xy&0xFF00|xy>>>8; break;
---    SingleRegisterChange ChangeSingleL (shiftRightBy8 z80_main.hl)
 
 
 ld_a_c : RegisterFlagChange
