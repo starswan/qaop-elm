@@ -54,6 +54,15 @@ apply_delta z80 iff rom48k clockTime z80delta =
         Triple16ParamDelta tripleByteChange ->
             z80 |> applyTripleChangeDelta rom48k clockTime tripleByteChange
 
+        ThreeBytePlainDelta tripleByteChange ->
+            z80 |> applySimpleTripleChangeDelta rom48k clockTime tripleByteChange
+
+        UnknownInstruction string int ->
+            debugTodo string (int |> toHexString2) z80 |> CoreOnly |> RareChange
+
+        InterruptDelta interruptChange ->
+            z80.flags |> applyInterruptChange interruptChange iff |> FlagsOnly
+
         EDChangeDelta eDRegisterChange ->
             z80 |> applyEdRegisterDelta clockTime eDRegisterChange rom48k
 
