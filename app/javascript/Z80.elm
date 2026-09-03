@@ -17,7 +17,7 @@ import OpcodeTables exposing (singleByteInstructions, singleByteMainFlagsRegsIX,
 import PCIncrement exposing (PCIncrement(..))
 import SimpleFlagOps exposing (singleByteFlagsCB)
 import SingleNoParams exposing (ex_af, execute_0x76_halt, exx)
-import Z80Core exposing (CoreChange(..), RareCoreChange(..), RepeatPCOffset(..), Z80Core)
+import Z80Core exposing (CoreChange(..), CoreChangeWithoutPC(..), RareCoreChange(..), RepeatPCOffset(..), Z80Core)
 import Z80CoreWithClockTime exposing (Z80, Z80CoreWithClockTime, di_0xF3, ei_0xFB)
 import Z80Env exposing (Z80Env, setMem, setMem16, z80_out, z80_push, z80env_constructor)
 import Z80Execute exposing (DeltaWithChanges(..), apply_delta)
@@ -192,15 +192,36 @@ executeAndApplyDelta opCode cpuClock iff rom48k z80clock =
 
         ( delta, clockTime, pc_inc ) =
             z80_core |> execute_delta cpuClock opCode rom48k z80clock.pc
-
-        coreChange =
-            delta |> apply_delta z80_core iff rom48k clockTime
     in
-    z80_core |> applyCoreChange coreChange clockTime pc_inc z80clock.pc rom48k
+    case delta |> apply_delta z80_core iff rom48k clockTime of
+        PopIntoPC ->
+            let
+                env =
+                    z80_core.env
+
+                popped =
+                    env |> z80_pop rom48k clockTime
+
+                new_env =
+                    { ram = env.ram, sp = popped.sp, borderColour = env.borderColour }
+            in
+            { core = { main = z80_core.main, flags = z80_core.flags, interrupts = z80_core.interrupts, env = new_env }, clockTime = popped.time, pc = popped.value16 }
+
+        JumpOnlyPC int ->
+            { core = z80_core, clockTime = clockTime, pc = int }
+
+        LooperJumpBack z80Core ->
+            { core = z80Core, clockTime = clockTime, pc = z80clock.pc }
+
+        LooperWithDelayJumpBack shortDelay z80Core ->
+            { core = z80Core, clockTime = clockTime |> addExtraCpuTime shortDelay, pc = z80clock.pc }
+
+        CoreWithoutJump coreChange ->
+            z80_core |> applyCoreChange coreChange clockTime pc_inc z80clock.pc
 
 
-applyCoreChange : CoreChange -> CpuTimeCTime -> PCIncrement -> Int -> Z80ROM -> Z80Core -> Z80CoreWithClockTime
-applyCoreChange coreChange clockTime pc_inc pc rom48k z80_core =
+applyCoreChange : CoreChangeWithoutPC -> CpuTimeCTime -> PCIncrement -> Int -> Z80Core -> Z80CoreWithClockTime
+applyCoreChange coreChange clockTime pc_inc pc z80_core =
     let
         rawPc =
             case pc_inc of
@@ -275,19 +296,6 @@ applyCoreChange coreChange clockTime pc_inc pc rom48k z80_core =
             in
             { core = { main = z80_core.main, env = { ram = z80env.ram, sp = sp, borderColour = z80env.borderColour }, flags = z80_flags, interrupts = z80_core.interrupts }, clockTime = clockTime, pc = pcAfter }
 
-        PopIntoPC ->
-            let
-                env =
-                    z80_core.env
-
-                popped =
-                    env |> z80_pop rom48k clockTime
-
-                new_env =
-                    { ram = env.ram, sp = popped.sp, borderColour = env.borderColour }
-            in
-            { core = { main = z80_core.main, flags = z80_core.flags, interrupts = z80_core.interrupts, env = new_env }, clockTime = popped.time, pc = popped.value16 }
-
         RareChange rareChange ->
             case rareChange of
                 CoreOnly z80Core ->
@@ -312,17 +320,8 @@ applyCoreChange coreChange clockTime pc_inc pc rom48k z80_core =
         MainWithOffsetAndDelay offset shortDelay z80_main ->
             { core = { main = z80_main, env = z80_core.env, flags = z80_core.flags, interrupts = z80_core.interrupts }, pc = (pcAfter + offset) |> Bitwise.and 0xFFFF, clockTime = clockTime |> addExtraCpuTime shortDelay }
 
-        JumpOnlyPC int ->
-            { core = z80_core, clockTime = clockTime, pc = int }
-
         JumpWithOffset offset ->
             { core = z80_core, clockTime = clockTime, pc = (pcAfter + offset) |> Bitwise.and 0xFFFF }
-
-        LooperJumpBack z80Core ->
-            { core = z80Core, clockTime = clockTime, pc = pc }
-
-        LooperWithDelayJumpBack shortDelay z80Core ->
-            { core = z80Core, clockTime = clockTime |> addExtraCpuTime shortDelay, pc = pc }
 
         NoCore ->
             { core = z80_core, clockTime = clockTime, pc = pcAfter }

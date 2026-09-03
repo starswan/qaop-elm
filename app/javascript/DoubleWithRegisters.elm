@@ -4,7 +4,7 @@ import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import Dict exposing (Dict)
 import Utils exposing (byte, shiftLeftBy8)
-import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
+import Z80Core exposing (CoreChange(..), CoreChangeWithoutPC(..), RareCoreChange(..), Z80Core)
 import Z80Flags exposing (FlagRegisters, adc, dec, inc, sbc, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
 import Z80Mem exposing (mem)
 import Z80Registers exposing (ChangeMainRegister(..))
@@ -196,7 +196,7 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
                 int =
                     Bitwise.or (param |> shiftLeftBy8) (Bitwise.and z80_main.ix 0xFF)
             in
-            { z80_main | ix = int } |> MainOnly
+            { z80_main | ix = int } |> MainOnly |> CoreWithoutJump
 
         NewIXLRegisterValue param ->
             let
@@ -206,7 +206,7 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
                 int =
                     Bitwise.or param (Bitwise.and main.ix 0xFF00)
             in
-            { main | ix = int } |> MainOnly
+            { main | ix = int } |> MainOnly |> CoreWithoutJump
 
         NewIYHRegisterValue param ->
             let
@@ -216,7 +216,7 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
                 int =
                     Bitwise.or (param |> shiftLeftBy8) (Bitwise.and z80_main.iy 0xFF)
             in
-            { z80_main | iy = int } |> MainOnly
+            { z80_main | iy = int } |> MainOnly |> CoreWithoutJump
 
         NewIYLRegisterValue param ->
             let
@@ -226,7 +226,7 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
                 int =
                     Bitwise.or param (Bitwise.and main.iy 0xFF00)
             in
-            { main | iy = int } |> MainOnly
+            { main | iy = int } |> MainOnly |> CoreWithoutJump
 
         RegStore8BitValue offset address_f value_f ->
             let
@@ -236,7 +236,7 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
                 address =
                     ((main |> address_f) + (offset |> byte)) |> Bitwise.and 0xFFFF
             in
-            SetMem8 address (main |> value_f)
+            SetMem8 address (main |> value_f) |> CoreWithoutJump
 
         NewRegisterIndirect changeOneRegister addr_f offsetparam ->
             let
@@ -269,7 +269,7 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
                         ChangeMainL ->
                             { main | hl = Bitwise.or (main.hl |> Bitwise.and 0xFF00) (new_b.value |> Bitwise.and 0xFF) }
             in
-            MainOnly new_main
+            MainOnly new_main |> CoreWithoutJump
 
         NewARegisterIndirect addr_f offset ->
             let
@@ -282,14 +282,14 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
                 new_a =
                     z80.env |> mem addr cpu_time rom48k
             in
-            { flags | a = new_a.value } |> FlagsOnly
+            { flags | a = new_a.value } |> FlagsOnly |> CoreWithoutJump
 
         SetARegisterIndirect addr_f param ->
             let
                 addr =
                     (z80.main |> addr_f) + byte param
             in
-            SetMem8 addr z80.flags.a
+            SetMem8 addr z80.flags.a |> CoreWithoutJump
 
         FlagOpIndexedIndirect flagFunc address_f offset ->
             let
@@ -302,7 +302,7 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
                 value =
                     z80.env |> mem address cpu_time rom48k
             in
-            flags |> flagFunc value.value |> FlagsOnly
+            flags |> flagFunc value.value |> FlagsOnly |> CoreWithoutJump
 
         IndexedIndirectIncrement inAddr_f offset ->
             let
@@ -320,10 +320,10 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
                     valueWithFlags =
                         z80.flags |> inc value.value
                 in
-                SetMem8Flags base_addr valueWithFlags
+                SetMem8Flags base_addr valueWithFlags |> CoreWithoutJump
 
             else
-                NoCore
+                NoCore |> CoreWithoutJump
 
         IndexedIndirectDecrement inAddr_f offset ->
             let
@@ -341,7 +341,7 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
                     valueWithFlags =
                         z80.flags |> dec value.value
                 in
-                SetMem8Flags base_addr valueWithFlags
+                SetMem8Flags base_addr valueWithFlags |> CoreWithoutJump
 
             else
-                NoCore
+                NoCore |> CoreWithoutJump

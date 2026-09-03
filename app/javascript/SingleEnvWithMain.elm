@@ -4,7 +4,7 @@ import Bitwise
 import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, InstructionDuration(..))
 import Dict exposing (Dict)
 import Utils exposing (BitTest, shiftLeftBy8, shiftRightBy8)
-import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
+import Z80Core exposing (CoreChange(..), CoreChangeWithoutPC(..), RareCoreChange(..), Z80Core)
 import Z80Env exposing (Z80Env)
 import Z80Flags exposing (FlagRegisters, adc, add16, c_F53, sbc, testBit, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
 import Z80Mem exposing (mem)
@@ -67,7 +67,7 @@ applySingleEnvMainChange clockTime z80changeData rom48k z80 =
                 flags =
                     z80.flags
             in
-            { flags | a = int } |> FlagsOnly
+            { flags | a = int } |> FlagsOnly |> CoreWithoutJump
 
         SingleEnv8BitMain eightBit int cpuTimeCTime ->
             let
@@ -76,23 +76,23 @@ applySingleEnvMainChange clockTime z80changeData rom48k z80 =
             in
             case eightBit of
                 RegisterB ->
-                    { main | b = int } |> MainOnly
+                    { main | b = int } |> MainOnly |> CoreWithoutJump
 
                 RegisterC ->
-                    { main | c = int } |> MainOnly
+                    { main | c = int } |> MainOnly |> CoreWithoutJump
 
                 RegisterD ->
-                    { main | d = int } |> MainOnly
+                    { main | d = int } |> MainOnly |> CoreWithoutJump
 
                 RegisterE ->
-                    { main | e = int } |> MainOnly
+                    { main | e = int } |> MainOnly |> CoreWithoutJump
 
         SingleEnvNewHLRegister int cpuTimeCTime ->
             let
                 main =
                     z80.main
             in
-            { main | hl = int } |> MainOnly
+            { main | hl = int } |> MainOnly |> CoreWithoutJump
 
         IndirectBitTest bitTest mp_address ->
             -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
@@ -107,20 +107,21 @@ applySingleEnvMainChange clockTime z80changeData rom48k z80 =
                 | ff = new_flags.ff |> Bitwise.and (Bitwise.complement c_F53) |> Bitwise.or (mp_address |> shiftRightBy8 |> Bitwise.and c_F53)
             }
                 |> FlagsOnly
+                |> CoreWithoutJump
 
         SingleEnvFlagFunc flagFunc int cpuTimeCTime ->
             let
                 flags =
                     z80.flags
             in
-            flags |> flagFunc int |> FlagsOnly
+            flags |> flagFunc int |> FlagsOnly |> CoreWithoutJump
 
         SingleEnvNewHL16BitAdd ixiyhl hl sp ->
             let
                 new_xy =
                     add16 hl sp z80.flags
             in
-            ChangeMainAndFlags (z80.main |> set_xy new_xy.value ixiyhl) new_xy.flags
+            ChangeMainAndFlags (z80.main |> set_xy new_xy.value ixiyhl) new_xy.flags |> CoreWithoutJump
 
 
 ld_a_indirect_bc : MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange
