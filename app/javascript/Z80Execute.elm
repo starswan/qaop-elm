@@ -72,10 +72,10 @@ apply_delta z80 iff rom48k clockTime z80delta =
                     z80 |> applyJumpChangeDelta jumpChange
 
         InterruptDelta interruptChange ->
-            z80.flags |> applyInterruptChange interruptChange iff |> FlagsOnly
+            z80.flags |> applyInterruptChange interruptChange iff |> FlagsOnly |> CoreWithoutJump
 
         UnknownInstruction string int ->
-            debugTodo string (int |> toHexString2) z80 |> CoreOnly |> RareChange
+            debugTodo string (int |> toHexString2) z80 |> CoreOnly |> RareChange |> CoreWithoutJump
 
 
 applyJumpChangeDelta : JumpChange -> Z80Core -> CoreChange
@@ -889,14 +889,14 @@ applySimpleTripleChangeDelta rom48k cpu_time z80changeData z80 =
                 JumpOnlyPC int
 
             else
-                NoCore
+                NoCore |> CoreWithoutJump
 
         Conditional16BitCall address shortdelay function ->
             if z80.flags |> function then
-                CallWithPCAndDelay address shortdelay
+                CallWithPCAndDelay address shortdelay |> CoreWithoutJump
 
             else
-                NoCore
+                NoCore |> CoreWithoutJump
 
         NewPCRegister int ->
             JumpOnlyPC int
