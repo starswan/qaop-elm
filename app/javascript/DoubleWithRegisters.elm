@@ -6,7 +6,7 @@ import Dict exposing (Dict)
 import Utils exposing (byte, shiftLeftBy8)
 import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
 import Z80Flags exposing (FlagRegisters, adc, dec, inc, sbc, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
-import Z80Mem exposing (mem)
+import Z80Mem exposing (getMem8)
 import Z80Registers exposing (ChangeMainRegister(..))
 import Z80Types exposing (MainWithIndexRegisters, Z80ROM)
 
@@ -246,28 +246,28 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
                 addr =
                     (main |> addr_f) + byte offsetparam |> Bitwise.and 0xFFFF
 
-                new_b =
-                    z80.env |> mem addr cpu_time rom48k
+                ( new_b, newTime ) =
+                    z80.env |> getMem8 addr cpu_time rom48k
 
                 new_main =
                     case changeOneRegister of
                         ChangeMainB ->
-                            { main | b = new_b.value }
+                            { main | b = new_b }
 
                         ChangeMainC ->
-                            { main | c = new_b.value }
+                            { main | c = new_b }
 
                         ChangeMainD ->
-                            { main | d = new_b.value }
+                            { main | d = new_b }
 
                         ChangeMainE ->
-                            { main | e = new_b.value }
+                            { main | e = new_b }
 
                         ChangeMainH ->
-                            { main | hl = Bitwise.or (main.hl |> Bitwise.and 0xFF) (new_b.value |> shiftLeftBy8) }
+                            { main | hl = Bitwise.or (main.hl |> Bitwise.and 0xFF) (new_b |> shiftLeftBy8) }
 
                         ChangeMainL ->
-                            { main | hl = Bitwise.or (main.hl |> Bitwise.and 0xFF00) (new_b.value |> Bitwise.and 0xFF) }
+                            { main | hl = Bitwise.or (main.hl |> Bitwise.and 0xFF00) (new_b |> Bitwise.and 0xFF) }
             in
             MainOnly new_main
 
@@ -279,10 +279,10 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
                 addr =
                     ((z80.main |> addr_f) + byte offset) |> Bitwise.and 0xFFFF
 
-                new_a =
-                    z80.env |> mem addr cpu_time rom48k
+                ( new_a, newTime ) =
+                    z80.env |> getMem8 addr cpu_time rom48k
             in
-            { flags | a = new_a.value } |> FlagsOnly
+            { flags | a = new_a } |> FlagsOnly
 
         SetARegisterIndirect addr_f param ->
             let
@@ -299,10 +299,10 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
                 address =
                     (z80.main |> address_f) + byte offset |> Bitwise.and 0xFFFF
 
-                value =
-                    z80.env |> mem address cpu_time rom48k
+                ( value, newTime ) =
+                    z80.env |> getMem8 address cpu_time rom48k
             in
-            flags |> flagFunc value.value |> FlagsOnly
+            flags |> flagFunc value |> FlagsOnly
 
         IndexedIndirectIncrement inAddr_f offset ->
             let
@@ -314,11 +314,11 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
             in
             if ramAddr >= 0 then
                 let
-                    value =
-                        z80.env |> mem base_addr cpu_time rom48k
+                    ( value, newTime ) =
+                        z80.env |> getMem8 base_addr cpu_time rom48k
 
                     valueWithFlags =
-                        z80.flags |> inc value.value
+                        z80.flags |> inc value
                 in
                 SetMem8Flags base_addr valueWithFlags
 
@@ -335,11 +335,11 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
             in
             if ramAddr >= 0 then
                 let
-                    value =
-                        z80.env |> mem base_addr cpu_time rom48k
+                    ( value, newTime ) =
+                        z80.env |> getMem8 base_addr cpu_time rom48k
 
                     valueWithFlags =
-                        z80.flags |> dec value.value
+                        z80.flags |> dec value
                 in
                 SetMem8Flags base_addr valueWithFlags
 

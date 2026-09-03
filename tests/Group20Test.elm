@@ -7,7 +7,7 @@ import Triple
 import Z80 exposing (executeCoreInstruction)
 import Z80CoreWithClockTime
 import Z80Env exposing (setMem16WithTime, setMemWithTime)
-import Z80Mem exposing (mem)
+import Z80Mem exposing (getMem8)
 import Z80Rom
 
 
@@ -86,14 +86,14 @@ suite =
                                 |> setMemWithTime (addr + 1) 0xFB
                                 |> .z80env
 
-                        ( new_z80, new_pc ) =
+                        new_pc =
                             executeCoreInstruction z80rom
                                 addr
                                 { z80
                                     | env = new_env
                                     , flags = { flags | a = 0x39, fr = 1 }
                                 }
-                                |> Triple.dropSecond
+                                |> Triple.third
                     in
                     Expect.equal (addr - 3) new_pc
             ]
@@ -183,12 +183,12 @@ suite =
                                 |> Triple.dropSecond
 
                         lo_value =
-                            new_z80.env |> mem 0x5577 clock.clockTime z80rom
+                            new_z80.env |> getMem8 0x5577 clock.clockTime z80rom |> Tuple.first
 
                         high_value =
-                            new_z80.env |> mem 0x5578 clock.clockTime z80rom
+                            new_z80.env |> getMem8 0x5578 clock.clockTime z80rom |> Tuple.first
                     in
-                    ( new_pc, lo_value.value, high_value.value ) |> Expect.equal ( addr + 3, 0x8F, 0x4D )
+                    ( new_pc, lo_value, high_value ) |> Expect.equal ( addr + 3, 0x8F, 0x4D )
             , test "0xDD 22 LD (nn), IX" <|
                 \_ ->
                     let
@@ -211,12 +211,12 @@ suite =
                                 |> Triple.dropSecond
 
                         lo_value =
-                            new_z80.env |> mem 0x5577 clock.clockTime z80rom
+                            new_z80.env |> getMem8 0x5577 clock.clockTime z80rom |> Tuple.first
 
                         high_value =
-                            new_z80.env |> mem 0x5578 clock.clockTime z80rom
+                            new_z80.env |> getMem8 0x5578 clock.clockTime z80rom |> Tuple.first
                     in
-                    Expect.equal ( addr + 4, 0x8F, 0x4D ) ( new_pc, lo_value.value, high_value.value )
+                    Expect.equal ( addr + 4, 0x8F, 0x4D ) ( new_pc, lo_value, high_value )
             , test "0xFD 22 LD (nn), IY" <|
                 \_ ->
                     let
@@ -239,12 +239,12 @@ suite =
                                 |> Triple.dropSecond
 
                         lo_value =
-                            new_z80.env |> mem 0x5577 clock.clockTime z80rom
+                            new_z80.env |> getMem8 0x5577 clock.clockTime z80rom |> Tuple.first
 
                         high_value =
-                            new_z80.env |> mem 0x5578 clock.clockTime z80rom
+                            new_z80.env |> getMem8 0x5578 clock.clockTime z80rom |> Tuple.first
                     in
-                    Expect.equal ( addr + 4, 0x8F, 0x4D ) ( new_pc, lo_value.value, high_value.value )
+                    Expect.equal ( addr + 4, 0x8F, 0x4D ) ( new_pc, lo_value, high_value )
             ]
         , describe "0x23 INC HL variants"
             [ test "0x23 INC HL" <|
@@ -519,14 +519,14 @@ suite =
                                 |> setMemWithTime (addr + 1) 0x05
                                 |> .z80env
 
-                        ( new_z80, new_pc ) =
+                        new_pc =
                             executeCoreInstruction z80rom
                                 addr
                                 { z80
                                     | env = new_env
                                     , flags = { flags | fr = 1 }
                                 }
-                                |> Triple.dropSecond
+                                |> Triple.third
                     in
                     Expect.equal (addr + 2) new_pc
             , test "Jump" <|
@@ -538,14 +538,14 @@ suite =
                                 |> setMemWithTime (addr + 1) 0x05
                                 |> .z80env
 
-                        ( new_z80, new_pc ) =
+                        new_pc =
                             executeCoreInstruction z80rom
                                 addr
                                 { z80
                                     | env = new_env
                                     , flags = { flags | a = 0x39, fr = 0 }
                                 }
-                                |> Triple.dropSecond
+                                |> Triple.third
                     in
                     Expect.equal (addr + 7) new_pc
             ]
