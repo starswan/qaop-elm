@@ -3,8 +3,10 @@ module DoubleWithRegisters exposing (..)
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..))
 import Dict exposing (Dict)
+import MemoryAddress exposing (MemoryAddress(..), RamAddress(..))
 import Utils exposing (byte, shiftLeftBy8)
-import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
+import Z80Core exposing (CoreChange(..), Z80Core)
+import Z80Env exposing (getRamMemoryValue)
 import Z80Flags exposing (FlagRegisters, adc, dec, inc, sbc, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
 import Z80Mem exposing (mem)
 import Z80Registers exposing (ChangeMainRegister(..))
@@ -309,39 +311,45 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
                 base_addr =
                     (z80.main |> inAddr_f) + byte offset |> Bitwise.and 0xFFFF
 
-                ramAddr =
-                    base_addr - 0x4000
+                --ramAddr =
+                --    base_addr - 0x4000
+                memAddress =
+                    base_addr |> MemoryAddress.fromInt
             in
-            if ramAddr >= 0 then
-                let
-                    value =
-                        z80.env |> mem base_addr cpu_time rom48k
+            case memAddress of
+                ROM _ ->
+                    NoCore
 
-                    valueWithFlags =
-                        z80.flags |> inc value.value
-                in
-                SetMem8Flags base_addr valueWithFlags
+                RAM ramaddress ->
+                    let
+                        ( value, newTime ) =
+                            z80.env |> getRamMemoryValue ramaddress cpu_time rom48k
 
-            else
-                NoCore
+                        valueWithFlags =
+                            z80.flags |> inc value
+                    in
+                    SetMem8Flags base_addr valueWithFlags
 
         IndexedIndirectDecrement inAddr_f offset ->
             let
                 base_addr =
                     (z80.main |> inAddr_f) + byte offset |> Bitwise.and 0xFFFF
 
-                ramAddr =
-                    base_addr - 0x4000
+                --ramAddr =
+                --    base_addr - 0x4000
+                memAddress =
+                    base_addr |> MemoryAddress.fromInt
             in
-            if ramAddr >= 0 then
-                let
-                    value =
-                        z80.env |> mem base_addr cpu_time rom48k
+            case memAddress of
+                ROM _ ->
+                    NoCore
 
-                    valueWithFlags =
-                        z80.flags |> dec value.value
-                in
-                SetMem8Flags base_addr valueWithFlags
+                RAM ramAddress ->
+                    let
+                        ( value, newTime ) =
+                            z80.env |> getRamMemoryValue ramAddress cpu_time rom48k
 
-            else
-                NoCore
+                        valueWithFlags =
+                            z80.flags |> dec value
+                    in
+                    SetMem8Flags base_addr valueWithFlags
