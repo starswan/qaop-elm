@@ -8,7 +8,7 @@ import Utils exposing (shiftRightBy8)
 import Z80 exposing (executeCoreInstruction)
 import Z80CoreWithClockTime
 import Z80Env exposing (setMemWithTime)
-import Z80Mem exposing (mem, mem16)
+import Z80Mem exposing (getMem8, mem16)
 import Z80Rom
 
 

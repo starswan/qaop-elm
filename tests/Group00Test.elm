@@ -10,7 +10,7 @@ import Z80 exposing (executeCoreInstruction)
 import Z80CoreWithClockTime
 import Z80Env exposing (setMemWithTime)
 import Z80Flags exposing (getFlags)
-import Z80Mem exposing (mem)
+import Z80Mem exposing (getMem8)
 import Z80OpCode exposing (lengthAndDuration)
 import Z80Rom
 
@@ -90,7 +90,7 @@ suite =
                         ( new_z80, new_pc ) =
                             z80inc |> Z80.executeCoreInstruction z80rom addr |> Triple.dropSecond
                     in
-                    Expect.equal ( addr + 1, 0x27 ) ( new_pc, new_z80.env |> mem 0x4534 clock.clockTime z80rom |> .value )
+                    Expect.equal ( addr + 1, 0x27 ) ( new_pc, new_z80.env |> getMem8 0x4534 clock.clockTime z80rom |> Tuple.first )
             , test "length LD (BC),A" <|
                 \_ ->
                     let

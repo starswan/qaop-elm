@@ -20,7 +20,7 @@ import TripleWithMain exposing (tripleMainRegsIYFour)
 import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
 import Z80Env exposing (Z80Env)
 import Z80Execute exposing (applyEdRegisterDelta, applyJumpChangeDelta, applyPureDelta, applyRegisterDelta, applySimple8BitDelta, applySimpleTripleChangeDelta, applyTripleChangeDelta)
-import Z80Mem exposing (m1, mem, mem16)
+import Z80Mem exposing (getMem8, m1, mem16)
 import Z80Types exposing (MainWithIndexRegisters, Z80ROM)
 
 
@@ -46,13 +46,13 @@ lengthAndDuration pc rom48k z80env =
 
         opcode =
             z80env
-                |> mem pc clockTime rom48k
-                |> .value
+                |> getMem8 pc clockTime rom48k
+                |> Tuple.first
     in
     if opcode == 0xFD then
         let
             param =
-                z80env |> mem (Bitwise.and (pc + 1) 0xFFFF) clockTime rom48k |> .value
+                z80env |> getMem8 (Bitwise.and (pc + 1) 0xFFFF) clockTime rom48k |> Tuple.first
         in
         param
             |> oneOf
@@ -70,13 +70,13 @@ lengthAndDuration pc rom48k z80env =
                             (\( f, duration ) ->
                                 let
                                     doubleParam =
-                                        z80env |> mem (Bitwise.and (pc + 2) 0xFFFF) clockTime rom48k
+                                        z80env |> getMem8 (Bitwise.and (pc + 2) 0xFFFF) clockTime rom48k |> Tuple.first
                                 in
                                 ( IncrementByThree
                                 , duration
                                 , \cpuClock z80rom z80core ->
                                     z80core
-                                        |> applyDoubleWithRegistersDelta cpuClock (f doubleParam.value) z80rom
+                                        |> applyDoubleWithRegistersDelta cpuClock (f doubleParam) z80rom
                                 )
                             )
                 , \fdinstruction ->
@@ -105,12 +105,12 @@ lengthAndDuration pc rom48k z80env =
                     if fdinstruction == 0xCB then
                         let
                             iycboffset =
-                                z80env |> mem (Bitwise.and (pc + 2) 0xFFFF) clockTime rom48k
+                                z80env |> getMem8 (Bitwise.and (pc + 2) 0xFFFF) clockTime rom48k |> Tuple.first
 
                             iycbparam =
-                                z80env |> mem (Bitwise.and (pc + 3) 0xFFFF) clockTime rom48k
+                                z80env |> getMem8 (Bitwise.and (pc + 3) 0xFFFF) clockTime rom48k |> Tuple.first
                         in
-                        ( iycbparam.value, iycboffset.value )
+                        ( iycbparam, iycboffset )
                             |> oneOf
                                 [ \( cbparam, cboffset ) ->
                                     singleByteMainRegsIYCB
@@ -143,7 +143,7 @@ lengthAndDuration pc rom48k z80env =
     else if opcode == 0xDD then
         let
             param =
-                z80env |> mem (Bitwise.and (pc + 1) 0xFFFF) clockTime rom48k |> .value
+                z80env |> getMem8 (Bitwise.and (pc + 1) 0xFFFF) clockTime rom48k |> Tuple.first
         in
         param
             |> oneOf
@@ -161,13 +161,13 @@ lengthAndDuration pc rom48k z80env =
                             (\( f, duration ) ->
                                 let
                                     doubleParam =
-                                        z80env |> mem (Bitwise.and (pc + 2) 0xFFFF) clockTime rom48k
+                                        z80env |> getMem8 (Bitwise.and (pc + 2) 0xFFFF) clockTime rom48k |> Tuple.first
                                 in
                                 ( IncrementByThree
                                 , duration
                                 , \cpuClock z80rom z80core ->
                                     z80core
-                                        |> applyDoubleWithRegistersDelta cpuClock (f doubleParam.value) z80rom
+                                        |> applyDoubleWithRegistersDelta cpuClock (f doubleParam) z80rom
                                 )
                             )
                 , \fdinstruction ->
@@ -186,7 +186,7 @@ lengthAndDuration pc rom48k z80env =
     else if opcode == 0xED then
         let
             edQualifier =
-                z80env |> mem (Bitwise.and (pc + 1) 0xFFFF) clockTime rom48k |> .value
+                z80env |> getMem8 (Bitwise.and (pc + 1) 0xFFFF) clockTime rom48k |> Tuple.first
         in
         edQualifier
             |> oneOf
@@ -271,9 +271,9 @@ lengthAndDuration pc rom48k z80env =
                             (\( f, duration ) ->
                                 let
                                     param =
-                                        z80env |> mem (Bitwise.and (pc + 1) 0xFFFF) clockTime rom48k
+                                        z80env |> getMem8 (Bitwise.and (pc + 1) 0xFFFF) clockTime rom48k |> Tuple.first
                                 in
-                                ( IncrementByTwo, duration, \cpuClock z80rom z80core -> z80core |> applySimple8BitDelta cpuClock (f param.value) z80rom )
+                                ( IncrementByTwo, duration, \cpuClock z80rom z80core -> z80core |> applySimple8BitDelta cpuClock (f param) z80rom )
                             )
                 , \instruction ->
                     singleByteFlags
@@ -302,9 +302,9 @@ lengthAndDuration pc rom48k z80env =
                             (\( f, duration ) ->
                                 let
                                     param =
-                                        z80env |> mem (Bitwise.and (pc + 1) 0xFFFF) clockTime rom48k
+                                        z80env |> getMem8 (Bitwise.and (pc + 1) 0xFFFF) clockTime rom48k |> Tuple.first
                                 in
-                                ( IncrementByTwo, duration, \_ _ z80core -> z80core |> applyJumpChangeDelta (f param.value) )
+                                ( IncrementByTwo, duration, \_ _ z80core -> z80core |> applyJumpChangeDelta (f param) )
                             )
                 , \instruction ->
                     singleEnvMainRegs

@@ -7,7 +7,7 @@ import Triple
 import Z80 exposing (executeCoreInstruction)
 import Z80CoreWithClockTime
 import Z80Env exposing (setMemWithTime)
-import Z80Mem exposing (mem)
+import Z80Mem exposing (getMem8)
 import Z80Rom
 
 
@@ -86,9 +86,9 @@ suite =
                             |> Triple.dropSecond
 
                     mem_value =
-                        new_z80.env |> mem 0xA086 clock.clockTime z80rom
+                        new_z80.env |> getMem8 0xA086 clock.clockTime z80rom |> Tuple.first
                 in
-                Expect.equal ( addr + 4, 0x10 ) ( new_pc, mem_value.value )
+                Expect.equal ( addr + 4, 0x10 ) ( new_pc, mem_value )
         , test "0xCB E8 SET 5,B" <|
             \_ ->
                 let
