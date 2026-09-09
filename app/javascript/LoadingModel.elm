@@ -6,7 +6,6 @@ import MessageHandler exposing (bytesToRom)
 import Qaop exposing (Qaop)
 import QaopModel exposing (QaopMessage, QaopModel, tapLoad)
 import Spectrum
-import Task
 import Time exposing (Posix, millisToPosix)
 import Z80Debug exposing (debugLog)
 
@@ -73,6 +72,7 @@ updateLoading initMessage loadingModel =
                     ( StillLoading loadingModel, Cmd.none )
 
 
-loadingSubs : Int -> Sub InitMessage
-loadingSubs tickInterval =
-    Sub.none
+
+--loadingSubs : Int -> Sub InitMessage
+--loadingSubs tickInterval =
+--    Sub.none

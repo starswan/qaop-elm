@@ -8,7 +8,8 @@ import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
 import Z80Flags exposing (FlagRegisters, adc, dec, inc, sbc, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
 import Z80Mem exposing (getMem8)
 import Z80Registers exposing (ChangeMainRegister(..))
-import Z80Types exposing (MainWithIndexRegisters, Z80ROM)
+import Z80Rom exposing (Z80ROM)
+import Z80Types exposing (MainWithIndexRegisters)
 
 
 type DoubleWithRegisterChange
