@@ -25,7 +25,7 @@ import Z80Flags exposing (FlagRegisters, IntWithFlags)
 import Z80Mem exposing (getMem8, mem16, z80_pop)
 import Z80OpCode exposing (fetchInstruction)
 import Z80Rom exposing (Z80ROM)
-import Z80Types exposing (IntWithFlagsTimeAndPC, MainRegisters, MainWithIndexRegisters, Z80ROM)
+import Z80Types exposing (IntWithFlagsTimeAndPC, MainRegisters, MainWithIndexRegisters)
 
 
 constructor : Z80

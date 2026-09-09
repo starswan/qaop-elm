@@ -21,7 +21,7 @@ import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
 import Z80Env exposing (Z80Env)
 import Z80Execute exposing (applyEdRegisterDelta, applyJumpChangeDelta, applyPureDelta, applyRegisterDelta, applySimple8BitDelta, applySimpleTripleChangeDelta, applyTripleChangeDelta)
 import Z80Mem exposing (getMem8, m1, mem16)
-import Z80Types exposing (MainWithIndexRegisters, Z80ROM)
+import Z80Rom exposing (Z80ROM)
 
 
 fetchInstruction : Int -> Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> CpuTimeAndValue

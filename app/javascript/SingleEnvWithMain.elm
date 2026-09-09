@@ -9,7 +9,8 @@ import Z80Env exposing (Z80Env)
 import Z80Flags exposing (FlagRegisters, adc, add16, c_F53, sbc, testBit, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
 import Z80Mem exposing (getMem8)
 import Z80Registers exposing (CoreRegister(..))
-import Z80Types exposing (IXIYHL(..), MainWithIndexRegisters, Z80ROM, set_xy)
+import Z80Rom exposing (Z80ROM)
+import Z80Types exposing (IXIYHL(..), MainWithIndexRegisters, set_xy)
 
 
 type SingleEnvMainChange

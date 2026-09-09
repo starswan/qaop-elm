@@ -7,7 +7,7 @@ module Main exposing (..)
 
 import Browser
 import Html exposing (Attribute, Html, div)
-import LoadingModel exposing (Flags, InitMessage(..), LoadResult(..), LoadingModel, loadingInit, loadingSubs, updateLoading)
+import LoadingModel exposing (Flags, InitMessage(..), LoadResult(..), LoadingModel, loadingInit, updateLoading)
 import QaopModel exposing (QaopMessage, QaopModel, qaopSubs, updateQaop, viewQaop)
 
 

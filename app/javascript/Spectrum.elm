@@ -16,9 +16,9 @@ import Z80Env exposing (Z80Env, setMemIgnoringTime)
 import Z80Flags exposing (c_FC, c_FZ, getFlags, setFlags)
 import Z80Mem exposing (getMem8, mem16, z80_pop)
 import Z80Ram exposing (foldDictIntoRam)
-import Z80Rom
+import Z80Rom exposing (Z80ROM)
 import Z80Tape exposing (TapePosition, Z80Tape)
-import Z80Types exposing (Z80ROM, get_de)
+import Z80Types exposing (get_de)
 
 
 type alias Audio =
