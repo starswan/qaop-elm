@@ -331,30 +331,7 @@ applyCBRegisterDelta clockTime z80changeData rom48k z80_core =
                     z80_core.env |> getMem8 addr clockTime rom48k
 
                 value =
-                    case shifterFunc of
-                        Shifter0 ->
-                            shifter0 input z80_core.flags
-
-                        Shifter1 ->
-                            shifter1 input z80_core.flags
-
-                        Shifter2 ->
-                            shifter2 input z80_core.flags
-
-                        Shifter3 ->
-                            shifter3 input z80_core.flags
-
-                        Shifter4 ->
-                            shifter4 input z80_core.flags
-
-                        Shifter5 ->
-                            shifter5 input z80_core.flags
-
-                        Shifter6 ->
-                            shifter6 input z80_core.flags
-
-                        Shifter7 ->
-                            shifter7 input z80_core.flags
+                    shifterFunc input z80_core.flags
 
                 main =
                     z80_core.main

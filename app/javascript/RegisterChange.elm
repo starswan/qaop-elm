@@ -10,7 +10,7 @@ import Utils exposing (BitTest)
 import Z80Change exposing (IndexedZ80Change, Z80Change)
 import Z80Core exposing (DirectionForLDIR)
 import Z80Env exposing (Z80Env)
-import Z80Flags exposing (FlagRegisters)
+import Z80Flags exposing (FlagRegisters, IntWithFlags)
 import Z80Registers exposing (ChangeMainRegister, CoreRegister)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIYHL, MainWithIndexRegisters)
@@ -70,7 +70,7 @@ type CBRegisterFlagChange
     | ResetBitIndirectWithCopy BitTest ChangeMainRegister Int
     | ResetBitIndirectA BitTest Int
     | IndirectBitSet BitTest (MainWithIndexRegisters -> Int)
-    | RegisterIndirectWithShifter Shifter ChangeMainRegister Int
+    | RegisterIndirectWithShifter (Int -> FlagRegisters -> IntWithFlags) ChangeMainRegister Int
     | RegisterChangeIndexShifter Shifter Int
 
 
