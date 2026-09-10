@@ -1,9 +1,10 @@
 module GroupCBIXIY exposing (..)
 
 import Bitwise
+import CBRegisterChange exposing (CBRegisterFlagChange(..))
 import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
-import RegisterChange exposing (CBRegisterFlagChange(..), Shifter(..))
+import RegisterChange exposing (Shifter(..))
 import SingleEnvWithMain exposing (SingleEnvMainChange(..))
 import Utils exposing (BitTest(..), byte)
 import Z80Env exposing (Z80Env)

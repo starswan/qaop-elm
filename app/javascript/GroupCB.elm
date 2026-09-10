@@ -1,14 +1,15 @@
 module GroupCB exposing (..)
 
 import Bitwise
+import CBRegisterChange exposing (CBRegisterFlagChange(..))
 import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
-import RegisterChange exposing (CBRegisterFlagChange(..), Shifter(..))
+import RegisterChange exposing (Shifter(..))
 import SingleEnvWithMain exposing (SingleEnvMainChange(..))
 import Utils exposing (BitTest(..), bitMaskFromBit, inverseBitMaskFromBit, shiftLeftBy8, shiftRightBy8)
 import Z80Change exposing (Z80Change(..))
 import Z80Flags exposing (FlagRegisters, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit)
-import Z80Registers exposing (ChangeMainRegister(..), CoreRegister(..))
+import Z80Registers exposing (CoreRegister(..))
 import Z80Types exposing (MainWithIndexRegisters)
 
 
