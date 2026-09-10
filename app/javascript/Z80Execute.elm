@@ -6,7 +6,7 @@ import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRe
 import GroupED exposing (adc_hl_sp, cpir, execute_ED70, execute_ED78, inirOtirFlags, ldir, rld, rrd, sbc_hl)
 import Interrupts exposing (IFFValue(..))
 import JumpChange exposing (JumpChange(..))
-import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), RegisterFlagChange(..), Shifter(..), SixteenBit(..), TwoByteChange(..))
+import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), Pop16(..), RegisterFlagChange(..), Shifter(..), SixteenBit(..), TwoByteChange(..))
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
 import SingleEnvWithMain exposing (SingleEnvMainChange, applySingleEnvMainChange)
 import SingleWith8BitParameter exposing (Single8BitChange(..), applySimple8BitChange)
@@ -325,86 +325,88 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
             --case 0xC7:push(PC); PC=c-199; break;
             CallWithPCAndDelay new_pc SevenExtraTStates
 
-        PopBC ->
-            let
-                old_env =
-                    z80_core.env
+        Pop16Bit pop16 ->
+            case pop16 of
+                PopBC ->
+                    let
+                        old_env =
+                            z80_core.env
 
-                v =
-                    old_env |> z80_pop rom48k clockTime
-            in
-            ChangeMainAndSP (z80_core.main |> set_bc_main v.value16) v.sp
+                        v =
+                            old_env |> z80_pop rom48k clockTime
+                    in
+                    ChangeMainAndSP (z80_core.main |> set_bc_main v.value16) v.sp
 
-        PopHL ->
-            let
-                old_env =
-                    z80_core.env
+                PopHL ->
+                    let
+                        old_env =
+                            z80_core.env
 
-                v =
-                    old_env |> z80_pop rom48k clockTime
+                        v =
+                            old_env |> z80_pop rom48k clockTime
 
-                main =
-                    z80_core.main
-            in
-            ChangeMainAndSP { main | hl = v.value16 } v.sp
+                        main =
+                            z80_core.main
+                    in
+                    ChangeMainAndSP { main | hl = v.value16 } v.sp
 
-        PopIX ->
-            let
-                old_env =
-                    z80_core.env
+                PopIX ->
+                    let
+                        old_env =
+                            z80_core.env
 
-                v =
-                    old_env |> z80_pop rom48k clockTime
+                        v =
+                            old_env |> z80_pop rom48k clockTime
 
-                main =
-                    z80_core.main
-            in
-            ChangeMainAndSP { main | ix = v.value16 } v.sp
+                        main =
+                            z80_core.main
+                    in
+                    ChangeMainAndSP { main | ix = v.value16 } v.sp
 
-        PopIY ->
-            let
-                old_env =
-                    z80_core.env
+                PopIY ->
+                    let
+                        old_env =
+                            z80_core.env
 
-                v =
-                    old_env |> z80_pop rom48k clockTime
+                        v =
+                            old_env |> z80_pop rom48k clockTime
 
-                main =
-                    z80_core.main
-            in
-            ChangeMainAndSP { main | iy = v.value16 } v.sp
+                        main =
+                            z80_core.main
+                    in
+                    ChangeMainAndSP { main | iy = v.value16 } v.sp
 
-        PopAF ->
-            -- case 0xF1: af(pop()); break;
-            let
-                old_env =
-                    z80_core.env
+                PopAF ->
+                    -- case 0xF1: af(pop()); break;
+                    let
+                        old_env =
+                            z80_core.env
 
-                v =
-                    old_env |> z80_pop rom48k clockTime
+                        v =
+                            old_env |> z80_pop rom48k clockTime
 
-                flags =
-                    set_af v.value16
-            in
-            ChangeFlagsAndSP flags v.sp
+                        flags =
+                            set_af v.value16
+                    in
+                    ChangeFlagsAndSP flags v.sp
 
-        --v.sp
-        --{ z80_core
-        --    | flags = set_af v.value16
-        --    , env = { old_env | sp = v.sp }
-        --}
-        --|> CoreOnly
-        --|> RareChange
-        PopDE ->
-            -- case 0xD1: v=pop(); D=v>>>8; E=v&0xFF; break;
-            let
-                old_env =
-                    z80_core.env
+                --v.sp
+                --{ z80_core
+                --    | flags = set_af v.value16
+                --    , env = { old_env | sp = v.sp }
+                --}
+                --|> CoreOnly
+                --|> RareChange
+                PopDE ->
+                    -- case 0xD1: v=pop(); D=v>>>8; E=v&0xFF; break;
+                    let
+                        old_env =
+                            z80_core.env
 
-                v =
-                    old_env |> z80_pop rom48k clockTime
-            in
-            ChangeMainAndSP (z80_core.main |> set_de_main v.value16) v.sp
+                        v =
+                            old_env |> z80_pop rom48k clockTime
+                    in
+                    ChangeMainAndSP (z80_core.main |> set_de_main v.value16) v.sp
 
         Ret ->
             -- case 0xC9: MP=PC=pop(); break;
