@@ -1,5 +1,6 @@
 module ED70Test exposing (..)
 
+import Compiler exposing (createCompiledRom)
 import Dict
 import Expect exposing (Expectation)
 import Test exposing (..)
@@ -45,7 +46,7 @@ suite =
             { z80env = z80.env, time = clock.clockTime }
 
         z80rom =
-            Z80Rom.constructor Dict.empty
+            createCompiledRom Dict.empty
     in
     describe "0xEn instructions"
         -- Nest as many descriptions as you like.
@@ -70,7 +71,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> mem16 0x6545 z80rom clock.clockTime |> .value16
+                            new_z80.env |> mem16 0x6545 z80rom.z80rom clock.clockTime |> .value16
                     in
                     Expect.equal ( addr + 4, 0xF765 ) ( new_pc, mem_value )
             , test "0xED 78 IN A, (C)" <|

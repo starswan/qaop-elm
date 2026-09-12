@@ -1,5 +1,6 @@
 module CBE0Test exposing (..)
 
+import Compiler exposing (createCompiledRom)
 import Dict
 import Expect exposing (Expectation)
 import Test exposing (..)
@@ -42,7 +43,7 @@ suite =
             { z80env = z80.env, time = clock.clockTime }
 
         z80rom =
-            Z80Rom.constructor Dict.empty
+            createCompiledRom Dict.empty
     in
     describe "Bit instructions (CB)"
         [ test "0xCB E0 SET 4,B" <|
@@ -86,7 +87,7 @@ suite =
                             |> Triple.dropSecond
 
                     mem_value =
-                        new_z80.env |> getMem8 0xA086 clock.clockTime z80rom |> Tuple.first
+                        new_z80.env |> getMem8 0xA086 clock.clockTime z80rom.z80rom |> Tuple.first
                 in
                 Expect.equal ( addr + 4, 0x10 ) ( new_pc, mem_value )
         , test "0xCB E8 SET 5,B" <|
