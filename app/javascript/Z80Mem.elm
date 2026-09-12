@@ -73,17 +73,13 @@ m1 addr ir rom48k clockTime z80env =
 
         clockTime2 =
             { z80env_1_time | ctime = ctime }
-
-        value =
-            if ramAddr >= 0 then
-                UncompiledOpcode (z80env |> getRamValue ramAddr rom48k.z80rom) clockTime2
-
-            else
-                -- not implementing IF1 switching for now
-                rom48k |> getROMInstruction addr clockTime2
     in
-    --CpuTimeAndValue { z80env_1_time | ctime = ctime } value
-    value
+    if ramAddr >= 0 then
+        UncompiledOpcode (z80env |> getRamValue ramAddr rom48k.z80rom) clockTime2
+
+    else
+        -- not implementing IF1 switching for now
+        rom48k |> getROMInstruction addr clockTime2
 
 
 
