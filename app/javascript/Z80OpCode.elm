@@ -14,7 +14,7 @@ import SingleEnvWithMain exposing (applySingleEnvMainChange, singleEnvMainRegs)
 import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters)
 import SingleNoParams exposing (singleNoParamCalls, singleWithNoParam)
 import SingleWith8BitParameter exposing (maybeRelativeJump, singleWith8BitParam)
-import TripleByte exposing (TripleByteIndexChange, tripleByteWith16BitParam, tripleByteWith16BitParamDD, tripleByteWith16BitParamFD)
+import TripleByte exposing (TripleByteChange(..), TripleByteIndexChange, tripleByteWith16BitParam, tripleByteWith16BitParamDD, tripleByteWith16BitParamFD)
 import TripleWithFlags exposing (triple16bitJumps)
 import TripleWithMain exposing (tripleMainRegsIYFour)
 import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
@@ -27,13 +27,19 @@ import Z80Rom exposing (Z80ROM)
 fetchInstruction : Int -> Z80ROM -> CpuTimeCTime -> Int -> Z80Core -> CpuTimeAndValue
 fetchInstruction pc_value rom48k clockTime r_register z80_core =
     --let
-    --pc_value =
     --case romRoutineNames |> Dict.get z80.pc of
     --    Just name ->
     --        debugLog "fetch PC " name z80.pc
     --
     --    Nothing ->
-    --z80_core.pc
+    --if
+    --    ([ 0x11E2, 0x11E3, 0x11E5, 0x11E6, 0x11E7, 0x11E9, 0x11EA, 0x11EC, 0x11ED, 0x11DC, 0x11DE, 0x11DF, 0x11E0 ] |> List.member z80_core.pc)
+    --        || ([ 0x0E54, 0x0E59, 0x0E4D, 0x0E5E, 0x0E57, 0x0E5C, 0x0E62, 0x0E5B ] |> List.member z80_core.pc)
+    --then
+    --    z80_core.pc
+    --
+    --else
+    --    debugLog "m1" (subName z80_core.pc) z80_core.pc
     --in
     z80_core.env |> m1 pc_value (Bitwise.or z80_core.interrupts.ir (Bitwise.and r_register 0x7F)) rom48k clockTime
 
@@ -293,7 +299,7 @@ lengthAndDuration pc rom48k z80env =
                                     doubleParam =
                                         z80env |> mem16 (Bitwise.and (pc + 1) 0xFFFF) rom48k clockTime
                                 in
-                                ( IncrementByThree, duration, \cpuClock z80rom z80core -> z80core |> applySimpleTripleChangeDelta z80rom cpuClock (f doubleParam.value16) )
+                                ( IncrementByThree, duration, \cpuClock z80rom z80core -> z80core |> applySimpleTripleChangeDelta z80rom cpuClock (TripleByteJumpChange (f doubleParam.value16)) )
                             )
                 , \instruction ->
                     maybeRelativeJump
