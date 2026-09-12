@@ -3,6 +3,7 @@ module Tapfile exposing (..)
 import Bitwise
 import Bytes exposing (Bytes, Endianness(..), width)
 import Bytes.Decode exposing (Decoder, Step(..), andThen, fail, loop, map, map3, map4, map5, string, succeed, unsignedInt16, unsignedInt8)
+import Bytes.Decode.Extra as BDE
 import Char exposing (toCode)
 import String
 import Utils exposing (shiftRightBy8, toHexString2, toPlainHexString2)
@@ -166,20 +167,6 @@ tapfileStepDecoder decoder ( n, xs ) =
         map (\x -> Loop ( n - x.length - 2 - (x.block.data |> List.length) - 4, x :: xs )) decoder
 
 
-listWithLengthDecoder : Int -> Decoder a -> Decoder (List a)
-listWithLengthDecoder len decoder =
-    loop ( len, [] ) (listStep decoder)
-
-
-listStep : Decoder a -> ( Int, List a ) -> Decoder (Step ( Int, List a ) (List a))
-listStep decoder ( n, xs ) =
-    if n <= 0 then
-        succeed (Done (xs |> List.reverse))
-
-    else
-        map (\x -> Loop ( n - 1, x :: xs )) decoder
-
-
 tapFilename : TapfileData -> String
 tapFilename tapFileHeader =
     case tapFileHeader of
@@ -327,4 +314,4 @@ decodeTapeHeader =
 
 tapFileBlockDecoder : Int -> Decoder TapfileBlock
 tapFileBlockDecoder blockLength =
-    map4 TapfileBlock spectrumUnsigned16Bit unsignedInt8 (listWithLengthDecoder blockLength unsignedInt8) unsignedInt8
+    map4 TapfileBlock spectrumUnsigned16Bit unsignedInt8 (BDE.list blockLength unsignedInt8) unsignedInt8
