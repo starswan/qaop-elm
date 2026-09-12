@@ -27,6 +27,15 @@ type Shifter
     | Shifter7
 
 
+type Pop16
+    = PopBC
+    | PopDE
+    | PopHL
+    | PopIX
+    | PopIY
+    | PopAF
+
+
 type RegisterFlagChange
     = Pushed16BitValue (MainWithIndexRegisters -> Int)
     | RegChangeNewSP (MainWithIndexRegisters -> Int)
@@ -56,12 +65,7 @@ type RegisterFlagChange
     | FlagChangeMain (FlagRegisters -> MainWithIndexRegisters -> MainWithIndexRegisters)
     | ConditionalReturn (FlagRegisters -> Bool)
     | FlagsPushAF
-    | PopBC
-    | PopDE
-    | PopHL
-    | PopIX
-    | PopIY
-    | PopAF
+    | Pop16Bit Pop16
     | Ret
     | Rst Int
     | RegisterZ80Change (MainWithIndexRegisters -> FlagRegisters -> Z80Change)

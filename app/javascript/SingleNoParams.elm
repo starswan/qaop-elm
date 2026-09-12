@@ -3,7 +3,7 @@ module SingleNoParams exposing (..)
 import Bitwise exposing (shiftRightBy)
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), c_TIME_LIMIT)
 import Dict exposing (Dict)
-import RegisterChange exposing (RegisterFlagChange(..))
+import RegisterChange exposing (Pop16(..), RegisterFlagChange(..))
 import Z80Core exposing (CoreChange(..), Z80Core)
 import Z80CoreWithClockTime exposing (Z80, add_cpu_time)
 
@@ -34,14 +34,14 @@ singleWithNoParam =
 
         -- case 0x7F: break;
         , ( 0x7F, ( RegChangeNoOp, FourTStates ) )
-        , ( 0xC1, ( PopBC, TenTStates ) )
+        , ( 0xC1, ( Pop16Bit PopBC, TenTStates ) )
         , ( 0xC9, ( Ret, TenTStates ) )
-        , ( 0xD1, ( PopDE, TenTStates ) )
+        , ( 0xD1, ( Pop16Bit PopDE, TenTStates ) )
 
         -- case 0xD9: exx(); break;
         --, ( 0xD9, ( Exx, FourTStates ) )
-        , ( 0xE1, ( PopHL, TenTStates ) )
-        , ( 0xF1, ( PopAF, TenTStates ) )
+        , ( 0xE1, ( Pop16Bit PopHL, TenTStates ) )
+        , ( 0xF1, ( Pop16Bit PopAF, TenTStates ) )
 
         --, ( 0xFB, ( EnableInterrupts, FourTStates ) )
         ]
@@ -64,14 +64,14 @@ singleNoParamCalls =
 singleWithNoParamDD : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleWithNoParamDD =
     Dict.fromList
-        [ ( 0xE1, ( PopIX, FourteenTStates ) )
+        [ ( 0xE1, ( Pop16Bit PopIX, FourteenTStates ) )
         ]
 
 
 singleWithNoParamFD : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleWithNoParamFD =
     Dict.fromList
-        [ ( 0xE1, ( PopIY, FourteenTStates ) )
+        [ ( 0xE1, ( Pop16Bit PopIY, FourteenTStates ) )
         ]
 
 
