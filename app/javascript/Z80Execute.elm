@@ -10,7 +10,7 @@ import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), Inte
 import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
 import SingleEnvWithMain exposing (SingleEnvMainChange, applySingleEnvMainChange)
 import SingleWith8BitParameter exposing (Single8BitChange(..), applySimple8BitChange)
-import TripleByte exposing (TripleByteChange(..), TripleByteIndexChange(..), TripleByteRegister(..))
+import TripleByte exposing (TripleByteChange(..), TripleByteIndexChange(..), TripleByteJump(..), TripleByteRegister(..))
 import Utils exposing (bitMaskFromBit, byte, clearBit, inverseBitMaskFromBit, setBit, shiftLeftBy8, toHexString2)
 import Z80Change exposing (IndexedZ80Change(..), Z80Change(..))
 import Z80Core exposing (CoreChange(..), DirectionForLDIR(..), LDIRLoop(..), RareCoreChange(..), RepeatPCOffset(..), Z80Core)
@@ -885,22 +885,24 @@ applySimpleTripleChangeDelta rom48k cpu_time z80changeData z80 =
         Store16BitFromHL address ->
             SetMem16 address z80.main.hl
 
-        Conditional16BitJump int function ->
-            if z80.flags |> function then
-                JumpOnlyPC int
+        TripleByteJumpChange tripleByteJump ->
+            case tripleByteJump of
+                Conditional16BitJump int function ->
+                    if z80.flags |> function then
+                        JumpOnlyPC int
 
-            else
-                NoCore
+                    else
+                        NoCore
 
-        Conditional16BitCall address shortdelay function ->
-            if z80.flags |> function then
-                CallWithPCAndDelay address shortdelay
+                Conditional16BitCall address shortdelay function ->
+                    if z80.flags |> function then
+                        CallWithPCAndDelay address shortdelay
 
-            else
-                NoCore
+                    else
+                        NoCore
 
-        NewPCRegister int ->
-            JumpOnlyPC int
+                NewPCRegister int ->
+                    JumpOnlyPC int
 
 
 applyTripleChangeDelta : Z80ROM -> CpuTimeCTime -> TripleByteIndexChange -> Z80Core -> CoreChange

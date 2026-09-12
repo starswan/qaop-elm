@@ -12,6 +12,12 @@ type TripleByteRegister
     | TripleByteHL
 
 
+type TripleByteJump
+    = Conditional16BitJump Int (FlagRegisters -> Bool)
+    | Conditional16BitCall Int ShortDelay (FlagRegisters -> Bool)
+    | NewPCRegister Int
+
+
 type TripleByteChange
     = NewHLIndirect Int
     | NewSPRegister Int
@@ -19,9 +25,7 @@ type TripleByteChange
     | NewTripleRegister Int TripleByteRegister
     | TripleSetIndirectFromA Int
     | Store16BitFromHL Int
-    | Conditional16BitJump Int (FlagRegisters -> Bool)
-    | Conditional16BitCall Int ShortDelay (FlagRegisters -> Bool)
-    | NewPCRegister Int
+    | TripleByteJumpChange TripleByteJump
 
 
 type TripleByteIndexChange

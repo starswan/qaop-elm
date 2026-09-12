@@ -2,12 +2,13 @@ module TripleWithFlags exposing (..)
 
 import CpuTimeCTime exposing (InstructionDuration(..), ShortDelay(..))
 import Dict exposing (Dict)
-import TripleByte exposing (TripleByteChange(..))
+import TripleByte exposing (TripleByteChange(..), TripleByteJump(..))
 import Z80Flags exposing (FlagRegisters, always_jump, jump_c, jump_m, jump_nc, jump_nz, jump_p, jump_pe, jump_po, jump_z)
 
 
-triple16bitJumps : Dict Int ( Int -> TripleByteChange, InstructionDuration )
+triple16bitJumps : Dict Int ( Int -> TripleByteJump, InstructionDuration )
 triple16bitJumps =
+    -- These have to be unique for the compiler (i.e. TripleByteJump)
     Dict.fromList
         [ ( 0xC2, ( jp_nz, TenTStates ) )
         , ( 0xC3, ( jp_nn, TenTStates ) )
@@ -34,109 +35,109 @@ triple16bitJumps =
         ]
 
 
-jp_nz : Int -> TripleByteChange
+jp_nz : Int -> TripleByteJump
 jp_nz param =
     -- case 0xC2: jp(Fr!=0); break;
     Conditional16BitJump param jump_nz
 
 
-jp_z_nn : Int -> TripleByteChange
+jp_z_nn : Int -> TripleByteJump
 jp_z_nn param =
     -- case 0xCA: jp(Fr==0); break;
     Conditional16BitJump param jump_z
 
 
-jp_nc_nn : Int -> TripleByteChange
+jp_nc_nn : Int -> TripleByteJump
 jp_nc_nn param =
     -- case 0xD2: jp((Ff&0x100)==0); break;
     Conditional16BitJump param jump_nc
 
 
-jp_c_nn : Int -> TripleByteChange
+jp_c_nn : Int -> TripleByteJump
 jp_c_nn param =
     -- case 0xDA: jp((Ff&0x100)!=0); break;
     Conditional16BitJump param jump_c
 
 
-jp_po_nn : Int -> TripleByteChange
+jp_po_nn : Int -> TripleByteJump
 jp_po_nn param =
     -- case 0xE2: jp((flags()&FP)==0); break;
     Conditional16BitJump param jump_po
 
 
-call_po_nn : Int -> TripleByteChange
+call_po_nn : Int -> TripleByteJump
 call_po_nn param =
     -- case 0xE4: call((flags()&FP)==0); break;
     Conditional16BitCall param SevenExtraTStates jump_po
 
 
-jp_pe_nn : Int -> TripleByteChange
+jp_pe_nn : Int -> TripleByteJump
 jp_pe_nn param =
     -- case 0xEA: jp((flags()&FP)!=0); break;
     Conditional16BitJump param jump_pe
 
 
-call_pe_nn : Int -> TripleByteChange
+call_pe_nn : Int -> TripleByteJump
 call_pe_nn param =
     -- case 0xEC: call((flags()&FP)!=0); break;
     Conditional16BitCall param SevenExtraTStates jump_pe
 
 
-jp_p_nn : Int -> TripleByteChange
+jp_p_nn : Int -> TripleByteJump
 jp_p_nn param =
     -- case 0xF2: jp((Ff&FS)==0); break;
     Conditional16BitJump param jump_p
 
 
-call_p_nn : Int -> TripleByteChange
+call_p_nn : Int -> TripleByteJump
 call_p_nn param =
     -- case 0xF4: call((Ff&FS)==0); break;
     Conditional16BitCall param SevenExtraTStates jump_p
 
 
-jp_m_nn : Int -> TripleByteChange
+jp_m_nn : Int -> TripleByteJump
 jp_m_nn param =
     -- case 0xFA: jp((Ff&FS)!=0); break;
     Conditional16BitJump param jump_m
 
 
-call_m_nn : Int -> TripleByteChange
+call_m_nn : Int -> TripleByteJump
 call_m_nn param =
     -- case 0xFC: call((Ff&FS)!=0); break;
     Conditional16BitCall param SevenExtraTStates jump_m
 
 
-call_nz_nn : Int -> TripleByteChange
+call_nz_nn : Int -> TripleByteJump
 call_nz_nn param =
     -- case 0xC4: call(Fr!=0); break;
     Conditional16BitCall param SevenExtraTStates jump_nz
 
 
-call_z_nn : Int -> TripleByteChange
+call_z_nn : Int -> TripleByteJump
 call_z_nn param =
     -- case 0xCC: call(Fr==0); break;
     Conditional16BitCall param SevenExtraTStates jump_z
 
 
-call_nc_nn : Int -> TripleByteChange
+call_nc_nn : Int -> TripleByteJump
 call_nc_nn param =
     -- case 0xD4: call((Ff&0x100)==0); break;
     Conditional16BitCall param SevenExtraTStates jump_nc
 
 
-call_c_nn : Int -> TripleByteChange
+call_c_nn : Int -> TripleByteJump
 call_c_nn param =
     ---- case 0xDC: call((Ff&0x100)!=0); break;
     Conditional16BitCall param SevenExtraTStates jump_c
 
 
-call_0xCD : Int -> TripleByteChange
+call_0xCD : Int -> TripleByteJump
 call_0xCD param16 =
     -- case 0xCD: v=imm16(); push(PC); MP=PC=v; break;
     Conditional16BitCall param16 SevenExtraTStates always_jump
 
 
-jp_nn : Int -> TripleByteChange
+jp_nn : Int -> TripleByteJump
 jp_nn param16 =
     -- case 0xC3: MP=PC=imm16(); break;
     NewPCRegister param16
