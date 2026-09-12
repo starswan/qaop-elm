@@ -88,10 +88,23 @@ new_tape tapfileList spectrum =
     -- spectrum
     -- This is weird - it only works if the tape is a dict (rather than list or Array)
     -- otherwise we just an infinite recursion error
-    { spectrum | tape = Just tapedict }
+    --{ spectrum | tape = Just tapedict }
+    { cpu = spectrum.cpu, rom48k = spectrum.rom48k, loading = spectrum.loading, tape = Just tapedict }
 
 
 
+--{ cpu : Z80
+--, rom48k : Z80ROM
+--
+--, loading : Bool
+--
+--, tape : Maybe Z80Tape
+--
+--}
+
+
+
+--
 --loadTapfile : Tapfile -> Spectrum -> Spectrum
 --loadTapfile tapFile spectrum =
 --    let
@@ -130,22 +143,16 @@ new_tape tapfileList spectrum =
 type alias Spectrum =
     { cpu : Z80
     , rom48k : Z80ROM
-    , paused : Bool
     , loading : Bool
-    , want_pause : Int
     , tape : Maybe Z80Tape
-
-    --, --audio: Audio,
-    --screen_refresh : ScreenRefresh
-    --, border_refresh : BorderRefresh
     }
 
 
-constructor : Dict Int Int -> Spectrum
+constructor : Z80ROM -> Spectrum
 constructor z80rom =
     --Spectrum Z80.constructor True 1 Nothing Audio new_screen_refresh new_border_refresh
     --Spectrum Z80.constructor (Z80Rom.constructor z80rom) True False 1 Nothing new_screen_refresh new_border_refresh
-    Spectrum Z80.constructor (Z80Rom.constructor z80rom) True False 1 Nothing
+    Spectrum Z80.constructor z80rom True Nothing
 
 
 
@@ -283,8 +290,11 @@ frames keys speccy =
         rom =
             speccy.rom48k
 
+        rommy =
+            debugLog "update_keys" Nothing rom
+
         new_rom =
-            { rom | keyboard = keys |> update_keyboard }
+            { rommy | keyboard = keys |> update_keyboard }
 
         cpu1 =
             { sz80
@@ -295,16 +305,12 @@ frames keys speccy =
             }
 
         loading_z80 =
-            if not speccy.paused then
-                case speccy.tape of
-                    Just _ ->
-                        speccy |> checkLoad
+            case speccy.tape of
+                Just _ ->
+                    speccy |> checkLoad
 
-                    Nothing ->
-                        Nothing
-
-            else
-                Nothing
+                Nothing ->
+                    Nothing
 
         loadz80posrom =
             case loading_z80 of
@@ -441,23 +447,33 @@ frames keys speccy =
 --}
 
 
-pause : Int -> Spectrum -> Spectrum
-pause m spectrum =
-    let
-        w =
-            Bitwise.xor (shiftRightBy 3 (Bitwise.and spectrum.want_pause (complement m))) (Bitwise.and m 7)
 
-        paused =
-            if xor spectrum.paused (w /= 0) then
-                debugLog "pause" (w /= 0) w /= 0
-
-            else
-                debugLog "pause" Nothing spectrum.paused
-    in
-    { spectrum | want_pause = w, paused = paused }
-
-
-
+--pause : Int -> Spectrum -> Spectrum
+--pause m spectrum =
+--    let
+--        w =
+--            Bitwise.xor (shiftRightBy 3 (Bitwise.and spectrum.want_pause (complement m))) (Bitwise.and m 7)
+--
+--        paused =
+--            if xor spectrum.paused (w /= 0) then
+--                debugLog "pause1" (w /= 0) w /= 0
+--
+--            else
+--                debugLog "pause2" Nothing spectrum.paused
+--    in
+--    { rom48k = spectrum.rom48k, loading = spectrum.loading, tape = spectrum.tape, cpu = spectrum.cpu, want_pause = w, paused = paused }
+--type alias Spectrum =
+--    { cpu : Z80
+--    , rom48k : Z80ROM
+--    , paused : Bool
+--    , loading : Bool
+--    , want_pause : Int
+--    , tape : Maybe Z80Tape
+--
+--    --, --audio: Audio,
+--    --screen_refresh : ScreenRefresh
+--    --, border_refresh : BorderRefresh
+--    }
 --
 --	public synchronized void reset()
 --	{

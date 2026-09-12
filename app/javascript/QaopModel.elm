@@ -10,7 +10,7 @@ import Http
 import Json.Decode as Decode
 import Keyboard exposing (ctrlKeyDownEvent, ctrlKeyUpEvent, keyDownEvent, keyUpEvent)
 import MessageHandler exposing (bytesToTap)
-import Qaop exposing (Qaop, pause)
+import Qaop exposing (Qaop)
 import ScreenStorage exposing (ScreenLine, Z80Screen)
 import Spectrum exposing (frames, new_tape)
 import SpectrumColour exposing (borderColour)
@@ -164,6 +164,9 @@ alwaysPreventDefault msg =
 viewQaop : QaopModel -> Int -> Html QaopMessage
 viewQaop model tickInterval =
     let
+        modelCount =
+            debugLog "view modelCount" model.count model.count
+
         screen =
             model.qaop.spectrum.rom48k.z80ram.screen
 
@@ -176,10 +179,10 @@ viewQaop model tickInterval =
                     True
 
         speed =
-            speed_in_hz model.elapsed_millis model.count
+            speed_in_hz model.elapsed_millis modelCount
 
         time_disp =
-            time_display model.elapsed_millis model.count
+            time_display model.elapsed_millis modelCount
     in
     -- The inline style is being used for example purposes in order to keep this example simple and
     -- avoid loading additional resources. Use a proper stylesheet when building your own app.
@@ -197,7 +200,7 @@ viewQaop model tickInterval =
                 ]
             , button [ onClick Pause ]
                 [ text
-                    (if model.qaop.spectrum.paused then
+                    (if model.qaop.paused then
                         "Unpause"
 
                      else
@@ -228,13 +231,22 @@ updateQaop message model =
             let
                 qaop =
                     gotTap model.qaop result
+
+                count =
+                    debugLog "GotTap count" ( model.count, model.qaop.paused ) model.count
+
+                new_model =
+                    debugLog "got tap new model" Nothing { model | qaop = qaop, count = count + 1 }
             in
-            ( { model | qaop = qaop, count = model.count + 1 }, Cmd.none )
+            ( new_model, Cmd.none )
 
         Tick posix ->
             let
+                tickCount =
+                    debugLog "tickCount" ( model.count, model.qaop.paused ) model.count
+
                 state =
-                    if model.qaop.spectrum.paused then
+                    if model.qaop.paused then
                         { qaop = model.qaop, count = model.count, elapsed = 0 }
 
                     else
@@ -245,12 +257,16 @@ updateQaop message model =
                             q =
                                 model.qaop |> run
                         in
-                        { qaop = q, count = model.count + 1, elapsed = elapsed }
+                        { qaop = q, count = tickCount + 1, elapsed = elapsed }
             in
             ( { model | count = state.count, elapsed_millis = model.elapsed_millis + state.elapsed, time = posix, qaop = state.qaop }, Cmd.none )
 
         Pause ->
-            ( { model | qaop = model.qaop |> pause (not model.qaop.spectrum.paused) }, Cmd.none )
+            let
+                qaop =
+                    model.qaop
+            in
+            ( { model | qaop = { qaop | paused = not qaop.paused } }, Cmd.none )
 
         CharacterKeyDown char ->
             let
@@ -292,7 +308,11 @@ updateQaop message model =
             ( model, Delay.after 1 (ControlUnKey str) )
 
         Autoload ->
-            ( { model | loadPressed = True }, Cmd.batch loadingCommands )
+            let
+                loadPressed =
+                    debugLog "Load" Nothing True
+            in
+            ( { model | loadPressed = loadPressed }, Cmd.batch loadingCommands )
 
         FlipFlash _ ->
             ( { model | globalFlash = not model.globalFlash }, Cmd.none )
@@ -323,7 +343,7 @@ loadingCommands =
 
 qaopSubs : QaopModel -> Int -> Sub QaopMessage
 qaopSubs model tickInterval =
-    if model.qaop.spectrum.paused then
+    if model.qaop.paused then
         Sub.none
 
     else
@@ -397,8 +417,13 @@ gotTap qaop result =
 
 run : Qaop -> Qaop
 run qaop =
-    if qaop.spectrum.paused then
-        { qaop | state = Bitwise.and qaop.state (complement 2), spectrum = qaop.spectrum |> Spectrum.pause 0x08 }
+    if qaop.paused then
+        --{ qaop | state = Bitwise.and qaop.state (complement 2), spectrum = qaop.spectrum |> Spectrum.pause 0x08 }
+        { qaop | state = Bitwise.and qaop.state (complement 2) }
 
     else
-        { qaop | spectrum = qaop.spectrum |> frames qaop.keys }
+        let
+            spec =
+                debugLog "running frames" Nothing qaop.spectrum
+        in
+        { qaop | spectrum = spec |> frames qaop.keys }

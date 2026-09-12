@@ -5,6 +5,8 @@
 
 module Z80Env exposing (..)
 
+--import Maybe.Extra exposing (combine)
+
 import Bitwise
 import CpuTimeCTime exposing (CTime(..), CpuTimeAnd16BitValue, CpuTimeAndValue, CpuTimeCTime, CpuTimeSpAnd16BitValue, cont, cont1, cont_port)
 import Dict exposing (Dict)

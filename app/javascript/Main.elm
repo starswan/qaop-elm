@@ -9,6 +9,7 @@ import Browser
 import Html exposing (Attribute, Html, div)
 import LoadingModel exposing (Flags, InitMessage(..), LoadResult(..), LoadingModel, loadingInit, updateLoading)
 import QaopModel exposing (QaopMessage, QaopModel, qaopSubs, updateQaop, viewQaop)
+import Z80Debug exposing (debugLog)
 
 
 
@@ -106,8 +107,11 @@ update message model =
                     let
                         ( x, y ) =
                             updateQaop qaopMessage qaopModel
+
+                        new =
+                            debugLog "new main model" Nothing { model | state = Running x }
                     in
-                    ( { model | state = Running x }, y |> Cmd.map RunningMessage )
+                    ( new, y |> Cmd.map RunningMessage )
 
 
 subscriptions : Model -> Sub Message

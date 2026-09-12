@@ -1,6 +1,6 @@
 module LoadingModel exposing (..)
 
-import Dict exposing (Dict)
+import Array exposing (Array)
 import Http
 import MessageHandler exposing (bytesToRom)
 import Qaop exposing (Qaop)
@@ -8,6 +8,7 @@ import QaopModel exposing (QaopMessage, QaopModel, tapLoad)
 import Spectrum
 import Time exposing (Posix, millisToPosix)
 import Z80Debug exposing (debugLog)
+import Z80Rom exposing (Z80ROM)
 
 
 type alias LoadingModel =
@@ -17,7 +18,7 @@ type alias LoadingModel =
 
 
 type InitMessage
-    = GotRom (Result Http.Error (Dict Int Int))
+    = GotRom (Result Http.Error Z80ROM)
 
 
 type LoadResult
@@ -60,14 +61,16 @@ updateLoading initMessage loadingModel =
             case result of
                 Ok z80rom ->
                     let
+                        qaop : Qaop
                         qaop =
-                            Qaop (Spectrum.constructor z80rom) 0 []
+                            Qaop (Spectrum.constructor z80rom) 0 [] True
 
                         qaopModel =
                             QaopModel qaop 0 0 loadingModel.currentTime False False
                     in
                     ( NowRunning qaopModel, tapLoad loadingModel.tapUrl )
 
+                --( NowRunning qaopModel, Cmd.none )
                 Err _ ->
                     ( StillLoading loadingModel, Cmd.none )
 

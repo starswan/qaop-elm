@@ -166,6 +166,8 @@ RSpec.describe "Game" do
     it "loads the emulator", :js do
       find("#game_#{game_id}").click
       # check that Elm is running
+      sleep 30
+
       expect(page).to have_content 'Refresh Interval'
 
       cpu_count = find("#cyclecount")
