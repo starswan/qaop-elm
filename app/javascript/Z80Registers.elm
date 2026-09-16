@@ -10,11 +10,6 @@ type ChangeMainRegister
     | ChangeMainL
 
 
-type ChangeSingle
-    = ChangeSingleH
-    | ChangeSingleL
-
-
 type CoreRegister
     = RegisterB
     | RegisterC

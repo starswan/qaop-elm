@@ -1,97 +1,99 @@
 module GroupCBIXIY exposing (..)
 
 import Bitwise
+import CBRegisterChange exposing (CBRegisterFlagChange(..))
 import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
-import RegisterChange exposing (RegisterFlagChange(..), Shifter(..))
+import RegisterChange exposing (Shifter(..))
 import SingleEnvWithMain exposing (SingleEnvMainChange(..))
 import Utils exposing (BitTest(..), byte)
 import Z80Env exposing (Z80Env)
+import Z80Flags exposing (shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
 import Z80Registers exposing (ChangeMainRegister(..))
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (MainWithIndexRegisters)
 
 
-singleByteMainRegsIXCB : Dict Int ( Int -> MainWithIndexRegisters -> RegisterFlagChange, InstructionDuration )
+singleByteMainRegsIXCB : Dict Int ( Int -> MainWithIndexRegisters -> CBRegisterFlagChange, InstructionDuration )
 singleByteMainRegsIXCB =
     Dict.fromList
         [ --shifter0
-          ( 0x00, ( \offset z80_main -> RegisterIndirectWithShifter Shifter0 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x01, ( \offset z80_main -> RegisterIndirectWithShifter Shifter0 ChangeMainC (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x02, ( \offset z80_main -> RegisterIndirectWithShifter Shifter0 ChangeMainD (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x03, ( \offset z80_main -> RegisterIndirectWithShifter Shifter0 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x04, ( \offset z80_main -> RegisterIndirectWithShifter Shifter0 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x05, ( \offset z80_main -> RegisterIndirectWithShifter Shifter0 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
+          ( 0x00, ( \offset z80_main -> RegisterIndirectWithShifter shifter0 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x01, ( \offset z80_main -> RegisterIndirectWithShifter shifter0 ChangeMainC (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x02, ( \offset z80_main -> RegisterIndirectWithShifter shifter0 ChangeMainD (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x03, ( \offset z80_main -> RegisterIndirectWithShifter shifter0 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x04, ( \offset z80_main -> RegisterIndirectWithShifter shifter0 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x05, ( \offset z80_main -> RegisterIndirectWithShifter shifter0 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x06, ( \offset z80_main -> RegisterChangeIndexShifter Shifter0 (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x07, ( \offset z80_main -> FlagsIndirectWithShifter Shifter0 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         --shifter1
-        , ( 0x08, ( \offset z80_main -> RegisterIndirectWithShifter Shifter1 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x09, ( \offset z80_main -> RegisterIndirectWithShifter Shifter1 ChangeMainC (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x0A, ( \offset z80_main -> RegisterIndirectWithShifter Shifter1 ChangeMainD (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x0B, ( \offset z80_main -> RegisterIndirectWithShifter Shifter1 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x0C, ( \offset z80_main -> RegisterIndirectWithShifter Shifter1 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x0D, ( \offset z80_main -> RegisterIndirectWithShifter Shifter1 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x08, ( \offset z80_main -> RegisterIndirectWithShifter shifter1 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x09, ( \offset z80_main -> RegisterIndirectWithShifter shifter1 ChangeMainC (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x0A, ( \offset z80_main -> RegisterIndirectWithShifter shifter1 ChangeMainD (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x0B, ( \offset z80_main -> RegisterIndirectWithShifter shifter1 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x0C, ( \offset z80_main -> RegisterIndirectWithShifter shifter1 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x0D, ( \offset z80_main -> RegisterIndirectWithShifter shifter1 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x0E, ( \offset z80_main -> RegisterChangeIndexShifter Shifter1 (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x0F, ( \offset z80_main -> FlagsIndirectWithShifter Shifter1 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         --shifter2
-        , ( 0x10, ( \offset z80_main -> RegisterIndirectWithShifter Shifter2 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x11, ( \offset z80_main -> RegisterIndirectWithShifter Shifter2 ChangeMainC (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x12, ( \offset z80_main -> RegisterIndirectWithShifter Shifter2 ChangeMainD (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x13, ( \offset z80_main -> RegisterIndirectWithShifter Shifter2 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x14, ( \offset z80_main -> RegisterIndirectWithShifter Shifter2 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x15, ( \offset z80_main -> RegisterIndirectWithShifter Shifter2 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x10, ( \offset z80_main -> RegisterIndirectWithShifter shifter2 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x11, ( \offset z80_main -> RegisterIndirectWithShifter shifter2 ChangeMainC (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x12, ( \offset z80_main -> RegisterIndirectWithShifter shifter2 ChangeMainD (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x13, ( \offset z80_main -> RegisterIndirectWithShifter shifter2 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x14, ( \offset z80_main -> RegisterIndirectWithShifter shifter2 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x15, ( \offset z80_main -> RegisterIndirectWithShifter shifter2 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x16, ( \offset z80_main -> RegisterChangeIndexShifter Shifter2 (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x17, ( \offset z80_main -> FlagsIndirectWithShifter Shifter2 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         --shifter3
-        , ( 0x18, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x19, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeMainC (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x1A, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeMainD (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x1B, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x1C, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x1D, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x18, ( \offset z80_main -> RegisterIndirectWithShifter shifter3 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x19, ( \offset z80_main -> RegisterIndirectWithShifter shifter3 ChangeMainC (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x1A, ( \offset z80_main -> RegisterIndirectWithShifter shifter3 ChangeMainD (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x1B, ( \offset z80_main -> RegisterIndirectWithShifter shifter3 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x1C, ( \offset z80_main -> RegisterIndirectWithShifter shifter3 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x1D, ( \offset z80_main -> RegisterIndirectWithShifter shifter3 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x1E, ( \offset z80_main -> RegisterChangeIndexShifter Shifter3 (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x1F, ( \offset z80_main -> FlagsIndirectWithShifter Shifter3 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         --shifter4
-        , ( 0x20, ( \offset z80_main -> RegisterIndirectWithShifter Shifter4 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x21, ( \offset z80_main -> RegisterIndirectWithShifter Shifter4 ChangeMainC (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x22, ( \offset z80_main -> RegisterIndirectWithShifter Shifter4 ChangeMainD (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x23, ( \offset z80_main -> RegisterIndirectWithShifter Shifter4 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x24, ( \offset z80_main -> RegisterIndirectWithShifter Shifter4 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x25, ( \offset z80_main -> RegisterIndirectWithShifter Shifter4 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x20, ( \offset z80_main -> RegisterIndirectWithShifter shifter4 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x21, ( \offset z80_main -> RegisterIndirectWithShifter shifter4 ChangeMainC (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x22, ( \offset z80_main -> RegisterIndirectWithShifter shifter4 ChangeMainD (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x23, ( \offset z80_main -> RegisterIndirectWithShifter shifter4 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x24, ( \offset z80_main -> RegisterIndirectWithShifter shifter4 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x25, ( \offset z80_main -> RegisterIndirectWithShifter shifter4 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x26, ( \offset z80_main -> RegisterChangeIndexShifter Shifter4 (z80_main.ix + byte offset), FifteenTStates ) )
         , ( 0x27, ( \offset z80_main -> FlagsIndirectWithShifter Shifter4 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         --shifter5
-        , ( 0x28, ( \offset z80_main -> RegisterIndirectWithShifter Shifter5 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x29, ( \offset z80_main -> RegisterIndirectWithShifter Shifter5 ChangeMainC (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x2A, ( \offset z80_main -> RegisterIndirectWithShifter Shifter5 ChangeMainD (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x2B, ( \offset z80_main -> RegisterIndirectWithShifter Shifter5 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x2C, ( \offset z80_main -> RegisterIndirectWithShifter Shifter5 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x2D, ( \offset z80_main -> RegisterIndirectWithShifter Shifter5 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x28, ( \offset z80_main -> RegisterIndirectWithShifter shifter5 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x29, ( \offset z80_main -> RegisterIndirectWithShifter shifter5 ChangeMainC (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x2A, ( \offset z80_main -> RegisterIndirectWithShifter shifter5 ChangeMainD (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x2B, ( \offset z80_main -> RegisterIndirectWithShifter shifter5 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x2C, ( \offset z80_main -> RegisterIndirectWithShifter shifter5 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x2D, ( \offset z80_main -> RegisterIndirectWithShifter shifter5 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x2E, ( \offset z80_main -> RegisterChangeIndexShifter Shifter5 (z80_main.ix + byte offset), FifteenTStates ) )
         , ( 0x2F, ( \offset z80_main -> FlagsIndirectWithShifter Shifter5 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         --shifter6
-        , ( 0x30, ( \offset z80_main -> RegisterIndirectWithShifter Shifter6 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x31, ( \offset z80_main -> RegisterIndirectWithShifter Shifter6 ChangeMainC (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x32, ( \offset z80_main -> RegisterIndirectWithShifter Shifter6 ChangeMainD (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x33, ( \offset z80_main -> RegisterIndirectWithShifter Shifter6 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x34, ( \offset z80_main -> RegisterIndirectWithShifter Shifter6 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x35, ( \offset z80_main -> RegisterIndirectWithShifter Shifter6 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x30, ( \offset z80_main -> RegisterIndirectWithShifter shifter6 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x31, ( \offset z80_main -> RegisterIndirectWithShifter shifter6 ChangeMainC (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x32, ( \offset z80_main -> RegisterIndirectWithShifter shifter6 ChangeMainD (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x33, ( \offset z80_main -> RegisterIndirectWithShifter shifter6 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x34, ( \offset z80_main -> RegisterIndirectWithShifter shifter6 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x35, ( \offset z80_main -> RegisterIndirectWithShifter shifter6 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x36, ( \offset z80_main -> RegisterChangeIndexShifter Shifter6 (z80_main.ix + byte offset), FifteenTStates ) )
         , ( 0x37, ( \offset z80_main -> FlagsIndirectWithShifter Shifter6 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         --shifter7
-        , ( 0x38, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x39, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ChangeMainC (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x3A, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ChangeMainD (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x3B, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x3C, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0x3D, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x38, ( \offset z80_main -> RegisterIndirectWithShifter shifter7 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x39, ( \offset z80_main -> RegisterIndirectWithShifter shifter7 ChangeMainC (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x3A, ( \offset z80_main -> RegisterIndirectWithShifter shifter7 ChangeMainD (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x3B, ( \offset z80_main -> RegisterIndirectWithShifter shifter7 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x3C, ( \offset z80_main -> RegisterIndirectWithShifter shifter7 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0x3D, ( \offset z80_main -> RegisterIndirectWithShifter shifter7 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x3E, ( \offset z80_main -> RegisterChangeIndexShifter Shifter7 (z80_main.ix + byte offset), FifteenTStates ) )
         , ( 0x3F, ( \offset z80_main -> FlagsIndirectWithShifter Shifter7 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
@@ -182,7 +184,7 @@ singleByteMainRegsIXCB =
         , ( 0xC3, ( \offset z80_main -> SetBitIndirectWithCopy Bit_0 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xC4, ( \offset z80_main -> SetBitIndirectWithCopy Bit_0 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xC5, ( \offset z80_main -> SetBitIndirectWithCopy Bit_0 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0xC6, ( \offset z80_main -> IndirectBitSet Bit_0 (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0xC6, ( \offset main -> IndirectBitSet Bit_0 (\z80_main -> z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xC7, ( \offset z80_main -> SetBitIndirectA Bit_0 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         -- set bit1
@@ -192,7 +194,7 @@ singleByteMainRegsIXCB =
         , ( 0xCB, ( \offset z80_main -> SetBitIndirectWithCopy Bit_1 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xCC, ( \offset z80_main -> SetBitIndirectWithCopy Bit_1 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xCD, ( \offset z80_main -> SetBitIndirectWithCopy Bit_1 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0xCE, ( \offset z80_main -> IndirectBitSet Bit_1 (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0xCE, ( \offset main -> IndirectBitSet Bit_1 (\z80_main -> z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xCF, ( \offset z80_main -> SetBitIndirectA Bit_1 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         -- set bit2
@@ -202,7 +204,7 @@ singleByteMainRegsIXCB =
         , ( 0xD3, ( \offset z80_main -> SetBitIndirectWithCopy Bit_2 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xD4, ( \offset z80_main -> SetBitIndirectWithCopy Bit_2 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xD5, ( \offset z80_main -> SetBitIndirectWithCopy Bit_2 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0xD6, ( \offset z80_main -> IndirectBitSet Bit_2 (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0xD6, ( \offset main -> IndirectBitSet Bit_2 (\z80_main -> z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xD7, ( \offset z80_main -> SetBitIndirectA Bit_2 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         -- set bit3
@@ -212,7 +214,7 @@ singleByteMainRegsIXCB =
         , ( 0xDB, ( \offset z80_main -> SetBitIndirectWithCopy Bit_3 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xDC, ( \offset z80_main -> SetBitIndirectWithCopy Bit_3 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xDD, ( \offset z80_main -> SetBitIndirectWithCopy Bit_3 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0xDE, ( \offset z80_main -> IndirectBitSet Bit_3 (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0xDE, ( \offset main -> IndirectBitSet Bit_3 (\z80_main -> z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xDF, ( \offset z80_main -> SetBitIndirectA Bit_3 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         -- set bit4
@@ -222,7 +224,7 @@ singleByteMainRegsIXCB =
         , ( 0xE3, ( \offset z80_main -> SetBitIndirectWithCopy Bit_4 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xE4, ( \offset z80_main -> SetBitIndirectWithCopy Bit_4 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xE5, ( \offset z80_main -> SetBitIndirectWithCopy Bit_4 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0xE6, ( \offset z80_main -> IndirectBitSet Bit_4 (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0xE6, ( \offset main -> IndirectBitSet Bit_4 (\z80_main -> z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xE7, ( \offset z80_main -> SetBitIndirectA Bit_4 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         -- set bit5
@@ -232,7 +234,7 @@ singleByteMainRegsIXCB =
         , ( 0xEB, ( \offset z80_main -> SetBitIndirectWithCopy Bit_5 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xEC, ( \offset z80_main -> SetBitIndirectWithCopy Bit_5 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xED, ( \offset z80_main -> SetBitIndirectWithCopy Bit_5 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0xEE, ( \offset z80_main -> IndirectBitSet Bit_5 (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0xEE, ( \offset main -> IndirectBitSet Bit_5 (\z80_main -> z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xEF, ( \offset z80_main -> SetBitIndirectA Bit_5 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         -- set bit6
@@ -242,7 +244,7 @@ singleByteMainRegsIXCB =
         , ( 0xF3, ( \offset z80_main -> SetBitIndirectWithCopy Bit_6 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xF4, ( \offset z80_main -> SetBitIndirectWithCopy Bit_6 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xF5, ( \offset z80_main -> SetBitIndirectWithCopy Bit_6 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0xF6, ( \offset z80_main -> IndirectBitSet Bit_6 (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0xF6, ( \offset main -> IndirectBitSet Bit_6 (\z80_main -> z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xF7, ( \offset z80_main -> SetBitIndirectA Bit_6 (z80_main.ix + byte offset), TwentyThreeTStates ) )
 
         -- set bit7
@@ -252,91 +254,91 @@ singleByteMainRegsIXCB =
         , ( 0xFB, ( \offset z80_main -> SetBitIndirectWithCopy Bit_7 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xFC, ( \offset z80_main -> SetBitIndirectWithCopy Bit_7 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xFD, ( \offset z80_main -> SetBitIndirectWithCopy Bit_7 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
-        , ( 0xFE, ( \offset z80_main -> IndirectBitSet Bit_7 (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        , ( 0xFE, ( \offset main -> IndirectBitSet Bit_7 (\z80_main -> z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0xFF, ( \offset z80_main -> SetBitIndirectA Bit_7 (z80_main.ix + byte offset), TwentyThreeTStates ) )
         ]
 
 
-singleByteMainRegsIYCB : Dict Int ( Int -> MainWithIndexRegisters -> RegisterFlagChange, InstructionDuration )
+singleByteMainRegsIYCB : Dict Int ( Int -> MainWithIndexRegisters -> CBRegisterFlagChange, InstructionDuration )
 singleByteMainRegsIYCB =
     Dict.fromList
         [ --shifter0
-          ( 0x00, ( \offset z80_main -> RegisterIndirectWithShifter Shifter0 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x01, ( \offset z80_main -> RegisterIndirectWithShifter Shifter0 ChangeMainC (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x02, ( \offset z80_main -> RegisterIndirectWithShifter Shifter0 ChangeMainD (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x03, ( \offset z80_main -> RegisterIndirectWithShifter Shifter0 ChangeMainE (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x04, ( \offset z80_main -> RegisterIndirectWithShifter Shifter0 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x05, ( \offset z80_main -> RegisterIndirectWithShifter Shifter0 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
+          ( 0x00, ( \offset z80_main -> RegisterIndirectWithShifter shifter0 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x01, ( \offset z80_main -> RegisterIndirectWithShifter shifter0 ChangeMainC (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x02, ( \offset z80_main -> RegisterIndirectWithShifter shifter0 ChangeMainD (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x03, ( \offset z80_main -> RegisterIndirectWithShifter shifter0 ChangeMainE (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x04, ( \offset z80_main -> RegisterIndirectWithShifter shifter0 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x05, ( \offset z80_main -> RegisterIndirectWithShifter shifter0 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x06, ( \offset z80_main -> RegisterChangeIndexShifter Shifter0 (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x07, ( \offset z80_main -> FlagsIndirectWithShifter Shifter0 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         --shifter1
-        , ( 0x08, ( \offset z80_main -> RegisterIndirectWithShifter Shifter1 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x09, ( \offset z80_main -> RegisterIndirectWithShifter Shifter1 ChangeMainC (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x0A, ( \offset z80_main -> RegisterIndirectWithShifter Shifter1 ChangeMainD (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x0B, ( \offset z80_main -> RegisterIndirectWithShifter Shifter1 ChangeMainE (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x0C, ( \offset z80_main -> RegisterIndirectWithShifter Shifter1 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x0D, ( \offset z80_main -> RegisterIndirectWithShifter Shifter1 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x08, ( \offset z80_main -> RegisterIndirectWithShifter shifter1 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x09, ( \offset z80_main -> RegisterIndirectWithShifter shifter1 ChangeMainC (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x0A, ( \offset z80_main -> RegisterIndirectWithShifter shifter1 ChangeMainD (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x0B, ( \offset z80_main -> RegisterIndirectWithShifter shifter1 ChangeMainE (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x0C, ( \offset z80_main -> RegisterIndirectWithShifter shifter1 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x0D, ( \offset z80_main -> RegisterIndirectWithShifter shifter1 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x0E, ( \offset z80_main -> RegisterChangeIndexShifter Shifter1 (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x0F, ( \offset z80_main -> FlagsIndirectWithShifter Shifter1 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         --shifter2
-        , ( 0x10, ( \offset z80_main -> RegisterIndirectWithShifter Shifter2 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x11, ( \offset z80_main -> RegisterIndirectWithShifter Shifter2 ChangeMainC (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x12, ( \offset z80_main -> RegisterIndirectWithShifter Shifter2 ChangeMainD (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x13, ( \offset z80_main -> RegisterIndirectWithShifter Shifter2 ChangeMainE (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x14, ( \offset z80_main -> RegisterIndirectWithShifter Shifter2 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x15, ( \offset z80_main -> RegisterIndirectWithShifter Shifter2 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x10, ( \offset z80_main -> RegisterIndirectWithShifter shifter2 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x11, ( \offset z80_main -> RegisterIndirectWithShifter shifter2 ChangeMainC (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x12, ( \offset z80_main -> RegisterIndirectWithShifter shifter2 ChangeMainD (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x13, ( \offset z80_main -> RegisterIndirectWithShifter shifter2 ChangeMainE (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x14, ( \offset z80_main -> RegisterIndirectWithShifter shifter2 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x15, ( \offset z80_main -> RegisterIndirectWithShifter shifter2 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x16, ( \offset z80_main -> RegisterChangeIndexShifter Shifter2 (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x17, ( \offset z80_main -> FlagsIndirectWithShifter Shifter2 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         --shifter3
-        , ( 0x18, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x19, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeMainC (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x1A, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeMainD (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x1B, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeMainE (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x1C, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x1D, ( \offset z80_main -> RegisterIndirectWithShifter Shifter3 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x18, ( \offset z80_main -> RegisterIndirectWithShifter shifter3 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x19, ( \offset z80_main -> RegisterIndirectWithShifter shifter3 ChangeMainC (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x1A, ( \offset z80_main -> RegisterIndirectWithShifter shifter3 ChangeMainD (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x1B, ( \offset z80_main -> RegisterIndirectWithShifter shifter3 ChangeMainE (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x1C, ( \offset z80_main -> RegisterIndirectWithShifter shifter3 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x1D, ( \offset z80_main -> RegisterIndirectWithShifter shifter3 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x1E, ( \offset z80_main -> RegisterChangeIndexShifter Shifter3 (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x1F, ( \offset z80_main -> FlagsIndirectWithShifter Shifter3 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         --shifter4
-        , ( 0x20, ( \offset z80_main -> RegisterIndirectWithShifter Shifter4 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x21, ( \offset z80_main -> RegisterIndirectWithShifter Shifter4 ChangeMainC (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x22, ( \offset z80_main -> RegisterIndirectWithShifter Shifter4 ChangeMainD (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x23, ( \offset z80_main -> RegisterIndirectWithShifter Shifter4 ChangeMainE (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x24, ( \offset z80_main -> RegisterIndirectWithShifter Shifter4 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x25, ( \offset z80_main -> RegisterIndirectWithShifter Shifter4 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x20, ( \offset z80_main -> RegisterIndirectWithShifter shifter4 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x21, ( \offset z80_main -> RegisterIndirectWithShifter shifter4 ChangeMainC (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x22, ( \offset z80_main -> RegisterIndirectWithShifter shifter4 ChangeMainD (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x23, ( \offset z80_main -> RegisterIndirectWithShifter shifter4 ChangeMainE (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x24, ( \offset z80_main -> RegisterIndirectWithShifter shifter4 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x25, ( \offset z80_main -> RegisterIndirectWithShifter shifter4 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x26, ( \offset z80_main -> RegisterChangeIndexShifter Shifter4 (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x27, ( \offset z80_main -> FlagsIndirectWithShifter Shifter4 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         --shifter5
-        , ( 0x28, ( \offset z80_main -> RegisterIndirectWithShifter Shifter5 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x29, ( \offset z80_main -> RegisterIndirectWithShifter Shifter5 ChangeMainC (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x2A, ( \offset z80_main -> RegisterIndirectWithShifter Shifter5 ChangeMainD (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x2B, ( \offset z80_main -> RegisterIndirectWithShifter Shifter5 ChangeMainE (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x2C, ( \offset z80_main -> RegisterIndirectWithShifter Shifter5 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x2D, ( \offset z80_main -> RegisterIndirectWithShifter Shifter5 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x28, ( \offset z80_main -> RegisterIndirectWithShifter shifter5 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x29, ( \offset z80_main -> RegisterIndirectWithShifter shifter5 ChangeMainC (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x2A, ( \offset z80_main -> RegisterIndirectWithShifter shifter5 ChangeMainD (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x2B, ( \offset z80_main -> RegisterIndirectWithShifter shifter5 ChangeMainE (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x2C, ( \offset z80_main -> RegisterIndirectWithShifter shifter5 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x2D, ( \offset z80_main -> RegisterIndirectWithShifter shifter5 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x2E, ( \offset z80_main -> RegisterChangeIndexShifter Shifter5 (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x2F, ( \offset z80_main -> FlagsIndirectWithShifter Shifter5 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         --shifter6
-        , ( 0x30, ( \offset z80_main -> RegisterIndirectWithShifter Shifter6 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x31, ( \offset z80_main -> RegisterIndirectWithShifter Shifter6 ChangeMainC (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x32, ( \offset z80_main -> RegisterIndirectWithShifter Shifter6 ChangeMainD (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x33, ( \offset z80_main -> RegisterIndirectWithShifter Shifter6 ChangeMainE (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x34, ( \offset z80_main -> RegisterIndirectWithShifter Shifter6 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x35, ( \offset z80_main -> RegisterIndirectWithShifter Shifter6 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x30, ( \offset z80_main -> RegisterIndirectWithShifter shifter6 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x31, ( \offset z80_main -> RegisterIndirectWithShifter shifter6 ChangeMainC (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x32, ( \offset z80_main -> RegisterIndirectWithShifter shifter6 ChangeMainD (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x33, ( \offset z80_main -> RegisterIndirectWithShifter shifter6 ChangeMainE (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x34, ( \offset z80_main -> RegisterIndirectWithShifter shifter6 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x35, ( \offset z80_main -> RegisterIndirectWithShifter shifter6 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x36, ( \offset z80_main -> RegisterChangeIndexShifter Shifter6 (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x37, ( \offset z80_main -> FlagsIndirectWithShifter Shifter6 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         --shifter7
-        , ( 0x38, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x39, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ChangeMainC (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x3A, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ChangeMainD (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x3B, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ChangeMainE (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x3C, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0x3D, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x38, ( \offset z80_main -> RegisterIndirectWithShifter shifter7 ChangeMainB (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x39, ( \offset z80_main -> RegisterIndirectWithShifter shifter7 ChangeMainC (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x3A, ( \offset z80_main -> RegisterIndirectWithShifter shifter7 ChangeMainD (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x3B, ( \offset z80_main -> RegisterIndirectWithShifter shifter7 ChangeMainE (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x3C, ( \offset z80_main -> RegisterIndirectWithShifter shifter7 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0x3D, ( \offset z80_main -> RegisterIndirectWithShifter shifter7 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x3E, ( \offset z80_main -> RegisterChangeIndexShifter Shifter7 (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0x3F, ( \offset z80_main -> FlagsIndirectWithShifter Shifter7 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
@@ -427,7 +429,7 @@ singleByteMainRegsIYCB =
         , ( 0xC3, ( \offset z80_main -> SetBitIndirectWithCopy Bit_0 ChangeMainE (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xC4, ( \offset z80_main -> SetBitIndirectWithCopy Bit_0 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xC5, ( \offset z80_main -> SetBitIndirectWithCopy Bit_0 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0xC6, ( \offset z80_main -> IndirectBitSet Bit_0 (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0xC6, ( \offset main -> IndirectBitSet Bit_0 (\z80_main -> z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xC7, ( \offset z80_main -> SetBitIndirectA Bit_0 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         -- set bit1
@@ -437,7 +439,7 @@ singleByteMainRegsIYCB =
         , ( 0xCB, ( \offset z80_main -> SetBitIndirectWithCopy Bit_1 ChangeMainE (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xCC, ( \offset z80_main -> SetBitIndirectWithCopy Bit_1 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xCD, ( \offset z80_main -> SetBitIndirectWithCopy Bit_1 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0xCE, ( \offset z80_main -> IndirectBitSet Bit_1 (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0xCE, ( \offset main -> IndirectBitSet Bit_1 (\z80_main -> z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xCF, ( \offset z80_main -> SetBitIndirectA Bit_1 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         -- set bit2
@@ -447,7 +449,7 @@ singleByteMainRegsIYCB =
         , ( 0xD3, ( \offset z80_main -> SetBitIndirectWithCopy Bit_2 ChangeMainE (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xD4, ( \offset z80_main -> SetBitIndirectWithCopy Bit_2 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xD5, ( \offset z80_main -> SetBitIndirectWithCopy Bit_2 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0xD6, ( \offset z80_main -> IndirectBitSet Bit_2 (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0xD6, ( \offset main -> IndirectBitSet Bit_2 (\z80_main -> z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xD7, ( \offset z80_main -> SetBitIndirectA Bit_2 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         -- set bit3
@@ -457,7 +459,7 @@ singleByteMainRegsIYCB =
         , ( 0xDB, ( \offset z80_main -> SetBitIndirectWithCopy Bit_3 ChangeMainE (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xDC, ( \offset z80_main -> SetBitIndirectWithCopy Bit_3 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xDD, ( \offset z80_main -> SetBitIndirectWithCopy Bit_3 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0xDE, ( \offset z80_main -> IndirectBitSet Bit_3 (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0xDE, ( \offset main -> IndirectBitSet Bit_3 (\z80_main -> z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xDF, ( \offset z80_main -> SetBitIndirectA Bit_3 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         -- set bit4
@@ -467,7 +469,7 @@ singleByteMainRegsIYCB =
         , ( 0xE3, ( \offset z80_main -> SetBitIndirectWithCopy Bit_4 ChangeMainE (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xE4, ( \offset z80_main -> SetBitIndirectWithCopy Bit_4 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xE5, ( \offset z80_main -> SetBitIndirectWithCopy Bit_4 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0xE6, ( \offset z80_main -> IndirectBitSet Bit_4 (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0xE6, ( \offset main -> IndirectBitSet Bit_4 (\z80_main -> z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xE7, ( \offset z80_main -> SetBitIndirectA Bit_4 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         -- set bit5
@@ -477,7 +479,7 @@ singleByteMainRegsIYCB =
         , ( 0xEB, ( \offset z80_main -> SetBitIndirectWithCopy Bit_5 ChangeMainE (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xEC, ( \offset z80_main -> SetBitIndirectWithCopy Bit_5 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xED, ( \offset z80_main -> SetBitIndirectWithCopy Bit_5 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0xEE, ( \offset z80_main -> IndirectBitSet Bit_5 (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0xEE, ( \offset main -> IndirectBitSet Bit_5 (\z80_main -> z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xEF, ( \offset z80_main -> SetBitIndirectA Bit_5 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         -- set bit6
@@ -487,7 +489,7 @@ singleByteMainRegsIYCB =
         , ( 0xF3, ( \offset z80_main -> SetBitIndirectWithCopy Bit_6 ChangeMainE (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xF4, ( \offset z80_main -> SetBitIndirectWithCopy Bit_6 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xF5, ( \offset z80_main -> SetBitIndirectWithCopy Bit_6 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0xF6, ( \offset z80_main -> IndirectBitSet Bit_6 (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0xF6, ( \offset main -> IndirectBitSet Bit_6 (\z80_main -> z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xF7, ( \offset z80_main -> SetBitIndirectA Bit_6 (z80_main.iy + byte offset), TwentyThreeTStates ) )
 
         -- set bit7
@@ -497,7 +499,7 @@ singleByteMainRegsIYCB =
         , ( 0xFB, ( \offset z80_main -> SetBitIndirectWithCopy Bit_7 ChangeMainE (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xFC, ( \offset z80_main -> SetBitIndirectWithCopy Bit_7 ChangeMainH (z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xFD, ( \offset z80_main -> SetBitIndirectWithCopy Bit_7 ChangeMainL (z80_main.iy + byte offset), TwentyThreeTStates ) )
-        , ( 0xFE, ( \offset z80_main -> IndirectBitSet Bit_7 (z80_main.iy + byte offset), TwentyThreeTStates ) )
+        , ( 0xFE, ( \offset main -> IndirectBitSet Bit_7 (\z80_main -> z80_main.iy + byte offset), TwentyThreeTStates ) )
         , ( 0xFF, ( \offset z80_main -> SetBitIndirectA Bit_7 (z80_main.iy + byte offset), TwentyThreeTStates ) )
         ]
 
@@ -546,13 +548,13 @@ singleEnvMainRegsIYCB =
     makeEnvMainDict .iy
 
 
-resetIXbit : BitTest -> Int -> MainWithIndexRegisters -> RegisterFlagChange
-resetIXbit bitMask offset z80_main =
+resetIXbit : BitTest -> Int -> MainWithIndexRegisters -> CBRegisterFlagChange
+resetIXbit bitMask offset _ =
     -- case 0x81: C=C&~(1<<o); break;
-    IndirectBitReset bitMask ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF)
+    IndirectBitReset bitMask (\z80_main -> (z80_main.ix + byte offset) |> Bitwise.and 0xFFFF)
 
 
-resetIYbit : BitTest -> Int -> MainWithIndexRegisters -> RegisterFlagChange
-resetIYbit bitMask offset z80_main =
+resetIYbit : BitTest -> Int -> MainWithIndexRegisters -> CBRegisterFlagChange
+resetIYbit bitMask offset _ =
     -- case 0x81: C=C&~(1<<o); break;
-    IndirectBitReset bitMask ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF)
+    IndirectBitReset bitMask (\z80_main -> (z80_main.iy + byte offset) |> Bitwise.and 0xFFFF)
