@@ -1,5 +1,6 @@
 module CB88Test exposing (..)
 
+import Array
 import Dict
 import Expect exposing (Expectation)
 import Test exposing (..)
@@ -42,7 +43,7 @@ suite =
             { z80env = z80.env, time = clock.clockTime }
 
         z80rom =
-            Z80Rom.constructor Dict.empty
+            Z80Rom.constructor Array.empty
     in
     describe "Bit instructions (CB)"
         [ test "0xCB 88 RES 1,B" <|
