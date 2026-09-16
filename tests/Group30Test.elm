@@ -1,5 +1,6 @@
 module Group30Test exposing (..)
 
+import Array
 import Bitwise
 import Dict
 import Expect exposing (Expectation)
@@ -36,7 +37,7 @@ suite =
             z80.main
 
         z80rom =
-            Z80Rom.constructor Dict.empty
+            Z80Rom.constructor Array.empty
     in
     describe "Z80.execute_instruction"
         -- Nest as many descriptions as you like.

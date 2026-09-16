@@ -1,5 +1,6 @@
 module Group40Test exposing (..)
 
+import Array
 import Dict
 import Expect exposing (Expectation)
 import Test exposing (..)
@@ -33,7 +34,7 @@ suite =
             z80.main
 
         z80rom =
-            Z80Rom.constructor Dict.empty
+            Z80Rom.constructor Array.empty
     in
     describe "Z80.execute_instruction"
         [ test "0x40 LD B,B (NOOP)" <|

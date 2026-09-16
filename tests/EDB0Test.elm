@@ -1,5 +1,6 @@
 module EDB0Test exposing (..)
 
+import Array
 import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict
 import Expect exposing (Expectation)
@@ -45,7 +46,7 @@ suite =
             { z80env = z80.env, time = clock.clockTime }
 
         z80rom =
-            Z80Rom.constructor Dict.empty
+            Z80Rom.constructor Array.empty
     in
     describe "ED instructions"
         [ describe "ED B0"

@@ -1,6 +1,5 @@
 module LoadingModel exposing (..)
 
-import Dict exposing (Dict)
 import Http
 import MessageHandler exposing (bytesToRom)
 import Qaop exposing (Qaop)
@@ -8,6 +7,7 @@ import QaopModel exposing (QaopMessage, QaopModel, tapLoad)
 import Spectrum
 import Time exposing (Posix, millisToPosix)
 import Z80Debug exposing (debugLog)
+import Z80Rom exposing (Z80ROM)
 
 
 type alias LoadingModel =
@@ -17,7 +17,7 @@ type alias LoadingModel =
 
 
 type InitMessage
-    = GotRom (Result Http.Error (Dict Int Int))
+    = GotRom (Result Http.Error Z80ROM)
 
 
 type LoadResult

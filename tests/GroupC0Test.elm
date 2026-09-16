@@ -1,5 +1,6 @@
 module GroupC0Test exposing (..)
 
+import Array
 import Bitwise exposing (shiftRightBy)
 import Dict
 import Expect
@@ -43,7 +44,7 @@ suite =
             z80.main
 
         z80rom =
-            Z80Rom.constructor Dict.empty
+            Z80Rom.constructor Array.empty
     in
     describe "Z80.execute_instruction"
         -- Nest as many descriptions as you like.

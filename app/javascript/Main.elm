@@ -9,6 +9,7 @@ import Browser
 import Html exposing (Attribute, Html, div)
 import LoadingModel exposing (Flags, InitMessage(..), LoadResult(..), LoadingModel, loadingInit, updateLoading)
 import QaopModel exposing (QaopMessage, QaopModel, qaopSubs, updateQaop, viewQaop)
+import Z80Debug exposing (debugLog)
 
 
 
