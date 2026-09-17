@@ -1,6 +1,7 @@
 module Group40Test exposing (..)
 
 import Array
+import CpuTimeCTime exposing (reset_cpu_time)
 import Dict
 import Expect exposing (Expectation)
 import Test exposing (..)
@@ -28,7 +29,7 @@ suite =
             z80.flags
 
         z80env =
-            { z80env = z80.env, time = clock.clockTime }
+            { z80env = z80.env, time = reset_cpu_time }
 
         z80main =
             z80.main
@@ -53,7 +54,7 @@ suite =
                             }
                             |> Triple.dropFirst
                 in
-                Expect.equal ( addr + 1, 4 ) ( new_pc, clockTime.cpu_time - clock.clockTime.cpu_time )
+                Expect.equal ( addr + 1, 4 ) ( new_pc, clockTime.cpu_time - reset_cpu_time.cpu_time )
         , test "0x41 LD B,C" <|
             \_ ->
                 let
@@ -341,7 +342,7 @@ suite =
                             }
                             |> Triple.dropFirst
                 in
-                Expect.equal ( addr + 1, 4 ) ( new_pc, clockTime.cpu_time - clock.clockTime.cpu_time )
+                Expect.equal ( addr + 1, 4 ) ( new_pc, clockTime.cpu_time - reset_cpu_time.cpu_time )
         , test "0x4A LD C,D" <|
             \_ ->
                 let

@@ -1,6 +1,7 @@
 module Z80Test exposing (..)
 
 import Array
+import CpuTimeCTime exposing (reset_cpu_time)
 import Dict
 import Expect
 import Test exposing (..)
@@ -32,7 +33,7 @@ suite =
             z80.env
 
         envwithtime =
-            { z80env = z80env, time = clock.clockTime }
+            { z80env = z80env, time = reset_cpu_time }
 
         z80main =
             z80.main

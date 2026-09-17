@@ -1,6 +1,7 @@
 module CB40Test exposing (..)
 
 import Array
+import CpuTimeCTime exposing (reset_cpu_time)
 import Dict
 import Expect exposing (Expectation)
 import Test exposing (..)
@@ -43,7 +44,7 @@ suite =
             z80.flags
 
         z80env =
-            { z80env = z80.env, time = clock.clockTime }
+            { z80env = z80.env, time = reset_cpu_time }
 
         z80rom =
             Z80Rom.constructor Array.empty
@@ -135,7 +136,7 @@ suite =
                                 |> Triple.dropSecond
 
                         --mem_value =
-                        --    new_z80.env |> mem 0x6545 clock.clockTime z80rom
+                        --    new_z80.env |> mem 0x6545 reset_cpu_time z80rom
                     in
                     Expect.equal ( addr + 4, 0x74 ) ( new_pc, new_z80.flags |> getFlags )
             ]

@@ -1,6 +1,7 @@
 module GroupD0Test exposing (..)
 
 import Array
+import CpuTimeCTime exposing (reset_cpu_time)
 import Dict
 import Expect
 import Test exposing (..)
@@ -34,7 +35,7 @@ suite =
             { old_z80 | env = { old_z80env | sp = sp } }
 
         z80env =
-            { z80env = z80.env, time = clock.clockTime }
+            { z80env = z80.env, time = reset_cpu_time }
 
         z80main =
             z80.main
@@ -294,10 +295,10 @@ suite =
                             |> Triple.dropSecond
 
                     lo_value =
-                        getMem8 0xFF75 clock.clockTime z80rom new_z80.env |> Tuple.first
+                        getMem8 0xFF75 reset_cpu_time z80rom new_z80.env |> Tuple.first
 
                     hi_value =
-                        getMem8 0xFF76 clock.clockTime z80rom new_z80.env |> Tuple.first
+                        getMem8 0xFF76 reset_cpu_time z80rom new_z80.env |> Tuple.first
                 in
                 Expect.equal { pc = 0x18, sp = 0xFF75, lowmem = 1, highmem = 0x80 } { sp = new_z80.env.sp, pc = new_pc, lowmem = lo_value, highmem = hi_value }
         ]
