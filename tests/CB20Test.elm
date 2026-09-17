@@ -2,7 +2,6 @@ module CB20Test exposing (..)
 
 import Array
 import CpuTimeCTime exposing (reset_cpu_time)
-import Dict
 import Expect exposing (Expectation)
 import Test exposing (..)
 import Triple
