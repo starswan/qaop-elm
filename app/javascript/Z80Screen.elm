@@ -115,7 +115,7 @@ mapScanLine globalFlash v32 =
                         else
                             ScreenData raw.colour [ raw.data ] :: list
 
-                    _ ->
+                    [] ->
                         [ ScreenData raw.colour [ raw.data ] ]
             )
             []
@@ -141,7 +141,7 @@ mapScanLine globalFlash v32 =
                                             else
                                                 item :: list
 
-                                        _ ->
+                                        [] ->
                                             List.singleton item
                                 )
                                 []

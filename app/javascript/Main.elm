@@ -3,13 +3,22 @@
 --
 
 
-module Main exposing (..)
+port module Main exposing (..)
 
 import Browser
+import Delay
 import Html exposing (Attribute, Html, div)
+import Json.Encode
 import LoadingModel exposing (Flags, InitMessage(..), LoadResult(..), LoadingModel, loadingInit, updateLoading)
 import QaopModel exposing (QaopMessage, QaopModel, qaopSubs, updateQaop, viewQaop)
+import Round
+import Spectrum exposing (Spectrum)
+import WebAudio
+import WebAudio.Property
 import Z80Debug exposing (debugLog)
+
+
+port toWebAudio : Json.Encode.Value -> Cmd msg
 
 
 
@@ -105,10 +114,50 @@ update message model =
 
                 Running qaopModel ->
                     let
-                        ( x, y ) =
+                        ( qmodel, cmd ) =
                             updateQaop qaopMessage qaopModel
+
+                        newCmds =
+                            cmd |> Cmd.map RunningMessage
+
+                        audioCmds =
+                            if qmodel.qaop.spectrum.audioFrequency /= qaopModel.qaop.spectrum.audioFrequency then
+                                let
+                                    audios =
+                                        audio qmodel
+
+                                    newaudioCmds =
+                                        audios
+                                            |> Json.Encode.list WebAudio.encode
+                                            |> toWebAudio
+                                in
+                                Cmd.batch [ newCmds, newaudioCmds ]
+
+                            else
+                                newCmds
                     in
-                    ( { model | state = Running x }, y |> Cmd.map RunningMessage )
+                    ( { model | state = Running qmodel }
+                    , audioCmds
+                    )
+
+
+audio : QaopModel -> List WebAudio.Node
+audio model =
+    case model.qaop.spectrum.audioFrequency of
+        Just freq ->
+            let
+                osc =
+                    --WebAudio.oscillator
+                    --    [ WebAudio.Property.frequency freq ]
+                    --    [ WebAudio.gain [ WebAudio.Property.gain 1.0 ] [ WebAudio.audioDestination ] ]
+                    WebAudio.oscillator
+                        [ WebAudio.Property.frequency freq ]
+                        [ WebAudio.audioDestination ]
+            in
+            debugLog "Frequency" ( model.elapsed_millis, Round.round 2 freq ) [ osc ]
+
+        Nothing ->
+            debugLog "Silence" model.elapsed_millis []
 
 
 subscriptions : Model -> Sub Message

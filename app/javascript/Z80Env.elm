@@ -9,7 +9,7 @@ import Bitwise
 import CpuTimeCTime exposing (CTime(..), CpuTimeAnd16BitValue, CpuTimeAndValue, CpuTimeCTime, CpuTimeSpAnd16BitValue, cont, cont1, cont_port)
 import Dict exposing (Dict)
 import Keyboard exposing (Keyboard, z80_keyboard_input)
-import Utils exposing (shiftRightBy8)
+import Utils exposing (shiftRightBy8, toHexString)
 import Z80Debug exposing (debugLog)
 
 
@@ -17,6 +17,7 @@ type alias Z80Env =
     { ram : Dict Int Int
     , sp : Int
     , borderColour : Int
+    , speaker : Bool
     }
 
 
@@ -27,7 +28,7 @@ type alias Z80EnvWithTime =
 
 
 z80env_constructor =
-    Z80Env Dict.empty 0 7
+    Z80Env Dict.empty 0 7 False
 
 
 setRam : Int -> Int -> Z80Env -> Z80Env
@@ -39,7 +40,7 @@ setRam addr value z80env =
     --    --    else
     --    --       Nothing
     --    --in
-    { sp = z80env.sp, borderColour = z80env.borderColour, ram = z80env.ram |> Dict.insert addr value }
+    { sp = z80env.sp, borderColour = z80env.borderColour, ram = z80env.ram |> Dict.insert addr value, speaker = z80env.speaker }
 
 
 
@@ -261,7 +262,7 @@ setMem16 addr value time_input z80env =
 --	}
 
 
-z80_out : Int -> Int -> CpuTimeCTime -> Z80Env -> ( Z80Env, CpuTimeCTime )
+z80_out : Int -> Int -> CpuTimeCTime -> Z80Env -> ( Z80Env, CpuTimeCTime, Bool )
 z80_out portnum value clockTime env_in =
     let
         newTime =
@@ -271,15 +272,23 @@ z80_out portnum value clockTime env_in =
         let
             border =
                 value |> Bitwise.and 0x07
+
+            speaker =
+                (value |> Bitwise.and 0x10) /= 0
+
+            blip =
+                not env_in.speaker && speaker
         in
         if border /= env_in.borderColour then
-            ( debugLog "border" (border |> String.fromInt) { env_in | borderColour = border }, newTime )
+            ( debugLog "border" border { env_in | borderColour = border, speaker = speaker }, newTime, blip )
+            --else if speaker /= env_in.speaker then
+            --    ( debugLog "speaker" clockTime.cpu_time { env_in | borderColour = border, speaker = speaker }, newTime, blip )
 
         else
-            ( env_in, newTime )
+            ( env_in, newTime, blip )
 
     else
-        ( env_in, newTime )
+        ( env_in, newTime, False )
 
 
 z80_in : Int -> Keyboard -> CpuTimeCTime -> Z80Env -> CpuTimeAndValue
