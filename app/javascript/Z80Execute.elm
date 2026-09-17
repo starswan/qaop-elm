@@ -1156,7 +1156,7 @@ applyEdRegisterDelta clockTime z80changeData rom48k z80_core =
                 new_bc =
                     main_2 |> get_bc
 
-                ( env2, newTime2 ) =
+                ( env2, newTime2, blip ) =
                     z80_core.env |> z80_out new_bc outvalue newTime
 
                 flags =
