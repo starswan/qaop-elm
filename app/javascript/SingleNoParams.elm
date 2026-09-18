@@ -1,11 +1,11 @@
 module SingleNoParams exposing (..)
 
 import Bitwise exposing (shiftRightBy)
-import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), c_TIME_LIMIT)
+import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), addCpuTimeTime, c_TIME_LIMIT)
 import Dict exposing (Dict)
 import RegisterChange exposing (Pop16(..), RegisterFlagChange(..))
 import Z80Core exposing (CoreChange(..), Z80Core)
-import Z80CoreWithClockTime exposing (Z80, add_cpu_time)
+import Z80CoreWithClockTime exposing (Z80)
 
 
 singleWithNoParam : Dict Int ( RegisterFlagChange, InstructionDuration )
@@ -75,8 +75,8 @@ singleWithNoParamFD =
         ]
 
 
-ex_af : Z80 -> Z80
-ex_af z80 =
+ex_af : ( Z80, CpuTimeCTime ) -> ( Z80, CpuTimeCTime )
+ex_af ( z80, clockTime ) =
     -- called by Spectrum loader
     let
         clock =
@@ -85,14 +85,16 @@ ex_af z80 =
         core =
             clock.core
     in
-    { z80
+    ( { z80
         | coreWithClock = { clock | core = { core | flags = z80.alt_flags } }
         , alt_flags = core.flags
-    }
+      }
+    , clockTime
+    )
 
 
-exx : Z80 -> Z80
-exx z80 =
+exx : ( Z80, CpuTimeCTime ) -> ( Z80, CpuTimeCTime )
+exx ( z80, clockTime ) =
     -- case 0xD9: exx(); break;
     let
         clock =
@@ -107,14 +109,16 @@ exx z80 =
         alt =
             z80.alt_main
     in
-    { z80
+    ( { z80
         | coreWithClock = { clock | core = { core | main = { main | b = alt.b, c = alt.c, d = alt.d, e = alt.e, hl = alt.hl } } }
         , alt_main = { alt | b = main.b, c = main.c, d = main.d, e = main.e, hl = main.hl }
-    }
+      }
+    , clockTime
+    )
 
 
-execute_0x76_halt : Z80 -> Z80
-execute_0x76_halt z80 =
+execute_0x76_halt : ( Z80, CpuTimeCTime ) -> ( Z80, CpuTimeCTime )
+execute_0x76_halt ( z80, clockTime ) =
     -- case 0x76: halt(); break;    --
     --	private void halt()
     --	{
@@ -129,8 +133,6 @@ execute_0x76_halt z80 =
         clock =
             z80.coreWithClock
 
-        --z80_core =
-        --    clock.core |> debugLog "halt" ""
         z80_core =
             clock.core
 
@@ -138,14 +140,14 @@ execute_0x76_halt z80 =
             z80_core.interrupts
 
         n =
-            shiftRightBy 2 (c_TIME_LIMIT - clock.clockTime.cpu_time + 3)
+            shiftRightBy 2 (c_TIME_LIMIT - clockTime.cpu_time + 3)
 
-        new_core =
+        ( new_core, extraClock ) =
             if n > 0 then
                 -- turns out env.halt(n, r) just returns n...?
-                { clock | core = { z80_core | interrupts = { interrupts | halted = True, r = interrupts.r + n } } } |> add_cpu_time (4 * n)
+                ( { clock | core = { z80_core | interrupts = { interrupts | halted = True, r = interrupts.r + n } } }, clockTime |> addCpuTimeTime (4 * n) )
 
             else
-                { clock | core = { z80_core | interrupts = { interrupts | halted = True } } }
+                ( { clock | core = { z80_core | interrupts = { interrupts | halted = True } } }, clockTime )
     in
-    { z80 | coreWithClock = new_core }
+    ( { z80 | coreWithClock = new_core }, extraClock )
