@@ -145,10 +145,9 @@ audio model =
                     [ WebAudio.oscillator
                         [ WebAudio.Property.frequency freq ]
                         [ WebAudio.audioDestination
-
-                        --, WebAudio.delay
-                        --    [ WebAudio.Property.delayTime 1 ]
-                        --    [ WebAudio.audioDestination ]
+                        , WebAudio.delay
+                            [ WebAudio.Property.delayTime 1 ]
+                            [ WebAudio.audioDestination ]
                         ]
                     ]
             in
