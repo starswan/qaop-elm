@@ -13,7 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const contextFactory = window.AudioContext || window.webkitAudioContext;
   const ctx = new contextFactory();
-  const virtualCtx = new VirtualAudioContext(ctx, { autostart: true });
+  // we don't need autostart, its running by default
+  const virtualCtx = new VirtualAudioContext(ctx);
 
   const app = Elm.Main.init({
     node: target,
@@ -21,7 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
   })
 
   app.ports.toWebAudio.subscribe((nodes) => {
-    // console.log("port output " + nodes.length);
+    console.log("port output " + nodes.length);
+     // console.log("port output " + ctx.state);
     virtualCtx.update(nodes);
   });
 
