@@ -129,7 +129,7 @@ update message model =
 
                                     newaudioCmds =
                                         if audios |> List.isEmpty then
-                                            Delay.after 3000 SilenceMessage
+                                            Delay.after 30000 SilenceMessage
 
                                         else
                                             audios
