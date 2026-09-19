@@ -205,7 +205,7 @@ viewQaop model tickInterval =
                     )
                 ]
             , button [ onClick Autoload, disabled load_disabled ]
-                [ text "Load"
+                [ span [ id "load" ] [ text "Load" ]
                 ]
             ]
         , div
