@@ -6,6 +6,7 @@
 port module Main exposing (..)
 
 import Browser
+import Delay
 import Html exposing (Attribute, Html, div)
 import Json.Encode
 import LoadingModel exposing (Flags, InitMessage(..), LoadResult(..), LoadingModel, loadingInit, updateLoading)
@@ -62,6 +63,7 @@ type alias Model =
 type Message
     = LoadingMessage InitMessage
     | RunningMessage QaopMessage
+    | SilenceMessage
 
 
 init : Flags -> ( Model, Cmd Message )
@@ -121,18 +123,42 @@ update message model =
 
                         audioCmds =
                             if qmodel.qaop.spectrum.audioFrequency /= qaopModel.qaop.spectrum.audioFrequency then
-                                Cmd.batch
-                                    [ newCmds
-                                    , audio qmodel
-                                        |> Json.Encode.list WebAudio.encode
-                                        |> toWebAudio
-                                    ]
+                                let
+                                    audios =
+                                        audio qmodel
+
+                                    newaudioCmds =
+                                        if audios |> List.isEmpty then
+                                            Delay.after 3000 SilenceMessage
+
+                                        else
+                                            audios
+                                                |> Json.Encode.list WebAudio.encode
+                                                |> toWebAudio
+                                in
+                                Cmd.batch [ newCmds, newaudioCmds ]
 
                             else
                                 newCmds
                     in
                     ( { model | state = Running qmodel }
                     , audioCmds
+                    )
+
+        SilenceMessage ->
+            case model.state of
+                Loading _ ->
+                    ( model, Cmd.none )
+
+                Running qaopModel ->
+                    let
+                        nothing =
+                            debugLog "Turning off " qaopModel.elapsed_millis []
+                    in
+                    ( model
+                    , nothing
+                        |> Json.Encode.list WebAudio.encode
+                        |> toWebAudio
                     )
 
 
@@ -145,9 +171,10 @@ audio model =
                     [ WebAudio.oscillator
                         [ WebAudio.Property.frequency freq ]
                         [ WebAudio.audioDestination
-                        , WebAudio.delay
-                            [ WebAudio.Property.delayTime 1 ]
-                            [ WebAudio.audioDestination ]
+
+                        --, WebAudio.delay
+                        --    [ WebAudio.Property.delayTime 1 ]
+                        --    [ WebAudio.audioDestination ]
                         ]
                     ]
             in
