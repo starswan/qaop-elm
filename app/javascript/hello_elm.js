@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
   })
 
   app.ports.toWebAudio.subscribe((nodes) => {
-    console.log("port output " + nodes.length);
+    // console.log("port output " + nodes.length);
     virtualCtx.update(nodes);
   });
 
