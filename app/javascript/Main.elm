@@ -149,13 +149,7 @@ audio model =
                 osc =
                     WebAudio.oscillator
                         [ WebAudio.Property.frequency freq ]
-                        [ WebAudio.gain [ WebAudio.Property.gain 1.0 ] [ WebAudio.audioDestination ]
-
-                        --, WebAudio.audioDestination
-                        --, WebAudio.delay
-                        --    [ WebAudio.Property.delayTime 1 ]
-                        --    [ WebAudio.audioDestination ]
-                        ]
+                        [ WebAudio.gain [ WebAudio.Property.gain 1.0 ] [ WebAudio.audioDestination ] ]
             in
             debugLog "Frequency" ( model.elapsed_millis, Round.round 2 freq ) [ osc ]
 

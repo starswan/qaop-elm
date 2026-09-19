@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const contextFactory = window.AudioContext || window.webkitAudioContext;
   const ctx = new contextFactory();
-  const virtualCtx = new VirtualAudioContext(ctx);
+  const virtualCtx = new VirtualAudioContext(ctx, { autostart: true });
 
   const app = Elm.Main.init({
     node: target,
