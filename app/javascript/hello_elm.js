@@ -11,7 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const rom = target.dataset.rom;
   const timeInMillis = parseInt(target.dataset.timeinmillis, 10);
 
-  const ctx = new AudioContext();
+  const contextFactory = window.AudioContext || window.webkitAudioContext;
+  const ctx = new contextFactory();
   const virtualCtx = new VirtualAudioContext(ctx);
 
   const app = Elm.Main.init({
@@ -20,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
   })
 
   app.ports.toWebAudio.subscribe((nodes) => {
+    console.log("port output " + nodes.length);
     virtualCtx.update(nodes);
   });
 

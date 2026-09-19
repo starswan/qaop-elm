@@ -63,7 +63,6 @@ type alias Model =
 type Message
     = LoadingMessage InitMessage
     | RunningMessage QaopMessage
-    | SilenceMessage
 
 
 init : Flags -> ( Model, Cmd Message )
@@ -128,13 +127,9 @@ update message model =
                                         audio qmodel
 
                                     newaudioCmds =
-                                        if audios |> List.isEmpty then
-                                            Delay.after 30000 SilenceMessage
-
-                                        else
-                                            audios
-                                                |> Json.Encode.list WebAudio.encode
-                                                |> toWebAudio
+                                        audios
+                                            |> Json.Encode.list WebAudio.encode
+                                            |> toWebAudio
                                 in
                                 Cmd.batch [ newCmds, newaudioCmds ]
 
@@ -145,40 +140,24 @@ update message model =
                     , audioCmds
                     )
 
-        SilenceMessage ->
-            case model.state of
-                Loading _ ->
-                    ( model, Cmd.none )
-
-                Running qaopModel ->
-                    let
-                        nothing =
-                            debugLog "Turning off " qaopModel.elapsed_millis []
-                    in
-                    ( model
-                    , nothing
-                        |> Json.Encode.list WebAudio.encode
-                        |> toWebAudio
-                    )
-
 
 audio : QaopModel -> List WebAudio.Node
 audio model =
     case model.qaop.spectrum.audioFrequency of
         Just freq ->
             let
-                nodeList =
-                    [ WebAudio.oscillator
+                osc =
+                    WebAudio.oscillator
                         [ WebAudio.Property.frequency freq ]
-                        [ WebAudio.audioDestination
+                        [ WebAudio.gain [ WebAudio.Property.gain 1.0 ] [ WebAudio.audioDestination ]
 
+                        --, WebAudio.audioDestination
                         --, WebAudio.delay
                         --    [ WebAudio.Property.delayTime 1 ]
                         --    [ WebAudio.audioDestination ]
                         ]
-                    ]
             in
-            debugLog "Frequency" ( model.elapsed_millis, Round.round 2 freq ) nodeList
+            debugLog "Frequency" ( model.elapsed_millis, Round.round 2 freq ) [ osc ]
 
         Nothing ->
             debugLog "Silence" model.elapsed_millis []
