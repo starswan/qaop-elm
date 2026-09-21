@@ -1,14 +1,17 @@
 module Z80Ram exposing (..)
 
+import Array exposing (Array)
+import Bitwise exposing (shiftRightBy)
 import Dict exposing (Dict)
 import ScreenStorage exposing (Z80Screen, getScreenValue, setScreenValue)
+import Z80Debug exposing (debugTodo)
 import Z80MemoryDict exposing (Z80MemoryDict, getMemValue, setMemValue)
 
 
 type alias Z80Ram =
     { screen : Z80Screen
     , ula_ram : Z80MemoryDict
-    , bank2 : Z80MemoryDict
+    , bank2 : Array (Array Int)
     , bank3 : Z80MemoryDict
     }
 
@@ -20,7 +23,7 @@ constructor =
             List.repeat (16384 - 6912) 0 |> Z80MemoryDict.constructor
 
         ram2 =
-            List.repeat 16384 0 |> Z80MemoryDict.constructor
+            Array.repeat 16 (Array.repeat 1024 0)
 
         ram3 =
             List.repeat 16384 0 |> Z80MemoryDict.constructor
@@ -42,7 +45,27 @@ getRamValue addr z80ram =
             z80ram.screen |> getScreenValue addr
 
     else if addr < 32768 then
-        z80ram.bank2 |> getMemValue (addr - 16384)
+        let
+            raw =
+                addr - 16384
+
+            list =
+                raw |> shiftRightBy 10
+
+            index =
+                raw |> Bitwise.and 0x03FF
+        in
+        case z80ram.bank2 |> Array.get list of
+            Just array ->
+                case array |> Array.get index of
+                    Just a ->
+                        a
+
+                    Nothing ->
+                        debugTodo "rambank2 getRamValue" (addr |> String.fromInt) -1
+
+            Nothing ->
+                debugTodo "rambank2 getRamValue" (addr |> String.fromInt) -1
 
     else
         z80ram.bank3 |> getMemValue (addr - 32768)
@@ -65,7 +88,26 @@ foldDictIntoRam ramdict z80_ram =
                         { z80ram | screen = z80ram.screen |> setScreenValue addr value }
 
                 else if addr < 32768 then
-                    { z80ram | bank2 = z80ram.bank2 |> setMemValue (addr - 16384) value }
+                    let
+                        raw =
+                            addr - 16384
+
+                        list =
+                            raw |> shiftRightBy 10
+
+                        index =
+                            raw |> Bitwise.and 0x03FF
+                    in
+                    case z80ram.bank2 |> Array.get list of
+                        Just array ->
+                            let
+                                new =
+                                    array |> Array.set index value
+                            in
+                            { z80ram | bank2 = z80ram.bank2 |> Array.set list new }
+
+                        Nothing ->
+                            debugTodo "rambank2 set" (addr |> String.fromInt) z80ram
 
                 else
                     { z80ram | bank3 = z80ram.bank3 |> setMemValue (addr - 32768) value }
