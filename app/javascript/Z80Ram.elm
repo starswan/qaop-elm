@@ -31,6 +31,49 @@ constructor =
     Z80Ram ScreenStorage.constructor ula ram2 ram3
 
 
+getNestedRamValue : Int -> Array (Array Int) -> Int
+getNestedRamValue raw bank =
+    let
+        list =
+            raw |> shiftRightBy 10
+
+        index =
+            raw |> Bitwise.and 0x03FF
+    in
+    case bank |> Array.get list of
+        Just array ->
+            case array |> Array.get index of
+                Just a ->
+                    a
+
+                Nothing ->
+                    debugTodo "rambank2 getRamValue" (raw |> String.fromInt) -1
+
+        Nothing ->
+            debugTodo "rambank2 getRamValue" (raw |> String.fromInt) -1
+
+
+setNestedRamValue : Int -> Int -> Array (Array Int) -> Array (Array Int)
+setNestedRamValue raw value bank =
+    let
+        list =
+            raw |> shiftRightBy 10
+
+        index =
+            raw |> Bitwise.and 0x03FF
+    in
+    case bank |> Array.get list of
+        Just array ->
+            let
+                new =
+                    array |> Array.set index value
+            in
+            bank |> Array.set list new
+
+        Nothing ->
+            debugTodo "rambank2 set" (raw |> String.fromInt) bank
+
+
 getRamValue : Int -> Z80Ram -> Int
 getRamValue addr z80ram =
     if addr < 16384 then
@@ -45,27 +88,7 @@ getRamValue addr z80ram =
             z80ram.screen |> getScreenValue addr
 
     else if addr < 32768 then
-        let
-            raw =
-                addr - 16384
-
-            list =
-                raw |> shiftRightBy 10
-
-            index =
-                raw |> Bitwise.and 0x03FF
-        in
-        case z80ram.bank2 |> Array.get list of
-            Just array ->
-                case array |> Array.get index of
-                    Just a ->
-                        a
-
-                    Nothing ->
-                        debugTodo "rambank2 getRamValue" (addr |> String.fromInt) -1
-
-            Nothing ->
-                debugTodo "rambank2 getRamValue" (addr |> String.fromInt) -1
+        z80ram.bank2 |> getNestedRamValue (addr - 16384)
 
     else
         z80ram.bank3 |> getMemValue (addr - 32768)
@@ -88,26 +111,7 @@ foldDictIntoRam ramdict z80_ram =
                         { z80ram | screen = z80ram.screen |> setScreenValue addr value }
 
                 else if addr < 32768 then
-                    let
-                        raw =
-                            addr - 16384
-
-                        list =
-                            raw |> shiftRightBy 10
-
-                        index =
-                            raw |> Bitwise.and 0x03FF
-                    in
-                    case z80ram.bank2 |> Array.get list of
-                        Just array ->
-                            let
-                                new =
-                                    array |> Array.set index value
-                            in
-                            { z80ram | bank2 = z80ram.bank2 |> Array.set list new }
-
-                        Nothing ->
-                            debugTodo "rambank2 set" (addr |> String.fromInt) z80ram
+                    { z80ram | bank2 = z80ram.bank2 |> setNestedRamValue (addr - 16384) value }
 
                 else
                     { z80ram | bank3 = z80ram.bank3 |> setMemValue (addr - 32768) value }
