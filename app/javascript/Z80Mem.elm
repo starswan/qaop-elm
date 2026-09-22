@@ -2,10 +2,9 @@ module Z80Mem exposing (..)
 
 import Bitwise exposing (shiftRightBy)
 import CpuTimeCTime exposing (CTime(..), CpuTimeAnd16BitValue, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAnd16BitValue, CpuTimeSpAnd16BitValue, addCpuTimeTime, cont, cont1)
-import Dict
 import Utils exposing (shiftLeftBy8)
 import Z80Env exposing (Z80Env)
-import Z80Ram exposing (getRamValue)
+import Z80Ram exposing (getRamValue, ramDictGet)
 import Z80Rom exposing (Z80ROM, getROMValue)
 
 
@@ -283,7 +282,7 @@ z80_pop z80rom clockTime z80_env =
 
 getRamValue : Int -> Z80ROM -> Z80Env -> Int
 getRamValue addr z80rom z80env =
-    case z80env.ram |> Dict.get addr of
+    case z80env.ram |> ramDictGet addr of
         Just a ->
             a
 
