@@ -7,11 +7,10 @@ module Z80Env exposing (..)
 
 import Bitwise
 import CpuTimeCTime exposing (CTime(..), CpuTimeAnd16BitValue, CpuTimeAndValue, CpuTimeCTime, CpuTimeSpAnd16BitValue, cont, cont1, cont_port)
-import Dict exposing (Dict)
 import Keyboard exposing (Keyboard, z80_keyboard_input)
 import Utils exposing (shiftRightBy8)
 import Z80Debug exposing (debugLog)
-import Z80Ram exposing (RamDict)
+import Z80Ram exposing (RamDict, emptyRamDict, ramDictInsert)
 
 
 type alias Z80Env =
@@ -28,14 +27,14 @@ type alias Z80EnvWithTime =
 
 
 z80env_constructor =
-    Z80Env { ramDict = Dict.empty } 0 7
+    Z80Env emptyRamDict 0 7
 
 
 setRam : Int -> Int -> Z80Env -> Z80Env
 setRam addr value z80env =
     let
         ramDict =
-            z80env.ram.ramDict |> Dict.insert addr value
+            z80env.ram |> ramDictInsert addr value
 
         --    --ram_value = getValue addr z80env.ram
         --    --n = if addr == 0x1CB6 || addr == 0x1CB7 then
@@ -43,7 +42,7 @@ setRam addr value z80env =
         --    --    else
         --    --       Nothing
     in
-    { sp = z80env.sp, borderColour = z80env.borderColour, ram = { ramDict = ramDict } }
+    { sp = z80env.sp, borderColour = z80env.borderColour, ram = ramDict }
 
 
 
@@ -125,11 +124,11 @@ setMem z80_addr value time_input z80env =
                     --    ( z80env, new_time )
                     --else
                     --( z80env |> setRam addr value, new_time )
-                    ( { z80env | ram = { ramDict = z80env.ram.ramDict |> Dict.insert addr value } }, new_time )
+                    ( { z80env | ram = z80env.ram |> ramDictInsert addr value }, new_time )
 
             else
                 --( z80env |> setRam addr value, NoCont )
-                ( { z80env | ram = { ramDict = z80env.ram.ramDict |> Dict.insert addr value } }, NoCont )
+                ( { z80env | ram = z80env.ram |> ramDictInsert addr value }, NoCont )
     in
     ( new_env, { z80env_time | ctime = ctime } )
 

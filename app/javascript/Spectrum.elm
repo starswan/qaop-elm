@@ -15,7 +15,7 @@ import Z80Debug exposing (debugLog)
 import Z80Env exposing (Z80Env, setMemIgnoringTime)
 import Z80Flags exposing (c_FC, c_FZ, getFlags, setFlags)
 import Z80Mem exposing (getMem8, mem16, z80_pop)
-import Z80Ram exposing (foldDictIntoRam)
+import Z80Ram exposing (emptyRamDict, foldDictIntoRam)
 import Z80Rom exposing (Z80ROM)
 import Z80Tape exposing (TapePosition, Z80Tape)
 import Z80Types exposing (get_de)
@@ -368,7 +368,7 @@ frames keys speccy =
                                 { new_rom | z80ram = newRam }
 
                         new_core =
-                            { core_2 | env = { env_2 | ram = { ramDict = Dict.empty } } }
+                            { core_2 | env = { env_2 | ram = emptyRamDict } }
                     in
                     { load = False
                     , z80 = { new_z80 | coreWithClock = { clock_2 | core = new_core } }
