@@ -1,6 +1,7 @@
 module CB70Test exposing (..)
 
 import Array
+import CpuTimeCTime exposing (reset_cpu_time)
 import Dict
 import Expect exposing (Expectation)
 import Test exposing (..)
@@ -45,7 +46,7 @@ suite =
             z80.flags
 
         z80env =
-            { z80env = z80.env |> setMem addr 0xCB clock.clockTime |> Tuple.first, time = clock.clockTime }
+            { z80env = z80.env |> setMem addr 0xCB reset_cpu_time |> Tuple.first, time = reset_cpu_time }
 
         z80rom =
             Z80Rom.constructor Array.empty

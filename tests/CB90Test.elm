@@ -1,6 +1,7 @@
 module CB90Test exposing (..)
 
 import Array
+import CpuTimeCTime exposing (reset_cpu_time)
 import Dict
 import Expect exposing (Expectation)
 import Test exposing (..)
@@ -39,7 +40,7 @@ suite =
             { old_z80 | env = { old_z80env | sp = sp }, main = { z80main | hl = hl } }
 
         z80env =
-            { z80env = z80.env, time = clock.clockTime }
+            { z80env = z80.env, time = reset_cpu_time }
 
         z80rom =
             Z80Rom.constructor Array.empty

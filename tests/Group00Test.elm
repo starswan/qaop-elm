@@ -1,7 +1,7 @@
 module Group00Test exposing (..)
 
 import Array
-import CpuTimeCTime exposing (InstructionDuration(..))
+import CpuTimeCTime exposing (InstructionDuration(..), reset_cpu_time)
 import Dict
 import Expect exposing (Expectation)
 import PCIncrement exposing (PCIncrement(..))
@@ -33,7 +33,7 @@ suite =
             z80.flags
 
         z80env =
-            { z80env = z80.env, time = clock.clockTime }
+            { z80env = z80.env, time = reset_cpu_time }
 
         z80main =
             z80.main
@@ -52,7 +52,7 @@ suite =
                                 |> Z80.executeCoreInstruction z80rom addr
                                 |> Triple.dropFirst
                     in
-                    Expect.equal ( addr + 1, 4 ) ( new_pc, clockTime.cpu_time - clock.clockTime.cpu_time )
+                    Expect.equal ( addr + 1, 4 ) ( new_pc, clockTime.cpu_time - reset_cpu_time.cpu_time )
             , test "length NOP" <|
                 \_ ->
                     let
@@ -91,7 +91,7 @@ suite =
                         ( new_z80, new_pc ) =
                             z80inc |> Z80.executeCoreInstruction z80rom addr |> Triple.dropSecond
                     in
-                    Expect.equal ( addr + 1, 0x27 ) ( new_pc, new_z80.env |> getMem8 0x4534 clock.clockTime z80rom |> Tuple.first )
+                    Expect.equal ( addr + 1, 0x27 ) ( new_pc, new_z80.env |> getMem8 0x4534 reset_cpu_time z80rom |> Tuple.first )
             , test "length LD (BC),A" <|
                 \_ ->
                     let
