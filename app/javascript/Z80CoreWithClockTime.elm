@@ -13,7 +13,6 @@ import Z80Types exposing (MainRegisters)
 
 type alias Z80CoreWithClockTime =
     { core : Z80Core
-    , clockTime : CpuTimeCTime
     , pc : Int
     }
 
@@ -31,11 +30,8 @@ constructor =
         --    FlagRegisters 0 0 0 0 0
         interrupts =
             Interrupts.InterruptRegisters IM0 False 0 0
-
-        time =
-            reset_cpu_time
     in
-    Z80CoreWithClockTime (Z80Core z80env_constructor main flags interrupts) time 0
+    Z80CoreWithClockTime (Z80Core z80env_constructor main flags interrupts) 0
 
 
 type alias Z80 =
@@ -46,13 +42,14 @@ type alias Z80 =
     }
 
 
-add_cpu_time : Int -> Z80CoreWithClockTime -> Z80CoreWithClockTime
-add_cpu_time value z80 =
-    let
-        env =
-            z80.clockTime |> addCpuTimeTime value
-    in
-    { z80 | clockTime = env }
+
+--add_cpu_time : Int -> Z80CoreWithClockTime -> Z80CoreWithClockTime
+--add_cpu_time value z80 =
+--    let
+--        env =
+--            z80.clockTime |> addCpuTimeTime value
+--    in
+--    { z80 | clockTime = env }
 
 
 im0 : Int -> Z80 -> Z80
@@ -71,6 +68,9 @@ im0 bus z80 =
 interrupt : Int -> Z80ROM -> Z80 -> Z80
 interrupt bus rom48k full_z80 =
     let
+        clockTime =
+            reset_cpu_time
+
         z80Clock =
             full_z80.coreWithClock
 
@@ -90,13 +90,16 @@ interrupt bus rom48k full_z80 =
                 { z80_core | interrupts = { ints | halted = False } }
 
             pushed =
-                z80_1.env |> z80_push z80Clock.pc z80Clock.clockTime
+                z80_1.env |> z80_push z80Clock.pc clockTime
 
             new_core =
                 { z80_1 | env = pushed }
 
             newClock =
-                { z80Clock | core = new_core, clockTime = z80Clock.clockTime |> addCpuTimeTime 6 }
+                { z80Clock | core = new_core }
+
+            newClockTime =
+                clockTime |> addCpuTimeTime 6
 
             new_z80 =
                 { full_z80 | coreWithClock = newClock, iff = IFF_0 }
@@ -119,10 +122,13 @@ interrupt bus rom48k full_z80 =
                         Bitwise.or new_ir bus
 
                     env_and_pc =
-                        new_core.env |> mem16 addr rom48k newClock.clockTime
+                        new_core.env |> mem16 addr rom48k newClockTime
 
                     newClock1 =
-                        { newClock | pc = env_and_pc.value16, core = new_core, clockTime = env_and_pc.time |> addCpuTimeTime 6 }
+                        { newClock | pc = env_and_pc.value16, core = new_core }
+
+                    --newClockTime1 =
+                    --    env_and_pc.time |> addCpuTimeTime 6
                 in
                 { new_z80 | coreWithClock = newClock1 }
 
@@ -180,13 +186,13 @@ get_ei z80 =
     z80.iff == IFF_3
 
 
-di_0xF3 : Z80 -> Z80
-di_0xF3 full_z80 =
+di_0xF3 : ( Z80, CpuTimeCTime ) -> ( Z80, CpuTimeCTime )
+di_0xF3 ( full_z80, clockTime ) =
     -- case 0xF3: IFF=0; break;
-    { full_z80 | iff = IFF_0 }
+    ( { full_z80 | iff = IFF_0 }, clockTime )
 
 
-ei_0xFB : Z80 -> Z80
-ei_0xFB full_z80 =
+ei_0xFB : ( Z80, CpuTimeCTime ) -> ( Z80, CpuTimeCTime )
+ei_0xFB ( full_z80, clockTime ) =
     --    -- case 0xFB: IFF=3; break;
-    { full_z80 | iff = IFF_3 }
+    ( { full_z80 | iff = IFF_3 }, clockTime )

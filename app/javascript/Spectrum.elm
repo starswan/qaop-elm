@@ -1,6 +1,5 @@
 module Spectrum exposing (..)
 
-import Array exposing (Array)
 import Bitwise exposing (complement, shiftRightBy)
 import CpuTimeCTime exposing (reset_cpu_time)
 import Dict exposing (Dict)
@@ -10,7 +9,7 @@ import SpectrumColour exposing (intToBorderColour)
 import Tapfile exposing (Tapfile, tapfileDataToList)
 import Utils exposing (char, shiftLeftBy8, shiftRightBy8, toHexString, toHexString2)
 import Vector8
-import Z80 exposing (execute)
+import Z80 exposing (executeWhile)
 import Z80CoreWithClockTime exposing (Z80, get_ei, interrupt)
 import Z80Debug exposing (debugLog)
 import Z80Env exposing (Z80Env, setMemIgnoringTime)
@@ -20,10 +19,6 @@ import Z80Ram exposing (foldDictIntoRam)
 import Z80Rom exposing (Z80ROM)
 import Z80Tape exposing (TapePosition, Z80Tape)
 import Z80Types exposing (get_de)
-
-
-type alias Audio =
-    {}
 
 
 type alias Tape =
@@ -41,26 +36,19 @@ type alias Tape =
 --	private static final int REFRESH_END = 99999;
 --	final int scrchg[] = new int[24];	// where the picture changed
 --	private int refrs_t, refrs_a, refrs_b, refrs_s;
-
-
-type alias ScreenRefresh =
-    { scrchg : List Int
-    , refrs_t : Int
-    , refrs_a : Int
-    , refrs_b : Int
-    , refrs_s : Int
-    }
-
-
-type alias BorderRefresh =
-    { bordchg : Int
-    , refrb_t : Int
-    , refrb_x : Int
-    , refrb_y : Int
-    }
-
-
-
+--type alias ScreenRefresh =
+--    { scrchg : List Int
+--    , refrs_t : Int
+--    , refrs_a : Int
+--    , refrs_b : Int
+--    , refrs_s : Int
+--    }
+--type alias BorderRefresh =
+--    { bordchg : Int
+--    , refrb_t : Int
+--    , refrb_x : Int
+--    , refrb_y : Int
+--    }
 --new_screen_refresh : ScreenRefresh
 --new_screen_refresh =
 --    let
@@ -135,6 +123,7 @@ type alias Spectrum =
     , loading : Bool
     , want_pause : Int
     , tape : Maybe Z80Tape
+    , audioFrequency : Maybe Float
 
     --, --audio: Audio,
     --screen_refresh : ScreenRefresh
@@ -146,7 +135,7 @@ constructor : Z80ROM -> Spectrum
 constructor z80rom =
     --Spectrum Z80.constructor True 1 Nothing Audio new_screen_refresh new_border_refresh
     --Spectrum Z80.constructor (Z80Rom.constructor z80rom) True False 1 Nothing new_screen_refresh new_border_refresh
-    Spectrum Z80.constructor z80rom True False 1 Nothing
+    Spectrum Z80.constructor z80rom True False 1 Nothing Nothing
 
 
 
@@ -265,18 +254,11 @@ constructor z80rom =
 frames : List KeyEvent -> Spectrum -> Spectrum
 frames keys speccy =
     let
-        --tap = 0
-        --tend = False
         sz80 =
             speccy.cpu
 
-        clock =
-            sz80.coreWithClock
-
-        --core =
-        --    clock.core
         clock_1 =
-            { clock | clockTime = reset_cpu_time }
+            sz80.coreWithClock
 
         compiledRom =
             speccy.rom48k
@@ -289,9 +271,6 @@ frames keys speccy =
 
         cpu1 =
             { sz80
-              -- time_limit is a constant
-              --| time_limit = c_FRSTART + c_FRTIME
-              --  | core = { core | env = { env | keyboard = keys |> update_keyboard } }
                 | coreWithClock = clock_1
             }
 
@@ -316,11 +295,8 @@ frames keys speccy =
                                 ( new_z80, z80_load, tape_position ) =
                                     doLoad z80 rom z80_tape
 
-                                core_2 =
-                                    new_z80.coreWithClock.core
-
                                 env_2 =
-                                    core_2.env
+                                    new_z80.coreWithClock.core.env
 
                                 newRam =
                                     rom.z80ram |> foldDictIntoRam env_2.ram
@@ -328,17 +304,17 @@ frames keys speccy =
                                 rom_2 =
                                     { new_rom | z80ram = newRam }
                             in
-                            { load = z80_load, z80 = new_z80, pos = Just tape_position, rom = rom_2 }
+                            { load = z80_load, z80 = new_z80, pos = Just tape_position, rom = rom_2, audioFrequency = Nothing }
 
                         Nothing ->
-                            { load = False, z80 = z80, pos = Nothing, rom = new_rom }
+                            { load = False, z80 = z80, pos = Nothing, rom = new_rom, audioFrequency = Nothing }
 
                 Nothing ->
                     let
-                        new_z80 =
+                        ( new_z80, audioFrequency ) =
                             cpu1
                                 |> interrupt 0xFF rom
-                                |> execute compiledRom
+                                |> executeWhile compiledRom
 
                         clock_2 =
                             new_z80.coreWithClock
@@ -375,19 +351,20 @@ frames keys speccy =
                     , z80 = { new_z80 | coreWithClock = { clock_2 | core = new_core } }
                     , pos = Nothing
                     , rom = rom_2
+                    , audioFrequency = audioFrequency
                     }
     in
     case speccy.tape of
         Just z80_tape ->
             case loadz80posrom.pos of
                 Just newPosition ->
-                    { speccy | rom48k = loadz80posrom.rom, loading = loadz80posrom.load, cpu = loadz80posrom.z80, tape = Just { z80_tape | tapePos = newPosition } }
+                    { speccy | rom48k = loadz80posrom.rom, loading = loadz80posrom.load, cpu = loadz80posrom.z80, tape = Just { z80_tape | tapePos = newPosition }, audioFrequency = loadz80posrom.audioFrequency }
 
                 Nothing ->
-                    { speccy | rom48k = loadz80posrom.rom, loading = loadz80posrom.load, cpu = loadz80posrom.z80, tape = Just z80_tape }
+                    { speccy | rom48k = loadz80posrom.rom, loading = loadz80posrom.load, cpu = loadz80posrom.z80, tape = Just z80_tape, audioFrequency = loadz80posrom.audioFrequency }
 
         Nothing ->
-            { speccy | rom48k = loadz80posrom.rom, loading = loadz80posrom.load, cpu = loadz80posrom.z80 }
+            { speccy | rom48k = loadz80posrom.rom, loading = loadz80posrom.load, cpu = loadz80posrom.z80, audioFrequency = loadz80posrom.audioFrequency }
 
 
 
@@ -1097,14 +1074,17 @@ checkLoad spectrum =
             sp1 =
                 cpu.coreWithClock.core.env.sp
 
+            clockTime =
+                reset_cpu_time
+
             ( pc, sp ) =
                 if pc1 >= 0x05E3 then
                     let
                         ( pc2, sp2 ) =
-                            ( cpu.coreWithClock.core.env |> mem16 sp1 spectrum.rom48k cpu.coreWithClock.clockTime |> .value16, char sp1 + 2 )
+                            ( cpu.coreWithClock.core.env |> mem16 sp1 spectrum.rom48k clockTime |> .value16, char sp1 + 2 )
                     in
                     if pc2 == 0x05E6 then
-                        ( cpu.coreWithClock.core.env |> mem16 sp2 spectrum.rom48k cpu.coreWithClock.clockTime |> .value16, char sp2 + 2 )
+                        ( cpu.coreWithClock.core.env |> mem16 sp2 spectrum.rom48k clockTime |> .value16, char sp2 + 2 )
 
                     else
                         ( pc2, sp2 )
@@ -1132,7 +1112,7 @@ checkLoad spectrum =
                 new_cpu =
                     { cpu | coreWithClock = { clock | core = { core | env = new_env } } }
             in
-            Just (new_cpu |> ex_af)
+            Just (( new_cpu, reset_cpu_time ) |> ex_af |> Tuple.first)
 
 
 
@@ -1296,6 +1276,9 @@ doLoad2 full_cpu z80rom tape =
     let
         cpu =
             full_cpu.coreWithClock
+
+        clockTime =
+            reset_cpu_time
 
         z80_core =
             cpu.core
@@ -1477,12 +1460,12 @@ doLoad2 full_cpu z80rom tape =
                                             data_a_rf_break =
                                                 if not a_rf_f_break_3.break && not a_rf_f_break_3.continue then
                                                     if Bitwise.and a_rf_f_break_3.f c_FC /= 0 then
-                                                        { a_rf_f_break_3 | z80_env = state.z80_env |> setMemIgnoringTime state.ix l cpu.clockTime }
+                                                        { a_rf_f_break_3 | z80_env = state.z80_env |> setMemIgnoringTime state.ix l clockTime }
 
                                                     else
                                                         let
                                                             new_a =
-                                                                Bitwise.xor (getMem8 state.ix cpu.clockTime z80rom z80_core.env |> Tuple.first) l
+                                                                Bitwise.xor (getMem8 state.ix clockTime z80rom z80_core.env |> Tuple.first) l
                                                         in
                                                         if new_a /= 0 then
                                                             { a_rf_f_break_3 | a = new_a, rf = Just 0, break = True }
@@ -1550,7 +1533,7 @@ doLoad2 full_cpu z80rom tape =
                         Just rf ->
                             let
                                 popped =
-                                    tapeData.z80_env |> z80_pop z80rom cpu.clockTime
+                                    tapeData.z80_env |> z80_pop z80rom clockTime
 
                                 logged =
                                     "rf " ++ (rf |> toHexString2) ++ " pc " ++ (popped.value16 |> toHexString2) ++ " a " ++ (tapeData.a |> toHexString2)
