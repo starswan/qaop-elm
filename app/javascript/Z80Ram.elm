@@ -12,7 +12,7 @@ type alias Z80Ram =
     { screen : Z80Screen
     , ula_ram : Z80MemoryDict
     , bank2 : Array (Array Int)
-    , bank3 : Z80MemoryDict
+    , bank3 : Array (Array Int)
     }
 
 
@@ -24,11 +24,8 @@ constructor =
 
         ram2 =
             Array.repeat 16 (Array.repeat 1024 0)
-
-        ram3 =
-            List.repeat 16384 0 |> Z80MemoryDict.constructor
     in
-    Z80Ram ScreenStorage.constructor ula ram2 ram3
+    Z80Ram ScreenStorage.constructor ula ram2 ram2
 
 
 getNestedRamValue : Int -> Array (Array Int) -> Int
@@ -91,7 +88,7 @@ getRamValue addr z80ram =
         z80ram.bank2 |> getNestedRamValue (addr - 16384)
 
     else
-        z80ram.bank3 |> getMemValue (addr - 32768)
+        z80ram.bank3 |> getNestedRamValue (addr - 32768)
 
 
 foldDictIntoRam : Dict Int Int -> Z80Ram -> Z80Ram
@@ -114,6 +111,6 @@ foldDictIntoRam ramdict z80_ram =
                     { z80ram | bank2 = z80ram.bank2 |> setNestedRamValue (addr - 16384) value }
 
                 else
-                    { z80ram | bank3 = z80ram.bank3 |> setMemValue (addr - 32768) value }
+                    { z80ram | bank3 = z80ram.bank3 |> setNestedRamValue (addr - 32768) value }
             )
             z80_ram
