@@ -283,7 +283,7 @@ z80_pop z80rom clockTime z80_env =
 
 getRamValue : Int -> Z80ROM -> Z80Env -> Int
 getRamValue addr z80rom z80env =
-    case z80env.ram |> Dict.get addr of
+    case z80env.ram.ramDict |> Dict.get addr of
         Just a ->
             a
 

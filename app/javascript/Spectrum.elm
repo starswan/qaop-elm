@@ -1,6 +1,5 @@
 module Spectrum exposing (..)
 
-import Array exposing (Array)
 import Bitwise exposing (complement, shiftRightBy)
 import CpuTimeCTime exposing (reset_cpu_time)
 import Dict exposing (Dict)
@@ -369,7 +368,7 @@ frames keys speccy =
                                 { new_rom | z80ram = newRam }
 
                         new_core =
-                            { core_2 | env = { env_2 | ram = Dict.empty } }
+                            { core_2 | env = { env_2 | ram = { ramDict = Dict.empty } } }
                     in
                     { load = False
                     , z80 = { new_z80 | coreWithClock = { clock_2 | core = new_core } }
