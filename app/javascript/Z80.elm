@@ -305,7 +305,7 @@ applyCoreChange coreChange clockTime pc_inc pc rom48k z80_core =
                         new_env =
                             { ram = env.ram, sp = new_sp, borderColour = env.borderColour }
                     in
-                    { core = { main = z80_core.main, env = new_env, interrupts = z80_core.interrupts, flags = z80_core.flags }, clockTime = clockTime, pc = pcAfter }
+                    ( { core = { main = z80_core.main, env = new_env, interrupts = z80_core.interrupts, flags = z80_core.flags }, pc = pcAfter }, clockTime )
 
         MainWithOffsetAndDelay offset shortDelay z80_main ->
             ( { core = { main = z80_main, env = z80_core.env, flags = z80_core.flags, interrupts = z80_core.interrupts }, pc = (pcAfter + offset) |> Bitwise.and 0xFFFF }, clockTime |> addExtraCpuTime shortDelay )
