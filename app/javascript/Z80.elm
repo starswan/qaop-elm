@@ -21,7 +21,6 @@ import SingleNoParams exposing (ex_af, execute_0x76_halt, exx)
 import Triple
 import Z80Core exposing (CoreChange(..), RareCoreChange(..), RepeatPCOffset(..), Z80Core)
 import Z80CoreWithClockTime exposing (Z80, Z80CoreWithClockTime, di_0xF3, ei_0xFB)
-import Z80Debug exposing (debugLog)
 import Z80Env exposing (Z80Env, setMem, setMem16, z80_out, z80_push, z80env_constructor)
 import Z80Execute exposing (DeltaWithChanges(..), apply_delta)
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
@@ -233,16 +232,6 @@ applyCoreChange coreChange clockTime pc_inc pc rom48k z80_core =
                     in
                     ( { core = { main = z80_core.main, env = env, flags = z80_core.flags, interrupts = z80_core.interrupts }, pc = int }, clockTime |> addExtraCpuTime shortDelay, [] )
 
-                SetStackPointer new_sp ->
-                    let
-                        env =
-                            z80_core.env
-
-                        new_env =
-                            { ram = env.ram, sp = new_sp, borderColour = env.borderColour, speaker = env.speaker }
-                    in
-                    ( { core = { main = z80_core.main, env = new_env, interrupts = z80_core.interrupts, flags = z80_core.flags }, pc = pcAfter }, clockTime, [] )
-
                 Push16BitValue int ->
                     let
                         env =
@@ -319,6 +308,16 @@ applyCoreChange coreChange clockTime pc_inc pc rom48k z80_core =
 
                         NewInterrupts interruptRegisters ->
                             ( { core = { z80_core | interrupts = interruptRegisters }, pc = pcAfter }, clockTime, [] )
+
+                        SetStackPointer new_sp ->
+                            let
+                                env =
+                                    z80_core.env
+
+                                new_env =
+                                    { ram = env.ram, sp = new_sp, borderColour = env.borderColour, speaker = env.speaker }
+                            in
+                            ( { core = { main = z80_core.main, env = new_env, interrupts = z80_core.interrupts, flags = z80_core.flags }, pc = pcAfter }, clockTime, [] )
 
                 MainWithOffsetAndDelay offset shortDelay z80_main ->
                     ( { core = { main = z80_main, env = z80_core.env, flags = z80_core.flags, interrupts = z80_core.interrupts }, pc = (pcAfter + offset) |> Bitwise.and 0xFFFF }, clockTime |> addExtraCpuTime shortDelay, [] )
@@ -624,8 +623,8 @@ executeCoreInstruction rom48k pc z80_core =
         clock =
             { core = z80_core, pc = pc }
 
-        ( newClock, newClockTime, newAudios ) =
-            clock |> executeAndApplyDelta ct.value ct.time IFF_0 rom48k
+        ( newClock, newClockTime ) =
+            clock |> executeAndApplyDelta ct.value ct.time IFF_0 rom48k |> Triple.dropThird
     in
     ( newClock.core, newClockTime, newClock.pc )
 
@@ -684,7 +683,7 @@ stillLooping clockTime =
 
 
 coreLooping : ( ( Z80CoreWithClockTime, CpuTimeCTime, List Audio ), Int, Int ) -> Bool
-coreLooping ( ( _, clockTime, audios ), opCode, _ ) =
+coreLooping ( ( _, clockTime, _ ), opCode, _ ) =
     isCoreOpCode opCode && (clockTime |> stillLooping)
 
 
