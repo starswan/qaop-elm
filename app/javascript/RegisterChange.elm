@@ -3,7 +3,6 @@ module RegisterChange exposing (..)
 import CpuTimeCTime exposing (CpuTimeCTime)
 import Interrupts exposing (InterruptMode)
 import JumpChange exposing (JumpChange)
-import SingleByteWithEnv exposing (SingleByteEnvChange)
 import SingleEnvWithMain exposing (SingleEnvMainChange)
 import SingleWith8BitParameter exposing (Single8BitChange)
 import Utils exposing (BitTest)
@@ -70,7 +69,6 @@ type RegisterFlagChange
     | Rst Int
     | RegisterZ80Change (MainWithIndexRegisters -> FlagRegisters -> Z80Change)
     | IndexedRegisterZ80Change (MainWithIndexRegisters -> FlagRegisters -> IndexedZ80Change)
-    | RegisterSingleByteEnv (Z80Env -> SingleByteEnvChange)
     | RegisterEnvMainChangeWithClockTime (MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange)
     | RegisterEnvMainChange (MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange)
 

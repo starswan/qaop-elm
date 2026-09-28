@@ -20,6 +20,7 @@ type SingleEnvMainChange
     | IndirectBitTest BitTest Int
     | SingleEnvFlagFunc (Int -> FlagRegisters -> FlagRegisters) Int CpuTimeCTime
     | SingleEnvNewHL16BitAdd IXIYHL Int Int
+    | NewSPValue Int
 
 
 singleEnvMainRegs : Dict Int ( MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange, InstructionDuration )
@@ -27,7 +28,9 @@ singleEnvMainRegs =
     Dict.fromList
         [ ( 0x0A, ( ld_a_indirect_bc, SevenTStates ) )
         , ( 0x1A, ( ld_a_indirect_de, SevenTStates ) )
+        , ( 0x33, ( inc_sp, SixTStates ) )
         , ( 0x39, ( add_hl_sp, ElevenTStates ) )
+        , ( 0x3B, ( dec_sp, SixTStates ) )
         , ( 0x46, ( ld_b_indirect_hl, SevenTStates ) )
         , ( 0x4E, ( ld_c_indirect_hl, SevenTStates ) )
         , ( 0x56, ( ld_d_indirect_hl, SevenTStates ) )
@@ -63,6 +66,9 @@ singleEnvMainRegsIY =
 applySingleEnvMainChange : CpuTimeCTime -> SingleEnvMainChange -> Z80ROM -> Z80Core -> CoreChange
 applySingleEnvMainChange clockTime z80changeData rom48k z80 =
     case z80changeData of
+        NewSPValue int ->
+            SetStackPointer int
+
         SingleEnvNewARegister int cpuTimeCTime ->
             let
                 flags =
@@ -334,3 +340,15 @@ add_iy_sp : MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange
 add_iy_sp z80_main rom48k z80_env =
     --case 0x39: xy=add16(xy,SP); break;
     SingleEnvNewHL16BitAdd IY z80_main.iy z80_env.sp
+
+
+inc_sp : MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange
+inc_sp z80_main rom48k clockTime z80_env =
+    -- case 0x33: SP=(char)(SP+1); time+=2; break;
+    NewSPValue (Bitwise.and (z80_env.sp + 1) 0xFFFF)
+
+
+dec_sp : MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange
+dec_sp z80_main rom48k clockTime z80_env =
+    -- case 0x3B: SP=(char)(SP-1); time+=2; break;
+    NewSPValue (Bitwise.and (z80_env.sp - 1) 0xFFFF)

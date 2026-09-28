@@ -7,7 +7,6 @@ import GroupED exposing (adc_hl_sp, cpir, execute_ED70, execute_ED78, inirOtirFl
 import Interrupts exposing (IFFValue(..))
 import JumpChange exposing (JumpChange(..))
 import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), Pop16(..), RegisterFlagChange(..), Shifter(..), SixteenBit(..), TwoByteChange(..))
-import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
 import SingleEnvWithMain exposing (SingleEnvMainChange, applySingleEnvMainChange)
 import SingleWith8BitParameter exposing (Single8BitChange(..), applySimple8BitChange)
 import TripleByte exposing (TripleByteChange(..), TripleByteIndexChange(..), TripleByteJump(..), TripleByteRegister(..))
@@ -280,13 +279,6 @@ applyIndexedPureDelta z80changeData z80 =
 applyRegisterDelta : CpuTimeCTime -> RegisterFlagChange -> Z80ROM -> Z80Core -> CoreChange
 applyRegisterDelta clockTime z80changeData rom48k z80_core =
     case z80changeData of
-        RegisterSingleByteEnv f ->
-            let
-                old_env =
-                    z80_core.env
-            in
-            applyEnvChangeDelta (f old_env)
-
         RegisterEnvMainChange f ->
             let
                 old_env =
