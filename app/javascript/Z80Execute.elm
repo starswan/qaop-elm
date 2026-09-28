@@ -7,7 +7,6 @@ import GroupED exposing (adc_hl_sp, cpir, execute_ED70, execute_ED78, inirOtirFl
 import Interrupts exposing (IFFValue(..))
 import JumpChange exposing (JumpChange(..))
 import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), Pop16(..), RegisterFlagChange(..), Shifter(..), SixteenBit(..), TwoByteChange(..))
-import SingleByteWithEnv exposing (SingleByteEnvChange(..), applyEnvChangeDelta)
 import SingleEnvWithMain exposing (SingleEnvMainChange, applySingleEnvMainChange)
 import SingleWith8BitParameter exposing (Single8BitChange(..), applySimple8BitChange)
 import TripleByte exposing (TripleByteChange(..), TripleByteIndexChange(..), TripleByteJump(..), TripleByteRegister(..))
@@ -280,13 +279,6 @@ applyIndexedPureDelta z80changeData z80 =
 applyRegisterDelta : CpuTimeCTime -> RegisterFlagChange -> Z80ROM -> Z80Core -> CoreChange
 applyRegisterDelta clockTime z80changeData rom48k z80_core =
     case z80changeData of
-        RegisterSingleByteEnv f ->
-            let
-                old_env =
-                    z80_core.env
-            in
-            applyEnvChangeDelta (f old_env)
-
         RegisterEnvMainChange f ->
             let
                 old_env =
@@ -419,7 +411,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
             (z80_core.main |> f) |> Push16BitValue
 
         RegChangeNewSP f ->
-            z80_core.main |> f |> SetStackPointer
+            z80_core.main |> f |> SetStackPointer |> RareChange
 
         IncrementIndirect f ->
             -- This should be a primitive operation on Z80Env to increment a stored value
@@ -840,7 +832,7 @@ applySimpleTripleChangeDelta rom48k cpu_time z80changeData z80 =
     in
     case z80changeData of
         NewSPRegister int ->
-            SetStackPointer int
+            SetStackPointer int |> RareChange
 
         NewHLIndirect int ->
             let
@@ -1004,7 +996,7 @@ applyEdFourByte clockTime z80changeData rom48k z80_core =
                     z80_core.main |> set_bc_main value.value16 |> MainOnly
 
                 RegSP ->
-                    SetStackPointer value.value16
+                    SetStackPointer value.value16 |> RareChange
 
 
 applyEdRegisterDelta : CpuTimeCTime -> EDRegisterChange -> Z80ROM -> Z80Core -> CoreChange
