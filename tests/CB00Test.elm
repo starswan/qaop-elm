@@ -1,6 +1,7 @@
 module CB00Test exposing (..)
 
 import Array
+import CpuTimeCTime exposing (reset_cpu_time)
 import Dict
 import Expect exposing (Expectation)
 import Test exposing (..)
@@ -41,13 +42,13 @@ suite =
             old_z80.main
 
         z80 =
-            { old_z80 | env = { old_z80env | sp = sp } |> setMem addr 0xCB clock.clockTime |> Tuple.first, main = { z80main | hl = hl } }
+            { old_z80 | env = { old_z80env | sp = sp } |> setMem addr 0xCB reset_cpu_time |> Tuple.first, main = { z80main | hl = hl } }
 
         flags =
             z80.flags
 
         z80env =
-            { z80env = z80.env, time = clock.clockTime }
+            { z80env = z80.env, time = reset_cpu_time }
 
         z80rom =
             Z80Rom.constructor Array.empty
@@ -131,7 +132,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> getMem8 0x6545 clock.clockTime z80rom |> Tuple.first
+                            new_z80.env |> getMem8 0x6545 reset_cpu_time z80rom |> Tuple.first
                     in
                     { pc = new_pc, b = new_z80.main.b, mem = mem_value, flags = new_z80.flags |> getFlags }
                         |> Expect.equal { pc = addr + 4, b = 0xFD, mem = 0xFD, flags = 0xA9 }
@@ -157,7 +158,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> getMem8 0x6545 clock.clockTime z80rom |> Tuple.first
+                            new_z80.env |> getMem8 0x6545 reset_cpu_time z80rom |> Tuple.first
                     in
                     Expect.equal ( addr + 4, 0xFD, 0xFD ) ( new_pc, new_z80.main.b, mem_value )
             ]
@@ -202,7 +203,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> getMem8 0x6545 clock.clockTime z80rom |> Tuple.first
+                            new_z80.env |> getMem8 0x6545 reset_cpu_time z80rom |> Tuple.first
                     in
                     Expect.equal ( addr + 4, 0xA0, 0xA0 ) ( new_pc, new_z80.main.c, mem_value )
             , test "0xFD 0xCB d 0x01 RLC (IY + d), C" <|
@@ -227,7 +228,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> getMem8 0x6545 clock.clockTime z80rom |> Tuple.first
+                            new_z80.env |> getMem8 0x6545 reset_cpu_time z80rom |> Tuple.first
                     in
                     { pc = new_pc, c = new_z80.main.c, mem = mem_value, flags = new_z80.flags |> getFlags }
                         |> Expect.equal { pc = addr + 4, c = 0xFD, mem = 0xFD, flags = 0xA9 }
@@ -325,7 +326,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> getMem8 hl clock.clockTime z80rom |> Tuple.first
+                            new_z80.env |> getMem8 hl reset_cpu_time z80rom |> Tuple.first
                     in
                     Expect.equal ( addr + 2, 0x62, 0x20 ) ( new_pc, mem_value, new_z80.flags |> getFlags )
             , test "0x80" <|
@@ -346,7 +347,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> getMem8 hl clock.clockTime z80rom |> Tuple.first
+                            new_z80.env |> getMem8 hl reset_cpu_time z80rom |> Tuple.first
                     in
                     Expect.equal ( addr + 2, 0x01, 0x01 ) ( new_pc, mem_value, new_z80.flags |> getFlags )
             , test "0xDD 0xCB 0x06 0x45 RLC (IX + d) 0x31" <|
@@ -371,7 +372,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> getMem8 0x6545 clock.clockTime z80rom |> Tuple.first
+                            new_z80.env |> getMem8 0x6545 reset_cpu_time z80rom |> Tuple.first
                     in
                     Expect.equal ( addr + 4, 0x62, 0x20 ) ( new_pc, mem_value, new_z80.flags |> getFlags )
             , test "0xDD 0xCB 0x06 0x45 RLC (IX + d) 0x80" <|
@@ -396,7 +397,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> getMem8 0x6545 clock.clockTime z80rom |> Tuple.first
+                            new_z80.env |> getMem8 0x6545 reset_cpu_time z80rom |> Tuple.first
                     in
                     Expect.equal ( addr + 4, 0x01, 0x01 ) ( new_pc, mem_value, new_z80.flags |> getFlags )
             , test "0xFD 0xCB 0x06 0x45 RLC (IY - d)" <|
@@ -421,7 +422,7 @@ suite =
                                 |> Triple.dropSecond
 
                         mem_value =
-                            new_z80.env |> getMem8 0x6500 clock.clockTime z80rom |> Tuple.first
+                            new_z80.env |> getMem8 0x6500 reset_cpu_time z80rom |> Tuple.first
                     in
                     Expect.equal ( addr + 4, 0x62, 0x20 ) ( new_pc, mem_value, new_z80.flags |> getFlags )
             ]
@@ -578,7 +579,7 @@ suite =
                             |> Triple.dropSecond
 
                     mem_value =
-                        new_z80.env |> getMem8 0x6545 clock.clockTime z80rom |> Tuple.first
+                        new_z80.env |> getMem8 0x6545 reset_cpu_time z80rom |> Tuple.first
                 in
                 Expect.equal ( addr + 2, 0x98 ) ( new_pc, mem_value )
         , test "0xCB 0x0F RRC A" <|

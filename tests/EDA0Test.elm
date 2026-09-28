@@ -1,6 +1,7 @@
 module EDA0Test exposing (..)
 
 import Array
+import CpuTimeCTime exposing (reset_cpu_time)
 import Dict
 import Expect exposing (Expectation)
 import Test exposing (..)
@@ -40,7 +41,7 @@ suite =
             { old_z80 | env = { old_z80env | sp = sp }, main = { z80main | hl = hl } }
 
         z80env =
-            { z80env = z80.env, time = clock.clockTime }
+            { z80env = z80.env, time = reset_cpu_time }
 
         z80rom =
             Z80Rom.constructor Array.empty
@@ -67,7 +68,7 @@ suite =
                             |> Triple.dropSecond
 
                     mem_value =
-                        new_z80.env |> getMem8 0x6545 clock.clockTime z80rom |> Tuple.first
+                        new_z80.env |> getMem8 0x6545 reset_cpu_time z80rom |> Tuple.first
                 in
                 Expect.equal { pc = addr + 2, hl = 0x6546, b = 0xA4, mem = 0xFF } { pc = new_pc, hl = new_z80.main.hl, b = new_z80.main.b, mem = mem_value }
         , test "0xEDA3 OUTI" <|
@@ -110,7 +111,7 @@ suite =
                             |> Triple.dropSecond
 
                     mem_value =
-                        new_z80.env |> getMem8 0x6545 clock.clockTime z80rom |> Tuple.first
+                        new_z80.env |> getMem8 0x6545 reset_cpu_time z80rom |> Tuple.first
                 in
                 Expect.equal { pc = addr + 2, hl = 0x6544, b = 0xA4, mem = 0xFF } { pc = new_pc, hl = new_z80.main.hl, b = new_z80.main.b, mem = mem_value }
         , test "0xEDAB OUTD" <|

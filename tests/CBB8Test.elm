@@ -1,6 +1,7 @@
 module CBB8Test exposing (..)
 
 import Array
+import CpuTimeCTime exposing (reset_cpu_time)
 import Dict
 import Expect exposing (Expectation)
 import Test exposing (..)
@@ -40,7 +41,7 @@ suite =
             { old_z80 | env = { old_z80env | sp = sp }, main = { z80main | hl = hl } }
 
         z80env =
-            { z80env = z80.env, time = clock.clockTime }
+            { z80env = z80.env, time = reset_cpu_time }
 
         z80rom =
             Z80Rom.constructor Array.empty
@@ -68,7 +69,7 @@ suite =
                             |> Triple.dropSecond
 
                     mem_value =
-                        new_z80.env |> getMem8 0xA07E clock.clockTime z80rom |> Tuple.first
+                        new_z80.env |> getMem8 0xA07E reset_cpu_time z80rom |> Tuple.first
                 in
                 Expect.equal ( addr + 4, 0x7F ) ( new_pc, mem_value )
         ]

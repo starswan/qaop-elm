@@ -2,6 +2,7 @@ module GroupC0Test exposing (..)
 
 import Array
 import Bitwise exposing (shiftRightBy)
+import CpuTimeCTime exposing (reset_cpu_time)
 import Dict
 import Expect
 import Test exposing (..)
@@ -38,7 +39,7 @@ suite =
             z80.flags
 
         z80env =
-            { z80env = z80.env, time = clock.clockTime }
+            { z80env = z80.env, time = reset_cpu_time }
 
         z80main =
             z80.main
@@ -242,10 +243,10 @@ suite =
                                 |> Triple.dropSecond
 
                         lo_value =
-                            z80_1.env |> getMem8 stackp clock.clockTime z80rom |> Tuple.first
+                            z80_1.env |> getMem8 stackp reset_cpu_time z80rom |> Tuple.first
 
                         high_value =
-                            z80_1.env |> getMem8 (stackp + 1) clock.clockTime z80rom |> Tuple.first
+                            z80_1.env |> getMem8 (stackp + 1) reset_cpu_time z80rom |> Tuple.first
 
                         ( z80_2, final_pc ) =
                             z80_1 |> executeCoreInstruction z80rom new_pc |> Triple.dropSecond
