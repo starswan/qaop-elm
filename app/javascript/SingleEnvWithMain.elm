@@ -67,7 +67,7 @@ applySingleEnvMainChange : CpuTimeCTime -> SingleEnvMainChange -> Z80ROM -> Z80C
 applySingleEnvMainChange clockTime z80changeData rom48k z80 =
     case z80changeData of
         NewSPValue int ->
-            SetStackPointer int
+            SetStackPointer int |> RareChange
 
         SingleEnvNewARegister int cpuTimeCTime ->
             let

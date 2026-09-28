@@ -411,7 +411,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
             (z80_core.main |> f) |> Push16BitValue
 
         RegChangeNewSP f ->
-            z80_core.main |> f |> SetStackPointer
+            z80_core.main |> f |> SetStackPointer |> RareChange
 
         IncrementIndirect f ->
             -- This should be a primitive operation on Z80Env to increment a stored value
@@ -832,7 +832,7 @@ applySimpleTripleChangeDelta rom48k cpu_time z80changeData z80 =
     in
     case z80changeData of
         NewSPRegister int ->
-            SetStackPointer int
+            SetStackPointer int |> RareChange
 
         NewHLIndirect int ->
             let
@@ -996,7 +996,7 @@ applyEdFourByte clockTime z80changeData rom48k z80_core =
                     z80_core.main |> set_bc_main value.value16 |> MainOnly
 
                 RegSP ->
-                    SetStackPointer value.value16
+                    SetStackPointer value.value16 |> RareChange
 
 
 applyEdRegisterDelta : CpuTimeCTime -> EDRegisterChange -> Z80ROM -> Z80Core -> CoreChange

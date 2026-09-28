@@ -227,16 +227,6 @@ applyCoreChange coreChange clockTime pc_inc pc rom48k z80_core =
             in
             { core = { main = z80_core.main, env = env, flags = z80_core.flags, interrupts = z80_core.interrupts }, pc = int, clockTime = clockTime |> addExtraCpuTime shortDelay }
 
-        SetStackPointer new_sp ->
-            let
-                env =
-                    z80_core.env
-
-                new_env =
-                    { ram = env.ram, sp = new_sp, borderColour = env.borderColour }
-            in
-            { core = { main = z80_core.main, env = new_env, interrupts = z80_core.interrupts, flags = z80_core.flags }, clockTime = clockTime, pc = pcAfter }
-
         Push16BitValue int ->
             let
                 env =
@@ -308,6 +298,16 @@ applyCoreChange coreChange clockTime pc_inc pc rom48k z80_core =
 
                 NewInterrupts interruptRegisters ->
                     { core = { z80_core | interrupts = interruptRegisters }, clockTime = clockTime, pc = pcAfter }
+
+                SetStackPointer new_sp ->
+                    let
+                        env =
+                            z80_core.env
+
+                        new_env =
+                            { ram = env.ram, sp = new_sp, borderColour = env.borderColour }
+                    in
+                    { core = { main = z80_core.main, env = new_env, interrupts = z80_core.interrupts, flags = z80_core.flags }, clockTime = clockTime, pc = pcAfter }
 
         MainWithOffsetAndDelay offset shortDelay z80_main ->
             { core = { main = z80_main, env = z80_core.env, flags = z80_core.flags, interrupts = z80_core.interrupts }, pc = (pcAfter + offset) |> Bitwise.and 0xFFFF, clockTime = clockTime |> addExtraCpuTime shortDelay }

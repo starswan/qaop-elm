@@ -25,13 +25,13 @@ type RareCoreChange
     | Z80OutChange Int
     | NewInterrupts InterruptRegisters
     | LooperNoOffset Z80Core
+    | SetStackPointer Int
 
 
 type CoreChange
     = SetMem8 Int Int
     | NoCore
     | SetMem16 Int Int
-    | SetStackPointer Int
     | Push16BitValue Int
     | JumpOnlyPC Int
     | JumpWithOffset Int
