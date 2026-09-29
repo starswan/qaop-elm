@@ -1,10 +1,11 @@
 module Z80OpCode exposing (..)
 
+import Array
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, InstructionDuration, reset_cpu_time)
 import Dict exposing (Dict)
 import DoubleWithRegisters exposing (applyDoubleWithRegistersDelta, doubleWithRegistersIX, doubleWithRegistersIY)
-import GroupCBIXIY exposing (singleByteMainRegsIYCB, singleEnvMainRegsIYCB)
+import GroupCBIXIY exposing (singleByteMainRegsIYCB, singleByteMainRegsIYCB80, singleEnvMainRegsIYCB)
 import GroupED exposing (singleByteMainAndFlagsED, singleByteMainRegsED)
 import Maybe.Extra exposing (oneOf)
 import PCIncrement exposing (PCIncrement(..))
@@ -19,7 +20,7 @@ import TripleWithFlags exposing (triple16bitJumps)
 import TripleWithMain exposing (tripleMainRegsIYFour)
 import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
 import Z80Env exposing (Z80Env)
-import Z80Execute exposing (applyEdRegisterDelta, applyJumpChangeDelta, applyPureDelta, applyRegisterDelta, applySimple8BitDelta, applySimpleTripleChangeDelta, applyTripleChangeDelta)
+import Z80Execute exposing (applyCBRegisterDelta, applyEdRegisterDelta, applyJumpChangeDelta, applyPureDelta, applyRegisterDelta, applySimple8BitDelta, applySimpleTripleChangeDelta, applyTripleChangeDelta)
 import Z80Mem exposing (getMem8, m1, mem16)
 import Z80Rom exposing (Z80ROM)
 
@@ -120,13 +121,24 @@ lengthAndDuration pc rom48k z80env =
                             |> oneOf
                                 [ \( cbparam, cboffset ) ->
                                     singleByteMainRegsIYCB
+                                        |> Array.get cbparam
+                                        |> Maybe.map
+                                            (\( mainRegFunc, duration ) ->
+                                                ( IncrementByFour
+                                                , duration
+                                                , \cpuClock z80rom z80core ->
+                                                    z80core |> applyCBRegisterDelta cpuClock (mainRegFunc cboffset z80core.main) z80rom
+                                                )
+                                            )
+                                , \( cbparam, cboffset ) ->
+                                    singleByteMainRegsIYCB80
                                         |> Dict.get cbparam
                                         |> Maybe.map
                                             (\( mainRegFunc, duration ) ->
                                                 ( IncrementByFour
                                                 , duration
                                                 , \cpuClock z80rom z80core ->
-                                                    z80core |> applyRegisterDelta cpuClock (mainRegFunc cboffset z80core.main) z80rom
+                                                    z80core |> applyCBRegisterDelta cpuClock (mainRegFunc cboffset z80core.main) z80rom
                                                 )
                                             )
                                 , \( cbparam, cboffset ) ->
