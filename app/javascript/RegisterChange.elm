@@ -74,6 +74,7 @@ type RegisterFlagChange
     | LoadAIndirect (MainWithIndexRegisters -> Int)
     | LoadRegisterIndirect ChangeMainRegister (MainWithIndexRegisters -> Int)
     | FlagFuncIndirect (Int -> FlagRegisters -> FlagRegisters) (MainWithIndexRegisters -> Int)
+    | SetMemIndirectFromA (MainWithIndexRegisters -> Int)
 
 
 type SixteenBit

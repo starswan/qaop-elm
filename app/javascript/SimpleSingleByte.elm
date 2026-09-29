@@ -120,6 +120,7 @@ singleByteMainRegs =
         , ( 0x73, ( SetIndirect (\main -> ( main.hl, main.e )), SevenTStates ) )
         , ( 0x74, ( SetIndirect (\main -> ( main.hl, main |> get_h )), SevenTStates ) )
         , ( 0x75, ( SetIndirect (\main -> ( main.hl, main |> get_l )), SevenTStates ) )
+        , ( 0x77, ( ld_indirect_hl_a, SevenTStates ) )
 
         -- case 0x78: A=B; break;
         , ( 0x78, ( RegisterChangeA .b, FourTStates ) )
@@ -774,6 +775,13 @@ cp_indirect_hl : RegisterFlagChange
 cp_indirect_hl =
     -- case 0x9E: sbc(env.mem(HL)); time+=3; break;
     FlagFuncIndirect z80_cp .hl
+
+
+ld_indirect_hl_a : RegisterFlagChange
+ld_indirect_hl_a =
+    -- case 0x77: env.mem(HL,A); time+=3; break;
+    -- case 0x77: env.mem(getd(xy),A); time+=3; break;
+    SetMemIndirectFromA .hl
 
 
 ld_h_a : FlagRegisters -> MainWithIndexRegisters -> MainWithIndexRegisters

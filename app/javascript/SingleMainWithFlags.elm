@@ -30,7 +30,6 @@ singleByteMainAndFlagRegisters =
         , ( 0x29, ( add_hl_hl, ElevenTStates ) )
         , ( 0x2C, ( inc_l, FourTStates ) )
         , ( 0x2D, ( dec_l, FourTStates ) )
-        , ( 0x77, ( ld_indirect_hl_a, SevenTStates ) )
         , ( 0x80, ( add_a_b, FourTStates ) )
         , ( 0x81, ( add_a_c, FourTStates ) )
         , ( 0x82, ( add_a_d, FourTStates ) )
@@ -823,13 +822,6 @@ ld_indirect_de_a z80_main z80_flags =
             shiftLeftBy8 z80_main.d + z80_main.e
     in
     Z80ChangeSetIndirect addr z80_flags.a
-
-
-ld_indirect_hl_a : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-ld_indirect_hl_a z80_main z80_flags =
-    -- case 0x77: env.mem(HL,A); time+=3; break;
-    -- case 0x77: env.mem(getd(xy),A); time+=3; break;
-    Z80ChangeSetIndirect z80_main.hl z80_flags.a
 
 
 ld_ixh_a : MainWithIndexRegisters -> FlagRegisters -> IndexedZ80Change

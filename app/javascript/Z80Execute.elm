@@ -851,6 +851,16 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
             in
             flags |> flagFunc value |> FlagsOnly
 
+        SetMemIndirectFromA addrFunc ->
+            let
+                address =
+                    z80_core.main |> addrFunc
+
+                ( env_2, newTime ) =
+                    z80_core.env |> setMem address z80_core.flags.a clockTime
+            in
+            { z80_core | env = env_2 } |> CoreOnly |> RareChange
+
 
 applyShifter : Shifter -> Int -> CpuTimeCTime -> Z80ROM -> Z80Core -> CoreChange
 applyShifter shifterFunc addr cpu_time rom48k z80 =
