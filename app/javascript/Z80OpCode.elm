@@ -5,7 +5,7 @@ import Bitwise
 import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, InstructionDuration, reset_cpu_time)
 import Dict exposing (Dict)
 import DoubleWithRegisters exposing (applyDoubleWithRegistersDelta, doubleWithRegistersIX, doubleWithRegistersIY)
-import GroupCBIXIY exposing (singleByteMainRegsIYCB, singleEnvMainRegsIYCB)
+import GroupCBIXIY exposing (singleByteMainRegsIYCB, singleByteMainRegsIYCB80, singleEnvMainRegsIYCB)
 import GroupED exposing (singleByteMainAndFlagsED, singleByteMainRegsED)
 import Maybe.Extra exposing (oneOf)
 import PCIncrement exposing (PCIncrement(..))
@@ -121,6 +121,17 @@ lengthAndDuration pc rom48k z80env =
                             |> oneOf
                                 [ \( cbparam, cboffset ) ->
                                     singleByteMainRegsIYCB
+                                        |> Array.get cbparam
+                                        |> Maybe.map
+                                            (\( mainRegFunc, duration ) ->
+                                                ( IncrementByFour
+                                                , duration
+                                                , \cpuClock z80rom z80core ->
+                                                    z80core |> applyCBRegisterDelta cpuClock (mainRegFunc cboffset z80core.main) z80rom
+                                                )
+                                            )
+                                , \( cbparam, cboffset ) ->
+                                    singleByteMainRegsIYCB80
                                         |> Dict.get cbparam
                                         |> Maybe.map
                                             (\( mainRegFunc, duration ) ->
