@@ -27,6 +27,9 @@ singleByteMainRegs =
         -- case 0x35: v=dec(env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
         -- case 0x35: {int a; v=dec(env.mem(a=getd(xy))); time+=4; env.mem(a,v); time+=3;} break;
         , ( 0x35, ( DecrementIndirect .hl, ElevenTStates ) )
+
+        -- case 0x40: break;
+        , ( 0x40, ( RegChangeNoOp, FourTStates ) )
         , ( 0x41, ( TransformMainRegisters ld_b_c, FourTStates ) )
         , ( 0x42, ( TransformMainRegisters ld_b_d, FourTStates ) )
         , ( 0x43, ( TransformMainRegisters ld_b_e, FourTStates ) )
@@ -37,6 +40,9 @@ singleByteMainRegs =
         , ( 0x46, ( ld_b_indirect_hl, SevenTStates ) )
         , ( 0x47, ( FlagChangeMain ld_b_a, FourTStates ) )
         , ( 0x48, ( TransformMainRegisters ld_c_b, FourTStates ) )
+
+        -- case 0x49: break;
+        , ( 0x49, ( RegChangeNoOp, FourTStates ) )
         , ( 0x4A, ( TransformMainRegisters ld_c_d, FourTStates ) )
         , ( 0x4B, ( TransformMainRegisters ld_c_e, FourTStates ) )
         , ( 0x4C, ( TransformMainRegisters (ld_c_h .hl), FourTStates ) )
@@ -45,6 +51,9 @@ singleByteMainRegs =
         , ( 0x4F, ( FlagChangeMain ld_c_a, FourTStates ) )
         , ( 0x50, ( TransformMainRegisters ld_d_b, FourTStates ) )
         , ( 0x51, ( TransformMainRegisters ld_d_c, FourTStates ) )
+
+        -- case 0x52: break;
+        , ( 0x52, ( RegChangeNoOp, FourTStates ) )
         , ( 0x53, ( TransformMainRegisters ld_d_e, FourTStates ) )
         , ( 0x54, ( TransformMainRegisters (ld_d_h .hl), FourTStates ) )
         , ( 0x55, ( TransformMainRegisters (ld_d_l .hl), FourTStates ) )
@@ -53,6 +62,9 @@ singleByteMainRegs =
         , ( 0x58, ( TransformMainRegisters ld_e_b, FourTStates ) )
         , ( 0x59, ( TransformMainRegisters ld_e_c, FourTStates ) )
         , ( 0x5A, ( TransformMainRegisters ld_e_d, FourTStates ) )
+
+        -- case 0x5B: break;
+        , ( 0x5B, ( RegChangeNoOp, FourTStates ) )
         , ( 0x5C, ( TransformMainRegisters ld_e_h, FourTStates ) )
         , ( 0x5D, ( TransformMainRegisters ld_e_l, FourTStates ) )
         , ( 0x5E, ( ld_e_indirect_hl, SevenTStates ) )
@@ -70,6 +82,9 @@ singleByteMainRegs =
         -- case 0x63: HL=HL&0xFF|E<<8; break;
         -- case 0x63: xy=xy&0xFF|E<<8; break;
         , ( 0x63, ( TransformMainRegisters (ld_h_b .e), FourTStates ) )
+
+        -- case 0x64: break;
+        , ( 0x64, ( RegChangeNoOp, FourTStates ) )
         , ( 0x65, ( TransformMainRegisters (ld_h_l get_l), FourTStates ) )
         , ( 0x66, ( ld_h_indirect_hl, SevenTStates ) )
         , ( 0x67, ( FlagChangeMain ld_h_a, FourTStates ) )
@@ -89,6 +104,9 @@ singleByteMainRegs =
         -- case 0x6C: HL=HL&0xFF00|HL>>>8; break;
         -- case 0x6C: xy=xy&0xFF00|xy>>>8; break;
         , ( 0x6C, ( TransformMainRegisters (ld_l_b get_h), FourTStates ) )
+
+        -- case 0x6D: break;
+        , ( 0x6D, ( RegChangeNoOp, FourTStates ) )
         , ( 0x6E, ( ld_l_indirect_hl, SevenTStates ) )
         , ( 0x6F, ( FlagChangeMain ld_l_a, FourTStates ) )
 
@@ -111,6 +129,9 @@ singleByteMainRegs =
         , ( 0x7C, ( ld_a_h, FourTStates ) )
         , ( 0x7D, ( ld_a_l, FourTStates ) )
         , ( 0x7E, ( ld_a_indirect_hl, SevenTStates ) )
+
+        -- case 0x7F: break;
+        , ( 0x7F, ( RegChangeNoOp, FourTStates ) )
         , ( 0x86, ( add_a_indirect_hl, SevenTStates ) )
         , ( 0x8E, ( adc_a_indirect_hl, SevenTStates ) )
         , ( 0x96, ( sub_indirect_hl, SevenTStates ) )

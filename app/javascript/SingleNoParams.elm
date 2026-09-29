@@ -14,26 +14,6 @@ singleWithNoParam =
         [ ( 0x00, ( RegChangeNoOp, FourTStates ) )
 
         --, ( 0x08, ( ExAfAfDash, FourTStates ) )
-        -- case 0x40: break;
-        , ( 0x40, ( RegChangeNoOp, FourTStates ) )
-
-        -- case 0x49: break;
-        , ( 0x49, ( RegChangeNoOp, FourTStates ) )
-
-        -- case 0x52: break;
-        , ( 0x52, ( RegChangeNoOp, FourTStates ) )
-
-        -- case 0x5B: break;
-        , ( 0x5B, ( RegChangeNoOp, FourTStates ) )
-
-        -- case 0x64: break;
-        , ( 0x64, ( RegChangeNoOp, FourTStates ) )
-
-        -- case 0x6D: break;
-        , ( 0x6D, ( RegChangeNoOp, FourTStates ) )
-
-        -- case 0x7F: break;
-        , ( 0x7F, ( RegChangeNoOp, FourTStates ) )
         , ( 0xC1, ( Pop16Bit PopBC, TenTStates ) )
         , ( 0xC9, ( Ret, TenTStates ) )
         , ( 0xD1, ( Pop16Bit PopDE, TenTStates ) )
