@@ -580,7 +580,7 @@ runSpecialIYCB offset clockTime param rom48k z80_core =
                     ( MainWithEnvDelta (f z80_core.main offset rom48k z80_core.env), clockTime |> addDuration duration, IncrementByFour )
 
                 Nothing ->
-                    case singleByteMainRegsIYCB80 |> Dict.get param |> Maybe.map (\( f, d ) -> ( f offset, d )) of
+                    case singleByteMainRegsIYCB80 |> Array.get (param - 0x80) |> Maybe.map (\( f, d ) -> ( f offset, d )) of
                         Just ( mainRegFunc, duration ) ->
                             ( RegisterChangeDelta (mainRegFunc z80_core.main), clockTime |> addDuration duration, IncrementByFour )
 

@@ -132,7 +132,7 @@ lengthAndDuration pc rom48k z80env =
                                             )
                                 , \( cbparam, cboffset ) ->
                                     singleByteMainRegsIYCB80
-                                        |> Dict.get cbparam
+                                        |> Array.get (cbparam - 0x80)
                                         |> Maybe.map
                                             (\( mainRegFunc, duration ) ->
                                                 ( IncrementByFour
