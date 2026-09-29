@@ -18,7 +18,6 @@ import TripleWithMain exposing (tripleMainRegsIXFour, tripleMainRegsIXThree, tri
 singleByteInstructions : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleByteInstructions =
     singleByteMainRegs
-        |> Dict.union singleByteMain4080
         |> Dict.union singleByteFlags
         |> Dict.union singleWithNoParam
         |> Dict.union singleNoParamCalls

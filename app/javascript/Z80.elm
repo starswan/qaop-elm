@@ -17,6 +17,7 @@ import Loop
 import OpcodeTables exposing (singleByteInstructions, singleByteMainFlagsRegsIX, singleByteMainFlagsRegsIY, threeByteInstructions, threeByteWithRegistersIX, threeByteWithRegistersIY, twoByteInstructions, twoByteWithRegistersIX, twoByteWithRegistersIY)
 import PCIncrement exposing (PCIncrement(..))
 import SimpleFlagOps exposing (singleByteFlagsCB)
+import SimpleSingleByte exposing (singleByteMain4080)
 import SingleNoParams exposing (ex_af, execute_0x76_halt, exx)
 import Triple
 import Z80Core exposing (CoreChange(..), RareCoreChange(..), RepeatPCOffset(..), Z80Core)
@@ -426,28 +427,33 @@ execute_delta instrTime opCode rom48k pc z80_core =
                     ( RegisterChangeDelta mainRegFunc, instrTime |> addDuration duration, IncrementByOne )
 
                 Nothing ->
-                    case twoByteInstructions |> Dict.get opCode of
-                        Just ( f, duration ) ->
-                            let
-                                ( paramValue, paramTime ) =
-                                    z80_core.env |> getMem8 (Bitwise.and (pc + 1) 0xFFFF) instrTime rom48k
-                            in
-                            ( TwoByteDelta (f paramValue), paramTime |> addDuration duration, IncrementByTwo )
+                    case singleByteMain4080 |> Dict.get opCode of
+                        Just ( mainRegFunc, duration ) ->
+                            ( RegisterChangeDelta mainRegFunc, instrTime |> addDuration duration, IncrementByOne )
 
                         Nothing ->
-                            case threeByteInstructions |> Dict.get opCode of
+                            case twoByteInstructions |> Dict.get opCode of
                                 Just ( f, duration ) ->
                                     let
-                                        env =
-                                            z80_core.env
-
-                                        doubleParam =
-                                            env |> mem16 (Bitwise.and (pc + 1) 0xFFFF) rom48k instrTime
+                                        ( paramValue, paramTime ) =
+                                            z80_core.env |> getMem8 (Bitwise.and (pc + 1) 0xFFFF) instrTime rom48k
                                     in
-                                    ( ThreeBytePlainDelta (f doubleParam.value16), doubleParam.time |> addDuration duration, IncrementByThree )
+                                    ( TwoByteDelta (f paramValue), paramTime |> addDuration duration, IncrementByTwo )
 
                                 Nothing ->
-                                    ( UnknownInstruction "runOrdinary" opCode, instrTime, IncrementByOne )
+                                    case threeByteInstructions |> Dict.get opCode of
+                                        Just ( f, duration ) ->
+                                            let
+                                                env =
+                                                    z80_core.env
+
+                                                doubleParam =
+                                                    env |> mem16 (Bitwise.and (pc + 1) 0xFFFF) rom48k instrTime
+                                            in
+                                            ( ThreeBytePlainDelta (f doubleParam.value16), doubleParam.time |> addDuration duration, IncrementByThree )
+
+                                        Nothing ->
+                                            ( UnknownInstruction "runOrdinary" opCode, instrTime, IncrementByOne )
 
 
 runIndexIX : Int -> CpuTimeCTime -> Z80ROM -> Int -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
