@@ -575,14 +575,14 @@ runSpecialIYCB offset clockTime param rom48k z80_core =
             ( RegisterChangeDelta (mainRegFunc z80_core.main), clockTime |> addDuration duration, IncrementByFour )
 
         Nothing ->
-            case singleByteMainRegsIYCB80 |> Dict.get param |> Maybe.map (\( f, d ) -> ( f offset, d )) of
-                Just ( mainRegFunc, duration ) ->
-                    ( RegisterCBDelta (mainRegFunc z80_core.main), clockTime |> addDuration duration, IncrementByFour )
+            case singleEnvMainRegsIYCB |> Dict.get param of
+                Just ( f, duration ) ->
+                    ( MainWithEnvDelta (f z80_core.main offset rom48k z80_core.env), clockTime |> addDuration duration, IncrementByFour )
 
                 Nothing ->
-                    case singleEnvMainRegsIYCB |> Dict.get param of
-                        Just ( f, duration ) ->
-                            ( MainWithEnvDelta (f z80_core.main offset rom48k z80_core.env), clockTime |> addDuration duration, IncrementByFour )
+                    case singleByteMainRegsIYCB80 |> Dict.get param |> Maybe.map (\( f, d ) -> ( f offset, d )) of
+                        Just ( mainRegFunc, duration ) ->
+                            ( RegisterChangeDelta (mainRegFunc z80_core.main), clockTime |> addDuration duration, IncrementByFour )
 
                         Nothing ->
                             ( UnknownInstruction "execute IYCB" param, clockTime, IncrementByFour )

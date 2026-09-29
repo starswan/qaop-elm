@@ -343,7 +343,7 @@ singleByteMainRegsIYCB =
         ]
 
 
-singleByteMainRegsIYCB80 : Dict Int ( Int -> MainWithIndexRegisters -> CBRegisterFlagChange, InstructionDuration )
+singleByteMainRegsIYCB80 : Dict Int ( Int -> MainWithIndexRegisters -> RegisterFlagChange, InstructionDuration )
 singleByteMainRegsIYCB80 =
     Dict.fromList
         -- reset bit0
@@ -514,32 +514,35 @@ bitTests =
 
 makeEnvMainDict : (MainWithIndexRegisters -> Int) -> Dict Int ( MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )
 makeEnvMainDict ix_func =
-    bitTests
-        |> List.indexedMap
-            (\bitIndex bitType ->
-                let
-                    start =
-                        0x40 + bitIndex * 8
-                in
-                List.range start (start + 7)
-                    |> List.map
-                        (\index ->
-                            ( index
-                            , ( \z80_main offset rom48k z80_env ->
-                                    let
-                                        --int a = mp = (char)(xy + (byte)env.mem(pc));
-                                        --case 0x40: bit(o, v); Ff=Ff&~F53 | a>>8&F53; return;
-                                        address =
-                                            (ix_func z80_main + byte offset) |> Bitwise.and 0xFFFF
-                                    in
-                                    IndirectBitTest bitType address
-                              , TwentyTStates
-                              )
-                            )
-                        )
-                    |> Dict.fromList
-            )
-        |> List.foldr (\d1 d2 -> d1 |> Dict.union d2) Dict.empty
+    let
+        subdict =
+            bitTests
+                |> List.indexedMap
+                    (\bitIndex bitType ->
+                        let
+                            start =
+                                0x40 + bitIndex * 8
+                        in
+                        List.range start (start + 7)
+                            |> List.map
+                                (\index ->
+                                    ( index
+                                    , ( \z80_main offset rom48k z80_env ->
+                                            let
+                                                --int a = mp = (char)(xy + (byte)env.mem(pc));
+                                                --case 0x40: bit(o, v); Ff=Ff&~F53 | a>>8&F53; return;
+                                                address =
+                                                    (ix_func z80_main + byte offset) |> Bitwise.and 0xFFFF
+                                            in
+                                            IndirectBitTest bitType address
+                                      , TwentyTStates
+                                      )
+                                    )
+                                )
+                            |> Dict.fromList
+                    )
+    in
+    subdict |> List.foldr (\d1 d2 -> d1 |> Dict.union d2) Dict.empty
 
 
 singleEnvMainRegsIXCB : Dict Int ( MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )
