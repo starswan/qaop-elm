@@ -12,7 +12,7 @@ import Keyboard exposing (ctrlKeyDownEvent, ctrlKeyUpEvent, keyDownEvent, keyUpE
 import MessageHandler exposing (bytesToTap)
 import Qaop exposing (Qaop, pause)
 import ScreenStorage exposing (ScreenLine, Z80Screen)
-import Spectrum exposing (frames, new_tape)
+import Spectrum exposing (Spectrum, frames, new_tape)
 import SpectrumColour exposing (borderColour)
 import Svg exposing (Svg, g, line, rect, svg)
 import Svg.Attributes exposing (fill, height, rx, stroke, viewBox, width, x1, x2, y1, y2)
@@ -205,7 +205,7 @@ viewQaop model tickInterval =
                     )
                 ]
             , button [ onClick Autoload, disabled load_disabled ]
-                [ text "Load"
+                [ span [ id "load" ] [ text "Load" ]
                 ]
             ]
         , div
@@ -246,8 +246,12 @@ updateQaop message model =
                                 model.qaop |> run
                         in
                         { qaop = q, count = model.count + 1, elapsed = elapsed }
+
+                newModel =
+                    { model | count = state.count, elapsed_millis = model.elapsed_millis + state.elapsed, time = posix, qaop = state.qaop }
             in
-            ( { model | count = state.count, elapsed_millis = model.elapsed_millis + state.elapsed, time = posix, qaop = state.qaop }, Cmd.none )
+            --( newModel, audio newModel.qaop.spectrum |> Json.Encode.list WebAudio.encode |> toWebAudio )
+            ( newModel, Cmd.none )
 
         Pause ->
             ( { model | qaop = model.qaop |> pause (not model.qaop.spectrum.paused) }, Cmd.none )

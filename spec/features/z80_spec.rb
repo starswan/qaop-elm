@@ -176,17 +176,18 @@ RSpec.describe "Game" do
       while cpu_count.text.to_i < 80
         sleep 0.5
       end
-      spectrum = find("#spectrum")
 
+      # sleep 100
       # This is very slow, but calling send_keys
       # with a string on an array is too quick
       # due to the 50Hz keyboard polling rate
       # Load tape
-      data = 'j""'
-      data.each_char do |k|
-        spectrum.send_keys k
-      end
-      spectrum.send_keys [:enter]
+      find("#load").click
+      # data = 'j""'
+      # data.each_char do |k|
+      #   spectrum.send_keys k
+      # end
+      # spectrum.send_keys [:enter]
 
       script = scripts.fetch(z80_game, lambda { |speccy|
         measure_speed_in_hz do
@@ -194,7 +195,7 @@ RSpec.describe "Game" do
         end
       })
 
-      speed = script.call(spectrum)
+      speed = script.call(find("#spectrum"))
 
       expect(speed).to be > expected_hz
       puts "Speed #{speed} Hz"
