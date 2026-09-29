@@ -22,12 +22,6 @@ singleByteFlags =
         , ( 0x3C, ( FlagChangeFunc inc_a, FourTStates ) )
         , ( 0x3D, ( FlagChangeFunc dec_a, FourTStates ) )
         , ( 0x3F, ( FlagChangeFunc ccf, FourTStates ) )
-        , ( 0x47, ( FlagChangeMain ld_b_a, FourTStates ) )
-        , ( 0x4F, ( FlagChangeMain ld_c_a, FourTStates ) )
-        , ( 0x57, ( FlagChangeMain ld_d_a, FourTStates ) )
-        , ( 0x5F, ( FlagChangeMain ld_e_a, FourTStates ) )
-        , ( 0x67, ( FlagChangeMain ld_h_a, FourTStates ) )
-        , ( 0x6F, ( FlagChangeMain ld_l_a, FourTStates ) )
         , ( 0x87, ( FlagChangeFunc add_a_a, FourTStates ) )
         , ( 0x8F, ( FlagChangeFunc adc_a_a, FourTStates ) )
         , ( 0x97, ( FlagChangeFunc sub_a, FourTStates ) )
@@ -56,26 +50,6 @@ singleByteFlags =
         -- case 0xF5: push(A<<8|flags()); break;
         , ( 0xF5, ( FlagsPushAF, ElevenTStates ) )
         , ( 0xF8, ( ret_m, FiveTStates ) )
-        ]
-
-
-singleByteFlagsDD : Dict Int ( RegisterFlagChange, InstructionDuration )
-singleByteFlagsDD =
-    Dict.fromList
-        [ ( 0x47, ( FlagChangeMain ld_b_a, EightTStates ) )
-        , ( 0x4F, ( FlagChangeMain ld_c_a, EightTStates ) )
-        , ( 0x57, ( FlagChangeMain ld_d_a, EightTStates ) )
-        , ( 0x5F, ( FlagChangeMain ld_e_a, EightTStates ) )
-        ]
-
-
-singleByteFlagsFD : Dict Int ( RegisterFlagChange, InstructionDuration )
-singleByteFlagsFD =
-    Dict.fromList
-        [ ( 0x47, ( FlagChangeMain ld_b_a, EightTStates ) )
-        , ( 0x4F, ( FlagChangeMain ld_c_a, EightTStates ) )
-        , ( 0x57, ( FlagChangeMain ld_d_a, EightTStates ) )
-        , ( 0x5F, ( FlagChangeMain ld_e_a, EightTStates ) )
         ]
 
 
@@ -181,50 +155,6 @@ ccf : FlagRegisters -> FlagRegisters
 ccf z80_flags =
     -- case 0x3F: scf_ccf(Ff&0x100); break;
     z80_flags |> scf_ccf (Bitwise.and z80_flags.ff 0x0100)
-
-
-ld_b_a : FlagRegisters -> MainWithIndexRegisters -> MainWithIndexRegisters
-ld_b_a z80_flags z80_main =
-    -- case 0x47: B=A; break;
-    --FlagChange8Bit RegisterB z80_flags.a
-    { z80_main | b = z80_flags.a }
-
-
-ld_c_a : FlagRegisters -> MainWithIndexRegisters -> MainWithIndexRegisters
-ld_c_a z80_flags z80_main =
-    -- case 0x4F: C=A; break;
-    --FlagChange8Bit RegisterC z80_flags.a
-    { z80_main | c = z80_flags.a }
-
-
-ld_d_a : FlagRegisters -> MainWithIndexRegisters -> MainWithIndexRegisters
-ld_d_a z80_flags z80_main =
-    -- case 0x57: D=A; break;
-    --FlagChange8Bit RegisterD z80_flags.a
-    { z80_main | d = z80_flags.a }
-
-
-ld_e_a : FlagRegisters -> MainWithIndexRegisters -> MainWithIndexRegisters
-ld_e_a z80_flags z80_main =
-    -- case 0x5F: E=A; break;
-    --FlagChange8Bit RegisterE z80_flags.a
-    { z80_main | e = z80_flags.a }
-
-
-ld_h_a : FlagRegisters -> MainWithIndexRegisters -> MainWithIndexRegisters
-ld_h_a z80_flags main =
-    -- case 0x67: HL=HL&0xFF|A<<8; break;
-    -- case 0x67: xy=xy&0xFF|A<<8; break;
-    --FlagChangeH z80_flags.a
-    { main | hl = Bitwise.or (shiftLeftBy8 z80_flags.a) (Bitwise.and main.hl 0xFF) }
-
-
-ld_l_a : FlagRegisters -> MainWithIndexRegisters -> MainWithIndexRegisters
-ld_l_a z80_flags main =
-    -- case 0x6F: HL=HL&0xFF00|A; break;
-    -- case 0x6F: xy=xy&0xFF00|A; break;
-    --FlagChangeL z80_flags.a
-    { main | hl = Bitwise.or z80_flags.a (Bitwise.and main.hl 0xFF00) }
 
 
 add_a_a : FlagRegisters -> FlagRegisters
