@@ -423,12 +423,12 @@ execute_delta instrTime opCode rom48k pc z80_core =
                 runIndexIY param newTime rom48k pc z80_core
 
         _ ->
-            case singleByteInstructions |> Dict.get opCode of
+            case singleByteMain4080 |> Array.get (opCode - 0x40) of
                 Just ( mainRegFunc, duration ) ->
                     ( RegisterChangeDelta mainRegFunc, instrTime |> addDuration duration, IncrementByOne )
 
                 Nothing ->
-                    case singleByteMain4080 |> Array.get (opCode - 0x40) of
+                    case singleByteInstructions |> Dict.get opCode of
                         Just ( mainRegFunc, duration ) ->
                             ( RegisterChangeDelta mainRegFunc, instrTime |> addDuration duration, IncrementByOne )
 

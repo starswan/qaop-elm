@@ -27,6 +27,9 @@ singleWith8BitParam =
         , ( 0x0E, ( ld_c_n, SevenTStates ) )
         , ( 0x16, ( ld_d_n, SevenTStates ) )
         , ( 0x1E, ( ld_e_n, SevenTStates ) )
+        , ( 0x26, ( ld_h_n, SevenTStates ) )
+        , ( 0x2E, ( ld_l_n, SevenTStates ) )
+        , ( 0x36, ( ld_indirect_hl_n, TenTStates ) )
         , ( 0x3E, ( ld_a_n, SevenTStates ) )
         , ( 0xC6, ( add_a_n, SevenTStates ) )
         , ( 0xCE, ( adc_n, SevenTStates ) )
@@ -38,9 +41,6 @@ singleWith8BitParam =
         , ( 0xEE, ( xor_n, SevenTStates ) )
         , ( 0xF6, ( or_n, SevenTStates ) )
         , ( 0xFE, ( cp_n, SevenTStates ) )
-        , ( 0x26, ( ld_h_n, SevenTStates ) )
-        , ( 0x2E, ( ld_l_n, SevenTStates ) )
-        , ( 0x36, ( ld_indirect_hl_n, TenTStates ) )
         ]
 
 
