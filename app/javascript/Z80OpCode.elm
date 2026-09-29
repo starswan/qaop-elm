@@ -1,5 +1,6 @@
 module Z80OpCode exposing (..)
 
+import Array
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, InstructionDuration, reset_cpu_time)
 import Dict exposing (Dict)
@@ -272,7 +273,7 @@ lengthAndDuration pc rom48k z80env =
                             )
                 , \instruction ->
                     singleByteMain4080
-                        |> Dict.get instruction
+                        |> Array.get (instruction - 0x40)
                         |> Maybe.map
                             (\( mainRegFunc, duration ) ->
                                 ( IncrementByOne

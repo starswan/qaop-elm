@@ -5,6 +5,7 @@
 
 module Z80 exposing (..)
 
+import Array
 import Bitwise
 import CpuTimeCTime exposing (CTime(..), CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAnd16BitValue, InstructionDuration(..), addDuration, addExtraCpuTime, c_FRTIME, c_TIME_LIMIT, reset_cpu_time)
 import Dict exposing (Dict)
@@ -427,7 +428,7 @@ execute_delta instrTime opCode rom48k pc z80_core =
                     ( RegisterChangeDelta mainRegFunc, instrTime |> addDuration duration, IncrementByOne )
 
                 Nothing ->
-                    case singleByteMain4080 |> Dict.get opCode of
+                    case singleByteMain4080 |> Array.get (opCode - 0x40) of
                         Just ( mainRegFunc, duration ) ->
                             ( RegisterChangeDelta mainRegFunc, instrTime |> addDuration duration, IncrementByOne )
 

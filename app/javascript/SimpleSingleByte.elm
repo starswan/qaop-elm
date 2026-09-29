@@ -1,5 +1,6 @@
 module SimpleSingleByte exposing (..)
 
+import Array exposing (Array)
 import Bitwise
 import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
@@ -53,114 +54,117 @@ singleByteMainRegs =
         ]
 
 
-singleByteMain4080 : Dict Int ( RegisterFlagChange, InstructionDuration )
+singleByteMain4080 : Array ( RegisterFlagChange, InstructionDuration )
 singleByteMain4080 =
-    Dict.fromList
+    Array.fromList
         [ -- case 0x40: break;
-          ( 0x40, ( RegChangeNoOp, FourTStates ) )
-        , ( 0x41, ( TransformMainRegisters ld_b_c, FourTStates ) )
-        , ( 0x42, ( TransformMainRegisters ld_b_d, FourTStates ) )
-        , ( 0x43, ( TransformMainRegisters ld_b_e, FourTStates ) )
-        , ( 0x44, ( TransformMainRegisters (ld_b_h .hl), FourTStates ) )
+          ( RegChangeNoOp, FourTStates )
+        , ( TransformMainRegisters ld_b_c, FourTStates )
+        , ( TransformMainRegisters ld_b_d, FourTStates )
+        , ( TransformMainRegisters ld_b_e, FourTStates )
+        , ( TransformMainRegisters (ld_b_h .hl), FourTStates )
 
         -- case 0x45: B=xy&0xFF; break;
-        , ( 0x45, ( TransformMainRegisters (ld_b_l .hl), FourTStates ) )
-        , ( 0x46, ( ld_b_indirect_hl, SevenTStates ) )
-        , ( 0x47, ( FlagChangeMain ld_b_a, FourTStates ) )
-        , ( 0x48, ( TransformMainRegisters ld_c_b, FourTStates ) )
+        , ( TransformMainRegisters (ld_b_l .hl), FourTStates )
+        , ( ld_b_indirect_hl, SevenTStates )
+        , ( FlagChangeMain ld_b_a, FourTStates )
+        , ( TransformMainRegisters ld_c_b, FourTStates )
 
         -- case 0x49: break;
-        , ( 0x49, ( RegChangeNoOp, FourTStates ) )
-        , ( 0x4A, ( TransformMainRegisters ld_c_d, FourTStates ) )
-        , ( 0x4B, ( TransformMainRegisters ld_c_e, FourTStates ) )
-        , ( 0x4C, ( TransformMainRegisters (ld_c_h .hl), FourTStates ) )
-        , ( 0x4D, ( TransformMainRegisters (ld_c_l .hl), FourTStates ) )
-        , ( 0x4E, ( ld_c_indirect_hl, SevenTStates ) )
-        , ( 0x4F, ( FlagChangeMain ld_c_a, FourTStates ) )
-        , ( 0x50, ( TransformMainRegisters ld_d_b, FourTStates ) )
-        , ( 0x51, ( TransformMainRegisters ld_d_c, FourTStates ) )
+        , ( RegChangeNoOp, FourTStates )
+        , ( TransformMainRegisters ld_c_d, FourTStates )
+        , ( TransformMainRegisters ld_c_e, FourTStates )
+        , ( TransformMainRegisters (ld_c_h .hl), FourTStates )
+        , ( TransformMainRegisters (ld_c_l .hl), FourTStates )
+        , ( ld_c_indirect_hl, SevenTStates )
+        , ( FlagChangeMain ld_c_a, FourTStates )
+        , ( TransformMainRegisters ld_d_b, FourTStates )
+        , ( TransformMainRegisters ld_d_c, FourTStates )
 
         -- case 0x52: break;
-        , ( 0x52, ( RegChangeNoOp, FourTStates ) )
-        , ( 0x53, ( TransformMainRegisters ld_d_e, FourTStates ) )
-        , ( 0x54, ( TransformMainRegisters (ld_d_h .hl), FourTStates ) )
-        , ( 0x55, ( TransformMainRegisters (ld_d_l .hl), FourTStates ) )
-        , ( 0x56, ( ld_d_indirect_hl, SevenTStates ) )
-        , ( 0x57, ( FlagChangeMain ld_d_a, FourTStates ) )
-        , ( 0x58, ( TransformMainRegisters ld_e_b, FourTStates ) )
-        , ( 0x59, ( TransformMainRegisters ld_e_c, FourTStates ) )
-        , ( 0x5A, ( TransformMainRegisters ld_e_d, FourTStates ) )
+        , ( RegChangeNoOp, FourTStates )
+        , ( TransformMainRegisters ld_d_e, FourTStates )
+        , ( TransformMainRegisters (ld_d_h .hl), FourTStates )
+        , ( TransformMainRegisters (ld_d_l .hl), FourTStates )
+        , ( ld_d_indirect_hl, SevenTStates )
+        , ( FlagChangeMain ld_d_a, FourTStates )
+        , ( TransformMainRegisters ld_e_b, FourTStates )
+        , ( TransformMainRegisters ld_e_c, FourTStates )
+        , ( TransformMainRegisters ld_e_d, FourTStates )
 
         -- case 0x5B: break;
-        , ( 0x5B, ( RegChangeNoOp, FourTStates ) )
-        , ( 0x5C, ( TransformMainRegisters ld_e_h, FourTStates ) )
-        , ( 0x5D, ( TransformMainRegisters ld_e_l, FourTStates ) )
-        , ( 0x5E, ( ld_e_indirect_hl, SevenTStates ) )
-        , ( 0x5F, ( FlagChangeMain ld_e_a, FourTStates ) )
-        , ( 0x60, ( TransformMainRegisters (ld_h_b .b), FourTStates ) )
+        , ( RegChangeNoOp, FourTStates )
+        , ( TransformMainRegisters ld_e_h, FourTStates )
+        , ( TransformMainRegisters ld_e_l, FourTStates )
+        , ( ld_e_indirect_hl, SevenTStates )
+        , ( FlagChangeMain ld_e_a, FourTStates )
+        , ( TransformMainRegisters (ld_h_b .b), FourTStates )
 
         -- case 0x61: HL=HL&0xFF|C<<8; break;
         -- case 0x61: xy=xy&0xFF|C<<8; break;
-        , ( 0x61, ( TransformMainRegisters (ld_h_b .c), FourTStates ) )
+        , ( TransformMainRegisters (ld_h_b .c), FourTStates )
 
         -- case 0x62: HL=HL&0xFF|D<<8; break;
         -- case 0x62: xy=xy&0xFF|D<<8; break;
-        , ( 0x62, ( TransformMainRegisters (ld_h_b .d), FourTStates ) )
+        , ( TransformMainRegisters (ld_h_b .d), FourTStates )
 
         -- case 0x63: HL=HL&0xFF|E<<8; break;
         -- case 0x63: xy=xy&0xFF|E<<8; break;
-        , ( 0x63, ( TransformMainRegisters (ld_h_b .e), FourTStates ) )
+        , ( TransformMainRegisters (ld_h_b .e), FourTStates )
 
         -- case 0x64: break;
-        , ( 0x64, ( RegChangeNoOp, FourTStates ) )
-        , ( 0x65, ( TransformMainRegisters (ld_h_l get_l), FourTStates ) )
-        , ( 0x66, ( ld_h_indirect_hl, SevenTStates ) )
-        , ( 0x67, ( FlagChangeMain ld_h_a, FourTStates ) )
-        , ( 0x68, ( TransformMainRegisters (ld_l_b .b), FourTStates ) )
+        , ( RegChangeNoOp, FourTStates )
+        , ( TransformMainRegisters (ld_h_l get_l), FourTStates )
+        , ( ld_h_indirect_hl, SevenTStates )
+        , ( FlagChangeMain ld_h_a, FourTStates )
+        , ( TransformMainRegisters (ld_l_b .b), FourTStates )
 
         -- case 0x69: HL=HL&0xFF00|C; break;
-        , ( 0x69, ( TransformMainRegisters (ld_l_b .c), FourTStates ) )
+        , ( TransformMainRegisters (ld_l_b .c), FourTStates )
 
         -- case 0x6A: HL=HL&0xFF00|D; break;
         -- case 0x6A: xy=xy&0xFF00|D; break;
-        , ( 0x6A, ( TransformMainRegisters (ld_l_b .d), FourTStates ) )
+        , ( TransformMainRegisters (ld_l_b .d), FourTStates )
 
         -- case 0x6B: HL=HL&0xFF00|E; break;
         -- case 0x6B: xy=xy&0xFF00|E; break;
-        , ( 0x6B, ( TransformMainRegisters (ld_l_b .e), FourTStates ) )
+        , ( TransformMainRegisters (ld_l_b .e), FourTStates )
 
         -- case 0x6C: HL=HL&0xFF00|HL>>>8; break;
         -- case 0x6C: xy=xy&0xFF00|xy>>>8; break;
-        , ( 0x6C, ( TransformMainRegisters (ld_l_b get_h), FourTStates ) )
+        , ( TransformMainRegisters (ld_l_b get_h), FourTStates )
 
         -- case 0x6D: break;
-        , ( 0x6D, ( RegChangeNoOp, FourTStates ) )
-        , ( 0x6E, ( ld_l_indirect_hl, SevenTStates ) )
-        , ( 0x6F, ( FlagChangeMain ld_l_a, FourTStates ) )
+        , ( RegChangeNoOp, FourTStates )
+        , ( ld_l_indirect_hl, SevenTStates )
+        , ( FlagChangeMain ld_l_a, FourTStates )
 
         -- case 0x70: env.mem(HL,B); time+=3; break;
         -- case 0x70: env.mem(getd(xy),B); time+=3; break;
-        , ( 0x70, ( SetIndirect (\main -> ( main.hl, main.b )), SevenTStates ) )
+        , ( SetIndirect (\main -> ( main.hl, main.b )), SevenTStates )
 
         -- case 0x71: env.mem(HL,C); time+=3; break;
-        , ( 0x71, ( SetIndirect (\main -> ( main.hl, main.c )), SevenTStates ) )
-        , ( 0x72, ( SetIndirect (\main -> ( main.hl, main.d )), SevenTStates ) )
-        , ( 0x73, ( SetIndirect (\main -> ( main.hl, main.e )), SevenTStates ) )
-        , ( 0x74, ( SetIndirect (\main -> ( main.hl, main |> get_h )), SevenTStates ) )
-        , ( 0x75, ( SetIndirect (\main -> ( main.hl, main |> get_l )), SevenTStates ) )
-        , ( 0x77, ( ld_indirect_hl_a, SevenTStates ) )
+        , ( SetIndirect (\main -> ( main.hl, main.c )), SevenTStates )
+        , ( SetIndirect (\main -> ( main.hl, main.d )), SevenTStates )
+        , ( SetIndirect (\main -> ( main.hl, main.e )), SevenTStates )
+        , ( SetIndirect (\main -> ( main.hl, main |> get_h )), SevenTStates )
+        , ( SetIndirect (\main -> ( main.hl, main |> get_l )), SevenTStates )
+
+        --0x76 placeholder - should never come in here
+        , ( RegChangeNoOp, FourTStates )
+        , ( ld_indirect_hl_a, SevenTStates )
 
         -- case 0x78: A=B; break;
-        , ( 0x78, ( RegisterChangeA .b, FourTStates ) )
-        , ( 0x79, ( ld_a_c, FourTStates ) )
-        , ( 0x7A, ( ld_a_d, FourTStates ) )
-        , ( 0x7B, ( ld_a_e, FourTStates ) )
-        , ( 0x7C, ( ld_a_h, FourTStates ) )
-        , ( 0x7D, ( ld_a_l, FourTStates ) )
-        , ( 0x7E, ( ld_a_indirect_hl, SevenTStates ) )
+        , ( RegisterChangeA .b, FourTStates )
+        , ( ld_a_c, FourTStates )
+        , ( ld_a_d, FourTStates )
+        , ( ld_a_e, FourTStates )
+        , ( ld_a_h, FourTStates )
+        , ( ld_a_l, FourTStates )
+        , ( ld_a_indirect_hl, SevenTStates )
 
         -- case 0x7F: break;
-        , ( 0x7F, ( RegChangeNoOp, FourTStates ) )
+        , ( RegChangeNoOp, FourTStates )
         ]
 
 
