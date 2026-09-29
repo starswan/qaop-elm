@@ -71,6 +71,10 @@ type RegisterFlagChange
     | IndexedRegisterZ80Change (MainWithIndexRegisters -> FlagRegisters -> IndexedZ80Change)
     | RegisterEnvMainChangeWithClockTime (MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange)
     | RegisterEnvMainChange (MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange)
+    | LoadAIndirect (MainWithIndexRegisters -> Int)
+    | LoadRegisterIndirect ChangeMainRegister (MainWithIndexRegisters -> Int)
+    | FlagFuncIndirect (Int -> FlagRegisters -> FlagRegisters) (MainWithIndexRegisters -> Int)
+    | SetMemIndirectFromA (MainWithIndexRegisters -> Int)
 
 
 type SixteenBit

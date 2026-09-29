@@ -1,5 +1,6 @@
 module Z80OpCode exposing (..)
 
+import Array
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, InstructionDuration, reset_cpu_time)
 import Dict exposing (Dict)
@@ -9,7 +10,7 @@ import GroupED exposing (singleByteMainAndFlagsED, singleByteMainRegsED)
 import Maybe.Extra exposing (oneOf)
 import PCIncrement exposing (PCIncrement(..))
 import SimpleFlagOps exposing (singleByteFlags)
-import SimpleSingleByte exposing (singleByteMainRegs, singleByteMainRegsDD, singleByteMainRegsFD)
+import SimpleSingleByte exposing (singleByteMain4080, singleByteMainRegs, singleByteMainRegsDD, singleByteMainRegsFD)
 import SingleEnvWithMain exposing (applySingleEnvMainChange, singleEnvMainRegs)
 import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters)
 import SingleNoParams exposing (singleNoParamCalls, singleWithNoParam)
@@ -262,6 +263,17 @@ lengthAndDuration pc rom48k z80env =
                 , \instruction ->
                     singleByteMainRegs
                         |> Dict.get instruction
+                        |> Maybe.map
+                            (\( mainRegFunc, duration ) ->
+                                ( IncrementByOne
+                                , duration
+                                , \cpuClock z80rom z80core ->
+                                    z80core |> applyRegisterDelta cpuClock mainRegFunc z80rom
+                                )
+                            )
+                , \instruction ->
+                    singleByteMain4080
+                        |> Array.get (instruction - 0x40)
                         |> Maybe.map
                             (\( mainRegFunc, duration ) ->
                                 ( IncrementByOne

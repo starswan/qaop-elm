@@ -4,7 +4,7 @@ import CpuTimeCTime exposing (InstructionDuration(..), ShortDelay(..))
 import Dict exposing (Dict)
 import JumpChange exposing (JumpChange(..))
 import Utils exposing (byte)
-import Z80Flags exposing (FlagRegisters, adc, always_jump, jump_c, jump_nc, jump_nz, jump_z, sbc, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
+import Z80Flags exposing (FlagRegisters, always_jump, jump_c, jump_nc, jump_nz, jump_z, z80_adc, z80_add, z80_and, z80_cp, z80_or, z80_sbc, z80_sub, z80_xor)
 import Z80Registers exposing (CoreRegister(..))
 import Z80Types exposing (MainWithIndexRegisters)
 
@@ -27,6 +27,9 @@ singleWith8BitParam =
         , ( 0x0E, ( ld_c_n, SevenTStates ) )
         , ( 0x16, ( ld_d_n, SevenTStates ) )
         , ( 0x1E, ( ld_e_n, SevenTStates ) )
+        , ( 0x26, ( ld_h_n, SevenTStates ) )
+        , ( 0x2E, ( ld_l_n, SevenTStates ) )
+        , ( 0x36, ( ld_indirect_hl_n, TenTStates ) )
         , ( 0x3E, ( ld_a_n, SevenTStates ) )
         , ( 0xC6, ( add_a_n, SevenTStates ) )
         , ( 0xCE, ( adc_n, SevenTStates ) )
@@ -38,9 +41,6 @@ singleWith8BitParam =
         , ( 0xEE, ( xor_n, SevenTStates ) )
         , ( 0xF6, ( or_n, SevenTStates ) )
         , ( 0xFE, ( cp_n, SevenTStates ) )
-        , ( 0x26, ( ld_h_n, SevenTStates ) )
-        , ( 0x2E, ( ld_l_n, SevenTStates ) )
-        , ( 0x36, ( ld_indirect_hl_n, TenTStates ) )
         ]
 
 
@@ -143,7 +143,7 @@ add_a_n param =
 adc_n : Int -> Single8BitChange
 adc_n param =
     -- case 0xCE: adc(imm8()); break;
-    FlagJump adc param
+    FlagJump z80_adc param
 
 
 sub_n : Int -> Single8BitChange
@@ -155,7 +155,7 @@ sub_n param =
 sbc_a_n : Int -> Single8BitChange
 sbc_a_n param =
     -- case 0xDE: sbc(imm8()); break;
-    FlagJump sbc param
+    FlagJump z80_sbc param
 
 
 and_n : Int -> Single8BitChange
