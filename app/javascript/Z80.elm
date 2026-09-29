@@ -5,11 +5,12 @@
 
 module Z80 exposing (..)
 
+import Array
 import Bitwise
 import CpuTimeCTime exposing (CTime(..), CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAnd16BitValue, InstructionDuration(..), addDuration, addExtraCpuTime, c_FRTIME, c_TIME_LIMIT, reset_cpu_time)
 import Dict exposing (Dict)
 import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainRegsCB, singleEnvMainRegsCB)
-import GroupCBIXIY exposing (singleByteMainRegsIXCB, singleByteMainRegsIYCB, singleEnvMainRegsIXCB, singleEnvMainRegsIYCB)
+import GroupCBIXIY exposing (singleByteMainRegsIXCB, singleByteMainRegsIYCB, singleByteMainRegsIYCB80, singleEnvMainRegsIXCB, singleEnvMainRegsIYCB)
 import GroupED exposing (edWithInterrupts, fourByteMainED, singleByteFlagsED, singleByteMainAndFlagsED, singleByteMainRegsED)
 import Interrupts exposing (IFFValue(..), InterruptMode(..))
 import List.Extra
@@ -563,17 +564,22 @@ runSpecialIXCB offset clockTime param rom48k z80_core =
 
 runSpecialIYCB : Int -> CpuTimeCTime -> Int -> Z80ROM -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
 runSpecialIYCB offset clockTime param rom48k z80_core =
-    case singleByteMainRegsIYCB |> Dict.get param |> Maybe.map (\( f, d ) -> ( f offset, d )) of
+    case singleByteMainRegsIYCB |> Array.get param |> Maybe.map (\( f, d ) -> ( f offset, d )) of
         Just ( mainRegFunc, duration ) ->
             ( RegisterCBDelta (mainRegFunc z80_core.main), clockTime |> addDuration duration, IncrementByFour )
 
         Nothing ->
-            case singleEnvMainRegsIYCB |> Dict.get param of
-                Just ( f, duration ) ->
-                    ( MainWithEnvDelta (f z80_core.main offset rom48k z80_core.env), clockTime |> addDuration duration, IncrementByFour )
+            case singleByteMainRegsIYCB80 |> Dict.get param |> Maybe.map (\( f, d ) -> ( f offset, d )) of
+                Just ( mainRegFunc, duration ) ->
+                    ( RegisterCBDelta (mainRegFunc z80_core.main), clockTime |> addDuration duration, IncrementByFour )
 
                 Nothing ->
-                    ( UnknownInstruction "execute IYCB" param, clockTime, IncrementByFour )
+                    case singleEnvMainRegsIYCB |> Dict.get param of
+                        Just ( f, duration ) ->
+                            ( MainWithEnvDelta (f z80_core.main offset rom48k z80_core.env), clockTime |> addDuration duration, IncrementByFour )
+
+                        Nothing ->
+                            ( UnknownInstruction "execute IYCB" param, clockTime, IncrementByFour )
 
 
 runSpecialEDMisc : Int -> CpuTimeCTime -> Z80ROM -> Int -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
