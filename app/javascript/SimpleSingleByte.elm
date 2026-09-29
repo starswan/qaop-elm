@@ -5,7 +5,8 @@ import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
 import RegisterChange exposing (RegisterFlagChange(..), Shifter(..))
 import Utils exposing (BitTest(..), shiftLeftBy8, shiftRightBy8)
-import Z80Flags exposing (adc, sbc, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
+import Z80Flags exposing (z80_adc, z80_add, z80_and, z80_cp, z80_or, z80_sbc, z80_sub, z80_xor)
+import Z80Registers exposing (ChangeMainRegister(..))
 import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, get_bc, get_de, get_h, get_ixh, get_ixl, get_iyh, get_iyl, get_l, set_de_main)
 
 
@@ -33,21 +34,25 @@ singleByteMainRegs =
 
         -- case 0x45: B=xy&0xFF; break;
         , ( 0x45, ( TransformMainRegisters (ld_b_l .hl), FourTStates ) )
+        , ( 0x46, ( ld_b_indirect_hl, SevenTStates ) )
         , ( 0x48, ( TransformMainRegisters ld_c_b, FourTStates ) )
         , ( 0x4A, ( TransformMainRegisters ld_c_d, FourTStates ) )
         , ( 0x4B, ( TransformMainRegisters ld_c_e, FourTStates ) )
         , ( 0x4C, ( TransformMainRegisters (ld_c_h .hl), FourTStates ) )
         , ( 0x4D, ( TransformMainRegisters (ld_c_l .hl), FourTStates ) )
+        , ( 0x4E, ( ld_c_indirect_hl, SevenTStates ) )
         , ( 0x50, ( TransformMainRegisters ld_d_b, FourTStates ) )
         , ( 0x51, ( TransformMainRegisters ld_d_c, FourTStates ) )
         , ( 0x53, ( TransformMainRegisters ld_d_e, FourTStates ) )
         , ( 0x54, ( TransformMainRegisters (ld_d_h .hl), FourTStates ) )
         , ( 0x55, ( TransformMainRegisters (ld_d_l .hl), FourTStates ) )
+        , ( 0x56, ( ld_d_indirect_hl, SevenTStates ) )
         , ( 0x58, ( TransformMainRegisters ld_e_b, FourTStates ) )
         , ( 0x59, ( TransformMainRegisters ld_e_c, FourTStates ) )
         , ( 0x5A, ( TransformMainRegisters ld_e_d, FourTStates ) )
         , ( 0x5C, ( TransformMainRegisters ld_e_h, FourTStates ) )
         , ( 0x5D, ( TransformMainRegisters ld_e_l, FourTStates ) )
+        , ( 0x5E, ( ld_e_indirect_hl, SevenTStates ) )
         , ( 0x60, ( TransformMainRegisters (ld_h_b .b), FourTStates ) )
 
         -- case 0x61: HL=HL&0xFF|C<<8; break;
@@ -62,6 +67,7 @@ singleByteMainRegs =
         -- case 0x63: xy=xy&0xFF|E<<8; break;
         , ( 0x63, ( TransformMainRegisters (ld_h_b .e), FourTStates ) )
         , ( 0x65, ( TransformMainRegisters (ld_h_l get_l), FourTStates ) )
+        , ( 0x66, ( ld_h_indirect_hl, SevenTStates ) )
         , ( 0x68, ( TransformMainRegisters (ld_l_b .b), FourTStates ) )
 
         -- case 0x69: HL=HL&0xFF00|C; break;
@@ -78,6 +84,7 @@ singleByteMainRegs =
         -- case 0x6C: HL=HL&0xFF00|HL>>>8; break;
         -- case 0x6C: xy=xy&0xFF00|xy>>>8; break;
         , ( 0x6C, ( TransformMainRegisters (ld_l_b get_h), FourTStates ) )
+        , ( 0x6E, ( ld_l_indirect_hl, SevenTStates ) )
 
         -- case 0x70: env.mem(HL,B); time+=3; break;
         -- case 0x70: env.mem(getd(xy),B); time+=3; break;
@@ -97,6 +104,15 @@ singleByteMainRegs =
         , ( 0x7B, ( ld_a_e, FourTStates ) )
         , ( 0x7C, ( ld_a_h, FourTStates ) )
         , ( 0x7D, ( ld_a_l, FourTStates ) )
+        , ( 0x7E, ( ld_a_indirect_hl, SevenTStates ) )
+        , ( 0x86, ( add_a_indirect_hl, SevenTStates ) )
+        , ( 0x8E, ( adc_a_indirect_hl, SevenTStates ) )
+        , ( 0x96, ( sub_indirect_hl, SevenTStates ) )
+        , ( 0x9E, ( sbc_indirect_hl, SevenTStates ) )
+        , ( 0xA6, ( and_indirect_hl, SevenTStates ) )
+        , ( 0xAE, ( xor_indirect_hl, SevenTStates ) )
+        , ( 0xB6, ( or_indirect_hl, SevenTStates ) )
+        , ( 0xBE, ( cp_indirect_hl, SevenTStates ) )
 
         -- case 0xC5: push(B<<8|C); break;
         , ( 0xC5, ( Pushed16BitValue get_bc, ElevenTStates ) )
@@ -185,12 +201,12 @@ singleByteMainRegsFD =
         , ( 0x7D, ( RegisterChangeA get_iyl, EightTStates ) )
         , ( 0x84, ( SingleEnvFlagFunc z80_add get_iyh, EightTStates ) )
         , ( 0x85, ( SingleEnvFlagFunc z80_add get_iyl, EightTStates ) )
-        , ( 0x8C, ( SingleEnvFlagFunc adc get_iyh, EightTStates ) )
-        , ( 0x8D, ( SingleEnvFlagFunc adc get_iyl, EightTStates ) )
+        , ( 0x8C, ( SingleEnvFlagFunc z80_adc get_iyh, EightTStates ) )
+        , ( 0x8D, ( SingleEnvFlagFunc z80_adc get_iyl, EightTStates ) )
         , ( 0x94, ( SingleEnvFlagFunc z80_sub get_iyh, EightTStates ) )
         , ( 0x95, ( SingleEnvFlagFunc z80_sub get_iyl, EightTStates ) )
-        , ( 0x9C, ( SingleEnvFlagFunc sbc get_iyh, EightTStates ) )
-        , ( 0x9D, ( SingleEnvFlagFunc sbc get_iyl, EightTStates ) )
+        , ( 0x9C, ( SingleEnvFlagFunc z80_sbc get_iyh, EightTStates ) )
+        , ( 0x9D, ( SingleEnvFlagFunc z80_sbc get_iyl, EightTStates ) )
         , ( 0xA4, ( SingleEnvFlagFunc z80_and get_iyh, EightTStates ) )
         , ( 0xA5, ( SingleEnvFlagFunc z80_and get_iyl, EightTStates ) )
         , ( 0xAC, ( SingleEnvFlagFunc z80_xor get_iyh, EightTStates ) )
@@ -243,12 +259,12 @@ singleByteMainRegsDD =
         , ( 0x7D, ( RegisterChangeA get_ixl, EightTStates ) )
         , ( 0x84, ( SingleEnvFlagFunc z80_add get_ixh, EightTStates ) )
         , ( 0x85, ( SingleEnvFlagFunc z80_add get_ixl, EightTStates ) )
-        , ( 0x8C, ( SingleEnvFlagFunc adc get_ixh, EightTStates ) )
-        , ( 0x8D, ( SingleEnvFlagFunc adc get_ixl, EightTStates ) )
+        , ( 0x8C, ( SingleEnvFlagFunc z80_adc get_ixh, EightTStates ) )
+        , ( 0x8D, ( SingleEnvFlagFunc z80_adc get_ixl, EightTStates ) )
         , ( 0x94, ( SingleEnvFlagFunc z80_sub get_ixh, EightTStates ) )
         , ( 0x95, ( SingleEnvFlagFunc z80_sub get_ixl, EightTStates ) )
-        , ( 0x9C, ( SingleEnvFlagFunc sbc get_ixh, EightTStates ) )
-        , ( 0x9D, ( SingleEnvFlagFunc sbc get_ixl, EightTStates ) )
+        , ( 0x9C, ( SingleEnvFlagFunc z80_sbc get_ixh, EightTStates ) )
+        , ( 0x9D, ( SingleEnvFlagFunc z80_sbc get_ixl, EightTStates ) )
         , ( 0xA4, ( SingleEnvFlagFunc z80_and get_ixh, EightTStates ) )
         , ( 0xA5, ( SingleEnvFlagFunc z80_and get_ixl, EightTStates ) )
         , ( 0xAC, ( SingleEnvFlagFunc z80_xor get_ixh, EightTStates ) )
@@ -553,31 +569,16 @@ ld_a_l =
 
 
 
---ld_indirect_hl_c : MainWithIndexRegisters -> RegisterChange
---ld_indirect_hl_c z80_main =
 -- case 0x71: env.mem(HL,C); time+=3; break;
 -- case 0x71: env.mem(getd(xy),C); time+=3; break;
---SetIndirect .hl .c
---ld_indirect_hl_d : MainWithIndexRegisters -> RegisterChange
---ld_indirect_hl_d z80_main =
 -- case 0x72: env.mem(HL,D); time+=3; break;
 -- case 0x72: env.mem(getd(xy),D); time+=3; break;
---SetIndirect .hl .d
---ld_indirect_hl_e : MainWithIndexRegisters -> RegisterChange
---ld_indirect_hl_e z80_main =
 -- case 0x73: env.mem(HL,E); time+=3; break;
 -- case 0x73: env.mem(getd(xy),E); time+=3; break;
---SetIndirect .hl .e
---ld_indirect_hl_h : MainWithIndexRegisters -> RegisterChange
---ld_indirect_hl_h z80_main =
 -- case 0x74: env.mem(HL,HL>>>8); time+=3; break;
 -- case 0x74: env.mem(getd(xy),HL>>>8); time+=3; break;
---SetIndirect .hl get_h
---ld_indirect_hl_l : MainWithIndexRegisters -> RegisterChange
---ld_indirect_hl_l z80_main =
 -- case 0x75: env.mem(HL,HL&0xFF); time+=3; break;
 -- case 0x75: env.mem(getd(xy),HL&0xFF); time+=3; break;
---SetIndirect .hl get_l
 
 
 ex_de_hl : MainWithIndexRegisters -> MainWithIndexRegisters
@@ -632,3 +633,97 @@ ld_e_iy_h : MainWithIndexRegisters -> MainWithIndexRegisters
 ld_e_iy_h z80_main =
     -- case 0x5C: E=HL>>>8; break;
     { z80_main | e = shiftRightBy8 z80_main.iy }
+
+
+ld_b_indirect_hl : RegisterFlagChange
+ld_b_indirect_hl =
+    -- case 0x46: B=env.mem(HL); time+=3; break;
+    -- case 0x46: B=env.mem(getd(xy)); time+=3; break;
+    LoadRegisterIndirect ChangeMainB .hl
+
+
+ld_c_indirect_hl : RegisterFlagChange
+ld_c_indirect_hl =
+    -- case 0x4E: C=env.mem(HL); time+=3; break;
+    LoadRegisterIndirect ChangeMainC .hl
+
+
+ld_d_indirect_hl : RegisterFlagChange
+ld_d_indirect_hl =
+    -- case 0x56: D=env.mem(HL); time+=3; break;
+    LoadRegisterIndirect ChangeMainD .hl
+
+
+ld_e_indirect_hl : RegisterFlagChange
+ld_e_indirect_hl =
+    -- case 0x5E: E=env.mem(HL); time+=3; break;
+    LoadRegisterIndirect ChangeMainE .hl
+
+
+ld_h_indirect_hl : RegisterFlagChange
+ld_h_indirect_hl =
+    -- case 0x66: HL=HL&0xFF|env.mem(HL)<<8; time+=3; break;
+    -- case 0x66: HL=HL&0xFF|env.mem(getd(xy))<<8; time+=3; break;
+    LoadRegisterIndirect ChangeMainH .hl
+
+
+ld_l_indirect_hl : RegisterFlagChange
+ld_l_indirect_hl =
+    -- case 0x6E: HL=HL&0xFF00|env.mem(HL); time+=3; break;
+    -- case 0x6E: HL=HL&0xFF00|env.mem(getd(xy)); time+=3; break;
+    LoadRegisterIndirect ChangeMainL .hl
+
+
+ld_a_indirect_hl : RegisterFlagChange
+ld_a_indirect_hl =
+    -- case 0x7E: A=env.mem(HL); time+=3; break;
+    -- case 0x7E: A=env.mem(getd(xy)); time+=3; break;
+    LoadAIndirect .hl
+
+
+add_a_indirect_hl : RegisterFlagChange
+add_a_indirect_hl =
+    -- case 0x86: add(env.mem(HL)); time+=3; break;
+    FlagFuncIndirect z80_add .hl
+
+
+adc_a_indirect_hl : RegisterFlagChange
+adc_a_indirect_hl =
+    -- case 0x8E: adc(env.mem(HL)); time+=3; break;
+    FlagFuncIndirect z80_adc .hl
+
+
+sub_indirect_hl : RegisterFlagChange
+sub_indirect_hl =
+    -- case 0x96: sub(env.mem(HL)); time+=3; break;
+    FlagFuncIndirect z80_sub .hl
+
+
+sbc_indirect_hl : RegisterFlagChange
+sbc_indirect_hl =
+    -- case 0x9E: sbc(env.mem(HL)); time+=3; break;
+    FlagFuncIndirect z80_sbc .hl
+
+
+and_indirect_hl : RegisterFlagChange
+and_indirect_hl =
+    -- case 0x9E: sbc(env.mem(HL)); time+=3; break;
+    FlagFuncIndirect z80_and .hl
+
+
+xor_indirect_hl : RegisterFlagChange
+xor_indirect_hl =
+    -- case 0x9E: sbc(env.mem(HL)); time+=3; break;
+    FlagFuncIndirect z80_xor .hl
+
+
+or_indirect_hl : RegisterFlagChange
+or_indirect_hl =
+    -- case 0x9E: sbc(env.mem(HL)); time+=3; break;
+    FlagFuncIndirect z80_or .hl
+
+
+cp_indirect_hl : RegisterFlagChange
+cp_indirect_hl =
+    -- case 0x9E: sbc(env.mem(HL)); time+=3; break;
+    FlagFuncIndirect z80_cp .hl

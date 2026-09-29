@@ -5,7 +5,7 @@ import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
 import RegisterChange exposing (RegisterFlagChange(..))
 import Utils exposing (BitTest(..), bitMaskFromBit, inverseBitMaskFromBit, shiftLeftBy8, shiftRightBy8)
-import Z80Flags exposing (FlagRegisters, IntWithFlags, adc, c_FP, c_FS, dec, getFlags, inc, rot, sbc, scf_ccf, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit, z80_add, z80_cp, z80_cpl, z80_daa, z80_or, z80_sub, z80_xor)
+import Z80Flags exposing (FlagRegisters, IntWithFlags, c_FP, c_FS, dec, getFlags, inc, rot, scf_ccf, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit, z80_adc, z80_add, z80_cp, z80_cpl, z80_daa, z80_or, z80_sbc, z80_sub, z80_xor)
 import Z80Types exposing (MainWithIndexRegisters)
 
 
@@ -236,7 +236,7 @@ add_a_a z80_flags =
 adc_a_a : FlagRegisters -> FlagRegisters
 adc_a_a z80_flags =
     -- case 0x8F: adc(A); break;
-    z80_flags |> adc z80_flags.a
+    z80_flags |> z80_adc z80_flags.a
 
 
 sub_a : FlagRegisters -> FlagRegisters
@@ -248,7 +248,7 @@ sub_a z80_flags =
 sbc_a : FlagRegisters -> FlagRegisters
 sbc_a z80_flags =
     -- case 0x9F: sbc(A); break;
-    z80_flags |> sbc z80_flags.a
+    z80_flags |> z80_sbc z80_flags.a
 
 
 and_a : FlagRegisters -> FlagRegisters

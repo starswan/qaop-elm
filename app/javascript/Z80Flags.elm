@@ -209,8 +209,8 @@ z80_add b the_flags =
 --}
 
 
-adc : Int -> FlagRegisters -> FlagRegisters
-adc b the_flags =
+z80_adc : Int -> FlagRegisters -> FlagRegisters
+z80_adc b the_flags =
     let
         fa =
             the_flags.a
@@ -261,8 +261,8 @@ z80_sub b flagRegs =
 --}
 
 
-sbc : Int -> FlagRegisters -> FlagRegisters
-sbc b flagRegs =
+z80_sbc : Int -> FlagRegisters -> FlagRegisters
+z80_sbc b flagRegs =
     let
         fb =
             complement b

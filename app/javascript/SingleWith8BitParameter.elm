@@ -4,7 +4,7 @@ import CpuTimeCTime exposing (InstructionDuration(..), ShortDelay(..))
 import Dict exposing (Dict)
 import JumpChange exposing (JumpChange(..))
 import Utils exposing (byte)
-import Z80Flags exposing (FlagRegisters, adc, always_jump, jump_c, jump_nc, jump_nz, jump_z, sbc, z80_add, z80_and, z80_cp, z80_or, z80_sub, z80_xor)
+import Z80Flags exposing (FlagRegisters, always_jump, jump_c, jump_nc, jump_nz, jump_z, z80_adc, z80_add, z80_and, z80_cp, z80_or, z80_sbc, z80_sub, z80_xor)
 import Z80Registers exposing (CoreRegister(..))
 import Z80Types exposing (MainWithIndexRegisters)
 
@@ -143,7 +143,7 @@ add_a_n param =
 adc_n : Int -> Single8BitChange
 adc_n param =
     -- case 0xCE: adc(imm8()); break;
-    FlagJump adc param
+    FlagJump z80_adc param
 
 
 sub_n : Int -> Single8BitChange
@@ -155,7 +155,7 @@ sub_n param =
 sbc_a_n : Int -> Single8BitChange
 sbc_a_n param =
     -- case 0xDE: sbc(imm8()); break;
-    FlagJump sbc param
+    FlagJump z80_sbc param
 
 
 and_n : Int -> Single8BitChange
