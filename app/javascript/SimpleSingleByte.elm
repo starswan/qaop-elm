@@ -27,9 +27,37 @@ singleByteMainRegs =
         -- case 0x35: v=dec(env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
         -- case 0x35: {int a; v=dec(env.mem(a=getd(xy))); time+=4; env.mem(a,v); time+=3;} break;
         , ( 0x35, ( DecrementIndirect .hl, ElevenTStates ) )
+        , ( 0x86, ( add_a_indirect_hl, SevenTStates ) )
+        , ( 0x8E, ( adc_a_indirect_hl, SevenTStates ) )
+        , ( 0x96, ( sub_indirect_hl, SevenTStates ) )
+        , ( 0x9E, ( sbc_indirect_hl, SevenTStates ) )
+        , ( 0xA6, ( and_indirect_hl, SevenTStates ) )
+        , ( 0xAE, ( xor_indirect_hl, SevenTStates ) )
+        , ( 0xB6, ( or_indirect_hl, SevenTStates ) )
+        , ( 0xBE, ( cp_indirect_hl, SevenTStates ) )
 
-        -- case 0x40: break;
-        , ( 0x40, ( RegChangeNoOp, FourTStates ) )
+        -- case 0xC5: push(B<<8|C); break;
+        , ( 0xC5, ( Pushed16BitValue get_bc, ElevenTStates ) )
+
+        -- case 0xD5: push(D<<8|E); break;
+        , ( 0xD5, ( Pushed16BitValue get_de, ElevenTStates ) )
+
+        -- case 0xE3: v=pop(); push(HL); MP=HL=v; time+=2; break;
+        , ( 0xE3, ( ExchangeTopOfStackWith HL, NineteenTStates ) )
+        , ( 0xE5, ( Pushed16BitValue .hl, ElevenTStates ) )
+        , ( 0xE9, ( RegisterChangeJump .hl, FourTStates ) )
+        , ( 0xEB, ( TransformMainRegisters ex_de_hl, FourTStates ) )
+
+        -- case 0xF9: SP=HL; time+=2; break;
+        , ( 0xF9, ( RegChangeNewSP .hl, SixTStates ) )
+        ]
+
+
+singleByteMain4080 : Dict Int ( RegisterFlagChange, InstructionDuration )
+singleByteMain4080 =
+    Dict.fromList
+        [ -- case 0x40: break;
+          ( 0x40, ( RegChangeNoOp, FourTStates ) )
         , ( 0x41, ( TransformMainRegisters ld_b_c, FourTStates ) )
         , ( 0x42, ( TransformMainRegisters ld_b_d, FourTStates ) )
         , ( 0x43, ( TransformMainRegisters ld_b_e, FourTStates ) )
@@ -133,29 +161,6 @@ singleByteMainRegs =
 
         -- case 0x7F: break;
         , ( 0x7F, ( RegChangeNoOp, FourTStates ) )
-        , ( 0x86, ( add_a_indirect_hl, SevenTStates ) )
-        , ( 0x8E, ( adc_a_indirect_hl, SevenTStates ) )
-        , ( 0x96, ( sub_indirect_hl, SevenTStates ) )
-        , ( 0x9E, ( sbc_indirect_hl, SevenTStates ) )
-        , ( 0xA6, ( and_indirect_hl, SevenTStates ) )
-        , ( 0xAE, ( xor_indirect_hl, SevenTStates ) )
-        , ( 0xB6, ( or_indirect_hl, SevenTStates ) )
-        , ( 0xBE, ( cp_indirect_hl, SevenTStates ) )
-
-        -- case 0xC5: push(B<<8|C); break;
-        , ( 0xC5, ( Pushed16BitValue get_bc, ElevenTStates ) )
-
-        -- case 0xD5: push(D<<8|E); break;
-        , ( 0xD5, ( Pushed16BitValue get_de, ElevenTStates ) )
-
-        -- case 0xE3: v=pop(); push(HL); MP=HL=v; time+=2; break;
-        , ( 0xE3, ( ExchangeTopOfStackWith HL, NineteenTStates ) )
-        , ( 0xE5, ( Pushed16BitValue .hl, ElevenTStates ) )
-        , ( 0xE9, ( RegisterChangeJump .hl, FourTStates ) )
-        , ( 0xEB, ( TransformMainRegisters ex_de_hl, FourTStates ) )
-
-        -- case 0xF9: SP=HL; time+=2; break;
-        , ( 0xF9, ( RegChangeNewSP .hl, SixTStates ) )
         ]
 
 

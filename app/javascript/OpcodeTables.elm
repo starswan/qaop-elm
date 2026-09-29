@@ -5,7 +5,7 @@ import Dict exposing (Dict)
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, doubleWithRegistersIX, doubleWithRegistersIY)
 import RegisterChange exposing (RegisterFlagChange(..), TwoByteChange(..))
 import SimpleFlagOps exposing (singleByteFlags)
-import SimpleSingleByte exposing (singleByteFlagsDD, singleByteFlagsFD, singleByteMainRegs, singleByteMainRegsDD, singleByteMainRegsFD)
+import SimpleSingleByte exposing (singleByteFlagsDD, singleByteFlagsFD, singleByteMain4080, singleByteMainRegs, singleByteMainRegsDD, singleByteMainRegsFD)
 import SingleEnvWithMain exposing (singleEnvMainRegs, singleEnvMainRegsIX, singleEnvMainRegsIY)
 import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters, singleByteMainAndFlagRegistersIX, singleByteMainAndFlagRegistersIY)
 import SingleNoParams exposing (singleNoParamCalls, singleWithNoParam, singleWithNoParamDD, singleWithNoParamFD)
@@ -18,6 +18,7 @@ import TripleWithMain exposing (tripleMainRegsIXFour, tripleMainRegsIXThree, tri
 singleByteInstructions : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleByteInstructions =
     singleByteMainRegs
+        |> Dict.union singleByteMain4080
         |> Dict.union singleByteFlags
         |> Dict.union singleWithNoParam
         |> Dict.union singleNoParamCalls
