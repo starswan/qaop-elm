@@ -95,9 +95,14 @@ singleByteMainRegsIXCB =
         , ( 0x3D, ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x3E, ( \offset z80_main -> RegisterChangeIndexShifter Shifter7 (z80_main.ix + byte offset), FifteenTStates ) )
         , ( 0x3F, ( \offset z80_main -> FlagsIndirectWithShifter Shifter7 (z80_main.ix + byte offset), TwentyThreeTStates ) )
+        ]
 
-        -- reset bit0
-        , ( 0x80, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_0 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
+
+singleByteMainRegsIXCB80 : Dict Int ( Int -> MainWithIndexRegisters -> RegisterFlagChange, InstructionDuration )
+singleByteMainRegsIXCB80 =
+    Dict.fromList
+        [ -- reset bit0
+          ( 0x80, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_0 ChangeMainB (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x81, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_0 ChangeMainC (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x82, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_0 ChangeMainD (z80_main.ix + byte offset), TwentyThreeTStates ) )
         , ( 0x83, ( \offset z80_main -> ResetBitIndirectWithCopy Bit_0 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates ) )
@@ -515,7 +520,8 @@ bitTests =
 makeEnvMainDict : (MainWithIndexRegisters -> Int) -> Dict Int ( MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )
 makeEnvMainDict ix_func =
     let
-        subdict =
+        dictList : List (Dict Int ( MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration ))
+        dictList =
             bitTests
                 |> List.indexedMap
                     (\bitIndex bitType ->
@@ -542,7 +548,7 @@ makeEnvMainDict ix_func =
                             |> Dict.fromList
                     )
     in
-    subdict |> List.foldr (\d1 d2 -> d1 |> Dict.union d2) Dict.empty
+    dictList |> List.foldr (\d1 d2 -> d1 |> Dict.union d2) Dict.empty
 
 
 singleEnvMainRegsIXCB : Dict Int ( MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )
