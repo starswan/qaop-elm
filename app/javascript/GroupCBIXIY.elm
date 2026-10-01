@@ -4,13 +4,14 @@ import Array exposing (Array)
 import Bitwise
 import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
+import IXIYChange exposing (IXIYChange(..))
 import RegisterChange exposing (RegisterFlagChange(..), Shifter(..))
 import Utils exposing (BitTest(..), byte)
 import Z80Registers exposing (ChangeMainRegister(..))
 import Z80Types exposing (MainWithIndexRegisters)
 
 
-singleByteMainRegsIXCB : Dict Int ( Int -> MainWithIndexRegisters -> RegisterFlagChange, InstructionDuration )
+singleByteMainRegsIXCB : Dict Int ( Int -> MainWithIndexRegisters -> IXIYChange, InstructionDuration )
 singleByteMainRegsIXCB =
     Dict.fromList
         [ --shifter0
@@ -95,7 +96,7 @@ singleByteMainRegsIXCB =
         ]
 
 
-singleByteMainRegsIXCB80 : Dict Int ( Int -> MainWithIndexRegisters -> RegisterFlagChange, InstructionDuration )
+singleByteMainRegsIXCB80 : Dict Int ( Int -> MainWithIndexRegisters -> IXIYChange, InstructionDuration )
 singleByteMainRegsIXCB80 =
     Dict.fromList
         [ -- reset bit0
@@ -260,7 +261,7 @@ singleByteMainRegsIXCB80 =
         ]
 
 
-singleByteMainRegsIYCB : Array ( Int -> MainWithIndexRegisters -> RegisterFlagChange, InstructionDuration )
+singleByteMainRegsIYCB : Array ( Int -> MainWithIndexRegisters -> IXIYChange, InstructionDuration )
 singleByteMainRegsIYCB =
     Array.fromList
         [ --shifter0 0x00 - 0x07
@@ -345,7 +346,7 @@ singleByteMainRegsIYCB =
         ]
 
 
-singleByteMainRegsIYCB80 : Array ( Int -> MainWithIndexRegisters -> RegisterFlagChange, InstructionDuration )
+singleByteMainRegsIYCB80 : Array ( Int -> MainWithIndexRegisters -> IXIYChange, InstructionDuration )
 singleByteMainRegsIYCB80 =
     Array.fromList
         -- reset bit0
@@ -514,10 +515,10 @@ bitTests =
     [ Bit_0, Bit_1, Bit_2, Bit_3, Bit_4, Bit_5, Bit_6, Bit_7 ]
 
 
-makeEnvMainDict : (MainWithIndexRegisters -> Int) -> Array ( Int -> MainWithIndexRegisters -> RegisterFlagChange, InstructionDuration )
+makeEnvMainDict : (MainWithIndexRegisters -> Int) -> Array ( Int -> MainWithIndexRegisters -> IXIYChange, InstructionDuration )
 makeEnvMainDict ix_func =
     let
-        dictList : List (Array ( Int -> MainWithIndexRegisters -> RegisterFlagChange, InstructionDuration ))
+        dictList : List (Array ( Int -> MainWithIndexRegisters -> IXIYChange, InstructionDuration ))
         dictList =
             bitTests
                 |> List.indexedMap
@@ -550,23 +551,23 @@ makeEnvMainDict ix_func =
     dictList |> List.foldl (\d1 d2 -> d1 |> Array.append d2) Array.empty
 
 
-singleEnvMainRegsIXCB : Array ( Int -> MainWithIndexRegisters -> RegisterFlagChange, InstructionDuration )
+singleEnvMainRegsIXCB : Array ( Int -> MainWithIndexRegisters -> IXIYChange, InstructionDuration )
 singleEnvMainRegsIXCB =
     makeEnvMainDict .ix
 
 
-singleEnvMainRegsIYCB : Array ( Int -> MainWithIndexRegisters -> RegisterFlagChange, InstructionDuration )
+singleEnvMainRegsIYCB : Array ( Int -> MainWithIndexRegisters -> IXIYChange, InstructionDuration )
 singleEnvMainRegsIYCB =
     makeEnvMainDict .iy
 
 
-resetIXbit : BitTest -> Int -> MainWithIndexRegisters -> RegisterFlagChange
+resetIXbit : BitTest -> Int -> MainWithIndexRegisters -> IXIYChange
 resetIXbit bitMask offset z80_main =
     -- case 0x81: C=C&~(1<<o); break;
     IndirectBitReset bitMask ((z80_main.ix + byte offset) |> Bitwise.and 0xFFFF)
 
 
-resetIYbit : BitTest -> Int -> MainWithIndexRegisters -> RegisterFlagChange
+resetIYbit : BitTest -> Int -> MainWithIndexRegisters -> IXIYChange
 resetIYbit bitMask offset z80_main =
     -- case 0x81: C=C&~(1<<o); break;
     IndirectBitReset bitMask ((z80_main.iy + byte offset) |> Bitwise.and 0xFFFF)

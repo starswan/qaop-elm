@@ -5,7 +5,6 @@ import Interrupts exposing (InterruptMode)
 import JumpChange exposing (JumpChange)
 import SingleEnvWithMain exposing (SingleEnvMainChange)
 import SingleWith8BitParameter exposing (Single8BitChange)
-import Utils exposing (BitTest)
 import Z80Change exposing (IndexedZ80Change, Z80Change)
 import Z80Core exposing (DirectionForLDIR)
 import Z80Env exposing (Z80Env)
@@ -42,22 +41,10 @@ type RegisterFlagChange
     | DecrementIndirect (MainWithIndexRegisters -> Int)
     | RegisterChangeJump (MainWithIndexRegisters -> Int)
     | SetIndirect (MainWithIndexRegisters -> ( Int, Int ))
-    | RegisterChangeShifter Shifter (MainWithIndexRegisters -> Int)
-    | RegisterChangeIndexShifter Shifter Int
-    | IndirectBitReset BitTest Int
-    | IndirectBitSet BitTest Int
     | RegChangeNoOp
     | SingleEnvFlagFunc (Int -> FlagRegisters -> FlagRegisters) (MainWithIndexRegisters -> Int)
     | ExchangeTopOfStackWith IXIYHL
-    | SingleRegisterChange ChangeSingle Int
     | RegisterChangeA (MainWithIndexRegisters -> Int)
-    | RegisterIndirectWithShifter Shifter ChangeMainRegister Int
-    | SetBitIndirectWithCopy BitTest ChangeMainRegister Int
-    | ResetBitIndirectWithCopy BitTest ChangeMainRegister Int
-    | FlagsIndirectWithShifter Shifter Int
-    | SetBitIndirectA BitTest Int
-    | ResetBitIndirectA BitTest Int
-    | TransformMainRegisters (MainWithIndexRegisters -> MainWithIndexRegisters)
     | FlagNewRValue Int
     | FlagNewIValue Int
     | FlagChangeFunc (FlagRegisters -> FlagRegisters)
@@ -75,7 +62,7 @@ type RegisterFlagChange
     | LoadRegisterIndirect ChangeMainRegister (MainWithIndexRegisters -> Int)
     | FlagFuncIndirect (Int -> FlagRegisters -> FlagRegisters) (MainWithIndexRegisters -> Int)
     | SetMemIndirectFromA (MainWithIndexRegisters -> Int)
-    | IndirectBitTest BitTest Int
+    | TransformMainRegisters (MainWithIndexRegisters -> MainWithIndexRegisters)
 
 
 type SixteenBit

@@ -4,10 +4,11 @@ import Array exposing (Array)
 import CpuTimeCTime exposing (InstructionDuration)
 import Dict exposing (Dict)
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, doubleWithRegistersIX, doubleWithRegistersIY)
-import GroupCBIXIY exposing (singleByteMainRegsIXCB, singleByteMainRegsIYCB, singleByteMainRegsIYCB80, singleEnvMainRegsIYCB)
+import GroupCBIXIY exposing (singleByteMainRegsIYCB, singleByteMainRegsIYCB80, singleEnvMainRegsIYCB)
+import IXIYChange exposing (IXIYChange)
 import RegisterChange exposing (RegisterFlagChange(..), TwoByteChange(..))
 import SimpleFlagOps exposing (singleByteFlags)
-import SimpleSingleByte exposing (singleByteFlagsDD, singleByteFlagsFD, singleByteMain4080, singleByteMainRegs, singleByteMainRegsDD, singleByteMainRegsFD)
+import SimpleSingleByte exposing (singleByteFlagsDD, singleByteFlagsFD, singleByteMainRegs, singleByteMainRegsDD, singleByteMainRegsFD)
 import SingleEnvWithMain exposing (SingleEnvMainChange, singleEnvMainRegs, singleEnvMainRegsIX, singleEnvMainRegsIY)
 import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters, singleByteMainAndFlagRegistersIX, singleByteMainAndFlagRegistersIY)
 import SingleNoParams exposing (singleNoParamCalls, singleWithNoParam, singleWithNoParamDD, singleWithNoParamFD)
@@ -49,7 +50,7 @@ singleByteMainFlagsRegsIY =
         |> Dict.union (singleEnvMainRegsIY |> Dict.map (\_ ( f, duration ) -> ( RegisterEnvMainChange f, duration )))
 
 
-singleEnvIY : Array ( Int -> MainWithIndexRegisters -> RegisterFlagChange, InstructionDuration )
+singleEnvIY : Array ( Int -> MainWithIndexRegisters -> IXIYChange, InstructionDuration )
 singleEnvIY =
     singleByteMainRegsIYCB80
         |> Array.append singleEnvMainRegsIYCB

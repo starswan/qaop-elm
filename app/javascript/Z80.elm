@@ -422,7 +422,7 @@ execute_delta instrTime opCode rom48k pc z80_core =
                 --runSpecialIYCB offset clockTime param z80_core =
                 case singleEnvIY |> Array.get iycbparam |> Maybe.map (\( f, d ) -> ( f iycboffset, d )) of
                     Just ( mainRegFunc, duration ) ->
-                        ( RegisterChangeDelta (mainRegFunc z80_core.main), parmTime |> addDuration duration, IncrementByFour )
+                        ( CBDeltaChange (mainRegFunc z80_core.main), parmTime |> addDuration duration, IncrementByFour )
 
                     Nothing ->
                         ( UnknownInstruction "execute IYCB" param, parmTime, IncrementByFour )
@@ -540,7 +540,7 @@ runSpecialBitManipCB : Int -> CpuTimeCTime -> Z80Core -> ( DeltaWithChanges, Cpu
 runSpecialBitManipCB param clockTime z80_core =
     case singleByteMainRegsCB |> Dict.get param of
         Just ( mainRegFunc, duration ) ->
-            ( RegisterChangeDelta (mainRegFunc z80_core.main), clockTime |> addDuration duration, IncrementByTwo )
+            ( CBDeltaChange (mainRegFunc z80_core.main), clockTime |> addDuration duration, IncrementByTwo )
 
         Nothing ->
             case singleByteMainAndFlagRegistersCB |> Dict.get param of
@@ -555,7 +555,7 @@ runSpecialBitManipCB param clockTime z80_core =
                         Nothing ->
                             case singleEnvMainRegsCB |> Dict.get param of
                                 Just ( f, duration ) ->
-                                    ( RegisterChangeDelta (f z80_core.main), clockTime |> addDuration duration, IncrementByTwo )
+                                    ( CBDeltaChange (f z80_core.main), clockTime |> addDuration duration, IncrementByTwo )
 
                                 Nothing ->
                                     ( UnknownInstruction "execute CB" param, clockTime, IncrementByTwo )
@@ -565,17 +565,17 @@ runSpecialIXCB : Int -> CpuTimeCTime -> Int -> Z80Core -> ( DeltaWithChanges, Cp
 runSpecialIXCB offset clockTime param z80_core =
     case singleByteMainRegsIXCB |> Dict.get param of
         Just ( mainRegFunc, duration ) ->
-            ( RegisterChangeDelta (mainRegFunc offset z80_core.main), clockTime |> addDuration duration, IncrementByFour )
+            ( CBDeltaChange (mainRegFunc offset z80_core.main), clockTime |> addDuration duration, IncrementByFour )
 
         Nothing ->
             case singleByteMainRegsIXCB80 |> Dict.get param of
                 Just ( mainRegFunc, duration ) ->
-                    ( RegisterChangeDelta (mainRegFunc offset z80_core.main), clockTime |> addDuration duration, IncrementByFour )
+                    ( CBDeltaChange (mainRegFunc offset z80_core.main), clockTime |> addDuration duration, IncrementByFour )
 
                 Nothing ->
                     case singleEnvMainRegsIXCB |> Array.get (param - 0x40) of
                         Just ( f, duration ) ->
-                            ( RegisterChangeDelta (f offset z80_core.main), clockTime |> addDuration duration, IncrementByFour )
+                            ( CBDeltaChange (f offset z80_core.main), clockTime |> addDuration duration, IncrementByFour )
 
                         Nothing ->
                             ( UnknownInstruction "execute IXCB" param, clockTime, IncrementByFour )
