@@ -417,7 +417,15 @@ execute_delta instrTime opCode rom48k pc z80_core =
                     ( iycbparam, parmTime ) =
                         z80_core.env |> getMem8 (Bitwise.and (pc + 3) 0xFFFF) offsetTime rom48k
                 in
-                runSpecialIYCB iycboffset parmTime iycbparam z80_core
+                --runSpecialIYCB iycboffset parmTime iycbparam z80_core
+                --runSpecialIYCB : Int -> CpuTimeCTime -> Int -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
+                --runSpecialIYCB offset clockTime param z80_core =
+                case singleEnvIY |> Array.get iycbparam |> Maybe.map (\( f, d ) -> ( f iycboffset, d )) of
+                    Just ( mainRegFunc, duration ) ->
+                        ( RegisterChangeDelta (mainRegFunc z80_core.main), parmTime |> addDuration duration, IncrementByFour )
+
+                    Nothing ->
+                        ( UnknownInstruction "execute IYCB" param, parmTime, IncrementByFour )
 
             else
                 runIndexIY param newTime rom48k pc z80_core
@@ -571,25 +579,6 @@ runSpecialIXCB offset clockTime param z80_core =
 
                         Nothing ->
                             ( UnknownInstruction "execute IXCB" param, clockTime, IncrementByFour )
-
-
-runSpecialIYCB : Int -> CpuTimeCTime -> Int -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
-runSpecialIYCB offset clockTime param z80_core =
-    case singleEnvIY |> Array.get param |> Maybe.map (\( f, d ) -> ( f offset, d )) of
-        Just ( mainRegFunc, duration ) ->
-            ( RegisterChangeDelta (mainRegFunc z80_core.main), clockTime |> addDuration duration, IncrementByFour )
-
-        --Nothing ->
-        --    case singleEnvMainRegsIYCB |> Array.get (param - 0x40) of
-        --        Just ( f, duration ) ->
-        --            ( RegisterChangeDelta (f offset z80_core.main), clockTime |> addDuration duration, IncrementByFour )
-        Nothing ->
-            --case singleByteMainRegsIYCB80 |> Array.get (param |> Bitwise.and 0x7F) |> Maybe.map (\( f, d ) -> ( f offset, d )) of
-            --    Just ( mainRegFunc, duration ) ->
-            --        ( RegisterChangeDelta (mainRegFunc z80_core.main), clockTime |> addDuration duration, IncrementByFour )
-            --
-            --    Nothing ->
-            ( UnknownInstruction "execute IYCB" param, clockTime, IncrementByFour )
 
 
 runSpecialEDMisc : Int -> CpuTimeCTime -> Z80ROM -> Int -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
