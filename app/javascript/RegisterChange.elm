@@ -75,6 +75,7 @@ type RegisterFlagChange
     | LoadRegisterIndirect ChangeMainRegister (MainWithIndexRegisters -> Int)
     | FlagFuncIndirect (Int -> FlagRegisters -> FlagRegisters) (MainWithIndexRegisters -> Int)
     | SetMemIndirectFromA (MainWithIndexRegisters -> Int)
+    | IndirectBitTest BitTest Int
 
 
 type SixteenBit

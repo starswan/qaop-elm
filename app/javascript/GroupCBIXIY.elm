@@ -5,11 +5,8 @@ import Bitwise
 import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
 import RegisterChange exposing (RegisterFlagChange(..), Shifter(..))
-import SingleEnvWithMain exposing (SingleEnvMainChange(..))
 import Utils exposing (BitTest(..), byte)
-import Z80Env exposing (Z80Env)
 import Z80Registers exposing (ChangeMainRegister(..))
-import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (MainWithIndexRegisters)
 
 
@@ -517,10 +514,10 @@ bitTests =
     [ Bit_0, Bit_1, Bit_2, Bit_3, Bit_4, Bit_5, Bit_6, Bit_7 ]
 
 
-makeEnvMainDict : (MainWithIndexRegisters -> Int) -> Array ( MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )
+makeEnvMainDict : (MainWithIndexRegisters -> Int) -> Array ( Int -> MainWithIndexRegisters -> RegisterFlagChange, InstructionDuration )
 makeEnvMainDict ix_func =
     let
-        dictList : List (Array ( MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration ))
+        dictList : List (Array ( Int -> MainWithIndexRegisters -> RegisterFlagChange, InstructionDuration ))
         dictList =
             bitTests
                 |> List.indexedMap
@@ -533,7 +530,7 @@ makeEnvMainDict ix_func =
                             |> List.map
                                 (\index ->
                                     ( index
-                                    , ( \z80_main offset rom48k z80_env ->
+                                    , ( \offset z80_main ->
                                             let
                                                 --int a = mp = (char)(xy + (byte)env.mem(pc));
                                                 --case 0x40: bit(o, v); Ff=Ff&~F53 | a>>8&F53; return;
@@ -553,12 +550,12 @@ makeEnvMainDict ix_func =
     dictList |> List.foldl (\d1 d2 -> d1 |> Array.append d2) Array.empty
 
 
-singleEnvMainRegsIXCB : Array ( MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )
+singleEnvMainRegsIXCB : Array ( Int -> MainWithIndexRegisters -> RegisterFlagChange, InstructionDuration )
 singleEnvMainRegsIXCB =
     makeEnvMainDict .ix
 
 
-singleEnvMainRegsIYCB : Array ( MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )
+singleEnvMainRegsIYCB : Array ( Int -> MainWithIndexRegisters -> RegisterFlagChange, InstructionDuration )
 singleEnvMainRegsIYCB =
     makeEnvMainDict .iy
 

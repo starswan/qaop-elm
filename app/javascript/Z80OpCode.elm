@@ -149,7 +149,7 @@ lengthAndDuration pc rom48k z80env =
                                                 ( IncrementByFour
                                                 , duration
                                                 , \cpuClock z80rom z80_core ->
-                                                    z80_core |> applySingleEnvMainChange cpuClock (f z80_core.main cboffset rom48k z80_core.env) z80rom
+                                                    z80_core |> applyRegisterDelta cpuClock (f cboffset z80_core.main) z80rom
                                                 )
                                             )
                                 ]

@@ -13,8 +13,7 @@ import Z80Types exposing (IXIYHL(..), MainWithIndexRegisters, get_bc, get_de, se
 
 
 type SingleEnvMainChange
-    = IndirectBitTest BitTest Int
-    | SingleEnvNewHL16BitAdd IXIYHL Int Int
+    = SingleEnvNewHL16BitAdd IXIYHL Int Int
     | NewSPValue Int
     | SingleEnvLoadAIndirect (MainWithIndexRegisters -> Int)
 
@@ -49,20 +48,6 @@ applySingleEnvMainChange clockTime z80changeData rom48k z80 =
     case z80changeData of
         NewSPValue int ->
             SetStackPointer int |> RareChange
-
-        IndirectBitTest bitTest mp_address ->
-            -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
-            let
-                ( value, newTime ) =
-                    z80.env |> getMem8 mp_address clockTime rom48k
-
-                new_flags =
-                    z80.flags |> testBit bitTest value
-            in
-            { new_flags
-                | ff = new_flags.ff |> Bitwise.and (Bitwise.complement c_F53) |> Bitwise.or (mp_address |> shiftRightBy8 |> Bitwise.and c_F53)
-            }
-                |> FlagsOnly
 
         SingleEnvNewHL16BitAdd ixiyhl hl sp ->
             let

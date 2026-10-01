@@ -1,18 +1,21 @@
 module OpcodeTables exposing (..)
 
+import Array exposing (Array)
 import CpuTimeCTime exposing (InstructionDuration)
 import Dict exposing (Dict)
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, doubleWithRegistersIX, doubleWithRegistersIY)
+import GroupCBIXIY exposing (singleByteMainRegsIXCB, singleByteMainRegsIYCB, singleByteMainRegsIYCB80, singleEnvMainRegsIYCB)
 import RegisterChange exposing (RegisterFlagChange(..), TwoByteChange(..))
 import SimpleFlagOps exposing (singleByteFlags)
 import SimpleSingleByte exposing (singleByteFlagsDD, singleByteFlagsFD, singleByteMain4080, singleByteMainRegs, singleByteMainRegsDD, singleByteMainRegsFD)
-import SingleEnvWithMain exposing (singleEnvMainRegs, singleEnvMainRegsIX, singleEnvMainRegsIY)
+import SingleEnvWithMain exposing (SingleEnvMainChange, singleEnvMainRegs, singleEnvMainRegsIX, singleEnvMainRegsIY)
 import SingleMainWithFlags exposing (singleByteMainAndFlagRegisters, singleByteMainAndFlagRegistersIX, singleByteMainAndFlagRegistersIY)
 import SingleNoParams exposing (singleNoParamCalls, singleWithNoParam, singleWithNoParamDD, singleWithNoParamFD)
 import SingleWith8BitParameter exposing (maybeRelativeJump, singleWith8BitParam)
 import TripleByte exposing (TripleByteChange(..), TripleByteIndexChange, tripleByteWith16BitParam, tripleByteWith16BitParamDD, tripleByteWith16BitParamFD)
 import TripleWithFlags exposing (triple16bitJumps)
 import TripleWithMain exposing (tripleMainRegsIXFour, tripleMainRegsIXThree, tripleMainRegsIYFour, tripleMainRegsIYThree)
+import Z80Types exposing (MainWithIndexRegisters)
 
 
 singleByteInstructions : Dict Int ( RegisterFlagChange, InstructionDuration )
@@ -44,6 +47,13 @@ singleByteMainFlagsRegsIY =
         |> Dict.union singleWithNoParamFD
         |> Dict.union (singleByteMainAndFlagRegistersIY |> Dict.map (\_ ( f, duration ) -> ( IndexedRegisterZ80Change f, duration )))
         |> Dict.union (singleEnvMainRegsIY |> Dict.map (\_ ( f, duration ) -> ( RegisterEnvMainChange f, duration )))
+
+
+singleEnvIY : Array ( Int -> MainWithIndexRegisters -> RegisterFlagChange, InstructionDuration )
+singleEnvIY =
+    singleByteMainRegsIYCB80
+        |> Array.append singleEnvMainRegsIYCB
+        |> Array.append singleByteMainRegsIYCB
 
 
 singleByteMainFlagsRegsIX : Dict Int ( RegisterFlagChange, InstructionDuration )
