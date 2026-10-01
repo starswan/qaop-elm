@@ -517,10 +517,10 @@ bitTests =
     [ Bit_0, Bit_1, Bit_2, Bit_3, Bit_4, Bit_5, Bit_6, Bit_7 ]
 
 
-makeEnvMainDict : (MainWithIndexRegisters -> Int) -> Dict Int ( MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )
+makeEnvMainDict : (MainWithIndexRegisters -> Int) -> Array ( MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )
 makeEnvMainDict ix_func =
     let
-        dictList : List (Dict Int ( MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration ))
+        dictList : List (Array ( MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration ))
         dictList =
             bitTests
                 |> List.indexedMap
@@ -545,18 +545,20 @@ makeEnvMainDict ix_func =
                                       )
                                     )
                                 )
-                            |> Dict.fromList
+                            |> List.map Tuple.second
+                            |> Array.fromList
                     )
     in
-    dictList |> List.foldr (\d1 d2 -> d1 |> Dict.union d2) Dict.empty
+    --dictList |> List.foldr (\d1 d2 -> d1 |> Dict.union d2) Dict.empty
+    dictList |> List.foldl (\d1 d2 -> d1 |> Array.append d2) Array.empty
 
 
-singleEnvMainRegsIXCB : Dict Int ( MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )
+singleEnvMainRegsIXCB : Array ( MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )
 singleEnvMainRegsIXCB =
     makeEnvMainDict .ix
 
 
-singleEnvMainRegsIYCB : Dict Int ( MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )
+singleEnvMainRegsIYCB : Array ( MainWithIndexRegisters -> Int -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )
 singleEnvMainRegsIYCB =
     makeEnvMainDict .iy
 
