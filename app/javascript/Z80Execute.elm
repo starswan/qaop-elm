@@ -4,10 +4,10 @@ import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), ShortDelay(..))
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
 import GroupED exposing (adc_hl_sp, cpir, execute_ED70, execute_ED78, inirOtirFlags, ldir, rld, rrd, sbc_hl)
-import IXIYChange exposing (IXIYChange, applyIXIYChange)
+import IXIYChange exposing (IXIYChange, applyIXIYChange, applyShifter)
 import Interrupts exposing (IFFValue(..))
 import JumpChange exposing (JumpChange(..))
-import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), Pop16(..), RegisterFlagChange(..), Shifter(..), SixteenBit(..), TwoByteChange(..))
+import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), Pop16(..), RegisterFlagChange(..), SixteenBit(..), TwoByteChange(..))
 import SingleEnvWithMain exposing (SingleEnvMainChange, applySingleEnvMainChange)
 import SingleWith8BitParameter exposing (Single8BitChange(..), applySimple8BitChange)
 import TripleByte exposing (TripleByteChange(..), TripleByteIndexChange(..), TripleByteJump(..), TripleByteRegister(..))
@@ -16,7 +16,7 @@ import Z80Change exposing (IndexedZ80Change(..), Z80Change(..))
 import Z80Core exposing (CoreChange(..), DirectionForLDIR(..), LDIRLoop(..), RareCoreChange(..), RepeatPCOffset(..), Z80Core)
 import Z80Debug exposing (debugLog, debugTodo)
 import Z80Env exposing (Z80Env, setMem, z80_in, z80_out, z80_push)
-import Z80Flags exposing (FlagRegisters, IntWithFlags, dec, f_szh0n0p, get_af, inc, set_af, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7)
+import Z80Flags exposing (FlagRegisters, IntWithFlags, dec, f_szh0n0p, get_af, inc, set_af)
 import Z80Mem exposing (getMem8, mem16, z80_pop)
 import Z80Registers exposing (ChangeMainRegister(..), ChangeSingle(..), CoreRegister(..))
 import Z80Rom exposing (Z80ROM)
@@ -42,7 +42,7 @@ apply_delta : Z80Core -> IFFValue -> Z80ROM -> CpuTimeCTime -> DeltaWithChanges 
 apply_delta z80 iff rom48k clockTime z80delta =
     case z80delta of
         PureDelta z80ChangeData ->
-            z80 |> applyPureDelta z80ChangeData
+            z80 |> applyPureDelta z80ChangeData clockTime rom48k
 
         CBDeltaChange change ->
             z80 |> applyIXIYChange clockTime change rom48k
@@ -211,18 +211,24 @@ applyInterruptChange change iff z80_flags =
             { a = value, ff = ff, fr = fr, fa = fab, fb = fab }
 
 
-applyPureDelta : Z80Change -> Z80Core -> CoreChange
-applyPureDelta z80changeData z80 =
+applyPureDelta : Z80Change -> CpuTimeCTime -> Z80ROM -> Z80Core -> CoreChange
+applyPureDelta z80changeData clockTime rom48k z80_core =
     case z80changeData of
         FlagsWithHLRegister flagRegisters int ->
             let
                 main =
-                    z80.main
+                    z80_core.main
             in
             ChangeMainAndFlags { main | hl = int } flagRegisters
 
         Z80ChangeFlags flagRegisters ->
             FlagsOnly flagRegisters
+
+        RegisterChangeShifter shifter addr_f ->
+            z80_core |> applyShifter shifter (z80_core.main |> addr_f) clockTime rom48k
+
+        Z80FlagChangeFunc f ->
+            f z80_core.flags |> FlagsOnly
 
         Z80ChangeSetIndirect addr int ->
             SetMem8 addr int
@@ -230,7 +236,7 @@ applyPureDelta z80changeData z80 =
         FlagsWithRegisterChange changeMainRegister intWithFlags ->
             let
                 z80_main =
-                    z80.main
+                    z80_core.main
 
                 new_main =
                     case changeMainRegister of
@@ -312,7 +318,7 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 z80change =
                     f z80_core.main z80_core.flags
             in
-            z80_core |> applyPureDelta z80change
+            z80_core |> applyPureDelta z80change clockTime rom48k
 
         IndexedRegisterZ80Change f ->
             let

@@ -56,15 +56,7 @@ singleByteFlags =
 singleByteFlagsCB : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleByteFlagsCB =
     Dict.fromList
-        [ ( 0x07, ( FlagChangeFunc rlc_a, EightTStates ) )
-        , ( 0x0F, ( FlagChangeFunc rrc_a, EightTStates ) )
-        , ( 0x17, ( FlagChangeFunc rl_a, EightTStates ) )
-        , ( 0x1F, ( FlagChangeFunc rr_a, EightTStates ) )
-        , ( 0x27, ( FlagChangeFunc sla_a, EightTStates ) )
-        , ( 0x2F, ( FlagChangeFunc sra_a, EightTStates ) )
-        , ( 0x37, ( FlagChangeFunc sll_a, EightTStates ) )
-        , ( 0x3F, ( FlagChangeFunc srl_a, EightTStates ) )
-        , ( 0x47, ( FlagChangeFunc (\z80_flags -> z80_flags |> testBit Bit_0 z80_flags.a), EightTStates ) )
+        [ ( 0x47, ( FlagChangeFunc (\z80_flags -> z80_flags |> testBit Bit_0 z80_flags.a), EightTStates ) )
         , ( 0x4F, ( FlagChangeFunc (\z80_flags -> z80_flags |> testBit Bit_1 z80_flags.a), EightTStates ) )
         , ( 0x57, ( FlagChangeFunc (\z80_flags -> z80_flags |> testBit Bit_2 z80_flags.a), EightTStates ) )
         , ( 0x5F, ( FlagChangeFunc (\z80_flags -> z80_flags |> testBit Bit_3 z80_flags.a), EightTStates ) )
