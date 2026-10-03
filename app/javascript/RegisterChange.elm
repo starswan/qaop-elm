@@ -14,17 +14,6 @@ import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIYHL, MainWithIndexRegisters)
 
 
-type Shifter
-    = Shifter0
-    | Shifter1
-    | Shifter2
-    | Shifter3
-    | Shifter4
-    | Shifter5
-    | Shifter6
-    | Shifter7
-
-
 type Pop16
     = PopBC
     | PopDE

@@ -227,8 +227,8 @@ lengthAndDuration pc rom48k z80env =
                             (\( f, pcInc, duration ) ->
                                 ( pcInc
                                 , duration
-                                , \_ _ z80core ->
-                                    z80core |> applyPureDelta (f z80core.main z80core.flags)
+                                , \cpuClock z80rom z80core ->
+                                    z80core |> applyPureDelta (f z80core.main z80core.flags) cpuClock z80rom
                                 )
                             )
                 ]
@@ -270,7 +270,7 @@ lengthAndDuration pc rom48k z80env =
                         |> Dict.get instruction
                         |> Maybe.map
                             (\( f, duration ) ->
-                                ( IncrementByOne, duration, \_ _ z80core -> z80core |> applyPureDelta (f z80core.main z80core.flags) )
+                                ( IncrementByOne, duration, \cpuClock z80rom z80core -> z80core |> applyPureDelta (f z80core.main z80core.flags) cpuClock z80rom )
                             )
                 , \instruction ->
                     singleByteMainRegs

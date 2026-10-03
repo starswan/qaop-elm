@@ -2,6 +2,18 @@ module Z80Change exposing (..)
 
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
 import Z80Registers exposing (ChangeMainRegister, CoreRegister)
+import Z80Types exposing (MainWithIndexRegisters)
+
+
+type Shifter
+    = Shifter0
+    | Shifter1
+    | Shifter2
+    | Shifter3
+    | Shifter4
+    | Shifter5
+    | Shifter6
+    | Shifter7
 
 
 type Z80Change
@@ -10,6 +22,7 @@ type Z80Change
     | Z80ChangeFlags FlagRegisters
     | Z80ChangeSetIndirect Int Int
     | Z80FlagChangeFunc (FlagRegisters -> FlagRegisters)
+    | RegisterChangeShifter Shifter (MainWithIndexRegisters -> Int)
 
 
 type IndexedZ80Change

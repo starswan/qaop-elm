@@ -2,8 +2,8 @@ module IXIYChange exposing (..)
 
 import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime)
-import RegisterChange exposing (Shifter(..))
 import Utils exposing (BitTest, bitMaskFromBit, clearBit, inverseBitMaskFromBit, setBit, shiftLeftBy8, shiftRightBy8)
+import Z80Change exposing (Shifter(..))
 import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
 import Z80Env exposing (setMem)
 import Z80Flags exposing (IntWithFlags, c_F53, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit)
@@ -24,7 +24,6 @@ type IXIYChange
     | SetBitIndirectWithCopy BitTest ChangeMainRegister Int
     | IndirectBitSet BitTest Int
     | SetBitIndirectA BitTest Int
-    | RegisterChangeShifter Shifter (MainWithIndexRegisters -> Int)
     | TransformMainRegistersCB (MainWithIndexRegisters -> MainWithIndexRegisters)
     | SingleRegisterChange ChangeSingle Int
 
@@ -48,9 +47,6 @@ applyIXIYChange clockTime z80changeData rom48k z80_core =
 
         TransformMainRegistersCB f ->
             z80_core.main |> f |> MainOnly
-
-        RegisterChangeShifter shifter addr_f ->
-            z80_core |> applyShifter shifter (z80_core.main |> addr_f) clockTime rom48k
 
         RegisterChangeIndexShifter shifter raw_addr ->
             z80_core |> applyShifter shifter (raw_addr |> Bitwise.and 0xFFFF) clockTime rom48k

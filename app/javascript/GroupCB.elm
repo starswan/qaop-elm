@@ -4,10 +4,9 @@ import Bitwise
 import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
 import IXIYChange exposing (IXIYChange(..))
-import RegisterChange exposing (RegisterFlagChange(..), Shifter(..))
 import SimpleFlagOps exposing (rl_a, rlc_a, rr_a, rrc_a, sla_a, sll_a, sra_a, srl_a)
 import Utils exposing (BitTest(..), bitMaskFromBit, inverseBitMaskFromBit, shiftLeftBy8, shiftRightBy8)
-import Z80Change exposing (Z80Change(..))
+import Z80Change exposing (Shifter(..), Z80Change(..))
 import Z80Flags exposing (FlagRegisters, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit)
 import Z80Registers exposing (ChangeMainRegister(..), ChangeSingle(..), CoreRegister(..))
 import Z80Types exposing (MainWithIndexRegisters)
@@ -78,20 +77,8 @@ bit_7_indirect_hl z80_main =
 singleByteMainRegsCB : Dict Int ( MainWithIndexRegisters -> IXIYChange, InstructionDuration )
 singleByteMainRegsCB =
     Dict.fromList
-        [ -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
-          ( 0x06, ( \z80_main -> RegisterChangeShifter Shifter0 .hl, FifteenTStates ) )
-
-        -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
-        , ( 0x0E, ( \z80_main -> RegisterChangeShifter Shifter1 .hl, FifteenTStates ) )
-        , ( 0x16, ( rl_indirect_hl, FifteenTStates ) )
-        , ( 0x1E, ( rr_indirect_hl, FifteenTStates ) )
-        , ( 0x26, ( sla_indirect_hl, FifteenTStates ) )
-        , ( 0x2E, ( sra_indirect_hl, FifteenTStates ) )
-        , ( 0x36, ( sll_indirect_hl, FifteenTStates ) )
-        , ( 0x3E, ( srl_indirect_hl, FifteenTStates ) )
-
-        -- reset bit0
-        , ( 0x80, ( \z80_main -> TransformMainRegistersCB (resetBbit Bit_0), EightTStates ) )
+        [ -- reset bit0
+          ( 0x80, ( \z80_main -> TransformMainRegistersCB (resetBbit Bit_0), EightTStates ) )
         , ( 0x81, ( \z80_main -> TransformMainRegistersCB (resetCbit Bit_0), EightTStates ) )
         , ( 0x82, ( \z80_main -> TransformMainRegistersCB (resetDbit Bit_0), EightTStates ) )
         , ( 0x83, ( \z80_main -> TransformMainRegistersCB (resetEbit Bit_0), EightTStates ) )
@@ -236,38 +223,38 @@ singleByteMainRegsCB =
         ]
 
 
-rl_indirect_hl : MainWithIndexRegisters -> IXIYChange
-rl_indirect_hl z80_main =
+rl_indirect_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+rl_indirect_hl z80_main z80_flags =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     RegisterChangeShifter Shifter2 .hl
 
 
-rr_indirect_hl : MainWithIndexRegisters -> IXIYChange
-rr_indirect_hl z80_main =
+rr_indirect_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+rr_indirect_hl z80_main z80_flags =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     RegisterChangeShifter Shifter3 .hl
 
 
-sla_indirect_hl : MainWithIndexRegisters -> IXIYChange
-sla_indirect_hl z80_main =
+sla_indirect_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+sla_indirect_hl z80_main z80_flags =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     RegisterChangeShifter Shifter4 .hl
 
 
-sra_indirect_hl : MainWithIndexRegisters -> IXIYChange
-sra_indirect_hl z80_main =
+sra_indirect_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+sra_indirect_hl z80_main z80_flags =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     RegisterChangeShifter Shifter5 .hl
 
 
-sll_indirect_hl : MainWithIndexRegisters -> IXIYChange
-sll_indirect_hl z80_main =
+sll_indirect_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+sll_indirect_hl z80_main z80_flags =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     RegisterChangeShifter Shifter6 .hl
 
 
-srl_indirect_hl : MainWithIndexRegisters -> IXIYChange
-srl_indirect_hl z80_main =
+srl_indirect_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+srl_indirect_hl z80_main z80_flags =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     RegisterChangeShifter Shifter7 .hl
 
@@ -383,6 +370,9 @@ singleByteMainAndFlagRegistersCB =
         , ( 0x03, ( rlc_e, EightTStates ) )
         , ( 0x04, ( rlc_h, EightTStates ) )
         , ( 0x05, ( rlc_l, EightTStates ) )
+
+        -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
+        , ( 0x06, ( \z80_main z80_flags -> RegisterChangeShifter Shifter0 .hl, FifteenTStates ) )
         , ( 0x07, ( \z80_main z80_flags -> Z80FlagChangeFunc rlc_a, EightTStates ) )
         , ( 0x08, ( rrc_b, EightTStates ) )
         , ( 0x09, ( rrc_c, EightTStates ) )
@@ -390,6 +380,7 @@ singleByteMainAndFlagRegistersCB =
         , ( 0x0B, ( rrc_e, EightTStates ) )
         , ( 0x0C, ( rrc_h, EightTStates ) )
         , ( 0x0D, ( rrc_l, EightTStates ) )
+        , ( 0x0E, ( \z80_main z80_flags -> RegisterChangeShifter Shifter1 .hl, FifteenTStates ) )
         , ( 0x0F, ( \z80_main z80_flags -> Z80FlagChangeFunc rrc_a, EightTStates ) )
         , ( 0x10, ( rl_b, EightTStates ) )
         , ( 0x11, ( rl_c, EightTStates ) )
@@ -397,6 +388,7 @@ singleByteMainAndFlagRegistersCB =
         , ( 0x13, ( rl_e, EightTStates ) )
         , ( 0x14, ( rl_h, EightTStates ) )
         , ( 0x15, ( rl_l, EightTStates ) )
+        , ( 0x16, ( rl_indirect_hl, FifteenTStates ) )
         , ( 0x17, ( \z80_main z80_flags -> Z80FlagChangeFunc rl_a, EightTStates ) )
         , ( 0x18, ( rr_b, EightTStates ) )
         , ( 0x19, ( rr_c, EightTStates ) )
@@ -404,6 +396,7 @@ singleByteMainAndFlagRegistersCB =
         , ( 0x1B, ( rr_e, EightTStates ) )
         , ( 0x1C, ( rr_h, EightTStates ) )
         , ( 0x1D, ( rr_l, EightTStates ) )
+        , ( 0x1E, ( rr_indirect_hl, FifteenTStates ) )
         , ( 0x1F, ( \z80_main z80_flags -> Z80FlagChangeFunc rr_a, EightTStates ) )
         , ( 0x20, ( sla_b, EightTStates ) )
         , ( 0x21, ( sla_c, EightTStates ) )
@@ -411,6 +404,7 @@ singleByteMainAndFlagRegistersCB =
         , ( 0x23, ( sla_e, EightTStates ) )
         , ( 0x24, ( sla_h, EightTStates ) )
         , ( 0x25, ( sla_l, EightTStates ) )
+        , ( 0x26, ( sla_indirect_hl, FifteenTStates ) )
         , ( 0x27, ( \z80_main z80_flags -> Z80FlagChangeFunc sla_a, EightTStates ) )
         , ( 0x28, ( sra_b, EightTStates ) )
         , ( 0x29, ( sra_c, EightTStates ) )
@@ -418,6 +412,7 @@ singleByteMainAndFlagRegistersCB =
         , ( 0x2B, ( sra_e, EightTStates ) )
         , ( 0x2C, ( sra_h, EightTStates ) )
         , ( 0x2D, ( sra_l, EightTStates ) )
+        , ( 0x2E, ( sra_indirect_hl, FifteenTStates ) )
         , ( 0x2F, ( \z80_main z80_flags -> Z80FlagChangeFunc sra_a, EightTStates ) )
         , ( 0x30, ( sll_b, EightTStates ) )
         , ( 0x31, ( sll_c, EightTStates ) )
@@ -425,6 +420,7 @@ singleByteMainAndFlagRegistersCB =
         , ( 0x33, ( sll_e, EightTStates ) )
         , ( 0x34, ( sll_h, EightTStates ) )
         , ( 0x35, ( sll_l, EightTStates ) )
+        , ( 0x36, ( sll_indirect_hl, FifteenTStates ) )
         , ( 0x37, ( \z80_main z80_flags -> Z80FlagChangeFunc sll_a, EightTStates ) )
         , ( 0x38, ( srl_b, EightTStates ) )
         , ( 0x39, ( srl_c, EightTStates ) )
@@ -432,6 +428,7 @@ singleByteMainAndFlagRegistersCB =
         , ( 0x3B, ( srl_e, EightTStates ) )
         , ( 0x3C, ( srl_h, EightTStates ) )
         , ( 0x3D, ( srl_l, EightTStates ) )
+        , ( 0x3E, ( srl_indirect_hl, FifteenTStates ) )
         , ( 0x3F, ( \z80_main z80_flags -> Z80FlagChangeFunc srl_a, EightTStates ) )
         , ( 0x40, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.b |> Z80ChangeFlags, EightTStates ) )
         , ( 0x41, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.c |> Z80ChangeFlags, EightTStates ) )
