@@ -348,17 +348,14 @@ suite =
                                 , flags = { flags | a = 0x39 }
                             }
                             |> Triple.dropSecond
-
-                    --mem_value =
-                    --    mem 0x6545 new_z80.env.time z80rom new_z80.env.ram
                 in
                 Expect.equal ( addr + 4, 0x00 ) ( new_pc, new_z80.flags.fr )
-        , test "0xDD 0xCB 0x05 0x4E BIT 1, (IX + d) set" <|
+        , test "0xDD 0xCB 0x05 0x4E BIT 1, (IY + d) set" <|
             \_ ->
                 let
                     new_env =
                         z80env
-                            |> setMemWithTime addr 0xDD
+                            |> setMemWithTime addr 0xFD
                             |> setMemWithTime (addr + 1) 0xCB
                             |> setMemWithTime (addr + 2) 0x05
                             |> setMemWithTime (addr + 3) 0x4E
@@ -370,13 +367,10 @@ suite =
                             addr
                             { z80
                                 | env = { new_env | sp = 0x8765 }
-                                , main = { z80main | ix = 0x6540, b = 0xA5 }
+                                , main = { z80main | iy = 0x6540, b = 0xA5 }
                                 , flags = { flags | a = 0x39 }
                             }
                             |> Triple.dropSecond
-
-                    --mem_value =
-                    --    mem 0x6545 new_z80.env.time z80rom new_z80.env.ram
                 in
                 Expect.equal ( addr + 4, True ) ( new_pc, new_z80.flags.fr /= 0 )
         , test "0xCB 0x4F BIT 1,A (unset)" <|

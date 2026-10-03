@@ -5,8 +5,9 @@ import Bitwise
 import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, InstructionDuration, reset_cpu_time)
 import Dict exposing (Dict)
 import DoubleWithRegisters exposing (applyDoubleWithRegistersDelta, doubleWithRegistersIX, doubleWithRegistersIY)
-import GroupCBIXIY exposing (singleByteMainRegsIYCB, singleEnvMainRegsIYCB)
+import GroupCBIXIY exposing (singleByteMainRegsIYCB, singleByteMainRegsIYCB80, singleEnvMainRegsIYCB)
 import GroupED exposing (singleByteMainAndFlagsED, singleByteMainRegsED)
+import IXIYChange exposing (applyIXIYChange)
 import Maybe.Extra exposing (oneOf)
 import PCIncrement exposing (PCIncrement(..))
 import SimpleFlagOps exposing (singleByteFlags)
@@ -121,24 +122,35 @@ lengthAndDuration pc rom48k z80env =
                             |> oneOf
                                 [ \( cbparam, cboffset ) ->
                                     singleByteMainRegsIYCB
-                                        |> Dict.get cbparam
+                                        |> Array.get cbparam
                                         |> Maybe.map
                                             (\( mainRegFunc, duration ) ->
                                                 ( IncrementByFour
                                                 , duration
                                                 , \cpuClock z80rom z80core ->
-                                                    z80core |> applyRegisterDelta cpuClock (mainRegFunc cboffset z80core.main) z80rom
+                                                    z80core |> applyIXIYChange cpuClock (mainRegFunc cboffset z80core.main) z80rom
+                                                )
+                                            )
+                                , \( cbparam, cboffset ) ->
+                                    singleByteMainRegsIYCB80
+                                        |> Array.get (cbparam - 0x80)
+                                        |> Maybe.map
+                                            (\( mainRegFunc, duration ) ->
+                                                ( IncrementByFour
+                                                , duration
+                                                , \cpuClock z80rom z80core ->
+                                                    z80core |> applyIXIYChange cpuClock (mainRegFunc cboffset z80core.main) z80rom
                                                 )
                                             )
                                 , \( cbparam, cboffset ) ->
                                     singleEnvMainRegsIYCB
-                                        |> Dict.get cbparam
+                                        |> Array.get (cbparam - 0x40)
                                         |> Maybe.map
                                             (\( f, duration ) ->
                                                 ( IncrementByFour
                                                 , duration
                                                 , \cpuClock z80rom z80_core ->
-                                                    z80_core |> applySingleEnvMainChange cpuClock (f z80_core.main cboffset rom48k z80_core.env) z80rom
+                                                    z80_core |> applyIXIYChange cpuClock (f cboffset z80_core.main) z80rom
                                                 )
                                             )
                                 ]
