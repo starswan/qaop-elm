@@ -212,17 +212,20 @@ applyInterruptChange change iff z80_flags =
 
 
 applyPureDelta : Z80Change -> Z80Core -> CoreChange
-applyPureDelta z80changeData z80 =
+applyPureDelta z80changeData z80_core =
     case z80changeData of
         FlagsWithHLRegister flagRegisters int ->
             let
                 main =
-                    z80.main
+                    z80_core.main
             in
             ChangeMainAndFlags { main | hl = int } flagRegisters
 
         Z80ChangeFlags flagRegisters ->
             FlagsOnly flagRegisters
+
+        Z80FlagChangeFunc f ->
+            f z80_core.flags |> FlagsOnly
 
         Z80ChangeSetIndirect addr int ->
             SetMem8 addr int
@@ -230,7 +233,7 @@ applyPureDelta z80changeData z80 =
         FlagsWithRegisterChange changeMainRegister intWithFlags ->
             let
                 z80_main =
-                    z80.main
+                    z80_core.main
 
                 new_main =
                     case changeMainRegister of

@@ -9,6 +9,7 @@ type Z80Change
     | FlagsWithHLRegister FlagRegisters Int
     | Z80ChangeFlags FlagRegisters
     | Z80ChangeSetIndirect Int Int
+    | Z80FlagChangeFunc (FlagRegisters -> FlagRegisters)
 
 
 type IndexedZ80Change
