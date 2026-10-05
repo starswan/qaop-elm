@@ -542,14 +542,9 @@ runSpecialBitManipCB param clockTime z80_core =
             ( PureDelta (f z80_core.main z80_core.flags), clockTime |> addDuration duration, IncrementByTwo )
 
         Nothing ->
-            --case singleByteMainAndFlagRegistersCB40 |> Dict.get param of
-            --    Just ( f, duration ) ->
-            --        ( PureDelta (f z80_core.main z80_core.flags), clockTime |> addDuration duration, IncrementByTwo )
-            --
-            --    Nothing ->
             case singleByteMainAndFlagRegistersCB80 |> Dict.get param of
                 Just ( f, duration ) ->
-                    ( PureDelta (f z80_core.main z80_core.flags), clockTime |> addDuration duration, IncrementByTwo )
+                    ( PureDelta f, clockTime |> addDuration duration, IncrementByTwo )
 
                 Nothing ->
                     case singleByteMainRegsCB80 |> Dict.get param of
