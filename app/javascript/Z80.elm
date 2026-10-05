@@ -9,7 +9,7 @@ import Array
 import Bitwise
 import CpuTimeCTime exposing (CTime(..), CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAnd16BitValue, InstructionDuration(..), addDuration, addExtraCpuTime, c_FRTIME, c_TIME_LIMIT, reset_cpu_time)
 import Dict exposing (Dict)
-import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainAndFlagRegistersCB40, singleByteMainRegsCB80)
+import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainAndFlagRegistersCB80, singleByteMainRegsCB80)
 import GroupCBIXIY exposing (singleByteMainRegsIXCB, singleByteMainRegsIXCB80, singleEnvMainRegsIXCB)
 import GroupED exposing (edWithInterrupts, fourByteMainED, singleByteFlagsED, singleByteMainAndFlagsED, singleByteMainRegsED)
 import Interrupts exposing (IFFValue(..), InterruptMode(..))
@@ -542,7 +542,12 @@ runSpecialBitManipCB param clockTime z80_core =
             ( PureDelta (f z80_core.main z80_core.flags), clockTime |> addDuration duration, IncrementByTwo )
 
         Nothing ->
-            case singleByteMainAndFlagRegistersCB40 |> Dict.get param of
+            --case singleByteMainAndFlagRegistersCB40 |> Dict.get param of
+            --    Just ( f, duration ) ->
+            --        ( PureDelta (f z80_core.main z80_core.flags), clockTime |> addDuration duration, IncrementByTwo )
+            --
+            --    Nothing ->
+            case singleByteMainAndFlagRegistersCB80 |> Dict.get param of
                 Just ( f, duration ) ->
                     ( PureDelta (f z80_core.main z80_core.flags), clockTime |> addDuration duration, IncrementByTwo )
 
