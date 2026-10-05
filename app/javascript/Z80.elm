@@ -9,7 +9,7 @@ import Array
 import Bitwise
 import CpuTimeCTime exposing (CTime(..), CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAnd16BitValue, InstructionDuration(..), addDuration, addExtraCpuTime, c_FRTIME, c_TIME_LIMIT, reset_cpu_time)
 import Dict exposing (Dict)
-import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainAndFlagRegistersCB40, singleByteMainRegsCB)
+import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainAndFlagRegistersCB40, singleByteMainRegsCB80)
 import GroupCBIXIY exposing (singleByteMainRegsIXCB, singleByteMainRegsIXCB80, singleEnvMainRegsIXCB)
 import GroupED exposing (edWithInterrupts, fourByteMainED, singleByteFlagsED, singleByteMainAndFlagsED, singleByteMainRegsED)
 import Interrupts exposing (IFFValue(..), InterruptMode(..))
@@ -538,19 +538,19 @@ runIndexIY param clockTime rom48k pc z80 =
 
 runSpecialBitManipCB : Int -> CpuTimeCTime -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
 runSpecialBitManipCB param clockTime z80_core =
-    case singleByteMainRegsCB |> Dict.get param of
-        Just ( mainRegFunc, duration ) ->
-            ( CBDeltaChange (mainRegFunc z80_core.main), clockTime |> addDuration duration, IncrementByTwo )
+    case singleByteMainAndFlagRegistersCB |> Array.get param of
+        Just ( f, duration ) ->
+            ( PureDelta (f z80_core.main z80_core.flags), clockTime |> addDuration duration, IncrementByTwo )
 
         Nothing ->
-            case singleByteMainAndFlagRegistersCB |> Dict.get param of
+            case singleByteMainAndFlagRegistersCB40 |> Dict.get param of
                 Just ( f, duration ) ->
                     ( PureDelta (f z80_core.main z80_core.flags), clockTime |> addDuration duration, IncrementByTwo )
 
                 Nothing ->
-                    case singleByteMainAndFlagRegistersCB40 |> Dict.get param of
-                        Just ( f, duration ) ->
-                            ( PureDelta (f z80_core.main z80_core.flags), clockTime |> addDuration duration, IncrementByTwo )
+                    case singleByteMainRegsCB80 |> Dict.get param of
+                        Just ( mainRegFunc, duration ) ->
+                            ( CBDeltaChange (mainRegFunc z80_core.main), clockTime |> addDuration duration, IncrementByTwo )
 
                         Nothing ->
                             case singleByteFlagsCB |> Dict.get param of
@@ -563,19 +563,19 @@ runSpecialBitManipCB param clockTime z80_core =
 
 runSpecialIXCB : Int -> CpuTimeCTime -> Int -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
 runSpecialIXCB offset clockTime param z80_core =
-    case singleByteMainRegsIXCB |> Dict.get param of
-        Just ( mainRegFunc, duration ) ->
-            ( CBDeltaChange (mainRegFunc offset z80_core.main), clockTime |> addDuration duration, IncrementByFour )
+    case singleEnvMainRegsIXCB |> Array.get (param - 0x40) of
+        Just ( f, duration ) ->
+            ( CBDeltaChange (f offset z80_core.main), clockTime |> addDuration duration, IncrementByFour )
 
         Nothing ->
-            case singleByteMainRegsIXCB80 |> Dict.get param of
+            case singleByteMainRegsIXCB |> Dict.get param of
                 Just ( mainRegFunc, duration ) ->
                     ( CBDeltaChange (mainRegFunc offset z80_core.main), clockTime |> addDuration duration, IncrementByFour )
 
                 Nothing ->
-                    case singleEnvMainRegsIXCB |> Array.get (param - 0x40) of
-                        Just ( f, duration ) ->
-                            ( CBDeltaChange (f offset z80_core.main), clockTime |> addDuration duration, IncrementByFour )
+                    case singleByteMainRegsIXCB80 |> Dict.get param of
+                        Just ( mainRegFunc, duration ) ->
+                            ( CBDeltaChange (mainRegFunc offset z80_core.main), clockTime |> addDuration duration, IncrementByFour )
 
                         Nothing ->
                             ( UnknownInstruction "execute IXCB" param, clockTime, IncrementByFour )
