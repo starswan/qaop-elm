@@ -6,7 +6,7 @@ import Utils exposing (BitTest, bitMaskFromBit, clearBit, inverseBitMaskFromBit,
 import Z80Change exposing (Shifter(..))
 import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
 import Z80Env exposing (setMem)
-import Z80Flags exposing (IntWithFlags, c_F53, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit)
+import Z80Flags exposing (FlagRegisters, IntWithFlags, c_F53, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit)
 import Z80Mem exposing (getMem8)
 import Z80Registers exposing (ChangeMainRegister(..), ChangeSingle(..))
 import Z80Rom exposing (Z80ROM)
@@ -26,6 +26,7 @@ type IXIYChange
     | SetBitIndirectA BitTest Int
     | TransformMainRegistersCB (MainWithIndexRegisters -> MainWithIndexRegisters)
     | SingleRegisterChange ChangeSingle Int
+    | IXIYFlagChangeFunc (FlagRegisters -> FlagRegisters)
 
 
 applyIXIYChange : CpuTimeCTime -> IXIYChange -> Z80ROM -> Z80Core -> CoreChange
@@ -47,6 +48,9 @@ applyIXIYChange clockTime z80changeData rom48k z80_core =
 
         TransformMainRegistersCB f ->
             z80_core.main |> f |> MainOnly
+
+        IXIYFlagChangeFunc f ->
+            f z80_core.flags |> FlagsOnly
 
         RegisterChangeIndexShifter shifter raw_addr ->
             z80_core |> applyShifter shifter (raw_addr |> Bitwise.and 0xFFFF) clockTime rom48k

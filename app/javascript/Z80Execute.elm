@@ -270,6 +270,44 @@ applyPureDelta z80changeData clockTime rom48k z80_core =
             in
             ChangeMainAndFlags new_main intWithFlags.flags
 
+        FlagRegChangeFunc intFunc changeMainRegister ->
+            let
+                z80_main =
+                    z80_core.main
+
+                intWithFlags =
+                    intFunc z80_main z80_core.flags
+
+                new_main =
+                    case changeMainRegister of
+                        ChangeMainB ->
+                            { z80_main | b = intWithFlags.value }
+
+                        ChangeMainC ->
+                            { z80_main | c = intWithFlags.value }
+
+                        ChangeMainD ->
+                            { z80_main | d = intWithFlags.value }
+
+                        ChangeMainE ->
+                            { z80_main | e = intWithFlags.value }
+
+                        ChangeMainH ->
+                            let
+                                new_hl =
+                                    Bitwise.or (intWithFlags.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
+                            in
+                            { z80_main | hl = new_hl }
+
+                        ChangeMainL ->
+                            let
+                                new_hl =
+                                    Bitwise.or intWithFlags.value (Bitwise.and z80_main.hl 0xFF00)
+                            in
+                            { z80_main | hl = new_hl }
+            in
+            ChangeMainAndFlags new_main intWithFlags.flags
+
 
 applyIndexedPureDelta : IndexedZ80Change -> Z80Core -> CoreChange
 applyIndexedPureDelta z80changeData z80 =

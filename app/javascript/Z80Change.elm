@@ -25,6 +25,7 @@ type Z80Change
     | Z80FlagChangeFunc (FlagRegisters -> FlagRegisters)
     | RegisterChangeShifter Shifter (MainWithIndexRegisters -> Int)
     | Z80IndirectMainBitTest BitTest (MainWithIndexRegisters -> Int)
+    | FlagRegChangeFunc (MainWithIndexRegisters -> FlagRegisters -> IntWithFlags) ChangeMainRegister
 
 
 type IndexedZ80Change
