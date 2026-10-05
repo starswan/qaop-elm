@@ -9,7 +9,7 @@ import Array
 import Bitwise
 import CpuTimeCTime exposing (CTime(..), CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAnd16BitValue, InstructionDuration(..), addDuration, addExtraCpuTime, c_FRTIME, c_TIME_LIMIT, reset_cpu_time)
 import Dict exposing (Dict)
-import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainRegsCB, singleEnvMainRegsCB)
+import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainRegsCB)
 import GroupCBIXIY exposing (singleByteMainRegsIXCB, singleByteMainRegsIXCB80, singleEnvMainRegsIXCB)
 import GroupED exposing (edWithInterrupts, fourByteMainED, singleByteFlagsED, singleByteMainAndFlagsED, singleByteMainRegsED)
 import Interrupts exposing (IFFValue(..), InterruptMode(..))
@@ -553,12 +553,7 @@ runSpecialBitManipCB param clockTime z80_core =
                             ( RegisterChangeDelta flagFunc, clockTime |> addDuration duration, IncrementByTwo )
 
                         Nothing ->
-                            case singleEnvMainRegsCB |> Dict.get param of
-                                Just ( f, duration ) ->
-                                    ( CBDeltaChange (f z80_core.main), clockTime |> addDuration duration, IncrementByTwo )
-
-                                Nothing ->
-                                    ( UnknownInstruction "execute CB" param, clockTime, IncrementByTwo )
+                            ( UnknownInstruction "execute CB" param, clockTime, IncrementByTwo )
 
 
 runSpecialIXCB : Int -> CpuTimeCTime -> Int -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )

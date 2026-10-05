@@ -1,5 +1,6 @@
 module Z80Change exposing (..)
 
+import Utils exposing (BitTest)
 import Z80Flags exposing (FlagRegisters, IntWithFlags)
 import Z80Registers exposing (ChangeMainRegister, CoreRegister)
 import Z80Types exposing (MainWithIndexRegisters)
@@ -23,6 +24,7 @@ type Z80Change
     | Z80ChangeSetIndirect Int Int
     | Z80FlagChangeFunc (FlagRegisters -> FlagRegisters)
     | RegisterChangeShifter Shifter (MainWithIndexRegisters -> Int)
+    | Z80IndirectMainBitTest BitTest (MainWithIndexRegisters -> Int)
 
 
 type IndexedZ80Change

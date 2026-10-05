@@ -12,66 +12,52 @@ import Z80Registers exposing (ChangeMainRegister(..), ChangeSingle(..), CoreRegi
 import Z80Types exposing (MainWithIndexRegisters)
 
 
-singleEnvMainRegsCB : Dict Int ( MainWithIndexRegisters -> IXIYChange, InstructionDuration )
-singleEnvMainRegsCB =
-    Dict.fromList
-        [ ( 0x46, ( bit_0_indirect_hl, TwelveTStates ) )
-        , ( 0x4E, ( bit_1_indirect_hl, TwelveTStates ) )
-        , ( 0x56, ( bit_2_indirect_hl, TwelveTStates ) )
-        , ( 0x5E, ( bit_3_indirect_hl, TwelveTStates ) )
-        , ( 0x66, ( bit_4_indirect_hl, TwelveTStates ) )
-        , ( 0x6E, ( bit_5_indirect_hl, TwelveTStates ) )
-        , ( 0x76, ( bit_6_indirect_hl, TwelveTStates ) )
-        , ( 0x7E, ( bit_7_indirect_hl, TwelveTStates ) )
-        ]
-
-
-bit_0_indirect_hl : MainWithIndexRegisters -> IXIYChange
-bit_0_indirect_hl z80_main =
+bit_0_indirect_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+bit_0_indirect_hl z80_main z80_flags =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
-    IndirectBitTest Bit_0 z80_main.hl
+    Z80IndirectMainBitTest Bit_0 .hl
 
 
-bit_1_indirect_hl : MainWithIndexRegisters -> IXIYChange
-bit_1_indirect_hl z80_main =
+bit_1_indirect_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+bit_1_indirect_hl z80_main z80_flags =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
-    IndirectBitTest Bit_1 z80_main.hl
+    Z80IndirectMainBitTest Bit_1 .hl
 
 
-bit_2_indirect_hl : MainWithIndexRegisters -> IXIYChange
-bit_2_indirect_hl z80_main =
+bit_2_indirect_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+bit_2_indirect_hl z80_main z80_flags =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
-    IndirectBitTest Bit_2 z80_main.hl
+    Z80IndirectMainBitTest Bit_2 .hl
 
 
-bit_3_indirect_hl : MainWithIndexRegisters -> IXIYChange
-bit_3_indirect_hl z80_main =
+bit_3_indirect_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+bit_3_indirect_hl z80_main z80_flags =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
-    IndirectBitTest Bit_3 z80_main.hl
+    Z80IndirectMainBitTest Bit_3 .hl
 
 
-bit_4_indirect_hl : MainWithIndexRegisters -> IXIYChange
-bit_4_indirect_hl z80_main =
+bit_4_indirect_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+bit_4_indirect_hl z80_main z80_flags =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
-    IndirectBitTest Bit_4 z80_main.hl
+    Z80IndirectMainBitTest Bit_4 .hl
 
 
-bit_5_indirect_hl : MainWithIndexRegisters -> IXIYChange
-bit_5_indirect_hl z80_main =
+bit_5_indirect_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+bit_5_indirect_hl z80_main z80_flags =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
-    IndirectBitTest Bit_5 z80_main.hl
+    Z80IndirectMainBitTest Bit_5 .hl
 
 
-bit_6_indirect_hl : MainWithIndexRegisters -> IXIYChange
-bit_6_indirect_hl z80_main =
+bit_6_indirect_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+bit_6_indirect_hl z80_main z80_flags =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
-    IndirectBitTest Bit_6 z80_main.hl
+    Z80IndirectMainBitTest Bit_6 .hl
 
 
-bit_7_indirect_hl : MainWithIndexRegisters -> IXIYChange
-bit_7_indirect_hl z80_main =
+bit_7_indirect_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+bit_7_indirect_hl z80_main z80_flags =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
-    IndirectBitTest Bit_7 z80_main.hl
+    Z80IndirectMainBitTest Bit_7 .hl
 
 
 singleByteMainRegsCB : Dict Int ( MainWithIndexRegisters -> IXIYChange, InstructionDuration )
@@ -436,6 +422,14 @@ singleByteMainAndFlagRegistersCB =
         , ( 0x43, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.e |> Z80ChangeFlags, EightTStates ) )
         , ( 0x44, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, EightTStates ) )
         , ( 0x45, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, EightTStates ) )
+        , ( 0x46, ( bit_0_indirect_hl, TwelveTStates ) )
+        , ( 0x4E, ( bit_1_indirect_hl, TwelveTStates ) )
+        , ( 0x56, ( bit_2_indirect_hl, TwelveTStates ) )
+        , ( 0x5E, ( bit_3_indirect_hl, TwelveTStates ) )
+        , ( 0x66, ( bit_4_indirect_hl, TwelveTStates ) )
+        , ( 0x6E, ( bit_5_indirect_hl, TwelveTStates ) )
+        , ( 0x76, ( bit_6_indirect_hl, TwelveTStates ) )
+        , ( 0x7E, ( bit_7_indirect_hl, TwelveTStates ) )
         , ( 0x48, ( bit_1_b, EightTStates ) )
         , ( 0x49, ( bit_1_c, EightTStates ) )
         , ( 0x4A, ( bit_1_d, EightTStates ) )

@@ -11,12 +11,12 @@ import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), Inte
 import SingleEnvWithMain exposing (SingleEnvMainChange, applySingleEnvMainChange)
 import SingleWith8BitParameter exposing (Single8BitChange(..), applySimple8BitChange)
 import TripleByte exposing (TripleByteChange(..), TripleByteIndexChange(..), TripleByteJump(..), TripleByteRegister(..))
-import Utils exposing (byte, shiftLeftBy8, toHexString2)
+import Utils exposing (byte, shiftLeftBy8, shiftRightBy8, toHexString2)
 import Z80Change exposing (IndexedZ80Change(..), Z80Change(..))
 import Z80Core exposing (CoreChange(..), DirectionForLDIR(..), LDIRLoop(..), RareCoreChange(..), RepeatPCOffset(..), Z80Core)
 import Z80Debug exposing (debugLog, debugTodo)
 import Z80Env exposing (Z80Env, setMem, z80_in, z80_out, z80_push)
-import Z80Flags exposing (FlagRegisters, IntWithFlags, dec, f_szh0n0p, get_af, inc, set_af)
+import Z80Flags exposing (FlagRegisters, IntWithFlags, c_F53, dec, f_szh0n0p, get_af, inc, set_af, testBit)
 import Z80Mem exposing (getMem8, mem16, z80_pop)
 import Z80Registers exposing (ChangeMainRegister(..), ChangeSingle(..), CoreRegister(..))
 import Z80Rom exposing (Z80ROM)
@@ -223,6 +223,22 @@ applyPureDelta z80changeData clockTime rom48k z80_core =
 
         Z80ChangeFlags flagRegisters ->
             FlagsOnly flagRegisters
+
+        Z80IndirectMainBitTest bitTest addr_func ->
+            let
+                mp_address =
+                    z80_core.main |> addr_func
+
+                ( value, newTime ) =
+                    z80_core.env |> getMem8 mp_address clockTime rom48k
+
+                new_flags =
+                    z80_core.flags |> testBit bitTest value
+            in
+            { new_flags
+                | ff = new_flags.ff |> Bitwise.and (Bitwise.complement c_F53) |> Bitwise.or (mp_address |> shiftRightBy8 |> Bitwise.and c_F53)
+            }
+                |> FlagsOnly
 
         RegisterChangeShifter shifter addr_f ->
             z80_core |> applyShifter shifter (z80_core.main |> addr_f) clockTime rom48k
