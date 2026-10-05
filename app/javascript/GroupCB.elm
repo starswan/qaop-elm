@@ -409,7 +409,9 @@ singleByteMainAndFlagRegistersCB =
         , ( sll_l, EightTStates )
         , ( sll_indirect_hl, FifteenTStates )
         , ( \z80_main z80_flags -> Z80FlagChangeFunc sll_a, EightTStates )
-        , ( srl_b, EightTStates )
+
+        -- case 0x00: B=shifter(o,B); break;
+        , ( \z80_main z80_flags -> z80_flags |> shifter7 z80_main.b |> FlagsWithRegisterChange RegisterB, EightTStates )
         , ( srl_c, EightTStates )
         , ( srl_d, EightTStates )
         , ( srl_e, EightTStates )
@@ -837,12 +839,6 @@ sll_l z80_main z80_flags =
             Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
     in
     FlagsWithHLRegister value.flags new_hl
-
-
-srl_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-srl_b z80_main z80_flags =
-    -- case 0x00: B=shifter(o,B); break;
-    z80_flags |> shifter7 z80_main.b |> FlagsWithRegisterChange RegisterB
 
 
 srl_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
