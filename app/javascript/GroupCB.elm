@@ -416,7 +416,13 @@ singleByteMainAndFlagRegistersCB =
         , ( 0x3D, ( srl_l, EightTStates ) )
         , ( 0x3E, ( srl_indirect_hl, FifteenTStates ) )
         , ( 0x3F, ( \z80_main z80_flags -> Z80FlagChangeFunc srl_a, EightTStates ) )
-        , ( 0x40, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.b |> Z80ChangeFlags, EightTStates ) )
+        ]
+
+
+singleByteMainAndFlagRegistersCB40 : Dict Int ( MainWithIndexRegisters -> FlagRegisters -> Z80Change, InstructionDuration )
+singleByteMainAndFlagRegistersCB40 =
+    Dict.fromList
+        [ ( 0x40, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.b |> Z80ChangeFlags, EightTStates ) )
         , ( 0x41, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.c |> Z80ChangeFlags, EightTStates ) )
         , ( 0x42, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.d |> Z80ChangeFlags, EightTStates ) )
         , ( 0x43, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.e |> Z80ChangeFlags, EightTStates ) )
