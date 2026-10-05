@@ -17,7 +17,6 @@ import List.Extra
 import Loop
 import OpcodeTables exposing (singleByteInstructions, singleByteMainFlagsRegsIX, singleByteMainFlagsRegsIY, singleEnvIY, threeByteInstructions, threeByteWithRegistersIX, threeByteWithRegistersIY, twoByteInstructions, twoByteWithRegistersIX, twoByteWithRegistersIY)
 import PCIncrement exposing (PCIncrement(..))
-import SimpleFlagOps exposing (singleByteFlagsCB)
 import SimpleSingleByte exposing (singleByteMain4080)
 import SingleNoParams exposing (ex_af, execute_0x76_halt, exx)
 import Triple
@@ -553,12 +552,7 @@ runSpecialBitManipCB param clockTime z80_core =
                             ( CBDeltaChange (mainRegFunc z80_core.main), clockTime |> addDuration duration, IncrementByTwo )
 
                         Nothing ->
-                            case singleByteFlagsCB |> Dict.get param of
-                                Just ( flagFunc, duration ) ->
-                                    ( RegisterChangeDelta flagFunc, clockTime |> addDuration duration, IncrementByTwo )
-
-                                Nothing ->
-                                    ( UnknownInstruction "execute CB" param, clockTime, IncrementByTwo )
+                            ( UnknownInstruction "execute CB" param, clockTime, IncrementByTwo )
 
 
 runSpecialIXCB : Int -> CpuTimeCTime -> Int -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
