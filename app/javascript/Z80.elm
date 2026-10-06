@@ -10,12 +10,11 @@ import Bitwise
 import CpuTimeCTime exposing (CTime(..), CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAnd16BitValue, InstructionDuration(..), addDuration, addExtraCpuTime, c_FRTIME, c_TIME_LIMIT, reset_cpu_time)
 import Dict exposing (Dict)
 import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainRegsCB80)
-import GroupCBIXIY exposing (singleByteMainRegsIXCB, singleByteMainRegsIXCB80, singleEnvMainRegsIXCB)
 import GroupED exposing (edWithInterrupts, fourByteMainED, singleByteFlagsED, singleByteMainAndFlagsED, singleByteMainRegsED)
 import Interrupts exposing (IFFValue(..), InterruptMode(..))
 import List.Extra
 import Loop
-import OpcodeTables exposing (singleByteInstructions, singleByteMainFlagsRegsIX, singleByteMainFlagsRegsIY, singleEnvIY, threeByteInstructions, threeByteWithRegistersIX, threeByteWithRegistersIY, twoByteInstructions, twoByteWithRegistersIX, twoByteWithRegistersIY)
+import OpcodeTables exposing (singleByteInstructions, singleByteMainFlagsRegsIX, singleByteMainFlagsRegsIY, singleEnvIX, singleEnvIY, threeByteInstructions, threeByteWithRegistersIX, threeByteWithRegistersIY, twoByteInstructions, twoByteWithRegistersIX, twoByteWithRegistersIY)
 import PCIncrement exposing (PCIncrement(..))
 import SimpleSingleByte exposing (singleByteMain4080)
 import SingleNoParams exposing (ex_af, execute_0x76_halt, exx)
@@ -398,7 +397,12 @@ execute_delta instrTime opCode rom48k pc z80_core =
                     ( ixcbparam, paramTime ) =
                         z80_core.env |> getMem8 (Bitwise.and (pc + 3) 0xFFFF) offsetTime rom48k
                 in
-                runSpecialIXCB ixcboffset paramTime ixcbparam z80_core
+                case singleEnvIX |> Array.get ixcbparam of
+                    Just ( mainRegFunc, duration ) ->
+                        ( CBDeltaChange (mainRegFunc ixcboffset z80_core.main), paramTime |> addDuration duration, IncrementByFour )
+
+                    Nothing ->
+                        ( UnknownInstruction "execute IXCB" param, paramTime, IncrementByFour )
 
             else
                 runIndexIX param newTime rom48k pc z80_core
@@ -548,26 +552,6 @@ runSpecialBitManipCB param clockTime z80_core =
 
                 Nothing ->
                     ( UnknownInstruction "execute CB" param, clockTime, IncrementByTwo )
-
-
-runSpecialIXCB : Int -> CpuTimeCTime -> Int -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
-runSpecialIXCB offset clockTime param z80_core =
-    case singleEnvMainRegsIXCB |> Array.get (param - 0x40) of
-        Just ( f, duration ) ->
-            ( CBDeltaChange (f offset z80_core.main), clockTime |> addDuration duration, IncrementByFour )
-
-        Nothing ->
-            case singleByteMainRegsIXCB |> Dict.get param of
-                Just ( mainRegFunc, duration ) ->
-                    ( CBDeltaChange (mainRegFunc offset z80_core.main), clockTime |> addDuration duration, IncrementByFour )
-
-                Nothing ->
-                    case singleByteMainRegsIXCB80 |> Dict.get param of
-                        Just ( mainRegFunc, duration ) ->
-                            ( CBDeltaChange (mainRegFunc offset z80_core.main), clockTime |> addDuration duration, IncrementByFour )
-
-                        Nothing ->
-                            ( UnknownInstruction "execute IXCB" param, clockTime, IncrementByFour )
 
 
 runSpecialEDMisc : Int -> CpuTimeCTime -> Z80ROM -> Int -> Z80Core -> ( DeltaWithChanges, CpuTimeCTime, PCIncrement )
