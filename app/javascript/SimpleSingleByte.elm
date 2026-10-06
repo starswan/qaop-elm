@@ -4,7 +4,7 @@ import Array exposing (Array)
 import Bitwise
 import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
-import RegisterChange exposing (RegisterFlagChange(..), Shifter(..))
+import RegisterChange exposing (RegisterFlagChange(..))
 import Utils exposing (BitTest(..), shiftLeftBy8, shiftRightBy8)
 import Z80Flags exposing (FlagRegisters, z80_adc, z80_add, z80_and, z80_cp, z80_or, z80_sbc, z80_sub, z80_xor)
 import Z80Registers exposing (ChangeMainRegister(..))

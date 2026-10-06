@@ -53,44 +53,6 @@ singleByteFlags =
         ]
 
 
-singleByteFlagsCB : Dict Int ( RegisterFlagChange, InstructionDuration )
-singleByteFlagsCB =
-    Dict.fromList
-        [ ( 0x07, ( FlagChangeFunc rlc_a, EightTStates ) )
-        , ( 0x0F, ( FlagChangeFunc rrc_a, EightTStates ) )
-        , ( 0x17, ( FlagChangeFunc rl_a, EightTStates ) )
-        , ( 0x1F, ( FlagChangeFunc rr_a, EightTStates ) )
-        , ( 0x27, ( FlagChangeFunc sla_a, EightTStates ) )
-        , ( 0x2F, ( FlagChangeFunc sra_a, EightTStates ) )
-        , ( 0x37, ( FlagChangeFunc sll_a, EightTStates ) )
-        , ( 0x3F, ( FlagChangeFunc srl_a, EightTStates ) )
-        , ( 0x47, ( FlagChangeFunc (\z80_flags -> z80_flags |> testBit Bit_0 z80_flags.a), EightTStates ) )
-        , ( 0x4F, ( FlagChangeFunc (\z80_flags -> z80_flags |> testBit Bit_1 z80_flags.a), EightTStates ) )
-        , ( 0x57, ( FlagChangeFunc (\z80_flags -> z80_flags |> testBit Bit_2 z80_flags.a), EightTStates ) )
-        , ( 0x5F, ( FlagChangeFunc (\z80_flags -> z80_flags |> testBit Bit_3 z80_flags.a), EightTStates ) )
-        , ( 0x67, ( FlagChangeFunc (\z80_flags -> z80_flags |> testBit Bit_4 z80_flags.a), EightTStates ) )
-        , ( 0x6F, ( FlagChangeFunc (\z80_flags -> z80_flags |> testBit Bit_5 z80_flags.a), EightTStates ) )
-        , ( 0x77, ( FlagChangeFunc (\z80_flags -> z80_flags |> testBit Bit_6 z80_flags.a), EightTStates ) )
-        , ( 0x7F, ( FlagChangeFunc (\z80_flags -> z80_flags |> testBit Bit_7 z80_flags.a), EightTStates ) )
-        , ( 0x87, ( FlagChangeFunc (\z80_flags -> z80_flags |> resetBit Bit_0), EightTStates ) )
-        , ( 0x8F, ( FlagChangeFunc (\z80_flags -> z80_flags |> resetBit Bit_1), EightTStates ) )
-        , ( 0x97, ( FlagChangeFunc (\z80_flags -> z80_flags |> resetBit Bit_2), EightTStates ) )
-        , ( 0x9F, ( FlagChangeFunc (\z80_flags -> z80_flags |> resetBit Bit_3), EightTStates ) )
-        , ( 0xA7, ( FlagChangeFunc (\z80_flags -> z80_flags |> resetBit Bit_4), EightTStates ) )
-        , ( 0xAF, ( FlagChangeFunc (\z80_flags -> z80_flags |> resetBit Bit_5), EightTStates ) )
-        , ( 0xB7, ( FlagChangeFunc (\z80_flags -> z80_flags |> resetBit Bit_6), EightTStates ) )
-        , ( 0xBF, ( FlagChangeFunc (\z80_flags -> z80_flags |> resetBit Bit_7), EightTStates ) )
-        , ( 0xC7, ( FlagChangeFunc (\z80_flags -> z80_flags |> setFlagBit Bit_0), EightTStates ) )
-        , ( 0xCF, ( FlagChangeFunc (\z80_flags -> z80_flags |> setFlagBit Bit_1), EightTStates ) )
-        , ( 0xD7, ( FlagChangeFunc (\z80_flags -> z80_flags |> setFlagBit Bit_2), EightTStates ) )
-        , ( 0xDF, ( FlagChangeFunc (\z80_flags -> z80_flags |> setFlagBit Bit_3), EightTStates ) )
-        , ( 0xE7, ( FlagChangeFunc (\z80_flags -> z80_flags |> setFlagBit Bit_4), EightTStates ) )
-        , ( 0xEF, ( FlagChangeFunc (\z80_flags -> z80_flags |> setFlagBit Bit_5), EightTStates ) )
-        , ( 0xF7, ( FlagChangeFunc (\z80_flags -> z80_flags |> setFlagBit Bit_6), EightTStates ) )
-        , ( 0xFF, ( FlagChangeFunc (\z80_flags -> z80_flags |> setFlagBit Bit_7), EightTStates ) )
-        ]
-
-
 rlca : FlagRegisters -> FlagRegisters
 rlca z80_flags =
     -- case 0x07: rot(A*0x101>>>7); break;

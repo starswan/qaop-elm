@@ -4,7 +4,7 @@ import Array exposing (Array)
 import CpuTimeCTime exposing (InstructionDuration)
 import Dict exposing (Dict)
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, doubleWithRegistersIX, doubleWithRegistersIY)
-import GroupCBIXIY exposing (singleByteMainRegsIYCB, singleByteMainRegsIYCB80, singleEnvMainRegsIYCB)
+import GroupCBIXIY exposing (singleByteMainRegsIXCB, singleByteMainRegsIXCB80, singleByteMainRegsIYCB, singleByteMainRegsIYCB80, singleEnvMainRegsIXCB40, singleEnvMainRegsIYCB40)
 import IXIYChange exposing (IXIYChange)
 import RegisterChange exposing (RegisterFlagChange(..), TwoByteChange(..))
 import SimpleFlagOps exposing (singleByteFlags)
@@ -53,8 +53,15 @@ singleByteMainFlagsRegsIY =
 singleEnvIY : Array ( Int -> MainWithIndexRegisters -> IXIYChange, InstructionDuration )
 singleEnvIY =
     singleByteMainRegsIYCB80
-        |> Array.append singleEnvMainRegsIYCB
+        |> Array.append singleEnvMainRegsIYCB40
         |> Array.append singleByteMainRegsIYCB
+
+
+singleEnvIX : Array ( Int -> MainWithIndexRegisters -> IXIYChange, InstructionDuration )
+singleEnvIX =
+    singleByteMainRegsIXCB80
+        |> Array.append singleEnvMainRegsIXCB40
+        |> Array.append singleByteMainRegsIXCB
 
 
 singleByteMainFlagsRegsIX : Dict Int ( RegisterFlagChange, InstructionDuration )

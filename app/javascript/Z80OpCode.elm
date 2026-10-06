@@ -5,7 +5,7 @@ import Bitwise
 import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, InstructionDuration, reset_cpu_time)
 import Dict exposing (Dict)
 import DoubleWithRegisters exposing (applyDoubleWithRegistersDelta, doubleWithRegistersIX, doubleWithRegistersIY)
-import GroupCBIXIY exposing (singleByteMainRegsIYCB, singleByteMainRegsIYCB80, singleEnvMainRegsIYCB)
+import GroupCBIXIY exposing (singleByteMainRegsIYCB, singleByteMainRegsIYCB80, singleEnvMainRegsIYCB40)
 import GroupED exposing (singleByteMainAndFlagsED, singleByteMainRegsED)
 import IXIYChange exposing (applyIXIYChange)
 import Maybe.Extra exposing (oneOf)
@@ -143,7 +143,7 @@ lengthAndDuration pc rom48k z80env =
                                                 )
                                             )
                                 , \( cbparam, cboffset ) ->
-                                    singleEnvMainRegsIYCB
+                                    singleEnvMainRegsIYCB40
                                         |> Array.get (cbparam - 0x40)
                                         |> Maybe.map
                                             (\( f, duration ) ->
@@ -227,8 +227,8 @@ lengthAndDuration pc rom48k z80env =
                             (\( f, pcInc, duration ) ->
                                 ( pcInc
                                 , duration
-                                , \_ _ z80core ->
-                                    z80core |> applyPureDelta (f z80core.main z80core.flags)
+                                , \cpuClock z80rom z80core ->
+                                    z80core |> applyPureDelta (f z80core.main z80core.flags) cpuClock z80rom
                                 )
                             )
                 ]
@@ -270,7 +270,7 @@ lengthAndDuration pc rom48k z80env =
                         |> Dict.get instruction
                         |> Maybe.map
                             (\( f, duration ) ->
-                                ( IncrementByOne, duration, \_ _ z80core -> z80core |> applyPureDelta (f z80core.main z80core.flags) )
+                                ( IncrementByOne, duration, \cpuClock z80rom z80core -> z80core |> applyPureDelta (f z80core.main z80core.flags) cpuClock z80rom )
                             )
                 , \instruction ->
                     singleByteMainRegs

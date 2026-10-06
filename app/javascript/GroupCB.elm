@@ -1,272 +1,263 @@
 module GroupCB exposing (..)
 
+import Array exposing (Array)
 import Bitwise
 import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
 import IXIYChange exposing (IXIYChange(..))
-import RegisterChange exposing (RegisterFlagChange(..), Shifter(..))
+import SimpleFlagOps exposing (resetBit, rl_a, rlc_a, rr_a, rrc_a, setFlagBit, sla_a, sll_a, sra_a, srl_a)
 import Utils exposing (BitTest(..), bitMaskFromBit, inverseBitMaskFromBit, shiftLeftBy8, shiftRightBy8)
-import Z80Change exposing (Z80Change(..))
+import Z80Change exposing (Shifter(..), Z80Change(..))
 import Z80Flags exposing (FlagRegisters, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit)
 import Z80Registers exposing (ChangeMainRegister(..), ChangeSingle(..), CoreRegister(..))
-import Z80Types exposing (MainWithIndexRegisters)
+import Z80Types exposing (MainWithIndexRegisters, get_h, get_l)
 
 
-singleEnvMainRegsCB : Dict Int ( MainWithIndexRegisters -> IXIYChange, InstructionDuration )
-singleEnvMainRegsCB =
-    Dict.fromList
-        [ ( 0x46, ( bit_0_indirect_hl, TwelveTStates ) )
-        , ( 0x4E, ( bit_1_indirect_hl, TwelveTStates ) )
-        , ( 0x56, ( bit_2_indirect_hl, TwelveTStates ) )
-        , ( 0x5E, ( bit_3_indirect_hl, TwelveTStates ) )
-        , ( 0x66, ( bit_4_indirect_hl, TwelveTStates ) )
-        , ( 0x6E, ( bit_5_indirect_hl, TwelveTStates ) )
-        , ( 0x76, ( bit_6_indirect_hl, TwelveTStates ) )
-        , ( 0x7E, ( bit_7_indirect_hl, TwelveTStates ) )
-        ]
-
-
-bit_0_indirect_hl : MainWithIndexRegisters -> IXIYChange
-bit_0_indirect_hl z80_main =
+bit_0_indirect_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+bit_0_indirect_hl z80_main z80_flags =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
-    IndirectBitTest Bit_0 z80_main.hl
+    Z80IndirectMainBitTest Bit_0 .hl
 
 
-bit_1_indirect_hl : MainWithIndexRegisters -> IXIYChange
-bit_1_indirect_hl z80_main =
+bit_1_indirect_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+bit_1_indirect_hl z80_main z80_flags =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
-    IndirectBitTest Bit_1 z80_main.hl
+    Z80IndirectMainBitTest Bit_1 .hl
 
 
-bit_2_indirect_hl : MainWithIndexRegisters -> IXIYChange
-bit_2_indirect_hl z80_main =
+bit_2_indirect_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+bit_2_indirect_hl z80_main z80_flags =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
-    IndirectBitTest Bit_2 z80_main.hl
+    Z80IndirectMainBitTest Bit_2 .hl
 
 
-bit_3_indirect_hl : MainWithIndexRegisters -> IXIYChange
-bit_3_indirect_hl z80_main =
+bit_3_indirect_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+bit_3_indirect_hl z80_main z80_flags =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
-    IndirectBitTest Bit_3 z80_main.hl
+    Z80IndirectMainBitTest Bit_3 .hl
 
 
-bit_4_indirect_hl : MainWithIndexRegisters -> IXIYChange
-bit_4_indirect_hl z80_main =
+bit_4_indirect_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+bit_4_indirect_hl z80_main z80_flags =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
-    IndirectBitTest Bit_4 z80_main.hl
+    Z80IndirectMainBitTest Bit_4 .hl
 
 
-bit_5_indirect_hl : MainWithIndexRegisters -> IXIYChange
-bit_5_indirect_hl z80_main =
+bit_5_indirect_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+bit_5_indirect_hl z80_main z80_flags =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
-    IndirectBitTest Bit_5 z80_main.hl
+    Z80IndirectMainBitTest Bit_5 .hl
 
 
-bit_6_indirect_hl : MainWithIndexRegisters -> IXIYChange
-bit_6_indirect_hl z80_main =
+bit_6_indirect_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+bit_6_indirect_hl z80_main z80_flags =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
-    IndirectBitTest Bit_6 z80_main.hl
+    Z80IndirectMainBitTest Bit_6 .hl
 
 
-bit_7_indirect_hl : MainWithIndexRegisters -> IXIYChange
-bit_7_indirect_hl z80_main =
+bit_7_indirect_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+bit_7_indirect_hl z80_main z80_flags =
     -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
-    IndirectBitTest Bit_7 z80_main.hl
+    Z80IndirectMainBitTest Bit_7 .hl
 
 
-singleByteMainRegsCB : Dict Int ( MainWithIndexRegisters -> IXIYChange, InstructionDuration )
-singleByteMainRegsCB =
-    Dict.fromList
-        [ -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
-          ( 0x06, ( \z80_main -> RegisterChangeShifter Shifter0 .hl, FifteenTStates ) )
+singleByteMainRegsCB80 : Array ( MainWithIndexRegisters -> IXIYChange, InstructionDuration )
+singleByteMainRegsCB80 =
+    Array.fromList
+        [ -- reset bit0
+          ( \z80_main -> TransformMainRegistersCB (resetBbit Bit_0), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetCbit Bit_0), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetDbit Bit_0), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetEbit Bit_0), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetHbit Bit_0), EightTStates )
+        , ( resetLbit Bit_0, EightTStates )
+        , ( resetHLbit Bit_0, EightTStates )
+        , ( \z80_main -> IXIYFlagChangeFunc (\z80_flags -> z80_flags |> resetBit Bit_0), EightTStates )
 
-        -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
-        , ( 0x0E, ( \z80_main -> RegisterChangeShifter Shifter1 .hl, FifteenTStates ) )
-        , ( 0x16, ( rl_indirect_hl, FifteenTStates ) )
-        , ( 0x1E, ( rr_indirect_hl, FifteenTStates ) )
-        , ( 0x26, ( sla_indirect_hl, FifteenTStates ) )
-        , ( 0x2E, ( sra_indirect_hl, FifteenTStates ) )
-        , ( 0x36, ( sll_indirect_hl, FifteenTStates ) )
-        , ( 0x3E, ( srl_indirect_hl, FifteenTStates ) )
+        --bit1
+        , ( \z80_main -> TransformMainRegistersCB (resetBbit Bit_1), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetCbit Bit_1), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetDbit Bit_1), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetEbit Bit_1), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetHbit Bit_1), EightTStates )
+        , ( resetLbit Bit_1, EightTStates )
+        , ( resetHLbit Bit_1, EightTStates )
+        , ( \z80_main -> IXIYFlagChangeFunc (\z80_flags -> z80_flags |> resetBit Bit_1), EightTStates )
 
-        -- reset bit0
-        , ( 0x80, ( \z80_main -> TransformMainRegistersCB (resetBbit Bit_0), EightTStates ) )
-        , ( 0x81, ( \z80_main -> TransformMainRegistersCB (resetCbit Bit_0), EightTStates ) )
-        , ( 0x82, ( \z80_main -> TransformMainRegistersCB (resetDbit Bit_0), EightTStates ) )
-        , ( 0x83, ( \z80_main -> TransformMainRegistersCB (resetEbit Bit_0), EightTStates ) )
-        , ( 0x84, ( \z80_main -> TransformMainRegistersCB (resetHbit Bit_0), EightTStates ) )
-        , ( 0x85, ( resetLbit Bit_0, EightTStates ) )
-        , ( 0x86, ( resetHLbit Bit_0, EightTStates ) )
+        --bit2
+        , ( \z80_main -> TransformMainRegistersCB (resetBbit Bit_2), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetCbit Bit_2), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetDbit Bit_2), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetEbit Bit_2), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetHbit Bit_2), EightTStates )
+        , ( resetLbit Bit_2, EightTStates )
+        , ( resetHLbit Bit_2, EightTStates )
+        , ( \z80_main -> IXIYFlagChangeFunc (\z80_flags -> z80_flags |> resetBit Bit_2), EightTStates )
 
-        -- reset bit1
-        , ( 0x88, ( \z80_main -> TransformMainRegistersCB (resetBbit Bit_1), EightTStates ) )
-        , ( 0x89, ( \z80_main -> TransformMainRegistersCB (resetCbit Bit_1), EightTStates ) )
-        , ( 0x8A, ( \z80_main -> TransformMainRegistersCB (resetDbit Bit_1), EightTStates ) )
-        , ( 0x8B, ( \z80_main -> TransformMainRegistersCB (resetEbit Bit_1), EightTStates ) )
-        , ( 0x8C, ( \z80_main -> TransformMainRegistersCB (resetHbit Bit_1), EightTStates ) )
-        , ( 0x8D, ( resetLbit Bit_1, EightTStates ) )
-        , ( 0x8E, ( resetHLbit Bit_1, EightTStates ) )
+        --bit3
+        , ( \z80_main -> TransformMainRegistersCB (resetBbit Bit_3), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetCbit Bit_3), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetDbit Bit_3), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetEbit Bit_3), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetHbit Bit_3), EightTStates )
+        , ( resetLbit Bit_3, EightTStates )
+        , ( resetHLbit Bit_3, EightTStates )
+        , ( \z80_main -> IXIYFlagChangeFunc (\z80_flags -> z80_flags |> resetBit Bit_3), EightTStates )
 
-        -- reset bit2
-        , ( 0x90, ( \z80_main -> TransformMainRegistersCB (resetBbit Bit_2), EightTStates ) )
-        , ( 0x91, ( \z80_main -> TransformMainRegistersCB (resetCbit Bit_2), EightTStates ) )
-        , ( 0x92, ( \z80_main -> TransformMainRegistersCB (resetDbit Bit_2), EightTStates ) )
-        , ( 0x93, ( \z80_main -> TransformMainRegistersCB (resetEbit Bit_2), EightTStates ) )
-        , ( 0x94, ( \z80_main -> TransformMainRegistersCB (resetHbit Bit_2), EightTStates ) )
-        , ( 0x95, ( resetLbit Bit_2, EightTStates ) )
-        , ( 0x96, ( resetHLbit Bit_2, EightTStates ) )
+        --bit4
+        , ( \z80_main -> TransformMainRegistersCB (resetBbit Bit_4), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetCbit Bit_4), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetDbit Bit_4), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetEbit Bit_4), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetHbit Bit_4), EightTStates )
+        , ( resetLbit Bit_4, EightTStates )
+        , ( resetHLbit Bit_4, EightTStates )
+        , ( \z80_main -> IXIYFlagChangeFunc (\z80_flags -> z80_flags |> resetBit Bit_4), EightTStates )
 
-        -- reset bit3
-        , ( 0x98, ( \z80_main -> TransformMainRegistersCB (resetBbit Bit_3), EightTStates ) )
-        , ( 0x99, ( \z80_main -> TransformMainRegistersCB (resetCbit Bit_3), EightTStates ) )
-        , ( 0x9A, ( \z80_main -> TransformMainRegistersCB (resetDbit Bit_3), EightTStates ) )
-        , ( 0x9B, ( \z80_main -> TransformMainRegistersCB (resetEbit Bit_3), EightTStates ) )
-        , ( 0x9C, ( \z80_main -> TransformMainRegistersCB (resetHbit Bit_3), EightTStates ) )
-        , ( 0x9D, ( resetLbit Bit_3, EightTStates ) )
-        , ( 0x9E, ( resetHLbit Bit_3, EightTStates ) )
+        --bit5
+        , ( \z80_main -> TransformMainRegistersCB (resetBbit Bit_5), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetCbit Bit_5), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetDbit Bit_5), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetEbit Bit_5), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetHbit Bit_5), EightTStates )
+        , ( resetLbit Bit_5, EightTStates )
+        , ( resetHLbit Bit_5, EightTStates )
+        , ( \z80_main -> IXIYFlagChangeFunc (\z80_flags -> z80_flags |> resetBit Bit_5), EightTStates )
 
-        -- reset bit4
-        , ( 0xA0, ( \z80_main -> TransformMainRegistersCB (resetBbit Bit_4), EightTStates ) )
-        , ( 0xA1, ( \z80_main -> TransformMainRegistersCB (resetCbit Bit_4), EightTStates ) )
-        , ( 0xA2, ( \z80_main -> TransformMainRegistersCB (resetDbit Bit_4), EightTStates ) )
-        , ( 0xA3, ( \z80_main -> TransformMainRegistersCB (resetEbit Bit_4), EightTStates ) )
-        , ( 0xA4, ( \z80_main -> TransformMainRegistersCB (resetHbit Bit_4), EightTStates ) )
-        , ( 0xA5, ( resetLbit Bit_4, EightTStates ) )
-        , ( 0xA6, ( resetHLbit Bit_4, EightTStates ) )
+        --bit6
+        , ( \z80_main -> TransformMainRegistersCB (resetBbit Bit_6), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetCbit Bit_6), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetDbit Bit_6), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetEbit Bit_6), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetHbit Bit_6), EightTStates )
+        , ( resetLbit Bit_6, EightTStates )
+        , ( resetHLbit Bit_6, EightTStates )
+        , ( \z80_main -> IXIYFlagChangeFunc (\z80_flags -> z80_flags |> resetBit Bit_6), EightTStates )
 
-        -- reset bit5
-        , ( 0xA8, ( \z80_main -> TransformMainRegistersCB (resetBbit Bit_5), EightTStates ) )
-        , ( 0xA9, ( \z80_main -> TransformMainRegistersCB (resetCbit Bit_5), EightTStates ) )
-        , ( 0xAA, ( \z80_main -> TransformMainRegistersCB (resetDbit Bit_5), EightTStates ) )
-        , ( 0xAB, ( \z80_main -> TransformMainRegistersCB (resetEbit Bit_5), EightTStates ) )
-        , ( 0xAC, ( \z80_main -> TransformMainRegistersCB (resetHbit Bit_5), EightTStates ) )
-        , ( 0xAD, ( resetLbit Bit_5, EightTStates ) )
-        , ( 0xAE, ( resetHLbit Bit_5, EightTStates ) )
+        --bit7
+        , ( \z80_main -> TransformMainRegistersCB (resetBbit Bit_7), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetCbit Bit_7), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetDbit Bit_7), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetEbit Bit_7), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (resetHbit Bit_7), EightTStates )
+        , ( resetLbit Bit_7, EightTStates )
+        , ( resetHLbit Bit_7, EightTStates )
+        , ( \z80_main -> IXIYFlagChangeFunc (\z80_flags -> z80_flags |> resetBit Bit_7), EightTStates )
 
-        -- reset bit6
-        , ( 0xB0, ( \z80_main -> TransformMainRegistersCB (resetBbit Bit_6), EightTStates ) )
-        , ( 0xB1, ( \z80_main -> TransformMainRegistersCB (resetCbit Bit_6), EightTStates ) )
-        , ( 0xB2, ( \z80_main -> TransformMainRegistersCB (resetDbit Bit_6), EightTStates ) )
-        , ( 0xB3, ( \z80_main -> TransformMainRegistersCB (resetEbit Bit_6), EightTStates ) )
-        , ( 0xB4, ( \z80_main -> TransformMainRegistersCB (resetHbit Bit_6), EightTStates ) )
-        , ( 0xB5, ( resetLbit Bit_6, EightTStates ) )
-        , ( 0xB6, ( resetHLbit Bit_6, EightTStates ) )
+        --t0
+        , ( \z80_main -> TransformMainRegistersCB (setBbit Bit_0), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setCbit Bit_0), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setDbit Bit_0), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setEbit Bit_0), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setHbit Bit_0), EightTStates )
+        , ( setLbit Bit_0, EightTStates )
+        , ( setHLbit Bit_0, EightTStates )
+        , ( \z80_main -> IXIYFlagChangeFunc (\z80_flags -> z80_flags |> setFlagBit Bit_0), EightTStates )
 
-        -- reset bit7
-        , ( 0xB8, ( \z80_main -> TransformMainRegistersCB (resetBbit Bit_7), EightTStates ) )
-        , ( 0xB9, ( \z80_main -> TransformMainRegistersCB (resetCbit Bit_7), EightTStates ) )
-        , ( 0xBA, ( \z80_main -> TransformMainRegistersCB (resetDbit Bit_7), EightTStates ) )
-        , ( 0xBB, ( \z80_main -> TransformMainRegistersCB (resetEbit Bit_7), EightTStates ) )
-        , ( 0xBC, ( \z80_main -> TransformMainRegistersCB (resetHbit Bit_7), EightTStates ) )
-        , ( 0xBD, ( resetLbit Bit_7, EightTStates ) )
-        , ( 0xBE, ( resetHLbit Bit_7, EightTStates ) )
+        --t1
+        , ( \z80_main -> TransformMainRegistersCB (setBbit Bit_1), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setCbit Bit_1), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setDbit Bit_1), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setEbit Bit_1), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setHbit Bit_1), EightTStates )
+        , ( setLbit Bit_1, EightTStates )
+        , ( setHLbit Bit_1, EightTStates )
+        , ( \z80_main -> IXIYFlagChangeFunc (\z80_flags -> z80_flags |> setFlagBit Bit_1), EightTStates )
 
-        -- set bit0
-        , ( 0xC0, ( \z80_main -> TransformMainRegistersCB (setBbit Bit_0), EightTStates ) )
-        , ( 0xC1, ( \z80_main -> TransformMainRegistersCB (setCbit Bit_0), EightTStates ) )
-        , ( 0xC2, ( \z80_main -> TransformMainRegistersCB (setDbit Bit_0), EightTStates ) )
-        , ( 0xC3, ( \z80_main -> TransformMainRegistersCB (setEbit Bit_0), EightTStates ) )
-        , ( 0xC4, ( \z80_main -> TransformMainRegistersCB (setHbit Bit_0), EightTStates ) )
-        , ( 0xC5, ( setLbit Bit_0, EightTStates ) )
-        , ( 0xC6, ( setHLbit Bit_0, EightTStates ) )
+        --t2
+        , ( \z80_main -> TransformMainRegistersCB (setBbit Bit_2), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setCbit Bit_2), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setDbit Bit_2), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setEbit Bit_2), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setHbit Bit_2), EightTStates )
+        , ( setLbit Bit_2, EightTStates )
+        , ( setHLbit Bit_2, EightTStates )
+        , ( \z80_main -> IXIYFlagChangeFunc (\z80_flags -> z80_flags |> setFlagBit Bit_2), EightTStates )
 
-        -- set bit1
-        , ( 0xC8, ( \z80_main -> TransformMainRegistersCB (setBbit Bit_1), EightTStates ) )
-        , ( 0xC9, ( \z80_main -> TransformMainRegistersCB (setCbit Bit_1), EightTStates ) )
-        , ( 0xCA, ( \z80_main -> TransformMainRegistersCB (setDbit Bit_1), EightTStates ) )
-        , ( 0xCB, ( \z80_main -> TransformMainRegistersCB (setEbit Bit_1), EightTStates ) )
-        , ( 0xCC, ( \z80_main -> TransformMainRegistersCB (setHbit Bit_1), EightTStates ) )
-        , ( 0xCD, ( setLbit Bit_1, EightTStates ) )
-        , ( 0xCE, ( setHLbit Bit_1, EightTStates ) )
-
-        -- set bit2
-        , ( 0xD0, ( \z80_main -> TransformMainRegistersCB (setBbit Bit_2), EightTStates ) )
-        , ( 0xD1, ( \z80_main -> TransformMainRegistersCB (setCbit Bit_2), EightTStates ) )
-        , ( 0xD2, ( \z80_main -> TransformMainRegistersCB (setDbit Bit_2), EightTStates ) )
-        , ( 0xD3, ( \z80_main -> TransformMainRegistersCB (setEbit Bit_2), EightTStates ) )
-        , ( 0xD4, ( \z80_main -> TransformMainRegistersCB (setHbit Bit_2), EightTStates ) )
-        , ( 0xD5, ( setLbit Bit_2, EightTStates ) )
-        , ( 0xD6, ( setHLbit Bit_2, EightTStates ) )
-
-        -- set bDt3
-        , ( 0xD8, ( \z80_main -> TransformMainRegistersCB (setBbit Bit_3), EightTStates ) )
-        , ( 0xD9, ( \z80_main -> TransformMainRegistersCB (setCbit Bit_3), EightTStates ) )
-        , ( 0xDA, ( \z80_main -> TransformMainRegistersCB (setDbit Bit_3), EightTStates ) )
-        , ( 0xDB, ( \z80_main -> TransformMainRegistersCB (setEbit Bit_3), EightTStates ) )
-        , ( 0xDC, ( \z80_main -> TransformMainRegistersCB (setHbit Bit_3), EightTStates ) )
-        , ( 0xDD, ( setLbit Bit_3, EightTStates ) )
-        , ( 0xDE, ( setHLbit Bit_3, EightTStates ) )
+        --t3
+        , ( \z80_main -> TransformMainRegistersCB (setBbit Bit_3), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setCbit Bit_3), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setDbit Bit_3), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setEbit Bit_3), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setHbit Bit_3), EightTStates )
+        , ( setLbit Bit_3, EightTStates )
+        , ( setHLbit Bit_3, EightTStates )
+        , ( \z80_main -> IXIYFlagChangeFunc (\z80_flags -> z80_flags |> setFlagBit Bit_3), EightTStates )
 
         -- set bit4
-        , ( 0xE0, ( \z80_main -> TransformMainRegistersCB (setBbit Bit_4), EightTStates ) )
-        , ( 0xE1, ( \z80_main -> TransformMainRegistersCB (setCbit Bit_4), EightTStates ) )
-        , ( 0xE2, ( \z80_main -> TransformMainRegistersCB (setDbit Bit_4), EightTStates ) )
-        , ( 0xE3, ( \z80_main -> TransformMainRegistersCB (setEbit Bit_4), EightTStates ) )
-        , ( 0xE4, ( \z80_main -> TransformMainRegistersCB (setHbit Bit_4), EightTStates ) )
-        , ( 0xE5, ( setLbit Bit_4, EightTStates ) )
-        , ( 0xE6, ( setHLbit Bit_4, EightTStates ) )
+        , ( \z80_main -> TransformMainRegistersCB (setBbit Bit_4), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setCbit Bit_4), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setDbit Bit_4), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setEbit Bit_4), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setHbit Bit_4), EightTStates )
+        , ( setLbit Bit_4, EightTStates )
+        , ( setHLbit Bit_4, EightTStates )
+        , ( \z80_main -> IXIYFlagChangeFunc (\z80_flags -> z80_flags |> setFlagBit Bit_4), EightTStates )
 
-        -- set bEt5
-        , ( 0xE8, ( \z80_main -> TransformMainRegistersCB (setBbit Bit_5), EightTStates ) )
-        , ( 0xE9, ( \z80_main -> TransformMainRegistersCB (setCbit Bit_5), EightTStates ) )
-        , ( 0xEA, ( \z80_main -> TransformMainRegistersCB (setDbit Bit_5), EightTStates ) )
-        , ( 0xEB, ( \z80_main -> TransformMainRegistersCB (setEbit Bit_5), EightTStates ) )
-        , ( 0xEC, ( \z80_main -> TransformMainRegistersCB (setHbit Bit_5), EightTStates ) )
-        , ( 0xED, ( setLbit Bit_5, EightTStates ) )
-        , ( 0xEE, ( setHLbit Bit_5, EightTStates ) )
+        --t5
+        , ( \z80_main -> TransformMainRegistersCB (setBbit Bit_5), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setCbit Bit_5), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setDbit Bit_5), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setEbit Bit_5), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setHbit Bit_5), EightTStates )
+        , ( setLbit Bit_5, EightTStates )
+        , ( setHLbit Bit_5, EightTStates )
+        , ( \z80_main -> IXIYFlagChangeFunc (\z80_flags -> z80_flags |> setFlagBit Bit_5), EightTStates )
 
-        -- set bit6
-        , ( 0xF0, ( \z80_main -> TransformMainRegistersCB (setBbit Bit_6), EightTStates ) )
-        , ( 0xF1, ( \z80_main -> TransformMainRegistersCB (setCbit Bit_6), EightTStates ) )
-        , ( 0xF2, ( \z80_main -> TransformMainRegistersCB (setDbit Bit_6), EightTStates ) )
-        , ( 0xF3, ( \z80_main -> TransformMainRegistersCB (setEbit Bit_6), EightTStates ) )
-        , ( 0xF4, ( \z80_main -> TransformMainRegistersCB (setHbit Bit_6), EightTStates ) )
-        , ( 0xF5, ( setLbit Bit_6, EightTStates ) )
-        , ( 0xF6, ( setHLbit Bit_6, EightTStates ) )
+        --t6
+        , ( \z80_main -> TransformMainRegistersCB (setBbit Bit_6), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setCbit Bit_6), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setDbit Bit_6), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setEbit Bit_6), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setHbit Bit_6), EightTStates )
+        , ( setLbit Bit_6, EightTStates )
+        , ( setHLbit Bit_6, EightTStates )
+        , ( \z80_main -> IXIYFlagChangeFunc (\z80_flags -> z80_flags |> setFlagBit Bit_6), EightTStates )
 
-        -- set bFt7
-        , ( 0xF8, ( \z80_main -> TransformMainRegistersCB (setBbit Bit_7), EightTStates ) )
-        , ( 0xF9, ( \z80_main -> TransformMainRegistersCB (setCbit Bit_7), EightTStates ) )
-        , ( 0xFA, ( \z80_main -> TransformMainRegistersCB (setDbit Bit_7), EightTStates ) )
-        , ( 0xFB, ( \z80_main -> TransformMainRegistersCB (setEbit Bit_7), EightTStates ) )
-        , ( 0xFC, ( \z80_main -> TransformMainRegistersCB (setHbit Bit_7), EightTStates ) )
-        , ( 0xFD, ( setLbit Bit_7, EightTStates ) )
-        , ( 0xFE, ( setHLbit Bit_7, EightTStates ) )
+        --t7
+        , ( \z80_main -> TransformMainRegistersCB (setBbit Bit_7), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setCbit Bit_7), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setDbit Bit_7), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setEbit Bit_7), EightTStates )
+        , ( \z80_main -> TransformMainRegistersCB (setHbit Bit_7), EightTStates )
+        , ( setLbit Bit_7, EightTStates )
+        , ( setHLbit Bit_7, EightTStates )
+        , ( \z80_main -> IXIYFlagChangeFunc (\z80_flags -> z80_flags |> setFlagBit Bit_7), EightTStates )
         ]
 
 
-rl_indirect_hl : MainWithIndexRegisters -> IXIYChange
-rl_indirect_hl z80_main =
+rl_indirect_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+rl_indirect_hl z80_main z80_flags =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     RegisterChangeShifter Shifter2 .hl
 
 
-rr_indirect_hl : MainWithIndexRegisters -> IXIYChange
-rr_indirect_hl z80_main =
+rr_indirect_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+rr_indirect_hl z80_main z80_flags =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     RegisterChangeShifter Shifter3 .hl
 
 
-sla_indirect_hl : MainWithIndexRegisters -> IXIYChange
-sla_indirect_hl z80_main =
+sla_indirect_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+sla_indirect_hl z80_main z80_flags =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     RegisterChangeShifter Shifter4 .hl
 
 
-sra_indirect_hl : MainWithIndexRegisters -> IXIYChange
-sra_indirect_hl z80_main =
+sra_indirect_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+sra_indirect_hl z80_main z80_flags =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     RegisterChangeShifter Shifter5 .hl
 
 
-sll_indirect_hl : MainWithIndexRegisters -> IXIYChange
-sll_indirect_hl z80_main =
+sll_indirect_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+sll_indirect_hl z80_main z80_flags =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     RegisterChangeShifter Shifter6 .hl
 
 
-srl_indirect_hl : MainWithIndexRegisters -> IXIYChange
-srl_indirect_hl z80_main =
+srl_indirect_hl : MainWithIndexRegisters -> FlagRegisters -> Z80Change
+srl_indirect_hl z80_main z80_flags =
     -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
     RegisterChangeShifter Shifter7 .hl
 
@@ -288,24 +279,21 @@ resetCbit bitMask z80_main =
 resetDbit : BitTest -> MainWithIndexRegisters -> MainWithIndexRegisters
 resetDbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
-    --SingleRegisterChange ChangeSingleD (bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.d)
     { z80_main | d = bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.d }
 
 
 resetEbit : BitTest -> MainWithIndexRegisters -> MainWithIndexRegisters
 resetEbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
-    --SingleRegisterChange ChangeSingleE (bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.e)
     { z80_main | e = bitMask |> inverseBitMaskFromBit |> Bitwise.and z80_main.e }
 
 
 resetHbit : BitTest -> MainWithIndexRegisters -> MainWithIndexRegisters
 resetHbit bitMask z80_main =
     -- case 0x81: C=C&~(1<<o); break;
-    --SingleRegisterChange ChangeSingleH (bitMask |> inverseBitMaskFromBit |> Bitwise.and (z80_main.hl |> shiftRightBy8))
     let
         new_h =
-            bitMask |> inverseBitMaskFromBit |> Bitwise.and (z80_main.hl |> shiftRightBy8)
+            bitMask |> inverseBitMaskFromBit |> Bitwise.and (z80_main |> get_h)
     in
     { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 new_h) }
 
@@ -356,7 +344,7 @@ setHbit bitMask z80_main =
     --SingleRegisterChange ChangeSingleH (bitMask |> bitMaskFromBit |> Bitwise.or (z80_main.hl |> shiftRightBy8))
     let
         new_h =
-            bitMask |> bitMaskFromBit |> Bitwise.or (z80_main.hl |> shiftRightBy8)
+            bitMask |> bitMaskFromBit |> Bitwise.or (z80_main |> get_h)
     in
     { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 new_h) }
 
@@ -373,173 +361,198 @@ setHLbit bitMask z80_main =
     IndirectBitSet bitMask z80_main.hl
 
 
-singleByteMainAndFlagRegistersCB : Dict Int ( MainWithIndexRegisters -> FlagRegisters -> Z80Change, InstructionDuration )
+singleByteMainAndFlagRegistersCB : Array ( MainWithIndexRegisters -> FlagRegisters -> Z80Change, InstructionDuration )
 singleByteMainAndFlagRegistersCB =
-    Dict.fromList
-        [ ( 0x00, ( rlc_b, EightTStates ) )
-        , ( 0x01, ( rlc_c, EightTStates ) )
-        , ( 0x02, ( rlc_d, EightTStates ) )
-        , ( 0x03, ( rlc_e, EightTStates ) )
-        , ( 0x04, ( rlc_h, EightTStates ) )
-        , ( 0x05, ( rlc_l, EightTStates ) )
-        , ( 0x08, ( rrc_b, EightTStates ) )
-        , ( 0x09, ( rrc_c, EightTStates ) )
-        , ( 0x0A, ( rrc_d, EightTStates ) )
-        , ( 0x0B, ( rrc_e, EightTStates ) )
-        , ( 0x0C, ( rrc_h, EightTStates ) )
-        , ( 0x0D, ( rrc_l, EightTStates ) )
-        , ( 0x10, ( rl_b, EightTStates ) )
-        , ( 0x11, ( rl_c, EightTStates ) )
-        , ( 0x12, ( rl_d, EightTStates ) )
-        , ( 0x13, ( rl_e, EightTStates ) )
-        , ( 0x14, ( rl_h, EightTStates ) )
-        , ( 0x15, ( rl_l, EightTStates ) )
-        , ( 0x18, ( rr_b, EightTStates ) )
-        , ( 0x19, ( rr_c, EightTStates ) )
-        , ( 0x1A, ( rr_d, EightTStates ) )
-        , ( 0x1B, ( rr_e, EightTStates ) )
-        , ( 0x1C, ( rr_h, EightTStates ) )
-        , ( 0x1D, ( rr_l, EightTStates ) )
-        , ( 0x20, ( sla_b, EightTStates ) )
-        , ( 0x21, ( sla_c, EightTStates ) )
-        , ( 0x22, ( sla_d, EightTStates ) )
-        , ( 0x23, ( sla_e, EightTStates ) )
-        , ( 0x24, ( sla_h, EightTStates ) )
-        , ( 0x25, ( sla_l, EightTStates ) )
-        , ( 0x28, ( sra_b, EightTStates ) )
-        , ( 0x29, ( sra_c, EightTStates ) )
-        , ( 0x2A, ( sra_d, EightTStates ) )
-        , ( 0x2B, ( sra_e, EightTStates ) )
-        , ( 0x2C, ( sra_h, EightTStates ) )
-        , ( 0x2D, ( sra_l, EightTStates ) )
-        , ( 0x30, ( sll_b, EightTStates ) )
-        , ( 0x31, ( sll_c, EightTStates ) )
-        , ( 0x32, ( sll_d, EightTStates ) )
-        , ( 0x33, ( sll_e, EightTStates ) )
-        , ( 0x34, ( sll_h, EightTStates ) )
-        , ( 0x35, ( sll_l, EightTStates ) )
-        , ( 0x38, ( srl_b, EightTStates ) )
-        , ( 0x39, ( srl_c, EightTStates ) )
-        , ( 0x3A, ( srl_d, EightTStates ) )
-        , ( 0x3B, ( srl_e, EightTStates ) )
-        , ( 0x3C, ( srl_h, EightTStates ) )
-        , ( 0x3D, ( srl_l, EightTStates ) )
-        , ( 0x40, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.b |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x41, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.c |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x42, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.d |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x43, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.e |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x44, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x45, ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x48, ( bit_1_b, EightTStates ) )
-        , ( 0x49, ( bit_1_c, EightTStates ) )
-        , ( 0x4A, ( bit_1_d, EightTStates ) )
-        , ( 0x4B, ( bit_1_e, EightTStates ) )
-        , ( 0x4C, ( bit_1_h, EightTStates ) )
-        , ( 0x4D, ( bit_1_l, EightTStates ) )
-        , ( 0x50, ( bit_2_b, EightTStates ) )
-        , ( 0x51, ( bit_2_c, EightTStates ) )
-        , ( 0x52, ( bit_2_d, EightTStates ) )
-        , ( 0x53, ( bit_2_e, EightTStates ) )
-        , ( 0x54, ( bit_2_h, EightTStates ) )
-        , ( 0x55, ( bit_2_l, EightTStates ) )
-        , ( 0x58, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.b |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x59, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.c |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x5A, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.d |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x5B, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.e |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x5C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x5D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x60, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.b |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x61, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.c |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x62, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.d |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x63, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.e |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x64, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x65, ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x68, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.b |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x69, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.c |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x6A, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.d |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x6B, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.e |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x6C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x6D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x70, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.b |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x71, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.c |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x72, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.d |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x73, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.e |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x74, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x75, ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x78, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.b |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x79, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.c |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x7A, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.d |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x7B, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.e |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x7C, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags, EightTStates ) )
-        , ( 0x7D, ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, EightTStates ) )
+    Array.fromList
+        [ ( rlc_b, EightTStates )
+        , ( rlc_c, EightTStates )
+        , ( rlc_d, EightTStates )
+        , ( rlc_e, EightTStates )
+        , ( rlc_h, EightTStates )
+        , ( rlc_l, EightTStates )
+
+        -- case 0x06: v=shifter(o,env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
+        , ( \z80_main z80_flags -> RegisterChangeShifter Shifter0 .hl, FifteenTStates )
+        , ( \z80_main z80_flags -> Z80FlagChangeFunc rlc_a, EightTStates )
+        , ( rrc_b, EightTStates )
+        , ( rrc_c, EightTStates )
+        , ( rrc_d, EightTStates )
+        , ( rrc_e, EightTStates )
+        , ( rrc_h, EightTStates )
+        , ( rrc_l, EightTStates )
+        , ( \z80_main z80_flags -> RegisterChangeShifter Shifter1 .hl, FifteenTStates )
+        , ( \z80_main z80_flags -> Z80FlagChangeFunc rrc_a, EightTStates )
+        , ( rl_b, EightTStates )
+        , ( rl_c, EightTStates )
+        , ( rl_d, EightTStates )
+        , ( rl_e, EightTStates )
+        , ( rl_h, EightTStates )
+        , ( rl_l, EightTStates )
+        , ( rl_indirect_hl, FifteenTStates )
+        , ( \z80_main z80_flags -> Z80FlagChangeFunc rl_a, EightTStates )
+        , ( rr_b, EightTStates )
+        , ( rr_c, EightTStates )
+        , ( rr_d, EightTStates )
+        , ( rr_e, EightTStates )
+        , ( rr_h, EightTStates )
+        , ( rr_l, EightTStates )
+        , ( rr_indirect_hl, FifteenTStates )
+        , ( \z80_main z80_flags -> Z80FlagChangeFunc rr_a, EightTStates )
+        , ( sla_b, EightTStates )
+        , ( sla_c, EightTStates )
+        , ( sla_d, EightTStates )
+        , ( sla_e, EightTStates )
+        , ( sla_h, EightTStates )
+        , ( sla_l, EightTStates )
+        , ( sla_indirect_hl, FifteenTStates )
+        , ( \z80_main z80_flags -> Z80FlagChangeFunc sla_a, EightTStates )
+        , ( sra_b, EightTStates )
+        , ( sra_c, EightTStates )
+        , ( sra_d, EightTStates )
+        , ( sra_e, EightTStates )
+        , ( sra_h, EightTStates )
+        , ( sra_l, EightTStates )
+        , ( sra_indirect_hl, FifteenTStates )
+        , ( \z80_main z80_flags -> Z80FlagChangeFunc sra_a, EightTStates )
+        , ( sll_b, EightTStates )
+        , ( sll_c, EightTStates )
+        , ( sll_d, EightTStates )
+        , ( sll_e, EightTStates )
+        , ( sll_h, EightTStates )
+        , ( sll_l, EightTStates )
+        , ( sll_indirect_hl, FifteenTStates )
+        , ( \z80_main z80_flags -> Z80FlagChangeFunc sll_a, EightTStates )
+
+        -- case 0x00: B=shifter(o,B); break;
+        , ( \z80_main z80_flags -> z80_flags |> shifter7 z80_main.b |> FlagsWithRegisterChange RegisterB, EightTStates )
+        , ( srl_c, EightTStates )
+        , ( srl_d, EightTStates )
+        , ( srl_e, EightTStates )
+        , ( srl_h, EightTStates )
+        , ( srl_l, EightTStates )
+        , ( srl_indirect_hl, FifteenTStates )
+        , ( \z80_main z80_flags -> Z80FlagChangeFunc srl_a, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.b |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.c |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.d |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 z80_main.e |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 (z80_main |> get_h) |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_0 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, EightTStates )
+        , ( bit_0_indirect_hl, TwelveTStates )
+        , ( \z80_main flags -> Z80FlagChangeFunc (\z80_flags -> z80_flags |> testBit Bit_0 z80_flags.a), EightTStates )
+        , ( bit_1_b, EightTStates )
+        , ( bit_1_c, EightTStates )
+        , ( bit_1_d, EightTStates )
+        , ( bit_1_e, EightTStates )
+        , ( bit_1_h, EightTStates )
+        , ( bit_1_l, EightTStates )
+        , ( bit_1_indirect_hl, TwelveTStates )
+        , ( \z80_main flags -> Z80FlagChangeFunc (\z80_flags -> z80_flags |> testBit Bit_1 z80_flags.a), EightTStates )
+        , ( bit_2_b, EightTStates )
+        , ( bit_2_c, EightTStates )
+        , ( bit_2_d, EightTStates )
+        , ( bit_2_e, EightTStates )
+        , ( bit_2_h, EightTStates )
+        , ( bit_2_l, EightTStates )
+        , ( bit_2_indirect_hl, TwelveTStates )
+        , ( \z80_main flags -> Z80FlagChangeFunc (\z80_flags -> z80_flags |> testBit Bit_2 z80_flags.a), EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.b |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.c |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.d |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 z80_main.e |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 (z80_main |> get_h) |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_3 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, EightTStates )
+        , ( bit_3_indirect_hl, TwelveTStates )
+        , ( \z80_main flags -> Z80FlagChangeFunc (\z80_flags -> z80_flags |> testBit Bit_3 z80_flags.a), EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.b |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.c |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.d |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 z80_main.e |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 (z80_main |> get_h) |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_4 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, EightTStates )
+        , ( bit_4_indirect_hl, TwelveTStates )
+        , ( \z80_main flags -> Z80FlagChangeFunc (\z80_flags -> z80_flags |> testBit Bit_4 z80_flags.a), EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.b |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.c |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.d |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 z80_main.e |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 (z80_main |> get_h) |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_5 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, EightTStates )
+        , ( bit_5_indirect_hl, TwelveTStates )
+        , ( \z80_main flags -> Z80FlagChangeFunc (\z80_flags -> z80_flags |> testBit Bit_5 z80_flags.a), EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.b |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.c |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.d |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 z80_main.e |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 (z80_main |> get_h) |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_6 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, EightTStates )
+        , ( bit_6_indirect_hl, TwelveTStates )
+        , ( \z80_main flags -> Z80FlagChangeFunc (\z80_flags -> z80_flags |> testBit Bit_6 z80_flags.a), EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.b |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.c |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.d |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 z80_main.e |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 (z80_main |> get_h) |> Z80ChangeFlags, EightTStates )
+        , ( \z80_main z80_flags -> z80_flags |> testBit Bit_7 (z80_main.hl |> Bitwise.and 0xFF) |> Z80ChangeFlags, EightTStates )
+        , ( bit_7_indirect_hl, TwelveTStates )
+        , ( \z80_main flags -> Z80FlagChangeFunc (\z80_flags -> z80_flags |> testBit Bit_7 z80_flags.a), EightTStates )
         ]
 
 
 rlc_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-rlc_b z80_main z80_flags =
-    z80_flags |> shifter0 z80_main.b |> FlagsWithRegisterChange RegisterB
+rlc_b main lags =
+    --z80_flags |> shifter0 z80_main.b |> FlagsWithRegisterChange RegisterB
+    FlagRegChangeFunc (\z80_main z80_flags -> z80_flags |> shifter0 z80_main.b) ChangeMainB
 
 
 rlc_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-rlc_c z80_main z80_flags =
+rlc_c main flags =
     -- case 0x01: C=shifter(o,C); break;
-    --z80_flags |> shifter_c shifter0 z80_main.c
-    z80_flags |> shifter0 z80_main.c |> FlagsWithRegisterChange RegisterC
+    FlagRegChangeFunc (\z80_main z80_flags -> z80_flags |> shifter0 z80_main.c) ChangeMainC
 
 
 rlc_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-rlc_d z80_main z80_flags =
+rlc_d main flags =
     -- case 0x02: D=shifter(o,D); break;
-    z80_flags |> shifter0 z80_main.d |> FlagsWithRegisterChange RegisterD
+    FlagRegChangeFunc (\z80_main z80_flags -> z80_flags |> shifter0 z80_main.d) ChangeMainD
 
 
 rlc_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-rlc_e z80_main z80_flags =
+rlc_e ain flags =
     -- case 0x03: E=shifter(o,E); break;
-    z80_flags |> shifter0 z80_main.e |> FlagsWithRegisterChange RegisterE
+    FlagRegChangeFunc (\z80_main z80_flags -> z80_flags |> shifter0 z80_main.e) ChangeMainE
 
 
 rlc_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-rlc_h z80_main z80_flags =
+rlc_h zmain z8flags =
     --case 0x04: HL=HL&0xFF|shifter(o,HL>>>8)<<8; break
-    let
-        value =
-            shifter0 (z80_main.hl |> shiftRightBy8) z80_flags
-
-        new_hl =
-            Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
-    in
-    FlagsWithHLRegister value.flags new_hl
+    FlagRegChangeFunc (\z80_main z80_flags -> z80_flags |> shifter0 (z80_main |> get_h)) ChangeMainH
 
 
 rlc_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-rlc_l z80_main z80_flags =
+rlc_l main flags =
     -- case 0x05: HL=HL&0xFF00|shifter(o,HL&0xFF); break;
-    let
-        value =
-            shifter0 (Bitwise.and z80_main.hl 0xFF) z80_flags
-
-        new_hl =
-            Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
-    in
-    FlagsWithHLRegister value.flags new_hl
+    FlagRegChangeFunc (\z80_main z80_flags -> z80_flags |> shifter0 (z80_main |> get_l)) ChangeMainL
 
 
 rrc_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-rrc_b z80_main z80_flags =
-    z80_flags |> shifter1 z80_main.b |> FlagsWithRegisterChange RegisterB
+rrc_b main flags =
+    --z80_flags |> shifter1 z80_main.b |> FlagsWithRegisterChange RegisterB
+    FlagRegChangeFunc (\z80_main z80_flags -> z80_flags |> shifter1 z80_main.b) ChangeMainB
 
 
 rrc_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-rrc_c z80_main z80_flags =
+rrc_c zmain zlags =
     -- case 0x01: C=shifter(o,C); break;
-    z80_flags |> shifter1 z80_main.c |> FlagsWithRegisterChange RegisterC
+    --z80_flags |> shifter1 z80_main.c |> FlagsWithRegisterChange RegisterC
+    FlagRegChangeFunc (\z80_main z80_flags -> z80_flags |> shifter1 z80_main.c) ChangeMainC
 
 
 rrc_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-rrc_d z80_main z80_flags =
+rrc_d z0_main z8_flags =
     -- case 0x02: D=shifter(o,D); break;
-    z80_flags |> shifter1 z80_main.d |> FlagsWithRegisterChange RegisterD
+    --z80_flags |> shifter1 z80_main.d |> FlagsWithRegisterChange RegisterD
+    FlagRegChangeFunc (\z80_main z80_flags -> z80_flags |> shifter1 z80_main.d) ChangeMainD
 
 
 rrc_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -553,7 +566,7 @@ rrc_h z80_main z80_flags =
     --case 0x04: HL=HL&0xFF|shifter(o,HL>>>8)<<8; break
     let
         value =
-            shifter1 (z80_main.hl |> shiftRightBy8) z80_flags
+            shifter1 (z80_main |> get_h) z80_flags
 
         new_hl =
             Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
@@ -603,7 +616,7 @@ rl_h z80_main z80_flags =
     --case 0x04: HL=HL&0xFF|shifter(o,HL>>>8)<<8; break
     let
         value =
-            shifter2 (z80_main.hl |> shiftRightBy8) z80_flags
+            shifter2 (z80_main |> get_h) z80_flags
 
         new_hl =
             Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
@@ -655,7 +668,7 @@ rr_h z80_main z80_flags =
     --case 0x04: HL=HL&0xFF|shifter(o,HL>>>8)<<8; break
     let
         value =
-            shifter3 (z80_main.hl |> shiftRightBy8) z80_flags
+            shifter3 (z80_main |> get_h) z80_flags
 
         new_hl =
             Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
@@ -707,7 +720,7 @@ sla_h z80_main z80_flags =
     --case 0x04: HL=HL&0xFF|shifter(o,HL>>>8)<<8; break
     let
         value =
-            shifter4 (z80_main.hl |> shiftRightBy8) z80_flags
+            shifter4 (z80_main |> get_h) z80_flags
 
         new_hl =
             Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
@@ -759,7 +772,7 @@ sra_h z80_main z80_flags =
     --case 0x04: HL=HL&0xFF|shifter(o,HL>>>8)<<8; break
     let
         value =
-            shifter5 (z80_main.hl |> shiftRightBy8) z80_flags
+            shifter5 (z80_main |> get_h) z80_flags
 
         new_hl =
             Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
@@ -811,7 +824,7 @@ sll_h z80_main z80_flags =
     --case 0x04: HL=HL&0xFF|shifter(o,HL>>>8)<<8; break
     let
         value =
-            shifter6 (z80_main.hl |> shiftRightBy8) z80_flags
+            shifter6 (z80_main |> get_h) z80_flags
 
         new_hl =
             Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
@@ -830,12 +843,6 @@ sll_l z80_main z80_flags =
             Bitwise.or value.value (Bitwise.and z80_main.hl 0xFF00)
     in
     FlagsWithHLRegister value.flags new_hl
-
-
-srl_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-srl_b z80_main z80_flags =
-    -- case 0x00: B=shifter(o,B); break;
-    z80_flags |> shifter7 z80_main.b |> FlagsWithRegisterChange RegisterB
 
 
 srl_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -863,7 +870,7 @@ srl_h z80_main z80_flags =
     --case 0x04: HL=HL&0xFF|shifter(o,HL>>>8)<<8; break
     let
         value =
-            shifter7 (z80_main.hl |> shiftRightBy8) z80_flags
+            shifter7 (z80_main |> get_h) z80_flags
 
         new_hl =
             Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
@@ -907,7 +914,7 @@ bit_1_e z80_main z80_flags =
 
 bit_1_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 bit_1_h z80_main z80_flags =
-    z80_flags |> testBit Bit_1 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags
+    z80_flags |> testBit Bit_1 (z80_main |> get_h) |> Z80ChangeFlags
 
 
 bit_1_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
@@ -940,7 +947,7 @@ bit_2_e z80_main z80_flags =
 
 bit_2_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 bit_2_h z80_main z80_flags =
-    z80_flags |> testBit Bit_2 (z80_main.hl |> shiftRightBy8) |> Z80ChangeFlags
+    z80_flags |> testBit Bit_2 (z80_main |> get_h) |> Z80ChangeFlags
 
 
 bit_2_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
