@@ -499,12 +499,6 @@ singleByteMainAndFlagRegistersCB =
         ]
 
 
-singleByteMainAndFlagRegistersCB80 : Dict Int ( Z80Change, InstructionDuration )
-singleByteMainAndFlagRegistersCB80 =
-    Dict.fromList
-        []
-
-
 rlc_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
 rlc_b main lags =
     --z80_flags |> shifter0 z80_main.b |> FlagsWithRegisterChange RegisterB
