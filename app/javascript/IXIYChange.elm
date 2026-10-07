@@ -18,14 +18,14 @@ type IXIYChange
     | RegisterIndirectWithShifter Shifter ChangeMainRegister Int
     | RegisterChangeIndexShifter Shifter Int
     | FlagsIndirectWithShifter Shifter Int
-    | ResetBitIndirectWithCopy BitTest ChangeMainRegister Int
-    | IndirectBitReset BitTest Int
-    | ResetBitIndirectA BitTest Int
-    | SetBitIndirectWithCopy BitTest ChangeMainRegister Int
-    | IndirectBitSet BitTest Int
-    | SetBitIndirectA BitTest Int
+    | ResetBitIndirectWithCopy BitTest ChangeMainRegister (MainWithIndexRegisters -> Int)
+    | IndirectBitReset BitTest (MainWithIndexRegisters -> Int)
+    | ResetBitIndirectA BitTest (MainWithIndexRegisters -> Int)
+    | SetBitIndirectWithCopy BitTest ChangeMainRegister (MainWithIndexRegisters -> Int)
+    | IndirectBitSet BitTest (MainWithIndexRegisters -> Int)
+    | SetBitIndirectA BitTest (MainWithIndexRegisters -> Int)
     | TransformMainRegistersCB (MainWithIndexRegisters -> MainWithIndexRegisters)
-    | SingleRegisterChange ChangeSingle Int
+    | SingleRegisterChange ChangeSingle (MainWithIndexRegisters -> Int)
     | IXIYFlagChangeFunc (FlagRegisters -> FlagRegisters)
 
 
@@ -58,10 +58,13 @@ applyIXIYChange clockTime z80changeData rom48k z80_core =
         RegisterChangeIndexShifter shifter raw_addr ->
             z80_core |> applyShifter shifter (raw_addr |> Bitwise.and 0xFFFF) clockTime rom48k
 
-        IndirectBitReset bitMask addr ->
+        IndirectBitReset bitMask addr_f ->
             let
                 old_env =
                     z80_core.env
+
+                addr =
+                    z80_core.main |> addr_f
 
                 ( value, newTime ) =
                     old_env |> getMem8 addr clockTime rom48k
@@ -71,8 +74,11 @@ applyIXIYChange clockTime z80changeData rom48k z80_core =
             in
             SetMem8 addr new_value
 
-        IndirectBitSet bitMask raw_addr ->
+        IndirectBitSet bitMask addr_f ->
             let
+                raw_addr =
+                    z80_core.main |> addr_f
+
                 addr =
                     raw_addr |> Bitwise.and 0xFFFF
 
@@ -84,10 +90,13 @@ applyIXIYChange clockTime z80changeData rom48k z80_core =
             in
             SetMem8 addr new_value
 
-        SingleRegisterChange changeOneRegister int ->
+        SingleRegisterChange changeOneRegister int_f ->
             let
                 z80_main =
                     z80_core.main
+
+                int =
+                    z80_main |> int_f
             in
             case changeOneRegister of
                 ChangeSingleH ->
@@ -161,10 +170,13 @@ applyIXIYChange clockTime z80changeData rom48k z80_core =
             in
             { z80_core | main = new_main, flags = value.flags, env = env_2 } |> CoreOnly |> RareChange
 
-        SetBitIndirectWithCopy bitTest changeOneRegister raw_addr ->
+        SetBitIndirectWithCopy bitTest changeOneRegister addr_f ->
             let
                 old_env =
                     z80_core.env
+
+                raw_addr =
+                    z80_core.main |> addr_f
 
                 addr =
                     raw_addr |> Bitwise.and 0xFFFF
@@ -203,10 +215,13 @@ applyIXIYChange clockTime z80changeData rom48k z80_core =
             in
             { z80_core | main = new_main, env = env_2 } |> CoreOnly |> RareChange
 
-        ResetBitIndirectWithCopy bitTest changeOneRegister raw_addr ->
+        ResetBitIndirectWithCopy bitTest changeOneRegister addr_f ->
             let
                 old_env =
                     z80_core.env
+
+                raw_addr =
+                    z80_core.main |> addr_f
 
                 addr =
                     raw_addr |> Bitwise.and 0xFFFF
@@ -284,8 +299,11 @@ applyIXIYChange clockTime z80changeData rom48k z80_core =
             in
             SetMem8Flags address { value = result.value, flags = { newFlags | a = result.value } }
 
-        SetBitIndirectA bitTest raw_addr ->
+        SetBitIndirectA bitTest addr_f ->
             let
+                raw_addr =
+                    z80_core.main |> addr_f
+
                 addr =
                     raw_addr |> Bitwise.and 0xFFFF
 
@@ -300,8 +318,11 @@ applyIXIYChange clockTime z80changeData rom48k z80_core =
             in
             SetMem8Flags addr { value = value, flags = { flags | a = value } }
 
-        ResetBitIndirectA bitTest raw_addr ->
+        ResetBitIndirectA bitTest addr_f ->
             let
+                raw_addr =
+                    z80_core.main |> addr_f
+
                 addr =
                     raw_addr |> Bitwise.and 0xFFFF
 
