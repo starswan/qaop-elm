@@ -20,7 +20,7 @@ type Shifter
 type Z80Change
     = FlagsWithRegisterChange CoreRegister ( Int, FlagRegisters )
     | FlagsWithHLRegister FlagRegisters Int
-    | Z80ChangeFlags FlagRegisters
+    | Z80ChangeFlags (MainWithIndexRegisters -> FlagRegisters -> FlagRegisters)
     | Z80ChangeSetIndirect Int Int
     | Z80FlagChangeFunc (FlagRegisters -> FlagRegisters)
     | RegisterChangeShifter Shifter (MainWithIndexRegisters -> Int)

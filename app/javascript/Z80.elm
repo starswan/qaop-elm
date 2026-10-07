@@ -9,7 +9,7 @@ import Array
 import Bitwise
 import CpuTimeCTime exposing (CTime(..), CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAnd16BitValue, c_FRTIME, c_TIME_LIMIT, reset_cpu_time)
 import Dict exposing (Dict)
-import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainRegsCB80)
+import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainAndFlagRegistersCB20, singleByteMainRegsCB80)
 import GroupED exposing (edWithInterrupts, fourByteMainED, singleByteFlagsED, singleByteMainAndFlagsED, singleByteMainRegsED)
 import InstructionDuration exposing (InstructionDuration(..), addDuration, addExtraCpuTime)
 import Interrupts exposing (IFFValue(..), InterruptMode(..))
@@ -540,15 +540,20 @@ runSpecialBitManipCB : Int -> CpuTimeCTime -> Z80Core -> ( DeltaWithChanges, ( C
 runSpecialBitManipCB param clockTime z80_core =
     case singleByteMainAndFlagRegistersCB |> Array.get param of
         Just ( f, duration ) ->
-            ( PureDelta (f z80_core.main z80_core.flags), ( clockTime, duration, IncrementByTwo ) )
+            ( PureDelta f, ( clockTime, duration, IncrementByTwo ) )
 
         Nothing ->
-            case singleByteMainRegsCB80 |> Array.get (param - 0x80) of
-                Just ( mainRegFunc, duration ) ->
-                    ( CBDeltaChange (mainRegFunc z80_core.main), ( clockTime, duration, IncrementByTwo ) )
+            case singleByteMainAndFlagRegistersCB20 |> Array.get (param - 0x20) of
+                Just ( f, duration ) ->
+                    ( PureDelta (f z80_core.main z80_core.flags), ( clockTime, duration, IncrementByTwo ) )
 
                 Nothing ->
-                    ( UnknownInstruction "execute CB" param, ( clockTime, FourTStates, IncrementByTwo ) )
+                    case singleByteMainRegsCB80 |> Array.get (param - 0x80) of
+                        Just ( mainRegFunc, duration ) ->
+                            ( CBDeltaChange mainRegFunc, ( clockTime, duration, IncrementByTwo ) )
+
+                        Nothing ->
+                            ( UnknownInstruction "execute CB" param, ( clockTime, FourTStates, IncrementByTwo ) )
 
 
 runSpecialEDMisc : Int -> CpuTimeCTime -> Z80ROM -> Int -> Z80Core -> ( DeltaWithChanges, ( CpuTimeCTime, InstructionDuration, PCIncrement ) )
