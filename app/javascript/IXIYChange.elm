@@ -14,7 +14,7 @@ import Z80Types exposing (MainWithIndexRegisters)
 
 
 type IXIYChange
-    = IndirectBitTest BitTest Int
+    = IndirectBitTest BitTest (MainWithIndexRegisters -> Int)
     | RegisterIndirectWithShifter Shifter ChangeMainRegister Int
     | RegisterChangeIndexShifter Shifter Int
     | FlagsIndirectWithShifter Shifter Int
@@ -32,9 +32,12 @@ type IXIYChange
 applyIXIYChange : CpuTimeCTime -> IXIYChange -> Z80ROM -> Z80Core -> CoreChange
 applyIXIYChange clockTime z80changeData rom48k z80_core =
     case z80changeData of
-        IndirectBitTest bitTest mp_address ->
+        IndirectBitTest bitTest address_func ->
             -- case 0x46: bit(o,env.mem(HL)); Ff=Ff&~F53|MP>>>8&F53; time+=4; break;
             let
+                mp_address =
+                    z80_core.main |> address_func
+
                 ( value, newTime ) =
                     z80_core.env |> getMem8 mp_address clockTime rom48k
 
