@@ -534,10 +534,12 @@ makeEnvMainDict ix_func =
                                             let
                                                 --int a = mp = (char)(xy + (byte)env.mem(pc));
                                                 --case 0x40: bit(o, v); Ff=Ff&~F53 | a>>8&F53; return;
-                                                address =
-                                                    (ix_func z80_main + byte offset) |> Bitwise.and 0xFFFF
+                                                --address =
+                                                --    (ix_func z80_main + byte offset) |> Bitwise.and 0xFFFF
+                                                address_f =
+                                                    \main -> (ix_func main + byte offset) |> Bitwise.and 0xFFFF
                                             in
-                                            IndirectBitTest bitType address
+                                            IndirectBitTest bitType address_f
                                       , TwentyTStates
                                       )
                                     )
