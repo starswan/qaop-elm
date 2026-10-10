@@ -200,11 +200,11 @@ executeAndApplyDelta opCode cpuClock iff rom48k z80clock =
         coreChange =
             delta |> apply_delta z80_core iff rom48k clockTime
     in
-    z80_core |> applyCoreChange coreChange (clockTime |> addDuration duration) pc_inc z80clock.pc rom48k
+    z80_core |> applyCoreChange coreChange clockTime pc_inc z80clock.pc rom48k duration
 
 
-applyCoreChange : CoreChange -> CpuTimeCTime -> PCIncrement -> Int -> Z80ROM -> Z80Core -> ( Z80CoreWithClockTime, CpuTimeCTime, List Audio )
-applyCoreChange coreChange clockTime pc_inc pc rom48k z80_core =
+applyCoreChange : CoreChange -> CpuTimeCTime -> PCIncrement -> Int -> Z80ROM -> InstructionDuration -> Z80Core -> ( Z80CoreWithClockTime, CpuTimeCTime, List Audio )
+applyCoreChange coreChange clockTime pc_inc pc rom48k duration z80_core =
     let
         rawPc =
             case pc_inc of
@@ -361,7 +361,7 @@ applyCoreChange coreChange clockTime pc_inc pc rom48k z80_core =
                     in
                     ( { core = { main = z80_core.main, env = z80env, flags = z80_core.flags, interrupts = z80_core.interrupts }, pc = pcAfter }, time, [] )
     in
-    ( coreClock, newClock, audios )
+    ( coreClock, newClock |> addDuration duration, audios )
 
 
 execute_delta : CpuTimeCTime -> Int -> Z80ROM -> Int -> Z80Core -> ( DeltaWithChanges, ( CpuTimeCTime, InstructionDuration ), PCIncrement )
