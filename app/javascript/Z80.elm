@@ -548,7 +548,7 @@ runSpecialBitManipCB param clockTime z80_core =
         Nothing ->
             case singleByteMainRegsCB80 |> Array.get (param - 0x80) of
                 Just ( mainRegFunc, duration ) ->
-                    ( CBDeltaChange (mainRegFunc z80_core.main), clockTime |> addDuration duration, IncrementByTwo )
+                    ( CBDeltaChange mainRegFunc, clockTime |> addDuration duration, IncrementByTwo )
 
                 Nothing ->
                     ( UnknownInstruction "execute CB" param, clockTime, IncrementByTwo )
