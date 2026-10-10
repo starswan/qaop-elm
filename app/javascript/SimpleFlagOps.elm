@@ -91,26 +91,26 @@ inc_a : FlagRegisters -> FlagRegisters
 inc_a z80_flags =
     -- case 0x3C: A=inc(A); break;
     let
-        v =
+        ( value, flags ) =
             inc z80_flags.a z80_flags
 
         new_flags =
-            v.flags
+            flags
     in
-    { new_flags | a = v.value }
+    { new_flags | a = value }
 
 
 dec_a : FlagRegisters -> FlagRegisters
 dec_a z80_flags =
     -- case 0x3D: A=dec(A); break;
     let
-        v =
+        ( value, flags ) =
             dec z80_flags.a z80_flags
 
         new_flags =
-            v.flags
+            flags
     in
-    { new_flags | a = v.value }
+    { new_flags | a = value }
 
 
 ccf : FlagRegisters -> FlagRegisters
@@ -192,17 +192,17 @@ ret_m =
     ConditionalReturn (\flags -> Bitwise.and flags.ff c_FS /= 0)
 
 
-applyFlagShifter : (Int -> FlagRegisters -> IntWithFlags) -> FlagRegisters -> FlagRegisters
+applyFlagShifter : (Int -> FlagRegisters -> ( Int, FlagRegisters )) -> FlagRegisters -> FlagRegisters
 applyFlagShifter shifter z80_flags =
     --case 0x07: A=shifter(o,A); break;
     let
-        value =
+        ( value, flags ) =
             shifter z80_flags.a z80_flags
 
         new_flags =
-            value.flags
+            flags
     in
-    { new_flags | a = value.value }
+    { new_flags | a = value }
 
 
 rlc_a : FlagRegisters -> FlagRegisters

@@ -347,12 +347,12 @@ applyCoreChange coreChange clockTime pc_inc pc rom48k z80_core =
                     in
                     ( { core = { main = z80_core.main, env = z80env, flags = z80_core.flags, interrupts = z80_core.interrupts }, pc = pcAfter }, time, [] )
 
-                SetMem8Flags address flags ->
+                SetMem8Flags address value flags ->
                     let
                         ( z80env, time ) =
-                            z80_core.env |> setMem address flags.value clockTime
+                            z80_core.env |> setMem address value clockTime
                     in
-                    ( { core = { main = z80_core.main, env = z80env, flags = flags.flags, interrupts = z80_core.interrupts }, pc = pcAfter }, time, [] )
+                    ( { core = { main = z80_core.main, env = z80env, flags = flags, interrupts = z80_core.interrupts }, pc = pcAfter }, time, [] )
 
                 SetMem16 address value ->
                     let

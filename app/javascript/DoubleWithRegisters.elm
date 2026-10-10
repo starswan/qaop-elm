@@ -315,13 +315,13 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
             in
             if ramAddr >= 0 then
                 let
-                    ( value, newTime ) =
+                    ( memvalue, newTime ) =
                         z80.env |> getMem8 base_addr cpu_time rom48k
 
-                    valueWithFlags =
-                        z80.flags |> inc value
+                    ( value, flags ) =
+                        z80.flags |> inc memvalue
                 in
-                SetMem8Flags base_addr valueWithFlags
+                SetMem8Flags base_addr value flags
 
             else
                 NoCore
@@ -336,13 +336,13 @@ applyDoubleWithRegistersDelta cpu_time z80changeData rom48k z80 =
             in
             if ramAddr >= 0 then
                 let
-                    ( value, newTime ) =
+                    ( memvalue, newTime ) =
                         z80.env |> getMem8 base_addr cpu_time rom48k
 
-                    valueWithFlags =
-                        z80.flags |> dec value
+                    ( value, flags ) =
+                        z80.flags |> dec memvalue
                 in
-                SetMem8Flags base_addr valueWithFlags
+                SetMem8Flags base_addr value flags
 
             else
                 NoCore
