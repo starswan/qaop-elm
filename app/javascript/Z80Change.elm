@@ -18,14 +18,14 @@ type Shifter
 
 
 type Z80Change
-    = FlagsWithRegisterChange CoreRegister IntWithFlags
+    = FlagsWithRegisterChange CoreRegister ( Int, FlagRegisters )
     | FlagsWithHLRegister FlagRegisters Int
     | Z80ChangeFlags FlagRegisters
     | Z80ChangeSetIndirect Int Int
     | Z80FlagChangeFunc (FlagRegisters -> FlagRegisters)
     | RegisterChangeShifter Shifter (MainWithIndexRegisters -> Int)
     | Z80IndirectMainBitTest BitTest (MainWithIndexRegisters -> Int)
-    | FlagRegChangeFunc (MainWithIndexRegisters -> FlagRegisters -> IntWithFlags) ChangeMainRegister
+    | FlagRegChangeFunc (MainWithIndexRegisters -> FlagRegisters -> ( Int, FlagRegisters )) ChangeMainRegister
 
 
 type IndexedZ80Change

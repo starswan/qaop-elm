@@ -249,7 +249,7 @@ applyPureDelta z80changeData clockTime rom48k z80_core =
         Z80ChangeSetIndirect addr int ->
             SetMem8 addr int
 
-        FlagsWithRegisterChange changeMainRegister intWithFlags ->
+        FlagsWithRegisterChange changeMainRegister ( value, flags ) ->
             let
                 z80_main =
                     z80_core.main
@@ -257,56 +257,56 @@ applyPureDelta z80changeData clockTime rom48k z80_core =
                 new_main =
                     case changeMainRegister of
                         RegisterB ->
-                            { z80_main | b = intWithFlags.value }
+                            { z80_main | b = value }
 
                         RegisterC ->
-                            { z80_main | c = intWithFlags.value }
+                            { z80_main | c = value }
 
                         RegisterD ->
-                            { z80_main | d = intWithFlags.value }
+                            { z80_main | d = value }
 
                         RegisterE ->
-                            { z80_main | e = intWithFlags.value }
+                            { z80_main | e = value }
             in
-            ChangeMainAndFlags new_main intWithFlags.flags
+            ChangeMainAndFlags new_main flags
 
         FlagRegChangeFunc intFunc changeMainRegister ->
             let
                 z80_main =
                     z80_core.main
 
-                intWithFlags =
+                ( value, flags ) =
                     intFunc z80_main z80_core.flags
 
                 new_main =
                     case changeMainRegister of
                         ChangeMainB ->
-                            { z80_main | b = intWithFlags.value }
+                            { z80_main | b = value }
 
                         ChangeMainC ->
-                            { z80_main | c = intWithFlags.value }
+                            { z80_main | c = value }
 
                         ChangeMainD ->
-                            { z80_main | d = intWithFlags.value }
+                            { z80_main | d = value }
 
                         ChangeMainE ->
-                            { z80_main | e = intWithFlags.value }
+                            { z80_main | e = value }
 
                         ChangeMainH ->
                             let
                                 new_hl =
-                                    Bitwise.or (intWithFlags.value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
+                                    Bitwise.or (value |> shiftLeftBy8) (Bitwise.and z80_main.hl 0xFF)
                             in
                             { z80_main | hl = new_hl }
 
                         ChangeMainL ->
                             let
                                 new_hl =
-                                    Bitwise.or intWithFlags.value (Bitwise.and z80_main.hl 0xFF00)
+                                    Bitwise.or value (Bitwise.and z80_main.hl 0xFF00)
                             in
                             { z80_main | hl = new_hl }
             in
-            ChangeMainAndFlags new_main intWithFlags.flags
+            ChangeMainAndFlags new_main flags
 
 
 applyIndexedPureDelta : IndexedZ80Change -> Z80Core -> CoreChange
@@ -484,13 +484,13 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 addr =
                     z80_core.main |> f
 
-                ( value, newTime ) =
+                ( memvalue, newTime ) =
                     z80_core.env |> getMem8 addr clockTime rom48k
 
-                flags =
-                    z80_core.flags |> inc value
+                ( value, flags ) =
+                    z80_core.flags |> inc memvalue
             in
-            SetMem8Flags addr flags
+            SetMem8Flags addr value flags
 
         DecrementIndirect f ->
             -- This should be a primitive operation on Z80Env to decrement a stored value
@@ -498,13 +498,13 @@ applyRegisterDelta clockTime z80changeData rom48k z80_core =
                 addr =
                     z80_core.main |> f
 
-                ( value, newTime ) =
+                ( memvalue, newTime ) =
                     z80_core.env |> getMem8 addr clockTime rom48k
 
-                flags =
-                    z80_core.flags |> dec value
+                ( value, flags ) =
+                    z80_core.flags |> dec memvalue
             in
-            SetMem8Flags addr flags
+            SetMem8Flags addr value flags
 
         RegisterChangeJump f ->
             JumpOnlyPC (z80_core.main |> f)

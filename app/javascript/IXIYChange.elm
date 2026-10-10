@@ -101,7 +101,7 @@ applyIXIYChange clockTime z80changeData rom48k z80_core =
                 ( input, newTime ) =
                     z80_core.env |> getMem8 addr clockTime rom48k
 
-                value =
+                ( value, flags ) =
                     case shifterFunc of
                         Shifter0 ->
                             shifter0 input z80_core.flags
@@ -133,30 +133,30 @@ applyIXIYChange clockTime z80changeData rom48k z80_core =
                 new_main =
                     case changeOneRegister of
                         ChangeMainB ->
-                            { main | b = value.value }
+                            { main | b = value }
 
                         ChangeMainC ->
-                            { main | c = value.value }
+                            { main | c = value }
 
                         ChangeMainD ->
-                            { main | d = value.value }
+                            { main | d = value }
 
                         ChangeMainE ->
-                            { main | e = value.value }
+                            { main | e = value }
 
                         ChangeMainH ->
-                            { main | hl = Bitwise.or (value.value |> shiftLeftBy8) (Bitwise.and z80_core.main.hl 0xFF) }
+                            { main | hl = Bitwise.or (value |> shiftLeftBy8) (Bitwise.and z80_core.main.hl 0xFF) }
 
                         ChangeMainL ->
-                            { main | hl = Bitwise.or value.value (Bitwise.and z80_core.main.hl 0xFF00) }
+                            { main | hl = Bitwise.or value (Bitwise.and z80_core.main.hl 0xFF00) }
 
                 old_env =
                     z80_core.env
 
                 ( env_2, newNew ) =
-                    old_env |> setMem addr value.value newTime
+                    old_env |> setMem addr value newTime
             in
-            { z80_core | main = new_main, flags = value.flags, env = env_2 } |> CoreOnly |> RareChange
+            { z80_core | main = new_main, flags = flags, env = env_2 } |> CoreOnly |> RareChange
 
         SetBitIndirectWithCopy bitTest changeOneRegister raw_addr ->
             let
@@ -247,39 +247,36 @@ applyIXIYChange clockTime z80changeData rom48k z80_core =
                 address =
                     raw_addr |> Bitwise.and 0xFFFF
 
-                ( value, newTime ) =
+                ( memV, newTime ) =
                     z80_core.env |> getMem8 address clockTime rom48k
 
-                result =
+                ( value, flags ) =
                     case shifterFunc of
                         Shifter0 ->
-                            z80_core.flags |> shifter0 value
+                            z80_core.flags |> shifter0 memV
 
                         Shifter1 ->
-                            z80_core.flags |> shifter1 value
+                            z80_core.flags |> shifter1 memV
 
                         Shifter2 ->
-                            z80_core.flags |> shifter2 value
+                            z80_core.flags |> shifter2 memV
 
                         Shifter3 ->
-                            z80_core.flags |> shifter3 value
+                            z80_core.flags |> shifter3 memV
 
                         Shifter4 ->
-                            z80_core.flags |> shifter4 value
+                            z80_core.flags |> shifter4 memV
 
                         Shifter5 ->
-                            z80_core.flags |> shifter5 value
+                            z80_core.flags |> shifter5 memV
 
                         Shifter6 ->
-                            z80_core.flags |> shifter6 value
+                            z80_core.flags |> shifter6 memV
 
                         Shifter7 ->
-                            z80_core.flags |> shifter7 value
-
-                newFlags =
-                    result.flags
+                            z80_core.flags |> shifter7 memV
             in
-            SetMem8Flags address { value = result.value, flags = { newFlags | a = result.value } }
+            SetMem8Flags address value { flags | a = value }
 
         SetBitIndirectA bitTest raw_addr ->
             let
@@ -295,7 +292,7 @@ applyIXIYChange clockTime z80changeData rom48k z80_core =
                 flags =
                     z80_core.flags
             in
-            SetMem8Flags addr { value = value, flags = { flags | a = value } }
+            SetMem8Flags addr value { flags | a = value }
 
         ResetBitIndirectA bitTest raw_addr ->
             let
@@ -311,40 +308,39 @@ applyIXIYChange clockTime z80changeData rom48k z80_core =
                 flags =
                     z80_core.flags
             in
-            SetMem8Flags addr { value = value, flags = { flags | a = value } }
+            SetMem8Flags addr value { flags | a = value }
 
 
 applyShifter : Shifter -> Int -> CpuTimeCTime -> Z80ROM -> Z80Core -> CoreChange
 applyShifter shifterFunc addr cpu_time rom48k z80 =
     let
-        ( value, newTime ) =
+        ( memValue, newTime ) =
             z80.env |> getMem8 addr cpu_time rom48k
 
-        result : IntWithFlags
-        result =
+        ( value, flags ) =
             case shifterFunc of
                 Shifter0 ->
-                    z80.flags |> shifter0 value
+                    z80.flags |> shifter0 memValue
 
                 Shifter1 ->
-                    z80.flags |> shifter1 value
+                    z80.flags |> shifter1 memValue
 
                 Shifter2 ->
-                    z80.flags |> shifter2 value
+                    z80.flags |> shifter2 memValue
 
                 Shifter3 ->
-                    z80.flags |> shifter3 value
+                    z80.flags |> shifter3 memValue
 
                 Shifter4 ->
-                    z80.flags |> shifter4 value
+                    z80.flags |> shifter4 memValue
 
                 Shifter5 ->
-                    z80.flags |> shifter5 value
+                    z80.flags |> shifter5 memValue
 
                 Shifter6 ->
-                    z80.flags |> shifter6 value
+                    z80.flags |> shifter6 memValue
 
                 Shifter7 ->
-                    z80.flags |> shifter7 value
+                    z80.flags |> shifter7 memValue
     in
-    SetMem8Flags addr result
+    SetMem8Flags addr value flags

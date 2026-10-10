@@ -413,7 +413,7 @@ z80_cpl flagRegs =
     { flagRegs | a = new_a, ff = ff, fb = fb, fa = fa }
 
 
-inc : Int -> FlagRegisters -> IntWithFlags
+inc : Int -> FlagRegisters -> ( Int, FlagRegisters )
 inc v flagRegs =
     let
         ff =
@@ -422,10 +422,10 @@ inc v flagRegs =
         vv =
             Bitwise.and (v + 1) 0xFF
     in
-    IntWithFlags vv { flagRegs | ff = Bitwise.or ff vv, fb = 1, fa = v, fr = vv }
+    ( vv, { flagRegs | ff = Bitwise.or ff vv, fb = 1, fa = v, fr = vv } )
 
 
-dec : Int -> FlagRegisters -> IntWithFlags
+dec : Int -> FlagRegisters -> ( Int, FlagRegisters )
 dec v flagRegs =
     let
         ff =
@@ -434,7 +434,7 @@ dec v flagRegs =
         vv =
             Bitwise.and (v - 1) 0xFF
     in
-    IntWithFlags vv { flagRegs | ff = Bitwise.or ff vv, fb = -1, fa = v, fr = vv }
+    ( vv, { flagRegs | ff = Bitwise.or ff vv, fb = -1, fa = v, fr = vv } )
 
 
 
@@ -511,16 +511,16 @@ rot a flagRegs =
     { flagRegs | ff = ff, fb = fb, fa = fa, a = Bitwise.and a 0xFF }
 
 
-shifter_v : Int -> FlagRegisters -> IntWithFlags
+shifter_v : Int -> FlagRegisters -> ( Int, FlagRegisters )
 shifter_v v flagRegs =
     let
         fr =
             Bitwise.and 0xFF v
     in
-    IntWithFlags fr { flagRegs | ff = v, fr = fr, fb = 0, fa = Bitwise.or 0x0100 fr }
+    ( fr, { flagRegs | ff = v, fr = fr, fb = 0, fa = Bitwise.or 0x0100 fr } )
 
 
-shifter0 : Int -> FlagRegisters -> IntWithFlags
+shifter0 : Int -> FlagRegisters -> ( Int, FlagRegisters )
 shifter0 v_in flagRegs =
     let
         v =
@@ -529,37 +529,37 @@ shifter0 v_in flagRegs =
     flagRegs |> shifter_v (v |> shiftRightBy 7)
 
 
-shifter1 : Int -> FlagRegisters -> IntWithFlags
+shifter1 : Int -> FlagRegisters -> ( Int, FlagRegisters )
 shifter1 v_in flagRegs =
     flagRegs |> shifter_v (shiftRightBy 24 (v_in * 0x80800000))
 
 
-shifter2 : Int -> FlagRegisters -> IntWithFlags
+shifter2 : Int -> FlagRegisters -> ( Int, FlagRegisters )
 shifter2 v_in flagRegs =
     flagRegs |> shifter_v (Bitwise.or (shiftLeftBy1 v_in) (Bitwise.and (shiftRightBy8 flagRegs.ff) 1))
 
 
-shifter3 : Int -> FlagRegisters -> IntWithFlags
+shifter3 : Int -> FlagRegisters -> ( Int, FlagRegisters )
 shifter3 v_in flagRegs =
     flagRegs |> shifter_v (shiftRightBy1 (Bitwise.or (v_in * 0x0201) (Bitwise.and flagRegs.ff 0x0100)))
 
 
-shifter4 : Int -> FlagRegisters -> IntWithFlags
+shifter4 : Int -> FlagRegisters -> ( Int, FlagRegisters )
 shifter4 v_in flagRegs =
     flagRegs |> shifter_v (shiftLeftBy1 v_in)
 
 
-shifter5 : Int -> FlagRegisters -> IntWithFlags
+shifter5 : Int -> FlagRegisters -> ( Int, FlagRegisters )
 shifter5 v_in flagRegs =
     flagRegs |> shifter_v (Bitwise.or (Bitwise.or (shiftRightBy1 v_in) (Bitwise.and v_in 0x80)) (shiftLeftBy8 v_in))
 
 
-shifter6 : Int -> FlagRegisters -> IntWithFlags
+shifter6 : Int -> FlagRegisters -> ( Int, FlagRegisters )
 shifter6 v_in flagRegs =
     flagRegs |> shifter_v (Bitwise.or (shiftLeftBy1 v_in) 1)
 
 
-shifter7 : Int -> FlagRegisters -> IntWithFlags
+shifter7 : Int -> FlagRegisters -> ( Int, FlagRegisters )
 shifter7 v_in flagRegs =
     flagRegs |> shifter_v (shiftRightBy1 (v_in * 0x0201))
 

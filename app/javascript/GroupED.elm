@@ -430,7 +430,7 @@ rld rom48k clockTime z80 =
         new_flags =
             { flags | a = new_a } |> f_szh0n0p new_a
     in
-    SetMem8Flags z80.main.hl { flags = new_flags, value = Bitwise.and v 0xFF }
+    SetMem8Flags z80.main.hl (Bitwise.and v 0xFF) new_flags
 
 
 
@@ -466,7 +466,7 @@ rrd rom48k clockTime z80 =
         new_flags =
             { flags | a = new_a } |> f_szh0n0p new_a
     in
-    SetMem8Flags z80.main.hl { flags = new_flags, value = Bitwise.and (v |> shiftRightBy 4) 0xFF }
+    SetMem8Flags z80.main.hl (Bitwise.and (v |> shiftRightBy 4) 0xFF) new_flags
 
 
 fourByteMainED : Dict Int ( MainWithIndexRegisters -> Int -> EDFourByteChange, InstructionDuration )

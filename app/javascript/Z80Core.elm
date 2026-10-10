@@ -41,7 +41,7 @@ type CoreChange
     | FlagsOnly FlagRegisters
     | MainWithOffsetAndDelay Int ShortDelay MainWithIndexRegisters
     | RareChange RareCoreChange
-    | SetMem8Flags Int IntWithFlags
+    | SetMem8Flags Int Int FlagRegisters
     | ChangeMainAndFlags MainWithIndexRegisters FlagRegisters
     | ChangeMainAndSP MainWithIndexRegisters Int
     | ChangeFlagsAndSP FlagRegisters Int
