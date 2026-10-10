@@ -221,8 +221,8 @@ applyPureDelta z80changeData clockTime rom48k z80_core =
             in
             ChangeMainAndFlags { main | hl = int } flagRegisters
 
-        Z80ChangeFlags flagRegisters ->
-            FlagsOnly flagRegisters
+        Z80ChangeFlags flagRegistersFunc ->
+            FlagsOnly (flagRegistersFunc z80_core.main z80_core.flags)
 
         Z80IndirectMainBitTest bitTest addr_func ->
             let
