@@ -4,7 +4,7 @@ import Bitwise
 import CpuTimeCTime exposing (CpuTimeCTime)
 import Utils exposing (BitTest, bitMaskFromBit, clearBit, inverseBitMaskFromBit, setBit, shiftLeftBy8, shiftRightBy8)
 import Z80Change exposing (Shifter(..))
-import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
+import Z80Core exposing (CoreChange(..), CoreChangeWithoutPC(..), RareCoreChange(..), Z80Core)
 import Z80Env exposing (setMem)
 import Z80Flags exposing (FlagRegisters, IntWithFlags, c_F53, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit)
 import Z80Mem exposing (getMem8)
@@ -45,12 +45,13 @@ applyIXIYChange clockTime z80changeData rom48k z80_core =
                 | ff = new_flags.ff |> Bitwise.and (Bitwise.complement c_F53) |> Bitwise.or (mp_address |> shiftRightBy8 |> Bitwise.and c_F53)
             }
                 |> FlagsOnly
+                |> CoreWithoutJump
 
         TransformMainRegistersCB f ->
-            z80_core.main |> f |> MainOnly
+            z80_core.main |> f |> MainOnly |> CoreWithoutJump
 
         IXIYFlagChangeFunc f ->
-            f z80_core.flags |> FlagsOnly
+            f z80_core.flags |> FlagsOnly |> CoreWithoutJump
 
         RegisterChangeIndexShifter shifter raw_addr ->
             z80_core |> applyShifter shifter (raw_addr |> Bitwise.and 0xFFFF) clockTime rom48k
@@ -66,7 +67,7 @@ applyIXIYChange clockTime z80changeData rom48k z80_core =
                 new_value =
                     bitMask |> inverseBitMaskFromBit |> Bitwise.and value
             in
-            SetMem8 addr new_value
+            SetMem8 addr new_value |> CoreWithoutJump
 
         IndirectBitSet bitMask raw_addr ->
             let
@@ -79,7 +80,7 @@ applyIXIYChange clockTime z80changeData rom48k z80_core =
                 new_value =
                     bitMask |> bitMaskFromBit |> Bitwise.or value
             in
-            SetMem8 addr new_value
+            SetMem8 addr new_value |> CoreWithoutJump
 
         SingleRegisterChange changeOneRegister int ->
             let
@@ -88,10 +89,10 @@ applyIXIYChange clockTime z80changeData rom48k z80_core =
             in
             case changeOneRegister of
                 ChangeSingleH ->
-                    { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 int) } |> MainOnly
+                    { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF) (shiftLeftBy8 int) } |> MainOnly |> CoreWithoutJump
 
                 ChangeSingleL ->
-                    { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) int } |> MainOnly
+                    { z80_main | hl = Bitwise.or (Bitwise.and z80_main.hl 0xFF00) int } |> MainOnly |> CoreWithoutJump
 
         RegisterIndirectWithShifter shifterFunc changeOneRegister raw_addr ->
             let
@@ -156,7 +157,7 @@ applyIXIYChange clockTime z80changeData rom48k z80_core =
                 ( env_2, newNew ) =
                     old_env |> setMem addr value newTime
             in
-            { z80_core | main = new_main, flags = flags, env = env_2 } |> CoreOnly |> RareChange
+            { z80_core | main = new_main, flags = flags, env = env_2 } |> CoreOnly |> RareChange |> CoreWithoutJump
 
         SetBitIndirectWithCopy bitTest changeOneRegister raw_addr ->
             let
@@ -198,7 +199,7 @@ applyIXIYChange clockTime z80changeData rom48k z80_core =
                 ( env_2, newTime2 ) =
                     old_env |> setMem addr value newTime
             in
-            { z80_core | main = new_main, env = env_2 } |> CoreOnly |> RareChange
+            { z80_core | main = new_main, env = env_2 } |> CoreOnly |> RareChange |> CoreWithoutJump
 
         ResetBitIndirectWithCopy bitTest changeOneRegister raw_addr ->
             let
@@ -240,7 +241,7 @@ applyIXIYChange clockTime z80changeData rom48k z80_core =
                 ( env_2, newTime ) =
                     old_env |> setMem addr value newTime1
             in
-            { z80_core | main = new_main, env = env_2 } |> CoreOnly |> RareChange
+            { z80_core | main = new_main, env = env_2 } |> CoreOnly |> RareChange |> CoreWithoutJump
 
         FlagsIndirectWithShifter shifterFunc raw_addr ->
             let
@@ -276,7 +277,7 @@ applyIXIYChange clockTime z80changeData rom48k z80_core =
                         Shifter7 ->
                             z80_core.flags |> shifter7 memV
             in
-            SetMem8Flags address value { flags | a = value }
+            SetMem8Flags address value { flags | a = value } |> CoreWithoutJump
 
         SetBitIndirectA bitTest raw_addr ->
             let
@@ -292,7 +293,7 @@ applyIXIYChange clockTime z80changeData rom48k z80_core =
                 flags =
                     z80_core.flags
             in
-            SetMem8Flags addr value { flags | a = value }
+            SetMem8Flags addr value { flags | a = value } |> CoreWithoutJump
 
         ResetBitIndirectA bitTest raw_addr ->
             let
@@ -308,7 +309,7 @@ applyIXIYChange clockTime z80changeData rom48k z80_core =
                 flags =
                     z80_core.flags
             in
-            SetMem8Flags addr value { flags | a = value }
+            SetMem8Flags addr value { flags | a = value } |> CoreWithoutJump
 
 
 applyShifter : Shifter -> Int -> CpuTimeCTime -> Z80ROM -> Z80Core -> CoreChange
@@ -343,4 +344,4 @@ applyShifter shifterFunc addr cpu_time rom48k z80 =
                 Shifter7 ->
                     z80.flags |> shifter7 memValue
     in
-    SetMem8Flags addr value flags
+    SetMem8Flags addr value flags |> CoreWithoutJump
