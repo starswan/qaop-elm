@@ -423,346 +423,346 @@ add_iy_bc z80_main z80_flags =
 
 
 add_a_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-add_a_b z80_main z80_flags =
+add_a_b z80main flags =
     -- case 0x80: add(B); break;
     --z80 |> set_flag_regs (z80_add z80.main.b z80.flags)
-    Z80ChangeFlags (z80_add z80_main.b z80_flags)
+    Z80ChangeFlags (\z80_main z80_flags -> z80_add z80_main.b z80_flags)
 
 
 add_a_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-add_a_c z80_main z80_flags =
+add_a_c z80main flags =
     -- case 0x81: add(C); break;
     --z80 |> set_flag_regs (z80_add z80.main.c z80.flags)
-    Z80ChangeFlags (z80_add z80_main.c z80_flags)
+    Z80ChangeFlags (\z80_main z80_flags -> z80_add z80_main.c z80_flags)
 
 
 add_a_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-add_a_d z80_main z80_flags =
+add_a_d z80main flags =
     -- case 0x82: add(D); break;
     --z80 |> set_flag_regs (z80_add z80.main.d z80.flags)
-    Z80ChangeFlags (z80_add z80_main.d z80_flags)
+    Z80ChangeFlags (\z80_main z80_flags -> z80_add z80_main.d z80_flags)
 
 
 add_a_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-add_a_e z80_main z80_flags =
+add_a_e z80main flags =
     -- case 0x83: add(E); break;
     --z80 |> set_flag_regs (z80_add z80.main.e z80.flags)
-    Z80ChangeFlags (z80_add z80_main.e z80_flags)
+    Z80ChangeFlags (\z80_main z80_flags -> z80_add z80_main.e z80_flags)
 
 
 add_a_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-add_a_h z80_main z80_flags =
+add_a_h z80main flags =
     -- case 0x84: add(HL>>>8); break;
     -- case 0x84: add(xy>>>8); break;
     --z80 |> set_flag_regs (z80_add (get_h ixiyhl z80.main) z80.flags)
-    Z80ChangeFlags (z80_add (shiftRightBy8 z80_main.hl) z80_flags)
+    Z80ChangeFlags (\z80_main z80_flags -> z80_add (shiftRightBy8 z80_main.hl) z80_flags)
 
 
 add_a_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-add_a_l z80_main z80_flags =
+add_a_l z80main flags =
     -- case 0x85: add(HL&0xFF); break;
     -- case 0x85: add(xy&0xFF); break;
     --z80 |> set_flag_regs (z80_add (get_l ixiyhl z80.main) z80.flags)
-    Z80ChangeFlags (z80_add (Bitwise.and z80_main.hl 0xFF) z80_flags)
+    Z80ChangeFlags (\z80_main z80_flags -> z80_add (Bitwise.and z80_main.hl 0xFF) z80_flags)
 
 
 adc_a_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-adc_a_b z80_main z80_flags =
+adc_a_b z80main flags =
     -- case 0x88: adc(B); break;
-    Z80ChangeFlags (z80_flags |> z80_adc z80_main.b)
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_adc z80_main.b)
 
 
 adc_a_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-adc_a_c z80_main z80_flags =
+adc_a_c z80main flags =
     -- case 0x89: adc(C); break;
     --z80 |> set_flag_regs (adc z80.main.c z80.flags)
-    Z80ChangeFlags (z80_flags |> z80_adc z80_main.c)
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_adc z80_main.c)
 
 
 adc_a_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-adc_a_d z80_main z80_flags =
+adc_a_d z80main flags =
     -- case 0x8A: adc(D); break;
     --z80 |> set_flag_regs (adc z80.main.d z80.flags)
-    Z80ChangeFlags (z80_flags |> z80_adc z80_main.d)
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_adc z80_main.d)
 
 
 adc_a_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-adc_a_e z80_main z80_flags =
+adc_a_e z80main flags =
     -- case 0x8B: adc(E); break;
     --z80 |> set_flag_regs (adc z80.main.e z80.flags)
-    Z80ChangeFlags (z80_flags |> z80_adc z80_main.e)
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_adc z80_main.e)
 
 
 adc_a_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-adc_a_h z80_main z80_flags =
+adc_a_h z80main flags =
     -- case 0x84: add(HL>>>8); break;
     -- case 0x84: add(xy>>>8); break;
     --z80 |> set_flag_regs (z80_add (get_h ixiyhl z80.main) z80.flags)
-    Z80ChangeFlags (z80_flags |> z80_adc (shiftRightBy8 z80_main.hl))
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_adc (shiftRightBy8 z80_main.hl))
 
 
 adc_a_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-adc_a_l z80_main z80_flags =
+adc_a_l z80main flags =
     -- case 0x85: add(HL&0xFF); break;
     -- case 0x85: add(xy&0xFF); break;
     --z80 |> set_flag_regs (z80_add (get_l ixiyhl z80.main) z80.flags)
-    Z80ChangeFlags (z80_flags |> z80_adc (Bitwise.and z80_main.hl 0xFF))
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_adc (Bitwise.and z80_main.hl 0xFF))
 
 
 sub_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-sub_b z80_main z80_flags =
+sub_b z80main flags =
     -- case 0x90: sub(B); break;
     --z80 |> set_flag_regs (z80_sub z80.main.b z80.flags)
-    Z80ChangeFlags (z80_flags |> z80_sub z80_main.b)
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_sub z80_main.b)
 
 
 sub_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-sub_c z80_main z80_flags =
+sub_c z80main flags =
     -- case 0x91: sub(C); break;
     --z80 |> set_flag_regs (z80_sub z80.main.c z80.flags)
-    Z80ChangeFlags (z80_flags |> z80_sub z80_main.c)
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_sub z80_main.c)
 
 
 sub_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-sub_d z80_main z80_flags =
+sub_d z80main flags =
     -- case 0x92: sub(D); break;
     --z80 |> set_flag_regs (z80_sub z80.main.d z80.flags)
-    Z80ChangeFlags (z80_flags |> z80_sub z80_main.d)
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_sub z80_main.d)
 
 
 sub_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-sub_e z80_main z80_flags =
+sub_e z80main flags =
     -- case 0x93: sub(E); break;
     --z80 |> set_flag_regs (z80_sub z80.main.e z80.flags)
-    Z80ChangeFlags (z80_flags |> z80_sub z80_main.e)
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_sub z80_main.e)
 
 
 sub_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-sub_h z80_main z80_flags =
+sub_h z80main flags =
     -- case 0x94: sub(HL>>>8); break;
     -- case 0x94: sub(xy>>>8); break;
     --z80 |> set_flag_regs (z80_sub (get_h ixiyhl z80.main) z80.flags)
-    Z80ChangeFlags (z80_flags |> z80_sub (shiftRightBy8 z80_main.hl))
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_sub (shiftRightBy8 z80_main.hl))
 
 
 sub_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-sub_l z80_main z80_flags =
+sub_l z80main flags =
     -- case 0x95: sub(HL&0xFF); break;
     -- case 0x95: sub(xy&0xFF); break;
     --z80 |> set_flag_regs (z80_sub (get_l ixiyhl z80.main) z80.flags)
-    Z80ChangeFlags (z80_flags |> z80_sub (Bitwise.and z80_main.hl 0xFF))
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_sub (Bitwise.and z80_main.hl 0xFF))
 
 
 sbc_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-sbc_b z80_main z80_flags =
+sbc_b z80main flags =
     -- case 0x98: sbc(B); break;
     --z80 |> set_flag_regs (sbc z80.main.b z80.flags)
-    Z80ChangeFlags (z80_flags |> z80_sbc z80_main.b)
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_sbc z80_main.b)
 
 
 sbc_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-sbc_c z80_main z80_flags =
+sbc_c z80main flags =
     -- case 0x99: sbc(C); break;
     --z80 |> set_flag_regs (sbc z80.main.c z80.flags)
-    Z80ChangeFlags (z80_flags |> z80_sbc z80_main.c)
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_sbc z80_main.c)
 
 
 sbc_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-sbc_d z80_main z80_flags =
+sbc_d z80main flags =
     -- case 0x9A: sbc(D); break;
     --z80 |> set_flag_regs (sbc z80.main.d z80.flags)
-    Z80ChangeFlags (z80_flags |> z80_sbc z80_main.d)
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_sbc z80_main.d)
 
 
 sbc_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-sbc_e z80_main z80_flags =
+sbc_e z80main flags =
     -- case 0x9B: sbc(E); break;
     --z80 |> set_flag_regs (sbc z80.main.e z80.flags)
-    Z80ChangeFlags (z80_flags |> z80_sbc z80_main.e)
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_sbc z80_main.e)
 
 
 sbc_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-sbc_h z80_main z80_flags =
+sbc_h z80main flags =
     -- case 0x9C: sbc(HL>>>8); break;
     -- case 0x9C: sbc(xy>>>8); break;
     --z80 |> set_flag_regs (sbc (get_h ixiyhl z80.main) z80.flags)
-    Z80ChangeFlags (z80_flags |> z80_sbc (shiftRightBy8 z80_main.hl))
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_sbc (shiftRightBy8 z80_main.hl))
 
 
 sbc_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-sbc_l z80_main z80_flags =
+sbc_l z80main flags =
     -- case 0x9D: sbc(HL&0xFF); break;
     -- case 0x9D: sbc(xy&0xFF); break;
     --z80 |> set_flag_regs (sbc (get_l ixiyhl z80.main) z80.flags)
-    Z80ChangeFlags (z80_flags |> z80_sbc (Bitwise.and z80_main.hl 0xFF))
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_sbc (Bitwise.and z80_main.hl 0xFF))
 
 
 and_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-and_b z80_main z80_flags =
+and_b z80main flags =
     -- case 0xA0: and(B); break;
     --z80 |> set_flag_regs (z80_and z80.main.b z80.flags)
-    z80_flags |> z80_and z80_main.b |> Z80ChangeFlags
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_and z80_main.b)
 
 
 and_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-and_c z80_main z80_flags =
+and_c z80main flags =
     -- case 0xA1: and(C); break;
     --z80 |> set_flag_regs (z80_and z80.main.c z80.flags)
-    z80_flags |> z80_and z80_main.c |> Z80ChangeFlags
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_and z80_main.c)
 
 
 and_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-and_d z80_main z80_flags =
+and_d z80main flags =
     -- case 0xA2: and(D); break;
     --z80 |> set_flag_regs (z80_and z80.main.d z80.flags)
-    z80_flags |> z80_and z80_main.d |> Z80ChangeFlags
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_and z80_main.d)
 
 
 and_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-and_e z80_main z80_flags =
+and_e z80main flags =
     -- case 0xA3: and(E); break;
     --z80 |> set_flag_regs (z80_and z80.main.e z80.flags)
-    z80_flags |> z80_and z80_main.e |> Z80ChangeFlags
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_and z80_main.e)
 
 
 and_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-and_h z80_main z80_flags =
+and_h z80main flags =
     -- case 0xA4: and(HL>>>8); break;
     -- case 0xA4: and(xy>>>8); break;
     --z80 |> set_flag_regs (z80_and (get_h ixiyhl z80.main) z80.flags)
-    z80_flags |> z80_and (shiftRightBy8 z80_main.hl) |> Z80ChangeFlags
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_and (shiftRightBy8 z80_main.hl))
 
 
 and_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-and_l z80_main z80_flags =
+and_l z80main flags =
     -- case 0xA5: and(HL&0xFF); break;
     -- case 0xA5: and(xy&0xFF); break;
     --z80 |> set_flag_regs (z80_and (get_l ixiyhl z80.main) z80.flags)
-    z80_flags |> z80_and (Bitwise.and z80_main.hl 0xFF) |> Z80ChangeFlags
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_and (Bitwise.and z80_main.hl 0xFF))
 
 
 xor_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-xor_b z80_main z80_flags =
+xor_b z80main flags =
     -- case 0xA8: xor(B); break;
-    z80_flags |> z80_xor z80_main.b |> Z80ChangeFlags
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_xor z80_main.b)
 
 
 xor_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-xor_c z80_main z80_flags =
+xor_c z80main flags =
     -- case 0xA9: xor(C); break;
-    z80_flags |> z80_xor z80_main.c |> Z80ChangeFlags
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_xor z80_main.c)
 
 
 xor_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-xor_d z80_main z80_flags =
+xor_d z80main flags =
     -- case 0xAA: xor(D); break;
-    z80_flags |> z80_xor z80_main.d |> Z80ChangeFlags
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_xor z80_main.d)
 
 
 xor_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-xor_e z80_main z80_flags =
+xor_e z80main flags =
     -- case 0xAB: xor(E); break;
-    z80_flags |> z80_xor z80_main.e |> Z80ChangeFlags
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_xor z80_main.e)
 
 
 xor_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-xor_h z80_main z80_flags =
+xor_h z80main flags =
     -- case 0xAC: xor(HL>>>8); break;
     -- case 0xAC: xor(xy>>>8); break;
-    z80_flags |> z80_xor (shiftRightBy8 z80_main.hl) |> Z80ChangeFlags
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_xor (shiftRightBy8 z80_main.hl))
 
 
 xor_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-xor_l z80_main z80_flags =
+xor_l z80main flags =
     -- case 0xAD: xor(HL&0xFF); break;
     -- case 0xAD: xor(xy&0xFF); break;
-    z80_flags |> z80_xor (Bitwise.and z80_main.hl 0xFF) |> Z80ChangeFlags
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_xor (Bitwise.and z80_main.hl 0xFF))
 
 
 or_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-or_b z80_main z80_flags =
+or_b z80main flags =
     -- case 0xB0: or(B); break;
     --z80 |> set_flag_regs (z80_or z80.main.b z80.flags)
-    z80_flags |> z80_or z80_main.b |> Z80ChangeFlags
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_or z80_main.b)
 
 
 or_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-or_c z80_main z80_flags =
+or_c z80main flags =
     -- case 0xB1: or(C); break;
-    z80_flags |> z80_or z80_main.c |> Z80ChangeFlags
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_or z80_main.c)
 
 
 or_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-or_d z80_main z80_flags =
+or_d z80main flags =
     -- case 0xB2: or(D); break;
-    z80_flags |> z80_or z80_main.d |> Z80ChangeFlags
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_or z80_main.d)
 
 
 or_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-or_e z80_main z80_flags =
+or_e z80main flags =
     -- case 0xB3: or(E); break;
     --z80 |> set_flag_regs (z80_or z80.main.e z80.flags)
-    z80_flags |> z80_or z80_main.e |> Z80ChangeFlags
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_or z80_main.e)
 
 
 or_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-or_h z80_main z80_flags =
+or_h z80main flags =
     -- case 0xB4: or(HL>>>8); break;
     -- case 0xB4: or(xy>>>8); break;
     --z80 |> set_flag_regs (z80_or (get_h ixiyhl z80.main) z80.flags)
-    z80_flags |> z80_or (shiftRightBy8 z80_main.hl) |> Z80ChangeFlags
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_or (shiftRightBy8 z80_main.hl))
 
 
 or_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-or_l z80_main z80_flags =
+or_l z80main flags =
     -- case 0xB5: or(HL&0xFF); break;
     -- case 0xB5: or(xy&0xFF); break;
     --z80 |> set_flag_regs (z80_or (get_l ixiyhl z80.main) z80.flags)
-    z80_flags |> z80_or (Bitwise.and z80_main.hl 0xFF) |> Z80ChangeFlags
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_or (Bitwise.and z80_main.hl 0xFF))
 
 
 cp_b : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-cp_b z80_main z80_flags =
+cp_b z80main flags =
     -- case 0xB8: cp(B); break;
     --z80 |> set_flag_regs (cp z80.main.b z80.flags)
-    z80_flags |> z80_cp z80_main.b |> Z80ChangeFlags
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_cp z80_main.b)
 
 
 cp_c : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-cp_c z80_main z80_flags =
+cp_c z80main flags =
     -- case 0xB9: cp(C); break;
     --z80 |> set_flag_regs (cp z80.main.c z80.flags)
-    z80_flags |> z80_cp z80_main.c |> Z80ChangeFlags
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_cp z80_main.c)
 
 
 cp_d : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-cp_d z80_main z80_flags =
+cp_d z80main flags =
     -- case 0xBA: cp(D); break;
     --z80 |> set_flag_regs (cp z80.main.d z80.flags)
-    z80_flags |> z80_cp z80_main.d |> Z80ChangeFlags
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_cp z80_main.d)
 
 
 cp_e : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-cp_e z80_main z80_flags =
+cp_e z80main flags =
     -- case 0xBB: cp(E); break;
     --z80 |> set_flag_regs (cp z80.main.e z80.flags)
-    z80_flags |> z80_cp z80_main.e |> Z80ChangeFlags
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_cp z80_main.e)
 
 
 cp_h : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-cp_h z80_main z80_flags =
+cp_h z80main flags =
     -- case 0xBC: cp(HL>>>8); break;
     -- case 0xBC: cp(xy>>>8); break;
     --z80 |> set_flag_regs (cp (get_h ixiyhl z80.main) z80.flags)
-    z80_flags |> z80_cp (shiftRightBy8 z80_main.hl) |> Z80ChangeFlags
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_cp (shiftRightBy8 z80_main.hl))
 
 
 cp_l : MainWithIndexRegisters -> FlagRegisters -> Z80Change
-cp_l z80_main z80_flags =
+cp_l z80main flags =
     -- case 0xBD: cp(HL&0xFF); break;
     -- case 0xBD: cp(xy&0xFF); break;
     --z80 |> set_flag_regs (cp (get_l ixiyhl z80.main) z80.flags)
-    z80_flags |> z80_cp (Bitwise.and z80_main.hl 0xFF) |> Z80ChangeFlags
+    Z80ChangeFlags (\z80_main z80_flags -> z80_flags |> z80_cp (Bitwise.and z80_main.hl 0xFF))
 
 
 add_hl_de : MainWithIndexRegisters -> FlagRegisters -> Z80Change
