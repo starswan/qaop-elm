@@ -1,11 +1,13 @@
 module Tapfile exposing (..)
 
+import Bitwise
 import Bytes exposing (Bytes, Endianness(..), width)
-import Bytes.Decode exposing (Decoder, Step(..), andThen, fail, loop, map, map3, map4, map5, string, succeed, unsignedInt8)
+import Bytes.Decode exposing (Decoder, Step(..), andThen, fail, loop, map, map3, map4, map5, string, succeed, unsignedInt16, unsignedInt8)
 import Bytes.Decode.Extra as BDE
-import SpectrumDecoders exposing (spectrumUnsigned16Bit)
-import Utils exposing (toHexString2, toPlainHexString2)
-import Z80Debug exposing (debugLog)
+import Char exposing (toCode)
+import String
+import Utils exposing (shiftRightBy8, toHexString2, toPlainHexString2)
+import Z80Debug exposing (debugLog, debugTodo)
 
 
 parseTapFile : Bytes -> List Tapfile
@@ -77,6 +79,74 @@ type alias Tapfile =
     , data : TapfileData
     , block : TapfileBlock
     }
+
+
+tapfileDataToList : TapfileData -> List Int
+tapfileDataToList tapfiledata =
+    case tapfiledata of
+        Program programTapeHeader ->
+            let
+                filename : List Int
+                filename =
+                    programTapeHeader.filename |> String.toList |> List.map (\char -> char |> toCode)
+
+                blockLow =
+                    programTapeHeader.blockLength |> Bitwise.and 0xFF
+
+                blockHigh =
+                    programTapeHeader.blockLength |> shiftRightBy8
+
+                autoStartLow =
+                    programTapeHeader.autoStartLineNumber |> Bitwise.and 0xFF
+
+                autoStartHigh =
+                    programTapeHeader.autoStartLineNumber |> shiftRightBy8
+
+                varLow =
+                    programTapeHeader.startOfVariablesArea |> Bitwise.and 0xFF
+
+                varHigh =
+                    programTapeHeader.startOfVariablesArea |> shiftRightBy8
+            in
+            -- This should be 17 bytes - the checksum would make it 18
+            List.append (0x00 :: filename) [ blockLow, blockHigh, autoStartLow, autoStartHigh, varLow, varHigh, programTapeHeader.checksum ]
+
+        NumberArray tapeHeaderEnd ->
+            debugTodo "tapFileDataToList" "numberArray" []
+
+        CharArray tapeHeaderEnd ->
+            debugTodo "tapFileDataToList" "CharArray" []
+
+        Code codeTapeHeader ->
+            let
+                filename : List Int
+                filename =
+                    codeTapeHeader.filename |> String.toList |> List.map (\char -> char |> toCode)
+
+                blockLow =
+                    codeTapeHeader.blockLength |> Bitwise.and 0xFF
+
+                blockHigh =
+                    codeTapeHeader.blockLength |> shiftRightBy8
+
+                startLow =
+                    codeTapeHeader.startOfCodeBlock |> Bitwise.and 0xFF
+
+                startHigh =
+                    codeTapeHeader.startOfCodeBlock |> shiftRightBy8
+
+                twosevenLow =
+                    codeTapeHeader.threeTwoSevenSixEight |> Bitwise.and 0xFF
+
+                twoSevenHigh =
+                    codeTapeHeader.threeTwoSevenSixEight |> shiftRightBy8
+            in
+            --map5 CodeTapeHeader (string 10) spectrumUnsigned16Bit spectrumUnsigned16Bit spectrumUnsigned16Bit unsignedInt8
+            List.append (0x03 :: filename) [ blockLow, blockHigh, startLow, startHigh, twosevenLow, twoSevenHigh, codeTapeHeader.checksum ]
+
+
+spectrumUnsigned16Bit =
+    unsignedInt16 LE
 
 
 tapfileListDecoder : Int -> Decoder Tapfile -> Decoder (List Tapfile)
