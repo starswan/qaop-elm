@@ -1,10 +1,10 @@
 module Tapfile exposing (..)
 
-import Bitwise
 import Bytes exposing (Bytes, Endianness(..), width)
-import Bytes.Decode exposing (Decoder, Step(..), andThen, fail, loop, map, map2, map3, map4, map5, string, succeed, unsignedInt16, unsignedInt8)
+import Bytes.Decode exposing (Decoder, Step(..), andThen, fail, loop, map, map3, map4, map5, string, succeed, unsignedInt8)
+import Bytes.Decode.Extra as BDE
 import SpectrumDecoders exposing (spectrumUnsigned16Bit)
-import Utils exposing (toPlainHexString2)
+import Utils exposing (toHexString2, toPlainHexString2)
 import Z80Debug exposing (debugLog)
 
 
