@@ -1,22 +1,22 @@
 module Z80Rom exposing (..)
 
 import Array exposing (Array)
-import Bitwise
+import Bitwise exposing (shiftRightBy)
 import Bytes exposing (Bytes)
 import Bytes.Decode exposing (Decoder, Step(..), unsignedInt8)
 import Bytes.Decode.Extra as BDE
 import Dict exposing (Dict)
+import Keyboard exposing (Keyboard)
 import SpectrumDecoders exposing (spectrumUnsigned16Bit)
 import Utils exposing (listToDict, shiftLeftBy8, shiftRightBy1, shiftRightBy8, toHexString)
 import Z80Debug exposing (debugTodo)
+import Z80Ram exposing (Z80Ram)
 
 
 c_ROMDATASIZE =
     8192
 
 
-type Z80ROM
-    = Z80ROM (Dict Int Int)
 
 type alias Z80ROM =
     { rom48k : Array (Array Int)
@@ -24,11 +24,6 @@ type alias Z80ROM =
     , z80ram : Z80Ram
     }
 
-constructor : Z80ROM
-constructor =
-    let
-        rom48k =
-            List.range 0 c_ROMDATASIZE
 
 constructor : Array (Array Int) -> Z80ROM
 constructor rom_dict =
