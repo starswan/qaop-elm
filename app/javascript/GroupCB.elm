@@ -2,8 +2,8 @@ module GroupCB exposing (..)
 
 import Array exposing (Array)
 import Bitwise
-import CpuTimeCTime exposing (InstructionDuration(..))
 import IXIYChange exposing (IXIYChange(..))
+import InstructionDuration exposing (InstructionDuration(..))
 import SimpleFlagOps exposing (resetBit, rl_a, rlc_a, rr_a, rrc_a, setFlagBit, sla_a, sll_a, sra_a, srl_a)
 import Utils exposing (BitTest(..), bitMaskFromBit, inverseBitMaskFromBit, shiftLeftBy8)
 import Z80Change exposing (Shifter(..), Z80Change(..))

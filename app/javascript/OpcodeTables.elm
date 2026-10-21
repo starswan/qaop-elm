@@ -1,11 +1,11 @@
 module OpcodeTables exposing (..)
 
 import Array exposing (Array)
-import CpuTimeCTime exposing (InstructionDuration)
 import Dict exposing (Dict)
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, doubleWithRegistersIX, doubleWithRegistersIY)
 import GroupCBIXIY exposing (singleByteMainRegsIXCB, singleByteMainRegsIXCB80, singleByteMainRegsIYCB, singleByteMainRegsIYCB80, singleEnvMainRegsIXCB40, singleEnvMainRegsIYCB40)
 import IXIYChange exposing (IXIYChange)
+import InstructionDuration exposing (InstructionDuration)
 import RegisterChange exposing (RegisterFlagChange(..), TwoByteChange(..))
 import SimpleFlagOps exposing (singleByteFlags)
 import SimpleSingleByte exposing (singleByteFlagsDD, singleByteFlagsFD, singleByteMainRegs, singleByteMainRegsDD, singleByteMainRegsFD)

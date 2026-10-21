@@ -1,12 +1,12 @@
 module SingleEnvWithMain exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, InstructionDuration(..))
+import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime)
 import Dict exposing (Dict)
-import Utils exposing (BitTest, shiftRightBy8)
+import InstructionDuration exposing (InstructionDuration(..))
 import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
 import Z80Env exposing (Z80Env)
-import Z80Flags exposing (FlagRegisters, add16, c_F53, testBit)
+import Z80Flags exposing (FlagRegisters, add16)
 import Z80Mem exposing (getMem8)
 import Z80Rom exposing (Z80ROM)
 import Z80Types exposing (IXIYHL(..), MainWithIndexRegisters, get_bc, get_de, set_xy)

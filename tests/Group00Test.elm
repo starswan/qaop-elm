@@ -1,9 +1,9 @@
 module Group00Test exposing (..)
 
 import Array
-import CpuTimeCTime exposing (InstructionDuration(..), reset_cpu_time)
-import Dict
+import CpuTimeCTime exposing (reset_cpu_time)
 import Expect exposing (Expectation)
+import InstructionDuration exposing (InstructionDuration(..))
 import PCIncrement exposing (PCIncrement(..))
 import Test exposing (..)
 import Triple

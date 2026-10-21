@@ -1,7 +1,8 @@
 module TripleWithFlags exposing (..)
 
-import CpuTimeCTime exposing (InstructionDuration(..), ShortDelay(..))
+import CpuTimeCTime exposing (ShortDelay(..))
 import Dict exposing (Dict)
+import InstructionDuration exposing (InstructionDuration(..))
 import TripleByte exposing (TripleByteChange(..), TripleByteJump(..))
 import Z80Flags exposing (FlagRegisters, always_jump, jump_c, jump_m, jump_nc, jump_nz, jump_p, jump_pe, jump_po, jump_z)
 

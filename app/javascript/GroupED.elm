@@ -1,8 +1,9 @@
 module GroupED exposing (..)
 
 import Bitwise exposing (complement, shiftLeftBy, shiftRightBy)
-import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), ShortDelay(..))
+import CpuTimeCTime exposing (CpuTimeCTime, ShortDelay(..))
 import Dict exposing (Dict)
+import InstructionDuration exposing (InstructionDuration(..))
 import Interrupts exposing (InterruptMode(..), InterruptRegisters)
 import PCIncrement exposing (PCIncrement(..))
 import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), RegisterFlagChange(..), SixteenBit(..))

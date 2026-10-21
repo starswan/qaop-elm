@@ -2,8 +2,8 @@ module GroupCBIXIY exposing (..)
 
 import Array exposing (Array)
 import Bitwise
-import CpuTimeCTime exposing (InstructionDuration(..))
 import IXIYChange exposing (IXIYChange(..))
+import InstructionDuration exposing (InstructionDuration(..))
 import Utils exposing (BitTest(..), byte)
 import Z80Change exposing (Shifter(..))
 import Z80Registers exposing (ChangeMainRegister(..))

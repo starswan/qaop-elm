@@ -1,9 +1,10 @@
 module EDB0Test exposing (..)
 
 import Array
-import CpuTimeCTime exposing (InstructionDuration(..), reset_cpu_time)
+import CpuTimeCTime exposing (reset_cpu_time)
 import Dict
 import Expect exposing (Expectation)
+import InstructionDuration exposing (InstructionDuration(..))
 import PCIncrement exposing (PCIncrement(..))
 import Test exposing (..)
 import Triple

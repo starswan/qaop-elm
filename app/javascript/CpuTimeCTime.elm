@@ -1,6 +1,7 @@
 module CpuTimeCTime exposing (..)
 
 import Bitwise exposing (shiftLeftBy, shiftRightBy)
+import InstructionDuration exposing (InstructionDuration(..))
 
 
 c_FRSTART =
@@ -13,27 +14,6 @@ c_FRTIME =
 
 c_TIME_LIMIT =
     c_FRSTART + c_FRTIME
-
-
-type InstructionDuration
-    = FourTStates
-    | FiveTStates
-    | SixTStates
-    | SevenTStates
-    | EightTStates
-    | NineTStates
-    | TenTStates
-    | ElevenTStates
-    | TwelveTStates
-    | ThirteenTStates
-    | FourteenTStates
-    | FifteenTStates
-    | SixteenTStates
-    | SeventeenTStates
-    | EighteenTStates
-    | NineteenTStates
-    | TwentyTStates
-    | TwentyThreeTStates
 
 
 type ShortDelay

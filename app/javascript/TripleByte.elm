@@ -1,7 +1,8 @@
 module TripleByte exposing (..)
 
-import CpuTimeCTime exposing (InstructionDuration(..), ShortDelay)
+import CpuTimeCTime exposing (ShortDelay)
 import Dict exposing (Dict)
+import InstructionDuration exposing (InstructionDuration(..))
 import Z80Flags exposing (FlagRegisters)
 import Z80Types exposing (MainWithIndexRegisters)
 

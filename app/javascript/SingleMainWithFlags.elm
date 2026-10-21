@@ -1,8 +1,8 @@
 module SingleMainWithFlags exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
+import InstructionDuration exposing (InstructionDuration(..))
 import Utils exposing (BitTest, shiftLeftBy8, shiftRightBy8)
 import Z80Change exposing (IndexedZ80Change(..), Z80Change(..))
 import Z80Flags exposing (FlagRegisters, IntWithFlags, add16, dec, inc, z80_adc, z80_add, z80_and, z80_cp, z80_or, z80_sbc, z80_sub, z80_xor)

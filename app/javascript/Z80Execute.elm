@@ -1,7 +1,7 @@
 module Z80Execute exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeCTime, InstructionDuration(..), ShortDelay(..))
+import CpuTimeCTime exposing (CpuTimeCTime, ShortDelay(..))
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
 import GroupED exposing (adc_hl_sp, cpir, execute_ED70, execute_ED78, inirOtirFlags, ldir, rld, rrd, sbc_hl)
 import IXIYChange exposing (IXIYChange, applyIXIYChange, applyShifter)
