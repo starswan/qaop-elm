@@ -16,11 +16,6 @@ c_TIME_LIMIT =
     c_FRSTART + c_FRTIME
 
 
-type ShortDelay
-    = FiveExtraTStates
-    | SevenExtraTStates
-
-
 c_SCRENDT =
     191 * 224 + 126
 
@@ -273,84 +268,6 @@ cont_port portn z80env =
 addCpuTimeTime : Int -> CpuTimeCTime -> CpuTimeCTime
 addCpuTimeTime value z80env =
     { z80env | cpu_time = z80env.cpu_time + value }
-
-
-addExtraCpuTime : ShortDelay -> CpuTimeCTime -> CpuTimeCTime
-addExtraCpuTime value z80env =
-    let
-        offset =
-            case value of
-                FiveExtraTStates ->
-                    5
-
-                SevenExtraTStates ->
-                    7
-    in
-    { z80env | cpu_time = z80env.cpu_time + offset }
-
-
-addDuration : InstructionDuration -> CpuTimeCTime -> CpuTimeCTime
-addDuration duration time =
-    let
-        offset =
-            case duration of
-                --ZeroTStates ->
-                --    value
-                FourTStates ->
-                    4
-
-                FiveTStates ->
-                    5
-
-                SixTStates ->
-                    6
-
-                SevenTStates ->
-                    7
-
-                EightTStates ->
-                    8
-
-                NineTStates ->
-                    9
-
-                TenTStates ->
-                    10
-
-                ElevenTStates ->
-                    11
-
-                TwelveTStates ->
-                    12
-
-                ThirteenTStates ->
-                    13
-
-                FourteenTStates ->
-                    14
-
-                FifteenTStates ->
-                    15
-
-                SixteenTStates ->
-                    16
-
-                SeventeenTStates ->
-                    17
-
-                EighteenTStates ->
-                    18
-
-                TwentyTStates ->
-                    20
-
-                TwentyThreeTStates ->
-                    23
-
-                NineteenTStates ->
-                    19
-    in
-    { time | cpu_time = time.cpu_time + offset }
 
 
 reset_cpu_time : CpuTimeCTime
