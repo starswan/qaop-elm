@@ -3,7 +3,6 @@ module InstructionDuration exposing (..)
 
 type InstructionDuration
     = FiveTStates
-    | SixTStates
     | SevenTStates
     | EightTStates
     | NineTStates

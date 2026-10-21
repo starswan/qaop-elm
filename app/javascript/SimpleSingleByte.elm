@@ -14,12 +14,12 @@ import Z80Types exposing (IXIYHL(..), MainRegisters, MainWithIndexRegisters, get
 singleByteMainRegs : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleByteMainRegs =
     Dict.fromList
-        [ ( 0x03, ( TransformMainRegisters inc_bc, SixTStates ) )
-        , ( 0x0B, ( TransformMainRegisters dec_bc, SixTStates ) )
-        , ( 0x13, ( TransformMainRegisters inc_de, SixTStates ) )
-        , ( 0x1B, ( TransformMainRegisters dec_de, SixTStates ) )
-        , ( 0x23, ( TransformMainRegisters inc_hl, SixTStates ) )
-        , ( 0x2B, ( TransformMainRegisters dec_hl, SixTStates ) )
+        [ ( 0x03, ( TransformMainRegisters inc_bc, NumberedTStates 6 ) )
+        , ( 0x0B, ( TransformMainRegisters dec_bc, NumberedTStates 6 ) )
+        , ( 0x13, ( TransformMainRegisters inc_de, NumberedTStates 6 ) )
+        , ( 0x1B, ( TransformMainRegisters dec_de, NumberedTStates 6 ) )
+        , ( 0x23, ( TransformMainRegisters inc_hl, NumberedTStates 6 ) )
+        , ( 0x2B, ( TransformMainRegisters dec_hl, NumberedTStates 6 ) )
 
         -- case 0x34: v=inc(env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
         -- case 0x34: {int a; v=inc(env.mem(a=getd(xy))); time+=4; env.mem(a,v); time+=3;} break;
@@ -50,7 +50,7 @@ singleByteMainRegs =
         , ( 0xEB, ( TransformMainRegisters ex_de_hl, NumberedTStates 4 ) )
 
         -- case 0xF9: SP=HL; time+=2; break;
-        , ( 0xF9, ( RegChangeNewSP .hl, SixTStates ) )
+        , ( 0xF9, ( RegChangeNewSP .hl, NumberedTStates 6 ) )
         ]
 
 

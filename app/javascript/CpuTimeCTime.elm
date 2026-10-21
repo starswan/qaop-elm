@@ -297,9 +297,6 @@ addDuration duration time =
                 FiveTStates ->
                     5
 
-                SixTStates ->
-                    6
-
                 SevenTStates ->
                     7
 

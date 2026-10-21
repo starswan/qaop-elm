@@ -124,7 +124,7 @@ suite =
                                 |> setMemWithTime addr 0x03
                                 |> .z80env
                     in
-                    lengthAndDuration addr z80rom z80inc |> Maybe.map (\d -> d |> Triple.dropThird) |> Expect.equal (Just ( IncrementByOne, SixTStates ))
+                    lengthAndDuration addr z80rom z80inc |> Maybe.map (\d -> d |> Triple.dropThird) |> Expect.equal (Just ( IncrementByOne, NumberedTStates 6 ))
             ]
         , test "0x04 INC B" <|
             \_ ->

@@ -23,9 +23,9 @@ singleEnvMainRegs =
     Dict.fromList
         [ ( 0x0A, ( ld_a_indirect_bc, SevenTStates ) )
         , ( 0x1A, ( ld_a_indirect_de, SevenTStates ) )
-        , ( 0x33, ( inc_sp, SixTStates ) )
+        , ( 0x33, ( inc_sp, NumberedTStates 6 ) )
         , ( 0x39, ( add_hl_sp, ElevenTStates ) )
-        , ( 0x3B, ( dec_sp, SixTStates ) )
+        , ( 0x3B, ( dec_sp, NumberedTStates 6 ) )
         ]
 
 
