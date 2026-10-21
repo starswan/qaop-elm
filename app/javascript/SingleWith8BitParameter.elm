@@ -1,8 +1,7 @@
 module SingleWith8BitParameter exposing (..)
 
-import CpuTimeCTime exposing (ShortDelay(..))
 import Dict exposing (Dict)
-import InstructionDuration exposing (InstructionDuration(..))
+import InstructionDuration exposing (InstructionDuration(..), ShortDelay(..))
 import JumpChange exposing (JumpChange(..))
 import Utils exposing (byte)
 import Z80Flags exposing (FlagRegisters, always_jump, jump_c, jump_nc, jump_nz, jump_z, z80_adc, z80_add, z80_and, z80_cp, z80_or, z80_sbc, z80_sub, z80_xor)

@@ -15,11 +15,6 @@ c_TIME_LIMIT =
     c_FRSTART + c_FRTIME
 
 
-type ShortDelay
-    = FiveExtraTStates
-    | SevenExtraTStates
-
-
 c_SCRENDT =
     191 * 224 + 126
 
@@ -272,20 +267,6 @@ cont_port portn z80env =
 addCpuTimeTime : Int -> CpuTimeCTime -> CpuTimeCTime
 addCpuTimeTime value z80env =
     { z80env | cpu_time = z80env.cpu_time + value }
-
-
-addExtraCpuTime : ShortDelay -> CpuTimeCTime -> CpuTimeCTime
-addExtraCpuTime value z80env =
-    let
-        offset =
-            case value of
-                FiveExtraTStates ->
-                    5
-
-                SevenExtraTStates ->
-                    7
-    in
-    { z80env | cpu_time = z80env.cpu_time + offset }
 
 
 reset_cpu_time : CpuTimeCTime

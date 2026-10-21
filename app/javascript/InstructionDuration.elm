@@ -8,6 +8,11 @@ type InstructionDuration
     | NumberedTStates Int
 
 
+type ShortDelay
+    = FiveExtraTStates
+    | SevenExtraTStates
+
+
 addDuration : InstructionDuration -> CpuTimeCTime -> CpuTimeCTime
 addDuration duration time =
     let
@@ -20,3 +25,17 @@ addDuration duration time =
                     int
     in
     { time | cpu_time = time.cpu_time + offset }
+
+
+addExtraCpuTime : ShortDelay -> CpuTimeCTime -> CpuTimeCTime
+addExtraCpuTime value z80env =
+    let
+        offset =
+            case value of
+                FiveExtraTStates ->
+                    5
+
+                SevenExtraTStates ->
+                    7
+    in
+    { z80env | cpu_time = z80env.cpu_time + offset }

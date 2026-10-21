@@ -1,7 +1,7 @@
 module GroupED exposing (..)
 
 import Bitwise exposing (complement, shiftLeftBy, shiftRightBy)
-import CpuTimeCTime exposing (CpuTimeCTime, ShortDelay(..))
+import CpuTimeCTime exposing (CpuTimeCTime)
 import Dict exposing (Dict)
 import InstructionDuration exposing (InstructionDuration(..))
 import Interrupts exposing (InterruptMode(..), InterruptRegisters)

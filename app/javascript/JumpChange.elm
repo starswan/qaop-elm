@@ -1,7 +1,6 @@
 module JumpChange exposing (..)
 
-import CpuTimeCTime exposing (ShortDelay)
-import Z80Core exposing (CoreChange(..), Z80Core)
+import InstructionDuration exposing (ShortDelay)
 import Z80Flags exposing (FlagRegisters)
 
 

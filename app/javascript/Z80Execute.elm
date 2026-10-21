@@ -1,10 +1,11 @@
 module Z80Execute exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeCTime, ShortDelay(..))
+import CpuTimeCTime exposing (CpuTimeCTime)
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
 import GroupED exposing (adc_hl_sp, cpir, execute_ED70, execute_ED78, inirOtirFlags, ldir, rld, rrd, sbc_hl)
 import IXIYChange exposing (IXIYChange, applyIXIYChange, applyShifter)
+import InstructionDuration exposing (ShortDelay(..))
 import Interrupts exposing (IFFValue(..))
 import JumpChange exposing (JumpChange(..))
 import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), Pop16(..), RegisterFlagChange(..), SixteenBit(..), TwoByteChange(..))

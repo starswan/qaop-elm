@@ -7,11 +7,11 @@ module Z80 exposing (..)
 
 import Array
 import Bitwise
-import CpuTimeCTime exposing (CTime(..), CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAnd16BitValue, addExtraCpuTime, c_FRTIME, c_TIME_LIMIT, reset_cpu_time)
+import CpuTimeCTime exposing (CTime(..), CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAnd16BitValue, c_FRTIME, c_TIME_LIMIT, reset_cpu_time)
 import Dict exposing (Dict)
 import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainRegsCB80)
 import GroupED exposing (edWithInterrupts, fourByteMainED, singleByteFlagsED, singleByteMainAndFlagsED, singleByteMainRegsED)
-import InstructionDuration exposing (InstructionDuration(..), addDuration)
+import InstructionDuration exposing (InstructionDuration(..), addDuration, addExtraCpuTime)
 import Interrupts exposing (IFFValue(..), InterruptMode(..))
 import List.Extra
 import Loop
