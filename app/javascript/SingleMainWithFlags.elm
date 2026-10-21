@@ -23,8 +23,8 @@ singleByteMainAndFlagRegisters =
         , ( 0x14, ( inc_d, NumberedTStates 4 ) )
         , ( 0x15, ( dec_d, NumberedTStates 4 ) )
         , ( 0x19, ( add_hl_de, NumberedTStates 11 ) )
-        , ( 0x1C, ( inc_e, EightTStates ) )
-        , ( 0x1D, ( dec_e, EightTStates ) )
+        , ( 0x1C, ( inc_e, NumberedTStates 8 ) )
+        , ( 0x1D, ( dec_e, NumberedTStates 8 ) )
         , ( 0x24, ( inc_h, NumberedTStates 4 ) )
         , ( 0x25, ( dec_h, NumberedTStates 4 ) )
         , ( 0x29, ( add_hl_hl, NumberedTStates 11 ) )
@@ -86,13 +86,13 @@ singleByteMainAndFlagRegistersIX =
     Dict.fromList
         [ ( 0x09, ( add_ix_bc, NumberedTStates 15 ) )
         , ( 0x19, ( add_ix_de, NumberedTStates 15 ) )
-        , ( 0x24, ( inc_h_ix, EightTStates ) )
-        , ( 0x25, ( dec_h_ix, EightTStates ) )
+        , ( 0x24, ( inc_h_ix, NumberedTStates 8 ) )
+        , ( 0x25, ( dec_h_ix, NumberedTStates 8 ) )
         , ( 0x29, ( add_ix_ix, NumberedTStates 15 ) )
-        , ( 0x2C, ( inc_ix_l, EightTStates ) )
-        , ( 0x2D, ( dec_ix_l, EightTStates ) )
-        , ( 0x67, ( ld_ixh_a, EightTStates ) )
-        , ( 0x6F, ( ld_ixl_a, EightTStates ) )
+        , ( 0x2C, ( inc_ix_l, NumberedTStates 8 ) )
+        , ( 0x2D, ( dec_ix_l, NumberedTStates 8 ) )
+        , ( 0x67, ( ld_ixh_a, NumberedTStates 8 ) )
+        , ( 0x6F, ( ld_ixl_a, NumberedTStates 8 ) )
         ]
 
 
@@ -101,13 +101,13 @@ singleByteMainAndFlagRegistersIY =
     Dict.fromList
         [ ( 0x09, ( add_iy_bc, NumberedTStates 15 ) )
         , ( 0x19, ( add_iy_de, NumberedTStates 15 ) )
-        , ( 0x24, ( inc_h_iy, EightTStates ) )
-        , ( 0x25, ( dec_h_iy, EightTStates ) )
+        , ( 0x24, ( inc_h_iy, NumberedTStates 8 ) )
+        , ( 0x25, ( dec_h_iy, NumberedTStates 8 ) )
         , ( 0x29, ( add_iy_iy, NumberedTStates 15 ) )
-        , ( 0x2C, ( inc_iy_l, EightTStates ) )
-        , ( 0x2D, ( dec_iy_l, EightTStates ) )
-        , ( 0x67, ( ld_iyh_a, EightTStates ) )
-        , ( 0x6F, ( ld_iyl_a, EightTStates ) )
+        , ( 0x2C, ( inc_iy_l, NumberedTStates 8 ) )
+        , ( 0x2D, ( dec_iy_l, NumberedTStates 8 ) )
+        , ( 0x67, ( ld_iyh_a, NumberedTStates 8 ) )
+        , ( 0x6F, ( ld_iyl_a, NumberedTStates 8 ) )
         ]
 
 
