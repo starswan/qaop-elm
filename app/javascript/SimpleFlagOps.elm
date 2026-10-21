@@ -32,23 +32,23 @@ singleByteFlags =
 
         -- When item popped, z80_pop adds another 6 to make 11
         -- case 0xC0: time++; if(Fr!=0) MP=PC=pop(); break; ret_nz
-        , ( 0xC0, ( ConditionalReturn (\flags -> flags.fr /= 0), FiveTStates ) )
+        , ( 0xC0, ( ConditionalReturn (\flags -> flags.fr /= 0), NumberedTStates 5 ) )
 
         -- case 0xC8: time++; if(Fr==0) MP=PC=pop(); break; ret_z
-        , ( 0xC8, ( ConditionalReturn (\flags -> flags.fr == 0), FiveTStates ) )
+        , ( 0xC8, ( ConditionalReturn (\flags -> flags.fr == 0), NumberedTStates 5 ) )
 
         -- case 0xD0: time++; if((Ff&0x100)==0) MP=PC=pop(); break; ret_nc
-        , ( 0xD0, ( ConditionalReturn (\flags -> Bitwise.and flags.ff 0x0100 == 0), FiveTStates ) )
+        , ( 0xD0, ( ConditionalReturn (\flags -> Bitwise.and flags.ff 0x0100 == 0), NumberedTStates 5 ) )
 
         -- case 0xD8: time++; if((Ff&0x100)!=0) MP=PC=pop(); break; ret_c
-        , ( 0xD8, ( ConditionalReturn (\flags -> Bitwise.and flags.ff 0x0100 /= 0), FiveTStates ) )
-        , ( 0xE0, ( ret_po, FiveTStates ) )
-        , ( 0xE8, ( ret_pe, FiveTStates ) )
-        , ( 0xF0, ( ret_p, FiveTStates ) )
+        , ( 0xD8, ( ConditionalReturn (\flags -> Bitwise.and flags.ff 0x0100 /= 0), NumberedTStates 5 ) )
+        , ( 0xE0, ( ret_po, NumberedTStates 5 ) )
+        , ( 0xE8, ( ret_pe, NumberedTStates 5 ) )
+        , ( 0xF0, ( ret_p, NumberedTStates 5 ) )
 
         -- case 0xF5: push(A<<8|flags()); break;
         , ( 0xF5, ( FlagsPushAF, NumberedTStates 11 ) )
-        , ( 0xF8, ( ret_m, FiveTStates ) )
+        , ( 0xF8, ( ret_m, NumberedTStates 5 ) )
         ]
 
 

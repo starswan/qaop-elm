@@ -274,7 +274,7 @@ singleByteMainRegsFD =
         , ( 0xBD, ( SingleEnvFlagFunc z80_cp get_iyl, NumberedTStates 8 ) )
 
         -- case 0xE3: v=pop(); push(xy); MP=xy=v; time+=2; break;
-        , ( 0xE3, ( ExchangeTopOfStackWith IY, TwentyThreeTStates ) )
+        , ( 0xE3, ( ExchangeTopOfStackWith IY, NumberedTStates 23 ) )
         , ( 0xE5, ( Pushed16BitValue .iy, NumberedTStates 15 ) )
         , ( 0xE9, ( RegisterChangeJump .iy, NumberedTStates 8 ) )
 
@@ -332,7 +332,7 @@ singleByteMainRegsDD =
         , ( 0xBD, ( SingleEnvFlagFunc z80_cp get_ixl, NumberedTStates 8 ) )
 
         -- case 0xE3: v=pop(); push(xy); MP=xy=v; time+=2; break;
-        , ( 0xE3, ( ExchangeTopOfStackWith IX, TwentyThreeTStates ) )
+        , ( 0xE3, ( ExchangeTopOfStackWith IX, NumberedTStates 23 ) )
         , ( 0xE5, ( Pushed16BitValue .ix, NumberedTStates 15 ) )
         , ( 0xE9, ( RegisterChangeJump .ix, NumberedTStates 8 ) )
 

@@ -4,9 +4,7 @@ import CpuTimeCTime exposing (CpuTimeCTime)
 
 
 type InstructionDuration
-    = FiveTStates
-    | NineteenTStates
-    | TwentyThreeTStates
+    = NineteenTStates
     | NumberedTStates Int
 
 
@@ -15,12 +13,6 @@ addDuration duration time =
     let
         offset =
             case duration of
-                FiveTStates ->
-                    5
-
-                TwentyThreeTStates ->
-                    23
-
                 NineteenTStates ->
                     19
 

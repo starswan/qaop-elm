@@ -32,8 +32,8 @@ doubleWithRegistersIX =
     Dict.fromList
         [ ( 0x26, ( ld_ix_h_n, NumberedTStates 11 ) )
         , ( 0x2E, ( ld_ix_l_n, NumberedTStates 11 ) )
-        , ( 0x34, ( inc_indirect_ix, TwentyThreeTStates ) )
-        , ( 0x35, ( dec_indirect_ix, TwentyThreeTStates ) )
+        , ( 0x34, ( inc_indirect_ix, NumberedTStates 23 ) )
+        , ( 0x35, ( dec_indirect_ix, NumberedTStates 23 ) )
 
         -- case 0x46: B=env.mem(getd(xy)); time+=3; break;
         , ( 0x46, ( \param -> NewRegisterIndirect ChangeMainB .ix param, NumberedTStates 7 ) )
@@ -70,8 +70,8 @@ doubleWithRegistersIY =
     Dict.fromList
         [ ( 0x26, ( ld_iy_h_n, NumberedTStates 11 ) )
         , ( 0x2E, ( ld_iy_l_n, NumberedTStates 11 ) )
-        , ( 0x34, ( inc_indirect_iy, TwentyThreeTStates ) )
-        , ( 0x35, ( dec_indirect_iy, TwentyThreeTStates ) )
+        , ( 0x34, ( inc_indirect_iy, NumberedTStates 23 ) )
+        , ( 0x35, ( dec_indirect_iy, NumberedTStates 23 ) )
 
         -- case 0x46: B=env.mem(getd(xy)); time+=3; break;
         , ( 0x46, ( \param -> NewRegisterIndirect ChangeMainB .iy param, NumberedTStates 7 ) )
