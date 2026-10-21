@@ -5,12 +5,10 @@ import CpuTimeCTime exposing (CpuTimeCTime)
 
 type InstructionDuration
     = FiveTStates
-    | NineTStates
     | FourteenTStates
     | SeventeenTStates
     | EighteenTStates
     | NineteenTStates
-    | TwentyTStates
     | TwentyThreeTStates
     | NumberedTStates Int
 
@@ -23,9 +21,6 @@ addDuration duration time =
                 FiveTStates ->
                     5
 
-                NineTStates ->
-                    9
-
                 FourteenTStates ->
                     14
 
@@ -34,9 +29,6 @@ addDuration duration time =
 
                 EighteenTStates ->
                     18
-
-                TwentyTStates ->
-                    20
 
                 TwentyThreeTStates ->
                     23

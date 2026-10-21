@@ -55,16 +55,16 @@ tripleByteWith16BitParam =
 tripleByteWith16BitParamDD : Dict Int ( Int -> TripleByteIndexChange, InstructionDuration )
 tripleByteWith16BitParamDD =
     Dict.fromList
-        [ ( 0x21, ( ld_ix_nn, TwentyTStates ) )
-        , ( 0x2A, ( ld_ix_indirect_nn, TwentyTStates ) )
+        [ ( 0x21, ( ld_ix_nn, NumberedTStates 20 ) )
+        , ( 0x2A, ( ld_ix_indirect_nn, NumberedTStates 20 ) )
         ]
 
 
 tripleByteWith16BitParamFD : Dict Int ( Int -> TripleByteIndexChange, InstructionDuration )
 tripleByteWith16BitParamFD =
     Dict.fromList
-        [ ( 0x21, ( ld_iy_nn, TwentyTStates ) )
-        , ( 0x2A, ( ld_iy_indirect_nn, TwentyTStates ) )
+        [ ( 0x21, ( ld_iy_nn, NumberedTStates 20 ) )
+        , ( 0x2A, ( ld_iy_indirect_nn, NumberedTStates 20 ) )
         ]
 
 

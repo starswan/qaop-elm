@@ -538,7 +538,7 @@ makeEnvMainDict ix_func =
                                                     (ix_func z80_main + byte offset) |> Bitwise.and 0xFFFF
                                             in
                                             IndirectBitTest bitType address
-                                      , TwentyTStates
+                                      , NumberedTStates 20
                                       )
                                     )
                                 )

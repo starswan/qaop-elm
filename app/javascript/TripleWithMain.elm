@@ -24,8 +24,8 @@ tripleMainRegsIXThree =
 tripleMainRegsIXFour : Dict Int ( Int -> TripleByteIndexChange, InstructionDuration )
 tripleMainRegsIXFour =
     Dict.fromList
-        [ ( 0x22, ( ld_nn_indirect_ix, TwentyTStates ) )
-        , ( 0x36, ( ld_indirect_ix_n, TwentyTStates ) )
+        [ ( 0x22, ( ld_nn_indirect_ix, NumberedTStates 20 ) )
+        , ( 0x36, ( ld_indirect_ix_n, NumberedTStates 20 ) )
         ]
 
 
@@ -44,8 +44,8 @@ tripleMainRegsIYThree =
 tripleMainRegsIYFour : Dict Int ( Int -> TripleByteIndexChange, InstructionDuration )
 tripleMainRegsIYFour =
     Dict.fromList
-        [ ( 0x22, ( ld_nn_indirect_iy, TwentyTStates ) )
-        , ( 0x36, ( ld_indirect_iy_n, TwentyTStates ) )
+        [ ( 0x22, ( ld_nn_indirect_iy, NumberedTStates 20 ) )
+        , ( 0x36, ( ld_indirect_iy_n, NumberedTStates 20 ) )
         ]
 
 

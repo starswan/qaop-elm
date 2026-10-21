@@ -473,14 +473,14 @@ rrd rom48k clockTime z80 =
 fourByteMainED : Dict Int ( MainWithIndexRegisters -> Int -> EDFourByteChange, InstructionDuration )
 fourByteMainED =
     Dict.fromList
-        [ ( 0x43, ( \z80main address -> SetMemFrom address RegBC, TwentyTStates ) )
-        , ( 0x4B, ( \z80main address -> GetFromMem address RegBC, TwentyTStates ) )
-        , ( 0x53, ( \z80main address -> SetMemFrom address RegDE, TwentyTStates ) )
-        , ( 0x5B, ( \z80main address -> GetFromMem address RegDE, TwentyTStates ) )
-        , ( 0x63, ( \z80main address -> SetMemFrom address RegHL, TwentyTStates ) )
-        , ( 0x6B, ( \z80main address -> GetFromMem address RegHL, TwentyTStates ) )
-        , ( 0x73, ( \z80main address -> SetMemFrom address RegSP, TwentyTStates ) )
-        , ( 0x7B, ( \z80main address -> GetFromMem address RegSP, TwentyTStates ) )
+        [ ( 0x43, ( \z80main address -> SetMemFrom address RegBC, NumberedTStates 20 ) )
+        , ( 0x4B, ( \z80main address -> GetFromMem address RegBC, NumberedTStates 20 ) )
+        , ( 0x53, ( \z80main address -> SetMemFrom address RegDE, NumberedTStates 20 ) )
+        , ( 0x5B, ( \z80main address -> GetFromMem address RegDE, NumberedTStates 20 ) )
+        , ( 0x63, ( \z80main address -> SetMemFrom address RegHL, NumberedTStates 20 ) )
+        , ( 0x6B, ( \z80main address -> GetFromMem address RegHL, NumberedTStates 20 ) )
+        , ( 0x73, ( \z80main address -> SetMemFrom address RegSP, NumberedTStates 20 ) )
+        , ( 0x7B, ( \z80main address -> GetFromMem address RegSP, NumberedTStates 20 ) )
         ]
 
 
@@ -663,11 +663,11 @@ singleByteFlagsED =
         [ ( 0x44, ( \flags -> FlagChangeFunc ed_44_neg, NumberedTStates 8 ) )
 
         -- case 0x47: i(A); time++; break;
-        , ( 0x47, ( \z80_flags -> FlagNewIValue z80_flags.a, NineTStates ) )
+        , ( 0x47, ( \z80_flags -> FlagNewIValue z80_flags.a, NumberedTStates 9 ) )
         , ( 0x4C, ( \z80_flags -> FlagChangeFunc ed_44_neg, NumberedTStates 8 ) )
 
         -- case 0x4F: r(A); time++; break;
-        , ( 0x4F, ( \z80_flags -> FlagNewRValue z80_flags.a, NineTStates ) )
+        , ( 0x4F, ( \z80_flags -> FlagNewRValue z80_flags.a, NumberedTStates 9 ) )
         , ( 0x54, ( \z80_flags -> FlagChangeFunc ed_44_neg, NumberedTStates 8 ) )
         , ( 0x5C, ( \z80_flags -> FlagChangeFunc ed_44_neg, NumberedTStates 8 ) )
         , ( 0x64, ( \z80_flags -> FlagChangeFunc ed_44_neg, NumberedTStates 8 ) )
@@ -924,12 +924,12 @@ edWithInterrupts : Dict Int ( InterruptRegisters -> InterruptChange, Instruction
 edWithInterrupts =
     Dict.fromList
         [ -- case 0x57: ld_a_ir(IR>>>8); break;
-          ( 0x57, ( \z80_main -> LoadAFromIR (z80_main.ir |> shiftRightBy8), NineTStates ) )
+          ( 0x57, ( \z80_main -> LoadAFromIR (z80_main.ir |> shiftRightBy8), NumberedTStates 9 ) )
 
         --ld_a_r : Z80ROM -> Z80Core -> Z80Delta
         --ld_a_r rom48k z80 =
         --    --int r() {return R&0x7F | IR&0x80;}
         --    -- case 0x5F: ld_a_ir(r()); break;
         --    NewAValue z80.interrupts.r
-        , ( 0x5F, ( \z80_main -> LoadAFromIR (Bitwise.or (z80_main.r |> Bitwise.and 0x7F) (z80_main.ir |> Bitwise.and 0x80)), NineTStates ) )
+        , ( 0x5F, ( \z80_main -> LoadAFromIR (Bitwise.or (z80_main.r |> Bitwise.and 0x7F) (z80_main.ir |> Bitwise.and 0x80)), NumberedTStates 9 ) )
         ]
