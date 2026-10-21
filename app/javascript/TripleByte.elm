@@ -41,14 +41,14 @@ type TripleByteIndexChange
 tripleByteWith16BitParam : Dict Int ( Int -> TripleByteChange, InstructionDuration )
 tripleByteWith16BitParam =
     Dict.fromList
-        [ ( 0x01, ( ld_bc_nn, TenTStates ) )
-        , ( 0x11, ( ld_de_nn, TenTStates ) )
-        , ( 0x21, ( ld_hl_nn, TenTStates ) )
+        [ ( 0x01, ( ld_bc_nn, NumberedTStates 10 ) )
+        , ( 0x11, ( ld_de_nn, NumberedTStates 10 ) )
+        , ( 0x21, ( ld_hl_nn, NumberedTStates 10 ) )
         , ( 0x22, ( ld_nn_indirect_hl, SixteenTStates ) )
         , ( 0x2A, ( ld_hl_indirect_nn, SixteenTStates ) )
-        , ( 0x31, ( ld_sp_nn, TenTStates ) )
-        , ( 0x32, ( ld_indirect_nn_a, ThirteenTStates ) )
-        , ( 0x3A, ( ld_a_indirect_nn, ThirteenTStates ) )
+        , ( 0x31, ( ld_sp_nn, NumberedTStates 10 ) )
+        , ( 0x32, ( ld_indirect_nn_a, NumberedTStates 13 ) )
+        , ( 0x3A, ( ld_a_indirect_nn, NumberedTStates 13 ) )
         ]
 
 

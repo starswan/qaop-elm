@@ -1,17 +1,13 @@
 module InstructionDuration exposing (..)
 
+import CpuTimeCTime exposing (CpuTimeCTime)
+
 
 type InstructionDuration
     = FiveTStates
-    | SevenTStates
     | EightTStates
     | NineTStates
-    | TenTStates
-    | ElevenTStates
-    | TwelveTStates
-    | ThirteenTStates
     | FourteenTStates
-    | FifteenTStates
     | SixteenTStates
     | SeventeenTStates
     | EighteenTStates
@@ -19,3 +15,44 @@ type InstructionDuration
     | TwentyTStates
     | TwentyThreeTStates
     | NumberedTStates Int
+
+
+addDuration : InstructionDuration -> CpuTimeCTime -> CpuTimeCTime
+addDuration duration time =
+    let
+        offset =
+            case duration of
+                FiveTStates ->
+                    5
+
+                EightTStates ->
+                    8
+
+                NineTStates ->
+                    9
+
+                FourteenTStates ->
+                    14
+
+                SixteenTStates ->
+                    16
+
+                SeventeenTStates ->
+                    17
+
+                EighteenTStates ->
+                    18
+
+                TwentyTStates ->
+                    20
+
+                TwentyThreeTStates ->
+                    23
+
+                NineteenTStates ->
+                    19
+
+                NumberedTStates int ->
+                    int
+    in
+    { time | cpu_time = time.cpu_time + offset }

@@ -60,7 +60,7 @@ singleByteMainRegsIXCB =
         , ( \offset z80_main -> RegisterIndirectWithShifter Shifter4 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates )
         , ( \offset z80_main -> RegisterIndirectWithShifter Shifter4 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates )
         , ( \offset z80_main -> RegisterIndirectWithShifter Shifter4 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates )
-        , ( \offset z80_main -> RegisterChangeIndexShifter Shifter4 (z80_main.ix + byte offset), FifteenTStates )
+        , ( \offset z80_main -> RegisterChangeIndexShifter Shifter4 (z80_main.ix + byte offset), NumberedTStates 15 )
         , ( \offset z80_main -> FlagsIndirectWithShifter Shifter4 (z80_main.ix + byte offset), TwentyThreeTStates )
 
         --5
@@ -70,7 +70,7 @@ singleByteMainRegsIXCB =
         , ( \offset z80_main -> RegisterIndirectWithShifter Shifter5 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates )
         , ( \offset z80_main -> RegisterIndirectWithShifter Shifter5 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates )
         , ( \offset z80_main -> RegisterIndirectWithShifter Shifter5 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates )
-        , ( \offset z80_main -> RegisterChangeIndexShifter Shifter5 (z80_main.ix + byte offset), FifteenTStates )
+        , ( \offset z80_main -> RegisterChangeIndexShifter Shifter5 (z80_main.ix + byte offset), NumberedTStates 15 )
         , ( \offset z80_main -> FlagsIndirectWithShifter Shifter5 (z80_main.ix + byte offset), TwentyThreeTStates )
 
         --6
@@ -80,7 +80,7 @@ singleByteMainRegsIXCB =
         , ( \offset z80_main -> RegisterIndirectWithShifter Shifter6 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates )
         , ( \offset z80_main -> RegisterIndirectWithShifter Shifter6 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates )
         , ( \offset z80_main -> RegisterIndirectWithShifter Shifter6 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates )
-        , ( \offset z80_main -> RegisterChangeIndexShifter Shifter6 (z80_main.ix + byte offset), FifteenTStates )
+        , ( \offset z80_main -> RegisterChangeIndexShifter Shifter6 (z80_main.ix + byte offset), NumberedTStates 15 )
         , ( \offset z80_main -> FlagsIndirectWithShifter Shifter6 (z80_main.ix + byte offset), TwentyThreeTStates )
 
         --7
@@ -90,7 +90,7 @@ singleByteMainRegsIXCB =
         , ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ChangeMainE (z80_main.ix + byte offset), TwentyThreeTStates )
         , ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ChangeMainH (z80_main.ix + byte offset), TwentyThreeTStates )
         , ( \offset z80_main -> RegisterIndirectWithShifter Shifter7 ChangeMainL (z80_main.ix + byte offset), TwentyThreeTStates )
-        , ( \offset z80_main -> RegisterChangeIndexShifter Shifter7 (z80_main.ix + byte offset), FifteenTStates )
+        , ( \offset z80_main -> RegisterChangeIndexShifter Shifter7 (z80_main.ix + byte offset), NumberedTStates 15 )
         , ( \offset z80_main -> FlagsIndirectWithShifter Shifter7 (z80_main.ix + byte offset), TwentyThreeTStates )
         ]
 

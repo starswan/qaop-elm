@@ -1,7 +1,6 @@
 module CpuTimeCTime exposing (..)
 
 import Bitwise exposing (shiftLeftBy, shiftRightBy)
-import InstructionDuration exposing (InstructionDuration(..))
 
 
 c_FRSTART =
@@ -287,65 +286,6 @@ addExtraCpuTime value z80env =
                     7
     in
     { z80env | cpu_time = z80env.cpu_time + offset }
-
-
-addDuration : InstructionDuration -> CpuTimeCTime -> CpuTimeCTime
-addDuration duration time =
-    let
-        offset =
-            case duration of
-                FiveTStates ->
-                    5
-
-                SevenTStates ->
-                    7
-
-                EightTStates ->
-                    8
-
-                NineTStates ->
-                    9
-
-                TenTStates ->
-                    10
-
-                ElevenTStates ->
-                    11
-
-                TwelveTStates ->
-                    12
-
-                ThirteenTStates ->
-                    13
-
-                FourteenTStates ->
-                    14
-
-                FifteenTStates ->
-                    15
-
-                SixteenTStates ->
-                    16
-
-                SeventeenTStates ->
-                    17
-
-                EighteenTStates ->
-                    18
-
-                TwentyTStates ->
-                    20
-
-                TwentyThreeTStates ->
-                    23
-
-                NineteenTStates ->
-                    19
-
-                NumberedTStates int ->
-                    int
-    in
-    { time | cpu_time = time.cpu_time + offset }
 
 
 reset_cpu_time : CpuTimeCTime

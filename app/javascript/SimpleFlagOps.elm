@@ -47,7 +47,7 @@ singleByteFlags =
         , ( 0xF0, ( ret_p, FiveTStates ) )
 
         -- case 0xF5: push(A<<8|flags()); break;
-        , ( 0xF5, ( FlagsPushAF, ElevenTStates ) )
+        , ( 0xF5, ( FlagsPushAF, NumberedTStates 11 ) )
         , ( 0xF8, ( ret_m, FiveTStates ) )
         ]
 

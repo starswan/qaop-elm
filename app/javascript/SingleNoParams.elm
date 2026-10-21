@@ -15,14 +15,14 @@ singleWithNoParam =
         [ ( 0x00, ( RegChangeNoOp, NumberedTStates 4 ) )
 
         --, ( 0x08, ( ExAfAfDash, NumberedTStates 4 ) )
-        , ( 0xC1, ( Pop16Bit PopBC, TenTStates ) )
-        , ( 0xC9, ( Ret, TenTStates ) )
-        , ( 0xD1, ( Pop16Bit PopDE, TenTStates ) )
+        , ( 0xC1, ( Pop16Bit PopBC, NumberedTStates 10 ) )
+        , ( 0xC9, ( Ret, NumberedTStates 10 ) )
+        , ( 0xD1, ( Pop16Bit PopDE, NumberedTStates 10 ) )
 
         -- case 0xD9: exx(); break;
         --, ( 0xD9, ( Exx, NumberedTStates 4 ) )
-        , ( 0xE1, ( Pop16Bit PopHL, TenTStates ) )
-        , ( 0xF1, ( Pop16Bit PopAF, TenTStates ) )
+        , ( 0xE1, ( Pop16Bit PopHL, NumberedTStates 10 ) )
+        , ( 0xF1, ( Pop16Bit PopAF, NumberedTStates 10 ) )
 
         --, ( 0xFB, ( EnableInterrupts, NumberedTStates 4 ) )
         ]

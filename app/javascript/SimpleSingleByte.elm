@@ -23,29 +23,29 @@ singleByteMainRegs =
 
         -- case 0x34: v=inc(env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
         -- case 0x34: {int a; v=inc(env.mem(a=getd(xy))); time+=4; env.mem(a,v); time+=3;} break;
-        , ( 0x34, ( IncrementIndirect .hl, ElevenTStates ) )
+        , ( 0x34, ( IncrementIndirect .hl, NumberedTStates 11 ) )
 
         -- case 0x35: v=dec(env.mem(HL)); time+=4; env.mem(HL,v); time+=3; break;
         -- case 0x35: {int a; v=dec(env.mem(a=getd(xy))); time+=4; env.mem(a,v); time+=3;} break;
-        , ( 0x35, ( DecrementIndirect .hl, ElevenTStates ) )
-        , ( 0x86, ( add_a_indirect_hl, SevenTStates ) )
-        , ( 0x8E, ( adc_a_indirect_hl, SevenTStates ) )
-        , ( 0x96, ( sub_indirect_hl, SevenTStates ) )
-        , ( 0x9E, ( sbc_indirect_hl, SevenTStates ) )
-        , ( 0xA6, ( and_indirect_hl, SevenTStates ) )
-        , ( 0xAE, ( xor_indirect_hl, SevenTStates ) )
-        , ( 0xB6, ( or_indirect_hl, SevenTStates ) )
-        , ( 0xBE, ( cp_indirect_hl, SevenTStates ) )
+        , ( 0x35, ( DecrementIndirect .hl, NumberedTStates 11 ) )
+        , ( 0x86, ( add_a_indirect_hl, NumberedTStates 7 ) )
+        , ( 0x8E, ( adc_a_indirect_hl, NumberedTStates 7 ) )
+        , ( 0x96, ( sub_indirect_hl, NumberedTStates 7 ) )
+        , ( 0x9E, ( sbc_indirect_hl, NumberedTStates 7 ) )
+        , ( 0xA6, ( and_indirect_hl, NumberedTStates 7 ) )
+        , ( 0xAE, ( xor_indirect_hl, NumberedTStates 7 ) )
+        , ( 0xB6, ( or_indirect_hl, NumberedTStates 7 ) )
+        , ( 0xBE, ( cp_indirect_hl, NumberedTStates 7 ) )
 
         -- case 0xC5: push(B<<8|C); break;
-        , ( 0xC5, ( Pushed16BitValue get_bc, ElevenTStates ) )
+        , ( 0xC5, ( Pushed16BitValue get_bc, NumberedTStates 11 ) )
 
         -- case 0xD5: push(D<<8|E); break;
-        , ( 0xD5, ( Pushed16BitValue get_de, ElevenTStates ) )
+        , ( 0xD5, ( Pushed16BitValue get_de, NumberedTStates 11 ) )
 
         -- case 0xE3: v=pop(); push(HL); MP=HL=v; time+=2; break;
         , ( 0xE3, ( ExchangeTopOfStackWith HL, NineteenTStates ) )
-        , ( 0xE5, ( Pushed16BitValue .hl, ElevenTStates ) )
+        , ( 0xE5, ( Pushed16BitValue .hl, NumberedTStates 11 ) )
         , ( 0xE9, ( RegisterChangeJump .hl, NumberedTStates 4 ) )
         , ( 0xEB, ( TransformMainRegisters ex_de_hl, NumberedTStates 4 ) )
 
@@ -66,7 +66,7 @@ singleByteMain4080 =
 
         -- case 0x45: B=xy&0xFF; break;
         , ( TransformMainRegisters (ld_b_l .hl), NumberedTStates 4 )
-        , ( ld_b_indirect_hl, SevenTStates )
+        , ( ld_b_indirect_hl, NumberedTStates 7 )
         , ( FlagChangeMain ld_b_a, NumberedTStates 4 )
         , ( TransformMainRegisters ld_c_b, NumberedTStates 4 )
 
@@ -76,7 +76,7 @@ singleByteMain4080 =
         , ( TransformMainRegisters ld_c_e, NumberedTStates 4 )
         , ( TransformMainRegisters (ld_c_h .hl), NumberedTStates 4 )
         , ( TransformMainRegisters (ld_c_l .hl), NumberedTStates 4 )
-        , ( ld_c_indirect_hl, SevenTStates )
+        , ( ld_c_indirect_hl, NumberedTStates 7 )
         , ( FlagChangeMain ld_c_a, NumberedTStates 4 )
         , ( TransformMainRegisters ld_d_b, NumberedTStates 4 )
         , ( TransformMainRegisters ld_d_c, NumberedTStates 4 )
@@ -86,7 +86,7 @@ singleByteMain4080 =
         , ( TransformMainRegisters ld_d_e, NumberedTStates 4 )
         , ( TransformMainRegisters (ld_d_h .hl), NumberedTStates 4 )
         , ( TransformMainRegisters (ld_d_l .hl), NumberedTStates 4 )
-        , ( ld_d_indirect_hl, SevenTStates )
+        , ( ld_d_indirect_hl, NumberedTStates 7 )
         , ( FlagChangeMain ld_d_a, NumberedTStates 4 )
         , ( TransformMainRegisters ld_e_b, NumberedTStates 4 )
         , ( TransformMainRegisters ld_e_c, NumberedTStates 4 )
@@ -96,7 +96,7 @@ singleByteMain4080 =
         , ( RegChangeNoOp, NumberedTStates 4 )
         , ( TransformMainRegisters ld_e_h, NumberedTStates 4 )
         , ( TransformMainRegisters ld_e_l, NumberedTStates 4 )
-        , ( ld_e_indirect_hl, SevenTStates )
+        , ( ld_e_indirect_hl, NumberedTStates 7 )
         , ( FlagChangeMain ld_e_a, NumberedTStates 4 )
         , ( TransformMainRegisters (ld_h_b .b), NumberedTStates 4 )
 
@@ -115,7 +115,7 @@ singleByteMain4080 =
         -- case 0x64: break;
         , ( RegChangeNoOp, NumberedTStates 4 )
         , ( TransformMainRegisters (ld_h_l get_l), NumberedTStates 4 )
-        , ( ld_h_indirect_hl, SevenTStates )
+        , ( ld_h_indirect_hl, NumberedTStates 7 )
         , ( FlagChangeMain ld_h_a, NumberedTStates 4 )
         , ( TransformMainRegisters (ld_l_b .b), NumberedTStates 4 )
 
@@ -136,23 +136,23 @@ singleByteMain4080 =
 
         -- case 0x6D: break;
         , ( RegChangeNoOp, NumberedTStates 4 )
-        , ( ld_l_indirect_hl, SevenTStates )
+        , ( ld_l_indirect_hl, NumberedTStates 7 )
         , ( FlagChangeMain ld_l_a, NumberedTStates 4 )
 
         -- case 0x70: env.mem(HL,B); time+=3; break;
         -- case 0x70: env.mem(getd(xy),B); time+=3; break;
-        , ( SetIndirect (\main -> ( main.hl, main.b )), SevenTStates )
+        , ( SetIndirect (\main -> ( main.hl, main.b )), NumberedTStates 7 )
 
         -- case 0x71: env.mem(HL,C); time+=3; break;
-        , ( SetIndirect (\main -> ( main.hl, main.c )), SevenTStates )
-        , ( SetIndirect (\main -> ( main.hl, main.d )), SevenTStates )
-        , ( SetIndirect (\main -> ( main.hl, main.e )), SevenTStates )
-        , ( SetIndirect (\main -> ( main.hl, main |> get_h )), SevenTStates )
-        , ( SetIndirect (\main -> ( main.hl, main |> get_l )), SevenTStates )
+        , ( SetIndirect (\main -> ( main.hl, main.c )), NumberedTStates 7 )
+        , ( SetIndirect (\main -> ( main.hl, main.d )), NumberedTStates 7 )
+        , ( SetIndirect (\main -> ( main.hl, main.e )), NumberedTStates 7 )
+        , ( SetIndirect (\main -> ( main.hl, main |> get_h )), NumberedTStates 7 )
+        , ( SetIndirect (\main -> ( main.hl, main |> get_l )), NumberedTStates 7 )
 
         --0x76 placeholder - should never come in here
         , ( RegChangeNoOp, NumberedTStates 4 )
-        , ( ld_indirect_hl_a, SevenTStates )
+        , ( ld_indirect_hl_a, NumberedTStates 7 )
 
         -- case 0x78: A=B; break;
         , ( RegisterChangeA .b, NumberedTStates 4 )
@@ -161,7 +161,7 @@ singleByteMain4080 =
         , ( ld_a_e, NumberedTStates 4 )
         , ( ld_a_h, NumberedTStates 4 )
         , ( ld_a_l, NumberedTStates 4 )
-        , ( ld_a_indirect_hl, SevenTStates )
+        , ( ld_a_indirect_hl, NumberedTStates 7 )
 
         -- case 0x7F: break;
         , ( RegChangeNoOp, NumberedTStates 4 )
@@ -227,8 +227,8 @@ commonDDFDOps =
 singleByteMainRegsFD : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleByteMainRegsFD =
     Dict.fromList
-        [ ( 0x23, ( TransformMainRegisters inc_iy, TenTStates ) )
-        , ( 0x2B, ( TransformMainRegisters dec_iy, TenTStates ) )
+        [ ( 0x23, ( TransformMainRegisters inc_iy, NumberedTStates 10 ) )
+        , ( 0x2B, ( TransformMainRegisters dec_iy, NumberedTStates 10 ) )
         , ( 0x44, ( TransformMainRegisters (ld_b_h .iy), EightTStates ) )
         , ( 0x45, ( TransformMainRegisters (ld_b_l .iy), EightTStates ) )
         , ( 0x4C, ( TransformMainRegisters (ld_c_h .iy), EightTStates ) )
@@ -275,11 +275,11 @@ singleByteMainRegsFD =
 
         -- case 0xE3: v=pop(); push(xy); MP=xy=v; time+=2; break;
         , ( 0xE3, ( ExchangeTopOfStackWith IY, TwentyThreeTStates ) )
-        , ( 0xE5, ( Pushed16BitValue .iy, FifteenTStates ) )
+        , ( 0xE5, ( Pushed16BitValue .iy, NumberedTStates 15 ) )
         , ( 0xE9, ( RegisterChangeJump .iy, EightTStates ) )
 
         -- case 0xF9: SP=xy; time+=2; break;
-        , ( 0xF9, ( RegChangeNewSP .iy, TenTStates ) )
+        , ( 0xF9, ( RegChangeNewSP .iy, NumberedTStates 10 ) )
         ]
         |> Dict.union commonDDFDOps
 
@@ -287,8 +287,8 @@ singleByteMainRegsFD =
 singleByteMainRegsDD : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleByteMainRegsDD =
     Dict.fromList
-        [ ( 0x23, ( TransformMainRegisters inc_ix, TenTStates ) )
-        , ( 0x2B, ( TransformMainRegisters dec_ix, TenTStates ) )
+        [ ( 0x23, ( TransformMainRegisters inc_ix, NumberedTStates 10 ) )
+        , ( 0x2B, ( TransformMainRegisters dec_ix, NumberedTStates 10 ) )
         , ( 0x44, ( TransformMainRegisters (ld_b_h .ix), EightTStates ) )
         , ( 0x45, ( TransformMainRegisters (ld_b_l .ix), EightTStates ) )
         , ( 0x4C, ( TransformMainRegisters (ld_c_h .ix), EightTStates ) )
@@ -333,11 +333,11 @@ singleByteMainRegsDD =
 
         -- case 0xE3: v=pop(); push(xy); MP=xy=v; time+=2; break;
         , ( 0xE3, ( ExchangeTopOfStackWith IX, TwentyThreeTStates ) )
-        , ( 0xE5, ( Pushed16BitValue .ix, FifteenTStates ) )
+        , ( 0xE5, ( Pushed16BitValue .ix, NumberedTStates 15 ) )
         , ( 0xE9, ( RegisterChangeJump .ix, EightTStates ) )
 
         -- case 0xF9: SP=xy; time+=2; break;
-        , ( 0xF9, ( RegChangeNewSP .ix, TenTStates ) )
+        , ( 0xF9, ( RegChangeNewSP .ix, NumberedTStates 10 ) )
         ]
         |> Dict.union commonDDFDOps
 

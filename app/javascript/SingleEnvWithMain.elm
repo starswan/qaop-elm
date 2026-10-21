@@ -21,10 +21,10 @@ type SingleEnvMainChange
 singleEnvMainRegs : Dict Int ( MainWithIndexRegisters -> Z80ROM -> CpuTimeCTime -> Z80Env -> SingleEnvMainChange, InstructionDuration )
 singleEnvMainRegs =
     Dict.fromList
-        [ ( 0x0A, ( ld_a_indirect_bc, SevenTStates ) )
-        , ( 0x1A, ( ld_a_indirect_de, SevenTStates ) )
+        [ ( 0x0A, ( ld_a_indirect_bc, NumberedTStates 7 ) )
+        , ( 0x1A, ( ld_a_indirect_de, NumberedTStates 7 ) )
         , ( 0x33, ( inc_sp, NumberedTStates 6 ) )
-        , ( 0x39, ( add_hl_sp, ElevenTStates ) )
+        , ( 0x39, ( add_hl_sp, NumberedTStates 11 ) )
         , ( 0x3B, ( dec_sp, NumberedTStates 6 ) )
         ]
 
@@ -32,14 +32,14 @@ singleEnvMainRegs =
 singleEnvMainRegsIX : Dict Int ( MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )
 singleEnvMainRegsIX =
     Dict.fromList
-        [ ( 0x39, ( add_ix_sp, FifteenTStates ) )
+        [ ( 0x39, ( add_ix_sp, NumberedTStates 15 ) )
         ]
 
 
 singleEnvMainRegsIY : Dict Int ( MainWithIndexRegisters -> Z80ROM -> Z80Env -> SingleEnvMainChange, InstructionDuration )
 singleEnvMainRegsIY =
     Dict.fromList
-        [ ( 0x39, ( add_iy_sp, FifteenTStates ) )
+        [ ( 0x39, ( add_iy_sp, NumberedTStates 15 ) )
         ]
 
 

@@ -11,28 +11,28 @@ triple16bitJumps : Dict Int ( Int -> TripleByteJump, InstructionDuration )
 triple16bitJumps =
     -- These have to be unique for the compiler (i.e. TripleByteJump)
     Dict.fromList
-        [ ( 0xC2, ( jp_nz, TenTStates ) )
-        , ( 0xC3, ( jp_nn, TenTStates ) )
+        [ ( 0xC2, ( jp_nz, NumberedTStates 10 ) )
+        , ( 0xC3, ( jp_nn, NumberedTStates 10 ) )
 
         -- conditional calls get another 7 if the call is made
-        , ( 0xC4, ( call_nz_nn, TenTStates ) )
-        , ( 0xCA, ( jp_z_nn, TenTStates ) )
-        , ( 0xCC, ( call_z_nn, TenTStates ) )
+        , ( 0xC4, ( call_nz_nn, NumberedTStates 10 ) )
+        , ( 0xCA, ( jp_z_nn, NumberedTStates 10 ) )
+        , ( 0xCC, ( call_z_nn, NumberedTStates 10 ) )
 
         -- aLl calls are now conditional
-        , ( 0xCD, ( call_0xCD, TenTStates ) )
-        , ( 0xD2, ( jp_nc_nn, TenTStates ) )
-        , ( 0xD4, ( call_nc_nn, TenTStates ) )
-        , ( 0xDA, ( jp_c_nn, TenTStates ) )
-        , ( 0xDC, ( call_c_nn, TenTStates ) )
-        , ( 0xE2, ( jp_po_nn, TenTStates ) )
-        , ( 0xE4, ( call_po_nn, TenTStates ) )
-        , ( 0xEA, ( jp_pe_nn, TenTStates ) )
-        , ( 0xEC, ( call_pe_nn, TenTStates ) )
-        , ( 0xF2, ( jp_p_nn, TenTStates ) )
-        , ( 0xF4, ( call_p_nn, TenTStates ) )
-        , ( 0xFA, ( jp_m_nn, TenTStates ) )
-        , ( 0xFC, ( call_m_nn, TenTStates ) )
+        , ( 0xCD, ( call_0xCD, NumberedTStates 10 ) )
+        , ( 0xD2, ( jp_nc_nn, NumberedTStates 10 ) )
+        , ( 0xD4, ( call_nc_nn, NumberedTStates 10 ) )
+        , ( 0xDA, ( jp_c_nn, NumberedTStates 10 ) )
+        , ( 0xDC, ( call_c_nn, NumberedTStates 10 ) )
+        , ( 0xE2, ( jp_po_nn, NumberedTStates 10 ) )
+        , ( 0xE4, ( call_po_nn, NumberedTStates 10 ) )
+        , ( 0xEA, ( jp_pe_nn, NumberedTStates 10 ) )
+        , ( 0xEC, ( call_pe_nn, NumberedTStates 10 ) )
+        , ( 0xF2, ( jp_p_nn, NumberedTStates 10 ) )
+        , ( 0xF4, ( call_p_nn, NumberedTStates 10 ) )
+        , ( 0xFA, ( jp_m_nn, NumberedTStates 10 ) )
+        , ( 0xFC, ( call_m_nn, NumberedTStates 10 ) )
         ]
 
 

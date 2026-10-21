@@ -506,13 +506,13 @@ singleByteMainRegsED =
         , ( 0x34, ( EDNoOp, EightTStates ) )
         , ( 0x38, ( EDNoOp, EightTStates ) )
         , ( 0x39, ( EDNoOp, EightTStates ) )
-        , ( 0x40, ( InRC ChangeMainB, TwelveTStates ) )
+        , ( 0x40, ( InRC ChangeMainB, NumberedTStates 12 ) )
 
         -- case 0x41: env.out(B<<8|C,B); time+=4; break;
         , ( 0x41, ( EDNoOp, EightTStates ) )
 
         -- case 0x42: sbc_hl(B<<8|C); break;
-        , ( 0x42, ( SbcHL RegBC, FifteenTStates ) )
+        , ( 0x42, ( SbcHL RegBC, NumberedTStates 15 ) )
 
         -- RETN - end of NMI. NMIs aren't enabled on the Spectrum?
         , ( 0x45, ( EDNoOp, EightTStates ) )
@@ -533,7 +533,7 @@ singleByteMainRegsED =
         -- iM == 0 (which has the same code) appears to be impossible as there is no IM3 instruction
         --( 0x46, ( \_ -> RegChangeIm 0, EightTStates ) )
         , ( 0x46, ( EDNoOp, EightTStates ) )
-        , ( 0x48, ( InRC ChangeMainC, TwelveTStates ) )
+        , ( 0x48, ( InRC ChangeMainC, NumberedTStates 12 ) )
 
         -- case 0x49: env.out(B<<8|C,C); time+=4; break;       , IncrementByTwo
         , ( 0x49, ( EDNoOp, EightTStates ) )
@@ -544,13 +544,13 @@ singleByteMainRegsED =
         --( 0x4E, ( \_ -> RegChangeIm (0x4E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
         --, ( 0x4E, ( \_ -> RegChangeIm 0, EightTStates ) )
         , ( 0x4E, ( EDNoOp, EightTStates ) )
-        , ( 0x50, ( InRC ChangeMainD, TwelveTStates ) )
+        , ( 0x50, ( InRC ChangeMainD, NumberedTStates 12 ) )
 
         -- case 0x51: env.out(B<<8|C,D); time+=4; break;       , IncrementByTwo
         , ( 0x51, ( EDNoOp, EightTStates ) )
 
         -- case 0x52: sbc_hl(D<<8|E); break;
-        , ( 0x52, ( SbcHL RegDE, FifteenTStates ) )
+        , ( 0x52, ( SbcHL RegDE, NumberedTStates 15 ) )
 
         -- case 0x7D: IFF|=IFF>>1; MP=PC=pop(); break;
         -- TODO: Implement ED 7D (all these are the same)
@@ -558,7 +558,7 @@ singleByteMainRegsED =
 
         --, ( 0x56, ( \_ -> RegChangeIm (0x56 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
         , ( 0x56, ( RegChangeIm IM1, EightTStates ) )
-        , ( 0x58, ( InRC ChangeMainE, TwelveTStates ) )
+        , ( 0x58, ( InRC ChangeMainE, NumberedTStates 12 ) )
 
         -- case 0x59: env.out(B<<8|C,E); time+=4; break;       , IncrementByTwo
         , ( 0x59, ( EDNoOp, EightTStates ) )
@@ -566,20 +566,20 @@ singleByteMainRegsED =
 
         --, ( 0x5E, ( \_ -> RegChangeIm (0x5E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
         , ( 0x5E, ( RegChangeIm IM2, EightTStates ) )
-        , ( 0x60, ( InRC ChangeMainH, TwelveTStates ) )
+        , ( 0x60, ( InRC ChangeMainH, NumberedTStates 12 ) )
 
         -- case 0x61: env.out(B<<8|C,HL>>>8); time+=4; break;  , IncrementByTwo
         , ( 0x61, ( EDNoOp, EightTStates ) )
 
         -- case 0x62: sbc_hl(HL); break;
-        , ( 0x62, ( SbcHL RegHL, FifteenTStates ) )
+        , ( 0x62, ( SbcHL RegHL, NumberedTStates 15 ) )
         , ( 0x65, ( EDNoOp, EightTStates ) )
 
         --, ( 0x66, (  RegChangeIm (0x66 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
         --, ( 0x66, (  RegChangeIm 0, EightTStates ) )
         , ( 0x66, ( EDNoOp, EightTStates ) )
         , ( 0x67, ( RRD, EighteenTStates ) )
-        , ( 0x68, ( InRC ChangeMainL, TwelveTStates ) )
+        , ( 0x68, ( InRC ChangeMainL, NumberedTStates 12 ) )
 
         -- case 0x69: env.out(B<<8|C,HL&0xFF); time+=4; break; , IncrementByTwo
         , ( 0x69, ( EDNoOp, EightTStates ) )
@@ -589,22 +589,22 @@ singleByteMainRegsED =
         --, ( 0x6E, (  RegChangeIm 0, EightTStates ) )
         , ( 0x6E, ( EDNoOp, EightTStates ) )
         , ( 0x6F, ( RLD, EighteenTStates ) )
-        , ( 0x70, ( IN_C, TwelveTStates ) )
+        , ( 0x70, ( IN_C, NumberedTStates 12 ) )
 
         -- case 0x71: env.out(B<<8|C,0); time+=4; break;       , IncrementByTwo
         , ( 0x71, ( EDNoOp, EightTStates ) )
 
         -- case 0x72: sbc_hl(SP); break;
-        , ( 0x72, ( SbcHL RegSP, FifteenTStates ) )
+        , ( 0x72, ( SbcHL RegSP, NumberedTStates 15 ) )
         , ( 0x75, ( EDNoOp, EightTStates ) )
 
         --, ( 0x76, (  RegChangeIm (0x76 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
         , ( 0x76, ( RegChangeIm IM1, EightTStates ) )
-        , ( 0x78, ( IN_A_C, TwelveTStates ) )
+        , ( 0x78, ( IN_A_C, NumberedTStates 12 ) )
 
         -- case 0x79: MP=(v=B<<8|C)+1; env.out(v,A); time+=4; b, IncrementByTworeak;
         , ( 0x79, ( EDNoOp, EightTStates ) )
-        , ( 0x7A, ( AdcHLSP, FifteenTStates ) )
+        , ( 0x7A, ( AdcHLSP, NumberedTStates 15 ) )
         , ( 0x7D, ( EDNoOp, EightTStates ) )
 
         --, ( 0x7E, (  RegChangeIm (0x7E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
@@ -702,9 +702,9 @@ ed_44_neg z80_flags =
 singleByteMainAndFlagsED : Dict Int ( MainWithIndexRegisters -> FlagRegisters -> Z80Change, PCIncrement, InstructionDuration )
 singleByteMainAndFlagsED =
     Dict.fromList
-        [ ( 0x4A, ( ed4a_adc_hl_bc, IncrementByTwo, FifteenTStates ) )
-        , ( 0x5A, ( ed5a_adc_hl_de, IncrementByTwo, FifteenTStates ) )
-        , ( 0x6A, ( ed6a_adc_hl_hl, IncrementByTwo, FifteenTStates ) )
+        [ ( 0x4A, ( ed4a_adc_hl_bc, IncrementByTwo, NumberedTStates 15 ) )
+        , ( 0x5A, ( ed5a_adc_hl_de, IncrementByTwo, NumberedTStates 15 ) )
+        , ( 0x6A, ( ed6a_adc_hl_hl, IncrementByTwo, NumberedTStates 15 ) )
         ]
 
 

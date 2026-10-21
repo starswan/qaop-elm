@@ -30,22 +30,22 @@ type DoubleWithRegisterChange
 doubleWithRegistersIX : Dict Int ( Int -> DoubleWithRegisterChange, InstructionDuration )
 doubleWithRegistersIX =
     Dict.fromList
-        [ ( 0x26, ( ld_ix_h_n, ElevenTStates ) )
-        , ( 0x2E, ( ld_ix_l_n, ElevenTStates ) )
+        [ ( 0x26, ( ld_ix_h_n, NumberedTStates 11 ) )
+        , ( 0x2E, ( ld_ix_l_n, NumberedTStates 11 ) )
         , ( 0x34, ( inc_indirect_ix, TwentyThreeTStates ) )
         , ( 0x35, ( dec_indirect_ix, TwentyThreeTStates ) )
 
         -- case 0x46: B=env.mem(getd(xy)); time+=3; break;
-        , ( 0x46, ( \param -> NewRegisterIndirect ChangeMainB .ix param, SevenTStates ) )
+        , ( 0x46, ( \param -> NewRegisterIndirect ChangeMainB .ix param, NumberedTStates 7 ) )
 
         -- case 0x4E: C=env.mem(getd(xy)); time+=3; break;
-        , ( 0x4E, ( \param -> NewRegisterIndirect ChangeMainC .ix param, SevenTStates ) )
+        , ( 0x4E, ( \param -> NewRegisterIndirect ChangeMainC .ix param, NumberedTStates 7 ) )
 
         --case 0x56: D=env.mem(getd(xy)); time+=3; break;
-        , ( 0x56, ( \param -> NewRegisterIndirect ChangeMainD .ix param, SevenTStates ) )
+        , ( 0x56, ( \param -> NewRegisterIndirect ChangeMainD .ix param, NumberedTStates 7 ) )
 
         --case 0x5E: E=env.mem(getd(xy)); time+=3; break;
-        , ( 0x5E, ( \param -> NewRegisterIndirect ChangeMainE .ix param, SevenTStates ) )
+        , ( 0x5E, ( \param -> NewRegisterIndirect ChangeMainE .ix param, NumberedTStates 7 ) )
 
         -- case 0x66: HL=HL&0xFF|env.mem(getd(xy))<<8; time+=3; break;
         , ( 0x66, ( \param -> NewRegisterIndirect ChangeMainH .ix param, NineteenTStates ) )
@@ -68,22 +68,22 @@ doubleWithRegistersIX =
 doubleWithRegistersIY : Dict Int ( Int -> DoubleWithRegisterChange, InstructionDuration )
 doubleWithRegistersIY =
     Dict.fromList
-        [ ( 0x26, ( ld_iy_h_n, ElevenTStates ) )
-        , ( 0x2E, ( ld_iy_l_n, ElevenTStates ) )
+        [ ( 0x26, ( ld_iy_h_n, NumberedTStates 11 ) )
+        , ( 0x2E, ( ld_iy_l_n, NumberedTStates 11 ) )
         , ( 0x34, ( inc_indirect_iy, TwentyThreeTStates ) )
         , ( 0x35, ( dec_indirect_iy, TwentyThreeTStates ) )
 
         -- case 0x46: B=env.mem(getd(xy)); time+=3; break;
-        , ( 0x46, ( \param -> NewRegisterIndirect ChangeMainB .iy param, SevenTStates ) )
+        , ( 0x46, ( \param -> NewRegisterIndirect ChangeMainB .iy param, NumberedTStates 7 ) )
 
         -- case 0x4E: C=env.mem(getd(xy)); time+=3; break;
-        , ( 0x4E, ( \param -> NewRegisterIndirect ChangeMainC .iy param, SevenTStates ) )
+        , ( 0x4E, ( \param -> NewRegisterIndirect ChangeMainC .iy param, NumberedTStates 7 ) )
 
         --case 0x56: D=env.mem(getd(xy)); time+=3; break;
-        , ( 0x56, ( \param -> NewRegisterIndirect ChangeMainD .iy param, SevenTStates ) )
+        , ( 0x56, ( \param -> NewRegisterIndirect ChangeMainD .iy param, NumberedTStates 7 ) )
 
         --case 0x5E: E=env.mem(getd(xy)); time+=3; break;
-        , ( 0x5E, ( \param -> NewRegisterIndirect ChangeMainE .iy param, SevenTStates ) )
+        , ( 0x5E, ( \param -> NewRegisterIndirect ChangeMainE .iy param, NumberedTStates 7 ) )
 
         -- case 0x66: HL=HL&0xFF|env.mem(getd(xy))<<8; time+=3; break;
         , ( 0x66, ( \param -> NewRegisterIndirect ChangeMainH .iy param, NineteenTStates ) )
