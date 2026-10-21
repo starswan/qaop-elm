@@ -473,14 +473,14 @@ rrd rom48k clockTime z80 =
 fourByteMainED : Dict Int ( MainWithIndexRegisters -> Int -> EDFourByteChange, InstructionDuration )
 fourByteMainED =
     Dict.fromList
-        [ ( 0x43, ( \z80main address -> SetMemFrom address RegBC, TwentyTStates ) )
-        , ( 0x4B, ( \z80main address -> GetFromMem address RegBC, TwentyTStates ) )
-        , ( 0x53, ( \z80main address -> SetMemFrom address RegDE, TwentyTStates ) )
-        , ( 0x5B, ( \z80main address -> GetFromMem address RegDE, TwentyTStates ) )
-        , ( 0x63, ( \z80main address -> SetMemFrom address RegHL, TwentyTStates ) )
-        , ( 0x6B, ( \z80main address -> GetFromMem address RegHL, TwentyTStates ) )
-        , ( 0x73, ( \z80main address -> SetMemFrom address RegSP, TwentyTStates ) )
-        , ( 0x7B, ( \z80main address -> GetFromMem address RegSP, TwentyTStates ) )
+        [ ( 0x43, ( \z80main address -> SetMemFrom address RegBC, NumberedTStates 20 ) )
+        , ( 0x4B, ( \z80main address -> GetFromMem address RegBC, NumberedTStates 20 ) )
+        , ( 0x53, ( \z80main address -> SetMemFrom address RegDE, NumberedTStates 20 ) )
+        , ( 0x5B, ( \z80main address -> GetFromMem address RegDE, NumberedTStates 20 ) )
+        , ( 0x63, ( \z80main address -> SetMemFrom address RegHL, NumberedTStates 20 ) )
+        , ( 0x6B, ( \z80main address -> GetFromMem address RegHL, NumberedTStates 20 ) )
+        , ( 0x73, ( \z80main address -> SetMemFrom address RegSP, NumberedTStates 20 ) )
+        , ( 0x7B, ( \z80main address -> GetFromMem address RegSP, NumberedTStates 20 ) )
         ]
 
 
@@ -488,34 +488,34 @@ singleByteMainRegsED : Dict Int ( EDRegisterChange, InstructionDuration )
 singleByteMainRegsED =
     Dict.fromList
         [ -- ED08/ED09 no-op in Java version of Qaop
-          ( 0x00, ( EDNoOp, EightTStates ) )
-        , ( 0x01, ( EDNoOp, EightTStates ) )
-        , ( 0x04, ( EDNoOp, EightTStates ) )
-        , ( 0x08, ( EDNoOp, EightTStates ) )
-        , ( 0x09, ( EDNoOp, EightTStates ) )
-        , ( 0x10, ( EDNoOp, EightTStates ) )
-        , ( 0x11, ( EDNoOp, EightTStates ) )
-        , ( 0x14, ( EDNoOp, EightTStates ) )
-        , ( 0x18, ( EDNoOp, EightTStates ) )
-        , ( 0x19, ( EDNoOp, EightTStates ) )
-        , ( 0x20, ( EDNoOp, EightTStates ) )
-        , ( 0x21, ( EDNoOp, EightTStates ) )
-        , ( 0x24, ( EDNoOp, EightTStates ) )
-        , ( 0x28, ( EDNoOp, EightTStates ) )
-        , ( 0x29, ( EDNoOp, EightTStates ) )
-        , ( 0x34, ( EDNoOp, EightTStates ) )
-        , ( 0x38, ( EDNoOp, EightTStates ) )
-        , ( 0x39, ( EDNoOp, EightTStates ) )
-        , ( 0x40, ( InRC ChangeMainB, TwelveTStates ) )
+          ( 0x00, ( EDNoOp, NumberedTStates 8 ) )
+        , ( 0x01, ( EDNoOp, NumberedTStates 8 ) )
+        , ( 0x04, ( EDNoOp, NumberedTStates 8 ) )
+        , ( 0x08, ( EDNoOp, NumberedTStates 8 ) )
+        , ( 0x09, ( EDNoOp, NumberedTStates 8 ) )
+        , ( 0x10, ( EDNoOp, NumberedTStates 8 ) )
+        , ( 0x11, ( EDNoOp, NumberedTStates 8 ) )
+        , ( 0x14, ( EDNoOp, NumberedTStates 8 ) )
+        , ( 0x18, ( EDNoOp, NumberedTStates 8 ) )
+        , ( 0x19, ( EDNoOp, NumberedTStates 8 ) )
+        , ( 0x20, ( EDNoOp, NumberedTStates 8 ) )
+        , ( 0x21, ( EDNoOp, NumberedTStates 8 ) )
+        , ( 0x24, ( EDNoOp, NumberedTStates 8 ) )
+        , ( 0x28, ( EDNoOp, NumberedTStates 8 ) )
+        , ( 0x29, ( EDNoOp, NumberedTStates 8 ) )
+        , ( 0x34, ( EDNoOp, NumberedTStates 8 ) )
+        , ( 0x38, ( EDNoOp, NumberedTStates 8 ) )
+        , ( 0x39, ( EDNoOp, NumberedTStates 8 ) )
+        , ( 0x40, ( InRC ChangeMainB, NumberedTStates 12 ) )
 
         -- case 0x41: env.out(B<<8|C,B); time+=4; break;
-        , ( 0x41, ( EDNoOp, EightTStates ) )
+        , ( 0x41, ( EDNoOp, NumberedTStates 8 ) )
 
         -- case 0x42: sbc_hl(B<<8|C); break;
-        , ( 0x42, ( SbcHL RegBC, FifteenTStates ) )
+        , ( 0x42, ( SbcHL RegBC, NumberedTStates 15 ) )
 
         -- RETN - end of NMI. NMIs aren't enabled on the Spectrum?
-        , ( 0x45, ( EDNoOp, EightTStates ) )
+        , ( 0x45, ( EDNoOp, NumberedTStates 8 ) )
 
         --case 0x46:
         --case 0x4E:
@@ -526,125 +526,125 @@ singleByteMainRegsED =
         --case 0x76:
         --case 0x7E: IM = c>>3&3; break;
         --https://www.cpcwiki.eu/index.php/Z80_-_undocumented_opcodes
-        --( 0x46, ( \_ -> RegChangeIm (0x46 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
+        --( 0x46, ( \_ -> RegChangeIm (0x46 |> shiftRightBy 3 |> Bitwise.and 0x03), NumberedTStates 8 ) )
         -- IM0 (iM == 1) seems to crash the emulator quite badly because of this code:
         --  1 ->
         --      new_z80 |> im0 bus
         -- iM == 0 (which has the same code) appears to be impossible as there is no IM3 instruction
-        --( 0x46, ( \_ -> RegChangeIm 0, EightTStates ) )
-        , ( 0x46, ( EDNoOp, EightTStates ) )
-        , ( 0x48, ( InRC ChangeMainC, TwelveTStates ) )
+        --( 0x46, ( \_ -> RegChangeIm 0, NumberedTStates 8 ) )
+        , ( 0x46, ( EDNoOp, NumberedTStates 8 ) )
+        , ( 0x48, ( InRC ChangeMainC, NumberedTStates 12 ) )
 
         -- case 0x49: env.out(B<<8|C,C); time+=4; break;       , IncrementByTwo
-        , ( 0x49, ( EDNoOp, EightTStates ) )
+        , ( 0x49, ( EDNoOp, NumberedTStates 8 ) )
 
         -- RETI (return from maskable interupt, unused on the Spectrum I'm pretty sure)
-        , ( 0x4D, ( EDNoOp, EightTStates ) )
+        , ( 0x4D, ( EDNoOp, NumberedTStates 8 ) )
 
-        --( 0x4E, ( \_ -> RegChangeIm (0x4E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
-        --, ( 0x4E, ( \_ -> RegChangeIm 0, EightTStates ) )
-        , ( 0x4E, ( EDNoOp, EightTStates ) )
-        , ( 0x50, ( InRC ChangeMainD, TwelveTStates ) )
+        --( 0x4E, ( \_ -> RegChangeIm (0x4E |> shiftRightBy 3 |> Bitwise.and 0x03), NumberedTStates 8 ) )
+        --, ( 0x4E, ( \_ -> RegChangeIm 0, NumberedTStates 8 ) )
+        , ( 0x4E, ( EDNoOp, NumberedTStates 8 ) )
+        , ( 0x50, ( InRC ChangeMainD, NumberedTStates 12 ) )
 
         -- case 0x51: env.out(B<<8|C,D); time+=4; break;       , IncrementByTwo
-        , ( 0x51, ( EDNoOp, EightTStates ) )
+        , ( 0x51, ( EDNoOp, NumberedTStates 8 ) )
 
         -- case 0x52: sbc_hl(D<<8|E); break;
-        , ( 0x52, ( SbcHL RegDE, FifteenTStates ) )
+        , ( 0x52, ( SbcHL RegDE, NumberedTStates 15 ) )
 
         -- case 0x7D: IFF|=IFF>>1; MP=PC=pop(); break;
         -- TODO: Implement ED 7D (all these are the same)
-        , ( 0x55, ( EDNoOp, EightTStates ) )
+        , ( 0x55, ( EDNoOp, NumberedTStates 8 ) )
 
-        --, ( 0x56, ( \_ -> RegChangeIm (0x56 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
-        , ( 0x56, ( RegChangeIm IM1, EightTStates ) )
-        , ( 0x58, ( InRC ChangeMainE, TwelveTStates ) )
+        --, ( 0x56, ( \_ -> RegChangeIm (0x56 |> shiftRightBy 3 |> Bitwise.and 0x03), NumberedTStates 8 ) )
+        , ( 0x56, ( RegChangeIm IM1, NumberedTStates 8 ) )
+        , ( 0x58, ( InRC ChangeMainE, NumberedTStates 12 ) )
 
         -- case 0x59: env.out(B<<8|C,E); time+=4; break;       , IncrementByTwo
-        , ( 0x59, ( EDNoOp, EightTStates ) )
-        , ( 0x5D, ( EDNoOp, EightTStates ) )
+        , ( 0x59, ( EDNoOp, NumberedTStates 8 ) )
+        , ( 0x5D, ( EDNoOp, NumberedTStates 8 ) )
 
-        --, ( 0x5E, ( \_ -> RegChangeIm (0x5E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
-        , ( 0x5E, ( RegChangeIm IM2, EightTStates ) )
-        , ( 0x60, ( InRC ChangeMainH, TwelveTStates ) )
+        --, ( 0x5E, ( \_ -> RegChangeIm (0x5E |> shiftRightBy 3 |> Bitwise.and 0x03), NumberedTStates 8 ) )
+        , ( 0x5E, ( RegChangeIm IM2, NumberedTStates 8 ) )
+        , ( 0x60, ( InRC ChangeMainH, NumberedTStates 12 ) )
 
         -- case 0x61: env.out(B<<8|C,HL>>>8); time+=4; break;  , IncrementByTwo
-        , ( 0x61, ( EDNoOp, EightTStates ) )
+        , ( 0x61, ( EDNoOp, NumberedTStates 8 ) )
 
         -- case 0x62: sbc_hl(HL); break;
-        , ( 0x62, ( SbcHL RegHL, FifteenTStates ) )
-        , ( 0x65, ( EDNoOp, EightTStates ) )
+        , ( 0x62, ( SbcHL RegHL, NumberedTStates 15 ) )
+        , ( 0x65, ( EDNoOp, NumberedTStates 8 ) )
 
-        --, ( 0x66, (  RegChangeIm (0x66 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
-        --, ( 0x66, (  RegChangeIm 0, EightTStates ) )
-        , ( 0x66, ( EDNoOp, EightTStates ) )
-        , ( 0x67, ( RRD, EighteenTStates ) )
-        , ( 0x68, ( InRC ChangeMainL, TwelveTStates ) )
+        --, ( 0x66, (  RegChangeIm (0x66 |> shiftRightBy 3 |> Bitwise.and 0x03), NumberedTStates 8 ) )
+        --, ( 0x66, (  RegChangeIm 0, NumberedTStates 8 ) )
+        , ( 0x66, ( EDNoOp, NumberedTStates 8 ) )
+        , ( 0x67, ( RRD, NumberedTStates 18 ) )
+        , ( 0x68, ( InRC ChangeMainL, NumberedTStates 12 ) )
 
         -- case 0x69: env.out(B<<8|C,HL&0xFF); time+=4; break; , IncrementByTwo
-        , ( 0x69, ( EDNoOp, EightTStates ) )
-        , ( 0x6D, ( EDNoOp, EightTStates ) )
+        , ( 0x69, ( EDNoOp, NumberedTStates 8 ) )
+        , ( 0x6D, ( EDNoOp, NumberedTStates 8 ) )
 
-        --, ( 0x6E, (  RegChangeIm (0x6E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
-        --, ( 0x6E, (  RegChangeIm 0, EightTStates ) )
-        , ( 0x6E, ( EDNoOp, EightTStates ) )
-        , ( 0x6F, ( RLD, EighteenTStates ) )
-        , ( 0x70, ( IN_C, TwelveTStates ) )
+        --, ( 0x6E, (  RegChangeIm (0x6E |> shiftRightBy 3 |> Bitwise.and 0x03), NumberedTStates 8 ) )
+        --, ( 0x6E, (  RegChangeIm 0, NumberedTStates 8 ) )
+        , ( 0x6E, ( EDNoOp, NumberedTStates 8 ) )
+        , ( 0x6F, ( RLD, NumberedTStates 18 ) )
+        , ( 0x70, ( IN_C, NumberedTStates 12 ) )
 
         -- case 0x71: env.out(B<<8|C,0); time+=4; break;       , IncrementByTwo
-        , ( 0x71, ( EDNoOp, EightTStates ) )
+        , ( 0x71, ( EDNoOp, NumberedTStates 8 ) )
 
         -- case 0x72: sbc_hl(SP); break;
-        , ( 0x72, ( SbcHL RegSP, FifteenTStates ) )
-        , ( 0x75, ( EDNoOp, EightTStates ) )
+        , ( 0x72, ( SbcHL RegSP, NumberedTStates 15 ) )
+        , ( 0x75, ( EDNoOp, NumberedTStates 8 ) )
 
-        --, ( 0x76, (  RegChangeIm (0x76 |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
-        , ( 0x76, ( RegChangeIm IM1, EightTStates ) )
-        , ( 0x78, ( IN_A_C, TwelveTStates ) )
+        --, ( 0x76, (  RegChangeIm (0x76 |> shiftRightBy 3 |> Bitwise.and 0x03), NumberedTStates 8 ) )
+        , ( 0x76, ( RegChangeIm IM1, NumberedTStates 8 ) )
+        , ( 0x78, ( IN_A_C, NumberedTStates 12 ) )
 
         -- case 0x79: MP=(v=B<<8|C)+1; env.out(v,A); time+=4; b, IncrementByTworeak;
-        , ( 0x79, ( EDNoOp, EightTStates ) )
-        , ( 0x7A, ( AdcHLSP, FifteenTStates ) )
-        , ( 0x7D, ( EDNoOp, EightTStates ) )
+        , ( 0x79, ( EDNoOp, NumberedTStates 8 ) )
+        , ( 0x7A, ( AdcHLSP, NumberedTStates 15 ) )
+        , ( 0x7D, ( EDNoOp, NumberedTStates 8 ) )
 
-        --, ( 0x7E, (  RegChangeIm (0x7E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
-        , ( 0x7E, ( RegChangeIm IM2, EightTStates ) )
-        , ( 0xA2, ( Z80InI Forwards False, SixteenTStates ) )
-        , ( 0xA3, ( Z80OutI Forwards False, SixteenTStates ) )
-        , ( 0xAA, ( Z80InI Backwards False, SixteenTStates ) )
-        , ( 0xAB, ( Z80OutI Backwards False, SixteenTStates ) )
-        , ( 0xB2, ( Z80InI Forwards True, SixteenTStates ) )
-        , ( 0xB3, ( Z80OutI Forwards True, SixteenTStates ) )
-        , ( 0xBA, ( Z80InI Backwards True, SixteenTStates ) )
-        , ( 0xBB, ( Z80OutI Backwards True, SixteenTStates ) )
+        --, ( 0x7E, (  RegChangeIm (0x7E |> shiftRightBy 3 |> Bitwise.and 0x03), NumberedTStates 8 ) )
+        , ( 0x7E, ( RegChangeIm IM2, NumberedTStates 8 ) )
+        , ( 0xA2, ( Z80InI Forwards False, NumberedTStates 16 ) )
+        , ( 0xA3, ( Z80OutI Forwards False, NumberedTStates 16 ) )
+        , ( 0xAA, ( Z80InI Backwards False, NumberedTStates 16 ) )
+        , ( 0xAB, ( Z80OutI Backwards False, NumberedTStates 16 ) )
+        , ( 0xB2, ( Z80InI Forwards True, NumberedTStates 16 ) )
+        , ( 0xB3, ( Z80OutI Forwards True, NumberedTStates 16 ) )
+        , ( 0xBA, ( Z80InI Backwards True, NumberedTStates 16 ) )
+        , ( 0xBB, ( Z80OutI Backwards True, NumberedTStates 16 ) )
 
         --The ED opcodes in the range 00-3F and 80-FF (except for the block instructions of course) do nothing at all but taking up 8 T states
         -- and incrementing the R register by 2. Most of the unlisted opcodes in the range 0x40 to 0x7f do have an effect, however
-        , ( 0xBF, ( EDNoOp, EightTStates ) )
+        , ( 0xBF, ( EDNoOp, NumberedTStates 8 ) )
 
         -- case 0xA0: ldir(1,false); break;
-        , ( 0xA0, ( Ldir Forwards False, SixteenTStates ) )
+        , ( 0xA0, ( Ldir Forwards False, NumberedTStates 16 ) )
 
         -- case 0xA1: cpir(1,false); break;
-        , ( 0xA1, ( Cpir Forwards False, SixteenTStates ) )
+        , ( 0xA1, ( Cpir Forwards False, NumberedTStates 16 ) )
 
         -- case 0xA8: ldir(-1,false); break;
-        , ( 0xA8, ( Ldir Backwards False, SixteenTStates ) )
+        , ( 0xA8, ( Ldir Backwards False, NumberedTStates 16 ) )
 
         -- case 0xA9: cpir(-1,false); break;
-        , ( 0xA9, ( Cpir Backwards False, SixteenTStates ) )
+        , ( 0xA9, ( Cpir Backwards False, NumberedTStates 16 ) )
 
         -- case 0xB0: ldir(1,true); break;
-        , ( 0xB0, ( Ldir Forwards True, SixteenTStates ) )
+        , ( 0xB0, ( Ldir Forwards True, NumberedTStates 16 ) )
 
         -- case 0xB1: cpir(1,true); break;
-        , ( 0xB1, ( Cpir Forwards True, SixteenTStates ) )
+        , ( 0xB1, ( Cpir Forwards True, NumberedTStates 16 ) )
 
         -- case 0xB8: ldir(-1,true); break;
-        , ( 0xB8, ( Ldir Backwards True, SixteenTStates ) )
+        , ( 0xB8, ( Ldir Backwards True, NumberedTStates 16 ) )
 
         -- case 0xB9: cpir(-1,true); break;
-        , ( 0xB9, ( Cpir Backwards True, SixteenTStates ) )
+        , ( 0xB9, ( Cpir Backwards True, NumberedTStates 16 ) )
 
         -- case 0xA2:
         -- case 0xA3:
@@ -660,20 +660,20 @@ singleByteMainRegsED =
 singleByteFlagsED : Dict Int ( FlagRegisters -> RegisterFlagChange, InstructionDuration )
 singleByteFlagsED =
     Dict.fromList
-        [ ( 0x44, ( \flags -> FlagChangeFunc ed_44_neg, EightTStates ) )
+        [ ( 0x44, ( \flags -> FlagChangeFunc ed_44_neg, NumberedTStates 8 ) )
 
         -- case 0x47: i(A); time++; break;
-        , ( 0x47, ( \z80_flags -> FlagNewIValue z80_flags.a, NineTStates ) )
-        , ( 0x4C, ( \z80_flags -> FlagChangeFunc ed_44_neg, EightTStates ) )
+        , ( 0x47, ( \z80_flags -> FlagNewIValue z80_flags.a, NumberedTStates 9 ) )
+        , ( 0x4C, ( \z80_flags -> FlagChangeFunc ed_44_neg, NumberedTStates 8 ) )
 
         -- case 0x4F: r(A); time++; break;
-        , ( 0x4F, ( \z80_flags -> FlagNewRValue z80_flags.a, NineTStates ) )
-        , ( 0x54, ( \z80_flags -> FlagChangeFunc ed_44_neg, EightTStates ) )
-        , ( 0x5C, ( \z80_flags -> FlagChangeFunc ed_44_neg, EightTStates ) )
-        , ( 0x64, ( \z80_flags -> FlagChangeFunc ed_44_neg, EightTStates ) )
-        , ( 0x6C, ( \z80_flags -> FlagChangeFunc ed_44_neg, EightTStates ) )
-        , ( 0x74, ( \z80_flags -> FlagChangeFunc ed_44_neg, EightTStates ) )
-        , ( 0x7C, ( \z80_flags -> FlagChangeFunc ed_44_neg, EightTStates ) )
+        , ( 0x4F, ( \z80_flags -> FlagNewRValue z80_flags.a, NumberedTStates 9 ) )
+        , ( 0x54, ( \z80_flags -> FlagChangeFunc ed_44_neg, NumberedTStates 8 ) )
+        , ( 0x5C, ( \z80_flags -> FlagChangeFunc ed_44_neg, NumberedTStates 8 ) )
+        , ( 0x64, ( \z80_flags -> FlagChangeFunc ed_44_neg, NumberedTStates 8 ) )
+        , ( 0x6C, ( \z80_flags -> FlagChangeFunc ed_44_neg, NumberedTStates 8 ) )
+        , ( 0x74, ( \z80_flags -> FlagChangeFunc ed_44_neg, NumberedTStates 8 ) )
+        , ( 0x7C, ( \z80_flags -> FlagChangeFunc ed_44_neg, NumberedTStates 8 ) )
         ]
 
 
@@ -702,9 +702,9 @@ ed_44_neg z80_flags =
 singleByteMainAndFlagsED : Dict Int ( MainWithIndexRegisters -> FlagRegisters -> Z80Change, PCIncrement, InstructionDuration )
 singleByteMainAndFlagsED =
     Dict.fromList
-        [ ( 0x4A, ( ed4a_adc_hl_bc, IncrementByTwo, FifteenTStates ) )
-        , ( 0x5A, ( ed5a_adc_hl_de, IncrementByTwo, FifteenTStates ) )
-        , ( 0x6A, ( ed6a_adc_hl_hl, IncrementByTwo, FifteenTStates ) )
+        [ ( 0x4A, ( ed4a_adc_hl_bc, IncrementByTwo, NumberedTStates 15 ) )
+        , ( 0x5A, ( ed5a_adc_hl_de, IncrementByTwo, NumberedTStates 15 ) )
+        , ( 0x6A, ( ed6a_adc_hl_hl, IncrementByTwo, NumberedTStates 15 ) )
         ]
 
 
@@ -924,12 +924,12 @@ edWithInterrupts : Dict Int ( InterruptRegisters -> InterruptChange, Instruction
 edWithInterrupts =
     Dict.fromList
         [ -- case 0x57: ld_a_ir(IR>>>8); break;
-          ( 0x57, ( \z80_main -> LoadAFromIR (z80_main.ir |> shiftRightBy8), NineTStates ) )
+          ( 0x57, ( \z80_main -> LoadAFromIR (z80_main.ir |> shiftRightBy8), NumberedTStates 9 ) )
 
         --ld_a_r : Z80ROM -> Z80Core -> Z80Delta
         --ld_a_r rom48k z80 =
         --    --int r() {return R&0x7F | IR&0x80;}
         --    -- case 0x5F: ld_a_ir(r()); break;
         --    NewAValue z80.interrupts.r
-        , ( 0x5F, ( \z80_main -> LoadAFromIR (Bitwise.or (z80_main.r |> Bitwise.and 0x7F) (z80_main.ir |> Bitwise.and 0x80)), NineTStates ) )
+        , ( 0x5F, ( \z80_main -> LoadAFromIR (Bitwise.or (z80_main.r |> Bitwise.and 0x7F) (z80_main.ir |> Bitwise.and 0x80)), NumberedTStates 9 ) )
         ]

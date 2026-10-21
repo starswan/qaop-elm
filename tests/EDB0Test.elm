@@ -113,7 +113,7 @@ suite =
                                 |> setMemWithTime (addr + 1) 0xB0
                                 |> .z80env
                     in
-                    lengthAndDuration addr z80rom new_env |> Maybe.map (\d -> d |> Triple.dropThird) |> Expect.equal (Just ( IncrementByTwo, SixteenTStates ))
+                    lengthAndDuration addr z80rom new_env |> Maybe.map (\d -> d |> Triple.dropThird) |> Expect.equal (Just ( IncrementByTwo, NumberedTStates 16 ))
             ]
         , describe "0xEDB2 INIR"
             [ test "Not looping" <|

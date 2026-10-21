@@ -12,47 +12,47 @@ import Z80CoreWithClockTime exposing (Z80)
 singleWithNoParam : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleWithNoParam =
     Dict.fromList
-        [ ( 0x00, ( RegChangeNoOp, FourTStates ) )
+        [ ( 0x00, ( RegChangeNoOp, NumberedTStates 4 ) )
 
-        --, ( 0x08, ( ExAfAfDash, FourTStates ) )
-        , ( 0xC1, ( Pop16Bit PopBC, TenTStates ) )
-        , ( 0xC9, ( Ret, TenTStates ) )
-        , ( 0xD1, ( Pop16Bit PopDE, TenTStates ) )
+        --, ( 0x08, ( ExAfAfDash, NumberedTStates 4 ) )
+        , ( 0xC1, ( Pop16Bit PopBC, NumberedTStates 10 ) )
+        , ( 0xC9, ( Ret, NumberedTStates 10 ) )
+        , ( 0xD1, ( Pop16Bit PopDE, NumberedTStates 10 ) )
 
         -- case 0xD9: exx(); break;
-        --, ( 0xD9, ( Exx, FourTStates ) )
-        , ( 0xE1, ( Pop16Bit PopHL, TenTStates ) )
-        , ( 0xF1, ( Pop16Bit PopAF, TenTStates ) )
+        --, ( 0xD9, ( Exx, NumberedTStates 4 ) )
+        , ( 0xE1, ( Pop16Bit PopHL, NumberedTStates 10 ) )
+        , ( 0xF1, ( Pop16Bit PopAF, NumberedTStates 10 ) )
 
-        --, ( 0xFB, ( EnableInterrupts, FourTStates ) )
+        --, ( 0xFB, ( EnableInterrupts, NumberedTStates 4 ) )
         ]
 
 
 singleNoParamCalls : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleNoParamCalls =
     Dict.fromList
-        [ ( 0xC7, ( Rst 0x00, FourTStates ) )
-        , ( 0xCF, ( Rst 0x08, FourTStates ) )
-        , ( 0xD7, ( Rst 0x10, FourTStates ) )
-        , ( 0xDF, ( Rst 0x18, FourTStates ) )
-        , ( 0xE7, ( Rst 0x20, FourTStates ) )
-        , ( 0xEF, ( Rst 0x28, FourTStates ) )
-        , ( 0xF7, ( Rst 0x30, FourTStates ) )
-        , ( 0xFF, ( Rst 0x38, FourTStates ) )
+        [ ( 0xC7, ( Rst 0x00, NumberedTStates 4 ) )
+        , ( 0xCF, ( Rst 0x08, NumberedTStates 4 ) )
+        , ( 0xD7, ( Rst 0x10, NumberedTStates 4 ) )
+        , ( 0xDF, ( Rst 0x18, NumberedTStates 4 ) )
+        , ( 0xE7, ( Rst 0x20, NumberedTStates 4 ) )
+        , ( 0xEF, ( Rst 0x28, NumberedTStates 4 ) )
+        , ( 0xF7, ( Rst 0x30, NumberedTStates 4 ) )
+        , ( 0xFF, ( Rst 0x38, NumberedTStates 4 ) )
         ]
 
 
 singleWithNoParamDD : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleWithNoParamDD =
     Dict.fromList
-        [ ( 0xE1, ( Pop16Bit PopIX, FourteenTStates ) )
+        [ ( 0xE1, ( Pop16Bit PopIX, NumberedTStates 14 ) )
         ]
 
 
 singleWithNoParamFD : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleWithNoParamFD =
     Dict.fromList
-        [ ( 0xE1, ( Pop16Bit PopIY, FourteenTStates ) )
+        [ ( 0xE1, ( Pop16Bit PopIY, NumberedTStates 14 ) )
         ]
 
 

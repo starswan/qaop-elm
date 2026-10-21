@@ -403,7 +403,7 @@ execute_delta instrTime opCode rom48k pc z80_core =
                         ( CBDeltaChange (mainRegFunc ixcboffset z80_core.main), ( paramTime, duration, IncrementByFour ) )
 
                     Nothing ->
-                        ( UnknownInstruction "execute IXCB" param, ( paramTime, FourTStates, IncrementByFour ) )
+                        ( UnknownInstruction "execute IXCB" param, ( paramTime, NumberedTStates 4, IncrementByFour ) )
 
             else
                 runIndexIX param newTime rom48k pc z80_core
@@ -429,7 +429,7 @@ execute_delta instrTime opCode rom48k pc z80_core =
                         ( CBDeltaChange (mainRegFunc z80_core.main), ( parmTime, duration, IncrementByFour ) )
 
                     Nothing ->
-                        ( UnknownInstruction "execute IYCB" param, ( parmTime, FourTStates, IncrementByFour ) )
+                        ( UnknownInstruction "execute IYCB" param, ( parmTime, NumberedTStates 4, IncrementByFour ) )
 
             else
                 runIndexIY param newTime rom48k pc z80_core
@@ -466,7 +466,7 @@ execute_delta instrTime opCode rom48k pc z80_core =
                                             ( ThreeBytePlainDelta (f doubleParam.value16), ( doubleParam.time, duration, IncrementByThree ) )
 
                                         Nothing ->
-                                            ( UnknownInstruction "runOrdinary" opCode, ( instrTime, FourTStates, IncrementByOne ) )
+                                            ( UnknownInstruction "runOrdinary" opCode, ( instrTime, NumberedTStates 4, IncrementByOne ) )
 
 
 runIndexIX : Int -> CpuTimeCTime -> Z80ROM -> Int -> Z80Core -> ( DeltaWithChanges, ( CpuTimeCTime, InstructionDuration, PCIncrement ) )
@@ -498,7 +498,7 @@ runIndexIX param clockTime rom48k pc z80 =
                             ( Triple16ParamDelta (f doubleParam.value16), ( doubleParam.time, duration, IncrementByFour ) )
 
                         Nothing ->
-                            ( UnknownInstruction "execute IndexIX" param, ( clockTime, FourTStates, IncrementByTwo ) )
+                            ( UnknownInstruction "execute IndexIX" param, ( clockTime, NumberedTStates 4, IncrementByTwo ) )
 
 
 runIndexIY : Int -> CpuTimeCTime -> Z80ROM -> Int -> Z80Core -> ( DeltaWithChanges, ( CpuTimeCTime, InstructionDuration, PCIncrement ) )
@@ -533,7 +533,7 @@ runIndexIY param clockTime rom48k pc z80 =
                             ( Triple16ParamDelta (f doubleParam.value16), ( doubleParam.time, duration, IncrementByFour ) )
 
                         Nothing ->
-                            ( UnknownInstruction "execute IndexIY" param, ( clockTime, FourTStates, IncrementByTwo ) )
+                            ( UnknownInstruction "execute IndexIY" param, ( clockTime, NumberedTStates 4, IncrementByTwo ) )
 
 
 runSpecialBitManipCB : Int -> CpuTimeCTime -> Z80Core -> ( DeltaWithChanges, ( CpuTimeCTime, InstructionDuration, PCIncrement ) )
@@ -548,7 +548,7 @@ runSpecialBitManipCB param clockTime z80_core =
                     ( CBDeltaChange (mainRegFunc z80_core.main), ( clockTime, duration, IncrementByTwo ) )
 
                 Nothing ->
-                    ( UnknownInstruction "execute CB" param, ( clockTime, FourTStates, IncrementByTwo ) )
+                    ( UnknownInstruction "execute CB" param, ( clockTime, NumberedTStates 4, IncrementByTwo ) )
 
 
 runSpecialEDMisc : Int -> CpuTimeCTime -> Z80ROM -> Int -> Z80Core -> ( DeltaWithChanges, ( CpuTimeCTime, InstructionDuration, PCIncrement ) )
@@ -582,7 +582,7 @@ runSpecialEDMisc param clockTime rom48k pc z80_core =
                                             ( EDFourByteDelta (mainRegFunc z80_core.main doubleParam.value16), ( doubleParam.time, duration, IncrementByFour ) )
 
                                         Nothing ->
-                                            ( UnknownInstruction "runSpecial" param, ( clockTime, FourTStates, IncrementByTwo ) )
+                                            ( UnknownInstruction "runSpecial" param, ( clockTime, NumberedTStates 4, IncrementByTwo ) )
 
 
 
@@ -627,11 +627,11 @@ c_EI =
 nonCoreFuncs : Dict Int ( ( Z80, CpuTimeCTime ) -> ( Z80, CpuTimeCTime ), InstructionDuration )
 nonCoreFuncs =
     Dict.fromList
-        [ ( c_EX_AF_AFDASH, ( ex_af, FourTStates ) )
-        , ( c_EXX, ( exx, FourTStates ) )
-        , ( c_HALT, ( execute_0x76_halt, FourTStates ) )
-        , ( c_DI, ( di_0xF3, FourTStates ) )
-        , ( c_EI, ( ei_0xFB, FourTStates ) )
+        [ ( c_EX_AF_AFDASH, ( ex_af, NumberedTStates 4 ) )
+        , ( c_EXX, ( exx, NumberedTStates 4 ) )
+        , ( c_HALT, ( execute_0x76_halt, NumberedTStates 4 ) )
+        , ( c_DI, ( di_0xF3, NumberedTStates 4 ) )
+        , ( c_EI, ( ei_0xFB, NumberedTStates 4 ) )
         ]
 
 
