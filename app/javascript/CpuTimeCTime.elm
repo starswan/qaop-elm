@@ -294,11 +294,6 @@ addDuration duration time =
     let
         offset =
             case duration of
-                --ZeroTStates ->
-                --    value
-                FourTStates ->
-                    4
-
                 FiveTStates ->
                     5
 
@@ -349,6 +344,9 @@ addDuration duration time =
 
                 NineteenTStates ->
                     19
+
+                NumberedTStates int ->
+                    int
     in
     { time | cpu_time = time.cpu_time + offset }
 

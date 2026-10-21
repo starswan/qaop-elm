@@ -2,8 +2,7 @@ module InstructionDuration exposing (..)
 
 
 type InstructionDuration
-    = FourTStates
-    | FiveTStates
+    = FiveTStates
     | SixTStates
     | SevenTStates
     | EightTStates
@@ -20,3 +19,4 @@ type InstructionDuration
     | NineteenTStates
     | TwentyTStates
     | TwentyThreeTStates
+    | NumberedTStates Int

@@ -12,33 +12,33 @@ import Z80CoreWithClockTime exposing (Z80)
 singleWithNoParam : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleWithNoParam =
     Dict.fromList
-        [ ( 0x00, ( RegChangeNoOp, FourTStates ) )
+        [ ( 0x00, ( RegChangeNoOp, NumberedTStates 4 ) )
 
-        --, ( 0x08, ( ExAfAfDash, FourTStates ) )
+        --, ( 0x08, ( ExAfAfDash, NumberedTStates 4 ) )
         , ( 0xC1, ( Pop16Bit PopBC, TenTStates ) )
         , ( 0xC9, ( Ret, TenTStates ) )
         , ( 0xD1, ( Pop16Bit PopDE, TenTStates ) )
 
         -- case 0xD9: exx(); break;
-        --, ( 0xD9, ( Exx, FourTStates ) )
+        --, ( 0xD9, ( Exx, NumberedTStates 4 ) )
         , ( 0xE1, ( Pop16Bit PopHL, TenTStates ) )
         , ( 0xF1, ( Pop16Bit PopAF, TenTStates ) )
 
-        --, ( 0xFB, ( EnableInterrupts, FourTStates ) )
+        --, ( 0xFB, ( EnableInterrupts, NumberedTStates 4 ) )
         ]
 
 
 singleNoParamCalls : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleNoParamCalls =
     Dict.fromList
-        [ ( 0xC7, ( Rst 0x00, FourTStates ) )
-        , ( 0xCF, ( Rst 0x08, FourTStates ) )
-        , ( 0xD7, ( Rst 0x10, FourTStates ) )
-        , ( 0xDF, ( Rst 0x18, FourTStates ) )
-        , ( 0xE7, ( Rst 0x20, FourTStates ) )
-        , ( 0xEF, ( Rst 0x28, FourTStates ) )
-        , ( 0xF7, ( Rst 0x30, FourTStates ) )
-        , ( 0xFF, ( Rst 0x38, FourTStates ) )
+        [ ( 0xC7, ( Rst 0x00, NumberedTStates 4 ) )
+        , ( 0xCF, ( Rst 0x08, NumberedTStates 4 ) )
+        , ( 0xD7, ( Rst 0x10, NumberedTStates 4 ) )
+        , ( 0xDF, ( Rst 0x18, NumberedTStates 4 ) )
+        , ( 0xE7, ( Rst 0x20, NumberedTStates 4 ) )
+        , ( 0xEF, ( Rst 0x28, NumberedTStates 4 ) )
+        , ( 0xF7, ( Rst 0x30, NumberedTStates 4 ) )
+        , ( 0xFF, ( Rst 0x38, NumberedTStates 4 ) )
         ]
 
 

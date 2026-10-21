@@ -59,7 +59,7 @@ suite =
                         z80inc =
                             { z80 | env = z80env |> setMemWithTime addr 0x00 |> .z80env }
                     in
-                    lengthAndDuration addr z80rom z80inc.env |> Maybe.map (\d -> d |> Triple.dropThird) |> Expect.equal (Just ( IncrementByOne, FourTStates ))
+                    lengthAndDuration addr z80rom z80inc.env |> Maybe.map (\d -> d |> Triple.dropThird) |> Expect.equal (Just ( IncrementByOne, NumberedTStates 4 ))
             ]
         , describe "0x01 LD BC,nn"
             [ test "Execute 0x01" <|
@@ -224,7 +224,7 @@ suite =
                                 |> setMemWithTime addr 0x07
                                 |> .z80env
                     in
-                    lengthAndDuration addr z80rom z80inc |> Maybe.map (\d -> d |> Triple.dropThird) |> Expect.equal (Just ( IncrementByOne, FourTStates ))
+                    lengthAndDuration addr z80rom z80inc |> Maybe.map (\d -> d |> Triple.dropThird) |> Expect.equal (Just ( IncrementByOne, NumberedTStates 4 ))
             ]
 
         --, describe "EX AF,AF'"
