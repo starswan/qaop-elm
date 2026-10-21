@@ -609,42 +609,42 @@ singleByteMainRegsED =
 
         --, ( 0x7E, (  RegChangeIm (0x7E |> shiftRightBy 3 |> Bitwise.and 0x03), EightTStates ) )
         , ( 0x7E, ( RegChangeIm IM2, EightTStates ) )
-        , ( 0xA2, ( Z80InI Forwards False, SixteenTStates ) )
-        , ( 0xA3, ( Z80OutI Forwards False, SixteenTStates ) )
-        , ( 0xAA, ( Z80InI Backwards False, SixteenTStates ) )
-        , ( 0xAB, ( Z80OutI Backwards False, SixteenTStates ) )
-        , ( 0xB2, ( Z80InI Forwards True, SixteenTStates ) )
-        , ( 0xB3, ( Z80OutI Forwards True, SixteenTStates ) )
-        , ( 0xBA, ( Z80InI Backwards True, SixteenTStates ) )
-        , ( 0xBB, ( Z80OutI Backwards True, SixteenTStates ) )
+        , ( 0xA2, ( Z80InI Forwards False, NumberedTStates 16 ) )
+        , ( 0xA3, ( Z80OutI Forwards False, NumberedTStates 16 ) )
+        , ( 0xAA, ( Z80InI Backwards False, NumberedTStates 16 ) )
+        , ( 0xAB, ( Z80OutI Backwards False, NumberedTStates 16 ) )
+        , ( 0xB2, ( Z80InI Forwards True, NumberedTStates 16 ) )
+        , ( 0xB3, ( Z80OutI Forwards True, NumberedTStates 16 ) )
+        , ( 0xBA, ( Z80InI Backwards True, NumberedTStates 16 ) )
+        , ( 0xBB, ( Z80OutI Backwards True, NumberedTStates 16 ) )
 
         --The ED opcodes in the range 00-3F and 80-FF (except for the block instructions of course) do nothing at all but taking up 8 T states
         -- and incrementing the R register by 2. Most of the unlisted opcodes in the range 0x40 to 0x7f do have an effect, however
         , ( 0xBF, ( EDNoOp, EightTStates ) )
 
         -- case 0xA0: ldir(1,false); break;
-        , ( 0xA0, ( Ldir Forwards False, SixteenTStates ) )
+        , ( 0xA0, ( Ldir Forwards False, NumberedTStates 16 ) )
 
         -- case 0xA1: cpir(1,false); break;
-        , ( 0xA1, ( Cpir Forwards False, SixteenTStates ) )
+        , ( 0xA1, ( Cpir Forwards False, NumberedTStates 16 ) )
 
         -- case 0xA8: ldir(-1,false); break;
-        , ( 0xA8, ( Ldir Backwards False, SixteenTStates ) )
+        , ( 0xA8, ( Ldir Backwards False, NumberedTStates 16 ) )
 
         -- case 0xA9: cpir(-1,false); break;
-        , ( 0xA9, ( Cpir Backwards False, SixteenTStates ) )
+        , ( 0xA9, ( Cpir Backwards False, NumberedTStates 16 ) )
 
         -- case 0xB0: ldir(1,true); break;
-        , ( 0xB0, ( Ldir Forwards True, SixteenTStates ) )
+        , ( 0xB0, ( Ldir Forwards True, NumberedTStates 16 ) )
 
         -- case 0xB1: cpir(1,true); break;
-        , ( 0xB1, ( Cpir Forwards True, SixteenTStates ) )
+        , ( 0xB1, ( Cpir Forwards True, NumberedTStates 16 ) )
 
         -- case 0xB8: ldir(-1,true); break;
-        , ( 0xB8, ( Ldir Backwards True, SixteenTStates ) )
+        , ( 0xB8, ( Ldir Backwards True, NumberedTStates 16 ) )
 
         -- case 0xB9: cpir(-1,true); break;
-        , ( 0xB9, ( Cpir Backwards True, SixteenTStates ) )
+        , ( 0xB9, ( Cpir Backwards True, NumberedTStates 16 ) )
 
         -- case 0xA2:
         -- case 0xA3:
