@@ -45,14 +45,14 @@ singleNoParamCalls =
 singleWithNoParamDD : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleWithNoParamDD =
     Dict.fromList
-        [ ( 0xE1, ( Pop16Bit PopIX, FourteenTStates ) )
+        [ ( 0xE1, ( Pop16Bit PopIX, NumberedTStates 14 ) )
         ]
 
 
 singleWithNoParamFD : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleWithNoParamFD =
     Dict.fromList
-        [ ( 0xE1, ( Pop16Bit PopIY, FourteenTStates ) )
+        [ ( 0xE1, ( Pop16Bit PopIY, NumberedTStates 14 ) )
         ]
 
 
