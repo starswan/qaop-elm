@@ -578,7 +578,7 @@ singleByteMainRegsED =
         --, ( 0x66, (  RegChangeIm (0x66 |> shiftRightBy 3 |> Bitwise.and 0x03), NumberedTStates 8 ) )
         --, ( 0x66, (  RegChangeIm 0, NumberedTStates 8 ) )
         , ( 0x66, ( EDNoOp, NumberedTStates 8 ) )
-        , ( 0x67, ( RRD, EighteenTStates ) )
+        , ( 0x67, ( RRD, NumberedTStates 18 ) )
         , ( 0x68, ( InRC ChangeMainL, NumberedTStates 12 ) )
 
         -- case 0x69: env.out(B<<8|C,HL&0xFF); time+=4; break; , IncrementByTwo
@@ -588,7 +588,7 @@ singleByteMainRegsED =
         --, ( 0x6E, (  RegChangeIm (0x6E |> shiftRightBy 3 |> Bitwise.and 0x03), NumberedTStates 8 ) )
         --, ( 0x6E, (  RegChangeIm 0, NumberedTStates 8 ) )
         , ( 0x6E, ( EDNoOp, NumberedTStates 8 ) )
-        , ( 0x6F, ( RLD, EighteenTStates ) )
+        , ( 0x6F, ( RLD, NumberedTStates 18 ) )
         , ( 0x70, ( IN_C, NumberedTStates 12 ) )
 
         -- case 0x71: env.out(B<<8|C,0); time+=4; break;       , IncrementByTwo
