@@ -1,5 +1,7 @@
 module InstructionDuration exposing (..)
 
+import CpuTimeCTime exposing (CpuTimeCTime)
+
 
 type InstructionDuration
     = FourTStates
