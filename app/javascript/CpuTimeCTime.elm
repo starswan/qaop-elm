@@ -1,7 +1,6 @@
 module CpuTimeCTime exposing (..)
 
 import Bitwise exposing (shiftLeftBy, shiftRightBy)
-import InstructionDuration exposing (InstructionDuration(..))
 
 
 c_FRSTART =

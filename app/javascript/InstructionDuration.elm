@@ -17,7 +17,6 @@ type InstructionDuration
     | FourteenTStates
     | FifteenTStates
     | SixteenTStates
-    | SeventeenTStates
     | EighteenTStates
     | NineteenTStates
     | TwentyTStates
@@ -34,11 +33,58 @@ addDuration duration time =
     let
         offset =
             case duration of
+                --ZeroTStates ->
+                --    value
+                FourTStates ->
+                    4
+
+                FiveTStates ->
+                    5
+
+                SixTStates ->
+                    6
+
+                SevenTStates ->
+                    7
+
+                EightTStates ->
+                    8
+
+                NineTStates ->
+                    9
+
+                TenTStates ->
+                    10
+
+                ElevenTStates ->
+                    11
+
+                TwelveTStates ->
+                    12
+
+                ThirteenTStates ->
+                    13
+
+                FourteenTStates ->
+                    14
+
+                FifteenTStates ->
+                    15
+
+                SixteenTStates ->
+                    16
+
+                EighteenTStates ->
+                    18
+
+                TwentyTStates ->
+                    20
+
+                TwentyThreeTStates ->
+                    23
+
                 NineteenTStates ->
                     19
-
-                NumberedTStates int ->
-                    int
     in
     { time | cpu_time = time.cpu_time + offset }
 
