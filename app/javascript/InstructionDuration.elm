@@ -42,7 +42,7 @@ addDuration duration time =
 
 
 addExtraCpuTime : ShortDelay -> CpuTimeCTime -> CpuTimeCTime
-addExtraCpuTime value z80env =
+addExtraCpuTime value cpuTime =
     let
         offset =
             case value of
@@ -52,4 +52,4 @@ addExtraCpuTime value z80env =
                 SevenExtraTStates ->
                     7
     in
-    { z80env | cpu_time = z80env.cpu_time + offset }
+    { cpuTime | cpu_time = cpuTime.cpu_time + offset }
