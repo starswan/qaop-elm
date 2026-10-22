@@ -93,3 +93,16 @@ foldDictIntoRam ramdict z80_ram =
             z80_ram.bank3 |> mergeMemoryDict d3
     in
     { screen = x0, ula_ram = x1, bank2 = x2, bank3 = x3 }
+
+        bank2 =
+            z80_ram.bank2
+                |> Array.indexedMap
+                    (\index arrayItem ->
+                        arrayItem
+                            |> Array.indexedMap
+                                (\subIndex item ->
+                                    ramdict |> Dict.get (16384 + index * 1024 + subIndex) |> Maybe.withDefault item
+                                )
+                    )
+    in
+    { bank13 | bank2 = bank2 }
