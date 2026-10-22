@@ -1,5 +1,6 @@
 module Z80Ram exposing (..)
 
+import Array exposing (Array)
 import Dict exposing (Dict)
 import ScreenStorage exposing (Z80Screen, getScreenValue, setScreenValue)
 import Z80MemoryDict exposing (Z80MemoryDict, getMemValue, mergeMemoryDict, setMemValue)
@@ -8,7 +9,7 @@ import Z80MemoryDict exposing (Z80MemoryDict, getMemValue, mergeMemoryDict, setM
 type alias Z80Ram =
     { screen : Z80Screen
     , ula_ram : Z80MemoryDict
-    , bank2 : Z80MemoryDict
+    , bank2 : Array (Array Int)
     , bank3 : Z80MemoryDict
     }
 
@@ -20,7 +21,7 @@ constructor =
             List.repeat (16384 - 6912) 0 |> Z80MemoryDict.constructor
 
         ram2 =
-            List.repeat 16384 0 |> Z80MemoryDict.constructor
+            List.repeat 16 (List.repeat 1024 0 |> Array.fromList) |> Array.fromList
 
         ram3 =
             List.repeat 16384 0 |> Z80MemoryDict.constructor
@@ -42,7 +43,7 @@ getRamValue addr z80ram =
             z80ram.screen |> getScreenValue addr
 
     else if addr < 32768 then
-        z80ram.bank2 |> getMemValue (addr - 16384)
+        z80ram.bank2 |> getDoubleArrayValue (addr - 16384)
 
     else
         z80ram.bank3 |> getMemValue (addr - 32768)

@@ -10,6 +10,7 @@ import Http exposing (Error(..))
 import Keyboard exposing (Keyboard)
 import Utils exposing (toHexString, toHexString2)
 import Z80Debug exposing (debugLog, debugTodo)
+import Z80MemoryDict exposing (getDoubleArrayValue)
 import Z80Ram exposing (Z80Ram)
 
 
@@ -27,24 +28,7 @@ constructor rom_dict =
 
 getROMValue : Int -> Z80ROM -> Int
 getROMValue addr z80rom =
-    let
-        addr1 =
-            addr |> shiftRightBy 10
-
-        addr2 =
-            addr |> Bitwise.and 0x03FF
-    in
-    case Array.get addr1 z80rom.rom48k of
-        Just array ->
-            case array |> Array.get addr2 of
-                Just a ->
-                    a
-
-                Nothing ->
-                    debugTodo "getROMValue" (String.fromInt addr1 ++ String.fromInt addr2) -1
-
-        Nothing ->
-            debugTodo "getROMValue" (String.fromInt addr) -1
+    z80rom.rom48k |> getDoubleArrayValue addr
 
 
 parseRomFile : Bytes -> Result Error Z80ROM
