@@ -48,20 +48,20 @@ doubleWithRegistersIX =
         , ( 0x5E, ( \param -> NewRegisterIndirect ChangeMainE .ix param, NumberedTStates 7 ) )
 
         -- case 0x66: HL=HL&0xFF|env.mem(getd(xy))<<8; time+=3; break;
-        , ( 0x66, ( \param -> NewRegisterIndirect ChangeMainH .ix param, NineteenTStates ) )
+        , ( 0x66, ( \param -> NewRegisterIndirect ChangeMainH .ix param, NumberedTStates 19 ) )
 
         -- case 0x6E: HL=HL&0xFF00|env.mem(getd(xy)); time+=3; break;
-        , ( 0x6E, ( \param -> NewRegisterIndirect ChangeMainL .ix param, NineteenTStates ) )
-        , ( 0x86, ( \param -> FlagOpIndexedIndirect z80_add .ix param, NineteenTStates ) )
-        , ( 0x8E, ( \param -> FlagOpIndexedIndirect z80_adc .ix param, NineteenTStates ) )
-        , ( 0x96, ( \param -> FlagOpIndexedIndirect z80_sub .ix param, NineteenTStates ) )
-        , ( 0x9E, ( \param -> FlagOpIndexedIndirect z80_sbc .ix param, NineteenTStates ) )
-        , ( 0xA6, ( \param -> FlagOpIndexedIndirect z80_and .ix param, NineteenTStates ) )
-        , ( 0xAE, ( \param -> FlagOpIndexedIndirect z80_xor .ix param, NineteenTStates ) )
-        , ( 0xB6, ( \param -> FlagOpIndexedIndirect z80_or .ix param, NineteenTStates ) )
-        , ( 0xBE, ( \param -> FlagOpIndexedIndirect z80_cp .ix param, NineteenTStates ) )
-        , ( 0x77, ( ld_indirect_ix_a, NineteenTStates ) )
-        , ( 0x7E, ( ld_a_indirect_ix, NineteenTStates ) )
+        , ( 0x6E, ( \param -> NewRegisterIndirect ChangeMainL .ix param, NumberedTStates 19 ) )
+        , ( 0x86, ( \param -> FlagOpIndexedIndirect z80_add .ix param, NumberedTStates 19 ) )
+        , ( 0x8E, ( \param -> FlagOpIndexedIndirect z80_adc .ix param, NumberedTStates 19 ) )
+        , ( 0x96, ( \param -> FlagOpIndexedIndirect z80_sub .ix param, NumberedTStates 19 ) )
+        , ( 0x9E, ( \param -> FlagOpIndexedIndirect z80_sbc .ix param, NumberedTStates 19 ) )
+        , ( 0xA6, ( \param -> FlagOpIndexedIndirect z80_and .ix param, NumberedTStates 19 ) )
+        , ( 0xAE, ( \param -> FlagOpIndexedIndirect z80_xor .ix param, NumberedTStates 19 ) )
+        , ( 0xB6, ( \param -> FlagOpIndexedIndirect z80_or .ix param, NumberedTStates 19 ) )
+        , ( 0xBE, ( \param -> FlagOpIndexedIndirect z80_cp .ix param, NumberedTStates 19 ) )
+        , ( 0x77, ( ld_indirect_ix_a, NumberedTStates 19 ) )
+        , ( 0x7E, ( ld_a_indirect_ix, NumberedTStates 19 ) )
         ]
 
 
@@ -86,20 +86,20 @@ doubleWithRegistersIY =
         , ( 0x5E, ( \param -> NewRegisterIndirect ChangeMainE .iy param, NumberedTStates 7 ) )
 
         -- case 0x66: HL=HL&0xFF|env.mem(getd(xy))<<8; time+=3; break;
-        , ( 0x66, ( \param -> NewRegisterIndirect ChangeMainH .iy param, NineteenTStates ) )
+        , ( 0x66, ( \param -> NewRegisterIndirect ChangeMainH .iy param, NumberedTStates 19 ) )
 
         -- case 0x6E: HL=HL&0xFF00|env.mem(getd(xy)); time+=3; break;
-        , ( 0x6E, ( \param -> NewRegisterIndirect ChangeMainL .iy param, NineteenTStates ) )
-        , ( 0x86, ( \param -> FlagOpIndexedIndirect z80_add .iy param, NineteenTStates ) )
-        , ( 0x8E, ( \param -> FlagOpIndexedIndirect z80_adc .iy param, NineteenTStates ) )
-        , ( 0x96, ( \param -> FlagOpIndexedIndirect z80_sub .iy param, NineteenTStates ) )
-        , ( 0x9E, ( \param -> FlagOpIndexedIndirect z80_sbc .iy param, NineteenTStates ) )
-        , ( 0xA6, ( \param -> FlagOpIndexedIndirect z80_and .iy param, NineteenTStates ) )
-        , ( 0xAE, ( \param -> FlagOpIndexedIndirect z80_xor .iy param, NineteenTStates ) )
-        , ( 0xB6, ( \param -> FlagOpIndexedIndirect z80_or .iy param, NineteenTStates ) )
-        , ( 0xBE, ( \param -> FlagOpIndexedIndirect z80_cp .iy param, NineteenTStates ) )
-        , ( 0x77, ( ld_indirect_iy_a, NineteenTStates ) )
-        , ( 0x7E, ( ld_a_indirect_iy, NineteenTStates ) )
+        , ( 0x6E, ( \param -> NewRegisterIndirect ChangeMainL .iy param, NumberedTStates 19 ) )
+        , ( 0x86, ( \param -> FlagOpIndexedIndirect z80_add .iy param, NumberedTStates 19 ) )
+        , ( 0x8E, ( \param -> FlagOpIndexedIndirect z80_adc .iy param, NumberedTStates 19 ) )
+        , ( 0x96, ( \param -> FlagOpIndexedIndirect z80_sub .iy param, NumberedTStates 19 ) )
+        , ( 0x9E, ( \param -> FlagOpIndexedIndirect z80_sbc .iy param, NumberedTStates 19 ) )
+        , ( 0xA6, ( \param -> FlagOpIndexedIndirect z80_and .iy param, NumberedTStates 19 ) )
+        , ( 0xAE, ( \param -> FlagOpIndexedIndirect z80_xor .iy param, NumberedTStates 19 ) )
+        , ( 0xB6, ( \param -> FlagOpIndexedIndirect z80_or .iy param, NumberedTStates 19 ) )
+        , ( 0xBE, ( \param -> FlagOpIndexedIndirect z80_cp .iy param, NumberedTStates 19 ) )
+        , ( 0x77, ( ld_indirect_iy_a, NumberedTStates 19 ) )
+        , ( 0x7E, ( ld_a_indirect_iy, NumberedTStates 19 ) )
         ]
 
 

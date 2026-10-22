@@ -44,7 +44,7 @@ singleByteMainRegs =
         , ( 0xD5, ( Pushed16BitValue get_de, NumberedTStates 11 ) )
 
         -- case 0xE3: v=pop(); push(HL); MP=HL=v; time+=2; break;
-        , ( 0xE3, ( ExchangeTopOfStackWith HL, NineteenTStates ) )
+        , ( 0xE3, ( ExchangeTopOfStackWith HL, NumberedTStates 19 ) )
         , ( 0xE5, ( Pushed16BitValue .hl, NumberedTStates 11 ) )
         , ( 0xE9, ( RegisterChangeJump .hl, NumberedTStates 4 ) )
         , ( 0xEB, ( TransformMainRegisters ex_de_hl, NumberedTStates 4 ) )

@@ -4,8 +4,7 @@ import CpuTimeCTime exposing (CpuTimeCTime)
 
 
 type InstructionDuration
-    = NineteenTStates
-    | NumberedTStates Int
+    = NumberedTStates Int
 
 
 type ShortDelay
@@ -18,9 +17,6 @@ addDuration duration time =
     let
         offset =
             case duration of
-                NineteenTStates ->
-                    19
-
                 NumberedTStates int ->
                     int
     in

@@ -12,12 +12,12 @@ import Z80Types exposing (MainWithIndexRegisters, get_h)
 tripleMainRegsIXThree : Dict Int ( Int -> DoubleWithRegisterChange, InstructionDuration )
 tripleMainRegsIXThree =
     Dict.fromList
-        [ ( 0x70, ( \offset -> store_reg_indirect offset .ix .b, NineteenTStates ) )
-        , ( 0x71, ( \param16 -> store_reg_indirect param16 .ix .c, NineteenTStates ) )
-        , ( 0x72, ( \param16 -> store_reg_indirect param16 .ix .d, NineteenTStates ) )
-        , ( 0x73, ( \param16 -> store_reg_indirect param16 .ix .e, NineteenTStates ) )
-        , ( 0x74, ( \param16 -> store_reg_indirect param16 .ix get_h, NineteenTStates ) )
-        , ( 0x75, ( \param16 -> store_reg_indirect param16 .ix (\z80_main -> z80_main.hl |> Bitwise.and 0xFF), NineteenTStates ) )
+        [ ( 0x70, ( \offset -> store_reg_indirect offset .ix .b, NumberedTStates 19 ) )
+        , ( 0x71, ( \param16 -> store_reg_indirect param16 .ix .c, NumberedTStates 19 ) )
+        , ( 0x72, ( \param16 -> store_reg_indirect param16 .ix .d, NumberedTStates 19 ) )
+        , ( 0x73, ( \param16 -> store_reg_indirect param16 .ix .e, NumberedTStates 19 ) )
+        , ( 0x74, ( \param16 -> store_reg_indirect param16 .ix get_h, NumberedTStates 19 ) )
+        , ( 0x75, ( \param16 -> store_reg_indirect param16 .ix (\z80_main -> z80_main.hl |> Bitwise.and 0xFF), NumberedTStates 19 ) )
         ]
 
 
@@ -32,12 +32,12 @@ tripleMainRegsIXFour =
 tripleMainRegsIYThree : Dict Int ( Int -> DoubleWithRegisterChange, InstructionDuration )
 tripleMainRegsIYThree =
     Dict.fromList
-        [ ( 0x70, ( \offset -> store_reg_indirect offset .iy .b, NineteenTStates ) )
-        , ( 0x71, ( \offset -> store_reg_indirect offset .iy .c, NineteenTStates ) )
-        , ( 0x72, ( \param16 -> store_reg_indirect param16 .iy .d, NineteenTStates ) )
-        , ( 0x73, ( \param16 -> store_reg_indirect param16 .iy .e, NineteenTStates ) )
-        , ( 0x74, ( \param16 -> store_reg_indirect param16 .iy get_h, NineteenTStates ) )
-        , ( 0x75, ( \param16 -> store_reg_indirect param16 .iy (\z80_main -> z80_main.hl |> Bitwise.and 0xFF), NineteenTStates ) )
+        [ ( 0x70, ( \offset -> store_reg_indirect offset .iy .b, NumberedTStates 19 ) )
+        , ( 0x71, ( \offset -> store_reg_indirect offset .iy .c, NumberedTStates 19 ) )
+        , ( 0x72, ( \param16 -> store_reg_indirect param16 .iy .d, NumberedTStates 19 ) )
+        , ( 0x73, ( \param16 -> store_reg_indirect param16 .iy .e, NumberedTStates 19 ) )
+        , ( 0x74, ( \param16 -> store_reg_indirect param16 .iy get_h, NumberedTStates 19 ) )
+        , ( 0x75, ( \param16 -> store_reg_indirect param16 .iy (\z80_main -> z80_main.hl |> Bitwise.and 0xFF), NumberedTStates 19 ) )
         ]
 
 
