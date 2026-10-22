@@ -50,24 +50,81 @@ getRamValue addr z80ram =
 
 foldDictIntoRam : Dict Int Int -> Z80Ram -> Z80Ram
 foldDictIntoRam ramdict z80_ram =
-    ramdict
-        |> Dict.foldl
-            (\addr value z80ram ->
-                if addr < 16384 then
-                    let
-                        ram_addr =
-                            addr - 6912
-                    in
-                    if ram_addr >= 0 then
-                        { z80ram | ula_ram = z80ram.ula_ram |> setMemValue ram_addr value }
+    --ramdict
+    --    |> Dict.foldl
+    --        (\addr value z80ram ->
+    --            if addr < 16384 then
+    --                let
+    --                    ram_addr =
+    --                        addr - 6912
+    --                in
+    --                if ram_addr >= 0 then
+    --                    { z80ram | ula_ram = z80ram.ula_ram |> setMemValue ram_addr value }
+    --
+    --                else
+    --                    { z80ram | screen = z80ram.screen |> setScreenValue addr value }
+    --
+    --            else if addr < 32768 then
+    --                { z80ram | bank2 = z80ram.bank2 |> setMemValue (addr - 16384) value }
+    --
+    --            else
+    --                { z80ram | bank3 = z80ram.bank3 |> setMemValue (addr - 32768) value }
+    --        )
+    --        z80_ram
+    let
+        ( ( d0, d1 ), d2, d3 ) =
+            ramdict
+                |> Dict.foldl
+                    (\addr value ( ( t0, t1 ), t2, t3 ) ->
+                        if addr < 16384 then
+                            let
+                                ram_addr =
+                                    addr - 6912
+                            in
+                            if ram_addr >= 0 then
+                                ( ( t0, t1 |> Dict.insert ram_addr value ), t2, t3 )
 
-                    else
-                        { z80ram | screen = z80ram.screen |> setScreenValue addr value }
+                            else
+                                ( ( t0 |> Dict.insert addr value, t1 ), t2, t3 )
 
-                else if addr < 32768 then
-                    { z80ram | bank2 = z80ram.bank2 |> setMemValue (addr - 16384) value }
+                        else if addr < 32768 then
+                            ( ( t0, t1 ), t2 |> Dict.insert (addr - 16384) value, t3 )
 
-                else
-                    { z80ram | bank3 = z80ram.bank3 |> setMemValue (addr - 32768) value }
-            )
-            z80_ram
+                        else
+                            ( ( t0, t1 ), t2, t3 |> Dict.insert (addr - 32768) value )
+                    )
+                    ( ( Dict.empty, Dict.empty ), Dict.empty, Dict.empty )
+
+        x0 =
+            d0
+                |> Dict.foldl
+                    (\addr value screen ->
+                        screen |> setScreenValue addr value
+                    )
+                    z80_ram.screen
+
+        x1 =
+            d1
+                |> Dict.foldl
+                    (\addr value memDict ->
+                        memDict |> setMemValue addr value
+                    )
+                    z80_ram.ula_ram
+
+        x2 =
+            d2
+                |> Dict.foldl
+                    (\addr value memDict ->
+                        memDict |> setMemValue addr value
+                    )
+                    z80_ram.bank2
+
+        x3 =
+            d3
+                |> Dict.foldl
+                    (\addr value memDict ->
+                        memDict |> setMemValue addr value
+                    )
+                    z80_ram.bank3
+    in
+    { screen = x0, ula_ram = x1, bank2 = x2, bank3 = x3 }
