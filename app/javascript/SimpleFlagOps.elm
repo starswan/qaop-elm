@@ -1,12 +1,11 @@
 module SimpleFlagOps exposing (..)
 
 import Bitwise exposing (complement)
-import CpuTimeCTime exposing (InstructionDuration(..))
 import Dict exposing (Dict)
+import InstructionDuration exposing (InstructionDuration(..))
 import RegisterChange exposing (RegisterFlagChange(..))
 import Utils exposing (BitTest(..), bitMaskFromBit, inverseBitMaskFromBit, shiftLeftBy8, shiftRightBy8)
-import Z80Flags exposing (FlagRegisters, IntWithFlags, c_FP, c_FS, dec, getFlags, inc, rot, scf_ccf, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, testBit, z80_adc, z80_add, z80_cp, z80_cpl, z80_daa, z80_or, z80_sbc, z80_sub, z80_xor)
-import Z80Types exposing (MainWithIndexRegisters)
+import Z80Flags exposing (FlagRegisters, IntWithFlags, c_FP, c_FS, dec, getFlags, inc, rot, scf_ccf, shifter0, shifter1, shifter2, shifter3, shifter4, shifter5, shifter6, shifter7, z80_adc, z80_add, z80_cp, z80_cpl, z80_daa, z80_or, z80_sbc, z80_sub, z80_xor)
 
 
 singleByteFlags : Dict Int ( RegisterFlagChange, InstructionDuration )
