@@ -2,7 +2,7 @@ module Z80Ram exposing (..)
 
 import Dict exposing (Dict)
 import ScreenStorage exposing (Z80Screen, getScreenValue, setScreenValue)
-import Z80MemoryDict exposing (Z80MemoryDict, getMemValue, setMemValue)
+import Z80MemoryDict exposing (Z80MemoryDict, getMemValue, mergeMemoryDict, setMemValue)
 
 
 type alias Z80Ram =
@@ -50,27 +50,6 @@ getRamValue addr z80ram =
 
 foldDictIntoRam : Dict Int Int -> Z80Ram -> Z80Ram
 foldDictIntoRam ramdict z80_ram =
-    --ramdict
-    --    |> Dict.foldl
-    --        (\addr value z80ram ->
-    --            if addr < 16384 then
-    --                let
-    --                    ram_addr =
-    --                        addr - 6912
-    --                in
-    --                if ram_addr >= 0 then
-    --                    { z80ram | ula_ram = z80ram.ula_ram |> setMemValue ram_addr value }
-    --
-    --                else
-    --                    { z80ram | screen = z80ram.screen |> setScreenValue addr value }
-    --
-    --            else if addr < 32768 then
-    --                { z80ram | bank2 = z80ram.bank2 |> setMemValue (addr - 16384) value }
-    --
-    --            else
-    --                { z80ram | bank3 = z80ram.bank3 |> setMemValue (addr - 32768) value }
-    --        )
-    --        z80_ram
     let
         ( ( d0, d1 ), d2, d3 ) =
             ramdict
@@ -104,27 +83,12 @@ foldDictIntoRam ramdict z80_ram =
                     z80_ram.screen
 
         x1 =
-            d1
-                |> Dict.foldl
-                    (\addr value memDict ->
-                        memDict |> setMemValue addr value
-                    )
-                    z80_ram.ula_ram
+            z80_ram.ula_ram |> mergeMemoryDict d1
 
         x2 =
-            d2
-                |> Dict.foldl
-                    (\addr value memDict ->
-                        memDict |> setMemValue addr value
-                    )
-                    z80_ram.bank2
+            z80_ram.bank2 |> mergeMemoryDict d2
 
         x3 =
-            d3
-                |> Dict.foldl
-                    (\addr value memDict ->
-                        memDict |> setMemValue addr value
-                    )
-                    z80_ram.bank3
+            z80_ram.bank3 |> mergeMemoryDict d3
     in
     { screen = x0, ula_ram = x1, bank2 = x2, bank3 = x3 }

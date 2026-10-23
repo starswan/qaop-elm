@@ -42,6 +42,17 @@ setMemValue addr value z80mem =
             dict |> Dict.insert addr value |> Z80MemoryDict
 
 
+mergeMemoryDict : Dict Int Int -> Z80MemoryDict -> Z80MemoryDict
+mergeMemoryDict merged z80mem =
+    if merged |> Dict.isEmpty then
+        z80mem
+
+    else
+        case z80mem of
+            Z80MemoryDict dict ->
+                dict |> Dict.union merged |> Z80MemoryDict
+
+
 
 -- This delivers the values in the order of the keys
 --getDataItems : Z80Memory -> List Int
