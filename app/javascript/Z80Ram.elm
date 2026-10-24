@@ -110,6 +110,8 @@ foldDictIntoRam ramdict z80_ram =
         x1 =
             z80_ram.ula_ram |> mergeMemoryDict d1
 
+        -- not the best implementation as we're ignoring d2 which just contains a list of the changes
+        -- also bank2 would be better
         bank2 =
             z80_ram.bank2
                 |> Array.indexedMap
