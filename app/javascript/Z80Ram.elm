@@ -5,7 +5,7 @@ import Bitwise exposing (shiftRightBy)
 import Dict exposing (Dict)
 import ScreenStorage exposing (Z80Screen, getScreenValue, setScreenValue)
 import Z80Debug exposing (debugTodo)
-import Z80MemoryDict exposing (Z80MemoryDict, getMemValue, mergeMemoryDict, setMemValue)
+import Z80MemoryDict exposing (Z80MemoryDict, getMemValue, mergeMemoryDict)
 
 
 type alias Z80Ram =
@@ -110,14 +110,6 @@ foldDictIntoRam ramdict z80_ram =
         x1 =
             z80_ram.ula_ram |> mergeMemoryDict d1
 
-        x2 =
-            z80_ram.bank2 |> mergeMemoryDict d2
-
-        x3 =
-            z80_ram.bank3 |> mergeMemoryDict d3
-    in
-    { screen = x0, ula_ram = x1, bank2 = x2, bank3 = x3 }
-
         bank2 =
             z80_ram.bank2
                 |> Array.indexedMap
@@ -128,5 +120,8 @@ foldDictIntoRam ramdict z80_ram =
                                     ramdict |> Dict.get (16384 + index * 1024 + subIndex) |> Maybe.withDefault item
                                 )
                     )
+
+        x3 =
+            z80_ram.bank3 |> mergeMemoryDict d3
     in
-    { bank13 | bank2 = bank2 }
+    { screen = x0, ula_ram = x1, bank2 = bank2, bank3 = x3 }
