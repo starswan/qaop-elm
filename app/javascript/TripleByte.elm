@@ -40,30 +40,30 @@ type TripleByteIndexChange
 tripleByteWith16BitParam : Dict Int ( Int -> TripleByteChange, InstructionDuration )
 tripleByteWith16BitParam =
     Dict.fromList
-        [ ( 0x01, ( ld_bc_nn, TenTStates ) )
-        , ( 0x11, ( ld_de_nn, TenTStates ) )
-        , ( 0x21, ( ld_hl_nn, TenTStates ) )
-        , ( 0x22, ( ld_nn_indirect_hl, SixteenTStates ) )
-        , ( 0x2A, ( ld_hl_indirect_nn, SixteenTStates ) )
-        , ( 0x31, ( ld_sp_nn, TenTStates ) )
-        , ( 0x32, ( ld_indirect_nn_a, ThirteenTStates ) )
-        , ( 0x3A, ( ld_a_indirect_nn, ThirteenTStates ) )
+        [ ( 0x01, ( ld_bc_nn, NumberedTStates 10 ) )
+        , ( 0x11, ( ld_de_nn, NumberedTStates 10 ) )
+        , ( 0x21, ( ld_hl_nn, NumberedTStates 10 ) )
+        , ( 0x22, ( ld_nn_indirect_hl, NumberedTStates 16 ) )
+        , ( 0x2A, ( ld_hl_indirect_nn, NumberedTStates 16 ) )
+        , ( 0x31, ( ld_sp_nn, NumberedTStates 10 ) )
+        , ( 0x32, ( ld_indirect_nn_a, NumberedTStates 13 ) )
+        , ( 0x3A, ( ld_a_indirect_nn, NumberedTStates 13 ) )
         ]
 
 
 tripleByteWith16BitParamDD : Dict Int ( Int -> TripleByteIndexChange, InstructionDuration )
 tripleByteWith16BitParamDD =
     Dict.fromList
-        [ ( 0x21, ( ld_ix_nn, TwentyTStates ) )
-        , ( 0x2A, ( ld_ix_indirect_nn, TwentyTStates ) )
+        [ ( 0x21, ( ld_ix_nn, NumberedTStates 20 ) )
+        , ( 0x2A, ( ld_ix_indirect_nn, NumberedTStates 20 ) )
         ]
 
 
 tripleByteWith16BitParamFD : Dict Int ( Int -> TripleByteIndexChange, InstructionDuration )
 tripleByteWith16BitParamFD =
     Dict.fromList
-        [ ( 0x21, ( ld_iy_nn, TwentyTStates ) )
-        , ( 0x2A, ( ld_iy_indirect_nn, TwentyTStates ) )
+        [ ( 0x21, ( ld_iy_nn, NumberedTStates 20 ) )
+        , ( 0x2A, ( ld_iy_indirect_nn, NumberedTStates 20 ) )
         ]
 
 

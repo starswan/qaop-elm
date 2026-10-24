@@ -11,44 +11,44 @@ import Z80Flags exposing (FlagRegisters, IntWithFlags, c_FP, c_FS, dec, getFlags
 singleByteFlags : Dict Int ( RegisterFlagChange, InstructionDuration )
 singleByteFlags =
     Dict.fromList
-        [ ( 0x07, ( FlagChangeFunc rlca, FourTStates ) )
-        , ( 0x0F, ( FlagChangeFunc rrca, FourTStates ) )
-        , ( 0x17, ( FlagChangeFunc rla, FourTStates ) )
-        , ( 0x1F, ( FlagChangeFunc rra, FourTStates ) )
-        , ( 0x27, ( FlagChangeFunc z80_daa, FourTStates ) )
-        , ( 0x2F, ( FlagChangeFunc z80_cpl, FourTStates ) )
-        , ( 0x37, ( FlagChangeFunc scf, FourTStates ) )
-        , ( 0x3C, ( FlagChangeFunc inc_a, FourTStates ) )
-        , ( 0x3D, ( FlagChangeFunc dec_a, FourTStates ) )
-        , ( 0x3F, ( FlagChangeFunc ccf, FourTStates ) )
-        , ( 0x87, ( FlagChangeFunc add_a_a, FourTStates ) )
-        , ( 0x8F, ( FlagChangeFunc adc_a_a, FourTStates ) )
-        , ( 0x97, ( FlagChangeFunc sub_a, FourTStates ) )
-        , ( 0x9F, ( FlagChangeFunc sbc_a, FourTStates ) )
-        , ( 0xA7, ( FlagChangeFunc and_a, FourTStates ) )
-        , ( 0xAF, ( FlagChangeFunc xor_a, FourTStates ) )
-        , ( 0xB7, ( FlagChangeFunc or_a, FourTStates ) )
-        , ( 0xBF, ( FlagChangeFunc cp_a, FourTStates ) )
+        [ ( 0x07, ( FlagChangeFunc rlca, NumberedTStates 4 ) )
+        , ( 0x0F, ( FlagChangeFunc rrca, NumberedTStates 4 ) )
+        , ( 0x17, ( FlagChangeFunc rla, NumberedTStates 4 ) )
+        , ( 0x1F, ( FlagChangeFunc rra, NumberedTStates 4 ) )
+        , ( 0x27, ( FlagChangeFunc z80_daa, NumberedTStates 4 ) )
+        , ( 0x2F, ( FlagChangeFunc z80_cpl, NumberedTStates 4 ) )
+        , ( 0x37, ( FlagChangeFunc scf, NumberedTStates 4 ) )
+        , ( 0x3C, ( FlagChangeFunc inc_a, NumberedTStates 4 ) )
+        , ( 0x3D, ( FlagChangeFunc dec_a, NumberedTStates 4 ) )
+        , ( 0x3F, ( FlagChangeFunc ccf, NumberedTStates 4 ) )
+        , ( 0x87, ( FlagChangeFunc add_a_a, NumberedTStates 4 ) )
+        , ( 0x8F, ( FlagChangeFunc adc_a_a, NumberedTStates 4 ) )
+        , ( 0x97, ( FlagChangeFunc sub_a, NumberedTStates 4 ) )
+        , ( 0x9F, ( FlagChangeFunc sbc_a, NumberedTStates 4 ) )
+        , ( 0xA7, ( FlagChangeFunc and_a, NumberedTStates 4 ) )
+        , ( 0xAF, ( FlagChangeFunc xor_a, NumberedTStates 4 ) )
+        , ( 0xB7, ( FlagChangeFunc or_a, NumberedTStates 4 ) )
+        , ( 0xBF, ( FlagChangeFunc cp_a, NumberedTStates 4 ) )
 
         -- When item popped, z80_pop adds another 6 to make 11
         -- case 0xC0: time++; if(Fr!=0) MP=PC=pop(); break; ret_nz
-        , ( 0xC0, ( ConditionalReturn (\flags -> flags.fr /= 0), FiveTStates ) )
+        , ( 0xC0, ( ConditionalReturn (\flags -> flags.fr /= 0), NumberedTStates 5 ) )
 
         -- case 0xC8: time++; if(Fr==0) MP=PC=pop(); break; ret_z
-        , ( 0xC8, ( ConditionalReturn (\flags -> flags.fr == 0), FiveTStates ) )
+        , ( 0xC8, ( ConditionalReturn (\flags -> flags.fr == 0), NumberedTStates 5 ) )
 
         -- case 0xD0: time++; if((Ff&0x100)==0) MP=PC=pop(); break; ret_nc
-        , ( 0xD0, ( ConditionalReturn (\flags -> Bitwise.and flags.ff 0x0100 == 0), FiveTStates ) )
+        , ( 0xD0, ( ConditionalReturn (\flags -> Bitwise.and flags.ff 0x0100 == 0), NumberedTStates 5 ) )
 
         -- case 0xD8: time++; if((Ff&0x100)!=0) MP=PC=pop(); break; ret_c
-        , ( 0xD8, ( ConditionalReturn (\flags -> Bitwise.and flags.ff 0x0100 /= 0), FiveTStates ) )
-        , ( 0xE0, ( ret_po, FiveTStates ) )
-        , ( 0xE8, ( ret_pe, FiveTStates ) )
-        , ( 0xF0, ( ret_p, FiveTStates ) )
+        , ( 0xD8, ( ConditionalReturn (\flags -> Bitwise.and flags.ff 0x0100 /= 0), NumberedTStates 5 ) )
+        , ( 0xE0, ( ret_po, NumberedTStates 5 ) )
+        , ( 0xE8, ( ret_pe, NumberedTStates 5 ) )
+        , ( 0xF0, ( ret_p, NumberedTStates 5 ) )
 
         -- case 0xF5: push(A<<8|flags()); break;
-        , ( 0xF5, ( FlagsPushAF, ElevenTStates ) )
-        , ( 0xF8, ( ret_m, FiveTStates ) )
+        , ( 0xF5, ( FlagsPushAF, NumberedTStates 11 ) )
+        , ( 0xF8, ( ret_m, NumberedTStates 5 ) )
         ]
 
 
