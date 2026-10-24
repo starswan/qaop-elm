@@ -111,7 +111,8 @@ foldDictIntoRam ramdict z80_ram =
             z80_ram.ula_ram |> mergeMemoryDict d1
 
         -- not the best implementation as we're ignoring d2 which just contains a list of the changes
-        -- also bank2 would be better
+        -- also bank2 would be better as 1024 arrays of 16 rather than 16 arrays of 1024 so that
+        -- we can optimise array swap-outs based on actual changes
         bank2 =
             z80_ram.bank2
                 |> Array.indexedMap
