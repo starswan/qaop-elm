@@ -42,15 +42,15 @@ setMemValue addr value z80mem =
             dict |> Dict.insert addr value |> Z80MemoryDict
 
 
-mergeMemoryDict : Dict Int Int -> Z80MemoryDict -> Z80MemoryDict
+mergeMemoryDict : List ( Int, Int ) -> Z80MemoryDict -> Z80MemoryDict
 mergeMemoryDict merged z80mem =
-    if merged |> Dict.isEmpty then
+    if merged |> List.isEmpty then
         z80mem
 
     else
         case z80mem of
             Z80MemoryDict dict ->
-                dict |> Dict.union merged |> Z80MemoryDict
+                merged |> List.foldl (\( addr, value ) newdict -> newdict |> Dict.insert addr value) dict |> Z80MemoryDict
 
 
 

@@ -61,23 +61,23 @@ foldDictIntoRam ramdict z80_ram =
                                     addr - 6912
                             in
                             if ram_addr >= 0 then
-                                ( ( t0, t1 |> Dict.insert ram_addr value ), t2, t3 )
+                                ( ( t0, ( ram_addr, value ) :: t1 ), t2, t3 )
 
                             else
-                                ( ( t0 |> Dict.insert addr value, t1 ), t2, t3 )
+                                ( ( ( addr, value ) :: t0, t1 ), t2, t3 )
 
                         else if addr < 32768 then
-                            ( ( t0, t1 ), t2 |> Dict.insert (addr - 16384) value, t3 )
+                            ( ( t0, t1 ), ( addr - 16384, value ) :: t2, t3 )
 
                         else
-                            ( ( t0, t1 ), t2, t3 |> Dict.insert (addr - 32768) value )
+                            ( ( t0, t1 ), t2, ( addr - 32768, value ) :: t3 )
                     )
-                    ( ( Dict.empty, Dict.empty ), Dict.empty, Dict.empty )
+                    ( ( [], [] ), [], [] )
 
         x0 =
             d0
-                |> Dict.foldl
-                    (\addr value screen ->
+                |> List.foldl
+                    (\( addr, value ) screen ->
                         screen |> setScreenValue addr value
                     )
                     z80_ram.screen
