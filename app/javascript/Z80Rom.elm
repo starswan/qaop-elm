@@ -28,7 +28,24 @@ constructor rom_dict =
 
 getROMValue : Int -> Z80ROM -> Int
 getROMValue addr z80rom =
-    z80rom.rom48k |> getDoubleArrayValue addr
+    let
+        addr1 =
+            addr |> shiftRightBy 10
+
+        addr2 =
+            addr |> Bitwise.and 0x03FF
+    in
+    case Array.get addr1 z80rom.rom48k of
+        Just array ->
+            case array |> Array.get addr2 of
+                Just a ->
+                    a
+
+                Nothing ->
+                    debugTodo "getROMValue" (String.fromInt addr1 ++ String.fromInt addr2) -1
+
+        Nothing ->
+            debugTodo "getROMValue" (String.fromInt addr) -1
 
 
 parseRomFile : Bytes -> Result Error Z80ROM

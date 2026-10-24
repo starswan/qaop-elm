@@ -1,8 +1,10 @@
 module Z80Ram exposing (..)
 
 import Array exposing (Array)
+import Bitwise exposing (shiftRightBy)
 import Dict exposing (Dict)
 import ScreenStorage exposing (Z80Screen, getScreenValue, setScreenValue)
+import Z80Debug exposing (debugTodo)
 import Z80MemoryDict exposing (Z80MemoryDict, getMemValue, mergeMemoryDict, setMemValue)
 
 
@@ -47,6 +49,28 @@ getRamValue addr z80ram =
 
     else
         z80ram.bank3 |> getMemValue (addr - 32768)
+
+
+getDoubleArrayValue : Int -> Array (Array Int) -> Int
+getDoubleArrayValue addr memArray =
+    let
+        addr1 =
+            addr |> shiftRightBy 10
+
+        addr2 =
+            addr |> Bitwise.and 0x03FF
+    in
+    case Array.get addr1 memArray of
+        Just array ->
+            case array |> Array.get addr2 of
+                Just a ->
+                    a
+
+                Nothing ->
+                    debugTodo "getDoubleArrayValue" (String.fromInt addr1 ++ String.fromInt addr2) -1
+
+        Nothing ->
+            debugTodo "getDoubleArrayValue" (String.fromInt addr) -1
 
 
 foldDictIntoRam : Dict Int Int -> Z80Ram -> Z80Ram
