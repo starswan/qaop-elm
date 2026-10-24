@@ -14,8 +14,10 @@ const elm_options = function() {
     // console.log('node_env = ' + node_env);
     if (node_env === "production" || node_env === "arthur") {
         return {
-            optimize: true,
-            debug: false
+            optimize: false,
+            debug: false,
+            verbose: true,
+            pathToElm: "node_modules/elm-optimize-level-2/bin/elm-optimize-level-2"
         }
     } else {
         return {
