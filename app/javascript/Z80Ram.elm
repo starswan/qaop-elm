@@ -1,14 +1,17 @@
 module Z80Ram exposing (..)
 
+import Array exposing (Array)
+import Bitwise exposing (shiftRightBy)
 import Dict exposing (Dict)
 import ScreenStorage exposing (Z80Screen, getScreenValue, setScreenValue)
-import Z80MemoryDict exposing (Z80MemoryDict, getMemValue, mergeMemoryDict, setMemValue)
+import Z80Debug exposing (debugTodo)
+import Z80MemoryDict exposing (Z80MemoryDict, getMemValue, mergeMemoryDict)
 
 
 type alias Z80Ram =
     { screen : Z80Screen
     , ula_ram : Z80MemoryDict
-    , bank2 : Z80MemoryDict
+    , bank2 : Array (Array Int)
     , bank3 : Z80MemoryDict
     }
 
@@ -20,7 +23,7 @@ constructor =
             List.repeat (16384 - 6912) 0 |> Z80MemoryDict.constructor
 
         ram2 =
-            List.repeat 16384 0 |> Z80MemoryDict.constructor
+            List.repeat 16 (List.repeat 1024 0 |> Array.fromList) |> Array.fromList
 
         ram3 =
             List.repeat 16384 0 |> Z80MemoryDict.constructor
@@ -42,10 +45,32 @@ getRamValue addr z80ram =
             z80ram.screen |> getScreenValue addr
 
     else if addr < 32768 then
-        z80ram.bank2 |> getMemValue (addr - 16384)
+        z80ram.bank2 |> getDoubleArrayValue (addr - 16384)
 
     else
         z80ram.bank3 |> getMemValue (addr - 32768)
+
+
+getDoubleArrayValue : Int -> Array (Array Int) -> Int
+getDoubleArrayValue addr memArray =
+    let
+        addr1 =
+            addr |> shiftRightBy 10
+
+        addr2 =
+            addr |> Bitwise.and 0x03FF
+    in
+    case Array.get addr1 memArray of
+        Just array ->
+            case array |> Array.get addr2 of
+                Just a ->
+                    a
+
+                Nothing ->
+                    debugTodo "getDoubleArrayValue" (String.fromInt addr1 ++ String.fromInt addr2) -1
+
+        Nothing ->
+            debugTodo "getDoubleArrayValue" (String.fromInt addr) -1
 
 
 foldDictIntoRam : Dict Int Int -> Z80Ram -> Z80Ram
@@ -85,10 +110,21 @@ foldDictIntoRam ramdict z80_ram =
         x1 =
             z80_ram.ula_ram |> mergeMemoryDict d1
 
-        x2 =
-            z80_ram.bank2 |> mergeMemoryDict d2
+        -- not the best implementation as we're ignoring d2 which just contains a list of the changes
+        -- also bank2 would be better as 1024 arrays of 16 rather than 16 arrays of 1024 so that
+        -- we can optimise array swap-outs based on actual changes
+        bank2 =
+            z80_ram.bank2
+                |> Array.indexedMap
+                    (\index arrayItem ->
+                        arrayItem
+                            |> Array.indexedMap
+                                (\subIndex item ->
+                                    ramdict |> Dict.get (16384 + index * 1024 + subIndex) |> Maybe.withDefault item
+                                )
+                    )
 
         x3 =
             z80_ram.bank3 |> mergeMemoryDict d3
     in
-    { screen = x0, ula_ram = x1, bank2 = x2, bank3 = x3 }
+    { screen = x0, ula_ram = x1, bank2 = bank2, bank3 = x3 }
