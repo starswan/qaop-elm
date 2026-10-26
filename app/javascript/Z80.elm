@@ -9,7 +9,7 @@ import Array
 import Bitwise
 import CpuTimeCTime exposing (CTime(..), CpuTimeAndPc, CpuTimeAndValue, CpuTimeCTime, CpuTimePcAnd16BitValue, c_FRTIME, c_TIME_LIMIT, reset_cpu_time)
 import Dict exposing (Dict)
-import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainAndFlagRegistersCB30, singleByteMainRegsCB80)
+import GroupCB exposing (singleByteMainAndFlagRegistersCB, singleByteMainAndFlagRegistersCB40, singleByteMainRegsCB80)
 import GroupED exposing (edWithInterrupts, fourByteMainED, singleByteFlagsED, singleByteMainAndFlagsED, singleByteMainRegsED)
 import InstructionDuration exposing (InstructionDuration(..), addDuration, addExtraCpuTime)
 import Interrupts exposing (IFFValue(..), InterruptMode(..))
@@ -543,7 +543,7 @@ runSpecialBitManipCB param clockTime z80_core =
             ( PureDelta f, ( clockTime, duration, IncrementByTwo ) )
 
         Nothing ->
-            case singleByteMainAndFlagRegistersCB30 |> Array.get (param - 0x30) of
+            case singleByteMainAndFlagRegistersCB40 |> Array.get (param - 0x40) of
                 Just ( f, duration ) ->
                     ( PureDelta (f z80_core.main z80_core.flags), ( clockTime, duration, IncrementByTwo ) )
 
