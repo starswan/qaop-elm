@@ -376,7 +376,17 @@ execute_delta instrTime opCode rom48k pc z80_core =
                 ( param, newTime ) =
                     z80_core.env |> getMem8 (Bitwise.and (pc + 1) 0xFFFF) instrTime rom48k
             in
-            runSpecialBitManipCB param newTime z80_core
+            case singleByteMainAndFlagRegistersCB |> Array.get param of
+                Just ( f, duration ) ->
+                    ( PureDelta f, ( newTime, duration, IncrementByTwo ) )
+
+                Nothing ->
+                    case singleByteMainRegsCB80 |> Array.get (param - 0x80) of
+                        Just ( mainRegFunc, duration ) ->
+                            ( CBDeltaChange mainRegFunc, ( newTime, duration, IncrementByTwo ) )
+
+                        Nothing ->
+                            ( UnknownInstruction "execute CB" param, ( newTime, FourTStates, IncrementByTwo ) )
 
         0xED ->
             let
@@ -534,21 +544,6 @@ runIndexIY param clockTime rom48k pc z80 =
 
                         Nothing ->
                             ( UnknownInstruction "execute IndexIY" param, ( clockTime, FourTStates, IncrementByTwo ) )
-
-
-runSpecialBitManipCB : Int -> CpuTimeCTime -> Z80Core -> ( DeltaWithChanges, ( CpuTimeCTime, InstructionDuration, PCIncrement ) )
-runSpecialBitManipCB param clockTime z80_core =
-    case singleByteMainAndFlagRegistersCB |> Array.get param of
-        Just ( f, duration ) ->
-            ( PureDelta (f z80_core.main z80_core.flags), ( clockTime, duration, IncrementByTwo ) )
-
-        Nothing ->
-            case singleByteMainRegsCB80 |> Array.get (param - 0x80) of
-                Just ( mainRegFunc, duration ) ->
-                    ( CBDeltaChange (mainRegFunc z80_core.main), ( clockTime, duration, IncrementByTwo ) )
-
-                Nothing ->
-                    ( UnknownInstruction "execute CB" param, ( clockTime, FourTStates, IncrementByTwo ) )
 
 
 runSpecialEDMisc : Int -> CpuTimeCTime -> Z80ROM -> Int -> Z80Core -> ( DeltaWithChanges, ( CpuTimeCTime, InstructionDuration, PCIncrement ) )
