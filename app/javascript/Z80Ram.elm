@@ -2,7 +2,7 @@ module Z80Ram exposing (..)
 
 import Dict exposing (Dict)
 import ScreenStorage exposing (Z80Screen, getScreenValue, setScreenValue)
-import Z80MemoryDict exposing (Z80MemoryDict, getMemValue, mergeMemoryDict, setMemValue)
+import Z80MemoryDict exposing (Z80MemoryDict, getMemValue, mergeMemoryDict)
 
 
 type alias Z80Ram =
