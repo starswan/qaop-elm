@@ -177,17 +177,8 @@ RSpec.describe "Game" do
         sleep 0.5
       end
 
-      # sleep 100
-      # This is very slow, but calling send_keys
-      # with a string on an array is too quick
-      # due to the 50Hz keyboard polling rate
-      # Load tape
+      # use the emulator LOAD "" option
       find("#load").click
-      # data = 'j""'
-      # data.each_char do |k|
-      #   spectrum.send_keys k
-      # end
-      # spectrum.send_keys [:enter]
 
       script = scripts.fetch(z80_game, lambda { |speccy|
         measure_speed_in_hz do
@@ -210,6 +201,9 @@ RSpec.describe "Game" do
     end
     keys.each_char do |k|
       spectrum.send_keys k
+      # sleep just long enough for Spectrum to see down and up
+      # before sending the next keystroke
+      sleep 0.05
     end
   end
 
