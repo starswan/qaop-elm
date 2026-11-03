@@ -34,7 +34,7 @@ suite =
             z80.main
 
         z80rom =
-            Z80Rom.constructor Array.empty
+            Z80Rom.emptyROM
     in
     describe "Z80.execute_instruction"
         -- Nest as many descriptions as you like.
