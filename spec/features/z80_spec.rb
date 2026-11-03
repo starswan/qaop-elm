@@ -7,14 +7,6 @@ RSpec.describe "Game" do
   let(:expected_hz) { (ENV['HZ'] || "9.8").to_f }
 
   context "with documented Z80 test" do
-    let(:version) { "1.2a" }
-    let(:faraday) {
-      Faraday.new do |f|
-        f.response :raise_error
-        f.response :follow_redirects
-        f.adapter Faraday.default_adapter
-      end
-    }
     let(:cyrus) { build(:game, :cyrus) }
     let(:frogger) { build(:game, :frogger) }
     let(:football_manager) { build(:game, :football_manager) }
@@ -91,21 +83,21 @@ RSpec.describe "Game" do
         },
         football_manager.name => lambda { |spectrum|
           # Player name
-          delay_and_send(spectrum, 480, FFaker::Name.first_name.first(5))
+          delay_and_send(spectrum, 530, FFaker::Name.first_name.first(5))
           # select Plymouth Argyle
-          delay_and_send(spectrum, 890, "99")
+          delay_and_send(spectrum, 940, "99")
           delay_and_send(spectrum, 1070, "99")
-          delay_and_send(spectrum, 1210, "44")
+          delay_and_send(spectrum, 1220, "44")
           # select beginner
-          delay_and_send(spectrum, 1330, "1")
+          delay_and_send(spectrum, 1320, "1")
           # select white team colours
           delay_and_send(spectrum, 1410, "7")
           # continue from main menu
-          delay_and_send(spectrum, 1790, "99")
+          delay_and_send(spectrum, 1820, "99")
           #  Hit ENTER to start first match
           delay_and_send(spectrum, 1980, "")
           # continue into match
-          delay_and_send(spectrum, 2260, "99")
+          delay_and_send(spectrum, 2280, "99")
 
           # wait for match to actually start properly
           sleep 3
