@@ -114,3 +114,33 @@ set_bc_main v z80_main =
 set_de_main : Int -> MainWithIndexRegisters -> MainWithIndexRegisters
 set_de_main v z80_main =
     { z80_main | d = shiftRightBy8 v, e = Bitwise.and v 0xFF }
+
+
+set_b : Int -> MainWithIndexRegisters -> MainWithIndexRegisters
+set_b value main =
+    { main | b = value }
+
+
+set_c : Int -> MainWithIndexRegisters -> MainWithIndexRegisters
+set_c value main =
+    { main | c = value }
+
+
+set_d : Int -> MainWithIndexRegisters -> MainWithIndexRegisters
+set_d value main =
+    { main | d = value }
+
+
+set_e : Int -> MainWithIndexRegisters -> MainWithIndexRegisters
+set_e value main =
+    { main | e = value }
+
+
+set_h : Int -> MainWithIndexRegisters -> MainWithIndexRegisters
+set_h value main =
+    { main | hl = Bitwise.or (value |> shiftLeftBy8) (Bitwise.and main.hl 0xFF) }
+
+
+set_l : Int -> MainWithIndexRegisters -> MainWithIndexRegisters
+set_l value main =
+    { main | hl = Bitwise.or value (Bitwise.and main.hl 0xFF00) }
