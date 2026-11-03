@@ -171,7 +171,7 @@ RSpec.describe "Game" do
       cpu_count = find("#cyclecount")
       # wait for Spectrum ROM to initialize so that
       # we can send LOAD "" to load the tape
-      while cpu_count.text.to_i < 80
+      while cpu_count.text.to_i < 100
         sleep 0.5
       end
 
