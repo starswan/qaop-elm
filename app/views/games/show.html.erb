@@ -1,16 +1,11 @@
 <!-- $Id$ -->
 <%= javascript_include_tag "hello_elm", type: "module" %>
 <div align="center">
+<!--    <dd><%#= link_to 'Play Java Version', game_path(@game, format: :jnlp) %>-->
   <div class="page-header">
-    <b><%= t '.title', :default => @game.name %></b>(<%= @game.filename %>)
+    <b><%= t '.title', :default => @game.name %></b> (<%= @game.filename %>)
+    <%= link_to t('.back', :default => t("helpers.links.back")), games_path, :class => 'btn btn-default' %>
   </div>
-
-  <dl class="dl-horizontal">
-    <dd><%= link_to 'Play Java Version', game_path(@game, format: :jnlp) %>
-    <%= link_to t('.back', :default => t("helpers.links.back")),
-                games_path, :class => 'btn btn-default'  %>
-    </dd>
-  </dl>
   <div>
     <%= content_tag :canvas, 'Game', width: 512, height: 384, id: 'applet',
                     class: 'applet',

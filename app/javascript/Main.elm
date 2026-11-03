@@ -39,7 +39,7 @@ port toWebAudio : Json.Encode.Value -> Cmd msg
 
 
 c_TICKTIME =
-    20
+    19
 
 
 

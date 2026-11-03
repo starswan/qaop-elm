@@ -166,14 +166,12 @@ RSpec.describe "Game" do
     it "loads the emulator", :js do
       find("#game_#{game_id}").click
       # check that Elm is running
-      # sleep 30
-
       expect(page).to have_content 'Refresh Interval'
 
       cpu_count = find("#cyclecount")
       # wait for Spectrum ROM to initialize so that
       # we can send LOAD "" to load the tape
-      while cpu_count.text.to_i < 80
+      while cpu_count.text.to_i < 100
         sleep 0.5
       end
 
