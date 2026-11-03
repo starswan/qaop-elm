@@ -11,8 +11,6 @@ import Spectrum exposing (Spectrum)
 
 type alias Qaop =
     { spectrum : Spectrum
-
-    --, loader : Loader
     , state : Int
     , keys : List KeyEvent
     }

@@ -1,5 +1,7 @@
 module Z80MemoryDict exposing (..)
 
+import Array exposing (Array)
+import Bitwise exposing (shiftRightBy)
 import Dict exposing (Dict)
 import Utils exposing (toHexString)
 import Z80Debug exposing (debugTodo)

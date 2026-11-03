@@ -52,11 +52,12 @@ RSpec.describe "Game" do
           measure_speed_in_hz
         },
         flags.name => lambda { |spectrum|
-          [2350, 4710, 5900, 7300, 8200, 8780, 9100, 9550].each do |t|
+          # 19    41    63    85   102   119   141
+          [2380, 4720, 5910, 7310, 8180, 8780, 9080].each do |t|
             delay_and_send_just(spectrum, t, "y")
           end
 
-          sleep 3
+          sleep 7
 
           measure_speed_in_hz
         },
@@ -90,21 +91,21 @@ RSpec.describe "Game" do
         },
         football_manager.name => lambda { |spectrum|
           # Player name
-          delay_and_send(spectrum, 470, FFaker::Name.first_name.first(5))
+          delay_and_send(spectrum, 480, FFaker::Name.first_name.first(5))
           # select Plymouth Argyle
-          delay_and_send(spectrum, 930, "99")
-          delay_and_send(spectrum, 1080, "99")
-          delay_and_send(spectrum, 1225, "44")
+          delay_and_send(spectrum, 890, "99")
+          delay_and_send(spectrum, 1070, "99")
+          delay_and_send(spectrum, 1210, "44")
           # select beginner
           delay_and_send(spectrum, 1330, "1")
           # select white team colours
           delay_and_send(spectrum, 1410, "7")
           # continue from main menu
-          delay_and_send(spectrum, 1825, "99")
+          delay_and_send(spectrum, 1790, "99")
           #  Hit ENTER to start first match
           delay_and_send(spectrum, 1980, "")
           # continue into match
-          delay_and_send(spectrum, 2280, "99")
+          delay_and_send(spectrum, 2260, "99")
 
           # wait for match to actually start properly
           sleep 3
