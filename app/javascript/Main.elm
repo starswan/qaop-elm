@@ -6,7 +6,6 @@
 port module Main exposing (..)
 
 import Browser
-import Delay
 import Html exposing (Attribute, Html, div)
 import Json.Encode
 import LoadingModel exposing (Flags, InitMessage(..), LoadResult(..), LoadingModel, loadingInit, updateLoading)
