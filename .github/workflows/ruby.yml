@@ -61,7 +61,7 @@ jobs:
       - name: Cache ~/elm-stuff
         uses: actions/cache@v4
         with:
-          path: ${{ env.HOME }}/elm-stuff
+          path: elm-stuff
           key: elm-stuff-${{ hashFiles('elm.json') }}
 
 #      - name: Restore $HOME/.elm from tar file
