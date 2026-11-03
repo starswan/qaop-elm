@@ -166,7 +166,7 @@ RSpec.describe "Game" do
     it "loads the emulator", :js do
       find("#game_#{game_id}").click
       # check that Elm is running
-      expect(page).to have_content 'Pause'
+      expect(page).to have_content 'Refresh Interval'
 
       cpu_count = find("#cyclecount")
       # wait for Spectrum ROM to initialize so that
