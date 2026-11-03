@@ -45,7 +45,7 @@ jobs:
         run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
 
       - name: Set up yarn cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
           key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
@@ -53,13 +53,13 @@ jobs:
             ${{ runner.os }}-yarn-
 
       - name: Cache ~/.elm
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ env.ELM_HOME }}
           key: elm-${{ hashFiles('elm.json', 'review/elm.json') }}
 
       - name: Cache ~/elm-stuff
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: elm-stuff
           key: elm-stuff-${{ hashFiles('elm.json') }}
