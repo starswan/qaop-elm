@@ -27,7 +27,7 @@ constructor rom_dict =
 
 emptyROM : Z80ROM
 emptyROM =
-    Z80ROM (Array.repeat 16 (Array.repeat 1024 0)) Keyboard.constructor Z80Ram.constructor
+    Z80ROM (Array.repeat 16 (Array.repeat 512 0)) Keyboard.constructor Z80Ram.constructor
 
 
 getROMValue : Int -> Z80ROM -> Int
