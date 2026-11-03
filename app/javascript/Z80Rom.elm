@@ -25,6 +25,11 @@ constructor rom_dict =
     Z80ROM rom_dict Keyboard.constructor Z80Ram.constructor
 
 
+emptyROM : Z80ROM
+emptyROM =
+    Z80ROM (Array.repeat 16 (Array.repeat 1024 0)) Keyboard.constructor Z80Ram.constructor
+
+
 getROMValue : Int -> Z80ROM -> Int
 getROMValue addr z80rom =
     let
