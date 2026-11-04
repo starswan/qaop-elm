@@ -1,8 +1,9 @@
 module Z80CoreWithClockTime exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeCTime, addCpuTimeTime, reset_cpu_time)
+import CpuTimeCTime exposing (reset_cpu_time)
 import Interrupts exposing (IFFValue(..), InterruptMode(..))
+import MemoryContentionDelay exposing (CpuTimeCTime, addCpuTimeTime)
 import Z80Core exposing (Z80Core)
 import Z80Env exposing (z80_push, z80env_constructor)
 import Z80Flags exposing (FlagRegisters)

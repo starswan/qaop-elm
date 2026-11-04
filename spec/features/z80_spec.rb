@@ -7,30 +7,20 @@ RSpec.describe "Game" do
   let(:expected_hz) { (ENV['HZ'] || "9.8").to_f }
 
   context "with documented Z80 test" do
-    let(:version) { "1.2a" }
-    let(:faraday) {
-      Faraday.new do |f|
-        f.response :raise_error
-        f.response :follow_redirects
-        f.adapter Faraday.default_adapter
-      end
-    }
     let(:cyrus) { build(:game, :cyrus) }
-    let(:frogger) { build(:game, :frogger) }
     let(:football_manager) { build(:game, :football_manager) }
     let(:flags) { build(:game, :z80_test_flags) }
     let(:regs) { build(:game, :z80_test_doc) }
     let(:full_flags) { build(:game, :z80_full_flags) }
     let(:full) { build(:game, :z80_test_full) }
     let(:matchday) { build(:game, :match_day) }
-    let(:miner) { build(:game, :manic_miner) }
     # ideally speed test should be BASIC so we see if compiling helps
     # but matchday is interesting because it only manages 20Hz in optimised mode
     let(:z80_game) { ENV.fetch("Z80TEST", football_manager.name) }
     # let(:z80_game) { ENV.fetch("Z80TEST", matchday.name) }
 
     let(:programs_by_name) {
-      [flags, regs, miner, matchday, full_flags, full, cyrus, football_manager, frogger].index_by(&:name)
+      [flags, regs, build(:game, :manic_miner), matchday, full_flags, full, cyrus, football_manager, build(:game, :frogger)].index_by(&:name)
     }
     let(:game_id) { Game.find_by!(name: z80_game).id }
     let(:scripts) {
@@ -91,21 +81,21 @@ RSpec.describe "Game" do
         },
         football_manager.name => lambda { |spectrum|
           # Player name
-          delay_and_send(spectrum, 480, FFaker::Name.first_name.first(5))
+          delay_and_send(spectrum, 530, FFaker::Name.first_name.first(5))
           # select Plymouth Argyle
-          delay_and_send(spectrum, 890, "99")
-          delay_and_send(spectrum, 1070, "99")
-          delay_and_send(spectrum, 1210, "44")
+          delay_and_send(spectrum, 950, "99")
+          delay_and_send(spectrum, 1080, "99")
+          delay_and_send(spectrum, 1220, "44")
           # select beginner
-          delay_and_send(spectrum, 1330, "1")
+          delay_and_send(spectrum, 1320, "1")
           # select white team colours
           delay_and_send(spectrum, 1410, "7")
           # continue from main menu
-          delay_and_send(spectrum, 1790, "99")
+          delay_and_send(spectrum, 1810, "99")
           #  Hit ENTER to start first match
           delay_and_send(spectrum, 1980, "")
           # continue into match
-          delay_and_send(spectrum, 2260, "99")
+          delay_and_send(spectrum, 2280, "99")
 
           # wait for match to actually start properly
           sleep 3
