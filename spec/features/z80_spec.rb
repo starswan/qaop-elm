@@ -83,24 +83,24 @@ RSpec.describe "Game" do
         },
         football_manager.name => lambda { |spectrum|
           # Player name
-          delay_and_send(spectrum, 480, FFaker::Name.first_name.first(5))
+          delay_and_send(spectrum, 510, FFaker::Name.first_name.first(5))
           # select Plymouth Argyle
           delay_and_send(spectrum, 910, "99")
-          delay_and_send(spectrum, 1060, "99")
+          delay_and_send(spectrum, 1050, "99")
           delay_and_send(spectrum, 1210, "44")
           # select beginner
           delay_and_send(spectrum, 1330, "1")
           # select white team colours
-          delay_and_send(spectrum, 1410, "7")
+          delay_and_send(spectrum, 1420, "7")
           # continue from main menu
-          delay_and_send(spectrum, 1810, "99")
+          delay_and_send(spectrum, 1820, "99")
           #  Hit ENTER to start first match
           delay_and_send(spectrum, 1980, "")
           # continue into match
           delay_and_send(spectrum, 2260, "99")
 
           # wait for match to actually start properly
-          sleep 3
+          delay_and_send(spectrum, 2550, "")
 
           measure_speed_in_hz do
             spectrum.send_keys :enter
