@@ -84,7 +84,7 @@ RSpec.describe "Game" do
           delay_and_send(spectrum, 530, FFaker::Name.first_name.first(5))
           # select Plymouth Argyle
           delay_and_send(spectrum, 950, "99")
-          delay_and_send(spectrum, 1070, "99")
+          delay_and_send(spectrum, 1080, "99")
           delay_and_send(spectrum, 1220, "44")
           # select beginner
           delay_and_send(spectrum, 1320, "1")
