@@ -3,7 +3,7 @@ module QaopModel exposing (..)
 import Bitwise exposing (complement)
 import Delay
 import Dict
-import Html exposing (Html, button, div, h2, h4, span, text)
+import Html exposing (Html, button, div, h4, span, text)
 import Html.Attributes exposing (disabled, id, style, tabindex)
 import Html.Events exposing (onClick, preventDefaultOn)
 import Http
@@ -161,7 +161,7 @@ alwaysPreventDefault msg =
     ( msg, True )
 
 
-viewQaop : QaopModel -> Int -> Html QaopMessage
+viewQaop : QaopModel -> Float -> Html QaopMessage
 viewQaop model tickInterval =
     let
         screen =
@@ -184,7 +184,7 @@ viewQaop model tickInterval =
     -- The inline style is being used for example purposes in order to keep this example simple and
     -- avoid loading additional resources. Use a proper stylesheet when building your own app.
     div []
-        [ h4 [] [ text ("Refresh Interval " ++ (tickInterval |> String.fromInt) ++ "ms ") ]
+        [ h4 [] [ text ("Refresh Interval " ++ (tickInterval |> String.fromFloat) ++ "ms ") ]
         , div [ style "display" "flex", style "justify-content" "center" ]
             [ div []
                 [ span [ id "cyclecount" ] [ text (String.fromInt model.count) ]
@@ -325,7 +325,7 @@ loadingCommands =
         |> List.concat
 
 
-qaopSubs : QaopModel -> Int -> Sub QaopMessage
+qaopSubs : QaopModel -> Float -> Sub QaopMessage
 qaopSubs model tickInterval =
     if model.qaop.spectrum.paused then
         Sub.none
@@ -333,10 +333,10 @@ qaopSubs model tickInterval =
     else
         let
             ticker =
-                Time.every (tickInterval |> toFloat) (\posix -> Tick posix)
+                Time.every tickInterval (\posix -> Tick posix)
 
             flasher =
-                Time.every (tickInterval * 16 |> toFloat) (\posix -> FlipFlash posix)
+                Time.every (tickInterval * 16) (\posix -> FlipFlash posix)
         in
         Sub.batch [ ticker, flasher ]
 
