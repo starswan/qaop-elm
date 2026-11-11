@@ -1,6 +1,8 @@
 module Spectrum exposing (..)
 
 import Bitwise exposing (complement, shiftRightBy)
+import CompiledZ80ROM exposing (CompiledZ80ROM)
+import Compiler exposing (createCompiledRom)
 import CpuTimeCTime exposing (reset_cpu_time)
 import Dict exposing (Dict)
 import Keyboard exposing (KeyEvent, Keyboard, update_keyboard)
@@ -118,7 +120,7 @@ new_tape tapfileList spectrum =
 
 type alias Spectrum =
     { cpu : Z80
-    , rom48k : Z80ROM
+    , rom48k : CompiledZ80ROM
     , paused : Bool
     , loading : Bool
     , want_pause : Int
@@ -134,11 +136,11 @@ type alias Spectrum =
 constructor : Z80ROM -> Spectrum
 constructor z80rom =
     --Spectrum Z80.constructor True 1 Nothing Audio new_screen_refresh new_border_refresh
-    --Spectrum Z80.constructor (Z80Rom.constructor z80rom) True False 1 Nothing new_screen_refresh new_border_refresh
-    Spectrum Z80.constructor z80rom True False 1 Nothing Nothing
+    Spectrum Z80.constructor (createCompiledRom z80rom.rom48k) True False 1 Nothing Nothing
 
 
 
+--Spectrum Z80.constructor (Z80Rom.constructor z80rom) True False 1 Nothing
 --
 --	public void run()
 --	{
@@ -264,7 +266,7 @@ frames keys speccy =
             speccy.rom48k
 
         rom =
-            speccy.rom48k
+            compiledRom.z80rom
 
         new_rom =
             { rom | keyboard = keys |> update_keyboard }
@@ -353,18 +355,21 @@ frames keys speccy =
                     , rom = rom_2
                     , audioFrequency = audioFrequency
                     }
+
+        newCompiled =
+            { compiledRom | z80rom = loadz80posrom.rom }
     in
     case speccy.tape of
         Just z80_tape ->
             case loadz80posrom.pos of
                 Just newPosition ->
-                    { speccy | rom48k = loadz80posrom.rom, loading = loadz80posrom.load, cpu = loadz80posrom.z80, tape = Just { z80_tape | tapePos = newPosition }, audioFrequency = loadz80posrom.audioFrequency }
+                    { speccy | rom48k = newCompiled, loading = loadz80posrom.load, cpu = loadz80posrom.z80, tape = Just { z80_tape | tapePos = newPosition }, audioFrequency = loadz80posrom.audioFrequency }
 
                 Nothing ->
-                    { speccy | rom48k = loadz80posrom.rom, loading = loadz80posrom.load, cpu = loadz80posrom.z80, tape = Just z80_tape, audioFrequency = loadz80posrom.audioFrequency }
+                    { speccy | rom48k = newCompiled, loading = loadz80posrom.load, cpu = loadz80posrom.z80, tape = Just z80_tape, audioFrequency = loadz80posrom.audioFrequency }
 
         Nothing ->
-            { speccy | rom48k = loadz80posrom.rom, loading = loadz80posrom.load, cpu = loadz80posrom.z80, audioFrequency = loadz80posrom.audioFrequency }
+            { speccy | rom48k = newCompiled, loading = loadz80posrom.load, cpu = loadz80posrom.z80, audioFrequency = loadz80posrom.audioFrequency }
 
 
 
@@ -1081,10 +1086,10 @@ checkLoad spectrum =
                 if pc1 >= 0x05E3 then
                     let
                         ( pc2, sp2 ) =
-                            ( cpu.coreWithClock.core.env |> mem16 sp1 spectrum.rom48k clockTime |> .value16, char sp1 + 2 )
+                            ( cpu.coreWithClock.core.env |> mem16 sp1 spectrum.rom48k.z80rom clockTime |> .value16, char sp1 + 2 )
                     in
                     if pc2 == 0x05E6 then
-                        ( cpu.coreWithClock.core.env |> mem16 sp2 spectrum.rom48k clockTime |> .value16, char sp2 + 2 )
+                        ( cpu.coreWithClock.core.env |> mem16 sp2 spectrum.rom48k.z80rom clockTime |> .value16, char sp2 + 2 )
 
                     else
                         ( pc2, sp2 )

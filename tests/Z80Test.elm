@@ -1,15 +1,11 @@
 module Z80Test exposing (..)
 
-import Array
 import CpuTimeCTime exposing (reset_cpu_time)
-import Dict
 import Expect
 import Test exposing (..)
-import Triple
 import Utils exposing (toHexString)
-import Z80 exposing (executeCoreInstruction)
 import Z80CoreWithClockTime
-import Z80Env exposing (setMem, setMem16, setMemWithTime)
+import Z80Env exposing (setMem, setMem16)
 import Z80Mem exposing (getMem8, mem16)
 import Z80Rom
 

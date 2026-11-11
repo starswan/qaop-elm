@@ -1,6 +1,7 @@
 module GroupF0Test exposing (..)
 
 import Array
+import Compiler exposing (createCompiledRom)
 import CpuTimeCTime exposing (reset_cpu_time)
 import Dict
 import Expect
@@ -38,7 +39,7 @@ suite =
             z80.main
 
         z80rom =
-            Z80Rom.constructor Array.empty
+            createCompiledRom Array.empty
     in
     describe "Z80.execute_instruction"
         -- Nest as many descriptions as you like.
@@ -61,10 +62,10 @@ suite =
                             |> Triple.dropSecond
 
                     pushed_low =
-                        new_z80.env |> getMem8 0xFF75 reset_cpu_time z80rom |> Tuple.first
+                        new_z80.env |> getMem8 0xFF75 reset_cpu_time z80rom.z80rom |> Tuple.first
 
                     pushed_high =
-                        new_z80.env |> getMem8 0xFF76 reset_cpu_time z80rom |> Tuple.first
+                        new_z80.env |> getMem8 0xFF76 reset_cpu_time z80rom.z80rom |> Tuple.first
                 in
                 Expect.equal { pc = addr + 1, sp = 0xFF75, push_lo = 0x40, push_hi = 0x76 } { pc = new_pc, sp = new_z80.env.sp, push_lo = pushed_low, push_hi = pushed_high }
         , describe "0xF9 LD SP,HL"

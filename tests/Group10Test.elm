@@ -1,6 +1,7 @@
 module Group10Test exposing (..)
 
 import Array
+import Compiler exposing (createCompiledRom)
 import CpuTimeCTime exposing (reset_cpu_time)
 import Dict
 import Expect exposing (Expectation)
@@ -36,7 +37,7 @@ suite =
             z80.main
 
         z80rom =
-            Z80Rom.constructor Array.empty
+            createCompiledRom Array.empty
     in
     describe "Z80.execute_instruction"
         -- Nest as many descriptions as you like.
@@ -101,7 +102,7 @@ suite =
                             |> Triple.dropSecond
 
                     mem_value =
-                        new_z80.env |> getMem8 0x6545 reset_cpu_time z80rom |> Tuple.first
+                        new_z80.env |> getMem8 0x6545 reset_cpu_time z80rom.z80rom |> Tuple.first
                 in
                 Expect.equal ( addr + 1, 0x38 ) ( new_pc, mem_value )
         , test "0x13 INC DE" <|
