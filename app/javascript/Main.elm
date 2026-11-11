@@ -38,7 +38,7 @@ port toWebAudio : Json.Encode.Value -> Cmd msg
 
 
 c_TICKTIME =
-    19
+    19.75
 
 
 
@@ -55,7 +55,7 @@ type ModelState
 type alias Model =
     { state : ModelState
     , -- This doesn't look like a variable, but think it might be useful to adjust it at runtime
-      tickInterval : Int
+      tickInterval : Float
     }
 
 

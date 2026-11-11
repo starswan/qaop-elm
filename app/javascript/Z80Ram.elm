@@ -82,7 +82,7 @@ foldSingleRamBank d2 ramdict offset bank2 =
     let
         d2keys : Set Int
         d2keys =
-            d2 |> List.foldl (\( addr, value ) set -> set |> Set.insert (addr |> shiftRightBy 8)) Set.empty
+            d2 |> List.map Tuple.first |> List.foldl (\addr set -> set |> Set.insert (addr |> shiftRightBy 8)) Set.empty
     in
     bank2
         |> Array.indexedMap
@@ -138,7 +138,6 @@ foldDictIntoRam ramdict z80_ram =
                     z80_ram.screen
 
         x1 =
-            --z80_ram.ula_ram |> mergeMemoryDict d1
             z80_ram.ula_ram |> foldSingleRamBank d1 ramdict 6912
 
         bank2 =

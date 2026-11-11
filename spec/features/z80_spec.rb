@@ -7,14 +7,6 @@ RSpec.describe "Game" do
   let(:expected_hz) { (ENV['HZ'] || "9.8").to_f }
 
   context "with documented Z80 test" do
-    let(:version) { "1.2a" }
-    let(:faraday) {
-      Faraday.new do |f|
-        f.response :raise_error
-        f.response :follow_redirects
-        f.adapter Faraday.default_adapter
-      end
-    }
     let(:cyrus) { build(:game, :cyrus) }
     let(:frogger) { build(:game, :frogger) }
     let(:football_manager) { build(:game, :football_manager) }
@@ -25,7 +17,7 @@ RSpec.describe "Game" do
     let(:matchday) { build(:game, :match_day) }
     let(:miner) { build(:game, :manic_miner) }
     # ideally speed test should be BASIC so we see if compiling helps
-    # but matchday is interesting because it only manages 20Hz in optimised mode
+    # but matchday is interesting because it only manages 20Hz in optimized mode
     let(:z80_game) { ENV.fetch("Z80TEST", football_manager.name) }
     # let(:z80_game) { ENV.fetch("Z80TEST", matchday.name) }
 
@@ -93,15 +85,15 @@ RSpec.describe "Game" do
           # Player name
           delay_and_send(spectrum, 480, FFaker::Name.first_name.first(5))
           # select Plymouth Argyle
-          delay_and_send(spectrum, 890, "99")
-          delay_and_send(spectrum, 1070, "99")
+          delay_and_send(spectrum, 910, "99")
+          delay_and_send(spectrum, 1060, "99")
           delay_and_send(spectrum, 1210, "44")
           # select beginner
           delay_and_send(spectrum, 1330, "1")
           # select white team colours
           delay_and_send(spectrum, 1410, "7")
           # continue from main menu
-          delay_and_send(spectrum, 1790, "99")
+          delay_and_send(spectrum, 1810, "99")
           #  Hit ENTER to start first match
           delay_and_send(spectrum, 1980, "")
           # continue into match
@@ -202,7 +194,7 @@ RSpec.describe "Game" do
       spectrum.send_keys k
       # sleep just long enough for Spectrum to see down and up
       # before sending the next keystroke
-      sleep 0.05
+      sleep 0.14
     end
   end
 
