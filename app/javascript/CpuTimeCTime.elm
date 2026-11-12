@@ -1,6 +1,7 @@
 module CpuTimeCTime exposing (..)
 
 import Bitwise exposing (shiftLeftBy, shiftRightBy)
+import MemoryContentionDelay exposing (CTime(..), CpuTimeCTime, MemoryContentionDelay(..), addContention, addCpuTimeTime)
 
 
 c_FRSTART =
@@ -17,17 +18,6 @@ c_TIME_LIMIT =
 
 c_SCRENDT =
     191 * 224 + 126
-
-
-type CTime
-    = NoCont
-    | ContUntil Int
-
-
-type alias CpuTimeCTime =
-    { cpu_time : Int
-    , ctime : CTime
-    }
 
 
 type alias CpuTimeAndValue =
@@ -80,23 +70,41 @@ type alias CpuTimeAndPc =
 --	}
 
 
-cont1 : Int -> CpuTimeCTime -> CpuTimeCTime
+cont1 : Int -> CpuTimeCTime -> Maybe MemoryContentionDelay
 cont1 tmp_t z80 =
     let
         t =
             tmp_t + z80.cpu_time
     in
     if (t < 0) || (t >= c_SCRENDT) then
-        z80
+        Nothing
 
     else if Bitwise.and t 7 >= 6 then
-        z80
+        Nothing
 
     else if modBy 224 t < 126 then
-        z80 |> addCpuTimeTime (6 - Bitwise.and t 7)
+        let
+            delay =
+                6 - Bitwise.and t 7
+        in
+        case delay of
+            1 ->
+                Just ContentionOne
+
+            2 ->
+                Just ContentionTwo
+
+            3 ->
+                Just ContentionThree
+
+            4 ->
+                Just ContentionFour
+
+            _ ->
+                Just ContentionFive
 
     else
-        z80
+        Nothing
 
 
 
@@ -241,14 +249,18 @@ cont_port portn z80env =
             in
             if Bitwise.and portn 0xC000 /= 0x4000 then
                 let
+                    env3 : Maybe MemoryContentionDelay
                     env3 =
                         if Bitwise.and portn 0x01 == 0 then
                             env1_time |> cont1 1
 
                         else
-                            env1_time
+                            Nothing
+
+                    env4 =
+                        env1_time |> addContention env3
                 in
-                { env3 | ctime = NoCont }
+                { env4 | ctime = NoCont }
 
             else
                 let
@@ -262,11 +274,6 @@ cont_port portn z80env =
                         env3 |> cont (2 + contval)
                 in
                 env4 |> addCpuTimeTime 4
-
-
-addCpuTimeTime : Int -> CpuTimeCTime -> CpuTimeCTime
-addCpuTimeTime value z80env =
-    { z80env | cpu_time = z80env.cpu_time + value }
 
 
 reset_cpu_time : CpuTimeCTime

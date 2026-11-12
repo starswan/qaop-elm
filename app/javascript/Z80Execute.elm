@@ -1,13 +1,13 @@
 module Z80Execute exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeCTime)
 import DoubleWithRegisters exposing (DoubleWithRegisterChange, applyDoubleWithRegistersDelta)
 import GroupED exposing (adc_hl_sp, cpir, execute_ED70, execute_ED78, inirOtirFlags, ldir, rld, rrd, sbc_hl)
 import IXIYChange exposing (IXIYChange, applyIXIYChange, applyShifter)
 import InstructionDuration exposing (ShortDelay(..))
 import Interrupts exposing (IFFValue(..))
 import JumpChange exposing (JumpChange(..))
+import MemoryContentionDelay exposing (CpuTimeCTime, addContention)
 import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), Pop16(..), RegisterFlagChange(..), SixteenBit(..), TwoByteChange(..))
 import SingleEnvWithMain exposing (SingleEnvMainChange, applySingleEnvMainChange)
 import SingleWith8BitParameter exposing (Single8BitChange(..), applySimple8BitChange)
@@ -989,7 +989,7 @@ applyEdRegisterDelta clockTime z80changeData rom48k z80_core =
                     main_2 |> get_bc
 
                 ( env2, newTime2, blip ) =
-                    z80_core.env |> z80_out new_bc outvalue newTime
+                    z80_core.env |> z80_out new_bc outvalue (clockTime |> addContention newTime)
 
                 flags =
                     z80_core.flags |> inirOtirFlags new_hl new_bc outvalue

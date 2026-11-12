@@ -1,7 +1,7 @@
 module IXIYChange exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeCTime)
+import MemoryContentionDelay exposing (CpuTimeCTime, addContention)
 import Utils exposing (BitTest, bitMaskFromBit, clearBit, inverseBitMaskFromBit, setBit, shiftLeftBy8, shiftRightBy8)
 import Z80Change exposing (Shifter(..))
 import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
@@ -166,7 +166,7 @@ applyIXIYChange clockTime z80changeData rom48k z80_core =
                     z80_core.env
 
                 ( env_2, newNew ) =
-                    old_env |> setMem addr value newTime
+                    old_env |> setMem addr value (clockTime |> addContention newTime)
             in
             { z80_core | main = new_main, flags = flags, env = env_2 } |> CoreOnly |> RareChange
 
@@ -211,7 +211,7 @@ applyIXIYChange clockTime z80changeData rom48k z80_core =
                             { main | hl = Bitwise.or value (Bitwise.and z80_core.main.hl 0xFF00) }
 
                 ( env_2, newTime2 ) =
-                    old_env |> setMem addr value newTime
+                    old_env |> setMem addr value (clockTime |> addContention newTime)
             in
             { z80_core | main = new_main, env = env_2 } |> CoreOnly |> RareChange
 
@@ -256,7 +256,7 @@ applyIXIYChange clockTime z80changeData rom48k z80_core =
                             { main | hl = Bitwise.or value (Bitwise.and z80_core.main.hl 0xFF00) }
 
                 ( env_2, newTime ) =
-                    old_env |> setMem addr value newTime1
+                    old_env |> setMem addr value (clockTime |> addContention newTime1)
             in
             { z80_core | main = new_main, env = env_2 } |> CoreOnly |> RareChange
 
