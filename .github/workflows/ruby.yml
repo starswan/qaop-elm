@@ -22,8 +22,7 @@ jobs:
     strategy:
       matrix:
         #  3.3 tested locally, so just test beyond that (we're writing Elm, not Ruby here)
-        #  3.5 is still preview-1 so doesn't work yet (nokigiri)
-        ruby-version: ['3.4']
+        ruby-version: ['3.4', '4.0']
 
     env:
       ELM_HOME: ${{ github.workspace }}/.elm
