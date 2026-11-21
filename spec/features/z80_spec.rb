@@ -85,22 +85,22 @@ RSpec.describe "Game" do
           # Player name
           delay_and_send(spectrum, 510, FFaker::Name.first_name.first(5))
           # select Plymouth Argyle
-          delay_and_send(spectrum, 910, "99")
-          delay_and_send(spectrum, 1050, "99")
-          delay_and_send(spectrum, 1210, "44")
+          delay_and_send(spectrum, 950, "99")
+          delay_and_send(spectrum, 1090, "99")
+          delay_and_send(spectrum, 1250, "44")
           # select beginner
-          delay_and_send(spectrum, 1330, "1")
+          delay_and_send(spectrum, 1380, "1")
           # select white team colours
-          delay_and_send(spectrum, 1420, "7")
+          delay_and_send(spectrum, 1470, "7")
           # continue from main menu
-          delay_and_send(spectrum, 1820, "99")
+          delay_and_send(spectrum, 1870, "99")
           #  Hit ENTER to start first match
-          delay_and_send(spectrum, 1980, "")
+          delay_and_send(spectrum, 2030, "")
           # continue into match
-          delay_and_send(spectrum, 2260, "99")
+          delay_and_send(spectrum, 2310, "99")
 
           # wait for match to actually start properly
-          delay_and_send(spectrum, 2550, "")
+          delay_and_send(spectrum, 2600, "")
 
           measure_speed_in_hz do
             spectrum.send_keys :enter
@@ -194,7 +194,7 @@ RSpec.describe "Game" do
       spectrum.send_keys k
       # sleep just long enough for Spectrum to see down and up
       # before sending the next keystroke
-      sleep 0.14
+      sleep 0.16
     end
   end
 
