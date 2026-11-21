@@ -1,8 +1,8 @@
 module RegisterChange exposing (..)
 
-import CpuTimeCTime exposing (CpuTimeCTime)
 import Interrupts exposing (InterruptMode)
 import JumpChange exposing (JumpChange)
+import MemoryContentionDelay exposing (CpuTimeCTime)
 import SingleEnvWithMain exposing (SingleEnvMainChange)
 import SingleWith8BitParameter exposing (Single8BitChange)
 import Z80Change exposing (IndexedZ80Change, Z80Change)

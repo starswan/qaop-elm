@@ -1,9 +1,9 @@
 module SingleEnvWithMain exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime)
 import Dict exposing (Dict)
 import InstructionDuration exposing (InstructionDuration(..))
+import MemoryContentionDelay exposing (CpuTimeCTime)
 import Z80Core exposing (CoreChange(..), RareCoreChange(..), Z80Core)
 import Z80Env exposing (Z80Env)
 import Z80Flags exposing (FlagRegisters, add16)

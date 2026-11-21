@@ -1,7 +1,7 @@
 module Z80Types exposing (..)
 
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeAndPc, CpuTimeCTime, CpuTimePcAnd16BitValue)
+import MemoryContentionDelay exposing (CpuTimeCTime)
 import Utils exposing (shiftLeftBy8, shiftRightBy8)
 import Z80Flags exposing (FlagRegisters)
 

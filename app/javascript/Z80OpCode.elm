@@ -2,7 +2,7 @@ module Z80OpCode exposing (..)
 
 import Array
 import Bitwise
-import CpuTimeCTime exposing (CpuTimeAndValue, CpuTimeCTime, reset_cpu_time)
+import CpuTimeCTime exposing (CpuTimeAndValue, reset_cpu_time)
 import Dict exposing (Dict)
 import DoubleWithRegisters exposing (applyDoubleWithRegistersDelta, doubleWithRegistersIX, doubleWithRegistersIY)
 import GroupCBIXIY exposing (singleByteMainRegsIYCB, singleByteMainRegsIYCB80, singleEnvMainRegsIYCB40)
@@ -10,6 +10,7 @@ import GroupED exposing (singleByteMainAndFlagsED, singleByteMainRegsED)
 import IXIYChange exposing (applyIXIYChange)
 import InstructionDuration exposing (InstructionDuration)
 import Maybe.Extra exposing (oneOf)
+import MemoryContentionDelay exposing (CpuTimeCTime)
 import PCIncrement exposing (PCIncrement(..))
 import SimpleFlagOps exposing (singleByteFlags)
 import SimpleSingleByte exposing (singleByteMain4080, singleByteMainRegs, singleByteMainRegsDD, singleByteMainRegsFD)

@@ -1,10 +1,10 @@
 module GroupED exposing (..)
 
 import Bitwise exposing (complement, shiftLeftBy, shiftRightBy)
-import CpuTimeCTime exposing (CpuTimeCTime)
 import Dict exposing (Dict)
 import InstructionDuration exposing (InstructionDuration(..))
 import Interrupts exposing (InterruptMode(..), InterruptRegisters)
+import MemoryContentionDelay exposing (CpuTimeCTime, MemoryContentionDelay, addContention)
 import PCIncrement exposing (PCIncrement(..))
 import RegisterChange exposing (EDFourByteChange(..), EDRegisterChange(..), InterruptChange(..), RegisterFlagChange(..), SixteenBit(..))
 import Utils exposing (char, shiftLeftBy8, shiftRightBy8, toHexString2)
@@ -181,7 +181,7 @@ ldir incOrDec repeat rom48k clockTime z80 =
             main |> get_de
 
         ( env_1, newClock ) =
-            z80.env |> setMem de v1 newTime
+            z80.env |> setMem de v1 (clockTime |> addContention newTime)
 
         ( new_hl, new_de ) =
             case incOrDec of
@@ -322,7 +322,7 @@ adc_hl b z80 =
 --}
 
 
-cpir : DirectionForLDIR -> Bool -> Z80ROM -> CpuTimeCTime -> Z80Core -> ( Z80Core, CpuTimeCTime, RepeatPCOffset )
+cpir : DirectionForLDIR -> Bool -> Z80ROM -> CpuTimeCTime -> Z80Core -> ( Z80Core, Maybe MemoryContentionDelay, RepeatPCOffset )
 cpir incOrDec repeat rom48k clockTime z80_core =
     let
         z80_flags =
